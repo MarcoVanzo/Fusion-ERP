@@ -72,7 +72,7 @@ CREATE TABLE events (
 
 -- ─── EVENT ATTENDEES ──────────────────────────────────────────────────────────
 CREATE TABLE event_attendees (
-    id          BIGINT       NOT NULL AUTO_INCREMENT,
+    id          VARCHAR(20)  NOT NULL,
     event_id    VARCHAR(20)  NOT NULL,
     athlete_id  VARCHAR(20)  NOT NULL,
     status      VARCHAR(30)  NOT NULL DEFAULT 'invited', -- invited, confirmed, absent, excused

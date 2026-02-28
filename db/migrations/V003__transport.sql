@@ -33,7 +33,7 @@ CREATE TABLE carpool_routes (
 
 -- ─── CARPOOL PASSENGERS ───────────────────────────────────────────────────────
 CREATE TABLE carpool_passengers (
-    id            BIGINT       NOT NULL AUTO_INCREMENT,
+    id            VARCHAR(20)  NOT NULL,
     route_id      VARCHAR(20)  NOT NULL,
     athlete_id    VARCHAR(20)  NOT NULL,
     requested_by  VARCHAR(20)  NULL,             -- parent user who requested
@@ -77,7 +77,7 @@ CREATE TABLE mileage_reimbursements (
 
 -- ─── EMAIL NOTIFICATIONS LOG ──────────────────────────────────────────────────
 CREATE TABLE email_logs (
-    id          BIGINT       NOT NULL AUTO_INCREMENT,
+    id          VARCHAR(20)  NOT NULL,
     event_id    VARCHAR(20)  NULL,
     recipient   VARCHAR(255) NOT NULL,
     subject     VARCHAR(300) NOT NULL,

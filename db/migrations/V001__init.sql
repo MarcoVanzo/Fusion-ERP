@@ -26,7 +26,7 @@ CREATE TABLE users (
 
 -- ─── LOGIN ATTEMPTS (Rate Limiting) ───────────────────────────────────────────
 CREATE TABLE login_attempts (
-    id           BIGINT       NOT NULL AUTO_INCREMENT,
+    id           VARCHAR(20)  NOT NULL,
     ip_address   VARCHAR(45)  NOT NULL,                  -- IPv4 + IPv6
     email        VARCHAR(255) NULL,
     success      TINYINT(1)   NOT NULL DEFAULT 0,
@@ -38,7 +38,7 @@ CREATE TABLE login_attempts (
 
 -- ─── AUDIT LOGS ───────────────────────────────────────────────────────────────
 CREATE TABLE audit_logs (
-    id              BIGINT       NOT NULL AUTO_INCREMENT,
+    id              VARCHAR(20)  NOT NULL,
     user_id         VARCHAR(20)  NULL,
     action          VARCHAR(50)  NOT NULL,               -- e.g. INSERT, UPDATE, DELETE
     table_name      VARCHAR(100) NOT NULL,

@@ -72,7 +72,7 @@ CREATE TABLE documents (
 
 -- ─── ACWR RISK ALERTS LOG ─────────────────────────────────────────────────────
 CREATE TABLE acwr_alerts (
-    id          BIGINT       NOT NULL AUTO_INCREMENT,
+    id          VARCHAR(20)  NOT NULL,
     athlete_id  VARCHAR(20)  NOT NULL,
     acwr_score  DECIMAL(6,4) NOT NULL,
     risk_level  VARCHAR(30)  NOT NULL,            -- low, moderate, high, extreme

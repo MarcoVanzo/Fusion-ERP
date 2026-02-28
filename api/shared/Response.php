@@ -28,7 +28,8 @@ class Response
     public static function error(string $message, int $httpCode = 400, ?string $internalDetail = null): never
     {
         if ($internalDetail !== null) {
-            error_log("[API ERROR {$httpCode}] {$internalDetail}");
+            $codeStr = (string)$httpCode;
+            error_log("[API ERROR {$codeStr}] {$internalDetail}");
         }
         http_response_code($httpCode);
         header('Content-Type: application/json; charset=UTF-8');

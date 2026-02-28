@@ -6,6 +6,8 @@
 'use strict';
 
 const Dashboard = (() => {
+    let _ac = new AbortController();
+
   async function init() {
     const app = document.getElementById('app');
     if (!app) return;
@@ -393,6 +395,11 @@ const Dashboard = (() => {
     `;
   }
 
-  return { init };
+  function destroy() {
+        _ac.abort();
+        _ac = new AbortController();
+    }
+
+    return { destroy, init };
 })();
 window.Dashboard = Dashboard;

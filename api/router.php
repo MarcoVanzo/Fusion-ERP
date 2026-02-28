@@ -15,7 +15,7 @@ use FusionERP\Shared\Auth;
 use FusionERP\Shared\Response;
 
 // Load environment variables from .env
-$dotenv = Dotenv\Dotenv::createImmutable(dirname(__DIR__));
+$dotenv = Dotenv\Dotenv::createUnsafeImmutable(dirname(__DIR__));
 $dotenv->load();
 
 // Initialize secure session
@@ -66,7 +66,7 @@ function dispatch(string $controllerName, string $action): void
 
     if (!class_exists($class)) {
         // Lazy-load the file
-        $filePath = __DIR__ . "/modules/" . strtolower($controllerName) . "/{$controllerName}Controller.php";
+        $filePath = __DIR__ . "/Modules/" . $controllerName . "/{$controllerName}Controller.php";
         if (!file_exists($filePath)) {
             Response::error("Controller '{$controllerName}' non trovato", 404);
         }

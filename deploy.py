@@ -142,7 +142,8 @@ def deploy_files_via_ftp():
             
             for file in files:
                 if file in ignore_files or any(file.endswith(ext) for ext in ignore_extensions) or file.startswith('.'):
-                    if file != '.htaccess' and file != '.env': # Allow .htaccess and .env
+                    if file != '.htaccess': # Only allow .htaccess, never push local .env over production
+
                         skip_count += 1
                         continue
                     

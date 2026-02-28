@@ -63,7 +63,7 @@ class AdminRepository
 
     public function getCertificateById(string $id): ?array
     {
-        $stmt = $this->db->prepare('SELECT * FROM medical_certificates WHERE id = :id AND deleted_at IS NULL LIMIT 1');
+        $stmt = $this->db->prepare('SELECT id, athlete_id, type, issue_date, expiry_date, ocr_extracted_date, file_path, original_filename, status, notes, uploaded_by, created_at, updated_at FROM medical_certificates WHERE id = :id AND deleted_at IS NULL LIMIT 1');
         $stmt->execute([':id' => $id]);
         return $stmt->fetch() ?: null;
     }

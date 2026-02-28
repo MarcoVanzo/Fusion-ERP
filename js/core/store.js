@@ -25,7 +25,11 @@ const Store = (() => {
      */
     async function _handleResponse(response) {
         if (response.status === 401) {
-            // Se riceviamo 401, la sessione è scaduta o non valida, puliamo e forziamo il ricaricamento
+            // Evita loop infiniti ricaricando la pagina durante il check iniziale e il login
+            if (response.url.includes('action=me') || response.url.includes('action=login')) {
+                throw new Error('Non autorizzato');
+            }
+            // Se riceviamo 401 su altre chiamate, la sessione è scaduta o non valida, puliamo e forziamo il ricaricamento
             window.location.reload();
             throw new Error('Non autorizzato');
         }

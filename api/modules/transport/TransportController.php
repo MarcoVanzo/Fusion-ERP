@@ -227,6 +227,10 @@ class TransportController
             ]);
 
             $date = date('d/m/Y');
+            $kmStr = number_format($km, 2, ',', '');
+            $rateStr = number_format($rate, 2, ',', '');
+            $totalStr = number_format($total, 2, ',', '');
+
             $html = <<<HTML
 <style>
   body { font-family: Arial, sans-serif; color: #000; }
@@ -243,9 +247,9 @@ class TransportController
   <tr>
     <td>{$user['fullName']}</td>
     <td>{$body['carpoolId']}</td>
-    <td>{$km}</td>
-    <td>€ {$rate}</td>
-    <td class="total">€ {$total}</td>
+    <td>{$kmStr}</td>
+    <td>€ {$rateStr}</td>
+    <td class="total">€ {$totalStr}</td>
   </tr>
 </table>
 <p style="margin-top:30px;">Firma allenatore: ________________________________</p>
@@ -361,6 +365,10 @@ HTML;
         }
         catch (MailerException $e) {
             error_log('[MAILER] Failed to send to ' . $to . ': ' . $e->getMessage());
+            return false;
+        }
+    }
+}           error_log('[MAILER] Failed to send to ' . $to . ': ' . $e->getMessage());
             return false;
         }
     }

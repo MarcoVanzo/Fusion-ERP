@@ -6,6 +6,8 @@
 'use strict';
 
 const Athletes = (() => {
+    let _ac = new AbortController();
+
   let _state = [];
   let _teams = [];
   let _currentTeam = '';
@@ -67,13 +69,13 @@ const Athletes = (() => {
     Utils.qsa('[data-team]').forEach(btn => btn.addEventListener('click', () => {
       _currentTeam = btn.dataset.team;
       renderList();
-    }));
+    }, { signal: _ac.signal }));
 
     Utils.qsa('[data-athlete-id]').forEach(card => card.addEventListener('click', () => {
       showProfile(card.dataset.athleteId);
-    }));
+    }, { signal: _ac.signal }));
 
-    document.getElementById('new-athlete-btn')?.addEventListener('click', () => showCreateModal());
+    document.getElementById('new-athlete-btn')?.addEventListener('click', () => showCreateModal(), { signal: _ac.signal }, { signal: _ac.signal });
   }
 
   function athleteCard(a) {
@@ -192,9 +194,9 @@ const Athletes = (() => {
             </button>
         </div>` : ''}`;
 
-      document.getElementById('back-to-list')?.addEventListener('click', () => renderList());
-      document.getElementById('log-metric-btn')?.addEventListener('click', () => showMetricModal(athleteId));
-      document.getElementById('ai-report-btn')?.addEventListener('click', () => requestAiReport(athleteId));
+      document.getElementById('back-to-list')?.addEventListener('click', () => renderList(), { signal: _ac.signal }, { signal: _ac.signal });
+      document.getElementById('log-metric-btn')?.addEventListener('click', () => showMetricModal(athleteId), { signal: _ac.signal }, { signal: _ac.signal });
+      document.getElementById('ai-report-btn')?.addEventListener('click', () => requestAiReport(athleteId), { signal: _ac.signal }, { signal: _ac.signal });
 
       // Load existing AI summary
       loadAiSummary(athleteId);
@@ -281,7 +283,7 @@ const Athletes = (() => {
         <button class="btn btn-primary btn-sm" id="metric-save" type="button">SALVA</button>`,
     });
 
-    document.getElementById('metric-cancel')?.addEventListener('click', () => m.close());
+    document.getElementById('metric-cancel')?.addEventListener('click', () => m.close(), { signal: _ac.signal }, { signal: _ac.signal });
     document.getElementById('metric-save')?.addEventListener('click', async () => {
       const date = document.getElementById('metric-date').value;
       const dur = parseInt(document.getElementById('metric-duration').value) || 0;
@@ -308,7 +310,7 @@ const Athletes = (() => {
         errEl.classList.remove('hidden');
         btn.disabled = false; btn.textContent = 'SALVA';
       }
-    });
+    }, { signal: _ac.signal });
   }
 
   // ─── AI REPORT ────────────────────────────────────────────────────────────
@@ -380,7 +382,7 @@ const Athletes = (() => {
         <button class="btn btn-primary btn-sm" id="na-save" type="button">CREA ATLETA</button>`,
     });
 
-    document.getElementById('na-cancel')?.addEventListener('click', () => m.close());
+    document.getElementById('na-cancel')?.addEventListener('click', () => m.close(), { signal: _ac.signal }, { signal: _ac.signal });
     document.getElementById('na-save')?.addEventListener('click', async () => {
       const name = document.getElementById('na-name').value.trim();
       const team = document.getElementById('na-team').value;
@@ -414,9 +416,14 @@ const Athletes = (() => {
         errEl.classList.remove('hidden');
         btn.disabled = false; btn.textContent = 'CREA ATLETA';
       }
-    });
+    }, { signal: _ac.signal });
   }
 
-  return { init };
+  function destroy() {
+        _ac.abort();
+        _ac = new AbortController();
+    }
+
+    return { destroy, init };
 })();
 window.Athletes = Athletes;

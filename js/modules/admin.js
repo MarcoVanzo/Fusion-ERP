@@ -6,6 +6,8 @@
 'use strict';
 
 const Admin = (() => {
+    let _ac = new AbortController();
+
   let _activeTab = 'certs';
 
   async function init() {
@@ -44,7 +46,7 @@ const Admin = (() => {
       btn.classList.add('active');
       _activeTab = btn.dataset.tab;
       loadTab(_activeTab);
-    }));
+    }, { signal: _ac.signal }));
 
     loadTab(_activeTab);
   }
@@ -71,7 +73,7 @@ const Admin = (() => {
     `;
     document.getElementById('run-backup-btn')?.addEventListener('click', () => {
       UI.toast('Funzionalità in arrivo', 'info');
-    });
+    }, { signal: _ac.signal });
   }
 
   // ─── LOGS ─────────────────────────────────────────────────────────────────
@@ -86,7 +88,7 @@ const Admin = (() => {
     `;
     document.getElementById('refresh-logs-btn')?.addEventListener('click', () => {
       loadLogs();
-    });
+    }, { signal: _ac.signal });
   }
 
   // ─── CERTS ────────────────────────────────────────────────────────────────
@@ -139,7 +141,7 @@ const Admin = (() => {
               </table>
             </div>`}`;
 
-      document.getElementById('upload-cert-btn')?.addEventListener('click', () => showUploadModal());
+      document.getElementById('upload-cert-btn')?.addEventListener('click', () => showUploadModal(), { signal: _ac.signal }, { signal: _ac.signal });
 
     } catch (err) {
       content.innerHTML = Utils.emptyState('Errore caricamento certificati', err.message);
@@ -207,27 +209,27 @@ const Admin = (() => {
     const dropZone = document.getElementById('cert-drop-zone');
     const fileInput = document.getElementById('cert-file');
 
-    dropZone?.addEventListener('click', () => fileInput?.click());
-    dropZone?.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') fileInput?.click(); });
-    dropZone?.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
-    dropZone?.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+    dropZone?.addEventListener('click', () => fileInput?.click(), { signal: _ac.signal }, { signal: _ac.signal });
+    dropZone?.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') fileInput?.click(); }, { signal: _ac.signal }, { signal: _ac.signal });
+    dropZone?.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); }, { signal: _ac.signal }, { signal: _ac.signal });
+    dropZone?.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'), { signal: _ac.signal }, { signal: _ac.signal });
     dropZone?.addEventListener('drop', (e) => {
       e.preventDefault();
       dropZone.classList.remove('drag-over');
       const file = e.dataTransfer?.files?.[0];
       if (file) _handleFile(file);
-    });
+    }, { signal: _ac.signal });
     fileInput?.addEventListener('change', () => {
       if (fileInput.files[0]) _handleFile(fileInput.files[0]);
-    });
+    }, { signal: _ac.signal });
 
     function _handleFile(file) {
       document.getElementById('cert-file-preview').textContent = `📎 ${file.name} (${(file.size / 1024).toFixed(0)} KB)`;
       document.getElementById('cert-upload').disabled = false;
     }
 
-    document.getElementById('cert-cancel')?.addEventListener('click', () => m.close());
-    document.getElementById('cert-upload')?.addEventListener('click', () => _doUpload(m));
+    document.getElementById('cert-cancel')?.addEventListener('click', () => m.close(), { signal: _ac.signal }, { signal: _ac.signal });
+    document.getElementById('cert-upload')?.addEventListener('click', () => _doUpload(m), { signal: _ac.signal }, { signal: _ac.signal });
   }
 
   async function _doUpload(modal) {
@@ -305,7 +307,7 @@ const Admin = (() => {
               </table>
             </div>`}`;
 
-      document.getElementById('new-contract-btn')?.addEventListener('click', () => showContractModal());
+      document.getElementById('new-contract-btn')?.addEventListener('click', () => showContractModal(), { signal: _ac.signal }, { signal: _ac.signal });
     } catch (err) {
       content.innerHTML = Utils.emptyState('Errore caricamento contratti', err.message);
     }
@@ -343,7 +345,7 @@ const Admin = (() => {
         <button class="btn btn-primary btn-sm" id="ctr-save" type="button">GENERA & SCARICA PDF</button>`,
     });
 
-    document.getElementById('ctr-cancel')?.addEventListener('click', () => m.close());
+    document.getElementById('ctr-cancel')?.addEventListener('click', () => m.close(), { signal: _ac.signal }, { signal: _ac.signal });
     document.getElementById('ctr-save')?.addEventListener('click', async () => {
       const userId = document.getElementById('ctr-user').value.trim();
       const role = document.getElementById('ctr-role').value.trim();
@@ -370,9 +372,14 @@ const Admin = (() => {
         errEl.textContent = err.message; errEl.classList.remove('hidden');
         btn.disabled = false; btn.textContent = 'GENERA & SCARICA PDF';
       }
-    });
+    }, { signal: _ac.signal });
   }
 
-  return { init };
+  function destroy() {
+        _ac.abort();
+        _ac = new AbortController();
+    }
+
+    return { destroy, init };
 })();
 window.Admin = Admin;

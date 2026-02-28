@@ -23,9 +23,9 @@ class AthletesRepository
     {
         $sql = 'SELECT a.id, a.full_name, a.jersey_number, a.role, a.birth_date,
                        a.height_cm, a.weight_kg, a.photo_path, a.is_active,
-                       t.name AS team_name, t.category
+                       COALESCE(t.name, "Nessuna squadra") AS team_name, COALESCE(t.category, "Nessuna") AS category
                 FROM athletes a
-                JOIN teams t ON a.team_id = t.id
+                LEFT JOIN teams t ON a.team_id = t.id
                 WHERE a.deleted_at IS NULL';
 
         $params = [];
@@ -134,10 +134,10 @@ class AthletesRepository
         $stmt = $this->db->prepare(
             'SELECT id, log_date, duration_min, rpe, load_value, acwr_score, notes
              FROM metrics_logs
-             WHERE athlete_id = :id AND log_date >= DATE_SUB(CURDATE(), INTERVAL :days DAY)
+             WHERE athlete_id = :id AND log_date >= DATE_SUB(CURDATE(), INTERVAL ' . (int)$days . ' DAY)
              ORDER BY log_date DESC'
         );
-        $stmt->execute([':id' => $athleteId, ':days' => $days]);
+        $stmt->execute([':id' => $athleteId]);
         return $stmt->fetchAll();
     }
 

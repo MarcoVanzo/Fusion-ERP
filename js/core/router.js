@@ -32,6 +32,28 @@ const Router = (() => {
             return;
         }
 
+        const moduleNames = {
+            dashboard: 'Dashboard',
+            athletes: 'Athletes',
+            transport: 'Transport',
+            admin: 'Admin',
+            'admin-backup': 'Admin',
+            'admin-logs': 'Admin',
+            users: 'UsersModule',
+        };
+
+        // Call destroy on the previous module before switching to prevent memory leaks
+        if (_currentRoute) {
+            const prevModuleName = moduleNames[_currentRoute];
+            if (prevModuleName && window[prevModuleName] && typeof window[prevModuleName].destroy === 'function') {
+                try {
+                    window[prevModuleName].destroy();
+                } catch (e) {
+                    console.error('[Router] Error during module destroy:', e);
+                }
+            }
+        }
+
         _currentRoute = route;
 
         // Update nav active state

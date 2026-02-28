@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS tenant_users (
     roles       JSON         NOT NULL,           -- Array of roles: e.g. ["parent", "secretary"]
     is_active   TINYINT(1)   NOT NULL DEFAULT 1,
     created_at  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (tenant_id, user_id),
     CONSTRAINT fk_tenant_users_tenant FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
     CONSTRAINT fk_tenant_users_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -30,11 +31,12 @@ CREATE TABLE IF NOT EXISTS tenant_users (
 
 -- ─── USER RELATIONSHIPS (e.g. Parent <-> Child) ───────────────────────────────
 CREATE TABLE IF NOT EXISTS user_relationships (
-    id              BIGINT       NOT NULL AUTO_INCREMENT,
+    id              VARCHAR(20)  NOT NULL,
     parent_user_id  VARCHAR(20)  NOT NULL,
     child_user_id   VARCHAR(20)  NOT NULL,
     relation_type   VARCHAR(50)  NOT NULL,       -- e.g. "father", "mother", "guardian"
     created_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     UNIQUE KEY uq_user_rel (parent_user_id, child_user_id),
     CONSTRAINT fk_user_rel_parent FOREIGN KEY (parent_user_id) REFERENCES users(id) ON DELETE CASCADE,
@@ -66,6 +68,7 @@ CREATE TABLE IF NOT EXISTS team_members (
     joined_at   DATE         NOT NULL DEFAULT (CURRENT_DATE),
     left_at     DATE         NULL,
     created_at  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (team_id, user_id),
     CONSTRAINT fk_team_members_team FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE,
     CONSTRAINT fk_team_members_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
