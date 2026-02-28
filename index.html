@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="it" dir="ltr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#000000">
+    <meta name="description"
+        content="Fusion ERP — Sistema di gestione sportiva per atleti, trasferte e amministrazione.">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Fusion ERP</title>
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="stylesheet" href="css/style.css?v=1.2.0">
+</head>
+
+<body>
+
+    <!-- ─── SPLASH SCREEN ─────────────────────────────────────────────────────── -->
+    <div id="splash-screen" class="splash-screen">
+        <img src="assets/media/splash_bg.png" alt="Splash Background" class="splash-bg duotone-img">
+        <div class="splash-content">
+            <h1 class="splash-title">FUSION</h1>
+            <div class="splash-line"></div>
+        </div>
+    </div>
+
+    <!-- ─── ONBOARDING SCREENS ────────────────────────────────────────────────── -->
+    <div id="onboarding-screen" class="onboarding-screen hidden">
+        <div class="onboarding-slides" id="onboarding-slides">
+            <!-- Slide 1 -->
+            <div class="onboarding-slide active">
+                <img src="assets/media/onboarding_bg.png" alt="Onboarding 1" class="onboarding-bg duotone-img">
+                <div class="onboarding-content">
+                    <h2 class="onboarding-title">PRESTAZIONI<br>AL TOP</h2>
+                    <p class="onboarding-text">Monitora i tuoi dati in tempo reale e migliora ogni giorno.</p>
+                </div>
+            </div>
+            <!-- Slide 2 -->
+            <div class="onboarding-slide">
+                <img src="assets/media/onboarding_bg.png" alt="Onboarding 2" class="onboarding-bg duotone-img">
+                <div class="onboarding-content">
+                    <h2 class="onboarding-title">GESTIONE<br>TRASFERTE</h2>
+                    <p class="onboarding-text">Tutto organizzato, viaggio, hotel e convocazioni.</p>
+                </div>
+            </div>
+            <!-- Slide 3 -->
+            <div class="onboarding-slide">
+                <img src="assets/media/onboarding_bg.png" alt="Onboarding 3" class="onboarding-bg duotone-img">
+                <div class="onboarding-content">
+                    <h2 class="onboarding-title">DOMINA<br>IL GIOCO</h2>
+                    <p class="onboarding-text">Unisciti al team e fai la differenza.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="onboarding-controls">
+            <div class="onboarding-dots" id="onboarding-dots">
+                <div class="dot active"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+            </div>
+            <div class="onboarding-actions">
+                <button class="btn btn-ghost" id="onboarding-skip">SALTA</button>
+                <button class="btn btn-primary" id="onboarding-next">AVANTI <i class="ph ph-arrow-right"></i></button>
+            </div>
+        </div>
+    </div>
+    <div id="auth-screen" class="auth-screen">
+        <div class="auth-panel">
+            <div class="auth-logo">FUSION<span>.</span>ERP</div>
+            <div style="margin-bottom: var(--sp-2);">
+                <h2
+                    style="font-size:2.8rem; color:var(--color-pink); line-height:1; font-style:italic; margin-bottom: var(--sp-2);">
+                    GET GAME<br>READY</h2>
+                <h3 style="font-size:1.6rem; margin-bottom: 4px;">Accedi</h3>
+                <p class="text-muted"
+                    style="font-size:13px;font-family:var(--font-body);text-transform:none;letter-spacing:0;">
+                    Inserisci le tue credenziali per continuare.</p>
+            </div>
+
+            <form id="login-form" novalidate style="display:flex;flex-direction:column;gap:var(--sp-3);">
+                <div class="form-group">
+                    <label class="form-label" for="login-email">Indirizzo Email</label>
+                    <div style="position:relative; display:flex; align-items:center;">
+                        <i class="ph ph-envelope"
+                            style="position:absolute; left:12px; color:var(--color-text-dim); font-size: 18px;"></i>
+                        <input id="login-email" class="form-input" type="email" autocomplete="email"
+                            placeholder="tuo.nome@fusionerp.it" required aria-required="true"
+                            style="padding-left:38px; border-radius: 4px;">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 4px;">
+                        <label class="form-label" for="login-password" style="margin:0;">Password</label>
+                        <button type="button" class="btn btn-ghost" id="forgot-password-link"
+                            style="font-size:11px; font-weight:500; text-transform:none; letter-spacing:0; padding:0; height:auto; color:var(--color-pink);">Password
+                            dimenticata?</button>
+                    </div>
+                    <div style="position:relative; display:flex; align-items:center;">
+                        <i class="ph ph-lock"
+                            style="position:absolute; left:12px; color:var(--color-text-dim); font-size: 18px;"></i>
+                        <input id="login-password" class="form-input" type="password" autocomplete="current-password"
+                            placeholder="Inserisci la tua password" required aria-required="true"
+                            style="padding-left:38px; padding-right:38px; border-radius: 4px;">
+                        <button type="button"
+                            style="background:none; border:none; position:absolute; right:12px; color:var(--color-text-dim); font-size: 11px; font-weight: 500; display:flex; align-items:center; gap:4px; padding:4px;">
+                            <i class="ph ph-eye-slash" style="font-size: 16px;"></i> Mostra
+                        </button>
+                    </div>
+                </div>
+                <div id="login-error" class="form-error hidden" aria-live="polite"></div>
+                <button class="btn btn-primary w-full" type="submit" id="login-btn"
+                    style="margin-top:var(--sp-1); border-radius: 8px; font-size: 15px; padding: 16px;">
+                    ACCEDI ALLA DASHBOARD <i class="ph ph-caret-right" style="font-size: 18px;"></i>
+                </button>
+            </form>
+        </div>
+
+        <div class="auth-hero" aria-hidden="true">
+            <div class="auth-hero-text">FUSION SPORT</div>
+        </div>
+    </div>
+
+    <!-- ─── PASSWORD RESET SCREEN ───────────────────────────────────────────── -->
+    <div id="reset-screen" class="auth-screen hidden">
+        <div class="auth-panel">
+            <div class="auth-logo">FUSION<span>.</span>ERP</div>
+            <div>
+                <h2 style="font-size:1.8rem;">Nuova Password</h2>
+                <p class="text-muted"
+                    style="font-size:13px;margin-top:4px;font-family:var(--font-body);text-transform:none;letter-spacing:0;">
+                    La password è scaduta (90 giorni). Impostarne una nuova.</p>
+            </div>
+            <form id="reset-form" novalidate style="display:flex;flex-direction:column;gap:var(--sp-2);">
+                <div class="form-group">
+                    <label class="form-label" for="reset-current">Password Attuale</label>
+                    <input id="reset-current" class="form-input" type="password" autocomplete="current-password"
+                        required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="reset-new">Nuova Password (min. 10 caratteri)</label>
+                    <input id="reset-new" class="form-input" type="password" autocomplete="new-password" required>
+                </div>
+                <div id="reset-error" class="form-error hidden" aria-live="polite"></div>
+                <button class="btn btn-primary w-full" type="submit" id="reset-btn">SALVA NUOVA PASSWORD</button>
+            </form>
+        </div>
+        <div class="auth-hero" aria-hidden="true">
+            <div class="auth-hero-text">SICUREZZA</div>
+        </div>
+    </div>
+
+    <!-- ─── APP SHELL (shown once authenticated) ────────────────────────────── -->
+    <div id="app-shell" class="app-shell hidden">
+
+        <!-- Sidebar (Desktop) -->
+        <aside class="sidebar" id="sidebar" role="navigation" aria-label="Navigazione principale">
+            <div class="sidebar-logo">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <rect x="2" y="2" width="9" height="9" fill="#E6007E" />
+                    <rect x="13" y="2" width="9" height="9" fill="#fff" opacity="0.3" />
+                    <rect x="2" y="13" width="9" height="9" fill="#fff" opacity="0.3" />
+                    <rect x="13" y="13" width="9" height="9" fill="#E6007E" opacity="0.6" />
+                </svg>
+                <span class="logo-text">FUSION<span>.</span>ERP</span>
+            </div>
+
+            <nav class="sidebar-nav" aria-label="Sezioni">
+                <button class="nav-item active" data-route="dashboard" type="button" aria-current="page">
+                    <i class="ph ph-squares-four nav-icon" aria-hidden="true"></i>
+                    <span class="nav-label">Dashboard</span>
+                </button>
+                <button class="nav-item" data-route="athletes" type="button">
+                    <i class="ph ph-users nav-icon" aria-hidden="true"></i>
+                    <span class="nav-label">Atleti</span>
+                </button>
+                <button class="nav-item" data-route="transport" type="button">
+                    <i class="ph ph-bus nav-icon" aria-hidden="true"></i>
+                    <span class="nav-label">Trasporti</span>
+                </button>
+                <button class="nav-item" data-route="admin" type="button">
+                    <i class="ph ph-shield-check nav-icon" aria-hidden="true"></i>
+                    <span class="nav-label">Amministrazione</span>
+                </button>
+                <!-- Admin-only -->
+                <button class="nav-item nav-admin-only hidden" data-route="users" type="button">
+                    <i class="ph ph-user-gear nav-icon" aria-hidden="true"></i>
+                    <span class="nav-label">Utenti</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-chip">
+                    <div class="user-avatar" id="sidebar-avatar" aria-hidden="true">U</div>
+                    <div style="overflow:hidden;">
+                        <div class="user-name" id="sidebar-username">Caricamento...</div>
+                        <div class="user-role" id="sidebar-role">—</div>
+                    </div>
+                </div>
+                <button class="btn btn-ghost w-full mt-1" id="logout-btn" type="button"
+                    style="justify-content:flex-start;font-size:11px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                        aria-hidden="true">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                        <polyline points="16 17 21 12 16 7" />
+                        <line x1="21" y1="12" x2="9" y2="12" />
+                    </svg>
+                    Esci
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main content area -->
+        <main class="main-content" id="main-content">
+            <div id="app" role="main" aria-live="polite">
+                <!-- Module views are injected here by JS router -->
+                <div class="page-body" style="display:flex;align-items:center;justify-content:center;min-height:60vh;">
+                    <div style="text-align:center;">
+                        <div class="skeleton skeleton-title" style="width:200px;margin:0 auto 16px;"></div>
+                        <div class="skeleton skeleton-text" style="width:300px;margin:0 auto;"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Mobile Bottom Nav -->
+        <nav class="bottom-nav" id="bottom-nav" aria-label="Navigazione mobile">
+            <div class="bottom-nav-inner">
+                <button class="bottom-nav-item active" data-route="dashboard" type="button" aria-label="Dashboard">
+                    <i class="ph ph-squares-four bottom-nav-icon" style="font-size: 24px" aria-hidden="true"></i>
+                    <span class="bottom-nav-label">Dashboard</span>
+                </button>
+                <button class="bottom-nav-item" data-route="athletes" type="button" aria-label="Atleti">
+                    <i class="ph ph-users bottom-nav-icon" style="font-size: 24px" aria-hidden="true"></i>
+                    <span class="bottom-nav-label">Atleti</span>
+                </button>
+                <button class="bottom-nav-item" data-route="transport" type="button" aria-label="Trasporti">
+                    <i class="ph ph-bus bottom-nav-icon" style="font-size: 24px" aria-hidden="true"></i>
+                    <span class="bottom-nav-label">Trasporti</span>
+                </button>
+                <button class="bottom-nav-item" data-route="admin" type="button" aria-label="Admin">
+                    <i class="ph ph-shield-check bottom-nav-icon" style="font-size: 24px" aria-hidden="true"></i>
+                    <span class="bottom-nav-label">Admin</span>
+                </button>
+            </div>
+        </nav>
+    </div>
+
+    <!-- ─── TOAST CONTAINER ──────────────────────────────────────────────────── -->
+    <div id="toast-container" aria-live="assertive" aria-atomic="true" role="status"></div>
+
+    <!-- ─── MODAL CONTAINER ──────────────────────────────────────────────────── -->
+    <div id="modal-container"></div>
+
+    <!-- ─── GOOGLE MAPS API (loaded lazily by transport module) ──────────────── -->
+    <!-- Will be injected by js/modules/transport.js when needed -->
+
+    <!-- ─── SCRIPTS ──────────────────────────────────────────────────────────── -->
+    <script src="js/core/utils.js?v=1.2.0"></script>
+    <script src="js/core/store.js?v=1.2.0"></script>
+    <script src="js/core/router.js?v=1.2.0"></script>
+    <script src="js/app.js?v=1.2.0"></script>
+
+</body>
+
+</html>

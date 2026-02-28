@@ -1,0 +1,86 @@
+<?php
+/**
+ * JSON Response Helpers
+ * Fusion ERP v1.0
+ */
+
+declare(strict_types=1);
+
+namespace FusionERP\Shared;
+
+class Response
+{
+    /**
+     * Send a successful JSON response and exit.
+     */
+    public static function success(mixed $data = null, int $httpCode = 200): never
+    {
+        http_response_code($httpCode);
+        header('Content-Type: application/json; charset=UTF-8');
+        echo json_encode(['success' => true, 'data' => $data], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    /**
+     * Send an error JSON response and exit.
+     * Never exposes stack traces or DB internals.
+     */
+    public static function error(string $message, int $httpCode = 400, ?string $internalDetail = null): never
+    {
+        if ($internalDetail !== null) {
+            error_log("[API ERROR {$httpCode}] {$internalDetail}");
+        }
+        http_response_code($httpCode);
+        header('Content-Type: application/json; charset=UTF-8');
+        echo json_encode(['success' => false, 'error' => $message], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    /**
+     * Validate required fields in a payload array.
+     * Calls Response::error automatically if any field is missing or empty.
+     *
+     * @param array<string> $required  Field names
+     */
+    public static function requireFields(array $payload, array $required): void
+    {
+        foreach ($required as $field) {
+            if (!isset($payload[$field]) || $payload[$field] === '') {
+                self::error("Campo obbligatorio mancante: {$field}", 400);
+            }
+        }
+    }
+
+    /**
+     * Parse JSON body from the incoming request.
+     */
+    public static function jsonBody(): array
+    {
+        $raw = file_get_contents('php://input');
+        if (empty($raw)) {
+            return [];
+        }
+        $decoded = json_decode($raw, true);
+        if (!is_array($decoded)) {
+            self::error('Body JSON non valido', 400);
+        }
+        return $decoded;
+    }
+
+    /**
+     * Set CORS headers (restrict to app domain).
+     */
+    public static function setCorsHeaders(): void
+    {
+        $allowedOrigin = getenv('APP_URL') ?: 'http://localhost';
+        header("Access-Control-Allow-Origin: {$allowedOrigin}");
+        header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+        header('Access-Control-Allow-Headers: Content-Type, X-Requested-With');
+        header('Access-Control-Allow-Credentials: true');
+
+        if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+            http_response_code(204);
+            exit;
+        }
+    }
+}
