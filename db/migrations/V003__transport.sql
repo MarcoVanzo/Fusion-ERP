@@ -1,7 +1,7 @@
 -- V003__transport.sql — Carpool Routes & Passengers
 -- Dependencies: V002__sports.sql
 
-USE fusion_erp;
+-- Administrator configures the DB from Aruba panel
 
 -- ─── CARPOOL ROUTES ───────────────────────────────────────────────────────────
 CREATE TABLE carpool_routes (
@@ -40,7 +40,7 @@ CREATE TABLE carpool_passengers (
     pickup_lat    DECIMAL(10,7) NULL,
     pickup_lng    DECIMAL(10,7) NULL,
     pickup_address VARCHAR(300) NULL,
-    status        ENUM('requested','confirmed','rejected','cancelled') NOT NULL DEFAULT 'requested',
+    status        VARCHAR(30)  NOT NULL DEFAULT 'requested',     -- requested, confirmed, rejected, cancelled
     confirmed_at  DATETIME     NULL,
     created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -82,7 +82,7 @@ CREATE TABLE email_logs (
     recipient   VARCHAR(255) NOT NULL,
     subject     VARCHAR(300) NOT NULL,
     type        VARCHAR(50)  NOT NULL,           -- convocation, carpool_confirm, cert_expiry
-    status      ENUM('sent','failed','pending') NOT NULL DEFAULT 'pending',
+    status      VARCHAR(30)  NOT NULL DEFAULT 'pending',         -- sent, failed, pending
     sent_at     DATETIME     NULL,
     error_msg   TEXT         NULL,
     created_at  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,

@@ -22,3 +22,7 @@ Thumbs.db
 
 # PHP sessions
 sessions/
+
+# Deploy Cache
+.deploy_cache.json
+

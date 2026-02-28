@@ -22,14 +22,22 @@ class AuthRepository
     public function getUserByEmail(string $email): ?array
     {
         $stmt = $this->db->prepare(
-            'SELECT id, email, pwd_hash, role, full_name, phone, is_active, deleted_at,
-                    password_changed_at, last_login_at
-             FROM users
-             WHERE email = :email AND deleted_at IS NULL
+            'SELECT u.id, u.email, u.pwd_hash, u.role, u.full_name, u.phone, u.is_active, u.deleted_at,
+                    u.password_changed_at, u.last_login_at,
+                    t.tenant_id, t.roles as tenant_roles
+             FROM users u
+             LEFT JOIN tenant_users t ON u.id = t.user_id
+             WHERE u.email = :email AND u.deleted_at IS NULL
              LIMIT 1'
         );
         $stmt->execute([':email' => $email]);
         $row = $stmt->fetch();
+
+        if ($row) {
+            // Decodifica JSON dei ruoli additivi se presente
+            $row['permissions'] = $row['tenant_roles'] ? json_decode($row['tenant_roles'], true) : [];
+        }
+
         return $row ?: null;
     }
 

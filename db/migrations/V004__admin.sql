@@ -1,13 +1,11 @@
 -- V004__admin.sql — Medical Certificates, Contracts, Documents
--- Dependencies: V002__sports.sql
-
-USE fusion_erp;
+-- Administrator configures the DB from Aruba panel
 
 -- ─── MEDICAL CERTIFICATES ─────────────────────────────────────────────────────
 CREATE TABLE medical_certificates (
     id                   VARCHAR(20)  NOT NULL,   -- e.g. MED_f1a9c7d2
     athlete_id           VARCHAR(20)  NOT NULL,
-    type                 ENUM('agonistico','non_agonistico') NOT NULL DEFAULT 'agonistico',
+    type                 VARCHAR(30)  NOT NULL DEFAULT 'agonistico', -- agonistico, non_agonistico
     issue_date           DATE         NULL,
     expiry_date          DATE         NOT NULL,
     ocr_extracted_date   DATE         NULL,        -- what Gemini extracted
@@ -77,7 +75,7 @@ CREATE TABLE acwr_alerts (
     id          BIGINT       NOT NULL AUTO_INCREMENT,
     athlete_id  VARCHAR(20)  NOT NULL,
     acwr_score  DECIMAL(6,4) NOT NULL,
-    risk_level  ENUM('low','moderate','high','extreme') NOT NULL,
+    risk_level  VARCHAR(30)  NOT NULL,            -- low, moderate, high, extreme
     log_date    DATE         NOT NULL,
     ack_by      VARCHAR(20)  NULL,
     ack_at      DATETIME     NULL,

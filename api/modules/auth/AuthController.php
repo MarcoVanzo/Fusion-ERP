@@ -28,17 +28,61 @@ class AuthController
     // ─── POST /api/?module=auth&action=login ──────────────────────────────────
     public function login(): void
     {
-        // === MOCK MODE BYPASS ===
-        $user = Auth::user(); // Gets mock admin user
-        Auth::setUser($user);
+        $body = Response::jsonBody();
+        $email = strtolower(trim($body['email'] ?? ''));
+        $pwd = $body['password'] ?? '';
+        $ip = $this->getClientIp();
 
-        Response::success([
-            'id' => $user['id'],
-            'email' => $user['email'],
-            'role' => $user['role'],
-            'fullName' => $user['fullName'],
-            'needsReset' => false,
-        ]);
+        if (empty($email) || empty($pwd)) {
+            Response::error('Email e password sono obbligatori.', 400);
+        }
+
+        // Check rate limiting
+        $attempts = $this->repo->countRecentAttempts($ip, $this->rateWindow);
+        if ($attempts >= $this->rateMax) {
+            Response::error("Troppi tentativi falliti. Riprova tra " . ($this->rateWindow / 60) . " minuti.", 429);
+        }
+
+        $dbUser = $this->repo->getUserByEmail($email);
+
+        if (!$dbUser) {
+            $this->repo->logAttempt($ip, $email, false);
+            Response::error('Credenziali non valide.', 401);
+        }
+
+        if (!password_verify($pwd, $dbUser['pwd_hash'])) {
+            $this->repo->logAttempt($ip, $email, false);
+            Response::error('Credenziali non valide.', 401);
+        }
+
+        if (!(bool)$dbUser['is_active']) {
+            $this->repo->logAttempt($ip, $email, false);
+            Response::error('Il tuo account è stato disattivato. Contatta l\'amministratore.', 403);
+        }
+
+        // Successo
+        $this->repo->logAttempt($ip, $email, true);
+        $this->repo->updateLastLogin($dbUser['id']);
+
+        $needsReset = Auth::isPasswordExpired($dbUser['password_changed_at'] ?? null);
+
+        $payload = [
+            'id' => $dbUser['id'],
+            'email' => $dbUser['email'],
+            'role' => $dbUser['role'],
+            'full_name' => $dbUser['full_name'],
+            'needsReset' => $needsReset,
+            'tenantId' => $dbUser['tenant_id'] ?? null,
+            'permissions' => $dbUser['permissions'] ?? []
+        ];
+
+        Auth::setUser($payload);
+        Audit::log('LOGIN', 'users', $dbUser['id'], null, ['ip' => $ip]);
+
+        // Translate payload to match frontend expectations (fullName vs full_name is handled by frontend or here)
+        $payload['fullName'] = $payload['full_name'];
+
+        Response::success($payload);
     }
 
     // ─── POST /api/?module=auth&action=logout ─────────────────────────────────
@@ -145,7 +189,9 @@ class AuthController
 
     private function getClientIp(): string
     {
-        $ip = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
-        return trim(explode(',', $ip)[0]);
+        // Linea guida: Non fidarsi dell'X-Forwarded-For per rate-limiting se non dietro proxy certificato.
+        // Proxy spoofing vanificherebbe il brute-force protection.
+        $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+        return trim($ip);
     }
 }

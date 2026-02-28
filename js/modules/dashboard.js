@@ -1,5 +1,5 @@
 /**
- * Dashboard Module — Overview stats, ACWR alerts, upcoming events
+ * Dashboard Module — Exact Match Nano Banana Layout
  * Fusion ERP v1.0
  */
 
@@ -10,157 +10,387 @@ const Dashboard = (() => {
     const app = document.getElementById('app');
     if (!app) return;
 
-    UI.loading(true);
-    app.innerHTML = UI.skeletonPage();
-
-    try {
-      const [alerts, events, certs] = await Promise.all([
-        Store.get('alerts', 'athletes').catch(() => []),
-        Store.get('listEvents', 'transport', { type: 'away_game' }).catch(() => []),
-        Store.get('expiringCertificates', 'admin').catch(() => []),
-      ]);
-
-      render(alerts, events, certs);
-    } catch (err) {
-      app.innerHTML = Utils.emptyState('Errore nel caricamento della dashboard', err.message);
-      UI.toast('Errore nel caricamento', 'error');
-    } finally {
-      UI.loading(false);
+    // Check if we are inside the new top-nav shell or old one, update layout
+    const mainContent = document.getElementById('main-content');
+    if (mainContent) {
+      mainContent.style.padding = '0';
+      mainContent.style.backgroundColor = '#0a0a0c';
     }
+
+    render();
   }
 
-  function render(alerts, events, certs) {
-    const user = App.getUser();
+  function render() {
     const app = document.getElementById('app');
-    const highRisk = alerts.filter(a => a.risk_level === 'high' || a.risk_level === 'extreme');
-    const expiring = certs.filter(c => {
-      const days = Utils.daysUntil(c.expiry_date);
-      return days !== null && days <= 30;
-    });
 
     app.innerHTML = `
-      <div class="page-header" style="padding-bottom:var(--sp-2); border-bottom:none;">
-        <div>
-          <h1 class="page-title">Dashboard</h1>
-          <p class="page-subtitle">Bentornato, ${Utils.escapeHtml(user.fullName || user.email)}</p>
-        </div>
-      </div>
-
-      <!-- FILTER BAR -->
-      <div style="padding: 0 var(--sp-4);">
-        <div class="filter-bar" id="dashboard-cat-filters" style="overflow-x:auto; flex-wrap:nowrap; padding-bottom:4px; border-bottom:1px solid var(--color-border); gap:var(--sp-3);">
-            <button class="filter-chip active" style="border:none; border-bottom:2px solid var(--color-pink); border-radius:0; background:transparent; padding:0 8px 8px 8px; color:var(--color-white)">U13</button>
-            <button class="filter-chip" style="border:none; background:transparent; padding:0 8px 8px 8px;">U14</button>
-            <button class="filter-chip" style="border:none; background:transparent; padding:0 8px 8px 8px;">U16</button>
-            <button class="filter-chip" style="border:none; background:transparent; padding:0 8px 8px 8px;">B1</button>
-        </div>
-      </div>
-
-      <!-- MATCH TICKER -->
-      <div style="margin: var(--sp-2) 0; padding: var(--sp-1) var(--sp-4); background: var(--color-black); border-top: 1px solid var(--color-border); border-bottom: 1px solid var(--color-border); display: flex; align-items: center; gap: var(--sp-2);">
-          <div style="width:8px; height:8px; background:var(--color-pink); border-radius:50%; animation: pulse 2s infinite;"></div>
-          <span style="font-family: var(--font-display); font-weight:700; color:var(--color-pink); text-transform:uppercase; letter-spacing:0.05em; font-size:16px;">LIVE</span>
-          <span style="font-family: var(--font-display); font-weight:700; color:var(--color-white); margin-left:var(--sp-2); font-size:18px;">FUSION U16 68 - 62 OLIMPIA</span>
-      </div>
-
-      <div class="page-body" style="display:flex;flex-direction:column;gap:var(--sp-4); padding-top:var(--sp-2);">
-
-        <!-- KPI row -->
-        <div class="grid-2">
-          ${statCard('Atleti Rischio', highRisk.length, 'var(--color-white)', 'ACWR critico')}
-          ${statCard('Certificati', expiring.length, 'var(--color-white)', 'Scadenza <30gg')}
-        </div>
-        <div class="grid-2" style="margin-top: calc(var(--sp-2) * -1);">
-            ${statCard('Eventi', events.length, 'var(--color-white)', 'Trasferte')}
-            ${statCard('Staff', '—', 'var(--color-text-muted)', 'Attivi')}
-        </div>
-
-        <!-- LATEST NEWS MAGAZINE STYLE (Mockup Data since no DB table exists) -->
-        <div>
-           <p class="section-label" style="border-bottom:none; margin-bottom:var(--sp-1);">ULTIME NEWS</p>
-           <div class="grid-2">
-               <div style="position:relative; aspect-ratio:4/3; background:var(--color-black); border:1px solid var(--color-border); overflow:hidden;">
-                   <img src="assets/media/player_hero_bg.png" class="duotone-img" style="opacity:0.6; position:absolute; inset:0;" />
-                   <div style="position:absolute; bottom:0; left:0; width:100%; padding:var(--sp-2); background:linear-gradient(to top, rgba(0,0,0,0.9), transparent);">
-                       <h3 style="color:var(--color-white); line-height:1;">VITTORIA IN TRASFERTA</h3>
-                       <p style="font-size:11px; color:var(--color-pink); font-family:var(--font-display); font-weight:600; margin-top:4px;">U16 • IERI</p>
-                   </div>
-               </div>
-               <div style="position:relative; aspect-ratio:4/3; background:var(--color-black); border:1px solid var(--color-border); overflow:hidden;">
-                   <img src="assets/media/splash_bg.png" class="duotone-img" style="opacity:0.6; position:absolute; inset:0;" />
-                   <div style="position:absolute; bottom:0; left:0; width:100%; padding:var(--sp-2); background:linear-gradient(to top, rgba(0,0,0,0.9), transparent);">
-                       <h3 style="color:var(--color-white); line-height:1;">NUOVO PALAZZETTO</h3>
-                       <p style="font-size:11px; color:var(--color-pink); font-family:var(--font-display); font-weight:600; margin-top:4px;">CLUB • 2 GG FA</p>
-                   </div>
-               </div>
-           </div>
-        </div>
-
-        <!-- ACWR alerts -->
-        ${highRisk.length > 0 ? `
-        <div>
-          <p class="section-label">⚠ Allerta Carico</p>
-          <div style="display:flex;flex-direction:column;gap:var(--sp-1);">
-            ${highRisk.map(a => `
-              <div class="card card--highlighted" style="display:flex;align-items:center;justify-content:space-between;padding:var(--sp-2); border-left:4px solid var(--color-pink); box-shadow: inset 4px 0 10px -4px rgba(230,0,126,0.3);">
-                <div>
-                  <span style="font-family:var(--font-display);font-weight:700;font-size:1.1rem;text-transform:uppercase; text-shadow: 0 0 8px rgba(255,255,255,0.4);">${Utils.escapeHtml(a.athlete_name)}</span>
-                </div>
-                <div style="text-align:right;">
-                  <div style="font-family:var(--font-display);font-size:1.6rem;font-weight:700;color:var(--color-pink); text-shadow: 0 0 15px rgba(230,0,126,0.5);">${Utils.formatNum(a.acwr_score, 2)}</div>
-                </div>
-              </div>`).join('')}
-          </div>
-        </div>` : ''}
-
-        <!-- Expiring certs -->
-        ${expiring.length > 0 ? `
-        <div>
-          <p class="section-label">Certificati Scadenza</p>
-          <div style="display:flex; flex-direction:column; gap:8px;">
-            ${expiring.map(c => {
-      const days = Utils.daysUntil(c.expiry_date);
-      return `
-            <div class="card" style="display:flex; justify-content:space-between; padding:var(--sp-2);">
-                <div>
-                    <div style="font-family:var(--font-display); font-weight:600; font-size:14px;">${Utils.escapeHtml(c.athlete_name)}</div>
-                    <div style="font-size:11px; color:var(--color-text-muted);">${Utils.escapeHtml(c.category)}</div>
-                </div>
-                <div style="text-align:right;">
-                    <div style="font-family:var(--font-display); font-weight:700; color:var(--color-pink);">${days} GG</div>
-                </div>
-            </div>`;
-    }).join('')}
-          </div>
-        </div>` : ''}
-
-      </div>
       <style>
-        @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1); } }
-      </style>`;
+        .dash-container {
+          padding: 32px;
+          color: white;
+          background: #0a0a0c;
+          min-height: 100%;
+          font-family: var(--font-body), sans-serif;
+        }
+        
+        /* KPI Row */
+        .dash-kpi-row {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 32px;
+          border-bottom: 1px solid #1c1c1e;
+          padding-bottom: 24px;
+        }
+        
+        .kpi-item {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          padding-right: 24px;
+          border-right: 1px solid #1c1c1e;
+        }
+        .kpi-item:last-child {
+          border-right: none;
+          padding-right: 0;
+        }
+        
+        .kpi-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          font-size: 11px;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          font-weight: 700;
+          color: #8e8e93;
+        }
+        
+        .kpi-val-row {
+          display: flex;
+          align-items: baseline;
+          gap: 12px;
+        }
+        
+        .kpi-val {
+          font-family: var(--font-display);
+          font-weight: 800;
+          font-size: 42px;
+          line-height: 1;
+          letter-spacing: -0.03em;
+        }
+        
+        .kpi-trend {
+          font-size: 13px;
+          font-weight: 700;
+          color: #00E676; /* Green */
+        }
+        .kpi-trend.pink {
+          color: #E6007E;
+        }
 
-    const chips = app.querySelectorAll('#dashboard-cat-filters .filter-chip');
-    chips.forEach(chip => {
-      chip.addEventListener('click', () => {
-        chips.forEach(c => {
-          c.classList.remove('active');
-          c.style.borderBottom = 'none';
-          c.style.color = 'inherit';
-        });
-        chip.classList.add('active');
-        chip.style.borderBottom = '2px solid var(--color-pink)';
-        chip.style.color = 'var(--color-white)';
-        // Here we could trigger a real data fetch filtering by category
-      });
-    });
-  }
+        /* Main Grid */
+        .dash-grid {
+          display: grid;
+          grid-template-columns: 1.6fr 1.2fr 1.2fr;
+          grid-auto-rows: min-content;
+          gap: 20px;
+        }
+        
+        .widget {
+          background: #121214;
+          border: 1px solid #1c1c1e;
+          border-radius: 8px;
+          padding: 20px;
+          display: flex;
+          flex-direction: column;
+        }
+        
+        .widget-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 20px;
+        }
+        
+        .widget-title {
+          font-family: var(--font-display);
+          font-size: 15px;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 0.02em;
+        }
+        
+        .widget-more {
+          color: #8e8e93;
+          letter-spacing: 2px;
+          cursor: pointer;
+          font-weight: 800;
+        }
 
-  function statCard(label, value, valueColor, sub) {
-    return `
-      <div class="stat-card">
-        <span style="font-family:var(--font-display); font-weight:700; font-size:2.8rem; line-height:1; color:${valueColor}; letter-spacing:-0.02em; text-shadow: ${valueColor === 'var(--color-pink)' ? 'var(--glow-pink)' : '0 0 10px rgba(255,255,255,0.2)'};">${Utils.escapeHtml(String(value))}</span>
-        <span style="font-size:12px; color:var(--color-silver); font-weight:500; text-transform:uppercase; letter-spacing:0.05em;">${Utils.escapeHtml(label)}</span>
-      </div>`;
+        /* Specific Widgets Grid placement */
+        .w-team-perf { grid-column: 1 / 2; grid-row: 1 / 2; }
+        .w-fixtures { grid-column: 2 / 3; grid-row: 1 / 2; }
+        .w-finance { grid-column: 3 / 4; grid-row: 1 / 2; }
+        .w-player-eff { grid-column: 1 / 2; grid-row: 2 / 3; }
+        .w-player-status { grid-column: 2 / 4; grid-row: 2 / 3; }
+        
+        /* Utility styles for inner content */
+        .badge {
+            background: #E6007E;
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 700;
+        }
+        .text-pink { color: #E6007E; }
+        .text-cyan { color: #00A3FF; }
+        .text-muted { color: #8e8e93; }
+        
+        /* Bar Chart */
+        .bar-row { display: grid; grid-template-columns: 100px 1fr 40px; align-items: center; gap: 12px; margin-bottom: 12px; font-size: 13px; font-weight: 600; }
+        .bar-track { background: #1c1c1e; height: 8px; border-radius: 4px; overflow: hidden; }
+        .bar-fill { height: 100%; border-radius: 4px; }
+        
+        /* Table */
+        .status-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .status-table th { text-align: left; color: #8e8e93; font-weight: 600; padding-bottom: 12px; border-bottom: 1px solid #1c1c1e; }
+        .status-table td { padding: 14px 0; border-bottom: 1px solid #1c1c1e; font-weight: 500; }
+        .status-table tr:last-child td { border-bottom: none; }
+        
+        /* Fixture Cards */
+        .fixture-card { background: #0a0a0c; border: 1px solid #1c1c1e; padding: 12px; border-radius: 6px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .fixture-card:last-child { margin-bottom: 0; }
+        .team-logo { width: 32px; height: 32px; border-radius: 50%; background: #1c1c1e; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 800; color: white;}
+      </style>
+
+      <div class="dash-container">
+        
+        <!-- KPI ROW -->
+        <div class="dash-kpi-row">
+          <div class="kpi-item">
+            <div class="kpi-header">ACTIVE PLAYERS <i class="ph-fill ph-users"></i></div>
+            <div class="kpi-val-row">
+              <div class="kpi-val">148</div>
+              <div class="kpi-trend">+5.1%</div>
+            </div>
+          </div>
+          <div class="kpi-item">
+            <div class="kpi-header">TEAMS <i class="ph-fill ph-users-three"></i></div>
+            <div class="kpi-val-row">
+              <div class="kpi-val">12</div>
+              <div class="kpi-trend" style="color: #8e8e93;">100% capacity</div>
+            </div>
+          </div>
+          <div class="kpi-item">
+            <div class="kpi-header">SCOUTING REPORTS <i class="ph-fill ph-file-text"></i></div>
+            <div class="kpi-val-row">
+              <div class="kpi-val">67</div>
+              <div class="kpi-trend">+12%</div>
+            </div>
+          </div>
+          <div class="kpi-item">
+            <div class="kpi-header">REVENUE (MTD) <i class="ph-fill ph-chart-line-up"></i></div>
+            <div class="kpi-val-row">
+              <div class="kpi-val">$85.3K</div>
+              <div class="kpi-trend pink">+9.2%</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MAIN GRID -->
+        <div class="dash-grid">
+          
+          <!-- WIDGET 1: TEAM PERFORMANCE -->
+          <div class="widget w-team-perf">
+            <div class="widget-header">
+              <div class="widget-title">TEAM PERFORMANCE TRACKER</div>
+              <div class="widget-more">...</div>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:600; margin-bottom:16px;">
+              <div style="display:flex; gap:16px;">
+                <div style="display:flex; align-items:center; gap:6px;"><div style="width:8px; height:8px; background:#00A3FF; border-radius:2px;"></div> Blue</div>
+                <div style="display:flex; align-items:center; gap:6px;"><div style="width:8px; height:8px; background:#E6007E; border-radius:2px;"></div> Win %</div>
+              </div>
+              <div class="text-muted">2023-2024 Season</div>
+            </div>
+            
+            <div style="position:relative; width:100%; height:200px; border-bottom:1px solid #1c1c1e; border-left:1px solid #1c1c1e;">
+              <!-- Grid lines -->
+              <div style="position:absolute; top:33%; width:100%; height:1px; background:#1c1c1e;"></div>
+              <div style="position:absolute; top:66%; width:100%; height:1px; background:#1c1c1e;"></div>
+              <!-- Text labels -->
+              <div style="position:absolute; top:0; left:-25px; font-size:10px; color:#8e8e93;">100</div>
+              <div style="position:absolute; top:33%; left:-25px; font-size:10px; color:#8e8e93;">75</div>
+              <div style="position:absolute; top:66%; left:-25px; font-size:10px; color:#8e8e93;">25</div>
+              <div style="position:absolute; bottom:-18px; left:-5px; font-size:10px; color:#8e8e93;">0</div>
+              
+              <!-- Inline SVG Chart -->
+              <svg width="100%" height="100%" viewBox="0 0 400 200" preserveAspectRatio="none" style="overflow:visible;">
+                <!-- Pink glowing line -->
+                <path d="M 0,180 Q 40,160 80,140 T 160,100 T 240,60 T 320,120 T 400,20" fill="none" stroke="#E6007E" stroke-width="3" filter="drop-shadow(0 0 8px rgba(230,0,126,0.5))" />
+                <circle cx="240" cy="60" r="5" fill="#E6007E" />
+                
+                <!-- Blue glowing line -->
+                <path d="M 0,150 Q 50,140 100,80 T 200,120 T 300,160 T 400,90" fill="none" stroke="#00A3FF" stroke-width="3" filter="drop-shadow(0 0 8px rgba(0,163,255,0.5))" />
+                <circle cx="200" cy="120" r="5" fill="#00A3FF" />
+              </svg>
+            </div>
+            <!-- X Axis -->
+            <div style="display:flex; justify-content:space-between; margin-top:8px; font-size:11px; font-weight:600; color:#8e8e93; margin-left:10px;">
+              <span>Jan</span><span>Feb</span><span>Mar</span><span>Dec</span><span>Thu</span><span>Fri</span><span>Sec</span>
+            </div>
+          </div>
+
+          <!-- WIDGET 2: UPCOMING FIXTURES -->
+          <div class="widget w-fixtures">
+            <div class="widget-header">
+              <div class="widget-title">UPCOMING FIXTURES</div>
+              <div class="widget-more">...</div>
+            </div>
+            
+            <div style="font-size:12px; font-weight:700; color:#8e8e93; margin-bottom:8px;">OCT 28</div>
+            <div class="fixture-card">
+              <div class="team-logo" style="color:#F5B041;">L</div>
+              <div style="flex:1;">
+                <div style="font-size:13px; font-weight:700;">LA LAKERS</div>
+                <div style="font-size:13px; font-weight:800; color:#E6007E;">@ NY KNICKS</div>
+                <div style="font-size:11px; color:#8e8e93; margin-top:2px;">7:30 PM • MSG</div>
+              </div>
+              <div class="team-logo" style="color:#EB984E;">N</div>
+            </div>
+
+            <div style="font-size:12px; font-weight:700; color:#8e8e93; margin:16px 0 8px;">NOV 01</div>
+            <div class="fixture-card">
+              <div class="team-logo" style="color:#27AE60;">B</div>
+              <div style="flex:1;">
+                <div style="font-size:13px; font-weight:700;">BOS CELTICS</div>
+                <div style="font-size:13px; font-weight:800; color:#8e8e93;">vs MIA HEAT</div>
+                <div style="font-size:11px; color:#8e8e93; margin-top:2px;">8:00 PM • TDG</div>
+              </div>
+              <div class="team-logo" style="color:#C0392B;">M</div>
+            </div>
+            
+            <div style="text-align:center; margin-top:16px;">
+              <span style="color:#E6007E; font-size:13px; font-weight:700; cursor:pointer;">((•)) Live Update</span>
+            </div>
+          </div>
+
+          <!-- WIDGET 3: FINANCIAL OVERVIEW -->
+          <div class="widget w-finance">
+            <div class="widget-header">
+              <div class="widget-title">FINANCIAL OVERVIEW (Q4)</div>
+            </div>
+            <div style="text-align:center; font-size:12px; color:#8e8e93; margin-bottom:16px;">Revenue Split</div>
+            
+            <div style="position:relative; width:150px; height:150px; margin:0 auto 24px;">
+              <svg width="100%" height="100%" viewBox="0 0 36 36">
+                <!-- Background circle -->
+                <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#1c1c1e" stroke-width="4"></path>
+                <!-- Pink (42%) -->
+                <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#E6007E" stroke-width="4" stroke-dasharray="42, 100" filter="drop-shadow(0 0 4px rgba(230,0,126,0.5))"></path>
+                <!-- Gray (28%) -->
+                <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#2c2c2e" stroke-width="4" stroke-dasharray="28, 100" stroke-dashoffset="-42"></path>
+                <!-- Green/Cyan (18%) -->
+                <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#00A3FF" stroke-width="4" stroke-dasharray="18, 100" stroke-dashoffset="-70" filter="drop-shadow(0 0 4px rgba(0,163,255,0.5))"></path>
+              </svg>
+              <div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                <div style="font-size:10px; color:#8e8e93; font-weight:700;">18%</div>
+                <div style="font-family:var(--font-display); font-size:24px; font-weight:800; letter-spacing:-0.05em; color:white;">$312.5K</div>
+                <div style="font-size:10px; color:#8e8e93; font-weight:700;">Total</div>
+              </div>
+            </div>
+            
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; font-size:11px; font-weight:600; color:#8e8e93;">
+              <div><span style="color:#E6007E;">■</span> Tickets (42%)</div>
+              <div><span style="color:#1c1c1e;">■</span> Other: 12%</div>
+              <div><span style="color:#00A3FF;">■</span> Merch: 28%</div>
+              <div><span style="color:#1c1c1e;">■</span> Other: 12%</div>
+              <div><span style="color:#666666;">■</span> Sponsorships: 18%</div>
+            </div>
+          </div>
+
+          <!-- WIDGET 4: PLAYER EFFICIENCY RATING -->
+          <div class="widget w-player-eff">
+            <div class="widget-header">
+              <div class="widget-title">PLAYER EFFICIENCY RATING (PER)</div>
+              <div class="widget-more">...</div>
+            </div>
+            <div class="text-muted" style="font-size:12px; font-weight:600; margin-bottom:16px;">Top 5 Players</div>
+            
+            <div style="display:flex; flex-direction:column; gap:0;">
+              <div class="bar-row">
+                <div>K. Leonard: 28.1</div>
+                <div class="bar-track"><div class="bar-fill" style="width:90%; background:#E6007E; box-shadow:0 0 8px rgba(230,0,126,0.5);"></div></div>
+              </div>
+              <div class="bar-row">
+                <div>A. Davis: 27.5</div>
+                <div class="bar-track"><div class="bar-fill" style="width:85%; background:#a30059;"></div></div>
+              </div>
+              <div class="bar-row">
+                <div>P. George: 26.2</div>
+                <div class="bar-track"><div class="bar-fill" style="width:80%; background:#E6007E;"></div></div>
+              </div>
+              <div class="bar-row">
+                <div>S. Gilgeous: 25.8</div>
+                <div class="bar-track"><div class="bar-fill" style="width:78%; background:#a30059;"></div></div>
+              </div>
+              <div class="bar-row">
+                <div>D. Mitchell: 24.9</div>
+                <div class="bar-track"><div class="bar-fill" style="width:75%; background:#E6007E;"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- WIDGET 5: PLAYER STATUS -->
+          <div class="widget w-player-status">
+             <div class="widget-header">
+              <div class="widget-title">PLAYER STATUS</div>
+              <div class="widget-more">...</div>
+            </div>
+            
+            <table class="status-table">
+              <thead>
+                <tr>
+                  <th>Player</th>
+                  <th>Pos</th>
+                  <th>Status (Active/Scouting)</th>
+                  <th style="text-align:right;">Performance</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="color:white;">K. Leonard</td>
+                  <td>SF</td>
+                  <td>Active (Healthy)</td>
+                  <td style="text-align:right; color:white;">28.1 PER</td>
+                </tr>
+                <tr>
+                  <td style="color:white;">A. Davis</td>
+                  <td>PF/C</td>
+                  <td>Active (Healthy)</td>
+                  <td style="text-align:right; color:white;">27.5 PER</td>
+                </tr>
+                <tr>
+                  <td style="color:white;">P. George</td>
+                  <td>SF/PF</td>
+                  <td>Scouting (Clear)</td>
+                  <td style="text-align:right; color:white;">26.2 PER</td>
+                </tr>
+                <tr>
+                  <td style="color:white;">S. Gilgeous</td>
+                  <td>PG/SG</td>
+                  <td>Active (Healthy)</td>
+                  <td style="text-align:right; color:white;">25.8 PER</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+        </div> <!-- END MAIN GRID -->
+      </div>
+    `;
   }
 
   return { init };

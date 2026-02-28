@@ -6,45 +6,92 @@
 'use strict';
 
 const Store = (() => {
-    // ─── API Fetch (MOCKED FOR DEMO) ───────────────────────────────────────
-    async function api(action, module, payload = {}, method = 'POST') {
-        return new Promise(resolve => {
-            setTimeout(() => {
-                if (action === 'login') {
-                    resolve({
-                        id: 'USR_demo',
-                        email: 'admin@fusionerp.it',
-                        role: 'admin',
-                        fullName: 'Amministratore (Demo Bypass)',
-                        needsReset: false
-                    });
-                } else if (action === 'logout') {
-                    resolve(true);
-                } else {
-                    resolve({});
-                }
-            }, 300);
-        });
+    // Determine the base API URL dynamically based on where the app is running
+    const getApiUrl = (module, action) => {
+        let base = '';
+        const scripts = document.getElementsByTagName('script');
+        for (let s of scripts) {
+            if (s.src && s.src.includes('js/core/store.js')) {
+                base = s.src.split('js/core/store.js')[0];
+                break;
+            }
+        }
+        return `${base}api/router.php?module=${encodeURIComponent(module)}&action=${encodeURIComponent(action)}`;
+    };
+
+    /**
+     * Helper per gestire la risposta fetch.
+     * Gestisce i 401 (Unauthorized) in modo globale ricaricando la pagina.
+     */
+    async function _handleResponse(response) {
+        if (response.status === 401) {
+            // Se riceviamo 401, la sessione è scaduta o non valida, puliamo e forziamo il ricaricamento
+            window.location.reload();
+            throw new Error('Non autorizzato');
+        }
+
+        let data;
+        try {
+            data = await response.json();
+        } catch (e) {
+            throw new Error(`Errore di rete o server irraggiungibile (HTTP ${response.status})`);
+        }
+
+        if (!response.ok || !data.success) {
+            throw new Error(data.error || 'Errore sconosciuto durante la richiesta API');
+        }
+
+        return data.data;
     }
 
-    // Convenience GET wrapper (MOCKED FOR DEMO)
+    // ─── API Fetch ─────────────────────────────────────────────────────────────
+    async function api(action, module, payload = {}, method = 'POST') {
+        const url = getApiUrl(module, action);
+
+        const options = {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'same-origin', // Include session cookies!
+            body: Object.keys(payload).length > 0 ? JSON.stringify(payload) : undefined
+        };
+
+        try {
+            const response = await fetch(url, options);
+            return await _handleResponse(response);
+        } catch (error) {
+            console.error(`Store.api Error [${module}/${action}]:`, error);
+            throw error;
+        }
+    }
+
+    // Convenience GET wrapper
     async function get(action, module, params = {}) {
-        return new Promise(resolve => {
-            setTimeout(() => {
-                if (action === 'me') {
-                    // Fail once to show login screen, or resolve to auto-login
-                    // Let's resolve to let them auto-login if they refresh
-                    resolve({
-                        id: 'USR_demo',
-                        email: 'admin@fusionerp.it',
-                        role: 'admin',
-                        fullName: 'Amministratore (Demo Bypass)'
-                    });
-                } else {
-                    resolve([]); // Default to empty array for data lists
-                }
-            }, 300);
-        });
+        let url = getApiUrl(module, action);
+
+        // Append optional params to URL string
+        if (Object.keys(params).length > 0) {
+            for (const [key, value] of Object.entries(params)) {
+                url += `&${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
+            }
+        }
+
+        const options = {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json'
+            },
+            credentials: 'same-origin' // Include session cookies!
+        };
+
+        try {
+            const response = await fetch(url, options);
+            return await _handleResponse(response);
+        } catch (error) {
+            console.error(`Store.get Error [${module}/${action}]:`, error);
+            throw error;
+        }
     }
 
     return { api, get };
@@ -97,6 +144,12 @@ const UI = (() => {
     }
 
     // ─── Modal ────────────────────────────────────────────────────────────────
+    /**
+     * @param {Object} props
+     * @param {string} props.title - Il titolo della modale. Verrà eseguito in escape sicuro.
+     * @param {string|Element} props.body - [ATTENZIONE XSS] Il corpo in HTML o Elemento DOM. Se si passa stringa HTML, DEVE ESSERE PREVENTIVAMENTE SANIFICATO (es. Utils.escapeHtml) SE CONTIENE DATI UTENTE.
+     * @param {string|Element} [props.footer=''] - [ATTENZIONE XSS] Il footer in HTML o Elemento DOM. Se stringa, DEVE ESSERE PREVENTIVAMENTE SANIFICATO.
+     */
     function modal({ title, body, footer = '', onClose }) {
         const container = document.getElementById('modal-container');
         if (!container) return null;
@@ -110,36 +163,78 @@ const UI = (() => {
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
-          <div class="modal-body">${body}</div>
-          ${footer ? `<div class="modal-footer">${footer}</div>` : ''}
+          <div class="modal-body"></div>
         </div>
       </div>`;
+
+        const modalBody = container.querySelector('.modal-body');
+        if (typeof body === 'string') {
+            const tempP = document.createElement('p');
+            tempP.textContent = body;
+            modalBody.appendChild(tempP);
+        } else if (body instanceof Node) {
+            modalBody.appendChild(body);
+        }
+
+        if (footer) {
+            const footerContainer = document.createElement('div');
+            footerContainer.className = 'modal-footer';
+            if (typeof footer === 'string') {
+                const tempP = document.createElement('p');
+                tempP.textContent = footer;
+                footerContainer.appendChild(tempP);
+            } else if (footer instanceof Node) {
+                footerContainer.appendChild(footer);
+            }
+            container.querySelector('.modal').appendChild(footerContainer);
+        }
 
         const overlay = document.getElementById('modal-overlay');
         const closeBtn = document.getElementById('modal-close-btn');
 
+        const handler = (e) => {
+            if (e.key === 'Escape') close();
+        };
+
         const close = () => {
+            document.removeEventListener('keydown', handler);
             container.innerHTML = '';
             if (onClose) onClose();
         };
 
         closeBtn.addEventListener('click', close);
         overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
-        document.addEventListener('keydown', function handler(e) {
-            if (e.key === 'Escape') { close(); document.removeEventListener('keydown', handler); }
-        });
+        document.addEventListener('keydown', handler);
 
         return { close };
     }
 
     // ─── Confirm Dialog ───────────────────────────────────────────────────────
     function confirm(message, onConfirm) {
+        const bodyEl = document.createElement('p');
+        bodyEl.textContent = message;
+
+        const footerFrag = document.createDocumentFragment();
+
+        const btnCancel = document.createElement('button');
+        btnCancel.className = 'btn btn-ghost btn-sm';
+        btnCancel.id = 'confirm-cancel';
+        btnCancel.type = 'button';
+        btnCancel.textContent = 'Annulla';
+
+        const btnOk = document.createElement('button');
+        btnOk.className = 'btn btn-danger btn-sm';
+        btnOk.id = 'confirm-ok';
+        btnOk.type = 'button';
+        btnOk.textContent = 'Conferma';
+
+        footerFrag.appendChild(btnCancel);
+        footerFrag.appendChild(btnOk);
+
         const m = modal({
             title: 'Conferma',
-            body: `<p>${Utils.escapeHtml(message)}</p>`,
-            footer: `
-        <button class="btn btn-ghost btn-sm" id="confirm-cancel" type="button">Annulla</button>
-        <button class="btn btn-danger btn-sm" id="confirm-ok" type="button">Conferma</button>`,
+            body: bodyEl,
+            footer: footerFrag,
         });
         document.getElementById('confirm-cancel')?.addEventListener('click', () => m.close());
         document.getElementById('confirm-ok')?.addEventListener('click', () => { m.close(); onConfirm(); });

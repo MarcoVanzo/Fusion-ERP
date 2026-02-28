@@ -1,0 +1,262 @@
+[
+    {
+        "id": "athletes",
+        "title": "Atleta",
+        "path": "athletes",
+        "icon": "user",
+        "isMobileVisible": true,
+        "children": [
+            {
+                "title": "Anagrafica",
+                "path": "athlete-profile",
+                "icon": "identification-card",
+                "isMobileVisible": false
+            },
+            {
+                "title": "Pagamenti",
+                "path": "athlete-payments",
+                "icon": "credit-card",
+                "isMobileVisible": false
+            },
+            {
+                "title": "Metrics",
+                "path": "athlete-metrics",
+                "icon": "trend-up",
+                "isMobileVisible": false
+            },
+            {
+                "title": "Salute",
+                "path": "athlete-health",
+                "icon": "heartbeat",
+                "isMobileVisible": false
+            },
+            {
+                "title": "Documenti",
+                "path": "athlete-documents",
+                "icon": "file-text",
+                "isMobileVisible": false
+            }
+        ]
+    },
+    {
+        "id": "teams",
+        "title": "Squadre",
+        "path": "teams",
+        "icon": "users",
+        "isMobileVisible": true,
+        "isDynamicRoute": true,
+        "notes": "Route template: teams/:teamId",
+        "children": [
+            {
+                "title": "Roster",
+                "path": "team-roster",
+                "icon": "list",
+                "isMobileVisible": false
+            },
+            {
+                "title": "Calendario",
+                "path": "team-calendar",
+                "icon": "calendar-blank",
+                "isMobileVisible": false
+            },
+            {
+                "title": "Distinte Gara",
+                "path": "team-match-sheets",
+                "icon": "clipboard-text",
+                "isMobileVisible": false
+            },
+            {
+                "title": "Lavagna",
+                "path": "team-tactics",
+                "icon": "presentation-chart",
+                "isMobileVisible": false
+            },
+            {
+                "title": "Chat",
+                "path": "team-chat",
+                "icon": "chat-circle",
+                "isMobileVisible": false
+            }
+        ]
+    },
+    {
+        "id": "transport",
+        "title": "Trasporti",
+        "path": "trasporti/index.html",
+        "icon": "bus",
+        "isMobileVisible": true,
+        "children": [
+            {
+                "title": "Carpooling",
+                "path": "transport-carpooling",
+                "icon": "car-profile",
+                "isMobileVisible": true
+            },
+            {
+                "title": "Trasferte",
+                "path": "transport-trips",
+                "icon": "map-pin",
+                "isMobileVisible": false
+            },
+            {
+                "title": "Gestione Mezzi",
+                "path": "transport-fleet",
+                "icon": "bus",
+                "isMobileVisible": false
+            },
+            {
+                "title": "Rimborsi",
+                "path": "transport-refunds",
+                "icon": "receipt",
+                "isMobileVisible": false
+            }
+        ]
+    },
+    {
+        "id": "scouting",
+        "title": "Scouting",
+        "path": "scouting",
+        "icon": "binoculars",
+        "isMobileVisible": false,
+        "children": [
+            {
+                "title": "Database",
+                "path": "scouting-database",
+                "icon": "database",
+                "isMobileVisible": false
+            },
+            {
+                "title": "Report Partite",
+                "path": "scouting-reports",
+                "icon": "chart-bar",
+                "isMobileVisible": false
+            },
+            {
+                "title": "Calendario",
+                "path": "scouting-calendar",
+                "icon": "calendar",
+                "isMobileVisible": false
+            },
+            {
+                "title": "Video",
+                "path": "scouting-video",
+                "icon": "video-camera",
+                "isMobileVisible": false
+            }
+        ]
+    },
+    {
+        "id": "finance",
+        "title": "Finanza",
+        "path": "finance",
+        "icon": "currency-circle-dollar",
+        "isMobileVisible": false,
+        "children": [
+            {
+                "title": "Cash Flow",
+                "path": "finance-cash-flow",
+                "icon": "chart-line-up",
+                "isMobileVisible": false
+            },
+            {
+                "title": "Staff & Compensi",
+                "path": "finance-staff",
+                "icon": "users-three",
+                "isMobileVisible": false
+            },
+            {
+                "title": "Sponsor",
+                "path": "finance-sponsorships",
+                "icon": "buildings",
+                "isMobileVisible": false
+            },
+            {
+                "title": "Export",
+                "path": "finance-export",
+                "icon": "download-simple",
+                "isMobileVisible": false
+            }
+        ]
+    },
+    {
+        "id": "social",
+        "title": "Social & Media",
+        "path": "social",
+        "icon": "share-network",
+        "isMobileVisible": false,
+        "children": [
+            {
+                "title": "Media Gallery",
+                "path": "social-gallery",
+                "icon": "image",
+                "isMobileVisible": false
+            },
+            {
+                "title": "Grafiche",
+                "path": "social-graphics",
+                "icon": "paint-brush",
+                "isMobileVisible": false
+            },
+            {
+                "title": "Planner",
+                "path": "social-planner",
+                "icon": "calendar-check",
+                "isMobileVisible": false
+            }
+        ]
+    },
+    {
+        "id": "ecommerce",
+        "title": "Store",
+        "path": "ecommerce",
+        "icon": "shopping-cart",
+        "isMobileVisible": true,
+        "children": [
+            {
+                "title": "Acquista",
+                "path": "ecommerce-store",
+                "icon": "storefront",
+                "isMobileVisible": false
+            },
+            {
+                "title": "Magazzino",
+                "path": "ecommerce-inventory",
+                "icon": "package",
+                "isMobileVisible": false
+            },
+            {
+                "title": "Fornitori",
+                "path": "ecommerce-suppliers",
+                "icon": "truck",
+                "isMobileVisible": false
+            }
+        ]
+    },
+    {
+        "id": "outseason",
+        "title": "OutSeason",
+        "path": "outseason",
+        "icon": "sun",
+        "isMobileVisible": false,
+        "children": [
+            {
+                "title": "Summer Camp",
+                "path": "outseason-camps",
+                "icon": "tent",
+                "isMobileVisible": false
+            },
+            {
+                "title": "Tornei",
+                "path": "outseason-tournaments",
+                "icon": "trophy",
+                "isMobileVisible": false
+            },
+            {
+                "title": "Mantenimento",
+                "path": "outseason-workouts",
+                "icon": "barbell",
+                "isMobileVisible": false
+            }
+        ]
+    }
+]

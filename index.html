@@ -13,121 +13,81 @@
     <title>Fusion ERP</title>
     <!-- Phosphor Icons -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <link rel="stylesheet" href="css/style.css?v=1.2.0">
+    <link rel="stylesheet" href="css/style.css?v=1.3.3">
 </head>
 
 <body>
 
-    <!-- ─── SPLASH SCREEN ─────────────────────────────────────────────────────── -->
-    <div id="splash-screen" class="splash-screen">
-        <img src="assets/media/splash_bg.png" alt="Splash Background" class="splash-bg duotone-img">
-        <div class="splash-content">
-            <h1 class="splash-title">FUSION</h1>
-            <div class="splash-line"></div>
-        </div>
-    </div>
+    <!-- Splash Screen removed as requested -->
 
-    <!-- ─── ONBOARDING SCREENS ────────────────────────────────────────────────── -->
-    <div id="onboarding-screen" class="onboarding-screen hidden">
-        <div class="onboarding-slides" id="onboarding-slides">
-            <!-- Slide 1 -->
-            <div class="onboarding-slide active">
-                <img src="assets/media/onboarding_bg.png" alt="Onboarding 1" class="onboarding-bg duotone-img">
-                <div class="onboarding-content">
-                    <h2 class="onboarding-title">PRESTAZIONI<br>AL TOP</h2>
-                    <p class="onboarding-text">Monitora i tuoi dati in tempo reale e migliora ogni giorno.</p>
-                </div>
-            </div>
-            <!-- Slide 2 -->
-            <div class="onboarding-slide">
-                <img src="assets/media/onboarding_bg.png" alt="Onboarding 2" class="onboarding-bg duotone-img">
-                <div class="onboarding-content">
-                    <h2 class="onboarding-title">GESTIONE<br>TRASFERTE</h2>
-                    <p class="onboarding-text">Tutto organizzato, viaggio, hotel e convocazioni.</p>
-                </div>
-            </div>
-            <!-- Slide 3 -->
-            <div class="onboarding-slide">
-                <img src="assets/media/onboarding_bg.png" alt="Onboarding 3" class="onboarding-bg duotone-img">
-                <div class="onboarding-content">
-                    <h2 class="onboarding-title">DOMINA<br>IL GIOCO</h2>
-                    <p class="onboarding-text">Unisciti al team e fai la differenza.</p>
-                </div>
-            </div>
-        </div>
 
-        <div class="onboarding-controls">
-            <div class="onboarding-dots" id="onboarding-dots">
-                <div class="dot active"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-            </div>
-            <div class="onboarding-actions">
-                <button class="btn btn-ghost" id="onboarding-skip">SALTA</button>
-                <button class="btn btn-primary" id="onboarding-next">AVANTI <i class="ph ph-arrow-right"></i></button>
-            </div>
-        </div>
-    </div>
     <div id="auth-screen" class="auth-screen">
         <div class="auth-panel">
-            <div class="auth-logo">FUSION<span>.</span>ERP</div>
-            <div style="margin-bottom: var(--sp-2);">
-                <h2
-                    style="font-size:2.8rem; color:var(--color-pink); line-height:1; font-style:italic; margin-bottom: var(--sp-2);">
-                    GET GAME<br>READY</h2>
-                <h3 style="font-size:1.6rem; margin-bottom: 4px;">Accedi</h3>
-                <p class="text-muted"
-                    style="font-size:13px;font-family:var(--font-body);text-transform:none;letter-spacing:0;">
-                    Inserisci le tue credenziali per continuare.</p>
+            <div class="auth-logo">
+                <img src="uploads/images/Logo_con_nome.png" alt="Fusion ERP Logo" class="auth-logo-img">
             </div>
 
-            <form id="login-form" novalidate style="display:flex;flex-direction:column;gap:var(--sp-3);">
-                <div class="form-group">
-                    <label class="form-label" for="login-email">Indirizzo Email</label>
-                    <div style="position:relative; display:flex; align-items:center;">
-                        <i class="ph ph-envelope"
-                            style="position:absolute; left:12px; color:var(--color-text-dim); font-size: 18px;"></i>
-                        <input id="login-email" class="form-input" type="email" autocomplete="email"
-                            placeholder="tuo.nome@fusionerp.it" required aria-required="true"
-                            style="padding-left:38px; border-radius: 4px;">
+            <div class="login-header">
+                <h1 class="login-headline">GET GAME<br>READY</h1>
+                <h2 class="login-subtitle">Log In</h2>
+            </div>
+
+            <form id="login-form" class="login-form" novalidate>
+                <div class="form-group-login">
+                    <label for="login-email">Email address</label>
+                    <div class="input-wrapper">
+                        <i class="ph ph-envelope"></i>
+                        <input type="email" name="username" id="login-email" required placeholder="your.name@team.com"
+                            inputmode="email" autocomplete="username">
                     </div>
+                    <p id="login-email-hint" class="form-hint"></p>
                 </div>
-                <div class="form-group">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 4px;">
-                        <label class="form-label" for="login-password" style="margin:0;">Password</label>
-                        <button type="button" class="btn btn-ghost" id="forgot-password-link"
-                            style="font-size:11px; font-weight:500; text-transform:none; letter-spacing:0; padding:0; height:auto; color:var(--color-pink);">Password
-                            dimenticata?</button>
+
+                <div class="form-group-login">
+                    <div class="label-row">
+                        <label for="login-password">Password</label>
+                        <a href="#" onclick="App.renderForgotPassword && App.renderForgotPassword(); return false;"
+                            class="forgot-link">Forgot Password?</a>
                     </div>
-                    <div style="position:relative; display:flex; align-items:center;">
-                        <i class="ph ph-lock"
-                            style="position:absolute; left:12px; color:var(--color-text-dim); font-size: 18px;"></i>
-                        <input id="login-password" class="form-input" type="password" autocomplete="current-password"
-                            placeholder="Inserisci la tua password" required aria-required="true"
-                            style="padding-left:38px; padding-right:38px; border-radius: 4px;">
-                        <button type="button"
-                            style="background:none; border:none; position:absolute; right:12px; color:var(--color-text-dim); font-size: 11px; font-weight: 500; display:flex; align-items:center; gap:4px; padding:4px;">
-                            <i class="ph ph-eye-slash" style="font-size: 16px;"></i> Mostra
+                    <div class="input-wrapper">
+                        <i class="ph ph-lock"></i>
+                        <input type="password" name="password" id="login-password" required
+                            placeholder="Enter your password" autocomplete="current-password">
+                        <button type="button" class="password-toggle-btn" id="password-toggle"
+                            aria-label="Mostra/nascondi password">
+                            <i class="ph ph-eye-slash" id="password-toggle-icon"></i> <span
+                                id="password-toggle-text">Show</span>
                         </button>
                     </div>
                 </div>
-                <div id="login-error" class="form-error hidden" aria-live="polite"></div>
-                <button class="btn btn-primary w-full" type="submit" id="login-btn"
-                    style="margin-top:var(--sp-1); border-radius: 8px; font-size: 15px; padding: 16px;">
-                    ACCEDI ALLA DASHBOARD <i class="ph ph-caret-right" style="font-size: 18px;"></i>
+
+                <p id="login-error" class="login-error hidden"></p>
+
+                <button type="submit" class="btn btn-primary btn-login" id="login-submit-btn">
+                    ACCESS DASHBOARD <i class="ph ph-caret-right"></i>
                 </button>
+
+                <div class="login-footer">
+                    <div class="login-dots">
+                        <span class="dot active"></span>
+                        <span class="dot"></span>
+                        <span class="dot"></span>
+                    </div>
+                    <p>New to Fusion ERP? <a href="#" class="get-started-link">Get Started</a></p>
+                </div>
             </form>
         </div>
-
         <div class="auth-hero" aria-hidden="true">
-            <div class="auth-hero-text">FUSION SPORT</div>
+            <!-- Background image applied via CSS -->
         </div>
     </div>
 
     <!-- ─── PASSWORD RESET SCREEN ───────────────────────────────────────────── -->
     <div id="reset-screen" class="auth-screen hidden">
         <div class="auth-panel">
-            <div class="auth-logo">FUSION<span>.</span>ERP</div>
+            <div class="auth-logo">
+                <img src="uploads/images/Logo_con_nome.png" alt="Fusion ERP Logo" class="auth-logo-img">
+            </div>
             <div>
                 <h2 style="font-size:1.8rem;">Nuova Password</h2>
                 <p class="text-muted"
@@ -156,62 +116,55 @@
     <!-- ─── APP SHELL (shown once authenticated) ────────────────────────────── -->
     <div id="app-shell" class="app-shell hidden">
 
-        <!-- Sidebar (Desktop) -->
-        <aside class="sidebar" id="sidebar" role="navigation" aria-label="Navigazione principale">
-            <div class="sidebar-logo">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <rect x="2" y="2" width="9" height="9" fill="#E6007E" />
-                    <rect x="13" y="2" width="9" height="9" fill="#fff" opacity="0.3" />
-                    <rect x="2" y="13" width="9" height="9" fill="#fff" opacity="0.3" />
-                    <rect x="13" y="13" width="9" height="9" fill="#E6007E" opacity="0.6" />
-                </svg>
-                <span class="logo-text">FUSION<span>.</span>ERP</span>
+        <!-- Top Navigation (Desktop) -->
+        <header class="top-nav" id="top-nav" role="navigation" aria-label="Navigazione principale">
+            <div class="top-nav-left">
+                <div class="top-nav-logo" data-route="dashboard" style="cursor: pointer;" title="Torna alla Dashboard">
+                    <img src="uploads/images/Logo_con_nome.png" alt="Fusion ERP Logo" class="nav-logo-img"
+                        style="transform: scale(1.3); transform-origin: left center;">
+                </div>
+                <nav class="top-nav-menu" id="desktop-nav-container" aria-label="Sezioni">
+                    <!-- Nav items injected dynamically -->
+                </nav>
             </div>
-
-            <nav class="sidebar-nav" aria-label="Sezioni">
-                <button class="nav-item active" data-route="dashboard" type="button" aria-current="page">
-                    <i class="ph ph-squares-four nav-icon" aria-hidden="true"></i>
-                    <span class="nav-label">Dashboard</span>
-                </button>
-                <button class="nav-item" data-route="athletes" type="button">
-                    <i class="ph ph-users nav-icon" aria-hidden="true"></i>
-                    <span class="nav-label">Atleti</span>
-                </button>
-                <button class="nav-item" data-route="transport" type="button">
-                    <i class="ph ph-bus nav-icon" aria-hidden="true"></i>
-                    <span class="nav-label">Trasporti</span>
-                </button>
-                <button class="nav-item" data-route="admin" type="button">
-                    <i class="ph ph-shield-check nav-icon" aria-hidden="true"></i>
-                    <span class="nav-label">Amministrazione</span>
-                </button>
-                <!-- Admin-only -->
-                <button class="nav-item nav-admin-only hidden" data-route="users" type="button">
-                    <i class="ph ph-user-gear nav-icon" aria-hidden="true"></i>
-                    <span class="nav-label">Utenti</span>
-                </button>
-            </nav>
-
-            <div class="sidebar-footer">
-                <div class="user-chip">
-                    <div class="user-avatar" id="sidebar-avatar" aria-hidden="true">U</div>
-                    <div style="overflow:hidden;">
-                        <div class="user-name" id="sidebar-username">Caricamento...</div>
-                        <div class="user-role" id="sidebar-role">—</div>
+            <div class="top-nav-right">
+                <div class="user-dropdown-container" style="position:relative;">
+                    <div class="user-chip" id="user-menu-btn" style="cursor: pointer;">
+                        <div class="user-avatar" id="sidebar-avatar" aria-hidden="true">U</div>
+                        <div class="user-info">
+                            <div class="user-name" id="sidebar-username">Caricamento...</div>
+                            <div class="user-role" id="sidebar-role">—</div>
+                        </div>
+                    </div>
+                    <!-- Dropdown Menu -->
+                    <div id="user-dropdown" class="dropdown-menu hidden"
+                        style="position:absolute; top:calc(100% + 8px); right:0; background:var(--color-surface, #1e1e1e); border:1px solid var(--color-border, #333); border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.5); width:200px; z-index:1000; display:flex; flex-direction:column; padding:8px 0;">
+                        <button class="dropdown-item admin-only hidden" data-route="admin"
+                            style="display:flex; align-items:center; gap:8px; padding:12px 16px; width:100%; border:none; background:none; cursor:pointer; text-align:left; color:inherit; font-size:14px;">
+                            <i class="ph ph-shield-check" style="font-size:18px;"></i> Pannello Admin
+                        </button>
+                        <button class="dropdown-item admin-only hidden" data-route="admin-backup"
+                            style="display:flex; align-items:center; gap:8px; padding:12px 16px; width:100%; border:none; background:none; cursor:pointer; text-align:left; color:inherit; font-size:14px;">
+                            <i class="ph ph-database" style="font-size:18px;"></i> Backup
+                        </button>
+                        <button class="dropdown-item admin-only hidden" data-route="admin-logs"
+                            style="display:flex; align-items:center; gap:8px; padding:12px 16px; width:100%; border:none; background:none; cursor:pointer; text-align:left; color:inherit; font-size:14px;">
+                            <i class="ph ph-list-dashes" style="font-size:18px;"></i> Log Sistema
+                        </button>
+                        <div class="admin-only hidden"
+                            style="height:1px; background:var(--color-border, #333); margin:4px 0;"></div>
+                        <button class="dropdown-item" id="logout-btn" type="button"
+                            style="display:flex; align-items:center; gap:8px; padding:12px 16px; width:100%; border:none; background:none; cursor:pointer; text-align:left; color:var(--color-pink); font-size:14px;">
+                            <i class="ph ph-sign-out" style="font-size:18px;"></i> Esci
+                        </button>
                     </div>
                 </div>
-                <button class="btn btn-ghost w-full mt-1" id="logout-btn" type="button"
-                    style="justify-content:flex-start;font-size:11px;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
-                        aria-hidden="true">
-                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                        <polyline points="16 17 21 12 16 7" />
-                        <line x1="21" y1="12" x2="9" y2="12" />
-                    </svg>
-                    Esci
-                </button>
+                <button class="btn btn-ghost" style="padding:4px; border:none; outline:none;"><i class="ph ph-bell"
+                        style="font-size:20px;"></i></button>
+                <button class="btn btn-ghost" style="padding:4px; border:none; outline:none;"><i
+                        class="ph ph-magnifying-glass" style="font-size:20px;"></i></button>
             </div>
-        </aside>
+        </header>
 
         <!-- Main content area -->
         <main class="main-content" id="main-content">
@@ -228,23 +181,8 @@
 
         <!-- Mobile Bottom Nav -->
         <nav class="bottom-nav" id="bottom-nav" aria-label="Navigazione mobile">
-            <div class="bottom-nav-inner">
-                <button class="bottom-nav-item active" data-route="dashboard" type="button" aria-label="Dashboard">
-                    <i class="ph ph-squares-four bottom-nav-icon" style="font-size: 24px" aria-hidden="true"></i>
-                    <span class="bottom-nav-label">Dashboard</span>
-                </button>
-                <button class="bottom-nav-item" data-route="athletes" type="button" aria-label="Atleti">
-                    <i class="ph ph-users bottom-nav-icon" style="font-size: 24px" aria-hidden="true"></i>
-                    <span class="bottom-nav-label">Atleti</span>
-                </button>
-                <button class="bottom-nav-item" data-route="transport" type="button" aria-label="Trasporti">
-                    <i class="ph ph-bus bottom-nav-icon" style="font-size: 24px" aria-hidden="true"></i>
-                    <span class="bottom-nav-label">Trasporti</span>
-                </button>
-                <button class="bottom-nav-item" data-route="admin" type="button" aria-label="Admin">
-                    <i class="ph ph-shield-check bottom-nav-icon" style="font-size: 24px" aria-hidden="true"></i>
-                    <span class="bottom-nav-label">Admin</span>
-                </button>
+            <div class="bottom-nav-inner" id="mobile-nav-container">
+                <!-- Nav items injected dynamically -->
             </div>
         </nav>
     </div>
@@ -259,10 +197,10 @@
     <!-- Will be injected by js/modules/transport.js when needed -->
 
     <!-- ─── SCRIPTS ──────────────────────────────────────────────────────────── -->
-    <script src="js/core/utils.js?v=1.2.0"></script>
-    <script src="js/core/store.js?v=1.2.0"></script>
-    <script src="js/core/router.js?v=1.2.0"></script>
-    <script src="js/app.js?v=1.2.0"></script>
+    <script src="js/core/utils.js?v=1.3.3"></script>
+    <script src="js/core/store.js?v=1.3.3"></script>
+    <script src="js/core/router.js?v=1.3.3"></script>
+    <script src="js/app.js?v=1.3.3"></script>
 
 </body>
 

@@ -15,6 +15,8 @@ const Router = (() => {
         athletes: 'js/modules/athletes.js',
         transport: 'js/modules/transport.js',
         admin: 'js/modules/admin.js',
+        'admin-backup': 'js/modules/admin.js',
+        'admin-logs': 'js/modules/admin.js',
         users: 'js/modules/users.js',
     };
 
@@ -23,6 +25,13 @@ const Router = (() => {
      */
     async function navigate(route) {
         if (_currentRoute === route) return;
+
+        // Gestione link a pagine esterne o sezioni HTML standalone
+        if (route.includes('.html') || route.startsWith('http')) {
+            window.location.href = route;
+            return;
+        }
+
         _currentRoute = route;
 
         // Update nav active state
@@ -50,6 +59,8 @@ const Router = (() => {
                 athletes: 'Athletes',
                 transport: 'Transport',
                 admin: 'Admin',
+                'admin-backup': 'Admin',
+                'admin-logs': 'Admin',
                 users: 'UsersModule',
             };
 
@@ -71,7 +82,7 @@ const Router = (() => {
                 resolve(); return;
             }
             const s = document.createElement('script');
-            s.src = src + '?v=1.2.0';
+            s.src = src + '?v=1.3.0';
             s.async = true;
             s.onload = resolve;
             s.onerror = () => reject(new Error(`Impossibile caricare il modulo: ${src}`));
@@ -90,5 +101,5 @@ const Router = (() => {
 
     function getCurrentRoute() { return _currentRoute; }
 
-    return { navigate, getCurrentRoute };
+    return { navigate, getCurrentRoute, updateNavActive: _updateNavActive };
 })();

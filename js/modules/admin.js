@@ -9,6 +9,11 @@ const Admin = (() => {
   let _activeTab = 'certs';
 
   async function init() {
+    const route = Router.getCurrentRoute();
+    if (route === 'admin-backup') _activeTab = 'backup';
+    else if (route === 'admin-logs') _activeTab = 'logs';
+    else _activeTab = 'certs';
+
     const app = document.getElementById('app');
     if (!app) return;
 
@@ -16,15 +21,17 @@ const Admin = (() => {
       <div class="page-header">
         <div>
           <h1 class="page-title">Amministrazione</h1>
-          <p class="page-subtitle">Certificati medici, contratti e documenti</p>
+          <p class="page-subtitle">Certificati medici, contratti, backup e log</p>
         </div>
       </div>
 
       <div class="page-body">
         <!-- Tabs -->
         <div class="filter-bar" style="margin-bottom:var(--sp-3);">
-          <button class="filter-chip active" data-tab="certs" type="button">Certificati Medici</button>
-          <button class="filter-chip" data-tab="contracts" type="button">Contratti</button>
+          <button class="filter-chip ${_activeTab === 'certs' ? 'active' : ''}" data-tab="certs" type="button">Certificati Medici</button>
+          <button class="filter-chip ${_activeTab === 'contracts' ? 'active' : ''}" data-tab="contracts" type="button">Contratti</button>
+          <button class="filter-chip ${_activeTab === 'backup' ? 'active' : ''}" data-tab="backup" type="button">Backup</button>
+          <button class="filter-chip ${_activeTab === 'logs' ? 'active' : ''}" data-tab="logs" type="button">Log Sistema</button>
         </div>
 
         <div id="admin-content">
@@ -39,14 +46,47 @@ const Admin = (() => {
       loadTab(_activeTab);
     }));
 
-    loadTab('certs');
+    loadTab(_activeTab);
   }
 
   async function loadTab(tab) {
     const content = document.getElementById('admin-content');
     if (!content) return;
     content.innerHTML = `<div>${UI.skeletonPage()}</div>`;
-    tab === 'certs' ? await loadCerts() : await loadContracts();
+    if (tab === 'certs') await loadCerts();
+    else if (tab === 'contracts') await loadContracts();
+    else if (tab === 'backup') await loadBackup();
+    else if (tab === 'logs') await loadLogs();
+  }
+
+  // ─── BACKUP ───────────────────────────────────────────────────────────────
+  async function loadBackup() {
+    const content = document.getElementById('admin-content');
+    content.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--sp-2);">
+        <p class="section-label" style="margin:0;">Backup del Sistema</p>
+        <button class="btn btn-primary btn-sm" id="run-backup-btn" type="button" style="display:flex; align-items:center; gap:6px;"><i class="ph ph-database"></i> ESEGUI BACKUP</button>
+      </div>
+      ${Utils.emptyState('Backup', 'La funzionalità di backup completo del database e dei file è attualmente in fase di test.')}
+    `;
+    document.getElementById('run-backup-btn')?.addEventListener('click', () => {
+      UI.toast('Funzionalità in arrivo', 'info');
+    });
+  }
+
+  // ─── LOGS ─────────────────────────────────────────────────────────────────
+  async function loadLogs() {
+    const content = document.getElementById('admin-content');
+    content.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--sp-2);">
+        <p class="section-label" style="margin:0;">Log di Sistema</p>
+        <button class="btn btn-ghost btn-sm" id="refresh-logs-btn" type="button" style="display:flex; align-items:center; gap:6px;"><i class="ph ph-arrows-clockwise"></i> AGGIORNA</button>
+      </div>
+      ${Utils.emptyState('Log Sistema', 'La visualizzazione dei log delle operazioni e degli errori è attualmente in fase di test e monitoraggio.')}
+    `;
+    document.getElementById('refresh-logs-btn')?.addEventListener('click', () => {
+      loadLogs();
+    });
   }
 
   // ─── CERTS ────────────────────────────────────────────────────────────────

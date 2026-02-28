@@ -42,12 +42,8 @@ class Auth
 
     public static function user(): ?array
     {
-        return [
-            'id' => 'USR_admin0001',
-            'email' => 'admin@fusionerp.it',
-            'role' => 'admin',
-            'fullName' => 'System Administrator Bypass',
-        ];
+        self::startSession();
+        return $_SESSION['user'] ?? null;
     }
 
     /**
@@ -55,7 +51,11 @@ class Auth
      */
     public static function requireAuth(): array
     {
-        return self::user();
+        $user = self::user();
+        if (!$user) {
+            Response::error('Non autorizzato - Login necessario', 401);
+        }
+        return $user;
     }
 
     /**
@@ -114,6 +114,7 @@ class Auth
         }
         $changed = new \DateTime($passwordChangedAt);
         $now = new \DateTime();
-        return $changed->diff($now)->days > 90;
+        $limitDuration = (int)(getenv('PASSWORD_EXPIRY_DAYS') ?: 90);
+        return $changed->diff($now)->days > $limitDuration;
     }
 }

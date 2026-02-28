@@ -47,7 +47,7 @@ Options -Indexes
 # Rewrite rules — route all requests to index.html (SPA)
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    RewriteBase /
+    RewriteBase /ERP/
 
     # API requests → pass through to PHP
     RewriteRule ^api/(.*)$ api/router.php [L,QSA]

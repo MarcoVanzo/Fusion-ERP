@@ -1,7 +1,5 @@
 -- V002__sports.sql — Teams, Athletes, Events, Metrics
--- Dependencies: V001__init.sql
-
-USE fusion_erp;
+-- Administrator configures the DB from Aruba panel
 
 -- ─── TEAMS ────────────────────────────────────────────────────────────────────
 CREATE TABLE teams (
@@ -50,7 +48,7 @@ CREATE TABLE athletes (
 CREATE TABLE events (
     id            VARCHAR(20)  NOT NULL,         -- e.g. EVT_b7d2e9f4
     team_id       VARCHAR(20)  NOT NULL,
-    type          ENUM('training','away_game','home_game','tournament') NOT NULL,
+    type          VARCHAR(30)  NOT NULL,         -- training, away_game, home_game, tournament
     title         VARCHAR(200) NOT NULL,
     event_date    DATETIME     NOT NULL,
     event_end     DATETIME     NULL,
@@ -77,7 +75,7 @@ CREATE TABLE event_attendees (
     id          BIGINT       NOT NULL AUTO_INCREMENT,
     event_id    VARCHAR(20)  NOT NULL,
     athlete_id  VARCHAR(20)  NOT NULL,
-    status      ENUM('invited','confirmed','absent','excused') NOT NULL DEFAULT 'invited',
+    status      VARCHAR(30)  NOT NULL DEFAULT 'invited', -- invited, confirmed, absent, excused
     notified_at DATETIME     NULL,
     created_at  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -118,6 +116,7 @@ CREATE TABLE ai_summaries (
     summary_text  LONGTEXT     NOT NULL,
     model_version VARCHAR(50)  NULL,
     created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     INDEX idx_ai_athlete (athlete_id),
     CONSTRAINT fk_ai_athlete FOREIGN KEY (athlete_id) REFERENCES athletes(id) ON DELETE CASCADE
