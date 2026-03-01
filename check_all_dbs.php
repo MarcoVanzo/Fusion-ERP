@@ -1,0 +1,2 @@
+<?php ini_set('display_errors', 1); error_reporting(E_ALL); $host = '31.11.39.161'; $port = '3306'; $user = 'Sql1804377'; $pass = 'u3z4t994$@psAPr'; $dbnames = ['Sql1804377_1', 'Sql1804377_2', 'Sql1804377_3', 'Sql1804377_4', 'Sql1804377_5']; foreach ($dbnames as $dbname) { try { $dsn = "mysql:host={$host};port={$port};dbname={$dbname}"; $db = new PDO($dsn, $user, $pass); $stmt = $db->query("SHOW TABLES LIKE 'users'"); if ($stmt && $stmt->rowCount() > 0) { echo "Users table found in: $dbname
+"; } } catch (Exception $e) {} } ?>

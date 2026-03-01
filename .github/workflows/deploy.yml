@@ -1,0 +1,118 @@
+name: 🚀 Deploy to Production (Aruba FTP)
+
+# Triggered on every push to the main branch.
+# Credentials are stored as GitHub Repository Secrets — never in code.
+on:
+  push:
+    branches:
+      - main
+  # Allow manual trigger from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy via FTP
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      # ── 1. Checkout code ───────────────────────────────────────────────────
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # full history so the cache diff is accurate
+
+      # ── 2. Set up Python ───────────────────────────────────────────────────
+      - name: 🐍 Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      # ── 3. Cache deploy state between runs ────────────────────────────────
+      # The deploy.py script stores MD5 hashes of uploaded files in
+      # .deploy_cache.json. We cache this file so only changed files
+      # are re-uploaded each run (identical to running locally).
+      - name: 💾 Restore deploy cache
+        uses: actions/cache@v4
+        with:
+          path: .deploy_cache.json
+          key: deploy-cache-${{ github.ref_name }}
+          restore-keys: |
+            deploy-cache-
+
+      # ── 4. Create .env from GitHub Secrets ────────────────────────────────
+      # The .env file is never committed. On the runner we reconstruct it
+      # from GitHub Repository Secrets set in Settings → Secrets → Actions.
+      - name: 🔐 Construct .env from secrets
+        run: |
+          cat > .env << 'EOF'
+          # FTP — set these in GitHub Secrets
+          FTP_HOST=${{ secrets.FTP_HOST }}
+          FTP_USER=${{ secrets.FTP_USER }}
+          FTP_PASS=${{ secrets.FTP_PASS }}
+          FTP_DIR=${{ secrets.FTP_DIR }}
+
+          # Application
+          APP_ENV=production
+          APP_URL=${{ secrets.APP_URL }}
+          APP_SECRET=${{ secrets.APP_SECRET }}
+
+          # Database
+          DB_HOST=${{ secrets.DB_HOST }}
+          DB_PORT=${{ secrets.DB_PORT }}
+          DB_NAME=${{ secrets.DB_NAME }}
+          DB_USER=${{ secrets.DB_USER }}
+          DB_PASS=${{ secrets.DB_PASS }}
+
+          # AI / Maps
+          GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+          GOOGLE_MAPS_API_KEY=${{ secrets.GOOGLE_MAPS_API_KEY }}
+
+          # SMTP
+          SMTP_HOST=${{ secrets.SMTP_HOST }}
+          SMTP_PORT=${{ secrets.SMTP_PORT }}
+          SMTP_USER=${{ secrets.SMTP_USER }}
+          SMTP_PASS=${{ secrets.SMTP_PASS }}
+          SMTP_FROM_NAME=Fusion ERP
+
+          # Session / Security
+          SESSION_NAME=fusion_session
+          RATE_LIMIT_MAX=5
+          RATE_LIMIT_WINDOW=900
+          IMPORT_SECRET=${{ secrets.IMPORT_SECRET }}
+
+          # Storage paths (server-side)
+          PDF_STORAGE_PATH=/var/www/fusion/storage/pdfs/
+          UPLOAD_STORAGE_PATH=/var/www/fusion/storage/uploads/
+          BACKUP_STORAGE_PATH=/var/www/fusion/storage/backups/
+          MILEAGE_RATE=0.25
+
+          # Cognito Forms
+          COGNITO_API_KEY=${{ secrets.COGNITO_API_KEY }}
+          COGNITO_FORM_ID=${{ secrets.COGNITO_FORM_ID }}
+          COGNITO_VIEW_ID=${{ secrets.COGNITO_VIEW_ID }}
+          OUTSEASON_SEASON_KEY=${{ secrets.OUTSEASON_SEASON_KEY }}
+          OUTSEASON_PRICE_FULL=${{ secrets.OUTSEASON_PRICE_FULL }}
+          OUTSEASON_PRICE_PARTIAL=${{ secrets.OUTSEASON_PRICE_PARTIAL }}
+
+          # Meta / Social
+          META_APP_ID=${{ secrets.META_APP_ID }}
+          META_APP_SECRET=${{ secrets.META_APP_SECRET }}
+          META_REDIRECT_URI=${{ secrets.META_REDIRECT_URI }}
+          META_CONFIG_ID=${{ secrets.META_CONFIG_ID }}
+
+          # Google Drive backup
+          GDRIVE_CLIENT_ID=${{ secrets.GDRIVE_CLIENT_ID }}
+          GDRIVE_REFRESH_TOKEN=${{ secrets.GDRIVE_REFRESH_TOKEN }}
+          EOF
+
+      # ── 5. Run the existing deploy.py ─────────────────────────────────────
+      - name: 🚀 Run deploy.py (FTP incremental upload)
+        run: python deploy.py
+
+      # ── 6. Persist the updated deploy cache ───────────────────────────────
+      # This is already handled by actions/cache (post-step save),
+      # but we make the new .deploy_cache.json available for the next run.
+      - name: ✅ Deploy complete
+        run: echo "Deployment finished at $(date -u '+%Y-%m-%d %H:%M:%S UTC')"

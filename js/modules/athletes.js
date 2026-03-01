@@ -6,7 +6,7 @@
 'use strict';
 
 const Athletes = (() => {
-    let _ac = new AbortController();
+  let _ac = new AbortController();
 
   let _state = [];
   let _teams = [];
@@ -46,7 +46,13 @@ const Athletes = (() => {
           <h1 class="page-title">Atleti</h1>
           <p class="page-subtitle">${filtered.length} atleti${_currentTeam ? ' in squadra selezionata' : ' totali'}</p>
         </div>
-        ${canEdit ? `<button class="btn btn-primary" id="new-athlete-btn" type="button">+ NUOVO ATLETA</button>` : ''}
+        <div style="display:flex;align-items:center;gap:var(--sp-2);">
+          <div class="input-wrapper" style="position:relative;min-width:220px;">
+            <i class="ph ph-magnifying-glass" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--color-text-muted);font-size:16px;"></i>
+            <input type="text" id="athlete-search" class="form-input" placeholder="Cerca atleta..." style="padding-left:36px;height:42px;font-size:13px;">
+          </div>
+          ${canEdit ? `<button class="btn btn-primary" id="new-athlete-btn" type="button">+ NUOVO ATLETA</button>` : ''}
+        </div>
       </div>
 
       <div class="page-body">
@@ -76,6 +82,18 @@ const Athletes = (() => {
     }, { signal: _ac.signal }));
 
     document.getElementById('new-athlete-btn')?.addEventListener('click', () => showCreateModal(), { signal: _ac.signal }, { signal: _ac.signal });
+
+    // Search filter
+    const searchInput = document.getElementById('athlete-search');
+    if (searchInput) {
+      searchInput.addEventListener('input', () => {
+        const q = searchInput.value.trim().toLowerCase();
+        Utils.qsa('[data-athlete-id]').forEach(card => {
+          const name = card.querySelector('[style*="font-weight:700;font-size:1.1rem"]')?.textContent?.toLowerCase() || '';
+          card.style.display = name.includes(q) ? '' : 'none';
+        });
+      }, { signal: _ac.signal });
+    }
   }
 
   function athleteCard(a) {
@@ -145,6 +163,27 @@ const Athletes = (() => {
               </div>
           </div>
 
+          <!-- Dati Anagrafici -->
+          <div>
+            <p class="section-label">Dati Anagrafici</p>
+            <div class="card" style="padding:var(--sp-3);">
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-3);">
+                ${registryField('Nome', a.first_name)}
+                ${registryField('Cognome', a.last_name)}
+                ${registryField('Data di Nascita', a.birth_date ? Utils.formatDate(a.birth_date) : null)}
+                ${registryField('Luogo di Nascita', a.birth_place)}
+                ${registryField('Via di Residenza', a.residence_address)}
+                ${registryField('Città di Residenza', a.residence_city)}
+                ${registryField('Cellulare', a.phone)}
+                ${registryField('E-Mail', a.email)}
+                ${registryField('Documento d\'Identità', a.identity_document)}
+                ${registryField('Codice Fiscale', a.fiscal_code)}
+                ${registryField('Scadenza Cert. Medico', a.medical_cert_expires_at ? Utils.formatDate(a.medical_cert_expires_at) : null, a.medical_cert_expires_at && new Date(a.medical_cert_expires_at) < new Date() ? 'var(--color-pink)' : null)}
+                ${registryField('Matricola FIPAV', a.federal_id)}
+              </div>
+            </div>
+          </div>
+
           <!-- ACWR Section -->
           <div>
             <p class="section-label">Athlete Load — ACWR</p>
@@ -204,6 +243,16 @@ const Athletes = (() => {
     } catch (err) {
       app.innerHTML = Utils.emptyState('Atleta non trovato', err.message);
     }
+  }
+
+  // ─── REGISTRY FIELD HELPER ───────────────────────────────────────────────
+  function registryField(label, value, accentColor) {
+    const color = accentColor || 'var(--color-white)';
+    return `
+      <div style="display:flex; flex-direction:column; gap:2px;">
+        <span style="font-size:11px; color:var(--color-silver); text-transform:uppercase; font-weight:600; letter-spacing:0.04em;">${Utils.escapeHtml(label)}</span>
+        <span style="font-size:14px; font-weight:500; color:${color};">${value ? Utils.escapeHtml(String(value)) : '<span style="color:var(--color-text-muted);">—</span>'}</span>
+      </div>`;
   }
 
   function acwrCard(acwr) {
@@ -338,9 +387,15 @@ const Athletes = (() => {
     const m = UI.modal({
       title: 'Nuovo Atleta',
       body: `
-        <div class="form-group">
-          <label class="form-label" for="na-name">Nome Completo *</label>
-          <input id="na-name" class="form-input" type="text" placeholder="Marco Rossi" required>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="na-fname">Nome *</label>
+            <input id="na-fname" class="form-input" type="text" placeholder="Marco" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="na-lname">Cognome *</label>
+            <input id="na-lname" class="form-input" type="text" placeholder="Rossi" required>
+          </div>
         </div>
         <div class="form-grid">
           <div class="form-group">
@@ -355,11 +410,55 @@ const Athletes = (() => {
         <div class="form-grid">
           <div class="form-group">
             <label class="form-label" for="na-role">Ruolo</label>
-            <input id="na-role" class="form-input" type="text" placeholder="Playmaker">
+            <input id="na-role" class="form-input" type="text" placeholder="Palleggiatrice">
           </div>
           <div class="form-group">
-            <label class="form-label" for="na-birth">Data di nascita</label>
+            <label class="form-label" for="na-birth">Data di Nascita</label>
             <input id="na-birth" class="form-input" type="date">
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="na-birthplace">Luogo di Nascita</label>
+            <input id="na-birthplace" class="form-input" type="text" placeholder="Roma">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="na-rescity">Città di Residenza</label>
+            <input id="na-rescity" class="form-input" type="text" placeholder="Milano">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="na-resaddr">Via di Residenza</label>
+          <input id="na-resaddr" class="form-input" type="text" placeholder="Via Roma 1">
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="na-phone">Cellulare</label>
+            <input id="na-phone" class="form-input" type="tel" placeholder="+39 333 1234567">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="na-email">E-Mail</label>
+            <input id="na-email" class="form-input" type="email" placeholder="atleta@email.com">
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="na-doc">Documento d'Identità</label>
+            <input id="na-doc" class="form-input" type="text" placeholder="CI / Passaporto">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="na-fiscal">Codice Fiscale</label>
+            <input id="na-fiscal" class="form-input" type="text" placeholder="RSSMRC90A01H501Z" maxlength="16" style="text-transform:uppercase;">
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="na-medcert">Scadenza Certificato Medico</label>
+            <input id="na-medcert" class="form-input" type="date">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="na-fipav">Matricola FIPAV</label>
+            <input id="na-fipav" class="form-input" type="text" placeholder="FI-123456">
           </div>
         </div>
         <div class="form-grid">
@@ -373,7 +472,7 @@ const Athletes = (() => {
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label" for="na-parent">Contatto genitore</label>
+          <label class="form-label" for="na-parent">Contatto genitore (per minori)</label>
           <input id="na-parent" class="form-input" type="text" placeholder="Nome cognome genitore">
         </div>
         <div id="na-error" class="form-error hidden"></div>`,
@@ -382,14 +481,15 @@ const Athletes = (() => {
         <button class="btn btn-primary btn-sm" id="na-save" type="button">CREA ATLETA</button>`,
     });
 
-    document.getElementById('na-cancel')?.addEventListener('click', () => m.close(), { signal: _ac.signal }, { signal: _ac.signal });
+    document.getElementById('na-cancel')?.addEventListener('click', () => m.close(), { signal: _ac.signal });
     document.getElementById('na-save')?.addEventListener('click', async () => {
-      const name = document.getElementById('na-name').value.trim();
+      const fname = document.getElementById('na-fname').value.trim();
+      const lname = document.getElementById('na-lname').value.trim();
       const team = document.getElementById('na-team').value;
       const errEl = document.getElementById('na-error');
 
-      if (!name || !team) {
-        errEl.textContent = 'Nome e squadra sono obbligatori';
+      if (!fname || !lname || !team) {
+        errEl.textContent = 'Nome, cognome e squadra sono obbligatori';
         errEl.classList.remove('hidden');
         return;
       }
@@ -399,11 +499,21 @@ const Athletes = (() => {
 
       try {
         await Store.api('create', 'athletes', {
-          full_name: name,
+          first_name: fname,
+          last_name: lname,
           team_id: team,
           jersey_number: document.getElementById('na-jersey').value || null,
           role: document.getElementById('na-role').value || null,
           birth_date: document.getElementById('na-birth').value || null,
+          birth_place: document.getElementById('na-birthplace').value || null,
+          residence_address: document.getElementById('na-resaddr').value || null,
+          residence_city: document.getElementById('na-rescity').value || null,
+          phone: document.getElementById('na-phone').value || null,
+          email: document.getElementById('na-email').value || null,
+          identity_document: document.getElementById('na-doc').value || null,
+          fiscal_code: document.getElementById('na-fiscal').value?.toUpperCase() || null,
+          medical_cert_expires_at: document.getElementById('na-medcert').value || null,
+          federal_id: document.getElementById('na-fipav').value || null,
           height_cm: document.getElementById('na-height').value || null,
           weight_kg: document.getElementById('na-weight').value || null,
           parent_contact: document.getElementById('na-parent').value || null,
@@ -420,10 +530,10 @@ const Athletes = (() => {
   }
 
   function destroy() {
-        _ac.abort();
-        _ac = new AbortController();
-    }
+    _ac.abort();
+    _ac = new AbortController();
+  }
 
-    return { destroy, init };
+  return { destroy, init };
 })();
 window.Athletes = Athletes;

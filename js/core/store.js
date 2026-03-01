@@ -173,9 +173,7 @@ const UI = (() => {
 
         const modalBody = container.querySelector('.modal-body');
         if (typeof body === 'string') {
-            const tempP = document.createElement('p');
-            tempP.textContent = body;
-            modalBody.appendChild(tempP);
+            modalBody.innerHTML = body;
         } else if (body instanceof Node) {
             modalBody.appendChild(body);
         }
@@ -184,9 +182,7 @@ const UI = (() => {
             const footerContainer = document.createElement('div');
             footerContainer.className = 'modal-footer';
             if (typeof footer === 'string') {
-                const tempP = document.createElement('p');
-                tempP.textContent = footer;
-                footerContainer.appendChild(tempP);
+                footerContainer.innerHTML = footer;
             } else if (footer instanceof Node) {
                 footerContainer.appendChild(footer);
             }

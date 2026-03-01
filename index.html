@@ -8,12 +8,13 @@
     <meta name="description"
         content="Fusion ERP — Sistema di gestione sportiva per atleti, trasferte e amministrazione.">
     <meta name="robots" content="noindex, nofollow">
+    <meta name="app-version" content="1772407972">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Fusion ERP</title>
     <!-- Phosphor Icons -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <link rel="stylesheet" href="css/style.css?v=1772308272">
+    <link rel="stylesheet" href="css/style.css?v=1772407972">
 </head>
 
 <body>
@@ -29,16 +30,16 @@
 
             <div class="login-header">
                 <h1 class="login-headline">GET GAME<br>READY</h1>
-                <h2 class="login-subtitle">Log In</h2>
+                <h2 class="login-subtitle">Accedi</h2>
             </div>
 
             <form id="login-form" class="login-form" novalidate>
                 <div class="form-group-login">
-                    <label for="login-email">Email address</label>
+                    <label for="login-email">Indirizzo email</label>
                     <div class="input-wrapper">
                         <i class="ph ph-envelope"></i>
-                        <input type="email" name="username" id="login-email" required placeholder="your.name@team.com"
-                            inputmode="email" autocomplete="username">
+                        <input type="email" name="username" id="login-email" required
+                            placeholder="nome@fusionteamvolley.it" inputmode="email" autocomplete="username">
                     </div>
                     <p id="login-email-hint" class="form-hint"></p>
                 </div>
@@ -47,16 +48,16 @@
                     <div class="label-row">
                         <label for="login-password">Password</label>
                         <a href="#" onclick="App.renderForgotPassword && App.renderForgotPassword(); return false;"
-                            class="forgot-link">Forgot Password?</a>
+                            class="forgot-link">Password dimenticata?</a>
                     </div>
                     <div class="input-wrapper">
                         <i class="ph ph-lock"></i>
                         <input type="password" name="password" id="login-password" required
-                            placeholder="Enter your password" autocomplete="current-password">
+                            placeholder="Inserisci la password" autocomplete="current-password">
                         <button type="button" class="password-toggle-btn" id="password-toggle"
                             aria-label="Mostra/nascondi password">
                             <i class="ph ph-eye-slash" id="password-toggle-icon"></i> <span
-                                id="password-toggle-text">Show</span>
+                                id="password-toggle-text">Mostra</span>
                         </button>
                     </div>
                 </div>
@@ -64,17 +65,10 @@
                 <p id="login-error" class="login-error hidden"></p>
 
                 <button type="submit" class="btn btn-primary btn-login" id="login-submit-btn">
-                    ACCESS DASHBOARD <i class="ph ph-caret-right"></i>
+                    ACCEDI <i class="ph ph-caret-right"></i>
                 </button>
 
-                <div class="login-footer">
-                    <div class="login-dots">
-                        <span class="dot active"></span>
-                        <span class="dot"></span>
-                        <span class="dot"></span>
-                    </div>
-                    <p>New to Fusion ERP? <a href="#" class="get-started-link">Get Started</a></p>
-                </div>
+
             </form>
         </div>
         <div class="auth-hero" aria-hidden="true">
@@ -197,10 +191,12 @@
     <!-- Will be injected by js/modules/transport.js when needed -->
 
     <!-- ─── SCRIPTS ──────────────────────────────────────────────────────────── -->
-    <script src="js/core/utils.js?v=1772308272"></script>
-    <script src="js/core/store.js?v=1772308272"></script>
-    <script src="js/core/router.js?v=1772308272"></script>
-    <script src="js/app.js?v=1772308272"></script>
+    <!-- ─── CONFIG ───────────────────────────────────────────────────────────── -->
+    <script>window.GOOGLE_MAPS_API_KEY = 'AIzaSyBhPUVEj5X5jZ2zsG1pzDys5QiYHbtN6oI';</script>
+    <script src="js/core/utils.js?v=1772407972"></script>
+    <script src="js/core/store.js?v=1772407972"></script>
+    <script src="js/core/router.js?v=1772407972"></script>
+    <script src="js/app.js?v=1772407972"></script>
 
 </body>
 

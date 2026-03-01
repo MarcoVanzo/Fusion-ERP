@@ -215,16 +215,25 @@ const App = (() => {
             }
         });
 
-        // Logout
-        document.getElementById('logout-btn')?.addEventListener('click', async () => {
-            try {
-                await Store.api('logout', 'auth');
-                UI.toast('Logout effettuato', 'info');
-                setTimeout(() => window.location.reload(), 800);
-            } catch {
-                window.location.reload();
-            }
-        });
+        // Logout — use { once: true } to avoid duplicate listeners on repeated _bootApp calls
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) {
+            // Remove any previously attached logout handler to be safe
+            const newLogoutBtn = logoutBtn.cloneNode(true);
+            logoutBtn.parentNode.replaceChild(newLogoutBtn, logoutBtn);
+
+            newLogoutBtn.addEventListener('click', async (e) => {
+                e.stopPropagation(); // prevent document.onclick from closing dropdown before we act
+                userDropdown.classList.add('hidden');
+                try {
+                    await Store.api('logout', 'auth');
+                    UI.toast('Logout effettuato', 'info');
+                    setTimeout(() => window.location.reload(), 800);
+                } catch {
+                    window.location.reload();
+                }
+            }, { once: true });
+        }
 
         // Start at dashboard
         Router.navigate('dashboard');
@@ -278,8 +287,20 @@ const App = (() => {
                     btn.type = 'button';
                     btn.dataset.route = item.path;
                     btn.textContent = item.title.toUpperCase();
-                    // Setup children drop-down logic if needed here, but for now we just map the top level route
-                    btn.addEventListener('click', () => Router.navigate(item.path));
+
+                    // Handle unimplemented modules
+                    if (item.implemented === false) {
+                        btn.classList.add('nav-item--coming-soon');
+                        btn.title = 'In arrivo';
+                        btn.style.opacity = '0.35';
+                        btn.style.cursor = 'default';
+                        btn.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            UI.toast(`${item.title}: sezione in arrivo`, 'info', 2500);
+                        });
+                    } else {
+                        btn.addEventListener('click', () => Router.navigate(item.path));
+                    }
                     desktopContainer.appendChild(btn);
                 }
 

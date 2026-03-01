@@ -113,4 +113,171 @@ class AdminRepository
         $stmt->execute([':id' => $id]);
         return $stmt->fetch() ?: null;
     }
+
+    // ─── AUDIT LOGS ──────────────────────────────────────────────────────────
+
+    /**
+     * List audit log entries with optional filters.
+     *
+     * @param string $action     Filter by action type (empty = all)
+     * @param string $tableName  Filter by table name (empty = all)
+     * @param string $dateFrom   Filter from date YYYY-MM-DD (empty = no lower bound)
+     * @param string $dateTo     Filter to date YYYY-MM-DD (empty = no upper bound)
+     * @param string $search     Search in user full_name or record_id
+     * @param int    $limit      Page size
+     * @param int    $offset     Page offset
+     */
+    public function listLogs(
+        string $action = '',
+        string $tableName = '',
+        string $dateFrom = '',
+        string $dateTo = '',
+        string $search = '',
+        int $limit = 200,
+        int $offset = 0
+        ): array
+    {
+        $sql = '
+            SELECT
+                al.id,
+                al.user_id,
+                u.full_name  AS user_name,
+                al.action,
+                al.table_name,
+                al.record_id,
+                al.before_snapshot,
+                al.after_snapshot,
+                al.ip_address,
+                al.created_at
+            FROM audit_logs al
+            LEFT JOIN users u ON u.id = al.user_id
+            WHERE 1=1';
+
+        $params = [];
+
+        if ($action !== '') {
+            $sql .= ' AND al.action = :action';
+            $params[':action'] = $action;
+        }
+        if ($tableName !== '') {
+            $sql .= ' AND al.table_name = :table_name';
+            $params[':table_name'] = $tableName;
+        }
+        if ($dateFrom !== '') {
+            $sql .= ' AND al.created_at >= :date_from';
+            $params[':date_from'] = $dateFrom . ' 00:00:00';
+        }
+        if ($dateTo !== '') {
+            $sql .= ' AND al.created_at <= :date_to';
+            $params[':date_to'] = $dateTo . ' 23:59:59';
+        }
+        if ($search !== '') {
+            $sql .= ' AND (u.full_name LIKE :search OR al.record_id LIKE :search2)';
+            $params[':search'] = '%' . $search . '%';
+            $params[':search2'] = '%' . $search . '%';
+        }
+
+        $sql .= ' ORDER BY al.created_at DESC';
+        $sql .= ' LIMIT ' . $limit . ' OFFSET ' . $offset;
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll();
+    }
+
+    // ─── BACKUPS ──────────────────────────────────────────────────────────────
+
+    /**
+     * Return all user tables in the current database with row counts.
+     * @return array<array{table_name:string,table_rows:int,data_length:int}>
+     */
+    public function listDatabaseTables(): array
+    {
+        $dbName = getenv('DB_NAME') ?: 'fusion_erp';
+        try {
+            $stmt = $this->db->prepare(
+                'SELECT TABLE_NAME AS table_name,
+                        IFNULL(TABLE_ROWS, 0) AS table_rows,
+                        IFNULL(DATA_LENGTH + INDEX_LENGTH, 0) AS data_length
+                 FROM INFORMATION_SCHEMA.TABLES
+                 WHERE TABLE_SCHEMA = :dbname
+                   AND TABLE_TYPE = \'BASE TABLE\'
+                 ORDER BY TABLE_NAME'
+            );
+            $stmt->execute([':dbname' => $dbName]);
+            return $stmt->fetchAll();
+        }
+        catch (\PDOException $e) {
+            // Fallback: use SHOW TABLES if INFORMATION_SCHEMA access is restricted
+            error_log('[BACKUP] INFORMATION_SCHEMA failed, using SHOW TABLES: ' . $e->getMessage());
+            $tables = [];
+            try {
+                $rows = $this->db->query('SHOW TABLES')->fetchAll(\PDO::FETCH_COLUMN);
+                foreach ($rows as $tbl) {
+                    $tables[] = ['table_name' => $tbl, 'table_rows' => 0, 'data_length' => 0];
+                }
+            }
+            catch (\PDOException $e2) {
+                error_log('[BACKUP] SHOW TABLES also failed: ' . $e2->getMessage());
+            }
+            return $tables;
+        }
+    }
+
+    /** Insert backup metadata row. */
+    public function saveBackupRecord(array $data): void
+    {
+        $stmt = $this->db->prepare(
+            'INSERT INTO backups
+                 (id, filename, filesize, tables_list, table_count, row_count,
+                  created_by, status, notes, drive_file_id, drive_uploaded_at)
+             VALUES
+                 (:id, :filename, :filesize, :tables_list, :table_count, :row_count,
+                  :created_by, :status, :notes, :drive_file_id, :drive_uploaded_at)'
+        );
+        $stmt->execute($data);
+    }
+
+    /** Update an existing backup record with Google Drive info after upload. */
+    public function updateBackupDriveInfo(string $id, string $driveFileId): void
+    {
+        $stmt = $this->db->prepare(
+            'UPDATE backups
+             SET drive_file_id = :drive_file_id,
+                 drive_uploaded_at = NOW()
+             WHERE id = :id'
+        );
+        $stmt->execute([':drive_file_id' => $driveFileId, ':id' => $id]);
+    }
+
+    /** List all backup records, newest first. */
+    public function listBackupRecords(): array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT b.id, b.filename, b.filesize, b.tables_list, b.table_count, b.row_count,
+                    b.status, b.notes, b.created_at,
+                    b.drive_file_id, b.drive_uploaded_at,
+                    u.full_name AS created_by_name
+             FROM backups b
+             LEFT JOIN users u ON u.id = b.created_by
+             ORDER BY b.created_at DESC'
+        );
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    /** Delete a single backup record. */
+    public function deleteBackupRecord(string $id): void
+    {
+        $stmt = $this->db->prepare('DELETE FROM backups WHERE id = :id');
+        $stmt->execute([':id' => $id]);
+    }
+
+    /** Get a single backup record by ID. */
+    public function getBackupById(string $id): ?array
+    {
+        $stmt = $this->db->prepare('SELECT * FROM backups WHERE id = :id LIMIT 1');
+        $stmt->execute([':id' => $id]);
+        return $stmt->fetch() ?: null;
+    }
 }

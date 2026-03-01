@@ -49,6 +49,9 @@ try {
             'transport' => dispatch('Transport', $action),
             'admin' => dispatch('Admin', $action),
             'dashboard' => dispatch('Dashboard', $action),
+            'social' => dispatch('Social', $action),
+            'outseason' => dispatch('OutSeason', $action),
+            'results' => dispatch('Results', $action),
             default => Response::error("Modulo '{$module}' non trovato", 404),
         };
 }

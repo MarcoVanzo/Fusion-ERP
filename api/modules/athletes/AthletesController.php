@@ -54,26 +54,39 @@ class AthletesController
     {
         Auth::requireRole('operator');
         $body = Response::jsonBody();
-        Response::requireFields($body, ['full_name', 'team_id']);
+        Response::requireFields($body, ['first_name', 'last_name', 'team_id']);
 
         $id = 'ATH_' . bin2hex(random_bytes(4));
         $data = [
             ':id' => $id,
             ':user_id' => $body['user_id'] ?? null,
             ':team_id' => $body['team_id'],
-            ':full_name' => htmlspecialchars(trim($body['full_name']), ENT_QUOTES, 'UTF-8'),
+            ':first_name' => htmlspecialchars(trim($body['first_name']), ENT_QUOTES, 'UTF-8'),
+            ':last_name' => htmlspecialchars(trim($body['last_name']), ENT_QUOTES, 'UTF-8'),
             ':jersey_number' => isset($body['jersey_number']) ? (int)$body['jersey_number'] : null,
             ':role' => $body['role'] ?? null,
             ':birth_date' => $body['birth_date'] ?? null,
+            ':birth_place' => $body['birth_place'] ?? null,
             ':height_cm' => isset($body['height_cm']) ? (int)$body['height_cm'] : null,
             ':weight_kg' => isset($body['weight_kg']) ? (float)$body['weight_kg'] : null,
             ':photo_path' => null,
+            ':residence_address' => $body['residence_address'] ?? null,
+            ':residence_city' => $body['residence_city'] ?? null,
+            ':phone' => $body['phone'] ?? null,
+            ':email' => $body['email'] ?? null,
+            ':identity_document' => $body['identity_document'] ?? null,
+            ':fiscal_code' => $body['fiscal_code'] ?? null,
+            ':medical_cert_type' => $body['medical_cert_type'] ?? null,
+            ':medical_cert_expires_at' => $body['medical_cert_expires_at'] ?? null,
+            ':federal_id' => $body['federal_id'] ?? null,
+            ':shirt_size' => $body['shirt_size'] ?? null,
+            ':shoe_size' => $body['shoe_size'] ?? null,
             ':parent_contact' => $body['parent_contact'] ?? null,
             ':parent_phone' => $body['parent_phone'] ?? null,
         ];
 
         $this->repo->createAthlete($data);
-        Audit::log('INSERT', 'athletes', $id, null, ['full_name' => $body['full_name']]);
+        Audit::log('INSERT', 'athletes', $id, null, ['first_name' => $body['first_name'], 'last_name' => $body['last_name']]);
         Response::success(['id' => $id], 201);
     }
 
@@ -82,7 +95,7 @@ class AthletesController
     {
         Auth::requireRole('operator');
         $body = Response::jsonBody();
-        Response::requireFields($body, ['id', 'full_name', 'team_id']);
+        Response::requireFields($body, ['id', 'first_name', 'last_name', 'team_id']);
 
         $before = $this->repo->getAthleteById($body['id']);
         if (!$before) {
@@ -90,12 +103,25 @@ class AthletesController
         }
 
         $this->repo->updateAthlete($body['id'], [
-            ':full_name' => htmlspecialchars(trim($body['full_name']), ENT_QUOTES, 'UTF-8'),
+            ':first_name' => htmlspecialchars(trim($body['first_name']), ENT_QUOTES, 'UTF-8'),
+            ':last_name' => htmlspecialchars(trim($body['last_name']), ENT_QUOTES, 'UTF-8'),
             ':jersey_number' => $body['jersey_number'] ?? null,
             ':role' => $body['role'] ?? null,
             ':birth_date' => $body['birth_date'] ?? null,
+            ':birth_place' => $body['birth_place'] ?? null,
             ':height_cm' => $body['height_cm'] ?? null,
             ':weight_kg' => $body['weight_kg'] ?? null,
+            ':residence_address' => $body['residence_address'] ?? null,
+            ':residence_city' => $body['residence_city'] ?? null,
+            ':phone' => $body['phone'] ?? null,
+            ':email' => $body['email'] ?? null,
+            ':identity_document' => $body['identity_document'] ?? null,
+            ':fiscal_code' => $body['fiscal_code'] ?? null,
+            ':medical_cert_type' => $body['medical_cert_type'] ?? null,
+            ':medical_cert_expires_at' => $body['medical_cert_expires_at'] ?? null,
+            ':federal_id' => $body['federal_id'] ?? null,
+            ':shirt_size' => $body['shirt_size'] ?? null,
+            ':shoe_size' => $body['shoe_size'] ?? null,
             ':parent_contact' => $body['parent_contact'] ?? null,
             ':parent_phone' => $body['parent_phone'] ?? null,
             ':team_id' => $body['team_id'],
@@ -132,10 +158,10 @@ class AthletesController
         $rpe = min(10, max(1, (int)$body['rpe']));
         $loadValue = $durationMin * $rpe;
 
-        // Calculate ACWR before inserting
-        $acwr = $this->calcACWR($athleteId);
-
         $metricId = 'MET_' . bin2hex(random_bytes(4));
+
+        // Insert the metric FIRST — ACWR must include the current session
+        // (previously it was calculated before insert, making all stored ACWR values lag by 1)
         $this->repo->insertMetric([
             ':id' => $metricId,
             ':athlete_id' => $athleteId,
@@ -144,9 +170,15 @@ class AthletesController
             ':duration_min' => $durationMin,
             ':rpe' => $rpe,
             ':load_value' => $loadValue,
-            ':acwr_score' => $acwr['score'],
+            ':acwr_score' => 0.0, // placeholder; updated below after recalculation
             ':notes' => $body['notes'] ?? null,
         ]);
+
+        // Now calculate ACWR including the metric just inserted
+        $acwr = $this->calcACWR($athleteId);
+
+        // Update the acwr_score in the record we just inserted
+        $this->repo->updateMetricAcwr($metricId, $acwr['score']);
 
         // Insert alert if ACWR is in risk zone (> 1.3)
         $riskLevel = $acwr['risk'];

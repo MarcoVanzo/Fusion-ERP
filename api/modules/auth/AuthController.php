@@ -45,12 +45,13 @@ class AuthController
 
         $dbUser = $this->repo->getUserByEmail($email);
 
-        if (!$dbUser) {
-            $this->repo->logAttempt($ip, $email, false);
-            Response::error('Credenziali non valide.', 401);
-        }
+        // Always run password_verify to prevent user-enumeration via timing attack:
+        // response time is identical whether the email doesn't exist or the password is wrong.
+        $dummyHash = '$2y$12$dummyhashusedtopreventtimingsttttttttttttttttttttttttt.';
+        $hashToVerify = $dbUser ? $dbUser['pwd_hash'] : $dummyHash;
+        $passwordCorrect = password_verify($pwd, $hashToVerify);
 
-        if (!password_verify($pwd, $dbUser['pwd_hash'])) {
+        if (!$dbUser || !$passwordCorrect) {
             $this->repo->logAttempt($ip, $email, false);
             Response::error('Credenziali non valide.', 401);
         }
@@ -185,6 +186,79 @@ class AuthController
         $this->repo->deactivateUser($userId);
         Audit::log('DELETE', 'users', $userId);
         Response::success(['message' => 'Utente disattivato']);
+    }
+
+    // ─── POST /api/?module=auth&action=updateUserRole (admin only) ────────────
+    public function updateUserRole(): void
+    {
+        Auth::requireRole('admin');
+        $body = Response::jsonBody();
+        Response::requireFields($body, ['userId', 'role']);
+
+        $allowed = ['admin', 'manager', 'operator', 'readonly'];
+        if (!in_array($body['role'], $allowed, true)) {
+            Response::error('Ruolo non valido. Valori accettati: ' . implode(', ', $allowed), 400);
+        }
+
+        $userId = (string)$body['userId'];
+
+        // Validate user exists
+        $this->validateUserExists($userId);
+
+        $this->repo->updateRole($userId, $body['role']);
+        Audit::log('UPDATE', 'users', $userId, null, ['role' => $body['role']]);
+        Response::success(['message' => 'Ruolo aggiornato']);
+    }
+
+    // ─── POST /api/?module=auth&action=toggleUserActive (admin only) ──────────
+    public function toggleUserActive(): void
+    {
+        Auth::requireRole('admin');
+        $body = Response::jsonBody();
+        Response::requireFields($body, ['userId', 'active']);
+
+        $userId = (string)$body['userId'];
+        $active = (bool)$body['active'];
+
+        $this->validateUserExists($userId);
+
+        $this->repo->toggleActive($userId, $active);
+        Audit::log('UPDATE', 'users', $userId, null, ['is_active' => $active]);
+        Response::success(['message' => $active ? 'Utente riattivato' : 'Utente sospeso']);
+    }
+
+    // ─── POST /api/?module=auth&action=adminResetPassword (admin only) ────────
+    public function adminResetPassword(): void
+    {
+        Auth::requireRole('admin');
+        $body = Response::jsonBody();
+        Response::requireFields($body, ['userId']);
+
+        $userId = (string)$body['userId'];
+        $this->validateUserExists($userId);
+
+        // Generate cryptographically secure temporary password
+        $tempPassword = bin2hex(random_bytes(10)); // 20 hex chars
+        $hash = password_hash($tempPassword, PASSWORD_BCRYPT, ['cost' => 12]);
+
+        $this->repo->setPasswordHash($userId, $hash);
+        Audit::log('PASSWORD_RESET', 'users', $userId, null, ['reset_by' => 'admin']);
+
+        // Return temp password plaintext ONLY in this response
+        Response::success([
+            'tempPassword' => $tempPassword,
+            'message' => 'Password temporanea generata. Mostrala all\'utente e invitalo a cambiarla al prossimo accesso.',
+        ]);
+    }
+
+    // ─── PRIVATE HELPER ───────────────────────────────────────────────────────
+    private function validateUserExists(string $userId): array
+    {
+        $user = $this->repo->getUserById($userId);
+        if (!$user) {
+            Response::error('Utente non trovato', 404);
+        }
+        return $user;
     }
 
     private function getClientIp(): string

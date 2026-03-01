@@ -21,9 +21,12 @@ class AthletesRepository
 
     public function listAthletes(string $teamId = '', bool $includeInactive = false): array
     {
-        $sql = 'SELECT a.id, a.full_name, a.jersey_number, a.role, a.birth_date,
+        $sql = 'SELECT a.id, a.team_id, a.full_name, a.jersey_number, a.role, a.birth_date,
                        a.height_cm, a.weight_kg, a.photo_path, a.is_active,
-                       COALESCE(t.name, "Nessuna squadra") AS team_name, COALESCE(t.category, "Nessuna") AS category
+                       a.phone, a.email, a.fiscal_code, a.medical_cert_expires_at,
+                       a.residence_address, a.residence_city, a.parent_contact, a.parent_phone,
+                       COALESCE(t.name, a.team_id, "Nessuna squadra") AS team_name,
+                       COALESCE(t.category, a.team_id, "Nessuna") AS category
                 FROM athletes a
                 LEFT JOIN teams t ON a.team_id = t.id
                 WHERE a.deleted_at IS NULL';
@@ -46,12 +49,21 @@ class AthletesRepository
     public function getAthleteById(string $id): ?array
     {
         $stmt = $this->db->prepare(
-            'SELECT a.id, a.user_id, a.team_id, a.full_name, a.jersey_number, a.role,
-                    a.birth_date, a.height_cm, a.weight_kg, a.photo_path,
-                    a.parent_contact, a.parent_phone, a.is_active,
+            'SELECT a.id, a.user_id, a.team_id, a.full_name,
+                    a.first_name, a.last_name,
+                    a.jersey_number, a.role,
+                    a.birth_date, a.birth_place,
+                    a.height_cm, a.weight_kg, a.photo_path,
+                    a.residence_address, a.residence_city,
+                    a.fiscal_code, a.identity_document, a.federal_id,
+                    a.email, a.phone,
+                    a.parent_contact, a.parent_phone,
+                    a.medical_cert_type, a.medical_cert_expires_at,
+                    a.shirt_size, a.shoe_size,
+                    a.is_active,
                     t.name AS team_name, t.category
              FROM athletes a
-             JOIN teams t ON a.team_id = t.id
+             LEFT JOIN teams t ON a.team_id = t.id
              WHERE a.id = :id AND a.deleted_at IS NULL
              LIMIT 1'
         );
@@ -63,10 +75,35 @@ class AthletesRepository
     public function createAthlete(array $data): void
     {
         $stmt = $this->db->prepare(
-            'INSERT INTO athletes (id, user_id, team_id, full_name, jersey_number, role,
-                                   birth_date, height_cm, weight_kg, photo_path, parent_contact, parent_phone)
-             VALUES (:id, :user_id, :team_id, :full_name, :jersey_number, :role,
-                     :birth_date, :height_cm, :weight_kg, :photo_path, :parent_contact, :parent_phone)'
+            'INSERT INTO athletes (
+                id, user_id, team_id,
+                first_name, last_name,
+                jersey_number, role,
+                birth_date, birth_place,
+                height_cm, weight_kg,
+                photo_path,
+                residence_address, residence_city,
+                fiscal_code, identity_document, federal_id,
+                email, phone,
+                parent_contact, parent_phone,
+                medical_cert_type, medical_cert_expires_at,
+                shirt_size, shoe_size,
+                is_active
+             ) VALUES (
+                :id, :user_id, :team_id,
+                :first_name, :last_name,
+                :jersey_number, :role,
+                :birth_date, :birth_place,
+                :height_cm, :weight_kg,
+                :photo_path,
+                :residence_address, :residence_city,
+                :fiscal_code, :identity_document, :federal_id,
+                :email, :phone,
+                :parent_contact, :parent_phone,
+                :medical_cert_type, :medical_cert_expires_at,
+                :shirt_size, :shoe_size,
+                1
+             )'
         );
         $stmt->execute($data);
     }
@@ -76,9 +113,28 @@ class AthletesRepository
         $data[':id'] = $id;
         $stmt = $this->db->prepare(
             'UPDATE athletes
-             SET full_name = :full_name, jersey_number = :jersey_number, role = :role,
-                 birth_date = :birth_date, height_cm = :height_cm, weight_kg = :weight_kg,
-                 parent_contact = :parent_contact, parent_phone = :parent_phone, team_id = :team_id
+             SET first_name = :first_name,
+                 last_name = :last_name,
+                 jersey_number = :jersey_number,
+                 role = :role,
+                 team_id = :team_id,
+                 birth_date = :birth_date,
+                 birth_place = :birth_place,
+                 height_cm = :height_cm,
+                 weight_kg = :weight_kg,
+                 residence_address = :residence_address,
+                 residence_city = :residence_city,
+                 fiscal_code = :fiscal_code,
+                 identity_document = :identity_document,
+                 federal_id = :federal_id,
+                 email = :email,
+                 phone = :phone,
+                 parent_contact = :parent_contact,
+                 parent_phone = :parent_phone,
+                 medical_cert_type = :medical_cert_type,
+                 medical_cert_expires_at = :medical_cert_expires_at,
+                 shirt_size = :shirt_size,
+                 shoe_size = :shoe_size
              WHERE id = :id AND deleted_at IS NULL'
         );
         $stmt->execute($data);
@@ -134,19 +190,32 @@ class AthletesRepository
         $stmt = $this->db->prepare(
             'SELECT id, log_date, duration_min, rpe, load_value, acwr_score, notes
              FROM metrics_logs
-             WHERE athlete_id = :id AND log_date >= DATE_SUB(CURDATE(), INTERVAL ' . (int)$days . ' DAY)
+             WHERE athlete_id = :id AND log_date >= DATE_SUB(CURDATE(), INTERVAL :days DAY)
              ORDER BY log_date DESC'
         );
-        $stmt->execute([':id' => $athleteId]);
+        $stmt->bindValue(':id', $athleteId);
+        $stmt->bindValue(':days', $days, \PDO::PARAM_INT);
+        $stmt->execute();
         return $stmt->fetchAll();
+    }
+
+    /**
+     * Update the acwr_score of an already-inserted metric record.
+     * Called after calcACWR() which must run post-insert.
+     */
+    public function updateMetricAcwr(string $metricId, float $acwr): void
+    {
+        $stmt = $this->db->prepare(
+            'UPDATE metrics_logs SET acwr_score = :acwr WHERE id = :id'
+        );
+        $stmt->execute([':acwr' => $acwr, ':id' => $metricId]);
     }
 
     public function getCoachNotes(string $athleteId, int $limit = 10): array
     {
         $stmt = $this->db->prepare(
-            'SELECT m.log_date, m.notes, m.acwr_score, ml.duration_min, ml.rpe
+            'SELECT ml.log_date, ml.notes, ml.acwr_score, ml.duration_min, ml.rpe
              FROM metrics_logs ml
-             JOIN metrics_logs m ON m.id = ml.id
              WHERE ml.athlete_id = :id AND ml.notes IS NOT NULL AND ml.notes != \'\'
              ORDER BY ml.log_date DESC
              LIMIT :lim'

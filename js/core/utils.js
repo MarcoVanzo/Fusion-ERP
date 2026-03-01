@@ -73,13 +73,15 @@ const Utils = (() => {
         return elem;
     }
 
-    function emptyState(message = 'Nessun dato disponibile', detail = '') {
+    function emptyState(message = 'Nessun dato disponibile', detail = '', actionLabel = '', actionRoute = '') {
+        const actionHtml = actionLabel ? `<button class="btn btn-ghost" style="margin-top:var(--sp-2);" onclick="Router.navigate('${actionRoute || 'dashboard'}')">${escapeHtml(actionLabel)}</button>` : '';
         return `
       <div class="empty-state" style="padding:0; margin:var(--sp-4) 0; overflow:hidden; border:1px solid var(--color-border); background:var(--color-black); position:relative;">
         <img src="assets/media/empty_state_bg.png" class="duotone-img" style="opacity:0.4; max-height:280px; object-position:center; width:100%; display:block;" alt="Empty State Background" />
         <div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:var(--sp-4); text-align:center; background:linear-gradient(to top, rgba(0,0,0,0.8), transparent);">
             <h3 style="font-family:var(--font-display); font-weight:700; font-size:24px; color:var(--color-white); letter-spacing:0.05em; margin-bottom:var(--sp-1); text-transform:uppercase;">${escapeHtml(message)}</h3>
             ${detail ? `<p style="font-family:var(--font-body); font-size:14px; color:var(--color-silver);">${escapeHtml(detail)}</p>` : ''}
+            ${actionHtml}
         </div>
       </div>`;
     }

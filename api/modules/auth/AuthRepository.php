@@ -55,10 +55,11 @@ class AuthRepository
 
     public function logAttempt(string $ip, ?string $email, bool $success): void
     {
+        $id = 'LGA_' . bin2hex(random_bytes(4));
         $stmt = $this->db->prepare(
-            'INSERT INTO login_attempts (ip_address, email, success) VALUES (:ip, :email, :success)'
+            'INSERT INTO login_attempts (id, ip_address, email, success) VALUES (:id, :ip, :email, :success)'
         );
-        $stmt->execute([':ip' => $ip, ':email' => $email, ':success' => (int)$success]);
+        $stmt->execute([':id' => $id, ':ip' => $ip, ':email' => $email, ':success' => (int)$success]);
     }
 
     public function updateLastLogin(string $userId): void
@@ -75,6 +76,16 @@ class AuthRepository
             'UPDATE users SET pwd_hash = :hash, password_changed_at = NOW() WHERE id = :id'
         );
         $stmt->execute([':hash' => $hash, ':id' => $userId]);
+    }
+
+    public function getUserById(string $id): ?array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT id, email, role, full_name, phone, is_active, last_login_at, created_at
+             FROM users WHERE id = :id AND deleted_at IS NULL LIMIT 1'
+        );
+        $stmt->execute([':id' => $id]);
+        return $stmt->fetch() ?: null;
     }
 
     public function listUsers(string $role = ''): array
@@ -112,5 +123,23 @@ class AuthRepository
     {
         $stmt = $this->db->prepare('UPDATE users SET deleted_at = NOW() WHERE id = :id');
         $stmt->execute([':id' => $userId]);
+    }
+
+    public function updateRole(string $id, string $role): void
+    {
+        $stmt = $this->db->prepare('UPDATE users SET role = :role, updated_at = NOW() WHERE id = :id AND deleted_at IS NULL');
+        $stmt->execute([':role' => $role, ':id' => $id]);
+    }
+
+    public function toggleActive(string $id, bool $active): void
+    {
+        $stmt = $this->db->prepare('UPDATE users SET is_active = :active, updated_at = NOW() WHERE id = :id AND deleted_at IS NULL');
+        $stmt->execute([':active' => (int)$active, ':id' => $id]);
+    }
+
+    public function setPasswordHash(string $id, string $hash): void
+    {
+        $stmt = $this->db->prepare('UPDATE users SET pwd_hash = :hash, password_changed_at = NOW(), updated_at = NOW() WHERE id = :id AND deleted_at IS NULL');
+        $stmt->execute([':hash' => $hash, ':id' => $id]);
     }
 }

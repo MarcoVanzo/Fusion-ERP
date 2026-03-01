@@ -5,6 +5,7 @@ import sys
 import re
 import hashlib
 import json
+from typing import cast
 
 CACHE_FILE = '.deploy_cache.json'
 
@@ -41,12 +42,13 @@ def get_file_hash(filepath):
         print(f"⚠️ Error hashing {filepath}: {e}")
         return None
 
-def load_cache():
+def load_cache() -> dict[str, str]:
     """Load the file hash cache."""
     if os.path.exists(CACHE_FILE):
         try:
             with open(CACHE_FILE, 'r') as f:
-                return json.load(f)
+                data = json.load(f)
+                return dict(data) if isinstance(data, dict) else {}
         except Exception:
             return {}
     return {}
@@ -105,8 +107,8 @@ def deploy_files_via_ftp():
         print("✅ Connected securely.\n")
         
         # Load local cache
-        file_cache = load_cache()
-        new_cache = {}
+        file_cache: dict[str, str] = load_cache()
+        new_cache: dict[str, str] = {}
         
         # Keep track of directories we've verified or created
         created_dirs = set()
@@ -118,66 +120,69 @@ def deploy_files_via_ftp():
         ignore_dirs = ['.git', 'node_modules', 'tests', '__pycache__', '.pytest_cache', '.gemini', '.venv']
         ignore_extensions = ['.zip', '.log']
         ignore_files = ['deploy.py', 'deploy.mp', 'deploy_ftp.sh', CACHE_FILE]
-        
-        upload_count = 0
-        skip_count = 0
-        
+
+        def _do_upload(local_path: str, remote_file: str) -> None:
+            """Upload a single file via the enclosing FTP connection."""
+            with open(local_path, 'rb') as fbin:
+                ftp.storbinary(f'STOR {remote_file}', fbin)
+
+        upload_count: int = 0
+        skip_count: int = 0
+
         for root, dirs, files in os.walk('.'):
-            # Prune ignored directories
+            # Prune ignored directories in-place
             for d in list(dirs):
-                if d in ignore_dirs or d.startswith('.'):
-                    # We might skip all hidden dirs here, or specifically those in ignore_dirs.
-                    # Exclude .git etc via ignore_dirs. 
-                    if d in ignore_dirs:
-                        dirs.remove(d)
-            
+                if d in ignore_dirs:
+                    dirs.remove(d)
+
             # Calculate the corresponding remote path
             rel_path = os.path.relpath(root, '.')
             remote_sub_dir = base_remote_dir if rel_path == '.' else f"{base_remote_dir}/{rel_path}".replace('\\', '/')
-            
-            # Prepare to CD if we have files to upload in this dir (lazy cd)
-            dir_prepared = False
-            
-            current_remote_dir = remote_sub_dir
-            
-            for file in files:
-                if file in ignore_files or any(file.endswith(ext) for ext in ignore_extensions) or file.startswith('.'):
-                    if file != '.htaccess': # Only allow .htaccess, never push local .env over production
 
-                        skip_count += 1
-                        continue
-                    
-                local_file_path = os.path.join(root, file)
-                
-                # Check hash
+            # Lazy-CD: only change remote dir when we actually need to upload something
+            dir_prepared: bool = False
+            current_remote_dir: str = remote_sub_dir
+
+            for file in files:
+                # Skip ignored / hidden files (allow .htaccess)
+                if file != '.htaccess' and (
+                    file in ignore_files
+                    or file.startswith('.')
+                    or any(file.endswith(ext) for ext in ignore_extensions)
+                ):
+                    skip_count += 1
+                    continue
+
+                local_file_path: str = os.path.join(root, file)
+
                 file_hash = get_file_hash(local_file_path)
                 if not file_hash:
                     continue
-                
+
                 new_cache[local_file_path] = file_hash
-                
-                # If hash hasn't changed, skip upload
-                if local_file_path in file_cache and file_cache[local_file_path] == file_hash:
+
+                # Skip if unchanged
+                cached_hash: str = file_cache.get(local_file_path, '')
+                if cached_hash and cached_hash == file_hash:
                     skip_count += 1
                     continue
-                
-                # We need to upload. Ensure directory is ready if not done yet
+
+                # Ensure remote directory exists before first upload in this dir
                 if not dir_prepared:
                     ftp.cwd('/')
                     ensure_remote_dir(ftp, current_remote_dir, created_dirs)
                     ftp.cwd(current_remote_dir)
                     dir_prepared = True
-                
+
                 print(f"  ⬆️ Uploading {rel_path}/{file} ...")
-                with open(local_file_path, 'rb') as f:
-                    ftp.storbinary(f'STOR {file}', f)
-                upload_count += 1
-                
-                # Incrementally save cache to prevent total loss on interrupt
+                _do_upload(local_file_path, file)
+                upload_count = cast(int, upload_count) + 1
+
+                # Incrementally persist cache to survive interruptions
                 if upload_count % 50 == 0:
                     save_cache(new_cache)
-                
-        # Save the new cache so exact next run skips all
+
+        # Save the new cache so the next run skips all unchanged files
         save_cache(new_cache)
                 
         print(f"\n✅ Upload complete! Successfully transferred {upload_count} modified files (skipped {skip_count} unchanged files).")
@@ -202,6 +207,8 @@ def update_index_version():
             
         # Sostituisce .css?v=... o .js?v=... con la nuova versione (timestamp)
         content = re.sub(r'(\.(css|js)\?v=)[\w\.]+', r'\g<1>' + version, content)
+        # Aggiorna anche il meta tag app-version (usato dal router per i moduli dinamici)
+        content = re.sub(r'(<meta name="app-version" content=")[\w\.]+(")', r'\g<1>' + version + r'\2', content)
         
         with open(index_path, 'w', encoding='utf-8') as f:
             f.write(content)

@@ -73,7 +73,13 @@ class Response
      */
     public static function setCorsHeaders(): void
     {
-        $allowedOrigin = getenv('APP_URL') ?: 'http://localhost';
+        $appUrl = getenv('APP_URL') ?: 'http://localhost';
+        // CORS origin must be scheme+host+port only — paths are never part of an Origin header.
+        $parsed = parse_url($appUrl);
+        $allowedOrigin = ($parsed['scheme'] ?? 'http') . '://' . ($parsed['host'] ?? 'localhost');
+        if (!empty($parsed['port'])) {
+            $allowedOrigin .= ':' . $parsed['port'];
+        }
         header("Access-Control-Allow-Origin: {$allowedOrigin}");
         header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
         header('Access-Control-Allow-Headers: Content-Type, X-Requested-With');

@@ -173,6 +173,24 @@ class TransportRepository
     }
 
     /**
+     * Atomically decrements seats_available only if > 0.
+     * Returns the number of rows updated (1 = success, 0 = no seats left).
+     * This prevents overbooking under concurrent requests without needing
+     * a SELECT + UPDATE pattern that is vulnerable to race conditions.
+     */
+    public function decrementSeatsAtomic(string $routeId): int
+    {
+        $stmt = $this->db->prepare(
+            'UPDATE carpool_routes
+             SET seats_available = seats_available - 1,
+                 status = IF(seats_available - 1 <= 0, \'full\', status)
+             WHERE id = :id AND seats_available > 0'
+        );
+        $stmt->execute([':id' => $routeId]);
+        return $stmt->rowCount();
+    }
+
+    /**
      * Matching query: find best carpool routes for athletes in the same team for an event.
      * Returns athletes without a confirmed route and available routes with free seats.
      */
@@ -215,6 +233,20 @@ class TransportRepository
         $stmt->execute([':path' => $pdfPath, ':id' => $id]);
     }
 
+    /**
+     * Look up an existing reimbursement by carpool_id for idempotency check.
+     * Returns the existing record or null if none exists.
+     */
+    public function getReimbursementByCarpool(string $carpoolId): ?array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT id, carpool_id, total_eur, pdf_path FROM mileage_reimbursements
+             WHERE carpool_id = :carpool_id LIMIT 1'
+        );
+        $stmt->execute([':carpool_id' => $carpoolId]);
+        return $stmt->fetch() ?: null;
+    }
+
     // ─── EMAIL LOG ────────────────────────────────────────────────────────────
 
     public function logEmail(array $data): void
@@ -237,6 +269,106 @@ class TransportRepository
              WHERE ea.event_id = :event_id AND ea.status IN (\'invited\',\'confirmed\')'
         );
         $stmt->execute([':event_id' => $eventId]);
+        return $stmt->fetchAll();
+    }
+
+    // ─── GYMS ────────────────────────────────────────────────────────────────
+
+    public function listGyms(): array
+    {
+        $stmt = $this->db->query(
+            'SELECT id, name, address, lat, lng FROM gyms ORDER BY name'
+        );
+        return $stmt->fetchAll();
+    }
+
+    public function createGym(array $data): void
+    {
+        $stmt = $this->db->prepare(
+            'INSERT INTO gyms (id, name, address, lat, lng, created_by)
+             VALUES (:id, :name, :address, :lat, :lng, :created_by)'
+        );
+        $stmt->execute($data);
+    }
+
+    public function deleteGym(string $id): bool
+    {
+        $stmt = $this->db->prepare('DELETE FROM gyms WHERE id = :id');
+        $stmt->execute([':id' => $id]);
+        return $stmt->rowCount() > 0;
+    }
+
+    // ─── TEAM ATHLETES (for transport selection) ─────────────────────────────
+
+    public function listTeamAthletes(string $teamId): array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT a.id, a.full_name, a.jersey_number, a.role,
+                    TRIM(CONCAT_WS(\', \',
+                        NULLIF(TRIM(a.residence_address), \'\'),
+                        NULLIF(TRIM(a.residence_city), \'\')
+                    )) AS residence_address,
+                    a.photo_path,
+                    a.parent_contact, a.parent_phone
+             FROM athletes a
+             WHERE a.team_id = :team_id AND a.is_active = 1 AND a.deleted_at IS NULL
+             ORDER BY a.full_name'
+        );
+        $stmt->execute([':team_id' => $teamId]);
+        return $stmt->fetchAll();
+    }
+
+    // ─── TRANSPORTS ──────────────────────────────────────────────────────────
+
+    public function saveTransport(array $data): void
+    {
+        $stmt = $this->db->prepare(
+            'INSERT INTO transports (id, team_id, destination_name, destination_address,
+                                      destination_lat, destination_lng, departure_address,
+                                      arrival_time, departure_time, transport_date,
+                                      athletes_json, timeline_json, stats_json, ai_response, created_by)
+             VALUES (:id, :team_id, :destination_name, :destination_address,
+                     :destination_lat, :destination_lng, :departure_address,
+                     :arrival_time, :departure_time, :transport_date,
+                     :athletes_json, :timeline_json, :stats_json, :ai_response, :created_by)'
+        );
+        $stmt->execute($data);
+    }
+
+    public function listTransports(string $teamId = ''): array
+    {
+        $sql = 'SELECT id, team_id, destination_name, destination_address,
+                       arrival_time, departure_time, transport_date,
+                       athletes_json, stats_json, created_at
+                FROM transports';
+        $params = [];
+        if ($teamId !== '') {
+            $sql .= ' WHERE team_id = :team_id';
+            $params[':team_id'] = $teamId;
+        }
+        $sql .= ' ORDER BY transport_date DESC, created_at DESC';
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll();
+    }
+
+    public function getTransportById(string $id): ?array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT * FROM transports WHERE id = :id LIMIT 1'
+        );
+        $stmt->execute([':id' => $id]);
+        return $stmt->fetch() ?: null;
+    }
+
+    // ─── TEAMS LIST (for dropdowns) ──────────────────────────────────────────
+
+    public function listTeams(): array
+    {
+        $stmt = $this->db->query(
+            'SELECT id, name, category, season FROM teams
+             WHERE is_active = 1 AND deleted_at IS NULL ORDER BY name'
+        );
         return $stmt->fetchAll();
     }
 }

@@ -11,6 +11,7 @@ namespace FusionERP\Modules\Admin;
 use FusionERP\Shared\Auth;
 use FusionERP\Shared\Audit;
 use FusionERP\Shared\Response;
+use FusionERP\Shared\GoogleDrive;
 use Mpdf\Mpdf;
 
 class AdminController
@@ -290,5 +291,477 @@ HTML;
         Auth::requireRole('operator');
         $certs = $this->repo->listCertificates('', true);
         Response::success($certs);
+    }
+
+    // ─── SQL IMPORT (admin only) ──────────────────────────────────────────────
+
+    /**
+     * Execute a pre-generated SQL import file from uploads/.
+     * Only whitelisted filenames are accepted to prevent arbitrary SQL execution.
+     *
+     * Usage: POST /api?module=admin&action=runSqlImport
+     * Body:  { "file": "import_athletes.sql" }
+     */
+    public function runSqlImport(): void
+    {
+        Auth::requireRole('admin');
+
+        $body = Response::jsonBody();
+        $filename = $body['file'] ?? '';
+
+        // ── Whitelist: only allow known import files ──
+        $allowed = [
+            'import_athletes.sql',
+            'import_remaining_athletes.sql',
+        ];
+
+        if (!in_array($filename, $allowed, true)) {
+            Response::error(
+                "File non consentito. File validi: " . implode(', ', $allowed),
+                403
+            );
+        }
+
+        $uploadsDir = dirname(__DIR__, 3) . '/uploads/';
+        $filePath = $uploadsDir . $filename;
+
+        if (!file_exists($filePath)) {
+            Response::error("File non trovato: {$filename}", 404);
+        }
+
+        $sql = file_get_contents($filePath);
+        if ($sql === false || trim($sql) === '') {
+            Response::error("File vuoto o non leggibile: {$filename}", 400);
+        }
+
+        $pdo = \FusionERP\Shared\Database::getInstance();
+
+        // Split on semicolons (respecting quoted strings is non-trivial,
+        // but these generated files use only simple INSERT/SET/SELECT)
+        $statements = array_filter(
+            array_map('trim', explode(';', $sql)),
+        fn(string $s) => $s !== '' && !str_starts_with($s, '--')
+        );
+
+        $executed = 0;
+        $errors = [];
+        $warnings = [];
+
+        // ── Wrap ALL statements in a single transaction for atomicity ──────────
+        // If ANY statement fails, the entire import is rolled back to prevent
+        // partial/corrupt state in the DB.
+        $pdo->beginTransaction();
+        try {
+            foreach ($statements as $i => $stmt) {
+                // SELECT statements (team checks) → capture output for warnings
+                if (stripos(ltrim($stmt), 'SELECT') === 0) {
+                    $row = $pdo->query($stmt)->fetch(\PDO::FETCH_NUM);
+                    if ($row && isset($row[0]) && str_contains((string)$row[0], '⚠')) {
+                        $warnings[] = $row[0];
+                    }
+                }
+                else {
+                    $pdo->exec($stmt);
+                }
+                $executed++;
+            }
+            $pdo->commit();
+        }
+        catch (\Throwable $e) {
+            $pdo->rollBack();
+            $errors[] = [
+                'statement' => $executed + 1,
+                'sql' => mb_substr((string)($statements[array_keys($statements)[$executed]] ?? ''), 0, 120) . '…',
+                'error' => $e->getMessage(),
+            ];
+        }
+
+        Audit::log('IMPORT', 'athletes', null, null, [
+            'file' => $filename,
+            'executed' => $executed,
+            'errors' => count($errors),
+        ]);
+
+        Response::success([
+            'file' => $filename,
+            'total' => count($statements),
+            'executed' => $executed,
+            'errors' => $errors,
+            'warnings' => $warnings,
+            'message' => count($errors) === 0
+            ? '✅ Import completato: ' . (string)$executed . ' istruzioni eseguite.'
+            : '❌ Import annullato (rollback): errore allo statement #' . (string)($executed + 1) . '. Nessuna modifica applicata.',
+        ]);
+    }
+
+    // ─── SYSTEM LOGS ────────────────────────────────────────────────────────
+
+    /**
+     * GET ?module=admin&action=listLogs
+     * Optional query params: action, table_name, date_from, date_to, search, limit, offset
+     */
+    public function listLogs(): void
+    {
+        Auth::requireRole('manager');
+
+        $action = filter_input(INPUT_GET, 'action', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        $tableName = filter_input(INPUT_GET, 'table_name', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        $dateFrom = filter_input(INPUT_GET, 'date_from', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        $dateTo = filter_input(INPUT_GET, 'date_to', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        $search = filter_input(INPUT_GET, 'search', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        $limit = max(1, min(500, (int)(filter_input(INPUT_GET, 'limit', FILTER_VALIDATE_INT) ?: 200)));
+        $offset = max(0, (int)(filter_input(INPUT_GET, 'offset', FILTER_VALIDATE_INT) ?: 0));
+
+        // The 'action' GET param is also used by the router; for this endpoint the
+        // filter action is passed as 'action_filter' to avoid collision.
+        $actionFilter = filter_input(INPUT_GET, 'action_filter', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+
+        $logs = $this->repo->listLogs(
+            $actionFilter,
+            $tableName,
+            $dateFrom,
+            $dateTo,
+            $search,
+            $limit,
+            $offset
+        );
+
+        Response::success([
+            'logs' => $logs,
+            'limit' => $limit,
+            'offset' => $offset,
+            'count' => count($logs),
+        ]);
+    }
+
+    // ─── BACKUP ───────────────────────────────────────────────────────────────
+
+    /**
+     * GET ?module=admin&action=listBackups
+     * Returns list of backup metadata records + DB table stats.
+     */
+    public function listBackups(): void
+    {
+        Auth::requireRole('manager');
+
+        $backups = $this->repo->listBackupRecords();
+        $tables = $this->repo->listDatabaseTables();
+
+        $erpTables = array_values(array_filter($tables, fn($t) => !str_starts_with($t['table_name'], 'wp_')));
+        $totalRows = (int)array_sum(array_column($erpTables, 'table_rows'));
+        $totalBytes = (int)array_sum(array_column($erpTables, 'data_length'));
+
+        Response::success([
+            'backups' => $backups,
+            'db_stats' => [
+                'table_count' => count($erpTables),
+                'total_rows' => $totalRows,
+                'total_bytes' => $totalBytes,
+                'tables' => $erpTables,
+            ],
+        ]);
+    }
+
+    /**
+     * POST ?module=admin&action=createBackup
+     * Generates a full SQL dump via PDO and compresses to ZIP.
+     * After local save, uploads to Google Drive (if configured).
+     */
+    public function createBackup(): void
+    {
+        $user = Auth::requireRole('admin');
+        $result = self::_performBackupDump($user['id'], $user['full_name'] ?? 'Admin');
+
+        if (!$result['success']) {
+            Response::error($result['error'], 500);
+        }
+
+        // ── Upload to Google Drive ─────────────────────────────────────────────
+        $driveFileId = null;
+        $driveError = null;
+        $driveEnabled = !empty(getenv('GDRIVE_CLIENT_ID')) && !empty(getenv('GDRIVE_REFRESH_TOKEN'));
+
+        if ($driveEnabled) {
+            try {
+                $driveFileId = GoogleDrive::uploadFile($result['filepath'], $result['filename']);
+                $this->repo->updateBackupDriveInfo($result['id'], $driveFileId);
+            }
+            catch (\Throwable $e) {
+                $driveError = $e->getMessage();
+                error_log('[BACKUP] Drive upload failed: ' . $driveError);
+            }
+        }
+
+        Response::success([
+            'id' => $result['id'],
+            'filename' => $result['filename'],
+            'filesize' => $result['filesize'],
+            'table_count' => count($result['table_names']),
+            'row_count' => $result['total_rows'],
+            'created_at' => date('Y-m-d H:i:s'),
+            'drive_file_id' => $driveFileId,
+            'drive_error' => $driveError,
+        ], 201);
+    }
+
+    /**
+     * Performs DB dump + ZIP. Used by createBackup() (manual) and cron/backup_nightly.php.
+     *
+     * @param string|null $createdBy   User ID (null for cron)
+     * @param string      $authorName  Display name for SQL header
+     * @return array{success:bool, error?:string, id?:string, filename?:string,
+     *               filepath?:string, filesize?:int, table_names?:array, total_rows?:int}
+     */
+    public static function _performBackupDump(?string $createdBy, string $authorName = 'System'): array
+    {
+        $envPath = getenv('BACKUP_STORAGE_PATH') ?: '';
+        $candidates = array_filter([
+            $envPath ? rtrim($envPath, '/') . '/' : '',
+            dirname(__DIR__, 3) . '/uploads/backups/',
+            sys_get_temp_dir() . '/fusion_backups/',
+        ]);
+
+        $storagePath = null;
+        foreach ($candidates as $candidate) {
+            if (empty($candidate))
+                continue;
+            if (!is_dir($candidate))
+                @mkdir($candidate, 0750, true);
+            if (is_dir($candidate) && is_writable($candidate)) {
+                $storagePath = $candidate;
+                break;
+            }
+        }
+
+        if ($storagePath === null) {
+            return ['success' => false, 'error' => 'Nessuna directory di backup scrivibile disponibile'];
+        }
+
+        $repo = new AdminRepository();
+        $tables = $repo->listDatabaseTables();
+        $tables = array_values(array_filter($tables, fn($t) => !str_starts_with($t['table_name'], 'wp_')));
+        $tableNames = array_column($tables, 'table_name');
+        $totalRows = (int)array_sum(array_column($tables, 'table_rows'));
+
+        if (empty($tableNames)) {
+            return ['success' => false, 'error' => 'Nessuna tabella trovata nel database'];
+        }
+
+        $pdo = \FusionERP\Shared\Database::getInstance();
+        $backupId = 'BKP_' . bin2hex(random_bytes(6));
+        $date = date('Ymd_His');
+        $sqlFile = "backup_{$date}_{$backupId}.sql";
+        $zipFile = "backup_{$date}_{$backupId}.zip";
+        $sqlPath = $storagePath . $sqlFile;
+        $zipPath = $storagePath . $zipFile;
+
+        $fh = fopen($sqlPath, 'w');
+        if ($fh === false) {
+            return ['success' => false, 'error' => 'Impossibile scrivere il file di backup'];
+        }
+
+        fwrite($fh, "-- Fusion ERP \xe2\x80\x94 Database Backup\n");
+        fwrite($fh, "-- Generated: " . date('Y-m-d H:i:s') . "\n");
+        fwrite($fh, "-- By: {$authorName}\n");
+        fwrite($fh, "-- Tables: " . implode(', ', $tableNames) . "\n\n");
+        fwrite($fh, "SET FOREIGN_KEY_CHECKS=0;\nSET SQL_MODE='NO_AUTO_VALUE_ON_ZERO';\nSET NAMES utf8mb4;\n\n");
+
+        foreach ($tableNames as $table) {
+            // \u2500\u2500 Table name whitelist validation \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+            // Validates against a strict regex before interpolating into SQL.
+            // Table names come from INFORMATION_SCHEMA but we validate defensively.
+            if (!preg_match('/^[a-zA-Z0-9_]+$/', $table)) {
+                fwrite($fh, "-- SKIPPED unsafe table name: {$table}\n");
+                continue;
+            }
+
+            try {
+                $row = $pdo->query("SHOW CREATE TABLE `{$table}`")->fetch(\PDO::FETCH_NUM);
+                $createSql = $row[1] ?? '';
+            }
+            catch (\Throwable $e) {
+                $createSql = "-- Could not retrieve CREATE for {$table}: " . $e->getMessage();
+            }
+
+            fwrite($fh, "-- \xe2\x94\x80\xe2\x94\x80\xe2\x94\x80 TABLE: {$table} \xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\n");
+            fwrite($fh, "DROP TABLE IF EXISTS `{$table}`;\n");
+            fwrite($fh, $createSql . ";\n\n");
+
+            $offset = 0;
+            $chunkSize = 500;
+            do {
+                try {
+                    $stmt = $pdo->prepare("SELECT * FROM `{$table}` LIMIT " . (string)$chunkSize . " OFFSET " . (string)$offset);
+                    $stmt->execute();
+                    $rows = $stmt->fetchAll(\PDO::FETCH_NUM);
+                }
+                catch (\Throwable $e) {
+                    fwrite($fh, "-- Error reading {$table}: " . $e->getMessage() . "\n");
+                    break;
+                }
+                if (empty($rows))
+                    break;
+
+                fwrite($fh, "INSERT INTO `{$table}` VALUES\n");
+                $rowStrings = [];
+                foreach ($rows as $row) {
+                    $vals = array_map(fn($v) => $v === null ? 'NULL' : $pdo->quote((string)$v), $row);
+                    $rowStrings[] = '(' . implode(',', $vals) . ')';
+                }
+                fwrite($fh, implode(",\n", $rowStrings) . ";\n");
+                $offset += $chunkSize;
+            } while (count($rows) === $chunkSize);
+
+            fwrite($fh, "\n");
+        }
+
+        fwrite($fh, "SET FOREIGN_KEY_CHECKS=1;\n");
+        fclose($fh);
+
+        // ── Compress to ZIP ────────────────────────────────────────────────────
+        $filesize = 0;
+        $finalFile = $zipFile;
+        $finalPath = $zipPath;
+
+        if (class_exists('ZipArchive')) {
+            $zip = new \ZipArchive();
+            if ($zip->open($zipPath, \ZipArchive::CREATE) === true) {
+                $zip->addFile($sqlPath, $sqlFile);
+                $zip->close();
+                unlink($sqlPath);
+                $filesize = file_exists($zipPath) ? filesize($zipPath) : 0;
+            }
+            else {
+                $finalFile = $sqlFile;
+                $finalPath = $sqlPath;
+                $filesize = file_exists($sqlPath) ? filesize($sqlPath) : 0;
+            }
+        }
+        else {
+            $finalFile = $sqlFile;
+            $finalPath = $sqlPath;
+            $filesize = file_exists($sqlPath) ? filesize($sqlPath) : 0;
+        }
+
+        // ── Save metadata to DB ────────────────────────────────────────────────
+        try {
+            $repo->saveBackupRecord([
+                ':id' => $backupId,
+                ':filename' => $finalFile,
+                ':filesize' => $filesize,
+                ':tables_list' => json_encode($tableNames),
+                ':table_count' => count($tableNames),
+                ':row_count' => $totalRows,
+                ':created_by' => $createdBy,
+                ':status' => 'ok',
+                ':notes' => $createdBy === null ? 'Cron automatico' : null,
+                ':drive_file_id' => null,
+                ':drive_uploaded_at' => null,
+            ]);
+        }
+        catch (\Throwable $e) {
+            error_log('[BACKUP] DB saveBackupRecord failed: ' . $e->getMessage());
+        }
+
+        Audit::log('BACKUP', 'backups', $backupId, null, [
+            'filename' => $finalFile,
+            'filesize' => $filesize,
+            'table_count' => count($tableNames),
+            'row_count' => $totalRows,
+            'source' => $createdBy === null ? 'cron' : 'manual',
+        ]);
+
+        return [
+            'success' => true,
+            'id' => $backupId,
+            'filename' => $finalFile,
+            'filepath' => $finalPath,
+            'filesize' => $filesize,
+            'table_names' => $tableNames,
+            'total_rows' => $totalRows,
+        ];
+    }
+
+
+    /**
+     * GET ?module=admin&action=downloadBackup&id=BKP_xxxx
+     * Streams the backup file directly to the browser.
+     */
+    public function downloadBackup(): void
+    {
+        Auth::requireRole('admin');
+
+        $id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        if (empty($id)) {
+            Response::error('ID backup mancante', 400);
+        }
+
+        $backup = $this->repo->getBackupById($id);
+        if (!$backup) {
+            Response::error('Backup non trovato', 404);
+        }
+
+        $storagePath = rtrim(getenv('BACKUP_STORAGE_PATH') ?: '/var/www/fusion/storage/backups/', '/') . '/';
+
+        // ── Path-traversal guard ───────────────────────────────────────────────
+        // Use basename() to strip any directory components, then verify the
+        // resolved real path is within the expected storage directory.
+        $safeFilename = basename((string)$backup['filename']);
+        $filePath = $storagePath . $safeFilename;
+        $realFile = realpath($filePath);
+        $realStorage = realpath($storagePath);
+
+        if ($realFile === false || $realStorage === false
+        || !str_starts_with($realFile, $realStorage . DIRECTORY_SEPARATOR)) {
+            Response::error('File di backup non valido', 403);
+        }
+
+        if (!file_exists($realFile)) {
+            Response::error('File di backup non trovato sul server', 404);
+        }
+
+        // Stream file
+        $mime = str_ends_with($safeFilename, '.zip') ? 'application/zip' : 'application/sql';
+        header('Content-Type: ' . $mime);
+        header('Content-Disposition: attachment; filename="' . $safeFilename . '"');
+        header('Content-Length: ' . filesize($realFile));
+        header('Cache-Control: no-cache, must-revalidate');
+        readfile($realFile);
+        exit;
+    }
+
+    /**
+     * POST ?module=admin&action=deleteBackup
+     * Body: { "id": "BKP_xxxx" }
+     * Deletes backup file and metadata record.
+     */
+    public function deleteBackup(): void
+    {
+        Auth::requireRole('admin');
+
+        $body = Response::jsonBody();
+        $id = $body['id'] ?? '';
+
+        if (empty($id)) {
+            Response::error('ID backup mancante', 400);
+        }
+
+        $backup = $this->repo->getBackupById($id);
+        if (!$backup) {
+            Response::error('Backup non trovato', 404);
+        }
+
+        // Delete physical file
+        $storagePath = rtrim(getenv('BACKUP_STORAGE_PATH') ?: '/var/www/fusion/storage/backups/', '/') . '/';
+        $filePath = $storagePath . $backup['filename'];
+        if (file_exists($filePath)) {
+            unlink($filePath);
+        }
+
+        $this->repo->deleteBackupRecord($id);
+
+        Audit::log('DELETE', 'backups', $id, $backup, null);
+
+        Response::success(['deleted' => $id]);
     }
 }

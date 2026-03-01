@@ -165,9 +165,31 @@ class TransportController
         if (!$passId) {
             Response::error('passengerId obbligatorio', 400);
         }
+        $routeId = (string)($body['routeId'] ?? '');
+        if (empty($routeId)) {
+            Response::error('routeId obbligatorio', 400);
+        }
 
-        $this->repo->confirmPassenger($passId);
-        $this->repo->decrementSeats($body['routeId'] ?? '');
+        $db = \FusionERP\Shared\Database::getInstance();
+        $db->beginTransaction();
+        try {
+            $this->repo->confirmPassenger($passId);
+
+            // Atomic decrement: fails gracefully if no seats are available,
+            // preventing overbooking under concurrent requests.
+            $affected = $this->repo->decrementSeatsAtomic($routeId);
+            if ($affected === 0) {
+                $db->rollBack();
+                Response::error('Nessun posto disponibile — la conferma è stata annullata.', 409);
+            }
+
+            $db->commit();
+        }
+        catch (\Throwable $e) {
+            $db->rollBack();
+            throw $e;
+        }
+
         Audit::log('UPDATE', 'carpool_passengers', (string)$passId, null, ['status' => 'confirmed']);
         Response::success(['message' => 'Passeggero confermato']);
     }
@@ -189,6 +211,18 @@ class TransportController
         $user = Auth::requireRole('operator');
         $body = Response::jsonBody();
         Response::requireFields($body, ['carpoolId', 'distanceKm']);
+
+        // ── Idempotency check ────────────────────────────────────────────────────────────────────────
+        // Prevents double reimbursements on double-click or network retry.
+        $existing = $this->repo->getReimbursementByCarpool($body['carpoolId']);
+        if ($existing) {
+            Response::success([
+                'id' => $existing['id'],
+                'total_eur' => (float)$existing['total_eur'],
+                'pdf_path' => $existing['pdf_path'] ?? null,
+                'message' => 'Rimborso già esistente per questa tratta.',
+            ]);
+        }
 
         $km = (float)$body['distanceKm'];
         $rate = (float)(getenv('MILEAGE_RATE') ?: 0.25);
@@ -368,8 +402,108 @@ HTML;
             return false;
         }
     }
-}           error_log('[MAILER] Failed to send to ' . $to . ': ' . $e->getMessage());
-            return false;
+
+    // ─── GYMS ─────────────────────────────────────────────────────────────────
+
+    public function listGyms(): void
+    {
+        Auth::requireAuth();
+        Response::success($this->repo->listGyms());
+    }
+
+    public function createGym(): void
+    {
+        $user = Auth::requireRole('operator');
+        $body = Response::jsonBody();
+        Response::requireFields($body, ['name']);
+
+        $id = 'GYM_' . bin2hex(random_bytes(4));
+        $this->repo->createGym([
+            ':id' => $id,
+            ':name' => htmlspecialchars(trim($body['name']), ENT_QUOTES, 'UTF-8'),
+            ':address' => $body['address'] ?? null,
+            ':lat' => isset($body['lat']) ? (float)$body['lat'] : null,
+            ':lng' => isset($body['lng']) ? (float)$body['lng'] : null,
+            ':created_by' => $user['id'],
+        ]);
+
+        Audit::log('INSERT', 'gyms', $id, null, $body);
+        Response::success(['id' => $id], 201);
+    }
+
+    public function deleteGym(): void
+    {
+        Auth::requireRole('manager');
+        $body = Response::jsonBody();
+        $id = $body['id'] ?? '';
+        if (empty($id)) {
+            Response::error('id obbligatorio', 400);
         }
+
+        $deleted = $this->repo->deleteGym($id);
+        if (!$deleted) {
+            Response::error('Palestra non trovata', 404);
+        }
+
+        Audit::log('DELETE', 'gyms', $id, null, null);
+        Response::success(['message' => 'Palestra eliminata']);
+    }
+
+    // ─── TEAM ATHLETES ────────────────────────────────────────────────────────
+
+    public function listTeamAthletes(): void
+    {
+        Auth::requireAuth();
+        $teamId = filter_input(INPUT_GET, 'teamId', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        if (empty($teamId)) {
+            Response::error('teamId obbligatorio', 400);
+        }
+        Response::success($this->repo->listTeamAthletes($teamId));
+    }
+
+    // ─── TRANSPORTS ───────────────────────────────────────────────────────────
+
+    public function saveTransport(): void
+    {
+        $user = Auth::requireRole('operator');
+        $body = Response::jsonBody();
+        Response::requireFields($body, ['team_id', 'destination_name', 'arrival_time', 'athletes_json']);
+
+        $id = 'TRP_' . bin2hex(random_bytes(4));
+        $this->repo->saveTransport([
+            ':id' => $id,
+            ':team_id' => $body['team_id'],
+            ':destination_name' => htmlspecialchars(trim($body['destination_name']), ENT_QUOTES, 'UTF-8'),
+            ':destination_address' => $body['destination_address'] ?? null,
+            ':destination_lat' => isset($body['destination_lat']) ? (float)$body['destination_lat'] : null,
+            ':destination_lng' => isset($body['destination_lng']) ? (float)$body['destination_lng'] : null,
+            ':departure_address' => $body['departure_address'] ?? null,
+            ':arrival_time' => $body['arrival_time'],
+            ':departure_time' => $body['departure_time'] ?? null,
+            ':transport_date' => $body['transport_date'] ?? date('Y-m-d'),
+            ':athletes_json' => json_encode($body['athletes_json']),
+            ':timeline_json' => isset($body['timeline_json']) ? json_encode($body['timeline_json']) : null,
+            ':stats_json' => isset($body['stats_json']) ? json_encode($body['stats_json']) : null,
+            ':ai_response' => isset($body['ai_response']) ? json_encode($body['ai_response']) : null,
+            ':created_by' => $user['id'],
+        ]);
+
+        Audit::log('INSERT', 'transports', $id, null, ['destination' => $body['destination_name']]);
+        Response::success(['id' => $id], 201);
+    }
+
+    public function listTransports(): void
+    {
+        Auth::requireAuth();
+        $teamId = filter_input(INPUT_GET, 'teamId', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        Response::success($this->repo->listTransports($teamId));
+    }
+
+    // ─── TEAMS (for dropdowns) ────────────────────────────────────────────────
+
+    public function listTeams(): void
+    {
+        Auth::requireAuth();
+        Response::success($this->repo->listTeams());
     }
 }

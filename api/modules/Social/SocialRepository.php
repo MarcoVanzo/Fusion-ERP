@@ -1,0 +1,539 @@
+<?php
+/**
+ * Social Repository — Meta Graph API Integration & Token Management
+ * Fusion ERP v1.0
+ */
+
+declare(strict_types=1);
+
+namespace FusionERP\Modules\Social;
+
+use FusionERP\Shared\Database;
+
+class SocialRepository
+{
+    private \PDO $db;
+    private const GRAPH_API_VERSION = 'v21.0';
+    private const GRAPH_BASE_URL = 'https://graph.facebook.com/';
+
+    public function __construct()
+    {
+        $this->db = Database::getInstance();
+    }
+
+    /**
+     * Returns the underlying PDO connection (for diagnostics).
+     */
+    public function getDb(): \PDO
+    {
+        return $this->db;
+    }
+
+    // ─── TOKEN MANAGEMENT ────────────────────────────────────────────────────
+
+    /**
+     * Save or update Meta OAuth token for a given user.
+     */
+    public function saveToken(int $userId, array $tokenData): void
+    {
+        $stmt = $this->db->prepare(
+            'INSERT INTO meta_tokens (user_id, page_id, ig_account_id, page_name, ig_username, access_token, token_type, expires_at)
+             VALUES (:user_id, :page_id, :ig_account_id, :page_name, :ig_username, :access_token, :token_type, :expires_at)
+             ON DUPLICATE KEY UPDATE
+                page_id = VALUES(page_id),
+                ig_account_id = VALUES(ig_account_id),
+                page_name = VALUES(page_name),
+                ig_username = VALUES(ig_username),
+                access_token = VALUES(access_token),
+                token_type = VALUES(token_type),
+                expires_at = VALUES(expires_at),
+                updated_at = NOW()'
+        );
+        $stmt->execute([
+            ':user_id' => $userId,
+            ':page_id' => $tokenData['page_id'] ?? null,
+            ':ig_account_id' => $tokenData['ig_account_id'] ?? null,
+            ':page_name' => $tokenData['page_name'] ?? null,
+            ':ig_username' => $tokenData['ig_username'] ?? null,
+            ':access_token' => $tokenData['access_token'],
+            ':token_type' => $tokenData['token_type'] ?? 'long_lived',
+            ':expires_at' => $tokenData['expires_at'] ?? null,
+        ]);
+    }
+
+    /**
+     * Get the stored token for the current user. Returns null if not found.
+     */
+    public function getToken(int $userId): ?array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT id, user_id, page_id, ig_account_id, page_name, ig_username,
+                    access_token, token_type, expires_at, created_at, updated_at
+             FROM meta_tokens
+             WHERE user_id = :user_id
+             LIMIT 1'
+        );
+        $stmt->execute([':user_id' => $userId]);
+        $row = $stmt->fetch();
+        return $row ?: null;
+    }
+
+    /**
+     * Delete the stored token (disconnect).
+     */
+    public function deleteToken(int $userId): void
+    {
+        $stmt = $this->db->prepare('DELETE FROM meta_tokens WHERE user_id = :user_id');
+        $stmt->execute([':user_id' => $userId]);
+    }
+
+    /**
+     * Check if the stored token is still valid (not expired).
+     */
+    public function isTokenValid(array $token): bool
+    {
+        if (empty($token['expires_at'])) {
+            return true; // Page tokens with no expiry are typically long-lived
+        }
+        return strtotime($token['expires_at']) > time();
+    }
+
+    // ─── OAUTH FLOW ──────────────────────────────────────────────────────────
+
+    /**
+     * Generate the Meta OAuth login URL.
+     * Uses a short random token stored in DB so callback can identify the user
+     * without any session or base64 complexity.
+     */
+    public function getOAuthUrl(string $stateToken): string
+    {
+        $appId = getenv('META_APP_ID');
+        $redirectUri = getenv('META_REDIRECT_URI');
+        $configId = getenv('META_CONFIG_ID');
+
+        $params = [
+            'client_id' => $appId,
+            'redirect_uri' => $redirectUri,
+            'response_type' => 'code',
+            'state' => $stateToken, // short hex token — safe in URLs
+        ];
+
+        // Facebook Login for Business uses config_id instead of scope
+        if (!empty($configId)) {
+            $params['config_id'] = $configId;
+        }
+        else {
+            $params['scope'] = implode(',', [
+                'instagram_basic',
+                'instagram_manage_insights',
+                'pages_show_list',
+                'pages_read_engagement',
+            ]);
+        }
+
+        return 'https://www.facebook.com/' . self::GRAPH_API_VERSION . '/dialog/oauth?'
+            . http_build_query($params);
+    }
+
+    /**
+     * Store a random token → userId mapping for OAuth callback lookup.
+     * Returns the generated token (32-char hex, URL-safe).
+     * userId is stored as VARCHAR to match users.id (which is VARCHAR(20), e.g. 'USR_admin0001').
+     */
+    public function storeOAuthToken(string $userId): string
+    {
+        $token = bin2hex(random_bytes(16)); // 32-char hex
+        $expires = date('Y-m-d H:i:s', time() + 600); // 10 minutes
+
+        try {
+            $stmt = $this->db->prepare(
+                'INSERT INTO meta_oauth_states (token, user_id, expires_at)
+                 VALUES (:token, :user_id, :expires_at)
+                 ON DUPLICATE KEY UPDATE user_id = VALUES(user_id), expires_at = VALUES(expires_at)'
+            );
+            $stmt->execute([':token' => $token, ':user_id' => $userId, ':expires_at' => $expires]);
+            error_log('[SOCIAL] storeOAuthToken: stored token for userId=' . $userId);
+        }
+        catch (\Throwable $e) {
+            error_log('[SOCIAL] storeOAuthToken: DB error: ' . $e->getMessage());
+            throw $e; // Do NOT silently fall back to file — user_id must persist reliably
+        }
+
+        return $token;
+    }
+
+    /**
+     * Resolve a state token to a userId string. Deletes the token after use.
+     * Returns empty string '' if not found or expired.
+     */
+    public function resolveOAuthToken(string $token): string
+    {
+        if (empty($token) || strlen($token) < 16) {
+            error_log('[SOCIAL] resolveOAuthToken: token too short: ' . $token);
+            return '';
+        }
+
+        // Try DB
+        try {
+            $stmt = $this->db->prepare(
+                'SELECT user_id, expires_at FROM meta_oauth_states WHERE token = :token LIMIT 1'
+            );
+            $stmt->execute([':token' => $token]);
+            $row = $stmt->fetch();
+
+            if ($row) {
+                $userId = (string)$row['user_id'];
+                if (strtotime($row['expires_at']) < time()) {
+                    error_log('[SOCIAL] resolveOAuthToken: token expired for userId=' . $userId);
+                    return '';
+                }
+                $this->db->prepare('DELETE FROM meta_oauth_states WHERE token = :token')
+                    ->execute([':token' => $token]);
+                error_log('[SOCIAL] resolveOAuthToken: success, userId=' . $userId);
+                return $userId;
+            }
+            error_log('[SOCIAL] resolveOAuthToken: token not found in DB: ' . $token);
+        }
+        catch (\Throwable $e) {
+            error_log('[SOCIAL] resolveOAuthToken DB error: ' . $e->getMessage());
+        }
+
+        error_log('[SOCIAL] resolveOAuthToken: not found, token=' . $token);
+        return '';
+    }
+
+    /** @deprecated */
+    public function decodeOAuthState(string $state): string
+    {
+        return $this->resolveOAuthToken($state);
+    }
+
+    /**
+     * Exchange authorization code for a short-lived token, then for a long-lived one.
+     */
+
+    public function exchangeCodeForToken(string $code): array
+    {
+        $appId = getenv('META_APP_ID');
+        $appSecret = getenv('META_APP_SECRET');
+        $redirectUri = getenv('META_REDIRECT_URI');
+
+        // Step 1: Exchange code for short-lived user access token
+        $url = self::GRAPH_BASE_URL . self::GRAPH_API_VERSION . '/oauth/access_token?' . http_build_query([
+            'client_id' => $appId,
+            'client_secret' => $appSecret,
+            'redirect_uri' => $redirectUri,
+            'code' => $code,
+        ]);
+
+        $response = $this->graphGet($url);
+        if (empty($response['access_token'])) {
+            throw new \RuntimeException('Impossibile ottenere access token da Meta: ' . json_encode($response));
+        }
+
+        $shortLivedToken = $response['access_token'];
+
+        // Step 2: Exchange short-lived token for long-lived token (60 days)
+        $url = self::GRAPH_BASE_URL . self::GRAPH_API_VERSION . '/oauth/access_token?' . http_build_query([
+            'grant_type' => 'fb_exchange_token',
+            'client_id' => $appId,
+            'client_secret' => $appSecret,
+            'fb_exchange_token' => $shortLivedToken,
+        ]);
+
+        $llResponse = $this->graphGet($url);
+        $longLivedToken = $llResponse['access_token'] ?? $shortLivedToken;
+        $expiresIn = $llResponse['expires_in'] ?? 5184000; // default 60 days
+
+        // Step 3: Get Pages managed by the user
+        $pagesUrl = self::GRAPH_BASE_URL . self::GRAPH_API_VERSION . '/me/accounts?'
+            . http_build_query(['access_token' => $longLivedToken, 'fields' => 'id,name,access_token']);
+
+        $pagesResponse = $this->graphGet($pagesUrl);
+        $pages = $pagesResponse['data'] ?? [];
+
+        if (empty($pages)) {
+            throw new \RuntimeException('Nessuna Pagina Facebook trovata. Assicurati di avere almeno una Pagina collegata.');
+        }
+
+        // Use the first page (or you can let the user choose in a future iteration)
+        $page = $pages[0];
+        $pageAccessToken = $page['access_token'];
+
+        // Step 4: Get the Instagram Business Account linked to this Page
+        $igUrl = self::GRAPH_BASE_URL . self::GRAPH_API_VERSION . '/' . $page['id'] . '?'
+            . http_build_query([
+            'access_token' => $pageAccessToken,
+            'fields' => 'instagram_business_account{id,username,profile_picture_url,followers_count}',
+        ]);
+
+        $igResponse = $this->graphGet($igUrl);
+        $igAccount = $igResponse['instagram_business_account'] ?? null;
+
+        return [
+            'access_token' => $pageAccessToken,
+            'token_type' => 'long_lived',
+            'expires_at' => date('Y-m-d H:i:s', time() + (int)$expiresIn),
+            'page_id' => $page['id'],
+            'page_name' => $page['name'],
+            'ig_account_id' => $igAccount['id'] ?? null,
+            'ig_username' => $igAccount['username'] ?? null,
+        ];
+    }
+
+    /**
+     * Refresh a long-lived token (extends for another 60 days).
+     */
+    public function refreshToken(string $currentToken): ?array
+    {
+        $appId = getenv('META_APP_ID');
+        $appSecret = getenv('META_APP_SECRET');
+
+        $url = self::GRAPH_BASE_URL . self::GRAPH_API_VERSION . '/oauth/access_token?' . http_build_query([
+            'grant_type' => 'fb_exchange_token',
+            'client_id' => $appId,
+            'client_secret' => $appSecret,
+            'fb_exchange_token' => $currentToken,
+        ]);
+
+        $response = $this->graphGet($url);
+        if (empty($response['access_token'])) {
+            return null;
+        }
+
+        $expiresIn = $response['expires_in'] ?? 5184000;
+        return [
+            'access_token' => $response['access_token'],
+            'expires_at' => date('Y-m-d H:i:s', time() + (int)$expiresIn),
+        ];
+    }
+
+    // ─── INSIGHTS ────────────────────────────────────────────────────────────
+
+    /**
+     * Get Instagram account insights (follower count, profile views, etc.)
+     *
+     * @param string $igAccountId Instagram Business Account ID
+     * @param string $accessToken Page Access Token
+     * @param string $period      'day' | 'week' | 'days_28'
+     * @param int    $days        Number of days to fetch
+     * @return array
+     */
+    public function getIgInsights(string $igAccountId, string $accessToken, string $period = 'day', int $days = 28): array
+    {
+        $since = date('Y-m-d', strtotime("-{$days} days"));
+        $until = date('Y-m-d');
+
+        $fields = implode(',', [
+            'follower_count',
+            'impressions',
+            'reach',
+            'profile_views',
+        ]);
+
+        $url = self::GRAPH_BASE_URL . self::GRAPH_API_VERSION . '/' . $igAccountId . '/insights?'
+            . http_build_query([
+            'metric' => $fields,
+            'period' => $period,
+            'since' => $since,
+            'until' => $until,
+            'access_token' => $accessToken,
+        ]);
+
+        try {
+            $response = $this->graphGet($url);
+            return $response['data'] ?? [];
+        }
+        catch (\Throwable $e) {
+            error_log('[SOCIAL] getIgInsights error: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Get Instagram account profile info (followers, media count, etc.)
+     */
+    public function getIgProfile(string $igAccountId, string $accessToken): array
+    {
+        $url = self::GRAPH_BASE_URL . self::GRAPH_API_VERSION . '/' . $igAccountId . '?'
+            . http_build_query([
+            'fields' => 'id,username,name,profile_picture_url,followers_count,media_count,biography,website',
+            'access_token' => $accessToken,
+        ]);
+
+        try {
+            return $this->graphGet($url);
+        }
+        catch (\Throwable $e) {
+            error_log('[SOCIAL] getIgProfile error: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Get recent media (posts) with insights.
+     */
+    public function getIgMedia(string $igAccountId, string $accessToken, int $limit = 12): array
+    {
+        $url = self::GRAPH_BASE_URL . self::GRAPH_API_VERSION . '/' . $igAccountId . '/media?'
+            . http_build_query([
+            'fields' => 'id,caption,media_type,media_url,thumbnail_url,timestamp,like_count,comments_count,permalink',
+            'limit' => $limit,
+            'access_token' => $accessToken,
+        ]);
+
+        try {
+            $response = $this->graphGet($url);
+            $items = $response['data'] ?? [];
+
+            // Enrich with per-media insights
+            foreach ($items as &$item) {
+                $item['insights'] = $this->getMediaInsights(
+                    $item['id'],
+                    $item['media_type'] ?? 'IMAGE',
+                    $accessToken
+                );
+            }
+
+            return $items;
+        }
+        catch (\Throwable $e) {
+            error_log('[SOCIAL] getIgMedia error: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Get insights for a single media item.
+     */
+    private function getMediaInsights(string $mediaId, string $mediaType, string $accessToken): array
+    {
+        // Different metric sets based on media type
+        $metrics = match (strtoupper($mediaType)) {
+                'VIDEO' => 'impressions,reach,plays,saved',
+                'CAROUSEL_ALBUM' => 'impressions,reach,saved,carousel_album_impressions',
+                default => 'impressions,reach,saved',
+            };
+
+        $url = self::GRAPH_BASE_URL . self::GRAPH_API_VERSION . '/' . $mediaId . '/insights?'
+            . http_build_query([
+            'metric' => $metrics,
+            'access_token' => $accessToken,
+        ]);
+
+        try {
+            $response = $this->graphGet($url);
+            $data = $response['data'] ?? [];
+
+            $result = [];
+            foreach ($data as $d) {
+                $result[$d['name']] = $d['values'][0]['value'] ?? $d['value'] ?? 0;
+            }
+            return $result;
+        }
+        catch (\Throwable $e) {
+            error_log('[SOCIAL] getMediaInsights error: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Get Facebook Page insights (views, engaged users, fans, etc.)
+     */
+    public function getFbPageInsights(string $pageId, string $accessToken, int $days = 28): array
+    {
+        $since = date('Y-m-d', strtotime("-{$days} days"));
+        $until = date('Y-m-d');
+
+        $url = self::GRAPH_BASE_URL . self::GRAPH_API_VERSION . '/' . $pageId . '/insights?'
+            . http_build_query([
+            'metric' => 'page_views_total,page_engaged_users,page_post_engagements,page_fans',
+            'period' => 'day',
+            'since' => $since,
+            'until' => $until,
+            'access_token' => $accessToken,
+        ]);
+
+        $result = [
+            'page_views' => 0,
+            'engaged_users' => 0,
+            'post_engagements' => 0,
+            'page_fans' => 0,
+        ];
+
+        $keyMap = [
+            'page_views_total' => 'page_views',
+            'page_engaged_users' => 'engaged_users',
+            'page_post_engagements' => 'post_engagements',
+            'page_fans' => 'page_fans',
+        ];
+
+        try {
+            $rawInsights = $this->graphGet($url)['data'] ?? [];
+        }
+        catch (\Throwable $e) {
+            error_log('[SOCIAL] getFbPageInsights error: ' . $e->getMessage());
+            return $result;
+        }
+
+        foreach ($rawInsights as $metric) {
+            $name = $metric['name'] ?? '';
+            if (isset($keyMap[$name])) {
+                $values = $metric['values'] ?? [];
+                $total = 0;
+                foreach ($values as $v) {
+                    $total += (int)($v['value'] ?? 0);
+                }
+                // For page_fans, take the last value (it's a lifetime metric)
+                if ($name === 'page_fans' && !empty($values)) {
+                    $lastVal = end($values);
+                    $total = (int)($lastVal['value'] ?? 0);
+                }
+                $result[$keyMap[$name]] = $total;
+            }
+        }
+
+        return $result;
+    }
+
+    // ─── HTTP UTILITY ─────────────────────────────────────────────────────────
+
+    /**
+     * Make a GET request to the Meta Graph API.
+     *
+     * @throws \RuntimeException on HTTP error or JSON decode failure.
+     */
+    private function graphGet(string $url): array
+    {
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_TIMEOUT => 20,
+            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_USERAGENT => 'FusionERP/1.0',
+        ]);
+        $body = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlErr = curl_error($ch);
+        curl_close($ch);
+
+        if ($curlErr) {
+            throw new \RuntimeException('cURL error: ' . $curlErr);
+        }
+
+        $decoded = json_decode((string)$body, true);
+        if (!is_array($decoded)) {
+            throw new \RuntimeException('Graph API non-JSON response (HTTP ' . $httpCode . '): ' . substr((string)$body, 0, 200));
+        }
+
+        if (isset($decoded['error'])) {
+            $err = $decoded['error'];
+            throw new \RuntimeException(
+                'Graph API error ' . ($err['code'] ?? '?') . ': ' . ($err['message'] ?? json_encode($err))
+                );
+        }
+
+        return $decoded;
+    }
+}

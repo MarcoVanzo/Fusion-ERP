@@ -35,12 +35,15 @@ class Audit
             $userId = $user['id'] ?? null;
             $ip = self::getClientIp();
 
+            $id = 'AUD_' . bin2hex(random_bytes(4));
+
             $stmt = $db->prepare(
-                'INSERT INTO audit_logs (user_id, action, table_name, record_id, before_snapshot, after_snapshot, ip_address)
-                 VALUES (:user_id, :action, :table_name, :record_id, :before, :after, :ip)'
+                'INSERT INTO audit_logs (id, user_id, action, table_name, record_id, before_snapshot, after_snapshot, ip_address)
+                 VALUES (:id, :user_id, :action, :table_name, :record_id, :before, :after, :ip)'
             );
 
             $stmt->execute([
+                ':id' => $id,
                 ':user_id' => $userId,
                 ':action' => $action,
                 ':table_name' => $tableName,

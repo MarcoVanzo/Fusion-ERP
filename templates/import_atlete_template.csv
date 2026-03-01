@@ -1,0 +1,6 @@
+full_name,team_id,jersey_number,role,birth_date,height_cm,weight_kg,parent_contact,parent_phone
+"Rossi Maria",TEAM_u13a,7,Palleggiatrice,2013-05-15,158,48.5,"Rossi Giuseppe","+39 333 1234567"
+"Bianchi Giulia",TEAM_u13a,3,Schiacciatrice,2013-08-22,162,50.0,"Bianchi Anna","+39 340 2345678"
+"Verdi Sofia",TEAM_u14a,11,Centrale,2012-03-10,168,55.2,"Verdi Marco","+39 347 3456789"
+"Ferrari Elena",TEAM_u14a,1,Libero,2012-11-28,155,45.0,"Ferrari Laura","+39 338 4567890"
+"Esposito Chiara",TEAM_u16a,9,Opposto,2010-07-04,172,58.0,"Esposito Paolo","+39 335 5678901"

@@ -45,6 +45,7 @@
         "icon": "users",
         "isMobileVisible": true,
         "isDynamicRoute": true,
+        "implemented": false,
         "notes": "Route template: teams/:teamId",
         "children": [
             {
@@ -82,7 +83,7 @@
     {
         "id": "transport",
         "title": "Trasporti",
-        "path": "trasporti/index.html",
+        "path": "transport",
         "icon": "bus",
         "isMobileVisible": true,
         "children": [
@@ -118,6 +119,7 @@
         "path": "scouting",
         "icon": "binoculars",
         "isMobileVisible": false,
+        "implemented": false,
         "children": [
             {
                 "title": "Database",
@@ -151,6 +153,7 @@
         "path": "finance",
         "icon": "currency-circle-dollar",
         "isMobileVisible": false,
+        "implemented": false,
         "children": [
             {
                 "title": "Cash Flow",
@@ -186,6 +189,12 @@
         "isMobileVisible": false,
         "children": [
             {
+                "title": "Analytics",
+                "path": "social-analytics",
+                "icon": "chart-line",
+                "isMobileVisible": false
+            },
+            {
                 "title": "Media Gallery",
                 "path": "social-gallery",
                 "icon": "image",
@@ -211,6 +220,7 @@
         "path": "ecommerce",
         "icon": "shopping-cart",
         "isMobileVisible": true,
+        "implemented": false,
         "children": [
             {
                 "title": "Acquista",
@@ -228,6 +238,27 @@
                 "title": "Fornitori",
                 "path": "ecommerce-suppliers",
                 "icon": "truck",
+                "isMobileVisible": false
+            }
+        ]
+    },
+    {
+        "id": "results",
+        "title": "Risultati",
+        "path": "results",
+        "icon": "trophy",
+        "isMobileVisible": true,
+        "children": [
+            {
+                "title": "Partite",
+                "path": "results-matches",
+                "icon": "volleyball",
+                "isMobileVisible": false
+            },
+            {
+                "title": "Classifica",
+                "path": "results-standings",
+                "icon": "list-numbers",
                 "isMobileVisible": false
             }
         ]
