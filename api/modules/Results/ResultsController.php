@@ -41,9 +41,10 @@ class ResultsController
             return;
         }
 
-        $html = $this->_fetch(self::MOBILE_URL);
+        $errDetails = '';
+        $html = $this->_fetch(self::MOBILE_URL, $errDetails);
         if ($html === null) {
-            Response::error('Impossibile connettersi al portale FIPAV. Riprovare più tardi.', 502);
+            Response::error("Impossibile connettersi al portale FIPAV. Dettaglio tecnico: {$errDetails}", 502);
         }
 
         $campionati = $this->_parseCampionati($html);
@@ -93,9 +94,10 @@ class ResultsController
             $url = self::BASE_URL . '/mobile/risultati.asp?CampionatoId=' . urlencode($campionatoId);
         }
 
-        $html = $this->_fetch($url);
+        $errDetails = '';
+        $html = $this->_fetch($url, $errDetails);
         if ($html === null) {
-            Response::error('Impossibile connettersi al portale FIPAV. Riprovare più tardi.', 502);
+            Response::error("Impossibile connettersi al portale FIPAV. Dettaglio tecnico: {$errDetails}", 502);
         }
 
         $matches = $this->_parseMatches($html);
@@ -154,9 +156,10 @@ class ResultsController
             return;
         }
 
-        $html = $this->_fetch($campionatoUrl);
+        $errDetails = '';
+        $html = $this->_fetch($campionatoUrl, $errDetails);
         if ($html === null) {
-            Response::error('Impossibile connettersi al portale FIPAV. Riprovare più tardi.', 502);
+            Response::error("Impossibile connettersi al portale FIPAV. Dettaglio tecnico: {$errDetails}", 502);
         }
 
         $standings = $this->_parseStandings($html);
@@ -180,7 +183,7 @@ class ResultsController
     // PRIVATE — HTTP
     // ─────────────────────────────────────────────────────────────────────────
 
-    private function _fetch(string $url): ?string
+    private function _fetch(string $url, string&$errorDetails = ''): ?string
     {
         // Realistic browser User-Agent (improves compatibility with portals that block bots)
         $userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36';
@@ -193,9 +196,10 @@ class ResultsController
             CURLOPT_TIMEOUT => 30,
             CURLOPT_CONNECTTIMEOUT => 10,
             CURLOPT_ENCODING => '', // Accept any encoding (auto-decode)
-            // SSL — disable peer verification for shared hosting (Aruba) compatibility
-            CURLOPT_SSL_VERIFYPEER => false,
-            CURLOPT_SSL_VERIFYHOST => false,
+            // SSL — enforce peer verification for security despite shared hosting limits
+            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_SSL_VERIFYHOST => 2,
+            CURLOPT_CAINFO => dirname(__DIR__, 2) . '/Shared/cacert.pem',
             CURLOPT_HTTPHEADER => [
                 'User-Agent: ' . $userAgent,
                 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
@@ -211,10 +215,17 @@ class ResultsController
         $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $curlError = curl_error($ch);
         $curlErrNo = curl_errno($ch);
-        curl_close($ch);
+
+
+        if ($httpCode === 404 || $httpCode === 410) {
+            return ''; // Championship removed or doesn't exist anymore
+        }
 
         if ($html === false || $curlErrNo !== 0 || $httpCode >= 400) {
-            error_log("[Results] Fetch failed: HTTP {$httpCode} | cURL #{$curlErrNo}: {$curlError} | URL: {$url}");
+            $hc = (string)$httpCode;
+            $ce = (string)$curlErrNo;
+            $errorDetails = "HTTP {$hc} | cURL #{$ce}: {$curlError}";
+            error_log("[Results] Fetch failed: {$errorDetails} | URL: {$url}");
             return null;
         }
 
@@ -687,7 +698,11 @@ class ResultsController
 
     private function _cacheFile(string $key): string
     {
-        return sys_get_temp_dir() . '/fusion_results_' . md5($key) . '.json';
+        $cacheDir = __DIR__ . '/../../../../cache'; // outside api/ root, project private storage
+        if (!is_dir($cacheDir)) {
+            @mkdir($cacheDir, 0755, true);
+        }
+        return $cacheDir . '/fusion_results_' . md5($key) . '.json';
     }
 
     private function _getCache(string $key): ?array
