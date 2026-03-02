@@ -397,7 +397,7 @@ const Results = (() => {
 
     } catch (err) {
       console.error('[Results] getCampionati error:', err);
-      _renderError('Impossibile caricare i campionati FIPAV. Controlla la connessione e riprova.');
+      _renderError('Impossibile caricare i campionati FIPAV. ' + (err.message || ''));
     }
   }
 
