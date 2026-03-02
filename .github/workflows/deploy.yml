@@ -27,8 +27,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-          cache: 'pip'
-
+        
       # ── 3. Cache deploy state between runs ────────────────────────────────
       # The deploy.py script stores MD5 hashes of uploaded files in
       # .deploy_cache.json. We cache this file so only changed files
