@@ -1537,36 +1537,44 @@ Restituisci SOLO un JSON valido, niente markdown:
         <div class="nt-stat"><div class="nt-stat-val">${stats.tappe}</div><div class="nt-stat-lbl">Tappe</div></div>
       </div>
 
-      <!-- Route map -->
-      <div class="nt-step" style="padding:0; overflow:hidden;">
-        <div id="nt-route-map" style="width:100%; height:320px; background:#0a0a0c; display:flex; align-items:center; justify-content:center;">
-          <div style="text-align:center; color:rgba(255,255,255,0.3);">
-            <div class="spinner" style="margin:0 auto 12px;"></div>
-            <p style="font-size:13px; font-family:var(--font-display); text-transform:uppercase; letter-spacing:1px;">Caricamento mappa...</p>
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; margin-bottom: 24px;">
+        
+        <!-- Left Column: Route map & AI -->
+        <div style="display:flex; flex-direction:column; gap:24px;">
+          <!-- Route map -->
+          <div class="nt-step" style="padding:0; overflow:hidden; margin:0;">
+            <div id="nt-route-map" style="width:100%; height:320px; background:#0a0a0c; display:flex; align-items:center; justify-content:center;">
+              <div style="text-align:center; color:rgba(255,255,255,0.3);">
+                <div class="spinner" style="margin:0 auto 12px;"></div>
+                <p style="font-size:13px; font-family:var(--font-display); text-transform:uppercase; letter-spacing:1px;">Caricamento mappa...</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- AI Analysis card — loading state initially -->
+          <div class="nt-ai-card" id="nt-ai-card" style="margin:0;">
+            <div class="nt-ai-title"><i class="ph ph-robot" style="font-size:20px;"></i> Analisi AI (Gemini)</div>
+            <div id="nt-ai-body" style="display:flex; align-items:center; gap:12px; color:rgba(255,255,255,0.5); font-size:14px;">
+              <div class="spinner" style="width:18px; height:18px; flex-shrink:0;"></div>
+              <span>Gemini sta analizzando il percorso...</span>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- AI Analysis card — loading state initially -->
-      <div class="nt-ai-card" id="nt-ai-card">
-        <div class="nt-ai-title"><i class="ph ph-robot" style="font-size:20px;"></i> Analisi AI (Gemini)</div>
-        <div id="nt-ai-body" style="display:flex; align-items:center; gap:12px; color:rgba(255,255,255,0.5); font-size:14px;">
-          <div class="spinner" style="width:18px; height:18px; flex-shrink:0;"></div>
-          <span>Gemini sta analizzando il percorso...</span>
+        <!-- Right Column: Timeline -->
+        <div class="nt-step" style="margin:0;">
+          <span class="nt-step-num" style="background:rgba(255,255,255,0.1); color:#fff; border-color:rgba(255,255,255,0.2);"><i class="ph ph-clock"></i></span>
+          <h3 class="nt-step-title">Timeline Percorso</h3>
+          <div class="nt-timeline" style="margin-top:24px;">
+            ${timeline.map(t => `
+              <div class="nt-tl-item ${t.tipo}">
+                <div class="nt-tl-time">${Utils.escapeHtml(t.orario)}</div>
+                <div class="nt-tl-note">${Utils.escapeHtml(t.nota)}</div>
+                <div class="nt-tl-place"><i class="ph ph-map-pin"></i> ${Utils.escapeHtml(t.luogo)}</div>
+              </div>`).join('')}
+          </div>
         </div>
-      </div>
 
-      <div class="nt-step">
-        <span class="nt-step-num" style="background:rgba(255,255,255,0.1); color:#fff; border-color:rgba(255,255,255,0.2);"><i class="ph ph-clock"></i></span>
-        <h3 class="nt-step-title">Timeline Percorso</h3>
-        <div class="nt-timeline" style="margin-top:24px;">
-          ${timeline.map(t => `
-            <div class="nt-tl-item ${t.tipo}">
-              <div class="nt-tl-time">${Utils.escapeHtml(t.orario)}</div>
-              <div class="nt-tl-note">${Utils.escapeHtml(t.nota)}</div>
-              <div class="nt-tl-place"><i class="ph ph-map-pin"></i> ${Utils.escapeHtml(t.luogo)}</div>
-            </div>`).join('')}
-        </div>
       </div>
 
       <div style="display:flex; gap:16px; flex-wrap:wrap;">
