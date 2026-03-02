@@ -1666,17 +1666,7 @@ Restituisci SOLO un oggetto JSON come questo:
     mapEl.style.height = '100%';
     const mapDivId = 'leaflet-map-' + Date.now();
     mapEl.innerHTML = `
-      <div id="${mapDivId}" style="width:100%; flex:1; min-height:300px;"></div>
-      <div id="${mapDivId}-legend" style="padding:8px 16px; background:rgba(0,0,0,0.5); font-size:11px; color:rgba(255,255,255,0.5); display:flex; gap:16px; flex-wrap:wrap;">
-        ${validPts.map((p, i) => {
-      const isFirst = i === 0;
-      const isLast = i === validPts.length - 1;
-      const color = isFirst ? '#00e5ff' : isLast ? '#00E676' : '#E6007E';
-      const label = isFirst ? '🔵 Partenza' : isLast ? '🟢 Palestra' : `🔴 Tappa ${i}`;
-      const addr = (p.label || '').split(',')[0] || '...';
-      return `<span style="display:flex;align-items:center;gap:4px;"><span style="color:${color};font-weight:700;">${label}</span><span style="opacity:0.7;">${Utils.escapeHtml(addr)}</span></span>`;
-    }).join('')}
-      </div>`;
+      <div id="${mapDivId}" style="width:100%; flex:1; min-height:300px;"></div>`;
 
     function _initLeafletMap() {
       const L = window.L;
