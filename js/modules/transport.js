@@ -1269,14 +1269,127 @@ const Transport = (() => {
     });
   }
 
+  // ── Helpers per Drag & Drop e Google Directions ──
+  function _loadSortableJS(cb) {
+    if (window.Sortable) { cb(); return; }
+    if (!document.getElementById('sortable-js')) {
+      const script = document.createElement('script');
+      script.id = 'sortable-js';
+      script.src = 'https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js';
+      script.onload = cb;
+      document.head.appendChild(script);
+    } else {
+      const poll = setInterval(() => { if (window.Sortable) { clearInterval(poll); cb(); } }, 100);
+    }
+  }
+
+  async function _getGoogleDirections(origin, destination, waypoints, optimize = true) {
+    return new Promise((resolve, reject) => {
+      _loadPlacesLib(() => {
+        if (typeof google === 'undefined' || !google.maps || !google.maps.DirectionsService) {
+          return reject(new Error("Google Maps API non accessibile."));
+        }
+        const directionsService = new google.maps.DirectionsService();
+        const req = {
+          origin: origin,
+          destination: destination,
+          waypoints: waypoints.map(w => ({ location: w, stopover: true })),
+          optimizeWaypoints: optimize,
+          travelMode: google.maps.TravelMode.DRIVING
+        };
+        directionsService.route(req, (result, status) => {
+          if (status === google.maps.DirectionsStatus.OK) resolve(result);
+          else reject(new Error(status));
+        });
+      });
+    });
+  }
+
+  async function _recalculateTimelineTimes() {
+    const timelineCont = document.querySelector('.nt-timeline');
+    if (!timelineCont || !_currentTransportResult) return;
+    const items = Array.from(timelineCont.children);
+    const newAthletesOrder = [];
+
+    items.forEach(el => {
+      if (!el.classList.contains('partenza') && !el.classList.contains('arrivo')) {
+        const atletaName = el.querySelector('.nt-tl-note').textContent.replace('Raccolta ', '');
+        const atleta = _selectedAthletes.find(a => a.full_name === atletaName);
+        if (atleta) newAthletesOrder.push(atleta);
+      }
+    });
+
+    if (newAthletesOrder.length !== _selectedAthletes.length) return; // Mismatch o caricamento in corso
+    UI.toast('Ricalcolo percorso manuale...', 'info');
+
+    try {
+      const departureAddr = document.getElementById('nt-departure-addr')?.value;
+      const destination = _selectedGym.address || _selectedGym.name;
+      const arrivalTime = document.getElementById('nt-arrival-time')?.value;
+      const waypointAddrs = newAthletesOrder.map(a => a.residence_address);
+
+      const res = await _getGoogleDirections(departureAddr, destination, waypointAddrs, false);
+      const route = res.routes[0];
+
+      let totalDistanceM = 0; let totalDurationSec = 0;
+      const legDurations = []; const routePoints = [];
+
+      routePoints.push({ lat: route.legs[0].start_location.lat(), lng: route.legs[0].start_location.lng(), label: departureAddr });
+
+      for (let i = 0; i < route.legs.length; i++) {
+        const leg = route.legs[i];
+        const distM = leg.distance.value;
+        const driveSec = leg.duration.value;
+        const stopSec = (i > 0 && i < route.legs.length - 1) ? 180 : 0; // 3 min stop
+        totalDistanceM += distM;
+        totalDurationSec += driveSec + stopSec;
+        legDurations.push(driveSec + stopSec);
+        routePoints.push({ lat: leg.end_location.lat(), lng: leg.end_location.lng(), label: leg.end_address });
+      }
+
+      const stats = {
+        durata: Math.round(totalDurationSec / 60) + ' min',
+        distanza: (totalDistanceM / 1000).toFixed(1) + ' km',
+        tappe: newAthletesOrder.length,
+      };
+
+      const [hh, mm] = arrivalTime.split(':').map(Number);
+      const targetDate = new Date(); targetDate.setHours(hh, mm, 0, 0);
+      const partenzaDate = new Date(targetDate.getTime() - (totalDurationSec * 1000));
+
+      const timeline = [];
+      let currentDate = new Date(partenzaDate);
+      timeline.push({ tipo: 'partenza', luogo: departureAddr, orario: currentDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }), nota: 'Partenza Mezzo', coord: routePoints[0] });
+
+      legDurations.forEach((dur, i) => {
+        currentDate = new Date(currentDate.getTime() + dur * 1000);
+        if (i < newAthletesOrder.length) {
+          const atleta = newAthletesOrder[i];
+          timeline.push({ tipo: 'raccolta', luogo: atleta.residence_address, orario: currentDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }), nota: `Raccolta ${atleta.full_name}`, atleta_id: atleta.id, atleta_name: atleta.full_name, coord: routePoints[i + 1] });
+        } else {
+          timeline.push({ tipo: 'arrivo', luogo: _selectedGym.name, orario: currentDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }), nota: `Arrivo — Target: ${arrivalTime}`, coord: routePoints[routePoints.length - 1] });
+        }
+      });
+
+      _currentTransportResult.timeline = timeline;
+      _currentTransportResult.stats = stats;
+      _currentTransportResult.departureTime = partenzaDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+
+      _renderResults(timeline, stats, _currentTransportResult.ai, routePoints);
+
+    } catch (err) {
+      UI.toast('Errore nel ricalcolo: ' + err.message, 'error');
+    }
+  }
+
   async function _handleCalcolaPercorso() {
     // Validate
     if (!_selectedGym) { UI.toast('Seleziona una palestra di destinazione', 'error'); return; }
     const arrivalTime = document.getElementById('nt-arrival-time')?.value;
-    if (!arrivalTime) { UI.toast('Inserisci l\'orario di arrivo', 'error'); return; }
+    if (!arrivalTime) { UI.toast("Inserisci l'orario di arrivo", 'error'); return; }
     const departureAddr = document.getElementById('nt-departure-addr')?.value;
-    if (!departureAddr) { UI.toast('Inserisci l\'indirizzo di partenza', 'error'); return; }
-    if (_selectedAthletes.length === 0) { UI.toast('Seleziona almeno un\'atleta', 'error'); return; }
+    if (!departureAddr) { UI.toast("Inserisci l'indirizzo di partenza", 'error'); return; }
+    if (_selectedAthletes.length === 0) { UI.toast("Seleziona almeno un'atleta", 'error'); return; }
 
     const missingAddr = _selectedAthletes.filter(a => !a.residence_address || !a.residence_address.trim());
     if (missingAddr.length > 0) {
@@ -1291,54 +1404,37 @@ const Transport = (() => {
     try {
       const destination = _selectedGym.address || _selectedGym.name;
 
-      // ── Step 1: Geocodifica tutti gli indirizzi con Nominatim (OSM, gratuito) ──
-      btn.innerHTML = '<div class="spinner" style="width:20px;height:20px;"></div> Geocodifica indirizzi...';
-      const allAddresses = [departureAddr, ...(_selectedAthletes.map(a => a.residence_address)), destination];
-      const coords = await _geocodeAll(allAddresses);
-      const originCoord = coords[0];
-      const waypointCoords = coords.slice(1, coords.length - 1);
-      const destCoord = coords[coords.length - 1];
-
-      // ── Step 2: Mostra subito la UI con placeholder ──
-      const statsPlaceholder = {
-        durata: '...',
-        distanza: '...',
-        tappe: _selectedAthletes.length,
-      };
-      _renderResults([], statsPlaceholder, null, null);
-
-      // ── Step 3: AI ottimizza l'ordine delle tappe ──
-      btn.innerHTML = '<div class="spinner" style="width:20px;height:20px;"></div> AI analizza il percorso...';
-      let aiData = null;
-      let athleteOrder = _selectedAthletes.map((_, i) => i); // default order
+      // ── Step 1: Calcola e ottimizza il percorso con Google Maps Directions ──
+      btn.innerHTML = '<div class="spinner" style="width:20px;height:20px;"></div> Calcolo percorso Google...';
+      const waypointAddrs = _selectedAthletes.map(a => a.residence_address);
+      let directionsResult = null;
       try {
-        aiData = await _askGeminiRoute(departureAddr, destination, _selectedAthletes, { distanza: '?', durata: '?', tappe: _selectedAthletes.length }, waypointCoords);
-        _updateAiCard(aiData);
-        // If AI returned a pickup_order array (index-based), use it
-        if (aiData && Array.isArray(aiData.pickup_order) && aiData.pickup_order.length === _selectedAthletes.length) {
-          athleteOrder = aiData.pickup_order;
-        }
-      } catch (e) {
-        console.warn('AI optimization skipped:', e);
-        _updateAiCard({ consigli: 'Analisi AI non disponibile al momento.', fuori_percorso: [], punti_raccolta: [] });
+        directionsResult = await _getGoogleDirections(departureAddr, destination, waypointAddrs, true);
+      } catch (err) {
+        throw new Error('Impossibile calcolare il percorso con Google Maps: ' + err.message);
       }
 
-      // ── Step 4: Calcola distanze e durate con formula Haversine ──
-      const orderedAthletes = athleteOrder.map(i => _selectedAthletes[i]);
-      const orderedCoords = athleteOrder.map(i => waypointCoords[i]);
+      const route = directionsResult.routes[0];
+      const waypointOrder = route.waypoint_order;
+      const orderedAthletes = waypointOrder.map(i => _selectedAthletes[i]);
 
-      const routePoints = [originCoord, ...orderedCoords, destCoord];
-      let totalDistanceM = 0, totalDurationSec = 0;
-      const legDurations = [];
-      for (let i = 0; i < routePoints.length - 1; i++) {
-        const distKm = _haversineKm(routePoints[i], routePoints[i + 1]);
-        const distM = distKm * 1000;
-        // Assume avg 50 km/h in urban+extra-urban mix + 3 min stop per waypoint
-        const driveSec = (distKm / 50) * 3600;
-        const stopSec = (i > 0 && i < routePoints.length - 1) ? 180 : 0;
+      let totalDistanceM = 0; let totalDurationSec = 0;
+      const legDurations = []; const routePoints = []; const legDetails = [];
+
+      routePoints.push({ lat: route.legs[0].start_location.lat(), lng: route.legs[0].start_location.lng(), label: departureAddr });
+
+      for (let i = 0; i < route.legs.length; i++) {
+        const leg = route.legs[i];
+        const distM = leg.distance.value;
+        const driveSec = leg.duration.value;
+        const stopSec = (i > 0 && i < route.legs.length - 1) ? 180 : 0; // 3 min stop per atleta elaborata
+
         totalDistanceM += distM;
         totalDurationSec += driveSec + stopSec;
         legDurations.push(driveSec + stopSec);
+        legDetails.push({ durata: leg.duration.text, distanza: leg.distance.text });
+
+        routePoints.push({ lat: leg.end_location.lat(), lng: leg.end_location.lng(), label: leg.end_address });
       }
 
       const stats = {
@@ -1347,28 +1443,40 @@ const Transport = (() => {
         tappe: _selectedAthletes.length,
       };
 
-      // ── Step 5: Costruisci timeline (backward planning) ──
+      // ── Step 2: Costruisci timeline ──
       const [hh, mm] = arrivalTime.split(':').map(Number);
       const targetDate = new Date(); targetDate.setHours(hh, mm, 0, 0);
       const partenzaDate = new Date(targetDate.getTime() - (totalDurationSec * 1000));
 
       const timeline = [];
       let currentDate = new Date(partenzaDate);
-      timeline.push({ tipo: 'partenza', luogo: departureAddr, orario: currentDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }), nota: 'Partenza Mezzo', coord: originCoord });
+      timeline.push({ tipo: 'partenza', luogo: departureAddr, orario: currentDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }), nota: 'Partenza Mezzo', coord: routePoints[0] });
+
       legDurations.forEach((dur, i) => {
         currentDate = new Date(currentDate.getTime() + dur * 1000);
         if (i < orderedAthletes.length) {
           const atleta = orderedAthletes[i];
-          timeline.push({ tipo: 'raccolta', luogo: atleta.residence_address, orario: currentDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }), nota: `Raccolta ${atleta.full_name}`, atleta_id: atleta.id, atleta_name: atleta.full_name, coord: orderedCoords[i] });
+          timeline.push({ tipo: 'raccolta', luogo: atleta.residence_address, orario: currentDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }), nota: `Raccolta ${atleta.full_name}`, atleta_id: atleta.id, atleta_name: atleta.full_name, coord: routePoints[i + 1] });
         } else {
-          timeline.push({ tipo: 'arrivo', luogo: _selectedGym.name, orario: currentDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }), nota: `Arrivo — Target: ${arrivalTime}`, coord: destCoord });
+          timeline.push({ tipo: 'arrivo', luogo: _selectedGym.name, orario: currentDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }), nota: `Arrivo — Target: ${arrivalTime}`, coord: routePoints[routePoints.length - 1] });
         }
       });
 
-      _currentTransportResult = { timeline, stats, ai: aiData, departureTime: partenzaDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) };
+      _currentTransportResult = { timeline, stats, ai: null, departureTime: partenzaDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) };
 
-      // ── Step 6: Aggiorna UI con risultati finali ──
-      _renderResults(timeline, stats, aiData, routePoints);
+      // ── Step 3: Mostra risultati parziali mappa ──
+      _renderResults(timeline, stats, null, routePoints);
+
+      // ── Step 4: AI analizza i tempi e le tappe ──
+      btn.innerHTML = '<div class="spinner" style="width:20px;height:20px;"></div> AI analizza...';
+      try {
+        const aiData = await _askGeminiRouteGoogle(departureAddr, destination, orderedAthletes, stats, legDetails);
+        _currentTransportResult.ai = aiData;
+        _updateAiCard(aiData);
+      } catch (e) {
+        console.warn('AI analysis failed:', e);
+        _updateAiCard({ consigli: 'Analisi AI non disponibile al momento.', fuori_percorso: [], punti_raccolta: [] });
+      }
 
     } catch (err) {
       UI.toast('Errore calcolo percorso: ' + err.message, 'error');
@@ -1379,82 +1487,43 @@ const Transport = (() => {
     }
   }
 
-  // ─── Geocodifica con Nominatim (OpenStreetMap) ─────────────────────────────
-  async function _geocodeAddress(address) {
-    // ── Priorità 1: coordinate già verificate via Google Places ──
-    const verified = _verifiedCoords.get(address);
-    if (verified) return { lat: verified.lat, lng: verified.lng, label: address };
-
-    // ── Fallback: Nominatim (OpenStreetMap) ──
-    const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(address)}`;
-    const resp = await fetch(url, { headers: { 'Accept-Language': 'it', 'User-Agent': 'FusionERP/1.0' } });
-    if (!resp.ok) throw new Error('Geocodifica fallita per: ' + address);
-    const data = await resp.json();
-    if (!data.length) return null;
-    return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon), label: data[0].display_name };
-  }
-
-  async function _geocodeAll(addresses) {
-    const results = [];
-    for (const addr of addresses) {
-      try {
-        const coord = await _geocodeAddress(addr);
-        results.push(coord || { lat: 45.46, lng: 12.24, label: addr }); // fallback Venezia
-      } catch {
-        results.push({ lat: 45.46, lng: 12.24, label: addr });
-      }
-      // Nominatim richiede max 1 req/sec
-      await new Promise(r => setTimeout(r, 1100));
-    }
-    return results;
-  }
-
-  // ─── Distanza geografica (Haversine) ─────────────────────────────────────
-  function _haversineKm(a, b) {
-    if (!a || !b) return 10; // fallback
-    const R = 6371;
-    const dLat = (b.lat - a.lat) * Math.PI / 180;
-    const dLng = (b.lng - a.lng) * Math.PI / 180;
-    const s = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * Math.PI / 180) * Math.cos(b.lat * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
-    return R * 2 * Math.atan2(Math.sqrt(s), Math.sqrt(1 - s));
-  }
-
-  async function _askGeminiRoute(partenza, destinazione, atlete, stats, coords) {
+  async function _askGeminiRouteGoogle(partenza, destinazione, orderedAthletes, stats, legDetails) {
     if (!GEMINI_API_KEY) return null;
-    const athleteList = atlete.map((a, i) => `${i}. ${a.full_name} — ${a.residence_address || 'N/A'}`).join('\n');
-    const coordInfo = coords && coords.length ? `\nCoordinate geocodificate:\n` + coords.map((c, i) => `${i}. lat:${c?.lat?.toFixed(4)}, lng:${c?.lng?.toFixed(4)}`).join('\n') : '';
-    const prompt = `Sei un ottimizzatore di percorsi per il trasporto sportivo.
-Partenza mezzo: ${partenza}
-Destinazione (palestra): ${destinazione}
-Atlete (indice → nome → indirizzo):
-${athleteList}${coordInfo}
+    let desc = `Partenza mezzo: ${partenza}\nDestinazione (palestra): ${destinazione}\nDistanza totale: ${stats.distanza}\nDurata totale: ${stats.durata}\n\n`;
+    desc += `Ordine tappe (ottimizzato dal navigatore):\n`;
+    for (let i = 0; i < orderedAthletes.length; i++) {
+      desc += `Tratta ${i + 1}: fino a ${orderedAthletes[i].full_name} a ${orderedAthletes[i].residence_address} -> ${legDetails[i].durata}, ${legDetails[i].distanza}\n`;
+    }
+    desc += `Ultima tratta fino a destinazione -> ${legDetails[orderedAthletes.length].durata}, ${legDetails[orderedAthletes.length].distanza}\n`;
 
-Compito: trova l'ordine ottimale di raccolta delle atlete (più efficiente geograficamente, minimizzando deviazioni dal percorso verso la palestra).
+    const prompt = `Sei l'AI analista dei trasporti sportivi. Analizza questo percorso già ottimizzato e fornisci preziose intuizioni sui tempi e su come si potrebbe ulteriormente ridurre il viaggio.
+Dati viaggio:
+${desc}
 
-Restituisci SOLO un JSON valido, niente markdown, niente testo extra:
-{"pickup_order":[0,1,2],"consigli":"Descrizione naturale del percorso ottimale con motivazioni","fuori_percorso":[{"nome":"Nome Atleta","motivo":"Perché è molto fuori percorso"}],"punti_raccolta":[{"nome":"Punto comune","indirizzo":"Via X"}]}
+Compito:
+1. Controlla i tempi delle singole tratte. Un tempo eccessivo indica un "fuori percorso".
+2. Identifica atlete che generano deviazioni troppo grandi.
+3. Se necessario, suggerisci punti di raccolta intermedi (es. "Ci troveremo al casello autostradale di ...") per evitare di entrare in zone non ottimali.
+4. "consigli" DEVE essere una stringa breve (1 o 2 frasi) e discorsiva (es. "Il percorso è ottimale" o "Ci sono troppe deviazioni").
 
-pickup_order deve essere un array con gli indici delle atlete nell'ordine ottimale di raccolta (usa tutti gli indici da 0 a ${atlete.length - 1}).`;
+Restituisci SOLO un JSON valido, niente markdown:
+{"consigli":"Descrizione sintetica...","fuori_percorso":[{"nome":"Nome","motivo":"Perché aggiunge X minuti"}],"punti_raccolta":[{"nome":"Punto","indirizzo":"Indirizzo proposto"}]}
+  `;
     try {
       const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
       });
-      if (!resp.ok) throw new Error('Gemini API: ' + resp.status);
+      if (!resp.ok) throw new Error('Gemini API status: ' + resp.status);
       const data = await resp.json();
       const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
       try {
         const m = text.match(/```json\n([\s\S]*?)\n```/) || text.match(/```\n([\s\S]*?)\n```/);
-        const parsed = m ? JSON.parse(m[1]) : JSON.parse(text);
-        // Validate pickup_order
-        if (!Array.isArray(parsed.pickup_order) || parsed.pickup_order.length !== atlete.length) {
-          parsed.pickup_order = atlete.map((_, i) => i);
-        }
-        return parsed;
-      } catch { return { pickup_order: atlete.map((_, i) => i), consigli: text, fuori_percorso: [], punti_raccolta: [] }; }
+        return m ? JSON.parse(m[1]) : JSON.parse(text);
+      } catch { return { consigli: text, fuori_percorso: [], punti_raccolta: [] }; }
     } catch (e) {
       console.warn('Gemini call failed:', e);
-      return { pickup_order: atlete.map((_, i) => i), consigli: 'Analisi AI non disponibile al momento.', fuori_percorso: [], punti_raccolta: [] };
+      throw e;
     }
   }
 
@@ -1521,6 +1590,22 @@ pickup_order deve essere un array con gli indici delle atlete nell'ordine ottima
     if (aiData) {
       _updateAiCard(aiData);
     }
+
+    // Inizializza Drag & Drop sulla timeline
+    _loadSortableJS(() => {
+      const timelineCont = document.querySelector('.nt-timeline');
+      if (timelineCont && !timelineCont.dataset.sortable) {
+        timelineCont.dataset.sortable = '1';
+        window.Sortable.create(timelineCont, {
+          animation: 150,
+          filter: '.partenza, .arrivo',
+          onEnd: function (evt) {
+            if (evt.oldIndex === evt.newIndex) return;
+            _recalculateTimelineTimes();
+          }
+        });
+      }
+    });
   }
 
   function _updateAiCard(aiData) {
