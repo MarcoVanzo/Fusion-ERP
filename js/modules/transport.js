@@ -860,13 +860,13 @@ const Transport = (() => {
       .nt-stat { background:rgba(20,20,25,0.6); backdrop-filter:blur(16px); border:1px solid rgba(255,255,255,0.06); border-radius:16px; padding:20px; text-align:center; }
       .nt-stat-val { font-family:var(--font-display); font-size:32px; font-weight:800; color:#fff; }
       .nt-stat-lbl { font-size:11px; color:rgba(255,255,255,0.5); text-transform:uppercase; letter-spacing:1.5px; margin-top:6px; font-weight:700; }
-      .nt-timeline { position:relative; padding-left:32px; }
-      .nt-timeline::before { content:''; position:absolute; left:14px; top:0; bottom:0; width:2px; background:linear-gradient(180deg,#E6007E,#00e5ff,#00E676); border-radius:2px; }
-      .nt-tl-item { position:relative; padding:16px 20px; margin-bottom:12px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:12px; transition:all 0.3s; }
+      .nt-timeline { position:relative; padding-left:36px; counter-reset: step-number; }
+      .nt-timeline::before { content:''; position:absolute; left:16px; top:0; bottom:0; width:2px; background:linear-gradient(180deg,#E6007E,#00e5ff,#00E676); border-radius:2px; }
+      .nt-tl-item { position:relative; padding:16px 20px; margin-bottom:12px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:12px; transition:all 0.3s; counter-increment: step-number; }
       .nt-tl-item:hover { border-color:rgba(255,255,255,0.15); background:rgba(255,255,255,0.04); }
-      .nt-tl-item::before { content:''; position:absolute; left:-24px; top:20px; width:12px; height:12px; border-radius:50%; background:#E6007E; border:2px solid rgba(20,20,25,0.8); box-shadow:0 0 8px rgba(230,0,126,0.5); }
-      .nt-tl-item.raccolta::before { background:#00e5ff; box-shadow:0 0 8px rgba(0,229,255,0.5); }
-      .nt-tl-item.arrivo::before { background:#00E676; box-shadow:0 0 8px rgba(0,230,118,0.5); }
+      .nt-tl-item::before { content: counter(step-number); position:absolute; left:-32px; top:18px; width:22px; height:22px; border-radius:50%; background:#E6007E; border:2px solid rgba(20,20,25,0.8); box-shadow:0 0 8px rgba(230,0,126,0.5); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; color: #fff; line-height: 1; z-index: 1; text-align: center; }
+      .nt-tl-item.raccolta::before { background:#00e5ff; box-shadow:0 0 8px rgba(0,229,255,0.5); color: #000; }
+      .nt-tl-item.arrivo::before { background:#00E676; box-shadow:0 0 8px rgba(0,230,118,0.5); color: #000; }
       .nt-tl-time { font-family:var(--font-display); font-weight:800; font-size:18px; color:#fff; }
       .nt-tl-note { font-size:14px; font-weight:600; margin-top:4px; }
       .nt-tl-place { font-size:12px; color:rgba(255,255,255,0.5); margin-top:4px; }
