@@ -1506,9 +1506,18 @@ Compito:
 3. Se necessario, suggerisci punti di raccolta intermedi (es. "Ci troveremo al casello autostradale di ...") per evitare di entrare in zone non ottimali.
 4. "consigli" DEVE essere una stringa breve (1 o 2 frasi) e discorsiva (es. "Il percorso è ottimale" o "Ci sono troppe deviazioni").
 
-Restituisci SOLO un JSON valido, niente markdown:
-{"consigli":"Descrizione sintetica...","fuori_percorso":[{"nome":"Nome","motivo":"Perché aggiunge X minuti"}],"punti_raccolta":[{"nome":"Punto","indirizzo":"Indirizzo proposto"}]}
-  `;
+Restituisci SOLO ED ESCLUSIVAMENTE un JSON valido, senza blocchi markdown (\`\`\`) e senza testo extra.
+Esempio esatto del formato di output richiesto:
+{
+  "consigli": "Il percorso è ottimale, ma Maria Rossi aggiunge 15 minuti di deviazione.",
+  "fuori_percorso": [
+    {"nome": "Maria Rossi", "motivo": "Aggiunge 15 minuti di deviazione rispetto alla rotta principale"}
+  ],
+  "punti_raccolta": [
+    {"nome": "Casello Autostradale Est", "indirizzo": "Via Roma 100"}
+  ]
+}
+`;
     try {
       const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -1537,13 +1546,13 @@ Restituisci SOLO un JSON valido, niente markdown:
         <div class="nt-stat"><div class="nt-stat-val">${stats.tappe}</div><div class="nt-stat-lbl">Tappe</div></div>
       </div>
 
-      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; margin-bottom: 24px;">
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; margin-bottom: 24px; align-items: stretch;">
         
         <!-- Left Column: Route map & AI -->
         <div style="display:flex; flex-direction:column; gap:24px;">
           <!-- Route map -->
-          <div class="nt-step" style="padding:0; overflow:hidden; margin:0;">
-            <div id="nt-route-map" style="width:100%; height:320px; background:#0a0a0c; display:flex; align-items:center; justify-content:center;">
+          <div class="nt-step" style="padding:0; overflow:hidden; margin:0; flex: 1; display:flex; flex-direction:column;">
+            <div id="nt-route-map" style="width:100%; flex:1; min-height: 320px; background:#0a0a0c; display:flex; align-items:center; justify-content:center;">
               <div style="text-align:center; color:rgba(255,255,255,0.3);">
                 <div class="spinner" style="margin:0 auto 12px;"></div>
                 <p style="font-size:13px; font-family:var(--font-display); text-transform:uppercase; letter-spacing:1px;">Caricamento mappa...</p>
@@ -1552,7 +1561,7 @@ Restituisci SOLO un JSON valido, niente markdown:
           </div>
 
           <!-- AI Analysis card — loading state initially -->
-          <div class="nt-ai-card" id="nt-ai-card" style="margin:0;">
+          <div class="nt-ai-card" id="nt-ai-card" style="margin:0; flex-shrink: 0;">
             <div class="nt-ai-title"><i class="ph ph-robot" style="font-size:20px;"></i> Analisi AI (Gemini)</div>
             <div id="nt-ai-body" style="display:flex; align-items:center; gap:12px; color:rgba(255,255,255,0.5); font-size:14px;">
               <div class="spinner" style="width:18px; height:18px; flex-shrink:0;"></div>
@@ -1562,10 +1571,10 @@ Restituisci SOLO un JSON valido, niente markdown:
         </div>
 
         <!-- Right Column: Timeline -->
-        <div class="nt-step" style="margin:0;">
+        <div class="nt-step" style="margin:0; height: 100%; display:flex; flex-direction:column;">
           <span class="nt-step-num" style="background:rgba(255,255,255,0.1); color:#fff; border-color:rgba(255,255,255,0.2);"><i class="ph ph-clock"></i></span>
           <h3 class="nt-step-title">Timeline Percorso</h3>
-          <div class="nt-timeline" style="margin-top:24px;">
+          <div class="nt-timeline" style="margin-top:24px; flex: 1; overflow-y: auto;">
             ${timeline.map(t => `
               <div class="nt-tl-item ${t.tipo}">
                 <div class="nt-tl-time">${Utils.escapeHtml(t.orario)}</div>
