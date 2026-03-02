@@ -1505,9 +1505,10 @@ Compito:
 2. Identifica atlete che generano deviazioni troppo grandi.
 3. Se necessario, suggerisci punti di raccolta intermedi (es. "Ci troveremo al casello autostradale di ...") per evitare di entrare in zone non ottimali.
 4. "consigli" DEVE essere una stringa breve (1 o 2 frasi) e discorsiva (es. "Il percorso è ottimale" o "Ci sono troppe deviazioni").
+4. Rispondi SEMPRE in italiano.
+5. Usa ESATTAMENTE le chiavi JSON indicate nell'esempio. NON AGGIUNGERE NESSUNA FORMA DI MARKDOWN (NO \`\`\`json).
 
-Restituisci SOLO ED ESCLUSIVAMENTE un JSON valido, senza blocchi markdown (\`\`\`) e senza testo extra.
-Esempio esatto del formato di output richiesto:
+Restituisci SOLO un oggetto JSON come questo:
 {
   "consigli": "Il percorso è ottimale, ma Maria Rossi aggiunge 15 minuti di deviazione.",
   "fuori_percorso": [
@@ -1660,10 +1661,12 @@ Esempio esatto del formato di output richiesto:
     }
 
     // Crea container mappa + legenda
-    mapEl.style.display = 'block';
+    mapEl.style.display = 'flex';
+    mapEl.style.flexDirection = 'column';
+    mapEl.style.height = '100%';
     const mapDivId = 'leaflet-map-' + Date.now();
     mapEl.innerHTML = `
-      <div id="${mapDivId}" style="width:100%;height:320px;"></div>
+      <div id="${mapDivId}" style="width:100%; flex:1; min-height:300px;"></div>
       <div id="${mapDivId}-legend" style="padding:8px 16px; background:rgba(0,0,0,0.5); font-size:11px; color:rgba(255,255,255,0.5); display:flex; gap:16px; flex-wrap:wrap;">
         ${validPts.map((p, i) => {
       const isFirst = i === 0;
@@ -1705,6 +1708,9 @@ Esempio esatto del formato di output richiesto:
 
       // Adatta la vista a tutti i punti
       map.fitBounds(latlngs, { padding: [24, 24] });
+
+      // Forza il ricalcolo delle dimensioni quando la mappa viene caricata in un contenitore flex
+      setTimeout(() => map.invalidateSize(), 300);
     }
 
     // Carica Leaflet CSS+JS solo se non già caricato
