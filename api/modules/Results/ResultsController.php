@@ -188,36 +188,68 @@ class ResultsController
         // Realistic browser User-Agent (improves compatibility with portals that block bots)
         $userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36';
 
-        $ch = curl_init($url);
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 30,
-            CURLOPT_CONNECTTIMEOUT => 10,
-            CURLOPT_ENCODING => '', // Accept any encoding (auto-decode)
-            // SSL — enforce peer verification for security despite shared hosting limits
-            CURLOPT_SSL_VERIFYPEER => true,
-            CURLOPT_SSL_VERIFYHOST => 2,
-            CURLOPT_CAINFO => dirname(__DIR__, 2) . '/Shared/cacert.pem',
-            CURLOPT_HTTPHEADER => [
-                'User-Agent: ' . $userAgent,
-                'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-                'Accept-Language: it-IT,it;q=0.9,en-US;q=0.8,en;q=0.7',
-                'Accept-Encoding: gzip, deflate, br',
-                'Connection: keep-alive',
-                'Upgrade-Insecure-Requests: 1',
-                'Cache-Control: no-cache',
-            ],
-        ]);
+        // Cookie jar for session handling (some portals require cookies)
+        $cookieJar = sys_get_temp_dir() . '/fusion_fipav_cookies.txt';
 
-        $html = curl_exec($ch);
-        $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $curlError = curl_error($ch);
-        $curlErrNo = curl_errno($ch);
+        // Try with SSL verification first, fallback without if it fails
+        $sslAttempts = [
+            ['verify' => true, 'cainfo' => dirname(__DIR__, 2) . '/Shared/cacert.pem'],
+            ['verify' => true, 'cainfo' => null], // Use system default CA bundle
+            ['verify' => false, 'cainfo' => null], // Last resort: skip verification
+        ];
 
+        $html = false;
+        $httpCode = 0;
+        $curlError = '';
+        $curlErrNo = 0;
+
+        foreach ($sslAttempts as $idx => $sslConfig) {
+            $ch = curl_init($url);
+            $opts = [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_MAXREDIRS => 10,
+                CURLOPT_TIMEOUT => 30,
+                CURLOPT_CONNECTTIMEOUT => 10,
+                CURLOPT_ENCODING => '', // Accept any encoding (auto-decode)
+                CURLOPT_USERAGENT => $userAgent,
+                CURLOPT_COOKIEJAR => $cookieJar,
+                CURLOPT_COOKIEFILE => $cookieJar,
+                CURLOPT_SSL_VERIFYPEER => $sslConfig['verify'],
+                CURLOPT_SSL_VERIFYHOST => $sslConfig['verify'] ? 2 : 0,
+                CURLOPT_HTTPHEADER => [
+                    'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+                    'Accept-Language: it-IT,it;q=0.9,en-US;q=0.8,en;q=0.7',
+                    'Accept-Encoding: gzip, deflate, br',
+                    'Connection: keep-alive',
+                    'Upgrade-Insecure-Requests: 1',
+                    'Cache-Control: no-cache',
+                ],
+            ];
+
+            if ($sslConfig['cainfo'] !== null && file_exists($sslConfig['cainfo'])) {
+                $opts[CURLOPT_CAINFO] = $sslConfig['cainfo'];
+            }
+
+            curl_setopt_array($ch, $opts);
+
+            $html = curl_exec($ch);
+            $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $curlError = curl_error($ch);
+            $curlErrNo = curl_errno($ch);
+            curl_close($ch);
+
+            // If SSL-related error (codes 35, 51, 60, 77), try next SSL config
+            if (in_array($curlErrNo, [35, 51, 60, 77], true) && $idx < count($sslAttempts) - 1) {
+                error_log("[Results] SSL attempt #{$idx} failed (cURL #{$curlErrNo}: {$curlError}), trying fallback...");
+                continue;
+            }
+
+            break; // Success or non-SSL error — stop retrying
+        }
 
         if ($httpCode === 404 || $httpCode === 410) {
+            error_log("[Results] Fetch returned HTTP {$httpCode} for URL: {$url}");
             return ''; // Championship removed or doesn't exist anymore
         }
 
