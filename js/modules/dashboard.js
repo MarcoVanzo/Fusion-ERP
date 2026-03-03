@@ -21,20 +21,19 @@ const Dashboard = (() => {
     app.innerHTML = UI.skeletonPage();
 
     try {
-      // Fetch real data from the API
-      const [teams, athletes, events] = await Promise.all([
+      const [teams, athletes, events, deadlines] = await Promise.all([
         Store.get('teams', 'athletes').catch(() => []),
         Store.get('list', 'athletes').catch(() => []),
-        Store.get('list', 'transport').catch(() => []),
+        Store.get('listEvents', 'transport').catch(() => []),
+        Store.get('deadlines', 'dashboard').catch(() => []),
       ]);
-      render(athletes, teams, events);
+      render(athletes, teams, events, deadlines);
     } catch {
-      // Fallback: render with empty data
-      render([], [], []);
+      render([], [], [], []);
     }
   }
 
-  function render(athletes = [], teams = [], events = []) {
+  function render(athletes = [], teams = [], events = [], deadlines = []) {
     const app = document.getElementById('app');
 
     // Calculate real KPIs
@@ -90,7 +89,7 @@ const Dashboard = (() => {
       const pct2 = Math.round((count / maxTeamCount) * 100);
       return `<div class="bar-row">
         <div>${Utils.escapeHtml(name)}</div>
-        <div class="bar-track"><div class="bar-fill" style="width:${pct2}%; background:#E6007E; box-shadow:0 0 8px rgba(230,0,126,0.5);"></div></div>
+        <div class="bar-track"><div class="bar-fill" style="width:${pct2}%; background:#FF00FF; box-shadow:0 0 10px rgba(255,0,255,0.6);"></div></div>
         <div style="text-align:right;">${count}</div>
       </div>`;
     }).join('');
@@ -99,7 +98,7 @@ const Dashboard = (() => {
     const eventsHtml = upcoming.length > 0
       ? upcoming.map(e => `
         <div class="fixture-card">
-          <div class="team-logo" style="color:#E6007E;"><i class="ph ph-bus" style="font-size:18px;"></i></div>
+          <div class="team-logo" style="color:#FF00FF; text-shadow: 0 0 8px rgba(255, 0, 255, 0.5);"><i class="ph ph-bus" style="font-size:18px;"></i></div>
           <div style="flex:1;">
             <div style="font-size:13px; font-weight:700;">${Utils.escapeHtml(e.title || e.opponent || 'Evento')}</div>
             <div style="font-size:11px; color:var(--color-text-muted); margin-top:2px;">${Utils.escapeHtml(e.date || '')} ${e.time ? '• ' + Utils.escapeHtml(e.time) : ''}</div>
@@ -144,8 +143,8 @@ const Dashboard = (() => {
       <style>
         .dash-container {
           padding: 32px;
-          color: white;
-          background: #0a0a0c;
+          color: var(--color-text);
+          background: transparent;
           min-height: 100%;
           font-family: var(--font-body), sans-serif;
         }
@@ -212,12 +211,20 @@ const Dashboard = (() => {
         }
 
         .widget {
-          background: #121214;
-          border: 1px solid #1c1c1e;
-          border-radius: 8px;
+          background: var(--color-bg-card);
+          backdrop-filter: var(--glass-blur);
+          -webkit-backdrop-filter: var(--glass-blur);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius);
           padding: 20px;
           display: flex;
           flex-direction: column;
+          box-shadow: var(--shadow-sm);
+          transition: all var(--transition-base);
+        }
+        .widget:hover {
+          border-color: rgba(255, 0, 255, 0.4);
+          box-shadow: var(--shadow-lg), var(--glow-card-hover);
         }
 
         .widget-header {
@@ -239,7 +246,28 @@ const Dashboard = (() => {
         .w-team-dist { grid-column: 1 / 2; grid-row: 1 / 2; }
         .w-events { grid-column: 2 / 3; grid-row: 1 / 2; }
         .w-completeness { grid-column: 3 / 4; grid-row: 1 / 2; }
-        .w-quick-links { grid-column: 1 / 4; grid-row: 2 / 3; }
+        .w-deadlines { grid-column: 1 / 4; grid-row: 2 / 3; }
+        .w-quick-links { grid-column: 1 / 4; grid-row: 3 / 4; }
+
+        /* Deadlines widget */
+        .deadline-list { display: flex; flex-direction: column; gap: 2px; }
+        .deadline-row {
+          display: flex; align-items: center; gap: 14px;
+          padding: 10px 14px; border-radius: 6px;
+          transition: all var(--transition-base);
+        }
+        .deadline-row:hover { background: rgba(255, 255, 255, 0.05); }
+        .deadline-row.urgent { border-left: 3px solid #FF3B30; }
+        .deadline-row.warning { border-left: 3px solid #FF9500; }
+        .deadline-row.ok { border-left: 3px solid #FFD600; }
+        .deadline-icon { width: 36px; height: 36px; border-radius: 8px; background: rgba(255, 255, 255, 0.05); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+        .deadline-info { flex: 1; min-width: 0; }
+        .deadline-name { font-size: 14px; font-weight: 600; }
+        .deadline-label { font-size: 12px; color: var(--color-text-muted); }
+        .deadline-days { font-size: 13px; font-weight: 700; text-align: right; min-width: 70px; }
+        .deadline-days.urgent { color: #FF3B30; }
+        .deadline-days.warning { color: #FF9500; }
+        .deadline-days.ok { color: #FFD600; }
 
         /* Bar Chart */
         .bar-row { display: grid; grid-template-columns: 120px 1fr 40px; align-items: center; gap: 12px; margin-bottom: 12px; font-size: 13px; font-weight: 600; }
@@ -247,15 +275,32 @@ const Dashboard = (() => {
         .bar-fill { height: 100%; border-radius: 4px; }
 
         /* Fixture Cards */
-        .fixture-card { background: #0a0a0c; border: 1px solid #1c1c1e; padding: 12px; border-radius: 6px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .fixture-card { background: rgba(255, 255, 255, 0.03); border: 1px solid var(--color-border); padding: 12px; border-radius: var(--radius-sm); margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; transition: all var(--transition-base); }
+        .fixture-card:hover { border-color: rgba(255, 0, 255, 0.3); box-shadow: var(--shadow-md), inset 0 0 10px rgba(255, 0, 255, 0.1); }
         .fixture-card:last-child { margin-bottom: 0; }
-        .team-logo { width: 32px; height: 32px; border-radius: 50%; background: #1c1c1e; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 800; color: white; }
+        .team-logo { width: 32px; height: 32px; border-radius: 50%; background: rgba(255, 255, 255, 0.05); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 800; color: white; }
 
         /* Quick Link Card */
-        .quick-link { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: var(--sp-3); background: #1c1c1e; border-radius: 8px; cursor: pointer; transition: background 0.2s, transform 0.2s; text-align: center; }
-        .quick-link:hover { background: #2c2c2e; transform: translateY(-2px); }
-        .quick-link i { font-size: 28px; color: var(--color-pink); }
+        .quick-link { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: var(--sp-3); background: rgba(255, 255, 255, 0.03); border: 1px solid var(--color-border); border-radius: var(--radius); cursor: pointer; transition: all var(--transition-base); text-align: center; }
+        .quick-link:hover { background: rgba(255, 0, 255, 0.05); transform: translateY(-2px); border-color: rgba(255, 0, 255, 0.4); box-shadow: var(--shadow-md), var(--glow-card-hover); }
+        .quick-link i { font-size: 28px; color: var(--color-pink); text-shadow: 0 0 8px rgba(255,0,255,0.4); }
         .quick-link span { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+
+        /* Responsive */
+        @media (max-width: 960px) {
+          .dash-grid { grid-template-columns: 1fr !important; }
+          .w-team-dist, .w-events, .w-completeness { grid-column: auto; grid-row: auto; }
+          .w-quick-links { grid-column: auto; grid-row: auto; }
+        }
+        @media (max-width: 768px) {
+          .dash-container { padding: 16px; }
+          .dash-kpi-row { flex-wrap: wrap; gap: 16px; }
+          .kpi-item { flex: 0 0 calc(50% - 8px); border-right: none !important; padding-right: 0 !important; }
+          .kpi-val { font-size: 32px; }
+        }
+        @media (max-width: 480px) {
+          .kpi-item { flex: 0 0 100%; }
+        }
       </style>
 
       <div class="dash-container">
@@ -320,27 +365,44 @@ const Dashboard = (() => {
             ${completenessHtml}
           </div>
 
-          <!-- WIDGET 4: QUICK LINKS -->
+          <!-- WIDGET 4: DEADLINES -->
+          <div class="widget w-deadlines">
+            <div class="widget-header">
+              <div class="widget-title">⏰ Scadenze Imminenti</div>
+              <button class="btn btn-ghost btn-sm" onclick="Router.navigate('compliance')">Vedi tutte</button>
+            </div>
+            ${_renderDeadlines(deadlines)}
+          </div>
+
+          <!-- WIDGET 5: QUICK LINKS -->
           <div class="widget w-quick-links">
             <div class="widget-header">
               <div class="widget-title">Accesso Rapido</div>
             </div>
-            <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:var(--sp-2);">
+            <div style="display:grid; grid-template-columns:repeat(6,1fr); gap:var(--sp-2);">
               <div class="quick-link" onclick="Router.navigate('athletes')">
                 <i class="ph ph-user"></i>
-                <span>Gestione Atleti</span>
+                <span>Atleti</span>
               </div>
               <div class="quick-link" onclick="Router.navigate('transport')">
                 <i class="ph ph-bus"></i>
                 <span>Trasporti</span>
               </div>
-              <div class="quick-link" onclick="Router.navigate('outseason')">
-                <i class="ph ph-sun"></i>
-                <span>Out Season</span>
+              <div class="quick-link" onclick="Router.navigate('finance')">
+                <i class="ph ph-calculator"></i>
+                <span>Contabilità</span>
+              </div>
+              <div class="quick-link" onclick="Router.navigate('compliance')">
+                <i class="ph ph-shield-check"></i>
+                <span>Compliance</span>
+              </div>
+              <div class="quick-link" onclick="Router.navigate('tasks')">
+                <i class="ph ph-check-square"></i>
+                <span>Task</span>
               </div>
               <div class="quick-link" onclick="Router.navigate('social')">
                 <i class="ph ph-share-network"></i>
-                <span>Social & Media</span>
+                <span>Social</span>
               </div>
             </div>
           </div>
@@ -348,6 +410,28 @@ const Dashboard = (() => {
         </div> <!-- END MAIN GRID -->
       </div>
     `;
+  }
+
+  function _renderDeadlines(items) {
+    if (!items || items.length === 0) {
+      return `<div style="text-align:center; padding:20px; color:var(--color-text-muted); font-size:13px;">
+        <i class="ph ph-check-circle" style="font-size:32px; display:block; margin-bottom:8px; color:#00E676;"></i>
+        Nessuna scadenza nei prossimi 60 giorni 🎉
+      </div>`;
+    }
+    return `<div class="deadline-list">${items.map(d => {
+      const urgency = d.days_left <= 7 ? 'urgent' : d.days_left <= 15 ? 'warning' : 'ok';
+      const daysText = d.days_left === 0 ? 'OGGI' : d.days_left === 1 ? 'domani' : `${d.days_left} giorni`;
+      const iconColor = urgency === 'urgent' ? '#FF3B30' : urgency === 'warning' ? '#FF9500' : '#FFD600';
+      return `<div class="deadline-row ${urgency}">
+        <div class="deadline-icon" style="color:${iconColor};"><i class="ph ph-${Utils.escapeHtml(d.icon)}"></i></div>
+        <div class="deadline-info">
+          <div class="deadline-name">${Utils.escapeHtml(d.name)}</div>
+          <div class="deadline-label">${Utils.escapeHtml(d.label)} • scade ${Utils.escapeHtml(d.expiry_date)}</div>
+        </div>
+        <div class="deadline-days ${urgency}">${daysText}</div>
+      </div>`;
+    }).join('')}</div>`;
   }
 
   function destroy() {

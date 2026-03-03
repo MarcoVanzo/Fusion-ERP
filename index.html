@@ -8,13 +8,15 @@
     <meta name="description"
         content="Fusion ERP — Sistema di gestione sportiva per atleti, trasferte e amministrazione.">
     <meta name="robots" content="noindex, nofollow">
-    <meta name="app-version" content="1772411376">
+    <meta name="app-version" content="1772577675">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Fusion ERP</title>
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+    <link rel="apple-touch-icon" href="assets/favicon.svg">
     <!-- Phosphor Icons -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <link rel="stylesheet" href="css/style.css?v=1772411376">
+    <link rel="stylesheet" href="css/style_v2.css?v=1772577675">
 </head>
 
 <body>
@@ -73,6 +75,9 @@
         </div>
         <div class="auth-hero" aria-hidden="true">
             <!-- Background image applied via CSS -->
+            <div class="hero-logo-container">
+                <img src="uploads/images/Logo_con_nome.png" alt="Fusion ERP Logo" class="hero-logo-img">
+            </div>
         </div>
     </div>
 
@@ -103,6 +108,9 @@
             </form>
         </div>
         <div class="auth-hero" aria-hidden="true">
+            <div class="hero-logo-container">
+                <img src="uploads/images/Logo_con_nome.png" alt="Fusion ERP Logo" class="hero-logo-img">
+            </div>
             <div class="auth-hero-text">SICUREZZA</div>
         </div>
     </div>
@@ -121,7 +129,34 @@
                     <!-- Nav items injected dynamically -->
                 </nav>
             </div>
-            <div class="top-nav-right">
+            <div class="top-nav-right" style="display:flex; align-items:center; gap:16px;">
+                <!-- Notifications Dropdown -->
+                <div class="notifications-container" style="position:relative;">
+                    <div class="btn-icon" id="notifications-btn" style="cursor: pointer; position:relative;">
+                        <i class="ph ph-bell"></i>
+                        <span id="notifications-badge" class="badge badge-pink"
+                            style="position:absolute; top:-4px; right:-4px; padding:2px 4px; font-size:10px; display:none;">0</span>
+                    </div>
+                    <!-- Dropdown Menu -->
+                    <div id="notifications-dropdown" class="dropdown-menu hidden"
+                        style="position:absolute; top:calc(100% + 8px); right:-10px; background:var(--color-surface, #1e1e1e); border:1px solid var(--color-border, #333); border-radius:8px; box-shadow:0 8px 24px rgba(0,0,0,0.8); width:320px; z-index:1000; display:flex; flex-direction:column; overflow:hidden;">
+                        <div
+                            style="padding:12px 16px; border-bottom:1px solid var(--color-border, #333); display:flex; justify-content:space-between; align-items:center;">
+                            <strong
+                                style="font-size:13px; text-transform:uppercase; letter-spacing:0.05em; color:var(--color-text-muted);">Notifiche</strong>
+                            <button class="btn btn-ghost btn-sm" id="notifications-mark-read"
+                                style="font-size:11px; padding:4px 8px;">Segna lette</button>
+                        </div>
+                        <div id="notifications-list" style="max-height:300px; overflow-y:auto; padding:8px 0;">
+                            <!-- Items injected dynamically -->
+                            <div
+                                style="padding:24px 16px; text-align:center; color:var(--color-text-muted); font-size:13px;">
+                                Nessuna notifica recente.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="user-dropdown-container" style="position:relative;">
                     <div class="user-chip" id="user-menu-btn" style="cursor: pointer;">
                         <div class="user-avatar" id="sidebar-avatar" aria-hidden="true">U</div>
@@ -133,7 +168,12 @@
                     <!-- Dropdown Menu -->
                     <div id="user-dropdown" class="dropdown-menu hidden"
                         style="position:absolute; top:calc(100% + 8px); right:0; background:var(--color-surface, #1e1e1e); border:1px solid var(--color-border, #333); border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.5); width:200px; z-index:1000; display:flex; flex-direction:column; padding:8px 0;">
-                        <button class="dropdown-item admin-only hidden" data-route="admin"
+                        <button class="dropdown-item" id="profile-btn" type="button"
+                            style="display:flex; align-items:center; gap:8px; padding:12px 16px; width:100%; border:none; background:none; cursor:pointer; text-align:left; color:inherit; font-size:14px;">
+                            <i class="ph ph-user" style="font-size:18px;"></i> Il mio profilo
+                        </button>
+                        <div style="height:1px; background:var(--color-border, #333); margin:4px 0;"></div>
+                        <button class="dropdown-item admin-only hidden" data-route="utenti"
                             style="display:flex; align-items:center; gap:8px; padding:12px 16px; width:100%; border:none; background:none; cursor:pointer; text-align:left; color:inherit; font-size:14px;">
                             <i class="ph ph-shield-check" style="font-size:18px;"></i> Pannello Admin
                         </button>
@@ -153,10 +193,6 @@
                         </button>
                     </div>
                 </div>
-                <button class="btn btn-ghost" style="padding:4px; border:none; outline:none;"><i class="ph ph-bell"
-                        style="font-size:20px;"></i></button>
-                <button class="btn btn-ghost" style="padding:4px; border:none; outline:none;"><i
-                        class="ph ph-magnifying-glass" style="font-size:20px;"></i></button>
             </div>
         </header>
 
@@ -193,10 +229,10 @@
     <!-- ─── SCRIPTS ──────────────────────────────────────────────────────────── -->
     <!-- ─── CONFIG ───────────────────────────────────────────────────────────── -->
     <script>window.GOOGLE_MAPS_API_KEY = 'AIzaSyBhPUVEj5X5jZ2zsG1pzDys5QiYHbtN6oI';</script>
-    <script src="js/core/utils.js?v=1772411376"></script>
-    <script src="js/core/store.js?v=1772411376"></script>
-    <script src="js/core/router.js?v=1772411376"></script>
-    <script src="js/app.js?v=1772411376"></script>
+    <script src="js/core/utils.js?v=1772577675"></script>
+    <script src="js/core/store.js?v=1772577675"></script>
+    <script src="js/core/router.js?v=1772577675"></script>
+    <script src="js/app.js?v=1772577675"></script>
 
 </body>
 

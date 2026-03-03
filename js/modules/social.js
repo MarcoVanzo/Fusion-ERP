@@ -121,8 +121,13 @@ const Social = (() => {
         const totalReach = daily.reduce((s, d) => s + (d.reach || 0), 0);
         const totalViews = daily.reduce((s, d) => s + (d.views || 0), 0);
         const totalEngaged = daily.reduce((s, d) => s + (d.accounts_engaged || 0), 0);
-        const engagementRate = profile.followers_count
-            ? ((totalEngaged / profile.followers_count) * 100).toFixed(1)
+
+        const hasIg = !!profile.username;
+        const pageTitle = hasIg ? `@${profile.username}` : (_data?.fb_page_name || 'Facebook Page');
+        const followersKpi = hasIg ? profile.followers_count : fb.page_fans;
+
+        const engagementRate = followersKpi
+            ? ((totalEngaged / followersKpi) * 100).toFixed(1)
             : '0.0';
 
         app.innerHTML = `
@@ -140,7 +145,7 @@ const Social = (() => {
                     <div class="social-avatar">
                         ${profile.profile_picture_url
                 ? `<img src="${Utils.escapeHtml(profile.profile_picture_url)}" alt="Profile" class="social-avatar-img">`
-                : `<i class="ph ph-instagram-logo" style="font-size:32px;"></i>`
+                : (hasIg ? `<i class="ph ph-instagram-logo" style="font-size:32px;"></i>` : `<i class="ph ph-facebook-logo" style="font-size:32px;color:#1877F2;"></i>`)
             }
                     </div>
                     <div class="social-profile-info">
@@ -148,8 +153,8 @@ const Social = (() => {
                             <i class="ph ph-chart-line-up"></i> Social Analytics
                         </h1>
                         <p class="social-profile-handle">
-                            @${Utils.escapeHtml(profile.username || 'fusionteamvolley')}
-                            ${profile.followers_count ? ` · ${_formatNumber(profile.followers_count)} follower` : ''}
+                            ${Utils.escapeHtml(pageTitle)}
+                            ${followersKpi ? ` · ${_formatNumber(followersKpi)} follower/fan` : ''}
                         </p>
                     </div>
                 </div>
@@ -172,8 +177,8 @@ const Social = (() => {
                 <div class="social-kpi-card social-kpi-followers">
                     <div class="social-kpi-icon"><i class="ph ph-users"></i></div>
                     <div class="social-kpi-content">
-                        <span class="social-kpi-value" id="kpi-followers">${_formatNumber(profile.followers_count || 0)}</span>
-                        <span class="social-kpi-label">Follower</span>
+                        <span class="social-kpi-value" id="kpi-followers">${_formatNumber(followersKpi || 0)}</span>
+                        <span class="social-kpi-label">${hasIg ? 'Follower' : 'Fan Pagina'}</span>
                     </div>
                 </div>
                 <div class="social-kpi-card social-kpi-views">
@@ -237,12 +242,21 @@ const Social = (() => {
             </div>
 
             <!-- Posts Grid -->
+            ${hasIg ? `
             <div class="social-posts-section">
                 <h3 class="social-section-title"><i class="ph ph-images"></i> Ultimi Post</h3>
                 <div class="social-posts-grid" id="social-posts-grid">
                     ${posts.map(p => _renderPostCard(p)).join('')}
                 </div>
+            </div>` : `
+            <div class="social-posts-section">
+                <div style="background:var(--color-surface);border-radius:12px;padding:32px;text-align:center;color:var(--text-muted);border:1px dashed var(--color-border);margin-top:24px;">
+                    <i class="ph ph-instagram-logo" style="font-size:32px;margin-bottom:8px;opacity:0.5;"></i>
+                    <h3 style="margin-bottom:8px;">Instagram non collegato</h3>
+                    <p style="font-size:14px;max-width:400px;margin:0 auto;line-height:1.5;">Per visualizzare i tuoi post recenti e le relative metriche in questa sezione, assicurati di aver concesso i permessi per il tuo account Instagram Business durante la procedura di connessione Meta.</p>
+                </div>
             </div>
+            `}
         </div>`;
 
         // Wire up events
@@ -359,13 +373,13 @@ const Social = (() => {
         }
 
         // Draw area + line for Views
-        _drawLine(ctx, views, maxVal, padding, chartH, xStep, '#E6007E', 'rgba(230,0,126,0.15)');
+        _drawLine(ctx, views, maxVal, padding, chartH, xStep, '#FF00FF', 'rgba(255, 0, 255,0.15)');
 
         // Draw area + line for Reach
         _drawLine(ctx, reach, maxVal, padding, chartH, xStep, '#00E676', 'rgba(0,230,118,0.10)');
 
         // Draw dots for Views
-        _drawDots(ctx, views, maxVal, padding, chartH, xStep, '#E6007E');
+        _drawDots(ctx, views, maxVal, padding, chartH, xStep, '#FF00FF');
 
         // Draw dots for Reach
         _drawDots(ctx, reach, maxVal, padding, chartH, xStep, '#00E676');

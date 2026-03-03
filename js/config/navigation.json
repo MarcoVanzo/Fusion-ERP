@@ -5,6 +5,13 @@
         "path": "athletes",
         "icon": "user",
         "isMobileVisible": true,
+        "roles": [
+            "atleta",
+            "allenatore",
+            "operatore",
+            "manager",
+            "admin"
+        ],
         "children": [
             {
                 "title": "Anagrafica",
@@ -39,45 +46,43 @@
         ]
     },
     {
-        "id": "teams",
-        "title": "Squadre",
-        "path": "teams",
-        "icon": "users",
+        "id": "results",
+        "title": "Risultati",
+        "path": "results",
+        "icon": "trophy",
         "isMobileVisible": true,
-        "isDynamicRoute": true,
-        "implemented": false,
-        "notes": "Route template: teams/:teamId",
+        "roles": [
+            "allenatore",
+            "operatore",
+            "manager",
+            "admin"
+        ],
         "children": [
             {
-                "title": "Roster",
-                "path": "team-roster",
-                "icon": "list",
+                "title": "Partite",
+                "path": "results-matches",
+                "icon": "volleyball",
                 "isMobileVisible": false
             },
             {
-                "title": "Calendario",
-                "path": "team-calendar",
-                "icon": "calendar-blank",
-                "isMobileVisible": false
-            },
-            {
-                "title": "Distinte Gara",
-                "path": "team-match-sheets",
-                "icon": "clipboard-text",
-                "isMobileVisible": false
-            },
-            {
-                "title": "Lavagna",
-                "path": "team-tactics",
-                "icon": "presentation-chart",
-                "isMobileVisible": false
-            },
-            {
-                "title": "Chat",
-                "path": "team-chat",
-                "icon": "chat-circle",
+                "title": "Classifica",
+                "path": "results-standings",
+                "icon": "list-numbers",
                 "isMobileVisible": false
             }
+        ]
+    },
+    {
+        "id": "chat",
+        "title": "Chat",
+        "path": "team-chat",
+        "icon": "chat-circle",
+        "isMobileVisible": true,
+        "roles": [
+            "allenatore",
+            "operatore",
+            "manager",
+            "admin"
         ]
     },
     {
@@ -86,6 +91,12 @@
         "path": "transport",
         "icon": "bus",
         "isMobileVisible": true,
+        "roles": [
+            "allenatore",
+            "operatore",
+            "manager",
+            "admin"
+        ],
         "children": [
             {
                 "title": "Carpooling",
@@ -114,69 +125,26 @@
         ]
     },
     {
-        "id": "scouting",
-        "title": "Scouting",
-        "path": "scouting",
-        "icon": "binoculars",
+        "id": "outseason",
+        "title": "OutSeason",
+        "path": "outseason",
+        "icon": "sun",
         "isMobileVisible": false,
-        "implemented": false,
+        "roles": [
+            "manager",
+            "admin"
+        ],
         "children": [
             {
-                "title": "Database",
-                "path": "scouting-database",
-                "icon": "database",
+                "title": "Summer Camp",
+                "path": "outseason-camps",
+                "icon": "tent",
                 "isMobileVisible": false
             },
             {
-                "title": "Report Partite",
-                "path": "scouting-reports",
-                "icon": "chart-bar",
-                "isMobileVisible": false
-            },
-            {
-                "title": "Calendario",
-                "path": "scouting-calendar",
-                "icon": "calendar",
-                "isMobileVisible": false
-            },
-            {
-                "title": "Video",
-                "path": "scouting-video",
-                "icon": "video-camera",
-                "isMobileVisible": false
-            }
-        ]
-    },
-    {
-        "id": "finance",
-        "title": "Finanza",
-        "path": "finance",
-        "icon": "currency-circle-dollar",
-        "isMobileVisible": false,
-        "implemented": false,
-        "children": [
-            {
-                "title": "Cash Flow",
-                "path": "finance-cash-flow",
-                "icon": "chart-line-up",
-                "isMobileVisible": false
-            },
-            {
-                "title": "Staff & Compensi",
-                "path": "finance-staff",
-                "icon": "users-three",
-                "isMobileVisible": false
-            },
-            {
-                "title": "Sponsor",
-                "path": "finance-sponsorships",
-                "icon": "buildings",
-                "isMobileVisible": false
-            },
-            {
-                "title": "Export",
-                "path": "finance-export",
-                "icon": "download-simple",
+                "title": "Tornei",
+                "path": "outseason-tournaments",
+                "icon": "trophy",
                 "isMobileVisible": false
             }
         ]
@@ -187,6 +155,11 @@
         "path": "social",
         "icon": "share-network",
         "isMobileVisible": false,
+        "roles": [
+            "operatore",
+            "manager",
+            "admin"
+        ],
         "children": [
             {
                 "title": "Analytics",
@@ -199,17 +172,99 @@
                 "path": "social-gallery",
                 "icon": "image",
                 "isMobileVisible": false
-            },
+            }
+        ]
+    },
+    {
+        "id": "tasks",
+        "title": "Task",
+        "path": "tasks",
+        "icon": "check-square",
+        "isMobileVisible": false,
+        "roles": [
+            "manager",
+            "admin"
+        ]
+    },
+    {
+        "id": "compliance",
+        "title": "Compliance",
+        "path": "compliance",
+        "icon": "shield-check",
+        "isMobileVisible": false,
+        "roles": [
+            "operatore",
+            "manager",
+            "admin"
+        ],
+        "children": [
             {
-                "title": "Grafiche",
-                "path": "social-graphics",
-                "icon": "paint-brush",
+                "title": "Dashboard",
+                "path": "compliance",
+                "icon": "chart-pie",
                 "isMobileVisible": false
             },
             {
-                "title": "Planner",
-                "path": "social-planner",
+                "title": "Contratti",
+                "path": "compliance-contracts",
+                "icon": "file-text",
+                "isMobileVisible": false
+            },
+            {
+                "title": "Scadenzario",
+                "path": "compliance-calendar",
                 "icon": "calendar-check",
+                "isMobileVisible": false
+            },
+            {
+                "title": "Certificati Medici",
+                "path": "compliance-medical",
+                "icon": "first-aid-kit",
+                "isMobileVisible": false
+            },
+            {
+                "title": "Tesseramenti",
+                "path": "compliance-federation",
+                "icon": "identification-badge",
+                "isMobileVisible": false
+            }
+        ]
+    },
+    {
+        "id": "scouting",
+        "title": "Scouting",
+        "path": "scouting",
+        "icon": "binoculars",
+        "isMobileVisible": false,
+        "implemented": false,
+        "roles": [
+            "allenatore",
+            "manager",
+            "admin"
+        ],
+        "children": [
+            {
+                "title": "Database Atleti",
+                "path": "scouting-database",
+                "icon": "database",
+                "isMobileVisible": false
+            },
+            {
+                "title": "Valutazioni",
+                "path": "scouting-evaluations",
+                "icon": "star",
+                "isMobileVisible": false
+            },
+            {
+                "title": "Watchlist",
+                "path": "scouting-watchlist",
+                "icon": "eye",
+                "isMobileVisible": false
+            },
+            {
+                "title": "Report",
+                "path": "scouting-reports",
+                "icon": "note-pencil",
                 "isMobileVisible": false
             }
         ]
@@ -221,6 +276,10 @@
         "icon": "shopping-cart",
         "isMobileVisible": true,
         "implemented": false,
+        "roles": [
+            "operatore",
+            "admin"
+        ],
         "children": [
             {
                 "title": "Acquista",
@@ -243,49 +302,32 @@
         ]
     },
     {
-        "id": "results",
-        "title": "Risultati",
-        "path": "results",
-        "icon": "trophy",
-        "isMobileVisible": true,
-        "children": [
-            {
-                "title": "Partite",
-                "path": "results-matches",
-                "icon": "volleyball",
-                "isMobileVisible": false
-            },
-            {
-                "title": "Classifica",
-                "path": "results-standings",
-                "icon": "list-numbers",
-                "isMobileVisible": false
-            }
-        ]
-    },
-    {
-        "id": "outseason",
-        "title": "OutSeason",
-        "path": "outseason",
-        "icon": "sun",
+        "id": "finance",
+        "title": "Contabilità",
+        "path": "finance",
+        "icon": "calculator",
         "isMobileVisible": false,
+        "roles": [
+            "manager",
+            "admin"
+        ],
         "children": [
             {
-                "title": "Summer Camp",
-                "path": "outseason-camps",
-                "icon": "tent",
+                "title": "Dashboard",
+                "path": "finance",
+                "icon": "chart-pie",
                 "isMobileVisible": false
             },
             {
-                "title": "Tornei",
-                "path": "outseason-tournaments",
-                "icon": "trophy",
+                "title": "Fatturazione",
+                "path": "finance-invoices",
+                "icon": "receipt",
                 "isMobileVisible": false
             },
             {
-                "title": "Mantenimento",
-                "path": "outseason-workouts",
-                "icon": "barbell",
+                "title": "74-ter",
+                "path": "finance-74ter",
+                "icon": "intersect",
                 "isMobileVisible": false
             }
         ]

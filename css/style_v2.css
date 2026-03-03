@@ -9,45 +9,45 @@
 /* ─── DESIGN TOKENS ────────────────────────────────────────────────────────── */
 :root {
   /* Brand Palette */
-  --color-black: #050505;
-  --color-pink: #E6007E;
-  --color-pink-hover: #ff1a9a;
+  --color-black: #000000;
+  --color-pink: #FF00FF;
+  --color-pink-hover: #ff33ff;
   --color-white: #FFFFFF;
   --color-silver: #E5E5E5;
 
   /* Semantic tokens */
-  --color-bg: #0A0A0C;
-  --color-bg-card: rgba(18, 18, 20, 0.45);
-  --color-bg-card-hover: rgba(26, 26, 30, 0.65);
-  --color-bg-input: rgba(17, 17, 17, 0.5);
-  --color-border: rgba(255, 255, 255, 0.08);
-  --color-border-active: rgba(255, 255, 255, 0.25);
-  --glass-blur: blur(16px);
+  --color-bg: #030303;
+  --color-bg-card: rgba(10, 10, 10, 0.7);
+  --color-bg-card-hover: rgba(18, 18, 20, 0.85);
+  --color-bg-input: rgba(5, 5, 5, 0.8);
+  --color-border: rgba(255, 0, 255, 0.15);
+  --color-border-active: rgba(255, 0, 255, 0.4);
+  --glass-blur: blur(20px);
   --color-text: var(--color-white);
-  --color-text-muted: rgba(255, 255, 255, 0.65);
-  --color-text-dim: rgba(255, 255, 255, 0.45);
+  --color-text-muted: rgba(255, 255, 255, 0.6);
+  --color-text-dim: rgba(255, 255, 255, 0.4);
 
   /* Status colours */
-  --color-success: #00E676;
+  --color-success: #00FF88;
   --color-warning: #FFD600;
   --color-danger: #FF3B30;
-  --color-info: rgba(255, 255, 255, 0.7);
+  --color-info: rgba(255, 255, 255, 0.8);
 
   /* Risk colours */
   --risk-low: rgba(255, 255, 255, 0.15);
-  --risk-moderate: #00E676;
+  --risk-moderate: #00FF88;
   --risk-high: #FFD600;
-  --risk-extreme: #E6007E;
+  --risk-extreme: #FF00FF;
 
   /* Shadows & Glows */
-  --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.18);
-  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
-  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.6), 0 4px 6px -2px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.7), 0 10px 10px -5px rgba(0, 0, 0, 0.5);
 
-  --glow-pink: 0 0 15px rgba(230, 0, 126, 0.4);
-  --glow-pink-strong: 0 0 25px rgba(230, 0, 126, 0.6), 0 0 45px rgba(230, 0, 126, 0.2);
-  --glow-input: 0 0 0 2px rgba(230, 0, 126, 0.3), 0 0 10px rgba(230, 0, 126, 0.2);
-  --glow-card-hover: 0 0 20px rgba(230, 0, 126, 0.15), inset 0 0 10px rgba(230, 0, 126, 0.05);
+  --glow-pink: 0 0 15px rgba(255, 0, 255, 0.4);
+  --glow-pink-strong: 0 0 20px rgba(255, 0, 255, 0.6), 0 0 40px rgba(255, 0, 255, 0.3);
+  --glow-input: 0 0 0 2px rgba(255, 0, 255, 0.4), 0 0 12px rgba(255, 0, 255, 0.25);
+  --glow-card-hover: 0 0 20px rgba(255, 0, 255, 0.15), inset 0 0 8px rgba(255, 0, 255, 0.05);
 
   /* Typography */
   --font-display: 'Barlow Condensed', sans-serif;
@@ -276,7 +276,7 @@ h3 {
 
 .nav-item.active {
   color: var(--color-pink);
-  text-shadow: 0 0 15px rgba(230, 0, 126, 0.6);
+  text-shadow: var(--glow-pink-strong);
 }
 
 .nav-item.active::after {
@@ -487,14 +487,14 @@ h3 {
 
 /* Primary CTA */
 .btn-primary {
-  background: linear-gradient(135deg, var(--color-pink), #ff33a1);
+  background: linear-gradient(135deg, var(--color-pink), #ff33ff);
   color: var(--color-white);
   box-shadow: var(--glow-pink), inset 0 0 10px rgba(255, 255, 255, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: linear-gradient(135deg, #ff1a9a, #ff4db8);
+  background: linear-gradient(135deg, #ff33ff, #ff66ff);
   box-shadow: var(--glow-pink-strong), inset 0 0 15px rgba(255, 255, 255, 0.3);
   transform: translateY(-2px);
   border-color: rgba(255, 255, 255, 0.4);
@@ -560,7 +560,7 @@ h3 {
 }
 
 .card:hover {
-  border-color: rgba(230, 0, 126, 0.4);
+  border-color: rgba(255, 0, 255, 0.4);
   transform: translateY(-4px);
   box-shadow: var(--shadow-lg), var(--glow-card-hover);
   background: var(--color-bg-card-hover);
@@ -573,7 +573,7 @@ h3 {
 
 .card--highlighted {
   border-color: var(--color-pink);
-  box-shadow: 0 0 15px rgba(230, 0, 126, 0.25), inset 0 0 10px rgba(230, 0, 126, 0.1);
+  box-shadow: var(--glow-pink-strong), inset 0 0 10px rgba(255, 0, 255, 0.1);
 }
 
 /* Stat Card */
@@ -614,9 +614,9 @@ h3 {
 
 .stat-card:hover {
   transform: translateY(-4px) scale(1.02);
-  border-color: rgba(230, 0, 126, 0.5);
+  border-color: rgba(255, 0, 255, 0.5);
   box-shadow: var(--shadow-lg), var(--glow-card-hover);
-  background: linear-gradient(180deg, rgba(40, 40, 45, 0.5) 0%, rgba(26, 26, 30, 0.8) 100%);
+  background: linear-gradient(180deg, rgba(20, 20, 20, 0.9) 0%, rgba(10, 10, 10, 1) 100%);
 }
 
 .stat-card:hover::after {
@@ -1282,8 +1282,9 @@ h3 {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  background: #050505;
-  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(5, 5, 5, 0.9);
+  border-right: 1px solid var(--color-pink);
+  box-shadow: 10px 0 30px rgba(255, 0, 255, 0.15);
   position: relative;
   z-index: 10;
 }
@@ -1417,19 +1418,20 @@ h3 {
 .input-wrapper input {
   width: 100%;
   padding: 16px 80px 16px 48px;
-  background: #1a1a1a;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(10, 10, 10, 0.8);
+  border: 1px solid rgba(255, 0, 255, 0.3);
   border-radius: 8px;
   color: var(--color-white);
   font-size: 15px;
   transition: all 0.2s ease;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 .input-wrapper input:focus {
   outline: none;
   border-color: var(--color-pink);
-  box-shadow: 0 0 0 1px var(--color-pink);
-  background: #111111;
+  box-shadow: var(--glow-input);
+  background: rgba(5, 5, 5, 0.95);
 }
 
 .input-wrapper input::placeholder {
@@ -3266,23 +3268,19 @@ h3 {
 }
 
 .finance-kpi-card {
-  background: var(--color-bg-card);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
+  background: var(--color-card);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   padding: 20px;
   display: flex;
   align-items: center;
   gap: 16px;
-  box-shadow: var(--shadow-sm);
-  transition: all var(--transition-base);
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .finance-kpi-card:hover {
   transform: translateY(-2px);
-  border-color: rgba(230, 0, 126, 0.4);
-  box-shadow: var(--shadow-md), var(--glow-card-hover);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
 .finance-kpi-icon {
@@ -3668,9 +3666,7 @@ h3 {
 
 /* Stat cards (federation) */
 .compliance-stat-card {
-  background: var(--color-bg-card);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
+  background: var(--color-card);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   padding: 20px;
@@ -3681,14 +3677,6 @@ h3 {
   gap: 4px;
   font-size: 13px;
   color: var(--text-muted);
-  box-shadow: var(--shadow-sm);
-  transition: all var(--transition-base);
-}
-
-.compliance-stat-card:hover {
-  transform: translateY(-2px);
-  border-color: rgba(230, 0, 126, 0.4);
-  box-shadow: var(--shadow-md), var(--glow-card-hover);
 }
 
 .compliance-big-num {

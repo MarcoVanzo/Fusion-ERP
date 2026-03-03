@@ -10,6 +10,14 @@ const App = (() => {
 
     async function init() {
         // Try to resume existing session
+        // Forgot-password reset link check
+        const _urlParams = new URLSearchParams(window.location.search);
+        const _resetToken = _urlParams.get('reset');
+        if (_resetToken && /^[a-f0-9]{64}$/i.test(_resetToken)) {
+            _showConfirmResetScreen(_resetToken);
+            return;
+        }
+
         try {
             _currentUser = await Store.get('me', 'auth');
             // If onboarding is not complete, we can either wait or just boot
@@ -159,84 +167,107 @@ const App = (() => {
     async function _bootApp(user) {
         _currentUser = user;
 
-        document.getElementById('auth-screen').classList.add('hidden');
-        document.getElementById('reset-screen').classList.add('hidden');
-        document.getElementById('app-shell').classList.remove('hidden');
+        try {
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('reset-screen').classList.add('hidden');
+            document.getElementById('app-shell').classList.remove('hidden');
 
-        const nameEl = document.getElementById('sidebar-username');
-        const roleEl = document.getElementById('sidebar-role');
-        const avatarEl = document.getElementById('sidebar-avatar');
-        if (nameEl) nameEl.textContent = Utils.escapeHtml(user.fullName || user.email);
-        if (roleEl) roleEl.textContent = Utils.escapeHtml(user.role);
-        if (avatarEl) avatarEl.textContent = Utils.initials(user.fullName || user.email);
+            const nameEl = document.getElementById('sidebar-username');
+            const roleEl = document.getElementById('sidebar-role');
+            const avatarEl = document.getElementById('sidebar-avatar');
+            if (nameEl) nameEl.textContent = Utils.escapeHtml(user.fullName || user.email);
+            if (roleEl) roleEl.textContent = Utils.escapeHtml(user.role);
+            if (avatarEl) avatarEl.textContent = Utils.initials(user.fullName || user.email);
 
-        // Show/hide admin items in user dropdown
-        const userRoles = user.permissions || [user.role];
-        const isAdmin = userRoles.includes('admin');
-        const adminItems = document.querySelectorAll('.admin-only');
-        adminItems.forEach(el => {
-            if (isAdmin) el.classList.remove('hidden');
-            else el.classList.add('hidden');
-        });
+            // Show/hide admin items in user dropdown
+            const _adminPerm = user.permissions && user.permissions['admin'];
+            const isAdmin = user.role === 'admin'
+                || _adminPerm === 'write'
+                || _adminPerm === 'read';
+            const adminItems = document.querySelectorAll('.admin-only');
+            adminItems.forEach(el => {
+                if (isAdmin) el.classList.remove('hidden');
+                else el.classList.add('hidden');
+            });
 
-        // User Dropdown toggle logic
-        const userMenuBtn = document.getElementById('user-menu-btn');
-        const userDropdown = document.getElementById('user-dropdown');
-        if (userMenuBtn && userDropdown) {
-            userMenuBtn.onclick = (e) => {
-                e.stopPropagation();
-                userDropdown.classList.toggle('hidden');
-            };
-            document.onclick = (e) => {
-                if (!userMenuBtn.contains(e.target) && !userDropdown.contains(e.target)) {
-                    userDropdown.classList.add('hidden');
-                }
-            };
-            userDropdown.querySelectorAll('.dropdown-item').forEach(item => {
-                if (item.id !== 'logout-btn') {
-                    item.onclick = () => {
+
+            // ─── User Dropdown ────────────────────────────────────────────────────
+            const userMenuBtn = document.getElementById('user-menu-btn');
+            const userDropdown = document.getElementById('user-dropdown');
+
+            if (userMenuBtn && userDropdown) {
+                userMenuBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    userDropdown.classList.toggle('hidden');
+                };
+
+                document.onclick = (e) => {
+                    if (!userMenuBtn.contains(e.target) && !userDropdown.contains(e.target)) {
                         userDropdown.classList.add('hidden');
-                        if (item.dataset.route) {
-                            Router.navigate(item.dataset.route);
+                    }
+                };
+
+                const profileBtn = document.getElementById('profile-btn');
+                if (profileBtn) {
+                    profileBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        userDropdown.classList.add('hidden');
+                        _showUserProfileModal(user);
+                    };
+                }
+
+                const logoutBtn = document.getElementById('logout-btn');
+                if (logoutBtn) {
+                    logoutBtn.onclick = async (e) => {
+                        e.stopPropagation();
+                        userDropdown.classList.add('hidden');
+                        try {
+                            await Store.api('logout', 'auth');
+                            UI.toast('Logout effettuato', 'info');
+                            setTimeout(() => window.location.reload(), 800);
+                        } catch {
+                            window.location.reload();
                         }
                     };
                 }
-            });
-        }
 
-        // Load and render navigation
-        await _renderNavigation(user);
-
-        // Wire up any remaining hardcoded nav items (like the Logo)
-        Utils.qsa('[data-route]').forEach(item => {
-            if (!item.hasAttribute('data-route-bound')) {
-                item.addEventListener('click', () => Router.navigate(item.dataset.route));
-                item.setAttribute('data-route-bound', 'true');
+                userDropdown.querySelectorAll('.dropdown-item[data-route]').forEach(item => {
+                    item.onclick = (e) => {
+                        e.stopPropagation();
+                        userDropdown.classList.add('hidden');
+                        Router.navigate(item.dataset.route);
+                    };
+                });
             }
-        });
 
-        // Logout — use { once: true } to avoid duplicate listeners on repeated _bootApp calls
-        const logoutBtn = document.getElementById('logout-btn');
-        if (logoutBtn) {
-            // Remove any previously attached logout handler to be safe
-            const newLogoutBtn = logoutBtn.cloneNode(true);
-            logoutBtn.parentNode.replaceChild(newLogoutBtn, logoutBtn);
+            // Initialize notifications (resiliently)
+            try {
+                _initNotifications();
+            } catch (err) {
+                console.error('[App] Failed to init notifications:', err);
+            }
 
-            newLogoutBtn.addEventListener('click', async (e) => {
-                e.stopPropagation(); // prevent document.onclick from closing dropdown before we act
-                userDropdown.classList.add('hidden');
-                try {
-                    await Store.api('logout', 'auth');
-                    UI.toast('Logout effettuato', 'info');
-                    setTimeout(() => window.location.reload(), 800);
-                } catch {
-                    window.location.reload();
+            // Load and render navigation (resiliently)
+            try {
+                await _renderNavigation(user);
+            } catch (err) {
+                console.error('[App] Failed to render navigation:', err);
+            }
+
+            // Wire up any remaining hardcoded nav items
+            Utils.qsa('[data-route]').forEach(item => {
+                if (!item.hasAttribute('data-route-bound')) {
+                    item.addEventListener('click', () => Router.navigate(item.dataset.route));
+                    item.setAttribute('data-route-bound', 'true');
                 }
-            }, { once: true });
-        }
+            });
 
-        // Start at dashboard
-        Router.navigate('dashboard');
+            // Start at dashboard
+            Router.navigate('dashboard');
+        } catch (err) {
+            console.error('[App] Critical boot error:', err);
+            UI.toast('Errore durante l\'avvio dell\'applicazione', 'error');
+        }
     }
 
     async function _renderNavigation(user) {
@@ -271,37 +302,79 @@ const App = (() => {
             if (desktopContainer) desktopContainer.innerHTML = '';
             if (mobileContainer) mobileContainer.innerHTML = '';
 
-            const userRoles = user.permissions || [user.role]; // Support additive roles or fallback to single role
+            const userRole = user.role; // e.g. 'atleta', 'allenatore', 'operatore', 'manager', 'admin'
 
             navConfig.forEach(item => {
-                // Roles Check
+                // Roles Check: item.roles lists which roles can see this tab
                 if (item.roles && item.roles.length > 0) {
-                    const hasAccess = item.roles.some(r => userRoles.includes(r));
-                    if (!hasAccess) return;
+                    if (!item.roles.includes(userRole)) return; // hide tab for this role
                 }
 
                 // Desktop Nav Item
                 if (desktopContainer) {
-                    const btn = document.createElement('button');
-                    btn.className = 'nav-item';
-                    btn.type = 'button';
-                    btn.dataset.route = item.path;
-                    btn.textContent = item.title.toUpperCase();
+                    const hasChildren = item.children && item.children.length > 0;
 
-                    // Handle unimplemented modules
-                    if (item.implemented === false) {
-                        btn.classList.add('nav-item--coming-soon');
-                        btn.title = 'In arrivo';
-                        btn.style.opacity = '0.35';
-                        btn.style.cursor = 'default';
-                        btn.addEventListener('click', (e) => {
-                            e.preventDefault();
-                            UI.toast(`${item.title}: sezione in arrivo`, 'info', 2500);
+                    if (hasChildren) {
+                        // Create wrapper for dropdown
+                        const wrapper = document.createElement('div');
+                        wrapper.className = 'nav-dropdown-wrapper';
+
+                        const btn = document.createElement('button');
+                        btn.className = 'nav-item';
+                        btn.type = 'button';
+                        btn.dataset.route = item.path;
+                        btn.innerHTML = item.title.toUpperCase() + ' <i class="ph ph-caret-down" style="font-size:10px;margin-left:4px;opacity:0.5;"></i>';
+
+                        if (item.implemented === false) {
+                            btn.style.opacity = '0.35';
+                            btn.style.cursor = 'default';
+                        } else {
+                            btn.addEventListener('click', () => Router.navigate(item.path));
+                        }
+                        wrapper.appendChild(btn);
+
+                        // Build dropdown
+                        const dropdown = document.createElement('div');
+                        dropdown.className = 'nav-dropdown';
+
+                        item.children.forEach(child => {
+                            if (child.roles && child.roles.length > 0 && !child.roles.includes(userRole)) return;
+                            const link = document.createElement('button');
+                            link.className = 'nav-dropdown-item';
+                            link.type = 'button';
+                            link.innerHTML = `<i class="ph ph-${child.icon || 'dot'}" style="font-size:16px;"></i> ${child.title}`;
+                            if (child.implemented === false) {
+                                link.style.opacity = '0.4';
+                                link.addEventListener('click', () => UI.toast(`${child.title}: in arrivo`, 'info', 2000));
+                            } else {
+                                link.addEventListener('click', () => { Router.navigate(child.path); });
+                            }
+                            dropdown.appendChild(link);
                         });
+
+                        wrapper.appendChild(dropdown);
+                        desktopContainer.appendChild(wrapper);
                     } else {
-                        btn.addEventListener('click', () => Router.navigate(item.path));
+                        const btn = document.createElement('button');
+                        btn.className = 'nav-item';
+                        btn.type = 'button';
+                        btn.dataset.route = item.path;
+                        btn.textContent = item.title.toUpperCase();
+
+                        if (item.implemented === false) {
+                            btn.classList.add('nav-item--coming-soon');
+                            btn.title = 'In arrivo';
+                            btn.style.opacity = '0.35';
+                            btn.style.cursor = 'default';
+                            btn.addEventListener('click', (e) => {
+                                e.preventDefault();
+                                UI.toast(`${item.title}: sezione in arrivo`, 'info', 2500);
+                            });
+                        } else {
+                            btn.addEventListener('click', () => Router.navigate(item.path));
+                        }
+                        desktopContainer.appendChild(btn);
                     }
-                    desktopContainer.appendChild(btn);
                 }
 
                 // Mobile Nav Item
@@ -346,9 +419,178 @@ const App = (() => {
         }
     }
 
+    function _showUserProfileModal(user) {
+        const bodyEl = document.createElement('div');
+        bodyEl.style.display = 'flex';
+        bodyEl.style.flexDirection = 'column';
+        bodyEl.style.gap = 'var(--sp-2)';
+
+        bodyEl.innerHTML = `
+            <h3 style="font-size:14px; margin-top:0; margin-bottom:0;">Cambia Password</h3>
+            <form id="profile-password-form" style="display:flex; flex-direction:column; gap:var(--sp-2); margin:0;">
+                <div class="form-group" style="margin:0;">
+                    <label class="form-label" for="profile-current-pwd" style="margin-bottom:4px;">Password Attuale</label>
+                    <input type="password" id="profile-current-pwd" class="form-input" required autocomplete="current-password" style="width:100%; border:1px solid var(--color-border); border-radius:6px; padding:0.75rem; background:var(--color-surface);">
+                </div>
+                <div class="form-group" style="margin:0;">
+                    <label class="form-label" for="profile-new-pwd" style="margin-bottom:4px;">Nuova Password (min. 10 caratteri)</label>
+                    <input type="password" id="profile-new-pwd" class="form-input" required autocomplete="new-password" style="width:100%; border:1px solid var(--color-border); border-radius:6px; padding:0.75rem; background:var(--color-surface);">
+                </div>
+                <div id="profile-pwd-error" class="form-error hidden" style="color:var(--color-danger); font-size:13px; margin:4px 0;"></div>
+                <button type="submit" class="btn btn-primary" id="profile-pwd-btn" style="margin-top:var(--sp-1);">AGGIORNA PASSWORD</button>
+            </form>
+        `;
+
+        const m = UI.modal({
+            title: 'Il mio profilo',
+            body: bodyEl
+        });
+
+        const form = bodyEl.querySelector('#profile-password-form');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = bodyEl.querySelector('#profile-pwd-btn');
+            const errEl = bodyEl.querySelector('#profile-pwd-error');
+            const current = bodyEl.querySelector('#profile-current-pwd').value;
+            const newPwd = bodyEl.querySelector('#profile-new-pwd').value;
+
+            if (newPwd.length < 10) {
+                errEl.textContent = 'La password deve essere di almeno 10 caratteri';
+                errEl.classList.remove('hidden');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'SALVATAGGIO...';
+            errEl.classList.add('hidden');
+
+            try {
+                await Store.api('resetPassword', 'auth', { currentPassword: current, newPassword: newPwd });
+                UI.toast('Password aggiornata con successo.', 'success');
+                m.close();
+            } catch (err) {
+                errEl.textContent = err.message || 'Errore durante la modifica della password';
+                errEl.classList.remove('hidden');
+                btn.disabled = false;
+                btn.textContent = 'AGGIORNA PASSWORD';
+            }
+        });
+    }
+
+
+    function renderForgotPassword() {
+        const m = UI.modal({
+            title: 'Password dimenticata',
+            body: `
+                <p style="font-size:13px;color:var(--color-text-muted);margin-bottom:var(--sp-3);">
+                    Inserisci la tua email. Ti invieremo un link per reimpostare la password (valido 1 ora).
+                </p>
+                <div class="form-group">
+                    <label class="form-label" for="fp-email">Email</label>
+                    <input id="fp-email" class="form-input" type="email" placeholder="nome@esempio.it" autocomplete="email">
+                </div>
+                <div id="fp-result" class="hidden" style="padding:12px;background:rgba(0,230,118,0.08);border:1px solid #00E676;font-size:13px;margin-top:12px;">
+                    ✔ Se l'email è registrata riceverai il link entro pochi minuti.
+                </div>
+                <div id="fp-error" class="form-error hidden"></div>`,
+            footer: `
+                <button class="btn btn-ghost btn-sm" id="fp-cancel" type="button">Annulla</button>
+                <button class="btn btn-primary btn-sm" id="fp-send" type="button">📧 INVIA LINK</button>`,
+        });
+        document.getElementById('fp-cancel')?.addEventListener('click', () => m.close());
+        document.getElementById('fp-send')?.addEventListener('click', async () => {
+            const btn = document.getElementById('fp-send');
+            const errEl = document.getElementById('fp-error');
+            const email = document.getElementById('fp-email')?.value.trim();
+            errEl.classList.add('hidden');
+            if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                errEl.textContent = 'Inserisci un indirizzo email valido.';
+                errEl.classList.remove('hidden'); return;
+            }
+            btn.disabled = true; btn.textContent = 'Invio…';
+            try {
+                await Store.api('requestPasswordReset', 'auth', { email });
+                document.getElementById('fp-result').classList.remove('hidden');
+                btn.classList.add('hidden');
+            } catch (err) {
+                errEl.textContent = err.message;
+                errEl.classList.remove('hidden');
+                btn.disabled = false; btn.textContent = '📧 INVIA LINK';
+            }
+        });
+    }
+
+    function _showConfirmResetScreen(token) {
+        document.getElementById('auth-screen').classList.add('hidden');
+        document.getElementById('app-shell').classList.add('hidden');
+        const resetScreen = document.getElementById('reset-screen');
+        resetScreen.classList.remove('hidden');
+        const sub = resetScreen.querySelector('p.text-muted');
+        if (sub) sub.textContent = 'Scegli una nuova password sicura (min. 10 caratteri).';
+        // Hide current-password field — not needed in forgot-password flow
+        const curGroup = document.getElementById('reset-current')?.closest('.form-group');
+        if (curGroup) curGroup.style.display = 'none';
+        if (document.getElementById('reset-current'))
+            document.getElementById('reset-current').value = 'NOT_REQUIRED_FORGOT_FLOW';
+        const form = document.getElementById('reset-form');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('reset-btn');
+            const errEl = document.getElementById('reset-error');
+            const newPwd = document.getElementById('reset-new').value;
+            if (newPwd.length < 10) {
+                errEl.textContent = 'La password deve essere di almeno 10 caratteri';
+                errEl.classList.remove('hidden'); return;
+            }
+            btn.disabled = true; btn.textContent = 'SALVATAGGIO…';
+            try {
+                await Store.api('confirmPasswordReset', 'auth', { token, newPassword: newPwd });
+                UI.toast('Password aggiornata! Effettua il login.', 'success');
+                window.history.replaceState(null, '', window.location.pathname);
+                setTimeout(() => window.location.reload(), 1500);
+            } catch (err) {
+                errEl.textContent = err.message;
+                errEl.classList.remove('hidden');
+                btn.disabled = false; btn.textContent = 'SALVA NUOVA PASSWORD';
+            }
+        }, { once: true });
+    }
+
+    function _initNotifications() {
+        const btn = document.getElementById('notifications-btn');
+        const dropdown = document.getElementById('notifications-dropdown');
+        const markReadBtn = document.getElementById('notifications-mark-read');
+
+        if (!btn || !dropdown) return;
+
+        // Toggle dropdown visibility
+        btn.onclick = (e) => {
+            e.stopPropagation();
+            dropdown.classList.toggle('hidden');
+        };
+
+        // Mark as read (mock logic)
+        if (markReadBtn) {
+            markReadBtn.onclick = (e) => {
+                e.stopPropagation();
+                const badge = document.getElementById('notifications-badge');
+                if (badge) badge.style.display = 'none';
+                UI.toast('Notifiche segnate come lette', 'success');
+                dropdown.classList.add('hidden');
+            };
+        }
+
+        // Close on clic outside
+        document.addEventListener('click', (e) => {
+            if (!btn.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+    }
+
     function getUser() { return _currentUser; }
 
-    return { init, getUser };
+    return { init, getUser, renderForgotPassword };
 })();
 
 // ─── Bootstrap ──────────────────────────────────────────────────────────────

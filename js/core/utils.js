@@ -46,7 +46,7 @@ const Utils = (() => {
 
     // ─── ACWR Helpers ────────────────────────────────────────────────────────
     function acwrRiskColor(risk) {
-        const map = { low: 'var(--color-text-muted)', moderate: '#00E676', high: '#FFD600', extreme: '#E6007E' };
+        const map = { low: 'var(--color-text-muted)', moderate: '#00E676', high: '#FFD600', extreme: '#FF00FF' };
         return map[risk] || 'var(--color-text-muted)';
     }
 

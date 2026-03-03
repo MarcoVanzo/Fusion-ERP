@@ -64,6 +64,9 @@ const OutSeason = (() => {
             <div class="os-header">
                 <h1><i class="ph ph-sun" style="font-size:28px;-webkit-text-fill-color:#f59e0b;"></i> FTV Out Season 2026</h1>
                 <span class="os-badge" id="os-badge-count">Caricamento…</span>
+                <button class="os-sync-btn" id="os-export-btn" title="Esporta lista iscritti in formato CSV">
+                    <i class="ph ph-download-simple" style="font-size:16px;"></i> Esporta CSV
+                </button>
                 <button class="os-sync-btn" id="os-sync-btn" title="Sincronizza dati da Cognito Forms">
                     <i class="ph ph-arrows-clockwise" style="font-size:16px;"></i> Sincronizza da Cognito
                 </button>
@@ -77,6 +80,44 @@ const OutSeason = (() => {
             </div>
         </div>`;
         document.getElementById('os-sync-btn')?.addEventListener('click', _onSyncClick, { signal: _ac.signal });
+        document.getElementById('os-export-btn')?.addEventListener('click', _exportCsv, { signal: _ac.signal });
+    }
+
+    function _exportCsv() {
+        if (!_entries || _entries.length === 0) {
+            UI.toast('Nessun dato da esportare', 'warning');
+            return;
+        }
+
+        const headers = ['Nome Cognome', 'Settimana', 'Formula', 'Club', 'Ruolo', 'Data Nascita', 'Cellulare / Emergenza', 'Note', 'Pagato'];
+        const csvRows = [headers.join(',')];
+
+        _entries.forEach(e => {
+            const row = [
+                _nome(e),
+                _week(e),
+                _formula(e),
+                _club(e),
+                _ruolo(e),
+                e.data_di_nascita || e.DataDiNascita || '',
+                e.cellulare_emergenze || e.CellulareEmergenze || e.cellulare || e.Cellulare || '',
+                (e.note || e.Note || '').replace(/\r?\n|\r/g, ' '),
+                _isPaid(e) || _verifiedHighNames.has(_nome(e)) ? 'Si' : 'No'
+            ].map(v => `"${String(v).replace(/"/g, '""')}"`);
+
+            csvRows.push(row.join(','));
+        });
+
+        // Add BOM for correct UTF-8 display in Excel
+        const csvContent = "\\uFEFF" + csvRows.join('\\n');
+        const encodedUri = "data:text/csv;charset=utf-8," + encodeURIComponent(csvContent);
+
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "outseason_iscritti.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
 
     async function _loadEntries() {
