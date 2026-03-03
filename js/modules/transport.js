@@ -21,8 +21,6 @@ const Transport = (() => {
   let _currentTransportResult = null;
   let _verifiedCoords = new Map(); // address string → {lat, lng} verificato via Google Places
 
-  const GEMINI_API_KEY = 'AIzaSyAGqiwUIpK7fe9vYsQbxNMIPvARWuFW5Lc';
-  const GEMINI_MODEL = 'gemini-2.5-flash';
 
   async function init() {
     const app = document.getElementById('app');
@@ -63,11 +61,11 @@ const Transport = (() => {
           --card-border: rgba(255, 255, 255, 0.08);
           --card-radius: 20px;
           --accent-cyan: #00e5ff;
-          --accent-pink: #E6007E;
+          --accent-pink: #FF00FF;
           --glass-bg: rgba(20, 20, 25, 0.6);
           --glass-blur: blur(16px);
           --shadow-soft: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-          --shadow-glow-pink: 0 0 20px rgba(230,0,126,0.2);
+          --shadow-glow-pink: 0 0 20px rgba(255, 0, 255,0.2);
           --shadow-glow-cyan: 0 0 20px rgba(0,229,255,0.2);
           animation: fade-in 0.5s ease-out;
         }
@@ -78,9 +76,9 @@ const Transport = (() => {
         }
 
         @keyframes pulse-glow {
-          0% { box-shadow: 0 0 0 0 rgba(230,0,126,0.4); }
-          70% { box-shadow: 0 0 0 10px rgba(230,0,126,0); }
-          100% { box-shadow: 0 0 0 0 rgba(230,0,126,0); }
+          0% { box-shadow: 0 0 0 0 rgba(255, 0, 255,0.4); }
+          70% { box-shadow: 0 0 0 10px rgba(255, 0, 255,0); }
+          100% { box-shadow: 0 0 0 0 rgba(255, 0, 255,0); }
         }
 
         .dash-top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; flex-wrap: wrap; gap: 16px; }
@@ -136,7 +134,7 @@ const Transport = (() => {
         }
         .dash-filter:hover { background: rgba(255,255,255,0.1); transform: translateY(-2px); color: #fff; }
         .dash-filter.active { 
-          background: linear-gradient(135deg, rgba(230,0,126,0.15), rgba(0,229,255,0.15)); 
+          background: linear-gradient(135deg, rgba(255, 0, 255,0.15), rgba(0,229,255,0.15)); 
           color: #fff; border-color: rgba(255,255,255,0.3); box-shadow: 0 4px 15px rgba(0,0,0,0.2); 
         }
 
@@ -168,7 +166,7 @@ const Transport = (() => {
           box-shadow: inset 0 2px 10px rgba(255,255,255,0.05); transition: transform 0.3s;
         }
         .dash-fixture:hover .fixture-icon { transform: scale(1.1) rotate(5deg); }
-        .fixture-icon.pink { color: var(--accent-pink); border-color: rgba(230,0,126,0.3); background: rgba(230,0,126,0.1); text-shadow: 0 0 10px rgba(230,0,126,0.5); }
+        .fixture-icon.pink { color: var(--accent-pink); border-color: rgba(255, 0, 255,0.3); background: rgba(255, 0, 255,0.1); text-shadow: 0 0 10px rgba(255, 0, 255,0.5); }
         .fixture-icon.cyan { color: var(--accent-cyan); border-color: rgba(0,229,255,0.3); background: rgba(0,229,255,0.1); text-shadow: 0 0 10px rgba(0,229,255,0.5); }
         .fixture-icon.yellow { color: #FFD600; border-color: rgba(255,214,0,0.3); background: rgba(255,214,0,0.1); text-shadow: 0 0 10px rgba(255,214,0,0.5); }
         .fixture-icon.green { color: #00E676; border-color: rgba(0,230,118,0.3); background: rgba(0,230,118,0.1); text-shadow: 0 0 10px rgba(0,230,118,0.5); }
@@ -199,9 +197,9 @@ const Transport = (() => {
         .btn-dash:active { transform: translateY(0); }
         .btn-dash.primary { 
           background: linear-gradient(135deg, var(--accent-pink), #ff1a9a); color: #fff; border: none; 
-          box-shadow: 0 4px 20px rgba(230,0,126,0.4); text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+          box-shadow: 0 4px 20px rgba(255, 0, 255,0.4); text-shadow: 0 1px 3px rgba(0,0,0,0.3);
         }
-        .btn-dash.primary:hover { background: linear-gradient(135deg, #ff1a9a, #ff4db8); box-shadow: 0 8px 30px rgba(230,0,126,0.6); animation: pulse-glow 1.5s infinite; }
+        .btn-dash.primary:hover { background: linear-gradient(135deg, #ff1a9a, #ff4db8); box-shadow: 0 8px 30px rgba(255, 0, 255,0.6); animation: pulse-glow 1.5s infinite; }
         
         .action-card {
           background: linear-gradient(145deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01)); 
@@ -226,48 +224,48 @@ const Transport = (() => {
       <div class="transport-dashboard">
         <div class="dash-top-bar">
           <div>
-            <h1 class="dash-title">Transport <span style="color:var(--accent-pink);">Hub</span></h1>
-            <p class="dash-subtitle">${totalEvents} events tracked in system</p>
+            <h1 class="dash-title">Gestione <span style="color:var(--accent-pink);">Trasporti</span></h1>
+            <p class="dash-subtitle">${totalEvents} eventi nel sistema</p>
           </div>
           <div style="display:flex; gap:12px; flex-wrap:wrap;">
             <button class="btn-dash" id="storico-btn" type="button"><i class="ph ph-clock-counter-clockwise" style="font-size:18px;"></i> STORICO</button>
             <button class="btn-dash pink" id="nuovo-trasporto-btn" type="button"><i class="ph ph-van" style="font-size:18px;"></i> NUOVO TRASPORTO</button>
-            ${canCreate ? `<button class="btn-dash primary" id="new-event-btn" type="button"><i class="ph ph-plus-circle" style="font-size:20px;"></i> NEW EVENT</button>` : ''}
+            ${canCreate ? `<button class="btn-dash primary" id="new-event-btn" type="button"><i class="ph ph-plus-circle" style="font-size:20px;"></i> NUOVO EVENTO</button>` : ''}
           </div>
         </div>
 
         <div class="dash-stat-grid">
           <div class="dash-stat-card">
-            <div class="dash-stat-title">Total Events <div class="dash-stat-icon"><i class="ph ph-calendar-blank"></i></div></div>
-            <div class="dash-stat-value">${totalEvents} <span class="dash-stat-trend trend-up"><i class="ph ph-trend-up"></i> +24%</span></div>
+            <div class="dash-stat-title">Totale Eventi <div class="dash-stat-icon"><i class="ph ph-calendar-blank"></i></div></div>
+            <div class="dash-stat-value">${totalEvents}</div>
           </div>
           <div class="dash-stat-card cyan">
-            <div class="dash-stat-title">Upcoming <div class="dash-stat-icon"><i class="ph ph-clock"></i></div></div>
+            <div class="dash-stat-title">In Programma <div class="dash-stat-icon"><i class="ph ph-clock"></i></div></div>
             <div class="dash-stat-value">${futureEvents}</div>
           </div>
           <div class="dash-stat-card">
-            <div class="dash-stat-title">Away Games <div class="dash-stat-icon"><i class="ph ph-bus"></i></div></div>
+            <div class="dash-stat-title">Trasferte <div class="dash-stat-icon"><i class="ph ph-bus"></i></div></div>
             <div class="dash-stat-value">${awayGames}</div>
           </div>
           <div class="dash-stat-card cyan">
-            <div class="dash-stat-title">Active Routes <div class="dash-stat-icon"><i class="ph ph-car"></i></div></div>
-            <div class="dash-stat-value">...</div>
+            <div class="dash-stat-title">Allenamenti <div class="dash-stat-icon"><i class="ph ph-barbell"></i></div></div>
+            <div class="dash-stat-value">${_events.filter(e => e.type === 'training').length}</div>
           </div>
         </div>
 
         <div class="dash-grid">
           <div class="dash-card">
             <div class="dash-card-header">
-              <div class="dash-card-title">UPCOMING FIXTURES</div>
+              <div class="dash-card-title">PROSSIMI EVENTI</div>
               <div class="dash-card-dots"><i class="ph ph-dots-three-bold"></i></div>
             </div>
             
             <div class="dash-filters">
-              <button class="dash-filter active" data-type-filter="" type="button">All Events</button>
-              <button class="dash-filter" data-type-filter="away_game" type="button">Away Games</button>
-              <button class="dash-filter" data-type-filter="home_game" type="button">Home Games</button>
-              <button class="dash-filter" data-type-filter="training" type="button">Training</button>
-              <button class="dash-filter" data-type-filter="tournament" type="button">Tournaments</button>
+              <button class="dash-filter active" data-type-filter="" type="button">Tutti</button>
+              <button class="dash-filter" data-type-filter="away_game" type="button">Trasferte</button>
+              <button class="dash-filter" data-type-filter="home_game" type="button">Gare in Casa</button>
+              <button class="dash-filter" data-type-filter="training" type="button">Allenamenti</button>
+              <button class="dash-filter" data-type-filter="tournament" type="button">Tornei</button>
             </div>
 
             <div id="events-list">
@@ -277,7 +275,7 @@ const Transport = (() => {
           
           <div class="dash-card" style="display:flex; flex-direction:column; gap:20px;">
              <div class="dash-card-header" style="margin-bottom:0;">
-              <div class="dash-card-title">QUICK ACTIONS</div>
+              <div class="dash-card-title">AZIONI RAPIDE</div>
               <div class="dash-card-dots"><i class="ph ph-dots-three-bold"></i></div>
             </div>
             
@@ -286,18 +284,17 @@ const Transport = (() => {
                 <i class="ph ph-git-merge action-icon"></i>
               </div>
               <div class="action-title">Carpooling AI</div>
-              <p class="action-desc">Automatically match drivers and passengers based on availability and proximity.</p>
-              <button class="btn-dash" style="width: 100%; border-color: rgba(0,229,255,0.3); color: var(--accent-cyan);"><i class="ph ph-lightning"></i> Auto-Match</button>
+              <p class="action-desc">Abbina automaticamente autisti e passeggeri in base a disponibilità e prossimità.</p>
+              <button class="btn-dash" id="qa-nuovo-trasporto" style="width: 100%; border-color: rgba(0,229,255,0.3); color: var(--accent-cyan);" type="button"><i class="ph ph-van"></i> Nuovo Trasporto</button>
             </div>
             
              <div class="action-card" style="margin-top: -10px;">
-              <div class="action-icon-wrap" style="background: rgba(230,0,126,0.1); border-color: rgba(230,0,126,0.3); box-shadow: 0 0 20px rgba(230,0,126,0.2);">
-                <i class="ph ph-envelope-simple-open action-icon" style="color: var(--accent-pink);"></i>
+              <div class="action-icon-wrap" style="background: rgba(255, 0, 255,0.1); border-color: rgba(255, 0, 255,0.3); box-shadow: 0 0 20px rgba(255, 0, 255,0.2);">
+                <i class="ph ph-calendar-plus action-icon" style="color: var(--accent-pink);"></i>
               </div>
-              <div class="action-title">Convocations</div>
-              <p class="action-desc">Send automated email notices to all selected athletes for an upcoming event.</p>
-              <button class="btn-dash" style="width: 100%;"><i class="ph ph-paper-plane-right"></i> Send All</button>
-            </div>
+              <div class="action-title">Nuovo Evento</div>
+              <p class="action-desc">Crea un nuovo evento per gestire trasferte, gare e allenamenti.</p>
+              ${canCreate ? `<button class="btn-dash" id="qa-new-event" style="width: 100%;" type="button"><i class="ph ph-plus-circle"></i> Crea Evento</button>` : ''}
           </div>
         </div>
       </div>`;
@@ -315,6 +312,8 @@ const Transport = (() => {
     document.getElementById('new-event-btn')?.addEventListener('click', () => showCreateEventModal(), { signal: _ac.signal });
     document.getElementById('nuovo-trasporto-btn')?.addEventListener('click', () => showNuovoTrasporto(), { signal: _ac.signal });
     document.getElementById('storico-btn')?.addEventListener('click', () => showStorico(), { signal: _ac.signal });
+    document.getElementById('qa-nuovo-trasporto')?.addEventListener('click', () => showNuovoTrasporto(), { signal: _ac.signal });
+    document.getElementById('qa-new-event')?.addEventListener('click', () => showCreateEventModal(), { signal: _ac.signal });
     _attachEventListeners();
   }
 
@@ -325,7 +324,7 @@ const Transport = (() => {
     const grouped = {};
     events.forEach(ev => {
       const d = new Date(ev.event_date);
-      const key = isNaN(d) ? 'TBD' : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase();
+      const key = isNaN(d) ? 'Da definire' : d.toLocaleDateString('it-IT', { day: 'numeric', month: 'short' }).toUpperCase();
       if (!grouped[key]) grouped[key] = [];
       grouped[key].push(ev);
     });
@@ -352,7 +351,7 @@ const Transport = (() => {
     if (ev.type === 'away_game') { iconClass = 'cyan'; iconLetter = 'A'; lineClass = 'cyan-line'; }
     else if (ev.type === 'home_game') { iconClass = 'pink'; iconLetter = 'H'; lineClass = 'pink-line'; }
     else if (ev.type === 'training') { iconClass = 'yellow'; iconLetter = 'T'; lineClass = 'yellow-line'; }
-    else if (ev.type === 'tournament') { iconClass = 'green'; iconLetter = 'C'; lineClass = 'green-line'; }
+    else if (ev.type === 'tournament') { iconClass = 'green'; iconLetter = 'T'; lineClass = 'green-line'; }
 
     const timeStr = new Date(ev.event_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const dateObj = new Date(ev.event_date);
@@ -382,9 +381,10 @@ const Transport = (() => {
     app.innerHTML = UI.skeletonPage();
 
     try {
-      const [event, routes] = await Promise.all([
+      const [event, routes, attendees] = await Promise.all([
         Store.get('listEvents', 'transport').then(evs => evs.find(e => e.id === eventId)),
         Store.get('listRoutes', 'transport', { eventId }),
+        Store.get('listAttendees', 'transport', { eventId }).catch(() => [])
       ]);
 
       const user = App.getUser();
@@ -407,7 +407,7 @@ const Transport = (() => {
           --card-border: rgba(255, 255, 255, 0.06);
           --card-radius: 20px;
           --accent-cyan: #00e5ff;
-          --accent-pink: #E6007E;
+          --accent-pink: #FF00FF;
           --glass-bg: rgba(20, 20, 25, 0.6);
           --glass-blur: blur(16px);
           --shadow-soft: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
@@ -444,8 +444,8 @@ const Transport = (() => {
         .btn-dash:hover { background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.3); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.3); }
         .btn-dash.primary { background: linear-gradient(135deg, var(--accent-cyan), #00b3cc); color: #000; border: none; box-shadow: 0 4px 20px rgba(0,229,255,0.4); }
         .btn-dash.primary:hover { box-shadow: 0 8px 30px rgba(0,229,255,0.6); }
-        .btn-dash.pink { background: linear-gradient(135deg, var(--accent-pink), #cc0070); color: #fff; border: none; box-shadow: 0 4px 20px rgba(230,0,126,0.4); }
-        .btn-dash.pink:hover { box-shadow: 0 8px 30px rgba(230,0,126,0.6); }
+        .btn-dash.pink { background: linear-gradient(135deg, var(--accent-pink), #cc0070); color: #fff; border: none; box-shadow: 0 4px 20px rgba(255, 0, 255,0.4); }
+        .btn-dash.pink:hover { box-shadow: 0 8px 30px rgba(255, 0, 255,0.6); }
         .btn-dash.icon-only { padding: 12px; border-radius: 50%; }
         
         .route-card {
@@ -460,7 +460,7 @@ const Transport = (() => {
         
         /* Circular Chart Overlay */
         .pie-chart-wrapper { position: relative; width: 180px; height: 180px; margin: 32px auto; }
-        .pie-chart-wrapper::after { content:''; position:absolute; inset:-10px; background:radial-gradient(circle, rgba(230,0,126,0.1), transparent 70%); border-radius:50%; z-index:-1;}
+        .pie-chart-wrapper::after { content:''; position:absolute; inset:-10px; background:radial-gradient(circle, rgba(255, 0, 255,0.1), transparent 70%); border-radius:50%; z-index:-1;}
         .pie-chart { width: 100%; height: 100%; border-radius: 50%; background: conic-gradient(var(--accent-pink) ${occPct}%, rgba(255,255,255,0.05) 0); display:flex; align-items:center; justify-content:center; box-shadow: inset 0 0 30px rgba(0,0,0,0.6), 0 0 20px rgba(0,0,0,0.3); transition: background 1s ease-out; }
         .pie-chart-inner { width: 140px; height: 140px; background: #121216; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.05); }
         .pie-val { font-family: var(--font-display); font-size: 42px; font-weight: 800; line-height: 1; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
@@ -472,13 +472,19 @@ const Transport = (() => {
 
       app.innerHTML = styles + `
         <div class="transport-dashboard">
+          <!-- Breadcrumb -->
+          <div style="padding:12px 0 0;display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(255,255,255,0.4);">
+            <button type="button" id="bc-home" style="background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1px;">Trasporti</button>
+            <i class="ph ph-caret-right" style="font-size:10px;"></i>
+            <span style="color:rgba(255,255,255,0.8);font-weight:600;text-transform:uppercase;letter-spacing:1px;">${Utils.escapeHtml(event?.title || 'Evento').substring(0, 30)}</span>
+          </div>
           <div class="dash-top-bar">
             <div>
               <div class="dash-title-wrap">
                  <button class="btn-dash icon-only" id="back-events" type="button" title="Torna Indietro"><i class="ph ph-arrow-left" style="font-size:20px;"></i></button>
                  <h1 class="dash-title">${Utils.escapeHtml(event?.title || 'Evento')}</h1>
               </div>
-              <p class="dash-subtitle"><i class="ph ph-calendar-blank"></i> ${dateStr} <span style="opacity:0.3;margin:0 8px;">|</span> <i class="ph ph-map-pin"></i> ${Utils.escapeHtml(event?.location_name || 'TBD')}</p>
+              <p class="dash-subtitle"><i class="ph ph-calendar-blank"></i> ${dateStr} <span style="opacity:0.3;margin:0 8px;">|</span> <i class="ph ph-map-pin"></i> ${Utils.escapeHtml(event?.location_name || 'Da definire')}</p>
             </div>
             <div style="display:flex;gap:12px; flex-wrap:wrap;">
               <button class="btn-dash pink" id="add-route-btn" type="button"><i class="ph ph-plus-circle" style="font-size:18px;"></i> OFFRI PASSAGGIO</button>
@@ -492,7 +498,7 @@ const Transport = (() => {
             <div style="display:flex; flex-direction:column; gap:28px;">
               <div class="dash-card">
                  <div class="dash-card-header" style="margin-bottom: 20px;">
-                   <div class="dash-card-title"><i class="ph ph-map-trifold" style="color:var(--accent-cyan);"></i> LOCATION & ROUTING</div>
+                   <div class="dash-card-title"><i class="ph ph-map-trifold" style="color:var(--accent-cyan);"></i> MAPPA E PERCORSO</div>
                    <div style="color: rgba(255,255,255,0.3); letter-spacing: 2px; cursor:pointer;"><i class="ph ph-dots-three-bold"></i></div>
                  </div>
                  <div class="gmap-container" id="map-container">
@@ -504,7 +510,7 @@ const Transport = (() => {
 
               <div class="dash-card cyan">
                  <div class="dash-card-header">
-                   <div class="dash-card-title"><i class="ph ph-car" style="color:var(--accent-cyan);"></i> AVAILABLE ROUTES <span style="background:rgba(255,255,255,0.1); padding:4px 10px; border-radius:20px; font-size:14px; margin-left:8px;">${routes.length}</span></div>
+                   <div class="dash-card-title"><i class="ph ph-car" style="color:var(--accent-cyan);"></i> TRATTE DISPONIBILI <span style="background:rgba(255,255,255,0.1); padding:4px 10px; border-radius:20px; font-size:14px; margin-left:8px;">${routes.length}</span></div>
                  </div>
                  <div>
                     ${routes.length === 0
@@ -518,7 +524,7 @@ const Transport = (() => {
             <div style="display:flex; flex-direction:column; gap:28px;">
               <div class="dash-card pink">
                  <div class="dash-card-header" style="margin-bottom:0px;">
-                    <div class="dash-card-title"><i class="ph ph-chart-pie-slice" style="color:var(--accent-pink);"></i> CAPACITY OVERVIEW</div>
+                    <div class="dash-card-title"><i class="ph ph-chart-pie-slice" style="color:var(--accent-pink);"></i> RIEPILOGO CAPACITÀ</div>
                  </div>
                  
                  <div class="pie-chart-wrapper">
@@ -548,9 +554,19 @@ const Transport = (() => {
 
               <div class="dash-card" id="match-result-card" style="display:none; animation: fade-in 0.3s ease-out;">
                  <div class="dash-card-header">
-                    <div class="dash-card-title"><i class="ph ph-check-circle" style="color:#00E676;"></i> MATCH RESULTS</div>
+                    <div class="dash-card-title"><i class="ph ph-check-circle" style="color:#00E676;"></i> RISULTATI ABBINAMENTO</div>
                  </div>
                  <div id="match-result" style="font-size:14px;"></div>
+              </div>
+
+              <!-- Presenze Card -->
+              <div class="dash-card cyan">
+                 <div class="dash-card-header">
+                    <div class="dash-card-title"><i class="ph ph-users" style="color:var(--accent-cyan);"></i> PRESENZE CONVOCATI</div>
+                 </div>
+                 <div style="font-size:14px; max-height:400px; overflow-y:auto; padding-right:8px;" id="attendees-list-container">
+                    ${_renderAttendeesList(attendees, eventId, user, canManage)}
+                 </div>
               </div>
             </div>
             
@@ -558,6 +574,7 @@ const Transport = (() => {
         </div>`;
 
       document.getElementById('back-events')?.addEventListener('click', () => renderEventList(), { signal: _ac.signal });
+      document.getElementById('bc-home')?.addEventListener('click', () => renderEventList(), { signal: _ac.signal });
       document.getElementById('add-route-btn')?.addEventListener('click', () => showAddRouteModal(eventId), { signal: _ac.signal });
       document.getElementById('match-carpool-btn')?.addEventListener('click', () => runCarpoolMatch(eventId), { signal: _ac.signal });
       document.getElementById('send-convocations-btn')?.addEventListener('click', () => sendConvocations(eventId), { signal: _ac.signal });
@@ -644,7 +661,7 @@ const Transport = (() => {
         </div>`;
     } catch (err) {
       document.getElementById('match-result-card').style.display = 'block';
-      document.getElementById('match-result').innerHTML = `<div style="color:var(--accent-pink); padding: 12px; background: rgba(230,0,126,0.1); border-radius: 8px;">Errore: ${err.message}</div>`;
+      document.getElementById('match-result').innerHTML = `<div style="color:var(--accent-pink); padding: 12px; background: rgba(255, 0, 255,0.1); border-radius: 8px;">Errore: ${err.message}</div>`;
     }
   }
 
@@ -657,6 +674,57 @@ const Transport = (() => {
         UI.toast('Errore invio email: ' + err.message, 'error');
       }
     });
+  }
+
+  function _renderAttendeesList(attendees, eventId, currentUser, canManage) {
+    if (!attendees || attendees.length === 0) return Utils.emptyState('Nessun convocato', 'Assicurati di aver assegnato atleti alla squadra per questo evento.');
+
+    let html = '';
+    attendees.forEach(a => {
+      const isMe = currentUser?.id === a.user_id;
+      const status = a.status || 'invited';
+      let statusBadge = '';
+      if (status === 'confirmed') statusBadge = '<span class="badge badge-success">Confermato</span>';
+      else if (status === 'absent') statusBadge = '<span class="badge badge-danger">Assente</span>';
+      else if (status === 'excused') statusBadge = '<span class="badge badge-warning">Giustificato</span>';
+      else statusBadge = '<span class="badge badge-default">In attesa</span>';
+
+      html += `
+        <div style="background:rgba(255,255,255,0.02); padding: 12px; margin-bottom: 8px; border-radius: 8px; display:flex; justify-content:space-between; align-items:center;">
+           <div>
+             <div style="font-weight:600; font-size:14px; display:flex; align-items:center; gap:8px;">
+               ${Utils.escapeHtml(a.athlete_name)} 
+               ${isMe ? '<span style="font-size:10px; background:var(--accent-pink); padding:2px 6px; border-radius:4px; color:#fff;">TU</span>' : ''}
+             </div>
+             <div style="margin-top:4px;">${statusBadge}</div>
+           </div>
+           
+           ${(isMe || canManage) ? `
+             <div style="display:flex; gap:8px;">
+               <button class="btn-dash" style="padding:6px; min-width:32px; border-color:rgba(0, 230, 118, 0.4); color:#00E676;" 
+                       onclick="Transport.handleAttendeeStatusChange('${Utils.escapeHtml(eventId)}', '${Utils.escapeHtml(a.athlete_id)}', 'confirmed')" title="Conferma Presenza">
+                 <i class="ph ph-check-circle"></i>
+               </button>
+               <button class="btn-dash" style="padding:6px; min-width:32px; border-color:rgba(255, 26, 26, 0.4); color:#ff1a1a;" 
+                       onclick="Transport.handleAttendeeStatusChange('${Utils.escapeHtml(eventId)}', '${Utils.escapeHtml(a.athlete_id)}', 'absent')" title="Declina">
+                 <i class="ph ph-x-circle"></i>
+               </button>
+             </div>
+           ` : ''}
+        </div>
+      `;
+    });
+    return html;
+  }
+
+  async function _handleAttendeeStatusChange(eventId, athleteId, status) {
+    try {
+      await Store.api('updateAttendeeStatus', 'transport', { event_id: eventId, athlete_id: athleteId, status });
+      UI.toast('Stato presenza aggiornato', 'success');
+      showCarpoolView(eventId); // Reload
+    } catch (err) {
+      UI.toast('Errore: ' + err.message, 'error');
+    }
   }
 
   // ─── ADD ROUTE MODAL ─────────────────────────────────────────────────────
@@ -712,7 +780,13 @@ const Transport = (() => {
   }
 
   // ─── CREATE EVENT MODAL ───────────────────────────────────────────────────
-  function showCreateEventModal() {
+  async function showCreateEventModal() {
+    // Load teams if not already loaded
+    if (!_teams.length) {
+      try { _teams = await Store.get('listTeams', 'transport'); } catch (_) { _teams = []; }
+    }
+    const teamOpts = _teams.map(t => `<option value="${Utils.escapeHtml(t.id)}">${Utils.escapeHtml(t.name)} (${Utils.escapeHtml(t.category)})</option>`).join('');
+
     const m = UI.modal({
       title: 'Nuovo Evento',
       body: `
@@ -740,8 +814,8 @@ const Transport = (() => {
           <input id="ev-location" class="form-input" type="text" placeholder="PalaXxx, Via Roma 1, Milano">
         </div>
         <div class="form-group">
-          <label class="form-label" for="ev-team">ID Squadra *</label>
-          <input id="ev-team" class="form-input" type="text" placeholder="TEAM_xxxx (da lista atleti)">
+          <label class="form-label" for="ev-team">Squadra *</label>
+          <select id="ev-team" class="form-select"><option value="">— Seleziona squadra —</option>${teamOpts}</select>
         </div>
         <div id="ev-error" class="form-error hidden"></div>`,
       footer: `
@@ -799,7 +873,7 @@ const Transport = (() => {
       { elementType: 'labels.text.fill', stylers: [{ color: '#ffffff' }] },
       { elementType: 'labels.text.stroke', stylers: [{ color: '#000000' }] },
       { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#1a1a1a' }] },
-      { featureType: 'road.arterial', elementType: 'geometry', stylers: [{ color: '#E6007E', lightness: -80 }] },
+      { featureType: 'road.arterial', elementType: 'geometry', stylers: [{ color: '#FF00FF', lightness: -80 }] },
     ];
   }
 
@@ -824,10 +898,10 @@ const Transport = (() => {
       .nt-title { font-family:var(--font-display); font-size:28px; font-weight:800; text-transform:uppercase; background:linear-gradient(90deg,#fff,rgba(255,255,255,0.6)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; display:flex; align-items:center; gap:14px; }
       .nt-subtitle { font-size:14px; color:rgba(255,255,255,0.5); margin-top:4px; }
       .nt-step { background:rgba(20,20,25,0.6); backdrop-filter:blur(16px); border:1px solid rgba(255,255,255,0.06); border-radius:20px; padding:28px; margin-bottom:24px; position:relative; overflow:hidden; box-shadow:0 8px 32px rgba(0,0,0,0.3); }
-      .nt-step::before { content:''; position:absolute; top:0; left:0; width:100%; height:3px; background:linear-gradient(90deg,#E6007E,transparent); opacity:0.8; }
+      .nt-step::before { content:''; position:absolute; top:0; left:0; width:100%; height:3px; background:linear-gradient(90deg,#FF00FF,transparent); opacity:0.8; }
       .nt-step.cyan::before { background:linear-gradient(90deg,#00e5ff,transparent); }
       .nt-step.green::before { background:linear-gradient(90deg,#00E676,transparent); }
-      .nt-step-num { display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:50%; background:rgba(230,0,126,0.15); color:#E6007E; font-family:var(--font-display); font-weight:800; font-size:15px; margin-right:12px; border:1px solid rgba(230,0,126,0.3); }
+      .nt-step-num { display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:50%; background:rgba(255, 0, 255,0.15); color:#FF00FF; font-family:var(--font-display); font-weight:800; font-size:15px; margin-right:12px; border:1px solid rgba(255, 0, 255,0.3); }
       .nt-step.cyan .nt-step-num { background:rgba(0,229,255,0.15); color:#00e5ff; border-color:rgba(0,229,255,0.3); }
       .nt-step.green .nt-step-num { background:rgba(0,230,118,0.15); color:#00E676; border-color:rgba(0,230,118,0.3); }
       .nt-step-title { font-family:var(--font-display); font-size:17px; font-weight:800; text-transform:uppercase; letter-spacing:1px; display:inline; }
@@ -844,15 +918,15 @@ const Transport = (() => {
       .nt-athlete-card:hover { border-color:rgba(255,255,255,0.15); transform:translateY(-3px); box-shadow:0 8px 20px rgba(0,0,0,0.4); }
       .nt-athlete-card.selected { border-color:rgba(0,229,255,0.5); background:linear-gradient(145deg,rgba(0,229,255,0.05),rgba(0,229,255,0.02)); box-shadow:0 0 20px rgba(0,229,255,0.1); }
       .nt-athlete-card.selected::after { content:'✓'; position:absolute; top:8px; right:10px; color:#00e5ff; font-weight:800; font-size:18px; }
-      .nt-avatar { width:44px; height:44px; border-radius:12px; background:rgba(230,0,126,0.1); border:1px solid rgba(230,0,126,0.3); display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:800; font-size:16px; color:#E6007E; flex-shrink:0; }
+      .nt-avatar { width:44px; height:44px; border-radius:12px; background:rgba(255, 0, 255,0.1); border:1px solid rgba(255, 0, 255,0.3); display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:800; font-size:16px; color:#FF00FF; flex-shrink:0; }
       .nt-athlete-card.selected .nt-avatar { background:rgba(0,229,255,0.1); border-color:rgba(0,229,255,0.3); color:#00e5ff; }
       .nt-athlete-name { font-weight:700; font-size:14px; }
       .nt-athlete-addr { font-size:12px; color:rgba(255,255,255,0.5); margin-top:4px; }
-      .nt-athlete-addr.missing { color:#E6007E; font-style:italic; }
-      .nt-addr-input { margin-top:8px; width:100%; padding:8px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(230,0,126,0.4); border-radius:8px; color:#fff; font-size:12px; outline:none; }
+      .nt-athlete-addr.missing { color:#FF00FF; font-style:italic; }
+      .nt-addr-input { margin-top:8px; width:100%; padding:8px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255, 0, 255,0.4); border-radius:8px; color:#fff; font-size:12px; outline:none; }
       .nt-addr-input:focus { border-color:#00e5ff; }
-      .nt-calc-btn { background:linear-gradient(135deg,#E6007E,#ff1a9a); color:#fff; border:none; border-radius:14px; padding:16px 32px; font-weight:800; font-size:15px; cursor:pointer; display:flex; align-items:center; gap:10px; text-transform:uppercase; letter-spacing:1.5px; box-shadow:0 4px 20px rgba(230,0,126,0.4); transition:all 0.3s; margin-top:28px; }
-      .nt-calc-btn:hover { box-shadow:0 8px 30px rgba(230,0,126,0.6); transform:translateY(-2px); }
+      .nt-calc-btn { background:linear-gradient(135deg,#FF00FF,#ff1a9a); color:#fff; border:none; border-radius:14px; padding:16px 32px; font-weight:800; font-size:15px; cursor:pointer; display:flex; align-items:center; gap:10px; text-transform:uppercase; letter-spacing:1.5px; box-shadow:0 4px 20px rgba(255, 0, 255,0.4); transition:all 0.3s; margin-top:28px; }
+      .nt-calc-btn:hover { box-shadow:0 8px 30px rgba(255, 0, 255,0.6); transform:translateY(-2px); }
       .nt-calc-btn:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
       .nt-results { margin-top:32px; animation:fade-in 0.5s ease-out; }
       .nt-stats-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:28px; }
@@ -861,16 +935,16 @@ const Transport = (() => {
       .nt-stat-val { font-family:var(--font-display); font-size:32px; font-weight:800; color:#fff; }
       .nt-stat-lbl { font-size:11px; color:rgba(255,255,255,0.5); text-transform:uppercase; letter-spacing:1.5px; margin-top:6px; font-weight:700; }
       .nt-timeline { position:relative; padding-left:36px; counter-reset: step-number; }
-      .nt-timeline::before { content:''; position:absolute; left:16px; top:0; bottom:0; width:2px; background:linear-gradient(180deg,#E6007E,#00e5ff,#00E676); border-radius:2px; }
+      .nt-timeline::before { content:''; position:absolute; left:16px; top:0; bottom:0; width:2px; background:linear-gradient(180deg,#FF00FF,#00e5ff,#00E676); border-radius:2px; }
       .nt-tl-item { position:relative; padding:16px 20px; margin-bottom:12px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:12px; transition:all 0.3s; counter-increment: step-number; }
       .nt-tl-item:hover { border-color:rgba(255,255,255,0.15); background:rgba(255,255,255,0.04); }
-      .nt-tl-item::before { content: counter(step-number); position:absolute; left:-32px; top:18px; width:22px; height:22px; border-radius:50%; background:#E6007E; border:2px solid rgba(20,20,25,0.8); box-shadow:0 0 8px rgba(230,0,126,0.5); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; color: #fff; line-height: 1; z-index: 1; text-align: center; }
+      .nt-tl-item::before { content: counter(step-number); position:absolute; left:-32px; top:18px; width:22px; height:22px; border-radius:50%; background:#FF00FF; border:2px solid rgba(20,20,25,0.8); box-shadow:0 0 8px rgba(255, 0, 255,0.5); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; color: #fff; line-height: 1; z-index: 1; text-align: center; }
       .nt-tl-item.raccolta::before { background:#00e5ff; box-shadow:0 0 8px rgba(0,229,255,0.5); color: #000; }
       .nt-tl-item.arrivo::before { background:#00E676; box-shadow:0 0 8px rgba(0,230,118,0.5); color: #000; }
       .nt-tl-time { font-family:var(--font-display); font-weight:800; font-size:18px; color:#fff; }
       .nt-tl-note { font-size:14px; font-weight:600; margin-top:4px; }
       .nt-tl-place { font-size:12px; color:rgba(255,255,255,0.5); margin-top:4px; }
-      .nt-ai-card { background:linear-gradient(145deg,rgba(0,229,255,0.05),rgba(230,0,126,0.03)); border:1px solid rgba(0,229,255,0.2); border-radius:16px; padding:20px; margin-bottom:20px; }
+      .nt-ai-card { background:linear-gradient(145deg,rgba(0,229,255,0.05),rgba(255, 0, 255,0.03)); border:1px solid rgba(0,229,255,0.2); border-radius:16px; padding:20px; margin-bottom:20px; }
       .nt-ai-title { font-family:var(--font-display); font-weight:800; font-size:14px; text-transform:uppercase; letter-spacing:1px; color:#00e5ff; display:flex; align-items:center; gap:8px; margin-bottom:12px; }
       .nt-save-btn { background:linear-gradient(135deg,#00e5ff,#00b3cc); color:#000; border:none; border-radius:14px; padding:16px 32px; font-weight:800; font-size:15px; cursor:pointer; display:flex; align-items:center; gap:10px; text-transform:uppercase; letter-spacing:1.5px; box-shadow:0 4px 20px rgba(0,229,255,0.4); transition:all 0.3s; margin-top:20px; }
       .nt-save-btn:hover { box-shadow:0 8px 30px rgba(0,229,255,0.6); transform:translateY(-2px); }
@@ -885,7 +959,7 @@ const Transport = (() => {
     <div class="nt-page">
       <div class="nt-top">
         <div>
-          <div class="nt-title"><button class="btn-dash ghost" id="nt-back" type="button" style="padding:10px;"><i class="ph ph-arrow-left" style="font-size:20px;"></i></button> Nuovo <span style="color:#E6007E;">Trasporto</span></div>
+          <div class="nt-title"><button class="btn-dash ghost" id="nt-back" type="button" style="padding:10px;"><i class="ph ph-arrow-left" style="font-size:20px;"></i></button> Nuovo <span style="color:#FF00FF;">Trasporto</span></div>
           <p class="nt-subtitle">Pianifica il percorso di raccolta atlete con backward planning</p>
         </div>
       </div>
@@ -903,7 +977,7 @@ const Transport = (() => {
           </div>
           <div style="display:flex;align-items:flex-end;gap:10px;">
             <button class="nt-btn-add" id="nt-add-gym-btn" type="button"><i class="ph ph-plus"></i> Nuova Palestra</button>
-            <button class="nt-btn-add" id="nt-del-gym-btn" type="button" style="background:rgba(230,0,126,0.1);border-color:rgba(230,0,126,0.4);color:#E6007E;" title="Elimina palestra selezionata"><i class="ph ph-trash"></i> Elimina</button>
+            <button class="nt-btn-add" id="nt-del-gym-btn" type="button" style="background:rgba(255, 0, 255,0.1);border-color:rgba(255, 0, 255,0.4);color:#FF00FF;" title="Elimina palestra selezionata"><i class="ph ph-trash"></i> Elimina</button>
           </div>
         </div>
       </div>
@@ -935,7 +1009,7 @@ const Transport = (() => {
             <i class="ph ph-magnifying-glass" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,0.35);font-size:16px;pointer-events:none;"></i>
             <input class="nt-input" type="text" id="nt-departure-addr" autocomplete="off"
               placeholder="Cerca indirizzo di partenza..."
-              value="Via Bazzera, 16, 30030 Martellago VE, Italia"
+              value="${localStorage.getItem('fusion_last_departure') || ''}"
               style="padding-left:40px;">
           </div>
           <div id="nt-departure-map" style="display:none;margin-top:10px;border-radius:12px;overflow:hidden;height:160px;border:1px solid rgba(66,133,244,0.25);"></div>
@@ -959,8 +1033,9 @@ const Transport = (() => {
       </div>
 
       <!-- Action -->
-      <div style="display:flex; gap:16px; flex-wrap:wrap;">
-        <button class="nt-calc-btn" id="nt-calc-btn" type="button"><i class="ph ph-route" style="font-size:22px;"></i> Calcola Percorso</button>
+      <div style="display:flex; gap:16px; flex-wrap:wrap; align-items:center;">
+        <button class="nt-calc-btn" id="nt-calc-btn" type="button" disabled><i class="ph ph-route" style="font-size:22px;"></i> Calcola Percorso</button>
+        <span id="nt-validation-hint" style="font-size:13px; color:rgba(255,255,255,0.4);">Compila destinazione, squadra e seleziona almeno un'atleta</span>
       </div>
 
       <!-- Results -->
@@ -980,6 +1055,7 @@ const Transport = (() => {
       document.getElementById('nt-departure-addr'),
       ({ lat, lng, address }) => {
         _verifiedCoords.set(address, { lat, lng });
+        try { localStorage.setItem('fusion_last_departure', address); } catch (_) { }
         // Mini-mappa preview
         const previewEl = document.getElementById('nt-departure-map');
         if (previewEl && typeof google !== 'undefined') {
@@ -1003,6 +1079,7 @@ const Transport = (() => {
       lat: parseFloat(opt.dataset.lat) || null,
       lng: parseFloat(opt.dataset.lng) || null,
     };
+    _validateNuovoTrasporto();
   }
 
   async function _onTeamSelect(e) {
@@ -1018,8 +1095,9 @@ const Transport = (() => {
     try {
       _athletes = await Store.get('listTeamAthletes', 'transport', { teamId });
       _renderAthleteGrid();
+      _validateNuovoTrasporto();
     } catch (err) {
-      grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; color:#E6007E;">Errore: ${Utils.escapeHtml(err.message)}</div>`;
+      grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; color:#FF00FF;">Errore: ${Utils.escapeHtml(err.message)}</div>`;
     }
   }
 
@@ -1065,6 +1143,7 @@ const Transport = (() => {
           _selectedAthletes.push({ ...athlete });
         }
         _renderAthleteGrid();
+        _validateNuovoTrasporto();
       }, { signal: _ac.signal });
     });
 
@@ -1093,6 +1172,30 @@ const Transport = (() => {
         _renderAthleteGrid();
       }));
     });
+  }
+
+  // ── Validation per Nuovo Trasporto ──────────────────────────────────────────
+  function _validateNuovoTrasporto() {
+    const btn = document.getElementById('nt-calc-btn');
+    const hint = document.getElementById('nt-validation-hint');
+    if (!btn) return;
+    const hasGym = !!_selectedGym;
+    const hasTeam = !!_selectedTeam;
+    const hasAthletes = _selectedAthletes.length > 0;
+    const isValid = hasGym && hasTeam && hasAthletes;
+    btn.disabled = !isValid;
+    if (hint) {
+      if (isValid) {
+        hint.style.display = 'none';
+      } else {
+        hint.style.display = '';
+        const missing = [];
+        if (!hasGym) missing.push('destinazione');
+        if (!hasTeam) missing.push('squadra');
+        if (!hasAthletes) missing.push('almeno un\'atleta');
+        hint.textContent = 'Seleziona: ' + missing.join(', ');
+      }
+    }
   }
 
   // ── Helpers condivisi: Google Maps Places Library ───────────────────────────
@@ -1488,7 +1591,6 @@ const Transport = (() => {
   }
 
   async function _askGeminiRouteGoogle(partenza, destinazione, orderedAthletes, stats, legDetails) {
-    if (!GEMINI_API_KEY) return null;
     let desc = `Partenza mezzo: ${partenza}\nDestinazione (palestra): ${destinazione}\nDistanza totale: ${stats.distanza}\nDurata totale: ${stats.durata}\n\n`;
     desc += `Ordine tappe (ottimizzato dal navigatore):\n`;
     for (let i = 0; i < orderedAthletes.length; i++) {
@@ -1496,43 +1598,11 @@ const Transport = (() => {
     }
     desc += `Ultima tratta fino a destinazione -> ${legDetails[orderedAthletes.length].durata}, ${legDetails[orderedAthletes.length].distanza}\n`;
 
-    const prompt = `Sei l'AI analista dei trasporti sportivi. Analizza questo percorso già ottimizzato e fornisci preziose intuizioni sui tempi e su come si potrebbe ulteriormente ridurre il viaggio.
-Dati viaggio:
-${desc}
-
-Compito:
-1. Controlla i tempi delle singole tratte. Un tempo eccessivo indica un "fuori percorso".
-2. Identifica atlete che generano deviazioni troppo grandi.
-3. Se necessario, suggerisci punti di raccolta intermedi (es. "Ci troveremo al casello autostradale di ...") per evitare di entrare in zone non ottimali.
-4. "consigli" DEVE essere una stringa breve (1 o 2 frasi) e discorsiva (es. "Il percorso è ottimale" o "Ci sono troppe deviazioni").
-4. Rispondi SEMPRE in italiano.
-5. Usa ESATTAMENTE le chiavi JSON indicate nell'esempio. NON AGGIUNGERE NESSUNA FORMA DI MARKDOWN (NO \`\`\`json).
-
-Restituisci SOLO un oggetto JSON come questo:
-{
-  "consigli": "Il percorso è ottimale, ma Maria Rossi aggiunge 15 minuti di deviazione.",
-  "fuori_percorso": [
-    {"nome": "Maria Rossi", "motivo": "Aggiunge 15 minuti di deviazione rispetto alla rotta principale"}
-  ],
-  "punti_raccolta": [
-    {"nome": "Casello Autostradale Est", "indirizzo": "Via Roma 100"}
-  ]
-}
-`;
     try {
-      const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
-      });
-      if (!resp.ok) throw new Error('Gemini API status: ' + resp.status);
-      const data = await resp.json();
-      const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-      try {
-        const m = text.match(/```json\n([\s\S]*?)\n```/) || text.match(/```\n([\s\S]*?)\n```/);
-        return m ? JSON.parse(m[1]) : JSON.parse(text);
-      } catch { return { consigli: text, fuori_percorso: [], punti_raccolta: [] }; }
+      const result = await Store.api('analyzeRoute', 'transport', { route_description: desc });
+      return result;
     } catch (e) {
-      console.warn('Gemini call failed:', e);
+      console.warn('AI analysis via backend failed:', e);
       throw e;
     }
   }
@@ -1638,7 +1708,7 @@ Restituisci SOLO un oggetto JSON come questo:
         <p style="font-size:14px; line-height:1.6; color:rgba(255,255,255,0.85); margin:0;">${Utils.escapeHtml(aiData.consigli)}</p>
         ${aiData.fuori_percorso && aiData.fuori_percorso.length ? `
           <div style="margin-top:12px; padding-top:12px; border-top:1px dashed rgba(255,255,255,0.1);">
-            <p style="font-size:12px; text-transform:uppercase; letter-spacing:1px; color:#E6007E; font-weight:700; margin-bottom:8px;"><i class="ph ph-warning"></i> Atlete Fuori Percorso</p>
+            <p style="font-size:12px; text-transform:uppercase; letter-spacing:1px; color:#FF00FF; font-weight:700; margin-bottom:8px;"><i class="ph ph-warning"></i> Atlete Fuori Percorso</p>
             ${aiData.fuori_percorso.map(fp => `<div style="font-size:13px; margin-bottom:4px;"><strong>${Utils.escapeHtml(fp.nome)}</strong>: ${Utils.escapeHtml(fp.motivo)}</div>`).join('')}
           </div>` : ''}
         ${aiData.punti_raccolta && aiData.punti_raccolta.length ? `
@@ -1685,7 +1755,7 @@ Restituisci SOLO un oggetto JSON come questo:
       validPts.forEach((p, i) => {
         const isFirst = i === 0;
         const isLast = i === validPts.length - 1;
-        const bg = isFirst ? '#00e5ff' : isLast ? '#00E676' : '#E6007E';
+        const bg = isFirst ? '#00e5ff' : isLast ? '#00E676' : '#FF00FF';
         const textC = isFirst || isLast ? '#000' : '#fff';
         const stepLabel = isFirst ? '🚐' : isLast ? '🏟' : String(i);
         const iconHtml = `<div style="width:32px;height:32px;border-radius:50%;background:${bg};color:${textC};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;border:2px solid rgba(255,255,255,0.8);box-shadow:0 2px 8px rgba(0,0,0,0.6);">${stepLabel}</div>`;
@@ -1828,6 +1898,6 @@ Restituisci SOLO un oggetto JSON come questo:
     _ac = new AbortController();
   }
 
-  return { destroy, init };
+  return { destroy, init, handleAttendeeStatusChange: _handleAttendeeStatusChange };
 })();
 window.Transport = Transport;

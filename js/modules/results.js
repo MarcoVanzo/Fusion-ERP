@@ -15,8 +15,7 @@ const Results = (() => {
 
   async function init() {
     _ac = new AbortController();
-    _currentView = Router.getCurrentRoute() === 'results-standings' ? 'standings' : 'matches';
-
+    _currentView = 'matches';
     _renderShell();
     await _loadCampionati();
   }
@@ -37,6 +36,8 @@ const Results = (() => {
       mainContent.style.padding = '0';
       mainContent.style.backgroundColor = '#0a0a0c';
     }
+
+    const isAdmin = window.App?.currentUser?.role === 'admin' || window.App?.currentUser?.permissions?.includes('admin');
 
     app.innerHTML = `
       <style>
@@ -92,7 +93,7 @@ const Results = (() => {
           padding: 8px 12px;
           cursor: pointer;
           outline: none;
-          min-width: 200px;
+          min-width: 220px;
           transition: border-color 0.2s;
         }
         .res-select:hover, .res-select:focus { border-color: var(--color-pink); }
@@ -122,7 +123,7 @@ const Results = (() => {
           color: white;
         }
 
-        .res-refresh-btn {
+        .res-icon-btn {
           background: #1c1c1e;
           border: 1px solid #2c2c2e;
           border-radius: 8px;
@@ -134,8 +135,8 @@ const Results = (() => {
           display: flex;
           align-items: center;
         }
-        .res-refresh-btn:hover { color: white; border-color: #444; }
-        .res-refresh-btn.loading i { animation: res-spin 0.7s linear infinite; }
+        .res-icon-btn:hover { color: white; border-color: #444; }
+        .res-icon-btn.loading i { animation: res-spin 0.7s linear infinite; }
 
         @keyframes res-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
@@ -160,10 +161,10 @@ const Results = (() => {
         }
         .res-card:hover { border-color: #2c2c2e; transform: translateY(-1px); }
         .res-card.our-team {
-          border-color: rgba(230,0,126,0.5);
+          border-color: rgba(255, 0, 255,0.5);
           background: linear-gradient(135deg, #121214 0%, #1a0a10 100%);
         }
-        .res-card.our-team:hover { border-color: rgba(230,0,126,0.85); }
+        .res-card.our-team:hover { border-color: rgba(255, 0, 255,0.85); }
 
         .res-card-top {
           display: flex;
@@ -189,8 +190,9 @@ const Results = (() => {
         }
         .res-badge.played    { background: #1c2b1c; color: #4caf50; }
         .res-badge.scheduled { background: #1c1f2e; color: #7986cb; }
+        .res-badge.unknown   { background: #2b2b1c; color: #ffc107; }
         .res-badge.live      { background: #2b1c1c; color: #ef5350; animation: pulse-badge 1.4s ease-in-out infinite; }
-        .res-badge.our-match { background: rgba(230,0,126,0.15); color: var(--color-pink); margin-left: 4px; }
+        .res-badge.our-match { background: rgba(255, 0, 255,0.15); color: var(--color-pink); margin-left: 4px; }
         @keyframes pulse-badge { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
 
         .res-teams {
@@ -206,7 +208,7 @@ const Results = (() => {
         }
         .res-team.away { align-items: flex-end; text-align: right; }
         .res-team-name {
-          font-size: 14px;
+          font-size: 13px;
           font-weight: 700;
           line-height: 1.2;
           color: white;
@@ -266,8 +268,8 @@ const Results = (() => {
         .res-table td.center { text-align: center; }
         .res-table tr:last-child td { border-bottom: none; }
         .res-table tr:hover td { background: #161618; }
-        .res-table tr.our-row td { background: rgba(230,0,126,0.07); }
-        .res-table tr.our-row:hover td { background: rgba(230,0,126,0.12); }
+        .res-table tr.our-row td { background: rgba(255, 0, 255,0.07); }
+        .res-table tr.our-row:hover td { background: rgba(255, 0, 255,0.12); }
 
         .res-pos {
           font-family: var(--font-display);
@@ -299,7 +301,7 @@ const Results = (() => {
         }
         .res-empty i { font-size: 48px; opacity: 0.4; }
         .res-empty-title { font-size: 16px; font-weight: 700; }
-        .res-empty-sub { font-size: 13px; opacity: 0.6; max-width: 320px; }
+        .res-empty-sub { font-size: 13px; opacity: 0.6; max-width: 360px; }
 
         .res-loading-grid {
           display: grid;
@@ -323,6 +325,107 @@ const Results = (() => {
           margin-top: 16px;
           text-align: right;
         }
+
+        /* ── Admin Modal ─── */
+        .res-modal-overlay {
+          position: fixed; inset: 0;
+          background: rgba(0,0,0,0.7);
+          z-index: 9000;
+          display: flex; align-items: center; justify-content: center;
+          animation: fadeIn 0.15s ease;
+        }
+        @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+
+        .res-modal {
+          background: #121214;
+          border: 1px solid #2c2c2e;
+          border-radius: 14px;
+          padding: 28px 32px;
+          width: 520px;
+          max-width: 95vw;
+          max-height: 85vh;
+          overflow-y: auto;
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+        }
+        .res-modal-title {
+          font-family: var(--font-display);
+          font-size: 18px;
+          font-weight: 800;
+          color: white;
+        }
+        .res-modal-section { display: flex; flex-direction: column; gap: 12px; }
+        .res-modal-section-title {
+          font-size: 11px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+          color: var(--color-text-muted);
+        }
+        .res-form-row { display: flex; flex-direction: column; gap: 6px; }
+        .res-form-label { font-size: 12px; font-weight: 600; color: var(--color-text-muted); }
+        .res-form-input {
+          background: #1c1c1e;
+          border: 1px solid #2c2c2e;
+          border-radius: 8px;
+          color: white;
+          font-size: 13px;
+          padding: 9px 12px;
+          width: 100%;
+          box-sizing: border-box;
+          outline: none;
+          transition: border-color 0.2s;
+          font-family: var(--font-body), sans-serif;
+        }
+        .res-form-input:focus { border-color: var(--color-pink); }
+        .res-form-input::placeholder { color: #555; }
+
+        .res-campionato-list { display: flex; flex-direction: column; gap: 8px; }
+        .res-campionato-item {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          background: #1c1c1e;
+          border-radius: 8px;
+          padding: 10px 14px;
+        }
+        .res-campionato-item-label {
+          flex: 1;
+          font-size: 13px;
+          font-weight: 600;
+          color: white;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .res-campionato-item-url {
+          font-size: 10px;
+          color: var(--color-text-muted);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          max-width: 180px;
+        }
+        .res-del-btn {
+          background: none;
+          border: 1px solid #3c1c1c;
+          border-radius: 6px;
+          color: #ef5350;
+          padding: 4px 8px;
+          cursor: pointer;
+          font-size: 13px;
+          flex-shrink: 0;
+          transition: background 0.2s;
+        }
+        .res-del-btn:hover { background: rgba(239,83,80,0.1); }
+
+        .res-modal-footer {
+          display: flex;
+          justify-content: flex-end;
+          gap: 10px;
+          margin-top: 4px;
+        }
       </style>
 
       <div class="res-container">
@@ -336,14 +439,16 @@ const Results = (() => {
               <option value="">Caricamento campionati...</option>
             </select>
             <div class="res-view-toggle">
-              <button class="res-view-btn ${_currentView === 'matches' ? 'active' : ''}"
-                id="res-btn-matches" onclick="Results._switchView('matches')">Partite</button>
-              <button class="res-view-btn ${_currentView === 'standings' ? 'active' : ''}"
-                id="res-btn-standings" onclick="Results._switchView('standings')">Classifica</button>
+              <button class="res-view-btn active" id="res-btn-matches" onclick="Results._switchView('matches')">Partite</button>
+              <button class="res-view-btn" id="res-btn-standings" onclick="Results._switchView('standings')">Classifica</button>
             </div>
-            <button class="res-refresh-btn" id="res-refresh-btn" title="Aggiorna" onclick="Results._refresh()">
+            <button class="res-icon-btn" id="res-refresh-btn" title="Aggiorna" onclick="Results._refresh()">
               <i class="ph ph-arrows-clockwise"></i>
             </button>
+            ${isAdmin ? `
+            <button class="res-icon-btn" id="res-manage-btn" title="Gestisci campionati" onclick="Results._openManage()">
+              <i class="ph ph-gear"></i>
+            </button>` : ''}
           </div>
         </div>
 
@@ -365,13 +470,16 @@ const Results = (() => {
       if (!select) return;
 
       if (_campionati.length === 0) {
-        select.innerHTML = '<option value="">Nessun campionato trovato</option>';
-        _renderEmpty('Nessun campionato disponibile', 'Il portale FIPAV non ha restituito campionati. Riprovare più tardi.');
+        select.innerHTML = '<option value="">Nessun campionato configurato</option>';
+        _renderEmpty(
+          'Nessun campionato configurato',
+          'Aggiungi almeno un campionato tramite il tasto ⚙️ in alto a destra (richiede accesso admin).'
+        );
         return;
       }
 
-      select.innerHTML = _campionati.map((c, i) =>
-        `<option value="${Utils.escapeHtml(c.id)}" data-url="${Utils.escapeHtml(c.url || '')}" data-standings-url="${Utils.escapeHtml(c.standings_url || '')}">${Utils.escapeHtml(c.label)}</option>`
+      select.innerHTML = _campionati.map(c =>
+        `<option value="${Utils.escapeHtml(c.id)}" data-url="${Utils.escapeHtml(c.url || '')}">${Utils.escapeHtml(c.label)}</option>`
       ).join('');
 
       select.addEventListener('change', () => {
@@ -379,7 +487,6 @@ const Results = (() => {
         _currentCampionato = {
           id: opt.value,
           url: opt.dataset.url,
-          standingsUrl: opt.dataset.standingsUrl,
           label: opt.textContent
         };
         _loadCurrentView();
@@ -390,14 +497,13 @@ const Results = (() => {
       _currentCampionato = {
         id: firstOpt.value,
         url: firstOpt.dataset.url,
-        standingsUrl: firstOpt.dataset.standingsUrl,
         label: firstOpt.textContent
       };
       await _loadCurrentView();
 
     } catch (err) {
       console.error('[Results] getCampionati error:', err);
-      _renderError('Impossibile caricare i campionati FIPAV. ' + (err.message || ''));
+      _renderError('Impossibile caricare i campionati. ' + (err.message || ''));
     }
   }
 
@@ -413,15 +519,13 @@ const Results = (() => {
     const contentEl = document.getElementById('res-content');
     if (contentEl) contentEl.innerHTML = _skeletonCards();
 
-    try {
-      const params = {};
-      if (_currentCampionato?.url) {
-        params.campionato_url = _currentCampionato.url;
-      } else if (_currentCampionato?.id) {
-        params.campionato_id = _currentCampionato.id;
-      }
+    if (!_currentCampionato?.url) {
+      _renderEmpty('Nessun campionato selezionato', 'Seleziona un campionato dal menu in alto.');
+      return;
+    }
 
-      const data = await Store.get('getResults', 'results', params);
+    try {
+      const data = await Store.get('getResults', 'results', { campionato_url: _currentCampionato.url });
       _renderMatches(data);
     } catch (err) {
       if (err.name === 'AbortError') return;
@@ -434,14 +538,13 @@ const Results = (() => {
     const contentEl = document.getElementById('res-content');
     if (contentEl) contentEl.innerHTML = _skeletonCards();
 
-    if (!_currentCampionato?.standingsUrl && !_currentCampionato?.url) {
-      _renderEmpty('Classifica non disponibile', 'Seleziona un campionato per vedere la classifica.');
+    if (!_currentCampionato?.url) {
+      _renderEmpty('Nessun campionato selezionato', 'Seleziona un campionato dal menu in alto.');
       return;
     }
 
     try {
-      const standingsUrl = _currentCampionato.standingsUrl || (_currentCampionato.url + '&vis=classifica');
-      const data = await Store.get('getStandings', 'results', { campionato_url: standingsUrl });
+      const data = await Store.get('getStandings', 'results', { campionato_url: _currentCampionato.url });
       _renderStandings(data);
     } catch (err) {
       if (err.name === 'AbortError') return;
@@ -464,7 +567,6 @@ const Results = (() => {
       return;
     }
 
-    // Separate: our team first, then others
     const ourMatches = matches.filter(m => m.is_our_team);
     const otherMatches = matches.filter(m => !m.is_our_team);
 
@@ -472,7 +574,7 @@ const Results = (() => {
 
     if (ourMatches.length > 0) {
       html += `
-        <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; color:var(--color-pink); margin-top:20px; margin-bottom:8px;">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--color-pink);margin-top:20px;margin-bottom:8px;">
           <i class="ph ph-star-four"></i> Le nostre partite
         </div>
         <div class="res-grid">${ourMatches.map(_matchCard).join('')}</div>
@@ -481,7 +583,7 @@ const Results = (() => {
 
     if (otherMatches.length > 0) {
       html += `
-        <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; color:var(--color-text-muted); margin-top:${ourMatches.length > 0 ? '28px' : '20px'}; margin-bottom:8px;">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--color-text-muted);margin-top:${ourMatches.length > 0 ? '28px' : '20px'};margin-bottom:8px;">
           Tutte le partite
         </div>
         <div class="res-grid">${otherMatches.map(_matchCard).join('')}</div>
@@ -499,19 +601,19 @@ const Results = (() => {
     const isOurs = match.is_our_team;
     const isPlayed = match.status === 'played';
     const isLive = match.status === 'live';
-    const isScheduled = match.status === 'scheduled';
 
     const statusBadge = isLive
       ? '<span class="res-badge live"><i class="ph ph-circle" style="font-size:8px;"></i> Live</span>'
       : isPlayed
         ? '<span class="res-badge played"><i class="ph ph-check-circle"></i> Giocata</span>'
-        : '<span class="res-badge scheduled"><i class="ph ph-clock"></i> In programma</span>';
+        : match.status === 'unknown'
+          ? '<span class="res-badge unknown"><i class="ph ph-question"></i> Da omologare</span>'
+          : '<span class="res-badge scheduled"><i class="ph ph-clock"></i> In programma</span>';
 
     const ourBadge = isOurs
       ? '<span class="res-badge our-match"><i class="ph ph-star-four"></i> Noi</span>'
       : '';
 
-    // Determine win/loss from our perspective
     let homeScoreClass = '';
     let awayScoreClass = '';
     if (isPlayed && isOurs) {
@@ -534,7 +636,7 @@ const Results = (() => {
     const awayNameClass = Results._isOurTeam(match.away || '') ? 'res-team-name our-name' : 'res-team-name';
 
     const scoreHtml = isPlayed && match.score
-      ? `<div class="res-score ${homeScoreClass.includes('win') || awayScoreClass.includes('win') ? '' : ''}">${match.sets_home ?? ''}</div>
+      ? `<div class="res-score ${homeScoreClass}">${match.sets_home ?? ''}</div>
          <div class="res-time-label">-</div>
          <div class="res-score ${awayScoreClass}">${match.sets_away ?? ''}</div>`
       : `<div class="res-score vs">vs</div>`;
@@ -556,7 +658,7 @@ const Results = (() => {
             <div class="${awayNameClass}">${Utils.escapeHtml(match.away || 'Ospite')}</div>
           </div>
         </div>
-        ${match.round ? `<div style="font-size:10px; color:var(--color-text-muted); font-weight:600;">Giornata ${match.round}</div>` : ''}
+        ${match.round ? `<div style="font-size:10px;color:var(--color-text-muted);font-weight:600;">Giornata ${match.round}</div>` : ''}
       </div>
     `;
   }
@@ -574,11 +676,12 @@ const Results = (() => {
     }
 
     const medals = ['🥇', '🥈', '🥉'];
-
     const rows = standings.map((row, i) => {
       const pos = row.position ?? (i + 1);
       const isOurs = row.is_our_team;
-      const posDisplay = pos <= 3 ? `<span class="pos-medal">${medals[pos - 1]}</span>` : `<span class="res-pos${pos <= 3 ? ' top3' : ''}">${pos}</span>`;
+      const posDisplay = pos <= 3
+        ? `<span class="pos-medal">${medals[pos - 1]}</span>`
+        : `<span class="res-pos">${pos}</span>`;
 
       return `
         <tr class="${isOurs ? 'our-row' : ''}">
@@ -665,7 +768,134 @@ const Results = (() => {
     return `<div class="res-loading-grid">${cards}</div>`;
   }
 
-  // ─── Public Helpers (called from inline onclick) ───────────────────────────
+  // ─── Admin: Manage Campionati ──────────────────────────────────────────────
+
+  function _openManage() {
+    // Remove existing overlay if any
+    document.getElementById('res-manage-overlay')?.remove();
+
+    const listHtml = _campionati.length === 0
+      ? '<div style="font-size:13px;color:var(--color-text-muted);text-align:center;padding:10px 0;">Nessun campionato configurato.</div>'
+      : _campionati.map(c => `
+          <div class="res-campionato-item">
+            <div style="flex:1;min-width:0;">
+              <div class="res-campionato-item-label">${Utils.escapeHtml(c.label)}</div>
+              <div class="res-campionato-item-url">${Utils.escapeHtml(c.url)}</div>
+            </div>
+            <button class="res-del-btn" onclick="Results._deleteCampionato('${Utils.escapeHtml(c.id)}', '${Utils.escapeHtml(c.label)}')">
+              <i class="ph ph-trash"></i>
+            </button>
+          </div>
+        `).join('');
+
+    const overlay = document.createElement('div');
+    overlay.id = 'res-manage-overlay';
+    overlay.className = 'res-modal-overlay';
+    overlay.innerHTML = `
+      <div class="res-modal">
+        <div class="res-modal-title">⚙️ Gestisci Campionati</div>
+
+        <div class="res-modal-section">
+          <div class="res-modal-section-title">Aggiungi campionato</div>
+          <div class="res-form-row">
+            <label class="res-form-label" for="res-new-label">Nome campionato</label>
+            <input type="text" id="res-new-label" class="res-form-input"
+              placeholder="es. Under 16 Femminile Girone E Eccellenza">
+          </div>
+          <div class="res-form-row">
+            <label class="res-form-label" for="res-new-url">URL del portale FIPAV</label>
+            <input type="text" id="res-new-url" class="res-form-input"
+              placeholder="https://venezia.portalefipav.net/risultati-classifiche.aspx?...">
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="Results._addCampionato()" style="align-self:flex-start;">
+            <i class="ph ph-plus"></i> Aggiungi
+          </button>
+        </div>
+
+        <div class="res-modal-section">
+          <div class="res-modal-section-title">Campionati configurati</div>
+          <div class="res-campionato-list" id="res-campionato-list">
+            ${listHtml}
+          </div>
+        </div>
+
+        <div class="res-modal-footer">
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('res-manage-overlay')?.remove()">
+            Chiudi
+          </button>
+        </div>
+      </div>
+    `;
+
+    // Close on backdrop click
+    overlay.addEventListener('click', e => {
+      if (e.target === overlay) overlay.remove();
+    });
+
+    document.body.appendChild(overlay);
+  }
+
+  async function _addCampionato() {
+    const label = document.getElementById('res-new-label')?.value.trim();
+    const url = document.getElementById('res-new-url')?.value.trim();
+
+    if (!label || !url) {
+      UI.toast('Compila nome e URL.', 'warning', 2500);
+      return;
+    }
+
+    if (!url.includes('portalefipav.net')) {
+      UI.toast("L'URL deve appartenere a portalefipav.net.", 'error', 3000);
+      return;
+    }
+
+    try {
+      const res = await fetch(`${window.API_BASE || '/ERP/api'}?module=results&action=saveCampionato`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ label, url }),
+        credentials: 'include',
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || 'Errore');
+
+      UI.toast('Campionato aggiunto!', 'success', 2500);
+      document.getElementById('res-manage-overlay')?.remove();
+
+      // Reload campionati and re-render
+      Store.invalidate?.('getCampionati', 'results');
+      await _loadCampionati();
+    } catch (err) {
+      console.error('[Results] saveCampionato error:', err);
+      UI.toast('Errore: ' + err.message, 'error', 3000);
+    }
+  }
+
+  async function _deleteCampionato(id, label) {
+    if (!confirm(`Rimuovere il campionato "${label}"?`)) return;
+
+    try {
+      const res = await fetch(`${window.API_BASE || '/ERP/api'}?module=results&action=deleteCampionato`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+        credentials: 'include',
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || 'Errore');
+
+      UI.toast('Campionato rimosso.', 'success', 2500);
+      document.getElementById('res-manage-overlay')?.remove();
+
+      Store.invalidate?.('getCampionati', 'results');
+      await _loadCampionati();
+    } catch (err) {
+      console.error('[Results] deleteCampionato error:', err);
+      UI.toast('Errore: ' + err.message, 'error', 3000);
+    }
+  }
+
+  // ─── Public Helpers ────────────────────────────────────────────────────────
 
   function _switchView(view) {
     _currentView = view;
@@ -678,6 +908,11 @@ const Results = (() => {
   async function _refresh() {
     const btn = document.getElementById('res-refresh-btn');
     if (btn) btn.classList.add('loading');
+
+    // Bust cache in Store if possible
+    Store.invalidate?.('getResults', 'results');
+    Store.invalidate?.('getStandings', 'results');
+
     await _loadCurrentView();
     if (btn) btn.classList.remove('loading');
     UI.toast('Risultati aggiornati', 'success', 2000);
@@ -691,7 +926,7 @@ const Results = (() => {
 
   // ─── Public ───────────────────────────────────────────────────────────────
 
-  return { init, destroy, _switchView, _refresh, _isOurTeam };
+  return { init, destroy, _switchView, _refresh, _isOurTeam, _openManage, _addCampionato, _deleteCampionato };
 })();
 
 window.Results = Results;
