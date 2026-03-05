@@ -412,6 +412,7 @@ h3 {
 .submenu-item.active:hover,
 .submenu-item.active:focus {
   color: var(--accent-secondary);
+  background: rgba(255, 0, 122, 0.05);
 }
 
 .sidebar.collapsed .submenu {
