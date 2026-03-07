@@ -45,11 +45,11 @@ class OutSeasonController
      * ───────────────────────────────────────────────────────────────────── */
     public function getEntries(): void
     {
-        Auth::requireRole('operator');
+        Auth::requireRead('outseason');
 
         $seasonKey = trim((string)(
             filter_input(INPUT_GET, 'season_key', FILTER_SANITIZE_SPECIAL_CHARS)
-            ?? self::SEASON_KEY
+            ?? self::seasonKey()
             ));
 
         $pdo = Database::getInstance();
@@ -82,7 +82,7 @@ class OutSeasonController
      * ───────────────────────────────────────────────────────────────────── */
     public function syncFromCognito(): void
     {
-        Auth::requireRole('operator');
+        Auth::requireWrite('outseason');
 
         $result = self::_doSync(self::seasonKey());
 
@@ -144,8 +144,8 @@ class OutSeasonController
             }
             elseif ($httpCode === 404) {
                 $errorMsg = 'Form o View Cognito non trovato (HTTP 404). '
-                    . 'Verifica COGNITO_FORM_ID=' . self::COGNITO_FORM_ID
-                    . ' e COGNITO_VIEW_ID=' . self::COGNITO_VIEW_ID . '.';
+                    . 'Verifica COGNITO_FORM_ID=' . self::cognitoFormId()
+                    . ' e COGNITO_VIEW_ID=' . self::cognitoViewId() . '.';
             }
             return ['success' => false, 'error' => $errorMsg];
         }
@@ -239,7 +239,7 @@ class OutSeasonController
      * ───────────────────────────────────────────────────────────────────── */
     public function verifyPayments(): void
     {
-        $user = Auth::requireRole('operator');
+        $user = Auth::requireWrite('outseason');
 
         // ── Validate upload ──────────────────────────────────────────────
         if (empty($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
@@ -266,7 +266,7 @@ class OutSeasonController
              WHERE season_key = :sk AND come_vuoi_pagare = 'Bonifico Bancario'
              ORDER BY nome_e_cognome"
         );
-        $stmt->execute([':sk' => self::SEASON_KEY]);
+        $stmt->execute([':sk' => self::seasonKey()]);
         $bonificoEntries = $stmt->fetchAll();
 
         if (empty($bonificoEntries)) {
@@ -453,7 +453,7 @@ PROMPT;
      * ───────────────────────────────────────────────────────────────────── */
     public function saveVerification(): void
     {
-        $user = Auth::requireRole('operator');
+        $user = Auth::requireWrite('outseason');
         $body = Response::jsonBody();
         $seasonKey = trim((string)($body['season_key'] ?? ''));
         $results = $body['results'] ?? [];
@@ -511,7 +511,7 @@ PROMPT;
      * ───────────────────────────────────────────────────────────────────── */
     public function getVerification(): void
     {
-        Auth::requireRole('operator');
+        Auth::requireRead('outseason');
 
         $seasonKey = trim((string)filter_input(INPUT_GET, 'season_key', FILTER_SANITIZE_SPECIAL_CHARS));
 

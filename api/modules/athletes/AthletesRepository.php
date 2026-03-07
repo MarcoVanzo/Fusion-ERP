@@ -270,7 +270,13 @@ class AthletesRepository
         $stmt->execute([':athlete_id' => $athleteId, ':acwr' => $acwr, ':risk' => $riskLevel]);
     }
 
-    public function getUnacknowledgedAlerts(string $coachId = ''): array
+    /**
+     * Get ACWR alerts not yet acknowledged, scoped to coachId's tenant.
+     * Filters via the athletes table to prevent cross-tenant data leaks.
+     *
+     * @param string $tenantId  The tenant to scope results to (required)
+     */
+    public function getUnacknowledgedAlerts(string $tenantId, string $coachId = ''): array
     {
         $stmt = $this->db->prepare(
             'SELECT al.id, al.athlete_id, a.full_name AS athlete_name, al.acwr_score,
@@ -278,9 +284,11 @@ class AthletesRepository
              FROM acwr_alerts al
              JOIN athletes a ON a.id = al.athlete_id
              WHERE al.ack_at IS NULL
+               AND a.tenant_id = :tid
+               AND a.deleted_at IS NULL
              ORDER BY al.log_date DESC, al.risk_level DESC'
         );
-        $stmt->execute();
+        $stmt->execute([':tid' => $tenantId]);
         return $stmt->fetchAll();
     }
 }

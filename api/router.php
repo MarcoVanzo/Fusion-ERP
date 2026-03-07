@@ -52,12 +52,21 @@ try {
             'social' => dispatch('Social', $action),
             'outseason' => dispatch('OutSeason', $action),
             'results' => dispatch('Results', $action),
+            'vald' => dispatch('Vald', $action),
+            'finance' => dispatch('Finance', $action),
+            'biometrics' => dispatch('Biometrics', $action),
+            'federation' => dispatch('Federation', $action),
+            'documents' => dispatch('Documents', $action),
+            'payments' => dispatch('Payments', $action),
+            'health' => dispatch('Health', $action),
+            'tournaments' => dispatch('Tournaments', $action),
+            'vehicles' => dispatch('Vehicles', $action),
             default => Response::error("Modulo '{$module}' non trovato", 404),
         };
 }
 catch (\Throwable $e) {
     error_log('[ROUTER] Unhandled exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
-    Response::error('Errore interno del server', 500, $e->getMessage());
+    Response::error('Errore interno del server', 500);
 }
 
 /**

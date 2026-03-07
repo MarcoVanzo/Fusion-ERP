@@ -12,6 +12,7 @@ use FusionERP\Shared\Auth;
 use FusionERP\Shared\Audit;
 use FusionERP\Shared\Response;
 use FusionERP\Shared\GoogleDrive;
+use FusionERP\Shared\BackupService;
 use Mpdf\Mpdf;
 
 class AdminController
@@ -394,6 +395,38 @@ HTML;
         ]);
     }
 
+    // ─── ADMIN DASHBOARD SUMMARY ──────────────────────────────────────────────
+
+    /**
+     * GET ?module=admin&action=adminSummary
+     * Aggregate summary for the admin dashboard: users, backups, logs.
+     * Requires manager role minimum.
+     */
+    public function adminSummary(): void
+    {
+        Auth::requireRole('manager');
+
+        $users = $this->repo->getUsersSummary();
+        $backups = $this->repo->getLastBackup();
+        $logs = $this->repo->getLogsSummary();
+
+        // DB size from backup stats (light query, no heavy scan)
+        $dbStats = $this->repo->listDatabaseTables();
+        $erpTables = array_values(array_filter($dbStats, fn($t) => !str_starts_with($t['table_name'], 'wp_')));
+        $totalRows = (int)array_sum(array_column($erpTables, 'table_rows'));
+        $totalBytes = (int)array_sum(array_column($erpTables, 'data_length'));
+
+        Response::success([
+            'users' => $users,
+            'backups' => array_merge($backups, [
+                'db_table_count' => count($erpTables),
+                'db_total_rows' => $totalRows,
+                'db_total_bytes' => $totalBytes,
+            ]),
+            'logs' => $logs,
+        ]);
+    }
+
     // ─── SYSTEM LOGS ────────────────────────────────────────────────────────
 
     /**
@@ -470,7 +503,7 @@ HTML;
     public function createBackup(): void
     {
         $user = Auth::requireRole('admin');
-        $result = self::_performBackupDump($user['id'], $user['full_name'] ?? 'Admin');
+        $result = (new BackupService($this->repo))->dump($user['id'], $user['full_name'] ?? 'Admin');
 
         if (!$result['success']) {
             Response::error($result['error'], 500);
@@ -502,184 +535,6 @@ HTML;
             'drive_file_id' => $driveFileId,
             'drive_error' => $driveError,
         ], 201);
-    }
-
-    /**
-     * Performs DB dump + ZIP. Used by createBackup() (manual) and cron/backup_nightly.php.
-     *
-     * @param string|null $createdBy   User ID (null for cron)
-     * @param string      $authorName  Display name for SQL header
-     * @return array{success:bool, error?:string, id?:string, filename?:string,
-     *               filepath?:string, filesize?:int, table_names?:array, total_rows?:int}
-     */
-    public static function _performBackupDump(?string $createdBy, string $authorName = 'System'): array
-    {
-        $envPath = getenv('BACKUP_STORAGE_PATH') ?: '';
-        $candidates = array_filter([
-            $envPath ? rtrim($envPath, '/') . '/' : '',
-            dirname(__DIR__, 3) . '/uploads/backups/',
-            sys_get_temp_dir() . '/fusion_backups/',
-        ]);
-
-        $storagePath = null;
-        foreach ($candidates as $candidate) {
-            if (empty($candidate))
-                continue;
-            if (!is_dir($candidate))
-                @mkdir($candidate, 0750, true);
-            if (is_dir($candidate) && is_writable($candidate)) {
-                $storagePath = $candidate;
-                break;
-            }
-        }
-
-        if ($storagePath === null) {
-            return ['success' => false, 'error' => 'Nessuna directory di backup scrivibile disponibile'];
-        }
-
-        $repo = new AdminRepository();
-        $tables = $repo->listDatabaseTables();
-        $tables = array_values(array_filter($tables, fn($t) => !str_starts_with($t['table_name'], 'wp_')));
-        $tableNames = array_column($tables, 'table_name');
-        $totalRows = (int)array_sum(array_column($tables, 'table_rows'));
-
-        if (empty($tableNames)) {
-            return ['success' => false, 'error' => 'Nessuna tabella trovata nel database'];
-        }
-
-        $pdo = \FusionERP\Shared\Database::getInstance();
-        $backupId = 'BKP_' . bin2hex(random_bytes(6));
-        $date = date('Ymd_His');
-        $sqlFile = "backup_{$date}_{$backupId}.sql";
-        $zipFile = "backup_{$date}_{$backupId}.zip";
-        $sqlPath = $storagePath . $sqlFile;
-        $zipPath = $storagePath . $zipFile;
-
-        $fh = fopen($sqlPath, 'w');
-        if ($fh === false) {
-            return ['success' => false, 'error' => 'Impossibile scrivere il file di backup'];
-        }
-
-        fwrite($fh, "-- Fusion ERP \xe2\x80\x94 Database Backup\n");
-        fwrite($fh, "-- Generated: " . date('Y-m-d H:i:s') . "\n");
-        fwrite($fh, "-- By: {$authorName}\n");
-        fwrite($fh, "-- Tables: " . implode(', ', $tableNames) . "\n\n");
-        fwrite($fh, "SET FOREIGN_KEY_CHECKS=0;\nSET SQL_MODE='NO_AUTO_VALUE_ON_ZERO';\nSET NAMES utf8mb4;\n\n");
-
-        foreach ($tableNames as $table) {
-            // \u2500\u2500 Table name whitelist validation \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-            // Validates against a strict regex before interpolating into SQL.
-            // Table names come from INFORMATION_SCHEMA but we validate defensively.
-            if (!preg_match('/^[a-zA-Z0-9_]+$/', $table)) {
-                fwrite($fh, "-- SKIPPED unsafe table name: {$table}\n");
-                continue;
-            }
-
-            try {
-                $row = $pdo->query("SHOW CREATE TABLE `{$table}`")->fetch(\PDO::FETCH_NUM);
-                $createSql = $row[1] ?? '';
-            }
-            catch (\Throwable $e) {
-                $createSql = "-- Could not retrieve CREATE for {$table}: " . $e->getMessage();
-            }
-
-            fwrite($fh, "-- \xe2\x94\x80\xe2\x94\x80\xe2\x94\x80 TABLE: {$table} \xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\n");
-            fwrite($fh, "DROP TABLE IF EXISTS `{$table}`;\n");
-            fwrite($fh, $createSql . ";\n\n");
-
-            $offset = 0;
-            $chunkSize = 500;
-            do {
-                try {
-                    $stmt = $pdo->prepare("SELECT * FROM `{$table}` LIMIT " . (string)$chunkSize . " OFFSET " . (string)$offset);
-                    $stmt->execute();
-                    $rows = $stmt->fetchAll(\PDO::FETCH_NUM);
-                }
-                catch (\Throwable $e) {
-                    fwrite($fh, "-- Error reading {$table}: " . $e->getMessage() . "\n");
-                    break;
-                }
-                if (empty($rows))
-                    break;
-
-                fwrite($fh, "INSERT INTO `{$table}` VALUES\n");
-                $rowStrings = [];
-                foreach ($rows as $row) {
-                    $vals = array_map(fn($v) => $v === null ? 'NULL' : $pdo->quote((string)$v), $row);
-                    $rowStrings[] = '(' . implode(',', $vals) . ')';
-                }
-                fwrite($fh, implode(",\n", $rowStrings) . ";\n");
-                $offset += $chunkSize;
-            } while (count($rows) === $chunkSize);
-
-            fwrite($fh, "\n");
-        }
-
-        fwrite($fh, "SET FOREIGN_KEY_CHECKS=1;\n");
-        fclose($fh);
-
-        // ── Compress to ZIP ────────────────────────────────────────────────────
-        $filesize = 0;
-        $finalFile = $zipFile;
-        $finalPath = $zipPath;
-
-        if (class_exists('ZipArchive')) {
-            $zip = new \ZipArchive();
-            if ($zip->open($zipPath, \ZipArchive::CREATE) === true) {
-                $zip->addFile($sqlPath, $sqlFile);
-                $zip->close();
-                unlink($sqlPath);
-                $filesize = file_exists($zipPath) ? filesize($zipPath) : 0;
-            }
-            else {
-                $finalFile = $sqlFile;
-                $finalPath = $sqlPath;
-                $filesize = file_exists($sqlPath) ? filesize($sqlPath) : 0;
-            }
-        }
-        else {
-            $finalFile = $sqlFile;
-            $finalPath = $sqlPath;
-            $filesize = file_exists($sqlPath) ? filesize($sqlPath) : 0;
-        }
-
-        // ── Save metadata to DB ────────────────────────────────────────────────
-        try {
-            $repo->saveBackupRecord([
-                ':id' => $backupId,
-                ':filename' => $finalFile,
-                ':filesize' => $filesize,
-                ':tables_list' => json_encode($tableNames),
-                ':table_count' => count($tableNames),
-                ':row_count' => $totalRows,
-                ':created_by' => $createdBy,
-                ':status' => 'ok',
-                ':notes' => $createdBy === null ? 'Cron automatico' : null,
-                ':drive_file_id' => null,
-                ':drive_uploaded_at' => null,
-            ]);
-        }
-        catch (\Throwable $e) {
-            error_log('[BACKUP] DB saveBackupRecord failed: ' . $e->getMessage());
-        }
-
-        Audit::log('BACKUP', 'backups', $backupId, null, [
-            'filename' => $finalFile,
-            'filesize' => $filesize,
-            'table_count' => count($tableNames),
-            'row_count' => $totalRows,
-            'source' => $createdBy === null ? 'cron' : 'manual',
-        ]);
-
-        return [
-            'success' => true,
-            'id' => $backupId,
-            'filename' => $finalFile,
-            'filepath' => $finalPath,
-            'filesize' => $filesize,
-            'table_names' => $tableNames,
-            'total_rows' => $totalRows,
-        ];
     }
 
 
@@ -751,11 +606,17 @@ HTML;
             Response::error('Backup non trovato', 404);
         }
 
-        // Delete physical file
+        // Delete physical file — path-traversal guard (same logic as downloadBackup)
         $storagePath = rtrim(getenv('BACKUP_STORAGE_PATH') ?: '/var/www/fusion/storage/backups/', '/') . '/';
-        $filePath = $storagePath . $backup['filename'];
-        if (file_exists($filePath)) {
-            unlink($filePath);
+        $safeFilename = basename((string)$backup['filename']);
+        $filePath = $storagePath . $safeFilename;
+        $realFile = realpath($filePath);
+        $realStorage = realpath($storagePath);
+
+        if ($realFile !== false && $realStorage !== false
+        && str_starts_with($realFile, $realStorage . DIRECTORY_SEPARATOR)
+        && file_exists($realFile)) {
+            unlink($realFile);
         }
 
         $this->repo->deleteBackupRecord($id);

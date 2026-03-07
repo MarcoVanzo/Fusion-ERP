@@ -280,4 +280,98 @@ class AdminRepository
         $stmt->execute([':id' => $id]);
         return $stmt->fetch() ?: null;
     }
+
+    // ─── DASHBOARD SUMMARY ────────────────────────────────────────────────────
+
+    /**
+     * Returns user counts broken down by status and by role.
+     * @return array{total:int, by_status:array, by_role:array}
+     */
+    public function getUsersSummary(): array
+    {
+        // Total + by status
+        $byStatus = $this->db->query(
+            "SELECT
+                SUM(CASE WHEN status = 'Attivo'      THEN 1 ELSE 0 END) AS active,
+                SUM(CASE WHEN status = 'Invitato'    THEN 1 ELSE 0 END) AS invited,
+                SUM(CASE WHEN status = 'Disattivato' THEN 1 ELSE 0 END) AS disabled,
+                COUNT(*) AS total
+             FROM users
+             WHERE deleted_at IS NULL"
+        )->fetch(\PDO::FETCH_ASSOC);
+
+        // By role
+        $roleRows = $this->db->query(
+            "SELECT role, COUNT(*) AS cnt
+             FROM users
+             WHERE deleted_at IS NULL
+             GROUP BY role
+             ORDER BY cnt DESC"
+        )->fetchAll(\PDO::FETCH_ASSOC);
+
+        return [
+            'total' => (int)($byStatus['total'] ?? 0),
+            'active' => (int)($byStatus['active'] ?? 0),
+            'invited' => (int)($byStatus['invited'] ?? 0),
+            'disabled' => (int)($byStatus['disabled'] ?? 0),
+            'by_role' => $roleRows,
+        ];
+    }
+
+    /**
+     * Returns the last 10 audit log entries + action distribution for today.
+     * @return array{recent:array, by_action:array}
+     */
+    public function getLogsSummary(): array
+    {
+        $recent = $this->db->query(
+            "SELECT al.id, al.action, al.table_name, al.record_id,
+                    al.ip_address, al.created_at,
+                    u.full_name AS user_name
+             FROM audit_logs al
+             LEFT JOIN users u ON u.id = al.user_id
+             ORDER BY al.created_at DESC
+             LIMIT 10"
+        )->fetchAll(\PDO::FETCH_ASSOC);
+
+        $byAction = $this->db->query(
+            "SELECT action, COUNT(*) AS cnt
+             FROM audit_logs
+             WHERE DATE(created_at) = CURDATE()
+             GROUP BY action
+             ORDER BY cnt DESC"
+        )->fetchAll(\PDO::FETCH_ASSOC);
+
+        $totalToday = (int)array_sum(array_column($byAction, 'cnt'));
+
+        return [
+            'recent' => $recent,
+            'by_action' => $byAction,
+            'total_today' => $totalToday,
+        ];
+    }
+
+    /**
+     * Returns last backup record + total backup count.
+     * @return array{last:array|null, total:int}
+     */
+    public function getLastBackup(): array
+    {
+        $last = $this->db->query(
+            "SELECT b.id, b.filename, b.filesize, b.table_count, b.row_count,
+                    b.status, b.created_at, b.drive_file_id,
+                    u.full_name AS created_by_name
+             FROM backups b
+             LEFT JOIN users u ON u.id = b.created_by
+             ORDER BY b.created_at DESC
+             LIMIT 1"
+        )->fetch(\PDO::FETCH_ASSOC) ?: null;
+
+        $total = (int)$this->db->query("SELECT COUNT(*) FROM backups")->fetchColumn();
+
+        return [
+            'last' => $last,
+            'total' => $total,
+        ];
+    }
 }

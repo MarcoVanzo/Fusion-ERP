@@ -142,4 +142,32 @@ class AuthRepository
         $stmt = $this->db->prepare('UPDATE users SET pwd_hash = :hash, password_changed_at = NOW(), updated_at = NOW() WHERE id = :id AND deleted_at IS NULL');
         $stmt->execute([':hash' => $hash, ':id' => $id]);
     }
+
+    public function getRecentPasswordHashes(string $userId, int $limit = 3): array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT pwd_hash FROM password_history
+             WHERE user_id = :user_id
+             ORDER BY created_at DESC
+             LIMIT :limit'
+        );
+        $stmt->bindValue(':user_id', $userId, \PDO::PARAM_STR);
+        $stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(\PDO::FETCH_COLUMN);
+    }
+
+    public function insertPasswordHistory(string $userId, string $hash): void
+    {
+        $id = 'PHS_' . bin2hex(random_bytes(4));
+        $stmt = $this->db->prepare(
+            'INSERT INTO password_history (id, user_id, pwd_hash)
+             VALUES (:id, :user_id, :pwd_hash)'
+        );
+        $stmt->execute([
+            ':id' => $id,
+            ':user_id' => $userId,
+            ':pwd_hash' => $hash
+        ]);
+    }
 }

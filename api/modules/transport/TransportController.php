@@ -28,7 +28,7 @@ class TransportController
 
     public function listEvents(): void
     {
-        Auth::requireAuth();
+        Auth::requireRead('transport');
         $teamId = filter_input(INPUT_GET, 'teamId', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
         $type = filter_input(INPUT_GET, 'type', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
         Response::success($this->repo->listEvents($teamId, $type));
@@ -36,7 +36,7 @@ class TransportController
 
     public function createEvent(): void
     {
-        $user = Auth::requireRole('operator');
+        $user = Auth::requireWrite('transport');
         $body = Response::jsonBody();
         Response::requireFields($body, ['team_id', 'type', 'title', 'event_date']);
 
@@ -62,7 +62,7 @@ class TransportController
 
     public function cancelEvent(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireWrite('transport');
         $body = Response::jsonBody();
         $id = $body['id'] ?? '';
         if (empty($id)) {
@@ -79,7 +79,7 @@ class TransportController
 
     public function listRoutes(): void
     {
-        Auth::requireAuth();
+        Auth::requireRead('transport');
         $eventId = filter_input(INPUT_GET, 'eventId', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
         if (empty($eventId)) {
             Response::error('eventId obbligatorio', 400);
@@ -89,7 +89,7 @@ class TransportController
 
     public function createRoute(): void
     {
-        $user = Auth::requireAuth();
+        $user = Auth::requireWrite('transport');
         $body = Response::jsonBody();
         Response::requireFields($body, ['event_id', 'seats_total']);
 
@@ -115,7 +115,7 @@ class TransportController
 
     public function updateRouteDistance(): void
     {
-        Auth::requireRole('operator');
+        Auth::requireWrite('transport');
         $body = Response::jsonBody();
         Response::requireFields($body, ['routeId', 'distanceKm']);
 
@@ -132,7 +132,7 @@ class TransportController
 
     public function addPassenger(): void
     {
-        $user = Auth::requireAuth();
+        $user = Auth::requireRead('transport');
         $body = Response::jsonBody();
         Response::requireFields($body, ['route_id', 'athlete_id']);
 
@@ -159,7 +159,7 @@ class TransportController
 
     public function confirmPassenger(): void
     {
-        Auth::requireRole('operator');
+        Auth::requireWrite('transport');
         $body = Response::jsonBody();
         $passId = (int)($body['passengerId'] ?? 0);
         if (!$passId) {
@@ -196,7 +196,7 @@ class TransportController
 
     public function matchCarpool(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireWrite('transport');
         $eventId = filter_input(INPUT_GET, 'eventId', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
         if (empty($eventId)) {
             Response::error('eventId obbligatorio', 400);
@@ -208,7 +208,7 @@ class TransportController
 
     public function generateReimbursement(): void
     {
-        $user = Auth::requireRole('operator');
+        $user = Auth::requireWrite('transport');
         $body = Response::jsonBody();
         Response::requireFields($body, ['carpoolId', 'distanceKm']);
 
@@ -306,7 +306,7 @@ HTML;
 
     public function sendConvocations(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireWrite('transport');
         $body = Response::jsonBody();
         $eventId = $body['eventId'] ?? '';
         if (empty($eventId)) {
@@ -407,13 +407,13 @@ HTML;
 
     public function listGyms(): void
     {
-        Auth::requireAuth();
+        Auth::requireRead('transport');
         Response::success($this->repo->listGyms());
     }
 
     public function createGym(): void
     {
-        $user = Auth::requireRole('operator');
+        $user = Auth::requireWrite('transport');
         $body = Response::jsonBody();
         Response::requireFields($body, ['name']);
 
@@ -433,7 +433,7 @@ HTML;
 
     public function deleteGym(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireWrite('transport');
         $body = Response::jsonBody();
         $id = $body['id'] ?? '';
         if (empty($id)) {
@@ -453,7 +453,7 @@ HTML;
 
     public function listTeamAthletes(): void
     {
-        Auth::requireAuth();
+        Auth::requireRead('transport');
         $teamId = filter_input(INPUT_GET, 'teamId', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
         if (empty($teamId)) {
             Response::error('teamId obbligatorio', 400);
@@ -465,7 +465,7 @@ HTML;
 
     public function saveTransport(): void
     {
-        $user = Auth::requireRole('operator');
+        $user = Auth::requireWrite('transport');
         $body = Response::jsonBody();
         Response::requireFields($body, ['team_id', 'destination_name', 'arrival_time', 'athletes_json']);
 
@@ -494,7 +494,7 @@ HTML;
 
     public function listTransports(): void
     {
-        Auth::requireAuth();
+        Auth::requireRead('transport');
         $teamId = filter_input(INPUT_GET, 'teamId', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
         Response::success($this->repo->listTransports($teamId));
     }
@@ -503,7 +503,65 @@ HTML;
 
     public function listTeams(): void
     {
-        Auth::requireAuth();
+        Auth::requireRead('transport');
         Response::success($this->repo->listTeams());
+    }
+
+    // ─── DRIVERS ─────────────────────────────────────────────────────────────
+
+    public function listDrivers(): void
+    {
+        Auth::requireRead('transport');
+        Response::success($this->repo->listDrivers());
+    }
+
+    public function createDriver(): void
+    {
+        $user = Auth::requireWrite('transport');
+        $body = Response::jsonBody();
+        Response::requireFields($body, ['full_name']);
+
+        $id = 'DRV_' . bin2hex(random_bytes(4));
+        $this->repo->createDriver([
+            ':id' => $id,
+            ':full_name' => htmlspecialchars(trim($body['full_name']), ENT_QUOTES, 'UTF-8'),
+            ':phone' => $body['phone'] ?? null,
+            ':license_number' => $body['license_number'] ?? null,
+            ':hourly_rate' => isset($body['hourly_rate']) ? (float)$body['hourly_rate'] : null,
+            ':notes' => $body['notes'] ?? null,
+            ':created_by' => $user['id'],
+        ]);
+
+        Audit::log('INSERT', 'drivers', $id, null, $body);
+        Response::success(['id' => $id], 201);
+    }
+
+    public function deleteDriver(): void
+    {
+        Auth::requireWrite('transport');
+        $body = Response::jsonBody();
+        $id = $body['id'] ?? '';
+        if (empty($id)) {
+            Response::error('id obbligatorio', 400);
+        }
+
+        $this->repo->softDeleteDriver($id);
+        Audit::log('DELETE', 'drivers', $id, null, null);
+        Response::success(['message' => 'Autista eliminato']);
+    }
+
+    public function toggleDriverActive(): void
+    {
+        Auth::requireWrite('transport');
+        $body = Response::jsonBody();
+        $id = $body['id'] ?? '';
+        if (empty($id)) {
+            Response::error('id obbligatorio', 400);
+        }
+
+        $active = (bool)($body['is_active'] ?? true);
+        $this->repo->setDriverActive($id, $active);
+        Audit::log('UPDATE', 'drivers', $id, null, ['is_active' => $active]);
+        Response::success(['message' => 'Stato aggiornato']);
     }
 }

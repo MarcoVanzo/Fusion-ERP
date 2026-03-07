@@ -77,6 +77,70 @@ class Auth
     }
 
     /**
+     * Require at least READ permission on a module (403 if 'none').
+     * Uses the permissions map stored in session: { 'athletes': 'write', 'social': 'none', ... }
+     * Admin users bypass all module-level checks.
+     *
+     * @return array The authenticated user
+     */
+    public static function requireRead(string $module): array
+    {
+        $user = self::requireAuth();
+
+        // Admin bypasses module-level checks
+        if (($user['role'] ?? '') === 'admin') {
+            return $user;
+        }
+
+        $perms = $user['permissions'] ?? null;
+        // Deny-by-default: if no permissions map is configured, block access (fix M5)
+        // This follows the principle of least privilege. Admins bypass this check above.
+        // Ensure all non-admin users have their permissions configured in the DB.
+        if (!$perms || !is_array($perms) || empty($perms)) {
+            error_log("[Auth] requireRead('{$module}'): user {$user['id']} has no permissions configured.");
+            Response::error("Permessi non configurati per il modulo '{$module}'. Contatta l'amministratore.", 403);
+        }
+
+        $level = $perms[$module] ?? 'none';
+        if ($level === 'none') {
+            Response::error("Permessi insufficienti per il modulo '{$module}'", 403);
+        }
+
+        return $user;
+    }
+
+    /**
+     * Require WRITE permission on a module (403 if 'read' or 'none').
+     * Uses the permissions map stored in session: { 'athletes': 'write', 'social': 'read', ... }
+     * Admin users bypass all module-level checks.
+     *
+     * @return array The authenticated user
+     */
+    public static function requireWrite(string $module): array
+    {
+        $user = self::requireAuth();
+
+        // Admin bypasses module-level checks
+        if (($user['role'] ?? '') === 'admin') {
+            return $user;
+        }
+
+        $perms = $user['permissions'] ?? null;
+        // Deny-by-default: if no permissions map is configured, block access (fix M5)
+        if (!$perms || !is_array($perms) || empty($perms)) {
+            error_log("[Auth] requireWrite('{$module}'): user {$user['id']} has no permissions configured.");
+            Response::error("Permessi di scrittura non configurati per il modulo '{$module}'. Contatta l'amministratore.", 403);
+        }
+
+        $level = $perms[$module] ?? 'none';
+        if ($level !== 'write') {
+            Response::error("Permessi di scrittura insufficienti per il modulo '{$module}'", 403);
+        }
+
+        return $user;
+    }
+
+    /**
      * Set a user into the session after successful login.
      */
     public static function setUser(array $user): void
@@ -88,6 +152,7 @@ class Auth
             'email' => $user['email'],
             'role' => $user['role'],
             'fullName' => $user['full_name'],
+            'permissions' => $user['permissions'] ?? [],
         ];
     }
 

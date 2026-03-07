@@ -15,8 +15,12 @@ const Results = (() => {
 
   async function init() {
     _ac = new AbortController();
-    _currentView = 'matches';
+    // Se arriviamo dalla route results-standings, apri direttamente la classifica
+    const route = Router.getCurrentRoute();
+    _currentView = (route === 'results-standings') ? 'standings' : 'matches';
     _renderShell();
+    // Aggiusta i bottoni di toggle subito dopo il rendering della shell
+    _updateViewButtons();
     await _loadCampionati();
   }
 
@@ -37,7 +41,8 @@ const Results = (() => {
       mainContent.style.backgroundColor = '#0a0a0c';
     }
 
-    const isAdmin = window.App?.currentUser?.role === 'admin' || window.App?.currentUser?.permissions?.includes('admin');
+    const _u = App.getUser();
+    const isAdmin = _u?.role === 'admin' || !!_u?.permissions?.admin;
 
     app.innerHTML = `
       <style>
@@ -442,13 +447,15 @@ const Results = (() => {
               <button class="res-view-btn active" id="res-btn-matches" onclick="Results._switchView('matches')">Partite</button>
               <button class="res-view-btn" id="res-btn-standings" onclick="Results._switchView('standings')">Classifica</button>
             </div>
+            <button class="res-icon-btn" id="res-sync-btn" title="Sincronizza con portale" onclick="Results._sync()">
+              <i class="ph ph-cloud-arrow-down"></i>
+            </button>
             <button class="res-icon-btn" id="res-refresh-btn" title="Aggiorna" onclick="Results._refresh()">
               <i class="ph ph-arrows-clockwise"></i>
             </button>
-            ${isAdmin ? `
             <button class="res-icon-btn" id="res-manage-btn" title="Gestisci campionati" onclick="Results._openManage()">
               <i class="ph ph-gear"></i>
-            </button>` : ''}
+            </button>
           </div>
         </div>
 
@@ -519,13 +526,19 @@ const Results = (() => {
     const contentEl = document.getElementById('res-content');
     if (contentEl) contentEl.innerHTML = _skeletonCards();
 
-    if (!_currentCampionato?.url) {
+    if (!_currentCampionato?.id && !_currentCampionato?.url) {
       _renderEmpty('Nessun campionato selezionato', 'Seleziona un campionato dal menu in alto.');
       return;
     }
 
+    // Prefer campionato_id so the backend reads from the local DB table.
+    // Fall back to campionato_url only when id is not available.
+    const params = _currentCampionato.id
+      ? { campionato_id: _currentCampionato.id }
+      : { campionato_url: _currentCampionato.url };
+
     try {
-      const data = await Store.get('getResults', 'results', { campionato_url: _currentCampionato.url });
+      const data = await Store.get('getResults', 'results', params);
       _renderMatches(data);
     } catch (err) {
       if (err.name === 'AbortError') return;
@@ -538,13 +551,30 @@ const Results = (() => {
     const contentEl = document.getElementById('res-content');
     if (contentEl) contentEl.innerHTML = _skeletonCards();
 
-    if (!_currentCampionato?.url) {
+    if (!_currentCampionato?.id && !_currentCampionato?.url) {
       _renderEmpty('Nessun campionato selezionato', 'Seleziona un campionato dal menu in alto.');
       return;
     }
 
+    // Prefer campionato_id so the backend reads from the local DB table.
+    const params = _currentCampionato.id
+      ? { campionato_id: _currentCampionato.id }
+      : { campionato_url: _currentCampionato.url };
+
     try {
-      const data = await Store.get('getStandings', 'results', { campionato_url: _currentCampionato.url });
+      const data = await Store.get('getStandings', 'results', params);
+
+      // Backend signals that standings haven't been synced yet or portal has no standings data.
+      if (data.needs_sync) {
+        if (data.already_synced) {
+          // Sync was done but portal returned no standings — show informative message instead of asking to sync again
+          _renderStandingsUnavailable(data.last_updated);
+        } else {
+          _renderNeedsSync();
+        }
+        return;
+      }
+
       _renderStandings(data);
     } catch (err) {
       if (err.name === 'AbortError') return;
@@ -567,28 +597,33 @@ const Results = (() => {
       return;
     }
 
-    const ourMatches = matches.filter(m => m.is_our_team);
-    const otherMatches = matches.filter(m => !m.is_our_team);
+    // Raggruppa per giornata
+    const rounds = {};
+    matches.forEach(m => {
+      const r = m.round || 'Altre';
+      if (!rounds[r]) rounds[r] = [];
+      rounds[r].push(m);
+    });
+
+    const roundKeys = Object.keys(rounds).sort((a, b) => {
+      if (a === 'Altre') return 1;
+      if (b === 'Altre') return -1;
+      return parseInt(a) - parseInt(b);
+    });
 
     let html = '';
 
-    if (ourMatches.length > 0) {
-      html += `
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--color-pink);margin-top:20px;margin-bottom:8px;">
-          <i class="ph ph-star-four"></i> Le nostre partite
-        </div>
-        <div class="res-grid">${ourMatches.map(_matchCard).join('')}</div>
-      `;
-    }
+    roundKeys.forEach((r, idx) => {
+      const gMatches = rounds[r];
+      const title = r === 'Altre' ? 'Partite senza giornata' : `Giornata ${r}`;
 
-    if (otherMatches.length > 0) {
       html += `
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--color-text-muted);margin-top:${ourMatches.length > 0 ? '28px' : '20px'};margin-bottom:8px;">
-          Tutte le partite
+        <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:white;margin-top:${idx === 0 ? '20px' : '32px'};margin-bottom:12px;display:flex;align-items:center;gap:6px;border-bottom:1px solid #1c1c1e;padding-bottom:8px;">
+          <i class="ph ph-calendar-blank" style="color:var(--color-pink);"></i> ${title}
         </div>
-        <div class="res-grid">${otherMatches.map(_matchCard).join('')}</div>
+        <div class="res-grid">${gMatches.map(_matchCard).join('')}</div>
       `;
-    }
+    });
 
     if (lastUpdated) {
       html += `<div class="res-last-update">Aggiornato: ${lastUpdated} &nbsp;·&nbsp; Fonte: <a href="https://venezia.portalefipav.net" target="_blank" style="color:var(--color-text-muted);">portalefipav.net</a></div>`;
@@ -658,7 +693,6 @@ const Results = (() => {
             <div class="${awayNameClass}">${Utils.escapeHtml(match.away || 'Ospite')}</div>
           </div>
         </div>
-        ${match.round ? `<div style="font-size:10px;color:var(--color-text-muted);font-weight:600;">Giornata ${match.round}</div>` : ''}
       </div>
     `;
   }
@@ -733,6 +767,40 @@ const Results = (() => {
         <i class="ph ph-volleyball"></i>
         <div class="res-empty-title">${Utils.escapeHtml(title)}</div>
         <div class="res-empty-sub">${Utils.escapeHtml(sub)}</div>
+      </div>
+    `;
+  }
+
+  function _renderNeedsSync() {
+    const contentEl = document.getElementById('res-content');
+    if (!contentEl) return;
+    contentEl.innerHTML = `
+      <div class="res-empty">
+        <i class="ph ph-cloud-arrow-down" style="color:var(--color-pink);opacity:1;"></i>
+        <div class="res-empty-title">Classifica non ancora sincronizzata</div>
+        <div class="res-empty-sub">Premi il bottone <strong>☁ Sincronizza</strong> in alto a destra per caricare la classifica dal portale FIPAV.</div>
+        <button class="btn btn-primary btn-sm" onclick="Results._sync()" style="margin-top:12px;">
+          <i class="ph ph-cloud-arrow-down"></i> Sincronizza ora
+        </button>
+      </div>
+    `;
+  }
+
+  function _renderStandingsUnavailable(lastSynced) {
+    const contentEl = document.getElementById('res-content');
+    if (!contentEl) return;
+    const syncedAt = lastSynced ? new Date(lastSynced).toLocaleString('it-IT') : '';
+    contentEl.innerHTML = `
+      <div class="res-empty">
+        <i class="ph ph-table" style="color:var(--color-text-muted);opacity:0.5;"></i>
+        <div class="res-empty-title">Classifica non disponibile</div>
+        <div class="res-empty-sub">
+          La sincronizzazione è avvenuta${syncedAt ? ' il ' + Utils.escapeHtml(syncedAt) : ''}, ma il portale FIPAV non ha pubblicato la classifica per questo campionato.<br><br>
+          Prova a risincronizzare tra qualche minuto, oppure verifica che l'URL del campionato supporti la classifica.
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="Results._sync()" style="margin-top:12px;">
+          <i class="ph ph-arrows-clockwise"></i> Riprova sincronizzazione
+        </button>
       </div>
     `;
   }
@@ -844,20 +912,13 @@ const Results = (() => {
       return;
     }
 
-    if (!url.includes('portalefipav.net')) {
-      UI.toast("L'URL deve appartenere a portalefipav.net.", 'error', 3000);
+    if (!url.toLowerCase().includes('fipav')) {
+      UI.toast("L'URL deve appartenere al portale FIPAV.", 'error', 3000);
       return;
     }
 
     try {
-      const res = await fetch(`${window.API_BASE || '/ERP/api'}?module=results&action=saveCampionato`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ label, url }),
-        credentials: 'include',
-      });
-      const data = await res.json();
-      if (!data.success) throw new Error(data.error || 'Errore');
+      await Store.api('addCampionato', 'results', { label, url });
 
       UI.toast('Campionato aggiunto!', 'success', 2500);
       document.getElementById('res-manage-overlay')?.remove();
@@ -866,27 +927,36 @@ const Results = (() => {
       Store.invalidate?.('getCampionati', 'results');
       await _loadCampionati();
     } catch (err) {
-      console.error('[Results] saveCampionato error:', err);
+      console.error('[Results] addCampionato error:', err);
       UI.toast('Errore: ' + err.message, 'error', 3000);
     }
   }
 
   async function _deleteCampionato(id, label) {
-    if (!confirm(`Rimuovere il campionato "${label}"?`)) return;
-
-    try {
-      const res = await fetch(`${window.API_BASE || '/ERP/api'}?module=results&action=deleteCampionato`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id }),
-        credentials: 'include',
+    if (!UI.confirm) {
+      // Fallback if UI.confirm is not available (though it should be)
+      if (!confirm(`Rimuovere il campionato "${label}"?`)) return;
+    } else {
+      UI.confirm(`Rimuovere il campionato "${label}"?`, async () => {
+        try {
+          await Store.api('deleteCampionato', 'results', { id });
+          UI.toast('Campionato rimosso.', 'success', 2500);
+          document.getElementById('res-manage-overlay')?.remove();
+          Store.invalidate?.('getCampionati', 'results');
+          await _loadCampionati();
+        } catch (err) {
+          console.error('[Results] deleteCampionato error:', err);
+          UI.toast('Errore: ' + err.message, 'error', 3000);
+        }
       });
-      const data = await res.json();
-      if (!data.success) throw new Error(data.error || 'Errore');
+      return;
+    }
 
+    // Fallback logic if UI.confirm wasn't used
+    try {
+      await Store.api('deleteCampionato', 'results', { id });
       UI.toast('Campionato rimosso.', 'success', 2500);
       document.getElementById('res-manage-overlay')?.remove();
-
       Store.invalidate?.('getCampionati', 'results');
       await _loadCampionati();
     } catch (err) {
@@ -897,11 +967,15 @@ const Results = (() => {
 
   // ─── Public Helpers ────────────────────────────────────────────────────────
 
+  function _updateViewButtons() {
+    document.querySelectorAll('.res-view-btn').forEach(b => b.classList.remove('active'));
+    const btn = document.getElementById(`res-btn-${_currentView}`);
+    if (btn) btn.classList.add('active');
+  }
+
   function _switchView(view) {
     _currentView = view;
-    document.querySelectorAll('.res-view-btn').forEach(b => b.classList.remove('active'));
-    const btn = document.getElementById(`res-btn-${view}`);
-    if (btn) btn.classList.add('active');
+    _updateViewButtons();
     _loadCurrentView();
   }
 
@@ -918,15 +992,61 @@ const Results = (() => {
     UI.toast('Risultati aggiornati', 'success', 2000);
   }
 
+  async function _sync() {
+    if (!_currentCampionato?.id) {
+      UI.toast('Seleziona un campionato.', 'warning', 2000);
+      return;
+    }
+
+    const btn = document.getElementById('res-sync-btn');
+    if (btn) {
+      btn.classList.add('loading');
+      btn.disabled = true;
+    }
+
+    try {
+      UI.toast('Sincronizzazione in corso...', 'info', 3000);
+      const res = await Store.api('sync', 'results', { id: _currentCampionato.id });
+
+      if (res.success) {
+        if (res.standings > 0) {
+          UI.toast(`Sincronizzazione completata: ${res.matches} partite, ${res.standings} squadre in classifica.`, 'success', 4000);
+        } else {
+          UI.toast(
+            `Sincronizzazione parziale: ${res.matches} partite trovate, ma classifica non disponibile sul portale FIPAV.`,
+            'warning', 5000
+          );
+          console.warn('[Results] Sync: no standings found. URLs tried:', res.standings_url ?? 'n/a');
+        }
+        // Invalidate and reload
+        Store.invalidate?.('getResults', 'results');
+        Store.invalidate?.('getStandings', 'results');
+        await _loadCurrentView();
+      } else {
+        throw new Error(res.error || 'Errore sconosciuto');
+      }
+    } catch (err) {
+      console.error('[Results] sync error:', err);
+      UI.toast('Errore sync: ' + err.message, 'error', 4000);
+    } finally {
+      if (btn) {
+        btn.classList.remove('loading');
+        btn.disabled = false;
+      }
+    }
+  }
+
   function _isOurTeam(name) {
-    const keywords = ['fusion', 'team volley', 'fusionteam'];
     const lower = name.toLowerCase();
+    // Robust exclusion for APV (matches apv, a.p.v., a. p. v. with spaces)
+    if (/a\.?\s?p\.?\s?v\.?/i.test(lower)) return false;
+    const keywords = ['fusion', 'team volley', 'fusionteam'];
     return keywords.some(k => lower.includes(k));
   }
 
   // ─── Public ───────────────────────────────────────────────────────────────
 
-  return { init, destroy, _switchView, _refresh, _isOurTeam, _openManage, _addCampionato, _deleteCampionato };
+  return { init, destroy, _switchView, _refresh, _sync, _isOurTeam, _openManage, _addCampionato, _deleteCampionato };
 })();
 
 window.Results = Results;

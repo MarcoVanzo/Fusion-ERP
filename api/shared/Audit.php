@@ -60,15 +60,40 @@ class Audit
     }
 
     /**
-     * Get the real client IP (respects X-Forwarded-For for proxies).
+     * Get the real client IP for audit logging.
+     *
+     * Trust order depends on TRUSTED_PROXY env variable:
+     *   - 'cloudflare': Trust CF-Connecting-IP first (set in .env when behind Cloudflare)
+     *   - 'proxy':      Trust X-Forwarded-For first (standard reverse proxy)
+     *   - (unset):      Trust only REMOTE_ADDR — cannot be spoofed by the client
+     *
+     * This mirrors the intentional behavior in AuthController::getClientIp() where
+     * X-Forwarded-For is NOT trusted for rate-limiting to prevent spoofing.
+     * For audit logs we allow a configurable level of trust.
      */
     private static function getClientIp(): string
     {
-        $candidates = [
-            $_SERVER['HTTP_CF_CONNECTING_IP'] ?? '', // Cloudflare
-            $_SERVER['HTTP_X_FORWARDED_FOR'] ?? '',
-            $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0',
-        ];
+        $trustedProxy = strtolower(trim((string)(getenv('TRUSTED_PROXY') ?: '')));
+
+        $candidates = ['0.0.0.0'];
+
+        if ($trustedProxy === 'cloudflare') {
+            $candidates = [
+                $_SERVER['HTTP_CF_CONNECTING_IP'] ?? '',
+                $_SERVER['HTTP_X_FORWARDED_FOR'] ?? '',
+                $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0',
+            ];
+        }
+        elseif ($trustedProxy === 'proxy') {
+            $candidates = [
+                $_SERVER['HTTP_X_FORWARDED_FOR'] ?? '',
+                $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0',
+            ];
+        }
+        else {
+            // Default: REMOTE_ADDR only — immune to client-side spoofing
+            $candidates = [$_SERVER['REMOTE_ADDR'] ?? '0.0.0.0'];
+        }
 
         foreach ($candidates as $ip) {
             $ip = trim(explode(',', $ip)[0]);

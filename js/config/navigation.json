@@ -1,6 +1,5 @@
 [
     {
-        "id": "athletes",
         "title": "Atleta",
         "path": "athletes",
         "icon": "user",
@@ -29,12 +28,6 @@
                 "title": "Metrics",
                 "path": "athlete-metrics",
                 "icon": "trend-up",
-                "isMobileVisible": false
-            },
-            {
-                "title": "Salute",
-                "path": "athlete-health",
-                "icon": "heartbeat",
                 "isMobileVisible": false
             },
             {
@@ -99,15 +92,9 @@
         ],
         "children": [
             {
-                "title": "Carpooling",
-                "path": "transport-carpooling",
-                "icon": "car-profile",
-                "isMobileVisible": true
-            },
-            {
-                "title": "Trasferte",
-                "path": "transport-trips",
-                "icon": "map-pin",
+                "title": "Autisti",
+                "path": "transport-drivers",
+                "icon": "steering-wheel",
                 "isMobileVisible": false
             },
             {
@@ -184,50 +171,6 @@
         "roles": [
             "manager",
             "admin"
-        ]
-    },
-    {
-        "id": "compliance",
-        "title": "Compliance",
-        "path": "compliance",
-        "icon": "shield-check",
-        "isMobileVisible": false,
-        "roles": [
-            "operatore",
-            "manager",
-            "admin"
-        ],
-        "children": [
-            {
-                "title": "Dashboard",
-                "path": "compliance",
-                "icon": "chart-pie",
-                "isMobileVisible": false
-            },
-            {
-                "title": "Contratti",
-                "path": "compliance-contracts",
-                "icon": "file-text",
-                "isMobileVisible": false
-            },
-            {
-                "title": "Scadenzario",
-                "path": "compliance-calendar",
-                "icon": "calendar-check",
-                "isMobileVisible": false
-            },
-            {
-                "title": "Certificati Medici",
-                "path": "compliance-medical",
-                "icon": "first-aid-kit",
-                "isMobileVisible": false
-            },
-            {
-                "title": "Tesseramenti",
-                "path": "compliance-federation",
-                "icon": "identification-badge",
-                "isMobileVisible": false
-            }
         ]
     },
     {
@@ -328,6 +271,36 @@
                 "title": "74-ter",
                 "path": "finance-74ter",
                 "icon": "intersect",
+                "isMobileVisible": false
+            }
+        ]
+    },
+    {
+        "id": "admin",
+        "title": "Amministrazione",
+        "path": "admin",
+        "icon": "gear",
+        "isMobileVisible": false,
+        "roles": [
+            "admin"
+        ],
+        "children": [
+            {
+                "title": "Utenti",
+                "path": "utenti",
+                "icon": "users-three",
+                "isMobileVisible": false
+            },
+            {
+                "title": "Backup",
+                "path": "admin-backup",
+                "icon": "database",
+                "isMobileVisible": false
+            },
+            {
+                "title": "Log Sistema",
+                "path": "admin-logs",
+                "icon": "clipboard-text",
                 "isMobileVisible": false
             }
         ]

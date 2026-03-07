@@ -26,3 +26,13 @@ sessions/
 # Deploy Cache
 .deploy_cache.json
 
+# Auto Backup Logs
+scripts/auto_backup.log
+scripts/auto_backup_error.log
+
+# Node
+node_modules/
+package-lock.json
+
+# Temp
+tmp/

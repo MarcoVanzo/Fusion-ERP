@@ -21,19 +21,84 @@ const Dashboard = (() => {
     app.innerHTML = UI.skeletonPage();
 
     try {
+      // PHASE 1: Fast local data
       const [teams, athletes, events, deadlines] = await Promise.all([
         Store.get('teams', 'athletes').catch(() => []),
         Store.get('list', 'athletes').catch(() => []),
         Store.get('listEvents', 'transport').catch(() => []),
         Store.get('deadlines', 'dashboard').catch(() => []),
       ]);
-      render(athletes, teams, events, deadlines);
-    } catch {
-      render([], [], [], []);
+
+      // Initial render with placeholder for results
+      render(athletes, teams, events, deadlines, null);
+
+      // PHASE 2: Slow external results (async)
+      fetchResults(athletes, teams, events, deadlines);
+
+    } catch (err) {
+      console.error('[Dashboard] Init error:', err);
+      render([], [], [], [], []);
     }
   }
 
-  function render(athletes = [], teams = [], events = [], deadlines = []) {
+  async function fetchResults(athletes, teams, events, deadlines) {
+    const parseDate = (dStr) => {
+      if (!dStr) return new Date(0);
+      if (String(dStr).includes('/')) {
+        const p = String(dStr).split('/');
+        return new Date(`${p[2]}-${p[1]}-${p[0]}T00:00:00`);
+      }
+      return new Date(dStr);
+    };
+    try {
+      // Step 1: load all saved championships
+      const campionatiPayload = await Store.get('getCampionati', 'results').catch((e) => {
+        console.warn('[Dashboard] getCampionati error:', e); return null;
+      });
+      const campionati = campionatiPayload?.campionati || [];
+      console.log('[Dashboard] campionati trovati:', campionati.length, campionati.map(c => c.id + ':' + c.label));
+
+      if (campionati.length === 0) {
+        console.warn('[Dashboard] Nessun campionato salvato — aggiungili nella sezione Risultati.');
+        render(athletes, teams, events, deadlines, []);
+        return;
+      }
+
+      // Step 2: fetch results for each championship in parallel
+      const allMatchArrays = await Promise.all(
+        campionati.map(c =>
+          Store.get('getResults', 'results', { campionato_id: c.id }).catch((e) => {
+            console.warn('[Dashboard] getResults error for', c.id, e);
+            return null;
+          })
+        )
+      );
+
+      const allMatches = allMatchArrays.flatMap(payload => payload?.matches || []);
+      console.log('[Dashboard] totale match aggregati:', allMatches.length);
+      if (allMatches.length > 0) {
+        console.log('[Dashboard] esempio primo match:', JSON.stringify(allMatches[0]));
+      }
+
+      // Step 3: keep only played matches, sort newest first, take last 8
+      const played = allMatches.filter(m =>
+        m.status === 'played' ||
+        (m.sets_home != null && m.sets_away != null) ||
+        (m.score_home != null && m.score_away != null)
+      );
+      played.sort((a, b) => parseDate(b.date) - parseDate(a.date));
+      const weekResults = played.slice(0, 8);
+
+      console.log('[Dashboard] weekResults da mostrare:', weekResults.length);
+      render(athletes, teams, events, deadlines, weekResults);
+    } catch (err) {
+      if (err.name === 'AbortError') return;
+      console.warn('[Dashboard] fetchResults error:', err);
+      render(athletes, teams, events, deadlines, []);
+    }
+  }
+
+  function render(athletes = [], teams = [], events = [], deadlines = [], weekResults = []) {
     const app = document.getElementById('app');
 
     // Calculate real KPIs
@@ -94,22 +159,43 @@ const Dashboard = (() => {
       </div>`;
     }).join('');
 
-    // Upcoming events HTML
-    const eventsHtml = upcoming.length > 0
-      ? upcoming.map(e => `
-        <div class="fixture-card">
-          <div class="team-logo" style="color:#FF00FF; text-shadow: 0 0 8px rgba(255, 0, 255, 0.5);"><i class="ph ph-bus" style="font-size:18px;"></i></div>
-          <div style="flex:1;">
-            <div style="font-size:13px; font-weight:700;">${Utils.escapeHtml(e.title || e.opponent || 'Evento')}</div>
-            <div style="font-size:11px; color:var(--color-text-muted); margin-top:2px;">${Utils.escapeHtml(e.date || '')} ${e.time ? '• ' + Utils.escapeHtml(e.time) : ''}</div>
-          </div>
-          <div style="font-size:11px; color:var(--color-text-muted);">${Utils.escapeHtml(e.type || '')}</div>
-        </div>`).join('')
-      : `<div style="text-align:center; padding:var(--sp-4); color:var(--color-text-muted); font-size:13px;">
-          <i class="ph ph-calendar-blank" style="font-size:32px; display:block; margin-bottom:var(--sp-1);"></i>
-          Nessun evento in programma
-          <div style="margin-top:var(--sp-2);"><button class="btn btn-ghost btn-sm" onclick="Router.navigate('transport')">Crea evento</button></div>
+    // Weekly results HTML
+    let weekResultsHtml = '';
+    if (weekResults === null) {
+      // Loading state
+      weekResultsHtml = `
+        <div style="display:flex; flex-direction:column; gap:12px; padding:var(--sp-2);">
+          <div class="skeleton" style="height:60px; border-radius:var(--radius-sm);"></div>
+          <div class="skeleton" style="height:60px; border-radius:var(--radius-sm); opacity:0.6;"></div>
+          <div class="skeleton" style="height:60px; border-radius:var(--radius-sm); opacity:0.3;"></div>
         </div>`;
+    } else if (weekResults.length > 0) {
+      weekResultsHtml = weekResults.map(m => {
+        const isHome = (m.home || '').toLowerCase().includes('fusion');
+        const opponent = isHome ? (m.away || '—') : (m.home || '—');
+        const scoreHome = m.sets_home ?? m.score_home ?? '—';
+        const scoreAway = m.sets_away ?? m.score_away ?? '—';
+        const fusionScore = isHome ? scoreHome : scoreAway;
+        const oppScore = isHome ? scoreAway : scoreHome;
+        const won = fusionScore > oppScore && fusionScore !== '—';
+        const scoreColor = (fusionScore !== '—' && oppScore !== '—') ? (fusionScore > oppScore ? '#00E676' : fusionScore < oppScore ? '#FF3B30' : '#FFD600') : 'var(--color-text-muted)';
+        return `
+          <div class="fixture-card">
+            <div class="team-logo" style="background:rgba(255,0,255,0.1);color:#FF00FF;"><i class="ph ph-volleyball" style="font-size:18px;"></i></div>
+            <div style="flex:1;">
+              <div style="font-size:13px; font-weight:700;">Fusion Team vs ${Utils.escapeHtml(opponent)}</div>
+              <div style="font-size:11px; color:var(--color-text-muted); margin-top:2px;">${Utils.escapeHtml(m.date || '')} ${m.time ? '• ' + Utils.escapeHtml(m.time) : ''}</div>
+            </div>
+            <div style="font-size:18px; font-weight:800; color:${scoreColor};">${fusionScore}–${oppScore}</div>
+          </div>`;
+      }).join('');
+    } else {
+      weekResultsHtml = `
+        <div style="text-align:center; padding:var(--sp-4); color:var(--color-text-muted); font-size:13px;">
+          <i class="ph ph-trophy" style="font-size:32px; display:block; margin-bottom:var(--sp-1);"></i>
+          Nessuna partita questa settimana
+        </div>`;
+    }
 
     // Completeness bars
     const completenessItems = [
@@ -348,12 +434,13 @@ const Dashboard = (() => {
             ${teamBarsHtml || '<div style="color:var(--color-text-muted); font-size:13px;">Nessuna squadra configurata</div>'}
           </div>
 
-          <!-- WIDGET 2: UPCOMING EVENTS -->
+          <!-- WIDGET 2: WEEKLY RESULTS -->
           <div class="widget w-events">
             <div class="widget-header">
-              <div class="widget-title">Prossimi Eventi</div>
+              <div class="widget-title">Risultati Precedenti</div>
+              <i class="ph ph-trophy" style="color:var(--color-pink);"></i>
             </div>
-            ${eventsHtml}
+            ${weekResultsHtml}
           </div>
 
           <!-- WIDGET 3: DATA COMPLETENESS -->
@@ -369,7 +456,7 @@ const Dashboard = (() => {
           <div class="widget w-deadlines">
             <div class="widget-header">
               <div class="widget-title">⏰ Scadenze Imminenti</div>
-              <button class="btn btn-ghost btn-sm" onclick="Router.navigate('compliance')">Vedi tutte</button>
+              <button class="btn btn-ghost btn-sm" onclick="Router.navigate('federation')">Vedi tutte</button>
             </div>
             ${_renderDeadlines(deadlines)}
           </div>
@@ -400,6 +487,10 @@ const Dashboard = (() => {
                 <i class="ph ph-check-square"></i>
                 <span>Task</span>
               </div>
+              <div class="quick-link" id="vald-quick-link">
+                <i class="ph ph-lightning" style="color:var(--color-pink);"></i>
+                <span>VALD Perf.</span>
+              </div>
               <div class="quick-link" onclick="Router.navigate('social')">
                 <i class="ph ph-share-network"></i>
                 <span>Social</span>
@@ -410,27 +501,38 @@ const Dashboard = (() => {
         </div> <!-- END MAIN GRID -->
       </div>
     `;
+
+    // Add event listener for VALD quick link
+    document.getElementById('vald-quick-link')?.addEventListener('click', () => {
+      const lastId = sessionStorage.getItem('last_athlete_id');
+      if (lastId) {
+        Router.navigate('athlete-metrics', { id: lastId });
+      } else {
+        Router.navigate('athletes');
+        UI.toast('Seleziona un atleta per vedere i dati VALD', 'info');
+      }
+    });
   }
 
   function _renderDeadlines(items) {
     if (!items || items.length === 0) {
       return `<div style="text-align:center; padding:20px; color:var(--color-text-muted); font-size:13px;">
-        <i class="ph ph-check-circle" style="font-size:32px; display:block; margin-bottom:8px; color:#00E676;"></i>
-        Nessuna scadenza nei prossimi 60 giorni 🎉
-      </div>`;
+          <i class="ph ph-check-circle" style="font-size:32px; display:block; margin-bottom:8px; color:#00E676;"></i>
+          Nessuna scadenza nei prossimi 60 giorni 🎉
+        </div>`;
     }
     return `<div class="deadline-list">${items.map(d => {
       const urgency = d.days_left <= 7 ? 'urgent' : d.days_left <= 15 ? 'warning' : 'ok';
       const daysText = d.days_left === 0 ? 'OGGI' : d.days_left === 1 ? 'domani' : `${d.days_left} giorni`;
       const iconColor = urgency === 'urgent' ? '#FF3B30' : urgency === 'warning' ? '#FF9500' : '#FFD600';
       return `<div class="deadline-row ${urgency}">
-        <div class="deadline-icon" style="color:${iconColor};"><i class="ph ph-${Utils.escapeHtml(d.icon)}"></i></div>
-        <div class="deadline-info">
-          <div class="deadline-name">${Utils.escapeHtml(d.name)}</div>
-          <div class="deadline-label">${Utils.escapeHtml(d.label)} • scade ${Utils.escapeHtml(d.expiry_date)}</div>
-        </div>
-        <div class="deadline-days ${urgency}">${daysText}</div>
-      </div>`;
+          <div class="deadline-icon" style="color:${iconColor};"><i class="ph ph-${Utils.escapeHtml(d.icon)}"></i></div>
+          <div class="deadline-info">
+            <div class="deadline-name">${Utils.escapeHtml(d.name)}</div>
+            <div class="deadline-label">${Utils.escapeHtml(d.label)} • scade ${Utils.escapeHtml(d.expiry_date)}</div>
+          </div>
+          <div class="deadline-days ${urgency}">${daysText}</div>
+        </div>`;
     }).join('')}</div>`;
   }
 
@@ -442,3 +544,4 @@ const Dashboard = (() => {
   return { destroy, init };
 })();
 window.Dashboard = Dashboard;
+

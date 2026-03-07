@@ -34,7 +34,7 @@ class SocialRepository
     /**
      * Save or update Meta OAuth token for a given user.
      */
-    public function saveToken(int $userId, array $tokenData): void
+    public function saveToken(string $userId, array $tokenData): void
     {
         $stmt = $this->db->prepare(
             'INSERT INTO meta_tokens (user_id, page_id, ig_account_id, page_name, ig_username, access_token, token_type, expires_at)
@@ -64,7 +64,7 @@ class SocialRepository
     /**
      * Get the stored token for the current user. Returns null if not found.
      */
-    public function getToken(int $userId): ?array
+    public function getToken(string $userId): ?array
     {
         $stmt = $this->db->prepare(
             'SELECT id, user_id, page_id, ig_account_id, page_name, ig_username,
@@ -81,7 +81,7 @@ class SocialRepository
     /**
      * Delete the stored token (disconnect).
      */
-    public function deleteToken(int $userId): void
+    public function deleteToken(string $userId): void
     {
         $stmt = $this->db->prepare('DELETE FROM meta_tokens WHERE user_id = :user_id');
         $stmt->execute([':user_id' => $userId]);
@@ -128,6 +128,8 @@ class SocialRepository
                 'instagram_manage_insights',
                 'pages_show_list',
                 'pages_read_engagement',
+                'read_insights',
+                'business_management',
             ]);
         }
 
@@ -261,14 +263,30 @@ class SocialRepository
         $pageAccessToken = $page['access_token'];
 
         // Step 4: Get the Instagram Business Account linked to this Page
-        $igUrl = self::GRAPH_BASE_URL . self::GRAPH_API_VERSION . '/' . $page['id'] . '?'
-            . http_build_query([
-            'access_token' => $pageAccessToken,
-            'fields' => 'instagram_business_account{id,username,profile_picture_url,followers_count}',
-        ]);
+        // Use a more robust check via /me/accounts with fields
+        $igAccount = null;
+        foreach ($pages as $p) {
+            if ($p['id'] === $page['id'] && !empty($p['instagram_business_account'])) {
+                $igAccount = $p['instagram_business_account'];
+                break;
+            }
+        }
 
-        $igResponse = $this->graphGet($igUrl);
-        $igAccount = $igResponse['instagram_business_account'] ?? null;
+        // Fallback to direct check if not found in me/accounts
+        if (!$igAccount) {
+            try {
+                $igUrl = self::GRAPH_BASE_URL . self::GRAPH_API_VERSION . '/' . $page['id'] . '?'
+                    . http_build_query([
+                    'access_token' => $pageAccessToken,
+                    'fields' => 'instagram_business_account{id,username,profile_picture_url,followers_count}',
+                ]);
+                $igResponse = $this->graphGet($igUrl);
+                $igAccount = $igResponse['instagram_business_account'] ?? null;
+            }
+            catch (\Throwable $e) {
+                error_log('[SOCIAL] IG Account fetch failed: ' . $e->getMessage());
+            }
+        }
 
         return [
             'access_token' => $pageAccessToken,
@@ -445,14 +463,23 @@ class SocialRepository
         $since = date('Y-m-d', strtotime("-{$days} days"));
         $until = date('Y-m-d');
 
-        $url = self::GRAPH_BASE_URL . self::GRAPH_API_VERSION . '/' . $pageId . '/insights?'
+        // Daily metrics
+        $urlDaily = self::GRAPH_BASE_URL . self::GRAPH_API_VERSION . '/' . $pageId . '/insights?'
             . http_build_query([
-            'metric' => 'page_views_total,page_engaged_users,page_post_engagements,page_fans',
-            'period' => 'day',
-            'since' => $since,
-            'until' => $until,
-            'access_token' => $accessToken,
-        ]);
+                'metric' => 'page_views_total,page_engaged_users,page_post_engagements',
+                'period' => 'day',
+                'since' => $since,
+                'until' => $until,
+                'access_token' => $accessToken,
+            ]);
+
+        // Lifetime metrics
+        $urlLifetime = self::GRAPH_BASE_URL . self::GRAPH_API_VERSION . '/' . $pageId . '/insights?'
+            . http_build_query([
+                'metric' => 'page_fans',
+                'period' => 'lifetime',
+                'access_token' => $accessToken,
+            ]);
 
         $result = [
             'page_views' => 0,
@@ -469,7 +496,15 @@ class SocialRepository
         ];
 
         try {
-            $rawInsights = $this->graphGet($url)['data'] ?? [];
+            // Fetch daily
+            $resDaily = $this->graphGet($urlDaily);
+            $rawInsights = $resDaily['data'] ?? [];
+
+            // Fetch lifetime separately
+            $resLifetime = $this->graphGet($urlLifetime);
+            if (!empty($resLifetime['data'])) {
+                $rawInsights = array_merge($rawInsights, $resLifetime['data']);
+            }
         }
         catch (\Throwable $e) {
             error_log('[SOCIAL] getFbPageInsights error: ' . $e->getMessage());
@@ -494,6 +529,80 @@ class SocialRepository
         }
 
         return $result;
+    }
+
+    // ─── MOCK DATA ────────────────────────────────────────────────────────────
+
+    /**
+     * Returns realistic demo data when no Meta token is connected.
+     * Used by the controller to render the social tab without a real account.
+     */
+    public function getMockData(int $days = 28): array
+    {
+        // Build a daily insights array with fake but plausible numbers
+        $dailyInsights = [];
+        for ($i = $days; $i >= 0; $i--) {
+            $iStr = (string)$i;
+            $date = date('Y-m-d', (int)strtotime("-{$iStr} days"));
+            $dailyInsights[] = [
+                'date' => $date,
+                'reach' => rand(120, 480),
+                'views' => rand(200, 900),
+                'accounts_engaged' => rand(20, 120),
+                'profile_views' => rand(10, 60),
+            ];
+        }
+
+        // A handful of mock posts
+        $posts = [];
+        $captions = [
+            'Grande vittoria per il nostro team! 🏐🔥 #FusionVolley',
+            'Allenamento intenso oggi — pronti per la prossima partita 💪',
+            'Grazie ai nostri tifosi per il supporto incredibile! ❤️ #ForteInsieme',
+            'Nuovo record personale per la nostra atleta! 🥇 #Athletics',
+            'Highlights della settimana — guardate che schiacciata! 💥 #Volley',
+            'Dietro le quinte: la vita in palestra 🎯 #TeamLife',
+        ];
+
+        for ($i = 0; $i < 6; $i++) {
+            $posts[] = [
+                'id' => 'MOCK_' . ($i + 1),
+                'caption' => $captions[$i],
+                'media_type' => ($i % 3 === 2) ? 'VIDEO' : 'IMAGE',
+                'media_url' => null,
+                'thumbnail_url' => null,
+                'timestamp' => date('c', strtotime('-' . ($i * 4 + 1) . ' days')),
+                'like_count' => rand(30, 250),
+                'comments_count' => rand(2, 35),
+                'permalink' => 'https://www.instagram.com/',
+                'insights' => [
+                    'impressions' => rand(300, 1200),
+                    'reach' => rand(200, 900),
+                    'saved' => rand(5, 50),
+                ],
+            ];
+        }
+
+        return [
+            'profile' => [
+                'id' => 'MOCK_IG',
+                'username' => 'fusionteamvolley',
+                'name' => 'Fusion Team Volley',
+                'followers_count' => 1248,
+                'media_count' => 87,
+                'biography' => 'Squadra di pallavolo — Demo mode (nessun account Meta collegato)',
+                'profile_picture_url' => null,
+            ],
+            'daily_insights' => $dailyInsights,
+            'posts' => $posts,
+            'fb_insights' => [
+                'page_views' => rand(300, 900),
+                'engaged_users' => rand(50, 200),
+                'post_engagements' => rand(100, 500),
+                'page_fans' => 842,
+            ],
+            'is_mock' => true,
+        ];
     }
 
     // ─── HTTP UTILITY ─────────────────────────────────────────────────────────

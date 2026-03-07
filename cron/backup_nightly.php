@@ -22,7 +22,7 @@ require_once $rootDir . '/vendor/autoload.php';
 $dotenv = Dotenv\Dotenv::createUnsafeImmutable($rootDir);
 $dotenv->load();
 
-use FusionERP\Modules\Admin\AdminController;
+use FusionERP\Shared\BackupService;
 use FusionERP\Modules\Admin\AdminRepository;
 use FusionERP\Shared\GoogleDrive;
 
@@ -32,7 +32,8 @@ echo "[{$now}] ====== Fusion ERP — Nightly Backup ======\n";
 // ── 1. Execute backup dump ────────────────────────────────────────────────────
 echo "[{$now}] Avvio dump database...\n";
 
-$result = AdminController::_performBackupDump(null, 'Cron Automatico');
+$service = new BackupService(new AdminRepository());
+$result = $service->dump(null, 'Cron Automatico');
 
 if (!$result['success']) {
     echo "[{$now}] ❌ ERRORE dump: {$result['error']}\n";
