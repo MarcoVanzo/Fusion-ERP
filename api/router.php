@@ -26,6 +26,16 @@ Response::setCorsHeaders();
 header('X-Content-Type-Options: nosniff');
 header('X-Frame-Options: SAMEORIGIN');
 
+// Permetti al browser di cacheare risposte GET (liste, stats) per 60 secondi.
+// Le richieste POST/mutazioni non vengono cachiate.
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    header('Cache-Control: private, max-age=60');
+    header('Vary: Cookie'); // Il contenuto dipende dalla sessione utente
+}
+else {
+    header('Cache-Control: no-store');
+}
+
 // Only accept POST (or OPTIONS for CORS preflight)
 if (!in_array($_SERVER['REQUEST_METHOD'], ['POST', 'GET', 'OPTIONS'])) {
     Response::error('Metodo non consentito', 405);
@@ -61,12 +71,27 @@ try {
             'health' => dispatch('Health', $action),
             'tournaments' => dispatch('Tournaments', $action),
             'vehicles' => dispatch('Vehicles', $action),
+            'whatsapp' => dispatchWebhook($action),
             default => Response::error("Modulo '{$module}' non trovato", 404),
         };
 }
 catch (\Throwable $e) {
     error_log('[ROUTER] Unhandled exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
     Response::error('Errore interno del server', 500);
+}
+
+/**
+ * Dispatch speciale per il webhook WhatsApp.
+ * Non richiede Auth (Meta chiama dall'esterno con firma HMAC).
+ */
+function dispatchWebhook(string $action): void
+{
+    require_once __DIR__ . '/Modules/WhatsApp/WhatsAppWebhookController.php';
+    $controller = new \FusionERP\Modules\WhatsApp\WhatsAppWebhookController();
+    if (!method_exists($controller, $action)) {
+        \FusionERP\Shared\Response::error("Azione webhook '{$action}' non trovata", 404);
+    }
+    $controller->$action();
 }
 
 /**
@@ -77,7 +102,6 @@ function dispatch(string $controllerName, string $action): void
     $class = "FusionERP\\Modules\\{$controllerName}\\{$controllerName}Controller";
 
     if (!class_exists($class)) {
-        // Lazy-load the file
         $filePath = __DIR__ . "/Modules/" . $controllerName . "/{$controllerName}Controller.php";
         if (!file_exists($filePath)) {
             Response::error("Controller '{$controllerName}' non trovato", 404);

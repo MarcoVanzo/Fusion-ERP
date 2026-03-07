@@ -102,10 +102,23 @@ class ValdController
             }
         }
 
+        // Expose top-level CMJ KPIs for easy consumption by the dashboard
+        $jumpHeight = $profile['jumpHeight'] ?? null;
+        $brakingImpulse = $profile['brakingImpulse'] ?? null;
+        $asymmetryPct = $asymmetry['landing']['asymmetry'] ?? null;
+
+        // Baseline braking impulse (average of last 5 tests, if available)
+        $baselineBraking = $this->repo->getBaselineBrakingImpulse($athleteId);
+
         Response::success([
             'hasData' => true,
             'testDate' => $latest['test_date'],
             'testType' => $latest['test_type'],
+            // CMJ 4 KPIs (top-level for dashboard consumption)
+            'jumpHeight' => $jumpHeight,
+            'brakingImpulse' => $brakingImpulse,
+            'asymmetryPct' => $asymmetryPct,
+            'baselineBraking' => $baselineBraking,
             'semaphore' => $semaphore,
             'asymmetry' => $asymmetry,
             'profile' => $profile,
@@ -251,6 +264,13 @@ class ValdController
         $peakForce = (float)($metrics['PeakForce']['Value'] ?? 0);
         $rsimod = (float)($metrics['RSIModified']['Value'] ?? 0);
         $bodyWeightN = $weightKg * 9.81;
+        $jumpHeight = round((float)($metrics['JumpHeightTotal']['Value'] ?? $metrics['JumpHeight']['Value'] ?? 0), 1);
+
+        // Braking Impulse: Ns — from VALD metric or computed from BrakingRFD if available
+        $brakingImpulse = (float)($metrics['BrakingImpulse']['Value']
+            ?? $metrics['EccentricBrakingImpulse']['Value']
+            ?? $metrics['BrakingPhaseImpulse']['Value']
+            ?? 0);
 
         $forceRelative = $bodyWeightN > 0 ? $peakForce / $bodyWeightN : 0;
 
@@ -277,7 +297,8 @@ class ValdController
             'rsimod' => round($rsimod, 2),
             'classification' => $classification,
             'recommendation' => $recommendation,
-            'jumpHeight' => round((float)($metrics['JumpHeightTotal']['Value'] ?? $metrics['JumpHeight']['Value'] ?? 0), 1),
+            'jumpHeight' => $jumpHeight,
+            'brakingImpulse' => $brakingImpulse > 0 ? round($brakingImpulse, 1) : null,
         ];
     }
 

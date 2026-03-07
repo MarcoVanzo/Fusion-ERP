@@ -8,19 +8,23 @@
     <meta name="description"
         content="Fusion ERP — Sistema di gestione sportiva per atleti, trasferte e amministrazione.">
     <meta name="robots" content="noindex, nofollow">
-    <meta name="app-version" content="1772903951">
+    <meta name="app-version" content="1772927062">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Fusion ERP</title>
     <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
     <link rel="apple-touch-icon" href="assets/favicon.svg">
-    <!-- Fonts: Syne & JetBrains Mono -->
+    <!-- DNS preconnect per risorse CDN critiche -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://unpkg.com">
+    <!-- Fonts: tutte le famiglie in un'unica richiesta HTTP (Inter + Barlow + Syne + JetBrains) -->
     <link
-        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Syne:wght@400;500;600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Syne:wght@400;500;600;700&display=swap"
         rel="stylesheet">
-    <!-- Phosphor Icons -->
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <link rel="stylesheet" href="css/style_v2.css?v=1772903951">
+    <!-- Phosphor Icons: defer evita il blocco del render -->
+    <script src="https://unpkg.com/@phosphor-icons/web" defer></script>
+    <link rel="stylesheet" href="css/style_v2.css?v=1772927062">
 </head>
 
 <body>
@@ -210,10 +214,10 @@
     <!-- ─── SCRIPTS ──────────────────────────────────────────────────────────── -->
     <!-- ─── CONFIG ───────────────────────────────────────────────────────────── -->
     <script>window.GOOGLE_MAPS_API_KEY = 'AIzaSyBhPUVEj5X5jZ2zsG1pzDys5QiYHbtN6oI';</script>
-    <script src="js/core/utils.js?v=1772903951"></script>
-    <script src="js/core/store.js?v=1772903951"></script>
-    <script src="js/core/router.js?v=1772903951"></script>
-    <script src="js/app.js?v=1772903951"></script>
+    <script src="js/core/utils.js?v=1772927062"></script>
+    <script src="js/core/store.js?v=1772927062"></script>
+    <script src="js/core/router.js?v=1772927062"></script>
+    <script src="js/app.js?v=1772927062"></script>
 
 </body>
 

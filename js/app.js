@@ -306,7 +306,12 @@ const App = (() => {
                 }
             }
 
-            const fetchUrl = base + 'js/config/navigation.json?v=' + Date.now();
+            // Usa APP_VERSION dal Router (stabilito al deploy) invece di Date.now()
+            // così il browser può cacheare il file tra i reload fino al prossimo deploy.
+            const navVersion = (typeof Router !== 'undefined' && Router._appVersion)
+                ? Router._appVersion
+                : (document.querySelector('meta[name="app-version"]')?.content || Date.now());
+            const fetchUrl = base + 'js/config/navigation.json?v=' + navVersion;
             const response = await fetch(fetchUrl);
             if (!response.ok) {
                 throw new Error(`Impossibile caricare navigation.json: HTTP ${response.status} (Controlla che il file esista e il web server operi correttamente)`);

@@ -185,4 +185,38 @@ class ValdRepository
         $stmt->execute([':tenant_id' => TenantContext::id()]);
         return $stmt->fetchColumn() ?: null;
     }
+
+    /**
+     * Compute baseline Braking Impulse from the last $limit historical tests
+     * (offset 1 to exclude the latest). Returns null if insufficient data.
+     */
+    public function getBaselineBrakingImpulse(string $athleteId, int $limit = 5): ?float
+    {
+        $stmt = $this->db->prepare(
+            'SELECT metrics FROM vald_test_results
+             WHERE athlete_id = :athlete_id AND tenant_id = :tenant_id
+             ORDER BY test_date DESC
+             LIMIT :lim OFFSET 1'
+        );
+        $stmt->bindValue(':athlete_id', $athleteId);
+        $stmt->bindValue(':tenant_id', TenantContext::id());
+        $stmt->bindValue(':lim', $limit, \PDO::PARAM_INT);
+        $stmt->execute();
+
+        $rows = $stmt->fetchAll();
+        $vals = [];
+
+        foreach ($rows as $row) {
+            $m = json_decode($row['metrics'] ?? '{}', true) ?: [];
+            $bi = $m['BrakingImpulse']['Value']
+                ?? $m['EccentricBrakingImpulse']['Value']
+                ?? $m['BrakingPhaseImpulse']['Value']
+                ?? null;
+            if ($bi !== null) {
+                $vals[] = (float)$bi;
+            }
+        }
+
+        return !empty($vals) ? round(array_sum($vals) / count($vals), 1) : null;
+    }
 }

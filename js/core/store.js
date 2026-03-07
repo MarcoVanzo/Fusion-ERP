@@ -6,18 +6,20 @@
 'use strict';
 
 const Store = (() => {
-    // Determine the base API URL dynamically based on where the app is running
-    const getApiUrl = (module, action) => {
-        let base = '';
+    // Determina la base URL UNA SOLA VOLTA al caricamento del modulo
+    // evitando di iterare tutti i <script> tag ad ogni chiamata API.
+    const _baseUrl = (() => {
         const scripts = document.getElementsByTagName('script');
         for (let s of scripts) {
             if (s.src && s.src.includes('js/core/store.js')) {
-                base = s.src.split('js/core/store.js')[0];
-                break;
+                return s.src.split('js/core/store.js')[0];
             }
         }
-        return `${base}api/router.php?module=${encodeURIComponent(module)}&action=${encodeURIComponent(action)}`;
-    };
+        return '';
+    })();
+
+    const getApiUrl = (module, action) =>
+        `${_baseUrl}api/router.php?module=${encodeURIComponent(module)}&action=${encodeURIComponent(action)}`;
 
     /**
      * Helper per gestire la risposta fetch.
