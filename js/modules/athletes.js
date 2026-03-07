@@ -1068,7 +1068,7 @@ const Athletes = (() => {
 
     const overlay = side === 'front' ? overlayFront : overlayBack;
 
-    return `<div style="position:relative;width:100%;max-width:180px;margin:0 auto;">
+    return `<div style="position:relative;width:100%;max-width:260px;margin:0 auto;">
       <img src="${imgSrc}" alt="Corpo femminile vista ${side === 'front' ? 'frontale' : 'posteriore'}"
         style="width:100%;height:auto;display:block;border-radius:8px;object-fit:cover;"
         onerror="this.style.display='none'">

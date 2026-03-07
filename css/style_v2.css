@@ -4611,12 +4611,12 @@ h3 {
 /* ── CMJ Dashboard Layout ── */
 .cmj-dashboard {
   display: grid;
-  grid-template-columns: 440px 1fr;
+  grid-template-columns: 560px 1fr;
   gap: var(--sp-3);
   align-items: start;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1100px) {
   .cmj-dashboard {
     grid-template-columns: 1fr;
   }
