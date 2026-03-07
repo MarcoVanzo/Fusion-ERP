@@ -4,7 +4,8 @@
    Fonts: Barlow Condensed (headers) + Inter (body)
    ════════════════════════════════════════════════════════════════════════════ */
 
-@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Inter:wght@300;400;500;600&family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+/* Font caricato via <link> in index.html con preconnect — NON usare @import qui */
+
 
 /* ─── DESIGN TOKENS ────────────────────────────────────────────────────────── */
 :root {
