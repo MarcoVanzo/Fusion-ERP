@@ -146,7 +146,72 @@ class AthletesController
         Response::success(['message' => 'Atleta rimosso']);
     }
 
-    // ─── POST /api/?module=athletes&action=logMetric ──────────────────────────
+    // ─── POST /api/?module=athletes&action=uploadPhoto (multipart/form-data) ──
+    public function uploadPhoto(): void
+    {
+        Auth::requireWrite('athletes');
+
+        $id = $_POST['id'] ?? '';
+        if (empty($id)) {
+            Response::error('id obbligatorio', 400);
+        }
+
+        $athlete = $this->repo->getAthleteById($id);
+        if (!$athlete) {
+            Response::error('Atleta non trovato', 404);
+        }
+
+        if (empty($_FILES['photo']) || $_FILES['photo']['error'] !== UPLOAD_ERR_OK) {
+            Response::error('Nessun file caricato o errore upload', 400);
+        }
+
+        $file = $_FILES['photo'];
+        $allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+        $finfo = new \finfo(FILEINFO_MIME_TYPE);
+        $mimeType = $finfo->file($file['tmp_name']);
+
+        if (!in_array($mimeType, $allowedTypes, true)) {
+            Response::error('Formato non supportato (jpg, png, webp)', 400);
+        }
+
+        if ($file['size'] > 5 * 1024 * 1024) {
+            Response::error('Dimensione massima 5MB', 400);
+        }
+
+        $ext = match ($mimeType) {
+                'image/jpeg' => 'jpg',
+                'image/png' => 'png',
+                'image/webp' => 'webp',
+            };
+
+        $uploadDir = __DIR__ . '/../../../uploads/athlete_photos/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+
+        // Remove old photo if it exists
+        if (!empty($athlete['photo_path'])) {
+            $oldFile = __DIR__ . '/../../../' . ltrim($athlete['photo_path'], '/');
+            if (file_exists($oldFile)) {
+                @unlink($oldFile);
+            }
+        }
+
+        $filename = $id . '_' . time() . '.' . $ext;
+        $destPath = $uploadDir . $filename;
+
+        if (!move_uploaded_file($file['tmp_name'], $destPath)) {
+            Response::error('Errore nel salvataggio del file', 500);
+        }
+
+        $relativePath = 'uploads/athlete_photos/' . $filename;
+        $this->repo->updatePhotoPath($id, $relativePath);
+
+        Audit::log('PHOTO_UPLOAD', 'athletes', $id, null, ['photo_path' => $relativePath]);
+        Response::success(['photo_path' => $relativePath]);
+    }
+
+
     public function logMetric(): void
     {
         Auth::requireWrite('athletes');

@@ -13,11 +13,13 @@ class WhatsAppClient
     private string $token;
     private string $phoneNumberId;
     private string $apiUrl;
+    public string $appSecret;
 
     public function __construct()
     {
         $this->token = $_ENV['WHATSAPP_TOKEN'] ?? '';
         $this->phoneNumberId = $_ENV['WHATSAPP_PHONE_NUMBER_ID'] ?? '';
+        $this->appSecret = $_ENV['WHATSAPP_APP_SECRET'] ?? '';
         $this->apiUrl = "https://graph.facebook.com/v21.0/{$this->phoneNumberId}/messages";
     }
 
@@ -60,6 +62,23 @@ class WhatsAppClient
             'to' => $to,
             'type' => 'text',
             'text' => ['body' => $text]
+        ];
+
+        return $this->request($payload);
+    }
+
+    /**
+     * Mark an incoming message as read (sends read receipt — double blue ticks).
+     *
+     * @param string $messageId The wa_message_id received in the webhook payload
+     * @return array API response
+     */
+    public function markAsRead(string $messageId): array
+    {
+        $payload = [
+            'messaging_product' => 'whatsapp',
+            'status' => 'read',
+            'message_id' => $messageId,
         ];
 
         return $this->request($payload);

@@ -435,6 +435,31 @@ const Athletes = (() => {
 
           <!-- ANAGRAFICA TAB -->
           <div id="tab-panel-anagrafica" class="athlete-tab-panel" style="display:flex;flex-direction:column;gap:var(--sp-4);">
+            <!-- FOTO PERSONALE -->
+            <div>
+              <p class="section-label">Foto Personale</p>
+              <div class="card" style="padding:var(--sp-3);">
+                <div style="display:flex;align-items:center;gap:var(--sp-3);">
+                  <div id="athlete-photo-preview" style="width:96px;height:96px;border-radius:12px;overflow:hidden;flex-shrink:0;border:2px solid var(--color-border);background:${getAvatarColor(a.full_name)};display:flex;align-items:center;justify-content:center;">
+                    ${a.photo_path
+          ? `<img src="/${Utils.escapeHtml(a.photo_path)}" alt="Foto atleta" style="width:100%;height:100%;object-fit:cover;">`
+          : `<span style="font-family:var(--font-display);font-size:2rem;font-weight:700;color:#000;">${Utils.initials(a.full_name)}</span>`
+        }
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:8px;">
+                    <div style="font-size:13px;color:var(--color-text-muted);">
+                      ${a.photo_path ? 'Foto caricata' : 'Nessuna foto caricata'}
+                    </div>
+                    ${canEdit ? `
+                    <label for="athlete-photo-upload" class="btn btn-default btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;">
+                      <i class="ph ph-camera"></i> ${a.photo_path ? 'Cambia foto' : 'Carica foto'}
+                    </label>
+                    <input id="athlete-photo-upload" type="file" accept="image/jpeg,image/png,image/webp" style="display:none;">
+                    <div id="athlete-photo-status" style="font-size:12px;color:var(--color-text-muted);"></div>` : ''}
+                  </div>
+                </div>
+              </div>
+            </div>
             <div>
               <p class="section-label">Dati Anagrafici e Contatti</p>
               <div class="card" style="padding:var(--sp-3);">
@@ -455,6 +480,7 @@ const Athletes = (() => {
               </div>
             </div>
           </div>
+
 
           <!-- METRICS TAB -->
           <div id="tab-panel-metrics" class="athlete-tab-panel" style="display:none;flex-direction:column;gap:var(--sp-4);">
@@ -552,6 +578,57 @@ const Athletes = (() => {
 
       document.getElementById('edit-athlete-btn')?.addEventListener('click', () => showEditModal(a), { signal: _ac.signal });
       document.getElementById('ai-report-btn')?.addEventListener('click', () => requestAiReport(athleteId), { signal: _ac.signal });
+
+      // ─── Photo Upload ──────────────────────────────────────────────────────
+      const photoInput = document.getElementById('athlete-photo-upload');
+      if (photoInput) {
+        photoInput.addEventListener('change', async () => {
+          const file = photoInput.files?.[0];
+          if (!file) return;
+
+          const statusEl = document.getElementById('athlete-photo-status');
+          const previewEl = document.getElementById('athlete-photo-preview');
+          const uploadLabel = document.querySelector('label[for="athlete-photo-upload"]');
+
+          // Local preview
+          const localUrl = URL.createObjectURL(file);
+          previewEl.innerHTML = `<img src="${localUrl}" alt="Foto atleta" style="width:100%;height:100%;object-fit:cover;">`;
+
+          if (statusEl) statusEl.textContent = 'Caricamento in corso...';
+          if (uploadLabel) { uploadLabel.style.opacity = '0.5'; uploadLabel.style.pointerEvents = 'none'; }
+
+          try {
+            const formData = new FormData();
+            formData.append('id', athleteId);
+            formData.append('photo', file);
+
+            const res = await fetch('api/router.php?module=athletes&action=uploadPhoto', {
+              method: 'POST',
+              credentials: 'same-origin',
+              body: formData,
+            });
+            const json = await res.json();
+            if (!res.ok) throw new Error(json.message || 'Errore upload');
+
+            if (statusEl) {
+              statusEl.textContent = '✓ Foto salvata';
+              statusEl.style.color = 'var(--color-success)';
+            }
+            UI.toast('Foto caricata', 'success');
+          } catch (err) {
+            previewEl.innerHTML = a.photo_path
+              ? `<img src="/${Utils.escapeHtml(a.photo_path)}" alt="Foto atleta" style="width:100%;height:100%;object-fit:cover;">`
+              : `<span style="font-family:var(--font-display);font-size:2rem;font-weight:700;color:#000;">${Utils.initials(a.full_name)}</span>`;
+            if (statusEl) { statusEl.textContent = 'Errore: ' + err.message; statusEl.style.color = 'var(--color-pink)'; }
+            UI.toast('Errore upload foto: ' + err.message, 'error');
+          } finally {
+            if (uploadLabel) { uploadLabel.style.opacity = ''; uploadLabel.style.pointerEvents = ''; }
+            URL.revokeObjectURL(localUrl);
+          }
+        }, { signal: _ac.signal });
+      }
+
+
 
       // ─── Tab Switching ────────────────────────────────────────────────────
       let _valdLoaded = false;

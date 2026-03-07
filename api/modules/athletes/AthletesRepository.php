@@ -146,6 +146,14 @@ class AthletesRepository
         $stmt->execute([':id' => $id]);
     }
 
+    public function updatePhotoPath(string $id, ?string $photoPath): void
+    {
+        $stmt = $this->db->prepare(
+            'UPDATE athletes SET photo_path = :photo_path WHERE id = :id AND deleted_at IS NULL'
+        );
+        $stmt->execute([':photo_path' => $photoPath, ':id' => $id]);
+    }
+
     // ─── METRICS ──────────────────────────────────────────────────────────────
 
     public function insertMetric(array $data): void

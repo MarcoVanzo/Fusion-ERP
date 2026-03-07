@@ -294,5 +294,5 @@ const Router = (() => {
         window.location.hash = route + queryStr;
     }
 
-    return { navigate, getCurrentRoute, getParams, updateHash, updateNavActive: _updateNavActive };
+    return { navigate, getCurrentRoute, getParams, updateHash, updateNavActive: _updateNavActive, _appVersion: APP_VERSION };
 })();

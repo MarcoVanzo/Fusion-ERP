@@ -21,27 +21,29 @@ const Dashboard = (() => {
     app.innerHTML = UI.skeletonPage();
 
     try {
-      // PHASE 1: Fast local data
-      const [teams, athletes, events, deadlines] = await Promise.all([
+      // PHASE 1: Dati leggeri in parallelo
+      // NOTA: athletes/list è stata RIMOSSA — caricava tutti i record atleta solo per conteggi.
+      // I KPI vengono ora da dashboard/summary (unica query aggregata sul server).
+      const [summary, teams, events, deadlines] = await Promise.all([
+        Store.get('summary', 'dashboard').catch(() => null),
         Store.get('teams', 'athletes').catch(() => []),
-        Store.get('list', 'athletes').catch(() => []),
         Store.get('listEvents', 'transport').catch(() => []),
         Store.get('deadlines', 'dashboard').catch(() => []),
       ]);
 
       // Initial render with placeholder for results
-      render(athletes, teams, events, deadlines, null);
+      render(summary, teams, events, deadlines, null);
 
-      // PHASE 2: Slow external results (async)
-      fetchResults(athletes, teams, events, deadlines);
+      // PHASE 2: Risultati partite (async, non bloccante)
+      fetchResults(summary, teams, events, deadlines);
 
     } catch (err) {
       console.error('[Dashboard] Init error:', err);
-      render([], [], [], [], []);
+      render(null, [], [], [], []);
     }
   }
 
-  async function fetchResults(athletes, teams, events, deadlines) {
+  async function fetchResults(summary, teams, events, deadlines) {
     const parseDate = (dStr) => {
       if (!dStr) return new Date(0);
       if (String(dStr).includes('/')) {
@@ -60,7 +62,7 @@ const Dashboard = (() => {
 
       if (campionati.length === 0) {
         console.warn('[Dashboard] Nessun campionato salvato — aggiungili nella sezione Risultati.');
-        render(athletes, teams, events, deadlines, []);
+        render(summary, teams, events, deadlines, []);
         return;
       }
 
@@ -90,57 +92,41 @@ const Dashboard = (() => {
       const weekResults = played.slice(0, 8);
 
       console.log('[Dashboard] weekResults da mostrare:', weekResults.length);
-      render(athletes, teams, events, deadlines, weekResults);
+      render(summary, teams, events, deadlines, weekResults);
     } catch (err) {
       if (err.name === 'AbortError') return;
       console.warn('[Dashboard] fetchResults error:', err);
-      render(athletes, teams, events, deadlines, []);
+      render(summary, teams, events, deadlines, []);
     }
   }
 
-  function render(athletes = [], teams = [], events = [], deadlines = [], weekResults = []) {
+  function render(summary = null, teams = [], events = [], deadlines = [], weekResults = []) {
     const app = document.getElementById('app');
 
-    // Calculate real KPIs
-    const totalAthletes = athletes.length;
-    const totalTeams = teams.length;
+    // KPI da summary (endpoint aggregato leggero) — fallback a 0 se non disponibile
+    const totalAthletes = summary?.total_athletes ?? 0;
+    const totalTeams = summary?.total_teams ?? teams.length;
     const totalEvents = events.length;
     const upcomingEvents = events.filter(e => new Date(e.date) >= new Date()).length;
 
-    // Calculate athletes per team
+    // Percentuali completezza dal server (pre-calcolate)
+    const pctRole = summary?.pct_role ?? 0;
+    const pctPhone = summary?.pct_phone ?? 0;
+    const pctEmail = summary?.pct_email ?? 0;
+    const pctFiscal = summary?.pct_fiscal ?? 0;
+    const pctMedCert = summary?.pct_med_cert ?? 0;
+    const pctAddress = summary?.pct_address ?? 0;
+    const pctCity = summary?.pct_city ?? 0;
+    const pctParent = summary?.pct_parent ?? 0;
+    const pctParentPh = summary?.pct_parent_ph ?? 0;
+    const pctAvg = summary?.pct_avg ?? 0;
+
+    // Athletes per team from teams endpoint (already has player counts)
     const athletesByTeam = {};
-    teams.forEach(t => { athletesByTeam[t.name || t.category] = 0; });
-    athletes.forEach(a => {
-      const key = a.team_name || a.category || 'Senza squadra';
-      athletesByTeam[key] = (athletesByTeam[key] || 0) + 1;
+    teams.forEach(t => {
+      const key = t.name || t.category || 'Squadra';
+      athletesByTeam[key] = t.athlete_count ?? 0;
     });
-
-    // Calculate data completeness
-    const withRole = athletes.filter(a => a.role).length;
-    const withPhone = athletes.filter(a => a.phone).length;
-    const withEmail = athletes.filter(a => a.email).length;
-    const withFiscalCode = athletes.filter(a => a.fiscal_code).length;
-    const withMedCert = athletes.filter(a => a.medical_cert_expires_at).length;
-    const withAddress = athletes.filter(a => a.residence_address).length;
-    const withCity = athletes.filter(a => a.residence_city).length;
-    const withParent = athletes.filter(a => a.parent_contact).length;
-    const withParentPh = athletes.filter(a => a.parent_phone).length;
-
-    const pct = (n) => totalAthletes ? Math.round((n / totalAthletes) * 100) : 0;
-
-    const pctRole = pct(withRole);
-    const pctPhone = pct(withPhone);
-    const pctEmail = pct(withEmail);
-    const pctFiscal = pct(withFiscalCode);
-    const pctMedCert = pct(withMedCert);
-    const pctAddress = pct(withAddress);
-    const pctCity = pct(withCity);
-    const pctParent = pct(withParent);
-    const pctParentPh = pct(withParentPh);
-
-    // Overall completeness average
-    const allPcts = [pctRole, pctPhone, pctEmail, pctFiscal, pctMedCert, pctAddress, pctCity, pctParent, pctParentPh];
-    const pctAvg = Math.round(allPcts.reduce((s, v) => s + v, 0) / allPcts.length);
 
     // Upcoming events (next 5)
     const upcoming = events
@@ -149,6 +135,7 @@ const Dashboard = (() => {
       .slice(0, 5);
 
     // Team bars HTML
+
     const maxTeamCount = Math.max(...Object.values(athletesByTeam), 1);
     const teamBarsHtml = Object.entries(athletesByTeam).map(([name, count]) => {
       const pct2 = Math.round((count / maxTeamCount) * 100);
