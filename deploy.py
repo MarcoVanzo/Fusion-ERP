@@ -5,6 +5,8 @@ import sys
 import re
 import hashlib
 import json
+import subprocess
+import time as _time
 from typing import cast
 
 CACHE_FILE = '.deploy_cache.json'
@@ -193,6 +195,41 @@ def deploy_files_via_ftp():
         print(f"❌ FTP Error: {e}")
         return False
 
+def git_commit_and_push():
+    """Committa tutte le modifiche locali e fa push su GitHub prima del deploy."""
+    print("\n📦 Salvataggio codice su GitHub prima del deploy...")
+    try:
+        # Controlla se ci sono modifiche
+        result = subprocess.run(
+            ['git', 'status', '--porcelain'],
+            capture_output=True, text=True, check=True
+        )
+        if not result.stdout.strip():
+            print("  ℹ️  Nessuna modifica locale da committare.")
+        else:
+            timestamp = _time.strftime('%Y-%m-%d %H:%M')
+            subprocess.run(['git', 'add', '-A'], check=True)
+            subprocess.run(
+                ['git', 'commit', '-m', f'deploy: {timestamp}'],
+                check=True
+            )
+            print(f"  ✅ Commit creato: deploy: {timestamp}")
+
+        # Push sempre (anche se non c'era commit, può esserci roba non pushata)
+        push_result = subprocess.run(
+            ['git', 'push', 'origin', 'main'],
+            capture_output=True, text=True
+        )
+        if push_result.returncode == 0:
+            print("  ✅ Push su GitHub completato.")
+        else:
+            print(f"  ⚠️  Push fallito (non bloccante): {push_result.stderr.strip()}")
+
+    except subprocess.CalledProcessError as e:
+        print(f"  ⚠️  Git error (non bloccante): {e}")
+    print()
+
+
 def update_index_version():
     """Aggiorna il parametro ?v=... in index.html per forzare il refresh della cache (CSS, JS) in produzione."""
     import time
@@ -222,10 +259,13 @@ def main():
     # 1. Load credentials
     load_env()
     
-    # 2. Aggiorna cache buster prima del deploy
+    # 2. Salva su GitHub prima di deployare
+    git_commit_and_push()
+
+    # 3. Aggiorna cache buster prima del deploy
     update_index_version()
-    
-    # 3. Deploy directly
+
+    # 4. Deploy directly
     try:
         success = deploy_files_via_ftp()
         if success:
