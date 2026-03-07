@@ -312,6 +312,17 @@ class AthletesController
         Response::success($summary);
     }
 
+    // ─── GET /api/?module=athletes&action=activityLog&id=ATH_xxx ─────────────
+    public function activityLog(): void
+    {
+        Auth::requireRead('athletes');
+        $id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        if (empty($id)) {
+            Response::error('id obbligatorio', 400);
+        }
+        Response::success($this->repo->getActivityLog($id));
+    }
+
     // ─── GET /api/?module=athletes&action=alerts ──────────────────────────────
     public function alerts(): void
     {

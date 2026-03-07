@@ -299,4 +299,43 @@ class AthletesRepository
         $stmt->execute([':tid' => $tenantId]);
         return $stmt->fetchAll();
     }
+
+    // ─── ACTIVITY LOG (dashboard overview) ───────────────────────────────────
+
+    /**
+     * Returns the last 5 audit_log entries for each section of an athlete.
+     *
+     * Sections:
+     *  - anagrafica  : table_name IN ('athletes') AND record_id = athleteId
+     *  - metrics     : table_name = 'metrics_logs' AND JSON_EXTRACT(after_snapshot,'$.athlete_id') = athleteId
+     *  - pagamenti   : table_name IN ('payment_plans','installments') AND JSON_EXTRACT(after_snapshot|before_snapshot,'$.athlete_id') = athleteId
+     *  - documenti   : table_name = 'athlete_documents' AND JSON_EXTRACT(after_snapshot,'$.athlete_id') = athleteId
+     */
+    public function getActivityLog(string $athleteId): array
+    {
+        $sql = function (string $whereClause) use ($athleteId): array {
+            $stmt = $this->db->prepare(
+                "SELECT al.id, al.action, al.table_name, al.created_at,
+                        COALESCE(u.email, al.user_id, 'Sistema') AS operator,
+                        al.after_snapshot, al.before_snapshot
+                 FROM audit_logs al
+                 LEFT JOIN users u ON al.user_id = u.id
+                 WHERE {$whereClause}
+                 ORDER BY al.created_at DESC
+                 LIMIT 5"
+            );
+            $stmt->bindValue(':athlete_id', $athleteId);
+            $stmt->execute();
+            return $stmt->fetchAll();
+        };
+
+        return [
+            'anagrafica' => $sql("al.table_name IN ('athletes') AND al.record_id = :athlete_id"),
+            'metrics' => $sql("al.table_name = 'metrics_logs' AND JSON_UNQUOTE(JSON_EXTRACT(al.after_snapshot, '$.athlete_id')) = :athlete_id"),
+            'pagamenti' => $sql("al.table_name IN ('payment_plans','installments')
+                                  AND (JSON_UNQUOTE(JSON_EXTRACT(al.after_snapshot,  '$.athlete_id')) = :athlete_id
+                                    OR JSON_UNQUOTE(JSON_EXTRACT(al.before_snapshot, '$.athlete_id')) = :athlete_id)"),
+            'documenti' => $sql("al.table_name = 'athlete_documents' AND JSON_UNQUOTE(JSON_EXTRACT(al.after_snapshot, '$.athlete_id')) = :athlete_id"),
+        ];
+    }
 }

@@ -342,7 +342,7 @@ const Athletes = (() => {
   function _openAthleteDetail(athleteId) {
     _selectedAthleteId = athleteId;
     sessionStorage.setItem('last_athlete_id', athleteId);
-    _renderAthleteDetail(athleteId, 'anagrafica');
+    _renderAthleteDashboard(athleteId);
   }
 
   function _closeAthleteDetail() {
@@ -351,6 +351,194 @@ const Athletes = (() => {
     _activeMainTab = 'anagrafica';
     _renderMainView();
   }
+
+  // ─── ATHLETE DASHBOARD (overview before detail) ───────────────────
+  async function _renderAthleteDashboard(athleteId) {
+    const app = document.getElementById('app');
+    if (!athleteId) { _closeAthleteDetail(); return; }
+
+    sessionStorage.setItem('last_athlete_id', athleteId);
+    Router.updateHash(Router.getCurrentRoute(), { id: athleteId });
+
+    // Skeleton while loading
+    app.innerHTML = `
+      <div style="display:flex;align-items:center;gap:var(--sp-2);padding:var(--sp-2) var(--sp-4);border-bottom:1px solid var(--color-border);background:var(--color-bg);position:sticky;top:72px;z-index:50;">
+        <button class="btn btn-ghost btn-sm" id="dash-back-btn" style="color:var(--color-text-muted);border:none;padding:0;display:flex;align-items:center;gap:6px;font-size:12px;text-transform:uppercase;letter-spacing:0.06em;" type="button">
+          <i class="ph ph-arrow-left" style="font-size:16px;"></i> Atleti
+        </button>
+        <i class="ph ph-caret-right" style="font-size:12px;color:var(--color-text-muted);opacity:0.5;"></i>
+        <div class="skeleton skeleton-text" style="width:140px;height:14px;"></div>
+      </div>
+      <div style="padding:var(--sp-4);">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3);">
+          ${[0, 1, 2, 3].map(() => `<div class="skeleton" style="height:180px;border-radius:var(--radius);"></div>`).join('')}
+        </div>
+      </div>`;
+
+    document.getElementById('dash-back-btn')?.addEventListener('click', () => _closeAthleteDetail(), { signal: _ac.signal });
+
+    try {
+      const [a, log] = await Promise.all([
+        Store.get('get', 'athletes', { id: athleteId }),
+        Store.get('activityLog', 'athletes', { id: athleteId }).catch(() => ({ anagrafica: [], metrics: [], pagamenti: [], documenti: [] })),
+      ]);
+
+      const _actionLabel = (action) => {
+        const map = {
+          INSERT: 'Aggiunto',
+          UPDATE: 'Modificato',
+          DELETE: 'Eliminato',
+          PHOTO_UPLOAD: 'Foto caricata',
+          AI_REPORT: 'Report AI generato',
+          ACWR_ALERT: 'Alert ACWR',
+          IMPORT: 'Importato',
+        };
+        return map[action] || action;
+      };
+
+      const _actionIcon = (action) => {
+        const map = {
+          INSERT: 'plus-circle',
+          UPDATE: 'pencil-simple',
+          DELETE: 'trash',
+          PHOTO_UPLOAD: 'camera',
+          AI_REPORT: 'robot',
+          ACWR_ALERT: 'warning-circle',
+        };
+        return map[action] || 'clock';
+      };
+
+      const _actionColor = (action) => {
+        if (action === 'DELETE') return 'var(--color-pink)';
+        if (action === 'INSERT') return 'var(--color-success)';
+        if (action === 'ACWR_ALERT') return '#FFD600';
+        return 'var(--color-text-muted)';
+      };
+
+      const _renderLogList = (entries) => {
+        if (!entries || entries.length === 0) {
+          return `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:6px;color:var(--color-text-muted);opacity:0.5;padding:var(--sp-2) 0;">
+            <i class="ph ph-clock-counter-clockwise" style="font-size:28px;"></i>
+            <span style="font-size:12px;">Nessuna modifica registrata</span>
+          </div>`;
+        }
+        return entries.map(e => {
+          const d = e.created_at ? new Date(e.created_at) : null;
+          const dateStr = d ? d.toLocaleDateString('it-IT', { day: '2-digit', month: 'short' }) + ' ' + d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) : '—';
+          const op = (e.operator || 'Sistema').split('@')[0]; // show just username part
+          const color = _actionColor(e.action);
+          return `
+            <div style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+              <div style="width:28px;height:28px;border-radius:6px;background:rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">
+                <i class="ph ph-${_actionIcon(e.action)}" style="font-size:14px;color:${color};"></i>
+              </div>
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:13px;font-weight:600;color:var(--color-white);">${_actionLabel(e.action)}</div>
+                <div style="font-size:11px;color:var(--color-text-muted);margin-top:2px;display:flex;gap:8px;">
+                  <span>${Utils.escapeHtml(dateStr)}</span>
+                  <span style="opacity:0.5;">·</span>
+                  <span>${Utils.escapeHtml(op)}</span>
+                </div>
+              </div>
+            </div>`;
+        }).join('');
+      };
+
+      const panels = [
+        { id: 'anagrafica', label: 'Anagrafica', icon: 'identification-card', accent: '#3b82f6', entries: log.anagrafica || [] },
+        { id: 'metrics', label: 'Metrics', icon: 'trend-up', accent: 'var(--color-pink)', entries: log.metrics || [] },
+        { id: 'pagamenti', label: 'Pagamenti', icon: 'credit-card', accent: '#10b981', entries: log.pagamenti || [] },
+        { id: 'documenti', label: 'Documenti', icon: 'file-text', accent: '#f59e0b', entries: log.documenti || [] },
+      ];
+
+      const avatarBg = getAvatarColor(a.full_name);
+
+      app.innerHTML = `
+        <!-- BREADCRUMB / TOPBAR -->
+        <div style="display:flex;align-items:center;gap:var(--sp-2);padding:var(--sp-2) var(--sp-4);border-bottom:1px solid var(--color-border);background:var(--color-bg);position:sticky;top:72px;z-index:50;">
+          <button class="btn btn-ghost btn-sm" id="dash-back-btn" style="color:var(--color-text-muted);border:none;padding:0;display:flex;align-items:center;gap:6px;font-size:12px;text-transform:uppercase;letter-spacing:0.06em;" type="button">
+            <i class="ph ph-arrow-left" style="font-size:16px;"></i> Atleti
+          </button>
+          <i class="ph ph-caret-right" style="font-size:12px;color:var(--color-text-muted);opacity:0.5;"></i>
+          <span style="font-size:12px;font-weight:600;color:var(--color-white);text-transform:uppercase;letter-spacing:0.06em;">${Utils.escapeHtml(a.full_name)}</span>
+          <span class="badge badge-muted" style="font-size:10px;">${Utils.escapeHtml(a.role || '')}</span>
+          <div style="flex:1;"></div>
+        </div>
+
+        <!-- ATHLETE IDENTITY HEADER -->
+        <div style="padding:var(--sp-4) var(--sp-4) var(--sp-2);display:flex;align-items:center;gap:var(--sp-3);border-bottom:1px solid var(--color-border);">
+          <div style="width:56px;height:56px;background:${avatarBg};border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:1.4rem;color:#000;flex-shrink:0;">
+            ${a.jersey_number != null ? Utils.escapeHtml(String(a.jersey_number)) : Utils.initials(a.full_name)}
+          </div>
+          <div>
+            <div style="font-family:var(--font-display);font-weight:700;font-size:1.4rem;">${Utils.escapeHtml(a.full_name)}</div>
+            <div style="font-size:12px;color:var(--color-text-muted);margin-top:2px;">${Utils.escapeHtml(a.team_name || '')}${a.category ? ' · ' + Utils.escapeHtml(a.category) : ''}</div>
+          </div>
+          <div style="flex:1;"></div>
+          <div style="text-align:right;">
+            <div style="font-size:10px;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Ultime modifiche</div>
+            <div style="font-size:11px;color:var(--color-text-muted);">
+              ${(() => {
+          const allEntries = [...(log.anagrafica || []), ...(log.metrics || []), ...(log.pagamenti || []), ...(log.documenti || [])];
+          if (allEntries.length === 0) return 'Nessuna modifica';
+          const latest = allEntries.reduce((a, b) => new Date(a.created_at) > new Date(b.created_at) ? a : b);
+          const d = new Date(latest.created_at);
+          return d.toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' });
+        })()}
+            </div>
+          </div>
+        </div>
+
+        <!-- 4 PANELS GRID -->
+        <div style="padding:var(--sp-4);display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:var(--sp-3);">
+          ${panels.map(p => `
+            <div class="card" style="padding:0;overflow:hidden;display:flex;flex-direction:column;">
+              <!-- Panel header -->
+              <div style="padding:var(--sp-2) var(--sp-3);border-bottom:1px solid var(--color-border);display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.02);">
+                <div style="width:30px;height:30px;border-radius:8px;background:${p.accent}18;display:flex;align-items:center;justify-content:center;">
+                  <i class="ph ph-${p.icon}" style="font-size:16px;color:${p.accent};"></i>
+                </div>
+                <span style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;">${p.label}</span>
+                <span style="margin-left:auto;font-size:11px;color:var(--color-text-muted);background:rgba(255,255,255,0.06);padding:2px 8px;border-radius:20px;">${p.entries.length} eventi</span>
+              </div>
+              <!-- Panel body -->
+              <div style="padding:var(--sp-2) var(--sp-3);flex:1;display:flex;flex-direction:column;">
+                ${_renderLogList(p.entries)}
+              </div>
+              <!-- Panel footer: navigate to section -->
+              <div style="padding:var(--sp-2) var(--sp-3);border-top:1px solid var(--color-border);background:rgba(255,255,255,0.01);">
+                <button class="btn btn-ghost btn-sm" data-open-tab="${p.id}" type="button" style="width:100%;justify-content:center;font-size:11px;letter-spacing:0.05em;gap:6px;">
+                  Vai a ${p.label} <i class="ph ph-arrow-right" style="font-size:12px;"></i>
+                </button>
+              </div>
+            </div>`).join('')}
+        </div>
+
+        <!-- CTA BOTTOM -->
+        <div style="padding:0 var(--sp-4) var(--sp-4);display:flex;justify-content:center;">
+          <button class="btn btn-primary" id="open-full-profile-btn" type="button" style="gap:10px;padding:14px 32px;font-size:13px;">
+            <i class="ph ph-user" style="font-size:16px;"></i>
+            Apri profilo completo
+            <i class="ph ph-arrow-right" style="font-size:14px;"></i>
+          </button>
+        </div>
+      `;
+
+      // Event listeners
+      document.getElementById('dash-back-btn')?.addEventListener('click', () => _closeAthleteDetail(), { signal: _ac.signal });
+      document.getElementById('open-full-profile-btn')?.addEventListener('click', () => _renderAthleteDetail(athleteId, 'anagrafica'), { signal: _ac.signal });
+
+      // Tab-specific open buttons
+      document.querySelectorAll('[data-open-tab]').forEach(btn => {
+        btn.addEventListener('click', () => _renderAthleteDetail(athleteId, btn.dataset.openTab), { signal: _ac.signal });
+      });
+
+    } catch (err) {
+      app.innerHTML = Utils.emptyState('Errore caricamento atleta', err.message);
+    }
+  }
+
+
 
   // ─── ATHLETE DETAIL VIEW ───────────────────────────────────────────
   async function _renderAthleteDetail(athleteId, startTab = 'anagrafica') {
