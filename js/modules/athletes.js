@@ -84,7 +84,7 @@ const Athletes = (() => {
   function _renderAnagraficaPanel() {
     const container = document.getElementById('main-tab-content');
     if (!container) return;
-    const filtered = _currentTeam ? _state.filter(a => a.team_id === _currentTeam || a.team_name === _currentTeam) : _state;
+    const filtered = _currentTeam ? _state.filter(a => String(a.team_id) === String(_currentTeam) || a.team_name === _currentTeam) : _state;
     const user = App.getUser();
     const canEdit = ['admin', 'manager', 'operator'].includes(user?.role);
 
@@ -218,7 +218,7 @@ const Athletes = (() => {
     const content = document.getElementById('main-tab-content');
     if (!content) return;
     switch (tabId) {
-      case 'anagrafica': _renderAnagraficaPanel(); break;
+      case 'anagrafica': _currentTeam = ''; _renderAnagraficaPanel(); break;
       case 'pagamenti': _renderSquadPayments(content); break;
       case 'metrics': _renderSquadMetrics(content); break;
       case 'documenti': _renderSquadDocuments(content); break;
@@ -347,6 +347,7 @@ const Athletes = (() => {
 
   function _closeAthleteDetail() {
     _selectedAthleteId = null;
+    _currentTeam = '';
     sessionStorage.removeItem('last_athlete_id');
     _activeMainTab = 'anagrafica';
     _renderMainView();
@@ -924,7 +925,219 @@ const Athletes = (() => {
     } catch { /* No summary yet, that's fine */ }
   }
 
-  // ─── VALD PERFORMANCE TAB ─────────────────────────────────────────────────
+  // ─── CMJ SCORING ENGINE ──────────────────────────────────────────────────
+  function _cmjStatus(param, value, baseline) {
+    if (value == null) return 'unknown';
+    if (param === 'asymmetry') {
+      if (value <= 8) return 'GREEN';
+      if (value <= 12) return 'YELLOW';
+      return 'ALERT';
+    }
+    if (baseline == null || baseline === 0) return 'GREEN';
+    const delta = ((value - baseline) / baseline) * 100;
+    if (delta >= -5) return 'GREEN';
+    if (delta >= -10) return 'YELLOW';
+    return 'RED';
+  }
+
+  function _cmjStatusClass(status) {
+    const map = { GREEN: 'status-green', YELLOW: 'status-yellow', RED: 'status-red', ALERT: 'status-alert', unknown: '' };
+    return map[status] || '';
+  }
+
+  function _cmjStatusBadge(status) {
+    const labels = { GREEN: '✓ OK', YELLOW: '⚠ Attenzione', RED: '✗ Rischio', ALERT: '⚡ Alert', unknown: '—' };
+    const cls = { GREEN: 'green', YELLOW: 'yellow', RED: 'red', ALERT: 'alert', unknown: '' };
+    if (status === 'unknown') return '';
+    return `<span class="cmj-kpi-badge ${cls[status]}">${labels[status]}</span>`;
+  }
+
+  // ─── MUSCLE MAPPING ──────────────────────────────────────────────────────
+  // Returns a map: muscleId → CSS class
+  function _computeMuscleStates(d) {
+    const states = {};
+    const rsiStatus = _cmjStatus('rsimod', d.semaphore?.rsimod?.current, d.semaphore?.rsimod?.baseline);
+    const jStatus = _cmjStatus('jh', d.profile?.jumpHeight, null /* no baseline in profile */);
+    // for JH use semaphore overall status as proxy
+    const jhState = d.semaphore?.status || 'GREEN';
+    const brkStatus = _cmjStatus('braking', d.brakingImpulse, d.baselineBraking);
+    const asymPct = d.asymmetryPct ?? d.asymmetry?.landing?.asymmetry;
+    const asymStatus = _cmjStatus('asymmetry', asymPct, null);
+    const dominant = d.asymmetry?.landing?.dominant; // 'SX' | 'DX' | undefined
+
+    // RSImod state → quadriceps + hamstrings + core
+    const rsiMuscles = ['svgm-quadriceps-l', 'svgm-quadriceps-r', 'svgm-hamstrings-l', 'svgm-hamstrings-r', 'svgm-core'];
+    rsiMuscles.forEach(m => _setMuscleState(states, m, rsiStatus));
+
+    // Braking Impulse → hamstrings + glutes + calves + lumbar
+    const brkMuscles = ['svgm-hamstrings-l', 'svgm-hamstrings-r', 'svgm-glutes-l', 'svgm-glutes-r', 'svgm-calves-l', 'svgm-calves-r', 'svgm-lumbar'];
+    brkMuscles.forEach(m => _setMuscleState(states, m, brkStatus));
+
+    // Jump Height (semaphore overall) → hip-flexors + core
+    const jhMuscles = ['svgm-hipflexors', 'svgm-core'];
+    jhMuscles.forEach(m => _setMuscleState(states, m, jhState));
+
+    // Asymmetry → light up only the weaker side
+    if (asymStatus !== 'GREEN' && asymStatus !== 'unknown') {
+      const side = dominant === 'SX' ? 'r' : 'l'; // weaker side is opposite of dominant
+      ['svgm-quadriceps-', 'svgm-hamstrings-', 'svgm-glutes-', 'svgm-calves-'].forEach(base => {
+        _setMuscleState(states, base + side, asymStatus);
+      });
+    }
+
+    return states;
+  }
+
+  function _setMuscleState(map, id, newState) {
+    const priority = { ALERT: 4, RED: 3, YELLOW: 2, GREEN: 1, unknown: 0 };
+    if ((priority[newState] || 0) > (priority[map[id]] || 0)) {
+      map[id] = newState;
+    }
+  }
+
+  function _muscleClass(states, id) {
+    const map = { GREEN: 'muscle-green', YELLOW: 'muscle-yellow', RED: 'muscle-red', ALERT: 'muscle-alert' };
+    return map[states[id]] || 'muscle-default';
+  }
+
+  // ─── SVG ANATOMICO FEMMINILE FRONTALE ────────────────────────────────────
+  function _svgFrontale(states) {
+    const mc = (id) => _muscleClass(states, id);
+    return `<svg class="cmj-body-svg" viewBox="0 0 120 280" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Vista frontale corpo femminile">
+      <!-- Outline corpo (silhouetta) -->
+      <g fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1">
+        <!-- Testa -->
+        <ellipse cx="60" cy="22" rx="14" ry="16" fill="rgba(255,255,255,0.04)"/>
+        <!-- Collo -->
+        <rect x="54" y="36" width="12" height="10" rx="4" fill="rgba(255,255,255,0.04)"/>
+        <!-- Torso -->
+        <path d="M36 46 Q28 58 26 80 Q24 105 30 120 Q36 130 60 132 Q84 130 90 120 Q96 105 94 80 Q92 58 84 46 Z" fill="rgba(255,255,255,0.03)"/>
+        <!-- Braccia sx -->
+        <path d="M36 50 Q20 60 16 90 Q14 105 20 118" stroke-width="10" stroke-linecap="round" fill="none"/>
+        <!-- Braccia dx -->
+        <path d="M84 50 Q100 60 104 90 Q106 105 100 118" stroke-width="10" stroke-linecap="round" fill="none"/>
+      </g>
+      <!-- Core Anteriore -->
+      <path id="svgm-core" class="${mc('svgm-core')}"
+        d="M46 88 Q60 84 74 88 Q76 104 74 118 Q60 122 46 118 Z" />
+      <!-- Hip Flexors -->
+      <path id="svgm-hipflexors" class="${mc('svgm-hipflexors')}"
+        d="M40 120 Q50 116 60 118 Q70 116 80 120 Q76 136 72 140 Q60 144 48 140 Q44 136 40 120 Z" />
+      <!-- Quadriceps Sinistra (sx dal punto di vista dell'atleta = destra in vista frontale) -->
+      <path id="svgm-quadriceps-l" class="${mc('svgm-quadriceps-l')}"
+        d="M44 142 Q50 138 58 140 Q60 160 58 182 Q50 186 44 182 Q40 165 44 142 Z" />
+      <!-- Quadriceps Destra -->
+      <path id="svgm-quadriceps-r" class="${mc('svgm-quadriceps-r')}"
+        d="M62 140 Q70 138 76 142 Q80 165 76 182 Q70 186 62 182 Q60 160 62 140 Z" />
+      <!-- Adductors SX -->
+      <path id="svgm-adductors-l" class="muscle-default"
+        d="M56 142 Q60 144 60 160 Q58 175 56 180 Q52 175 52 160 Z" />
+      <!-- Adductors DX -->
+      <path id="svgm-adductors-r" class="muscle-default"
+        d="M64 142 Q60 144 60 160 Q62 175 64 180 Q68 175 68 160 Z" />
+      <!-- Tibialis SX -->
+      <path id="svgm-tibialis-l" class="muscle-default"
+        d="M45 186 Q50 184 56 186 Q54 210 52 224 Q48 226 44 222 Q42 206 45 186 Z" />
+      <!-- Tibialis DX -->
+      <path id="svgm-tibialis-r" class="muscle-default"
+        d="M64 186 Q70 184 75 186 Q78 206 76 222 Q72 226 68 224 Q66 210 64 186 Z" />
+      <!-- Piedi -->
+      <ellipse cx="50" cy="232" rx="10" ry="5" fill="rgba(255,255,255,0.05)"/>
+      <ellipse cx="70" cy="232" rx="10" ry="5" fill="rgba(255,255,255,0.05)"/>
+    </svg>`;
+  }
+
+  // ─── SVG ANATOMICO FEMMINILE POSTERIORE ──────────────────────────────────
+  function _svgPosteriore(states) {
+    const mc = (id) => _muscleClass(states, id);
+    return `<svg class="cmj-body-svg" viewBox="0 0 120 280" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Vista posteriore corpo femminile">
+      <g fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1">
+        <ellipse cx="60" cy="22" rx="14" ry="16" fill="rgba(255,255,255,0.04)"/>
+        <rect x="54" y="36" width="12" height="10" rx="4" fill="rgba(255,255,255,0.04)"/>
+        <path d="M36 46 Q28 58 26 80 Q24 105 30 120 Q36 130 60 132 Q84 130 90 120 Q96 105 94 80 Q92 58 84 46 Z" fill="rgba(255,255,255,0.03)"/>
+        <path d="M36 50 Q20 60 16 90 Q14 105 20 118" stroke-width="10" stroke-linecap="round" fill="none"/>
+        <path d="M84 50 Q100 60 104 90 Q106 105 100 118" stroke-width="10" stroke-linecap="round" fill="none"/>
+      </g>
+      <!-- Thoracic (upper back) -->
+      <path id="svgm-thoracic" class="muscle-default"
+        d="M40 48 Q60 44 80 48 Q82 70 78 82 Q60 86 42 82 Q38 70 40 48 Z" />
+      <!-- Lumbar -->
+      <path id="svgm-lumbar" class="${mc('svgm-lumbar')}"
+        d="M42 84 Q60 80 78 84 Q80 100 78 116 Q60 120 42 116 Q40 100 42 84 Z" />
+      <!-- Glutes SX -->
+      <path id="svgm-glutes-l" class="${mc('svgm-glutes-l')}"
+        d="M40 118 Q52 114 60 118 Q62 134 58 144 Q50 148 42 142 Q38 134 40 118 Z" />
+      <!-- Glutes DX -->
+      <path id="svgm-glutes-r" class="${mc('svgm-glutes-r')}"
+        d="M60 118 Q72 114 80 118 Q82 134 78 142 Q70 148 62 144 Q58 134 60 118 Z" />
+      <!-- Hamstrings SX -->
+      <path id="svgm-hamstrings-l" class="${mc('svgm-hamstrings-l')}"
+        d="M42 146 Q52 142 60 144 Q60 164 58 182 Q50 186 44 182 Q40 165 42 146 Z" />
+      <!-- Hamstrings DX -->
+      <path id="svgm-hamstrings-r" class="${mc('svgm-hamstrings-r')}"
+        d="M60 144 Q70 142 78 146 Q80 165 76 182 Q70 186 62 182 Q60 164 60 144 Z" />
+      <!-- Calves SX -->
+      <path id="svgm-calves-l" class="${mc('svgm-calves-l')}"
+        d="M44 185 Q52 182 58 185 Q58 208 54 224 Q48 226 44 222 Q42 206 44 185 Z" />
+      <!-- Calves DX -->
+      <path id="svgm-calves-r" class="${mc('svgm-calves-r')}"
+        d="M62 185 Q68 182 76 185 Q78 206 76 222 Q72 226 66 224 Q62 208 62 185 Z" />
+      <!-- Piedi -->
+      <ellipse cx="50" cy="232" rx="10" ry="5" fill="rgba(255,255,255,0.05)"/>
+      <ellipse cx="70" cy="232" rx="10" ry="5" fill="rgba(255,255,255,0.05)"/>
+    </svg>`;
+  }
+
+  // ─── FORCE CURVE SVG SPARKLINE ───────────────────────────────────────────
+  function _forceCurveSvg(results, semStatus) {
+    // Try to extract a force-time curve from the last test results
+    // VALD may include ForceCurve or we approximate from peak values
+    const semColor = { GREEN: '#00E676', YELLOW: '#FFD600', RED: '#FF1744', ALERT: '#FF6D00' }[semStatus] || '#00E676';
+
+    // Build approximate curve from per-test RSImod history
+    const vals = (results || []).slice(-12).reverse().map(r => {
+      const m = r.metrics || {};
+      return parseFloat(m.RSIModified?.Value ?? m.JumpHeight?.Value ?? m.JumpHeightTotal?.Value ?? 0);
+    }).filter(v => v > 0);
+
+    if (vals.length < 2) {
+      return `<div style="text-align:center;padding:16px;font-size:11px;color:var(--color-text-muted);">Dati curva non disponibili</div>`;
+    }
+
+    const W = 400, H = 60;
+    const min = Math.min(...vals) * 0.9;
+    const max = Math.max(...vals) * 1.1;
+    const toY = v => H - ((v - min) / (max - min)) * H;
+    const toX = (i) => (i / (vals.length - 1)) * W;
+
+    // Peak value marker
+    const peakIdx = vals.indexOf(Math.max(...vals));
+    const lastIdx = vals.length - 1;
+
+    const pts = vals.map((v, i) => `${toX(i).toFixed(1)},${toY(v).toFixed(1)}`).join(' ');
+    const areaPath = `M${toX(0)},${H} ` + vals.map((v, i) => `L${toX(i).toFixed(1)},${toY(v).toFixed(1)}`).join(' ') + ` L${toX(lastIdx)},${H} Z`;
+
+    return `
+      <svg class="cmj-force-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="cmj-grad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="${semColor}" stop-opacity="0.3"/>
+            <stop offset="100%" stop-color="${semColor}" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <!-- Area fill -->
+        <path d="${areaPath}" fill="url(#cmj-grad)" />
+        <!-- Line -->
+        <polyline points="${pts}" fill="none" stroke="${semColor}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+        <!-- Current (last) dot -->
+        <circle cx="${toX(lastIdx).toFixed(1)}" cy="${toY(vals[lastIdx]).toFixed(1)}" r="4" fill="${semColor}" />
+        <!-- Peak dot -->
+        ${peakIdx !== lastIdx ? `<circle cx="${toX(peakIdx).toFixed(1)}" cy="${toY(vals[peakIdx]).toFixed(1)}" r="3" fill="white" opacity="0.5"/>` : ''}
+      </svg>`;
+  }
+
+
+  // ─── VALD PERFORMANCE TAB — CMJ DASHBOARD ─────────────────────────────────
   async function renderValdTab(athleteId, athlete) {
     const container = document.getElementById('vald-tab-content');
     if (!container) return;
@@ -932,6 +1145,7 @@ const Athletes = (() => {
     container.innerHTML = `<div style="display:flex;flex-direction:column;gap:8px;padding:8px 0;">
       <div class="skeleton skeleton-title"></div>
       <div class="skeleton skeleton-text" style="width:60%;"></div>
+      <div class="skeleton" style="height:160px;border-radius:var(--radius);"></div>
     </div>`;
 
     try {
@@ -942,101 +1156,144 @@ const Athletes = (() => {
           <div style="text-align:center;padding:var(--sp-4);background:rgba(255,0,255,0.04);border:1px solid rgba(255,0,255,0.1);border-radius:var(--radius);margin-top:8px;">
             <i class="ph ph-lightning-slash" style="font-size:40px;color:var(--color-pink);opacity:0.4;display:block;margin-bottom:12px;"></i>
             <p style="font-size:14px;font-weight:700;color:var(--color-text);margin-bottom:4px;">Nessun dato VALD disponibile</p>
-            <p style="font-size:12px;color:var(--color-text-muted);">Nessuna sessione ForceDeck o NordBord trovata per questo atleta.<br>Sincronizza i dati da VALD Hub per visualizzare le performance.</p>
+            <p style="font-size:12px;color:var(--color-text-muted);">Nessuna sessione ForceDeck trovata per questo atleta.<br>Sincronizza i dati da VALD Hub per visualizzare le performance.</p>
           </div>`;
         return;
       }
 
-      const { semaphore, asymmetry, profile, ranking, coachMessage, testDate, testType } = d;
+      const { semaphore, asymmetry, profile, ranking, coachMessage, testDate, testType, results } = d;
+      const jh = d.jumpHeight ?? profile?.jumpHeight;
+      const rsimod = semaphore?.rsimod?.current;
+      const braking = d.brakingImpulse;
+      const asymPct = d.asymmetryPct ?? asymmetry?.landing?.asymmetry;
+      const baselineRsi = semaphore?.rsimod?.baseline;
+      const baselineBraking = d.baselineBraking;
 
-      // Semaphore colors
-      const semColor = { GREEN: '#00E676', YELLOW: '#FFD600', RED: '#FF3B30' }[semaphore?.status] || 'var(--color-text-muted)';
-      const semBg = { GREEN: 'rgba(0,230,118,0.08)', YELLOW: 'rgba(255,214,0,0.08)', RED: 'rgba(255,59,48,0.08)' }[semaphore?.status] || 'rgba(255,255,255,0.04)';
+      const jhStatus = semaphore?.status || 'GREEN';
+      const rsiStatus = _cmjStatus('rsimod', rsimod, baselineRsi);
+      const brkStatus = _cmjStatus('braking', braking, baselineBraking);
+      const asymStatus = _cmjStatus('asymmetry', asymPct, null);
+      const overallStatus = semaphore?.status || 'GREEN';
+
+      const muscleStates = _computeMuscleStates(d);
+
+      const _delta = (cur, base) => {
+        if (cur == null || base == null || base === 0) return null;
+        return (((cur - base) / base) * 100).toFixed(1);
+      };
+      const _deltaHtml = (delta) => {
+        if (delta == null) return '<span style="color:var(--color-text-muted);font-size:10px;">No baseline</span>';
+        const sign = delta > 0 ? '+' : '';
+        const color = delta >= 0 ? '#00E676' : delta >= -5 ? '#FFD600' : '#FF1744';
+        return `<span style="color:${color};font-weight:600;">${sign}${delta}% vs baseline</span>`;
+      };
+
+      const statusColors = { GREEN: '#00E676', YELLOW: '#FFD600', RED: '#FF1744', ALERT: '#FF6D00' };
+      const semColor = statusColors[overallStatus] || '#888';
+
+      const kpiCards = [
+        { name: 'Jump Height', value: jh != null ? jh.toFixed(1) : '—', unit: 'cm', status: jhStatus, delta: _deltaHtml(null), icon: 'arrow-fat-up' },
+        { name: 'RSImod', value: rsimod != null ? rsimod.toFixed(3) : '—', unit: '', status: rsiStatus, delta: _deltaHtml(_delta(rsimod, baselineRsi)), icon: 'lightning' },
+        { name: 'Braking Impulse', value: braking != null ? braking.toFixed(0) : '—', unit: 'Ns', status: brkStatus, delta: _deltaHtml(_delta(braking, baselineBraking)), icon: 'arrows-in' },
+        {
+          name: 'Asimmetria', value: asymPct != null ? asymPct.toFixed(1) : '—', unit: '%', status: asymStatus,
+          delta: asymPct != null ? `<span style="color:var(--color-text-muted);font-size:10px;">${asymmetry?.landing?.dominant ?? '—'} dominante</span>` : '',
+          icon: 'arrows-left-right'
+        },
+      ];
 
       container.innerHTML = `
-        <!-- Coach Message -->
-        <div style="padding:var(--sp-2);background:rgba(255,255,255,0.04);border-radius:var(--radius);border-left:3px solid ${semColor};font-size:13px;color:var(--color-text-muted);font-style:italic;">
-          ${Utils.escapeHtml(coachMessage || '')}
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:var(--sp-2);padding-bottom:var(--sp-2);border-bottom:1px solid var(--color-border);">
+          <div style="width:10px;height:10px;border-radius:50%;background:${semColor};box-shadow:0 0 8px ${semColor};"></div>
+          <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;">${Utils.escapeHtml(semaphore?.label || overallStatus)}</span>
+          <span style="font-size:10px;color:var(--color-text-muted);margin-left:auto;">Test: ${Utils.escapeHtml(testDate || '—')} · ${Utils.escapeHtml(testType || 'CMJ')}</span>
         </div>
 
-        <!-- Semaphore Card -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-2);">
-          <div style="padding:var(--sp-3);background:${semBg};border:1px solid ${semColor}33;border-radius:var(--radius);text-align:center;">
-            <div style="font-size:11px;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Stato Neuromuscolare</div>
-            <div style="font-size:28px;font-family:var(--font-display);font-weight:800;color:${semColor};">${Utils.escapeHtml(semaphore?.label || '—')}</div>
-            <div style="font-size:11px;color:var(--color-text-muted);margin-top:8px;">Test: ${Utils.escapeHtml(testDate || '—')} • ${Utils.escapeHtml(testType || '—')}</div>
+        <div class="cmj-dashboard">
+          <div class="cmj-body-panel">
+            <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-text-muted);width:100%;text-align:center;padding-bottom:4px;">Stato Neuromuscolare</div>
+            <div class="cmj-body-views">
+              <div class="cmj-body-view"><span class="cmj-body-label">Frontale</span>${_svgFrontale(muscleStates)}</div>
+              <div class="cmj-body-view"><span class="cmj-body-label">Posteriore</span>${_svgPosteriore(muscleStates)}</div>
+            </div>
+            <div class="cmj-legend" style="margin-top:8px;">
+              <div class="cmj-legend-item"><div class="cmj-legend-dot" style="background:#00E676;"></div>OK</div>
+              <div class="cmj-legend-item"><div class="cmj-legend-dot" style="background:#FFD600;"></div>Attenzione</div>
+              <div class="cmj-legend-item"><div class="cmj-legend-dot" style="background:#FF1744;"></div>Rischio</div>
+              <div class="cmj-legend-item"><div class="cmj-legend-dot" style="background:#FF6D00;"></div>Alert</div>
+            </div>
           </div>
 
-          <!-- RSImod & TimeToTakeoff -->
-          <div style="padding:var(--sp-3);background:rgba(255,255,255,0.02);border:1px solid var(--color-border);border-radius:var(--radius);">
-            <div style="font-size:11px;color:var(--color-pink);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">ForceDecks — RSImod</div>
-            <div style="display:flex;justify-content:space-between;align-items:flex-end;">
-              <div>
-                <span style="font-size:28px;font-family:var(--font-display);font-weight:700;line-height:1;">${semaphore?.rsimod?.current ?? '—'}</span>
-                <span style="font-size:11px;color:var(--color-text-muted);"> attuale</span>
+          <div style="display:flex;flex-direction:column;gap:var(--sp-2);">
+            <div class="cmj-kpi-grid">
+              ${kpiCards.map(k => `
+                <div class="cmj-kpi-card ${_cmjStatusClass(k.status)}">
+                  <div class="cmj-kpi-name"><i class="ph ph-${k.icon}" style="margin-right:4px;"></i>${k.name}</div>
+                  <div class="cmj-kpi-value">${k.value}<span class="cmj-kpi-unit">${k.unit}</span></div>
+                  <div class="cmj-kpi-delta">${_cmjStatusBadge(k.status)} ${k.delta}</div>
+                </div>`).join('')}
+            </div>
+
+            <div class="cmj-coach-msg ${_cmjStatusClass(overallStatus)}">
+              <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--color-text-muted);margin-bottom:6px;">
+                <i class="ph ph-chalkboard-teacher" style="margin-right:4px;"></i>Raccomandazione Coach
               </div>
-              <div style="text-align:right;">
-                <span style="display:block;font-size:14px;font-family:var(--font-display);font-weight:700;color:var(--color-text-muted);">${semaphore?.rsimod?.baseline ?? '—'}</span>
-                <span style="font-size:10px;color:var(--color-text-muted);text-transform:uppercase;">Baseline</span>
+              <p style="font-size:13px;line-height:1.6;color:var(--color-text);font-style:italic;">${Utils.escapeHtml(coachMessage || '')}</p>
+              ${semaphore?.action ? `<div style="margin-top:8px;font-size:12px;font-weight:600;color:var(--color-text-muted);">${Utils.escapeHtml(semaphore.action)}</div>` : ''}
+            </div>
+
+            <div class="cmj-force-curve">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--color-text-muted);">
+                  <i class="ph ph-chart-line-up" style="margin-right:4px;"></i>Trend RSImod / Salto (ultimi test)
+                </span>
+                <span style="font-size:10px;color:var(--color-text-muted);">${results?.length || 0} test</span>
+              </div>
+              ${_forceCurveSvg(results, overallStatus)}
+              <div style="display:flex;justify-content:space-between;margin-top:4px;">
+                <span style="font-size:9px;color:var(--color-text-muted);">Più vecchio</span>
+                <span style="font-size:9px;color:var(--color-text-muted);">Più recente</span>
               </div>
             </div>
-            ${semaphore?.rsimod?.variation != null ? `
-            <div style="margin-top:8px;font-size:11px;color:${semaphore.rsimod.variation > 5 ? '#FF9500' : '#00E676'};">
-              Δ ${semaphore.rsimod.variation.toFixed(1)}% vs baseline
+
+            ${asymmetry ? `
+            <div style="background:rgba(255,255,255,0.02);border:1px solid var(--color-border);border-radius:var(--radius);padding:var(--sp-2) var(--sp-3);">
+              <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--color-text-muted);margin-bottom:10px;">
+                <i class="ph ph-arrows-left-right" style="margin-right:4px;"></i>Dettaglio Asimmetria SX / DX
+              </div>
+              <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:var(--sp-1);">
+                <div style="text-align:left;">
+                  <div style="font-size:9px;color:var(--color-text-muted);text-transform:uppercase;margin-bottom:2px;">SX</div>
+                  <div style="font-size:1.2rem;font-family:var(--font-display);font-weight:700;">${asymmetry.landing?.left ?? '—'}<span style="font-size:11px;color:var(--color-text-muted);"> N</span></div>
+                  <div style="height:8px;background:rgba(255,255,255,0.06);border-radius:4px;margin-top:4px;overflow:hidden;"><div style="height:100%;background:#00f2fe;border-radius:4px;width:${Math.round((asymmetry.landing?.left || 0) / ((asymmetry.landing?.left || 0) + (asymmetry.landing?.right || 1)) * 100)}%;"></div></div>
+                </div>
+                <div style="text-align:center;"><div class="cmj-kpi-badge ${asymStatus === 'ALERT' ? 'alert' : asymStatus === 'YELLOW' ? 'yellow' : 'green'}" style="font-size:10px;padding:4px 10px;">${asymPct != null ? asymPct.toFixed(1) + '%' : '—'}</div></div>
+                <div style="text-align:right;">
+                  <div style="font-size:9px;color:var(--color-text-muted);text-transform:uppercase;margin-bottom:2px;">DX</div>
+                  <div style="font-size:1.2rem;font-family:var(--font-display);font-weight:700;">${asymmetry.landing?.right ?? '—'}<span style="font-size:11px;color:var(--color-text-muted);"> N</span></div>
+                  <div style="height:8px;background:rgba(255,255,255,0.06);border-radius:4px;margin-top:4px;overflow:hidden;"><div style="height:100%;background:#ff007a;border-radius:4px;margin-left:auto;width:${Math.round((asymmetry.landing?.right || 0) / ((asymmetry.landing?.left || 0) + (asymmetry.landing?.right || 1)) * 100)}%;"></div></div>
+                </div>
+              </div>
+            </div>` : ''}
+
+            ${ranking && ranking.length > 0 ? `
+            <div style="background:rgba(255,255,255,0.02);border:1px solid var(--color-border);border-radius:var(--radius);padding:var(--sp-2) var(--sp-3);">
+              <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--color-text-muted);margin-bottom:10px;">
+                <i class="ph ph-trophy" style="margin-right:4px;"></i>Classifica Squadra (RSImod)
+              </div>
+              <div style="display:flex;flex-direction:column;gap:4px;">
+                ${ranking.map((r, i) => `
+                  <div style="display:flex;align-items:center;gap:10px;padding:5px 8px;border-radius:6px;background:${r.athlete_id === athleteId ? 'rgba(255,0,122,0.08)' : 'transparent'};">
+                    <span style="font-size:12px;font-weight:700;color:var(--color-text-muted);width:18px;">#${i + 1}</span>
+                    <span style="flex:1;font-size:12px;">${Utils.escapeHtml(r.name || r.full_name || '—')}</span>
+                    <span style="font-size:12px;font-weight:700;color:${r.athlete_id === athleteId ? 'var(--color-pink)' : 'var(--color-text)'};">${r.rsimod ?? '—'}</span>
+                  </div>`).join('')}
+              </div>
             </div>` : ''}
           </div>
         </div>
-
-        <!-- Asymmetry -->
-        <div style="padding:var(--sp-3);background:rgba(255,255,255,0.02);border:1px solid var(--color-border);border-radius:var(--radius);">
-          <p style="font-size:11px;color:var(--color-cyan);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">Asimmetria Forza (Sinistra / Destra)</p>
-          ${asymmetry?.criticalRisk ? `<div style="padding:8px 12px;background:rgba(255,59,48,0.1);border:1px solid rgba(255,59,48,0.3);border-radius:6px;font-size:12px;color:#FF3B30;margin-bottom:10px;">${Utils.escapeHtml(asymmetry.riskMessage || '')}</div>` : ''}
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-2);">
-            <div>
-              <div style="font-size:10px;color:var(--color-text-muted);margin-bottom:4px;text-transform:uppercase;">Atterraggio</div>
-              <div style="font-size:22px;font-family:var(--font-display);font-weight:700;color:${(asymmetry?.landing?.asymmetry || 0) > 15 ? '#FF3B30' : (asymmetry?.landing?.asymmetry || 0) > 10 ? '#FFD600' : '#00E676'};">${asymmetry?.landing?.asymmetry ?? '—'}%</div>
-              <div style="font-size:11px;color:var(--color-text-muted);">Dom: ${asymmetry?.landing?.dominant ?? '—'} · Deb: ${asymmetry?.landing?.weaker ?? '—'}</div>
-            </div>
-            <div>
-              <div style="font-size:10px;color:var(--color-text-muted);margin-bottom:4px;text-transform:uppercase;">Forza Picco</div>
-              <div style="font-size:22px;font-family:var(--font-display);font-weight:700;color:${(asymmetry?.peak?.asymmetry || 0) > 15 ? '#FF3B30' : (asymmetry?.peak?.asymmetry || 0) > 10 ? '#FFD600' : '#00E676'};">${asymmetry?.peak?.asymmetry ?? '—'}%</div>
-              <div style="font-size:11px;color:var(--color-text-muted);">Dom: ${asymmetry?.peak?.dominant ?? '—'} · Deb: ${asymmetry?.peak?.weaker ?? '—'}</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Force-Velocity Profile -->
-        <div style="padding:var(--sp-3);background:rgba(255,255,255,0.02);border:1px solid var(--color-border);border-radius:var(--radius);">
-          <p style="font-size:11px;color:var(--color-yellow, #FFD600);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">Profilo Forza-Velocità</p>
-          <div style="display:flex;align-items:center;gap:var(--sp-3);">
-            <div style="flex:0 0 auto;text-align:center;padding:12px 16px;background:rgba(255,214,0,0.08);border:1px solid rgba(255,214,0,0.2);border-radius:var(--radius);">
-              <div style="font-size:20px;font-family:var(--font-display);font-weight:800;color:#FFD600;">${Utils.escapeHtml(profile?.classification || '—')}</div>
-              <div style="font-size:10px;color:var(--color-text-muted);margin-top:4px;">Classificazione</div>
-            </div>
-            <div style="flex:1;">
-              <div style="font-size:12px;color:var(--color-text-muted);line-height:1.5;">${Utils.escapeHtml(profile?.recommendation || '')}</div>
-              <div style="margin-top:8px;display:flex;gap:16px;">
-                <div><span style="font-size:16px;font-weight:700;">${profile?.jumpHeight ?? '—'} cm</span><br><span style="font-size:10px;color:var(--color-text-muted);">Altezza Salto</span></div>
-                <div><span style="font-size:16px;font-weight:700;">${profile?.peakForceBW ?? '—'} BW</span><br><span style="font-size:10px;color:var(--color-text-muted);">Forza / Peso</span></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        ${ranking && ranking.length > 0 ? `
-        <!-- Team Ranking -->
-        <div style="padding:var(--sp-3);background:rgba(255,255,255,0.02);border:1px solid var(--color-border);border-radius:var(--radius);">
-          <p style="font-size:11px;color:var(--color-text-muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">Classifica Squadra (RSImod)</p>
-          <div style="display:flex;flex-direction:column;gap:6px;">
-            ${ranking.map((r, i) => `
-              <div style="display:flex;align-items:center;gap:10px;padding:6px 10px;border-radius:6px;background:${r.athlete_id === athleteId ? 'rgba(255,0,255,0.08)' : 'transparent'};">
-                <span style="font-size:13px;font-weight:700;color:var(--color-text-muted);width:20px;">#${i + 1}</span>
-                <span style="flex:1;font-size:13px;">${Utils.escapeHtml(r.full_name || '—')}</span>
-                <span style="font-size:13px;font-weight:700;color:${r.athlete_id === athleteId ? 'var(--color-pink)' : 'var(--color-text)'};">${r.rsimod ?? '—'}</span>
-              </div>`).join('')}
-          </div>
-        </div>` : ''}
       `;
+
     } catch (err) {
       container.innerHTML = `
         <div style="text-align:center;padding:var(--sp-4);background:rgba(255,59,48,0.04);border:1px solid rgba(255,59,48,0.2);border-radius:var(--radius);">
@@ -1047,13 +1304,12 @@ const Athletes = (() => {
     }
   }
 
-
   // ─── METRIC LOG MODAL ─────────────────────────────────────────────────────
   function showMetricModal(athleteId) {
     const m = UI.modal({
       title: 'Registra Carico',
       body: `
-        <div class="form-group">
+  < div class="form-group" >
           <label class="form-label" for="metric-date">Data</label>
           <input id="metric-date" class="form-input" type="date" value="${Utils.isoDate()}" required>
         </div>
@@ -1073,8 +1329,8 @@ const Athletes = (() => {
         </div>
         <div id="metric-error" class="form-error hidden"></div>`,
       footer: `
-        <button class="btn btn-ghost btn-sm" id="metric-cancel" type="button">Annulla</button>
-        <button class="btn btn-primary btn-sm" id="metric-save" type="button">SALVA</button>`,
+  < button class="btn btn-ghost btn-sm" id = "metric-cancel" type = "button" > Annulla</button >
+    <button class="btn btn-primary btn-sm" id="metric-save" type="button">SALVA</button>`,
     });
 
     document.getElementById('metric-cancel')?.addEventListener('click', () => m.close(), { signal: _ac.signal });
@@ -1097,7 +1353,7 @@ const Athletes = (() => {
       try {
         const res = await Store.api('logMetric', 'athletes', { athlete_id: athleteId, log_date: date, duration_min: dur, rpe, notes });
         m.close();
-        UI.toast(`Carico salvato. ACWR: ${res.acwr?.score ?? '—'}`, 'success');
+        UI.toast(`Carico salvato.ACWR: ${res.acwr?.score ?? '—'} `, 'success');
         _renderAthleteDetail(athleteId); // Refresh profile
       } catch (err) {
         errEl.textContent = err.message;
@@ -1126,7 +1382,7 @@ const Athletes = (() => {
   // ─── CREATE ATHLETE MODAL (Multi-Step Wizard) ──────────────────────────────
   function showCreateModal() {
     const teamOptions = _teams.map(t =>
-      `<option value="${Utils.escapeHtml(t.id)}">${Utils.escapeHtml(formatTeamLabel(t.category, t.name))}</option>`
+      `< option value = "${Utils.escapeHtml(t.id)}" > ${Utils.escapeHtml(formatTeamLabel(t.category, t.name))}</option > `
     ).join('');
 
     let _wizardStep = 1;
@@ -1135,22 +1391,23 @@ const Athletes = (() => {
     const stepTitles = ['Dati Obbligatori', 'Dati Sportivi', 'Contatti', 'Documenti'];
 
     const progressBar = () => `
-      <div style="display:flex;align-items:center;gap:0;margin-bottom:20px;">
-        ${[1, 2, 3, 4].map(s => `
+  < div style = "display:flex;align-items:center;gap:0;margin-bottom:20px;" >
+    ${[1, 2, 3, 4].map(s => `
           <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;">
             <div style="width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;
               ${s < _wizardStep ? 'background:var(--color-success);color:#000;' : s === _wizardStep ? 'background:var(--color-pink);color:#fff;' : 'background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.4);'}">${s < _wizardStep ? '✓' : s}</div>
             <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;color:${s === _wizardStep ? 'var(--color-white)' : 'rgba(255,255,255,0.35)'};">${stepTitles[s - 1]}</div>
           </div>
           ${s < 4 ? `<div style="flex:0.5;height:2px;background:${s < _wizardStep ? 'var(--color-success)' : 'rgba(255,255,255,0.1)'};margin-bottom:20px;"></div>` : ''}
-        `).join('')}
-      </div>`;
+        `).join('')
+      }
+      </div > `;
 
     const step1 = `
-      <div class="form-grid">
+  < div class="form-grid" >
         <div class="form-group"><label class="form-label" for="na-fname">Nome *</label><input id="na-fname" class="form-input" type="text" placeholder="Marco" required></div>
         <div class="form-group"><label class="form-label" for="na-lname">Cognome *</label><input id="na-lname" class="form-input" type="text" placeholder="Rossi" required></div>
-      </div>
+      </div >
       <div class="form-grid">
         <div class="form-group"><label class="form-label" for="na-team">Squadra *</label><select id="na-team" class="form-select"><option value="">Seleziona...</option>${teamOptions}</select></div>
         <div class="form-group"><label class="form-label" for="na-birth">Data di Nascita</label><input id="na-birth" class="form-input" type="date"></div>
@@ -1161,20 +1418,20 @@ const Athletes = (() => {
       </div>`;
 
     const step2 = `
-      <div class="form-grid">
+  < div class="form-grid" >
         <div class="form-group"><label class="form-label" for="na-role">Ruolo</label><input id="na-role" class="form-input" type="text" placeholder="Palleggiatrice"></div>
         <div class="form-group"><label class="form-label" for="na-jersey">N° Maglia</label><input id="na-jersey" class="form-input" type="number" min="1" max="99" placeholder="10"></div>
-      </div>
+      </div >
   <div class="form-grid">
     <div class="form-group"><label class="form-label" for="na-height">Altezza (cm)</label><input id="na-height" class="form-input" type="number" placeholder="180"></div>
     <div class="form-group"><label class="form-label" for="na-weight">Peso (kg)</label><input id="na-weight" class="form-input" type="number" placeholder="75"></div>
   </div>`;
 
     const step3 = `
-      <div class="form-grid">
+    < div class="form-grid" >
         <div class="form-group"><label class="form-label" for="na-phone">Cellulare</label><input id="na-phone" class="form-input" type="tel" placeholder="+39 333 1234567"></div>
         <div class="form-group"><label class="form-label" for="na-email">E-Mail</label><input id="na-email" class="form-input" type="email" placeholder="atleta@email.com"></div>
-      </div>
+      </div >
   <div class="form-group">
     <label class="form-label" for="na-resaddr" style="display:flex;align-items:center;gap:8px;">
       Via di Residenza
@@ -1189,10 +1446,10 @@ const Athletes = (() => {
   </div>`;
 
     const step4 = `
-      <div class="form-grid">
+    < div class="form-grid" >
         <div class="form-group"><label class="form-label" for="na-fiscal">Codice Fiscale</label><input id="na-fiscal" class="form-input" type="text" placeholder="RSSMRC90A01H501Z" maxlength="16" style="text-transform:uppercase;"></div>
         <div class="form-group"><label class="form-label" for="na-doc">Documento d'Identità</label><input id="na-doc" class="form-input" type="text" placeholder="CI / Passaporto"></div>
-      </div>
+      </div >
       <div class="form-grid">
         <div class="form-group"><label class="form-label" for="na-medcert">Scadenza Cert. Medico</label><input id="na-medcert" class="form-input" type="date"></div>
         <div class="form-group"><label class="form-label" for="na-fipav">Matricola FIPAV</label><input id="na-fipav" class="form-input" type="text" placeholder="FI-123456"></div>
@@ -1220,7 +1477,7 @@ const Athletes = (() => {
     const _renderStep = () => {
       const body = document.getElementById('wizard-body');
       if (!body) return;
-      body.innerHTML = progressBar() + `<div id="wizard-step-content">${steps[_wizardStep - 1]}</div><div id="na-error" class="form-error hidden"></div>`;
+      body.innerHTML = progressBar() + `< div id = "wizard-step-content" > ${steps[_wizardStep - 1]}</div > <div id="na-error" class="form-error hidden"></div>`;
       _restoreFields();
 
       // Update footer buttons
@@ -1250,9 +1507,9 @@ const Athletes = (() => {
 
     const m = UI.modal({
       title: 'Nuovo Atleta',
-      body: `<div id="wizard-body"></div>`,
+      body: `< div id = "wizard-body" ></div > `,
       footer: `
-        <button class="btn btn-ghost btn-sm" id="na-cancel" type="button">Annulla</button>
+  < button class="btn btn-ghost btn-sm" id = "na-cancel" type = "button" > Annulla</button >
         <button class="btn btn-default btn-sm" id="na-prev" type="button" style="display:none;"><i class="ph ph-arrow-left"></i> Indietro</button>
         <button class="btn btn-primary btn-sm" id="na-next" type="button">Avanti <i class="ph ph-arrow-right"></i></button>
         <button class="btn btn-primary btn-sm" id="na-save" type="button" style="display:none;">CREA ATLETA</button>`,
@@ -1328,13 +1585,13 @@ const Athletes = (() => {
   // ─── EDIT ATHLETE MODAL ───────────────────────────────────────────────────
   function showEditModal(a) {
     const teamOptions = _teams.map(t =>
-      `<option value="${Utils.escapeHtml(t.id)}" ${a.team_id === t.id ? 'selected' : ''}>${Utils.escapeHtml(formatTeamLabel(t.category, t.name))}</option>`
+      `< option value = "${Utils.escapeHtml(t.id)}" ${a.team_id === t.id ? 'selected' : ''}> ${Utils.escapeHtml(formatTeamLabel(t.category, t.name))}</option > `
     ).join('');
 
     const m = UI.modal({
       title: 'Modifica Atleta',
       body: `
-        <div class="form-grid">
+  < div class="form-grid" >
           <div class="form-group">
             <label class="form-label" for="ea-fname">Nome *</label>
             <input id="ea-fname" class="form-input" type="text" value="${Utils.escapeHtml(a.first_name || '')}" required>
@@ -1343,7 +1600,7 @@ const Athletes = (() => {
             <label class="form-label" for="ea-lname">Cognome *</label>
             <input id="ea-lname" class="form-input" type="text" value="${Utils.escapeHtml(a.last_name || '')}" required>
           </div>
-        </div>
+        </div >
         <div class="form-grid">
           <div class="form-group">
             <label class="form-label" for="ea-team">Squadra *</label>
@@ -1432,8 +1689,8 @@ const Athletes = (() => {
         </div>
         <div id="ea-error" class="form-error hidden"></div>`,
       footer: `
-        <button class="btn btn-ghost btn-sm" id="ea-cancel" type="button">Annulla</button>
-        <button class="btn btn-primary btn-sm" id="ea-save" type="button">SALVA MODIFICHE</button>`,
+  < button class="btn btn-ghost btn-sm" id = "ea-cancel" type = "button" > Annulla</button >
+    <button class="btn btn-primary btn-sm" id="ea-save" type="button">SALVA MODIFICHE</button>`,
     });
 
     document.getElementById('ea-cancel')?.addEventListener('click', () => m.close(), { signal: _ac.signal });

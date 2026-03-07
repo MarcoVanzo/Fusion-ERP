@@ -4520,3 +4520,329 @@ h3 {
   font-size: 13px;
   color: var(--text-muted);
 }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   CMJ DASHBOARD — SVG ANATOMICO NEUROMUSCOLARE
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Muscle state animations ── */
+@keyframes pulse-yellow {
+
+  0%,
+  100% {
+    fill-opacity: 0.55;
+    filter: drop-shadow(0 0 4px #FFD600);
+  }
+
+  50% {
+    fill-opacity: 1.0;
+    filter: drop-shadow(0 0 14px #FFD600);
+  }
+}
+
+@keyframes pulse-red {
+
+  0%,
+  100% {
+    fill-opacity: 0.65;
+    filter: drop-shadow(0 0 6px #FF1744);
+  }
+
+  50% {
+    fill-opacity: 1.0;
+    filter: drop-shadow(0 0 22px #FF1744);
+  }
+}
+
+@keyframes pulse-alert {
+
+  0%,
+  100% {
+    fill-opacity: 0.6;
+    filter: drop-shadow(0 0 5px #FF6D00);
+  }
+
+  50% {
+    fill-opacity: 1.0;
+    filter: drop-shadow(0 0 18px #FF6D00);
+  }
+}
+
+@keyframes pulse-green {
+
+  0%,
+  100% {
+    fill-opacity: 0.45;
+  }
+
+  50% {
+    fill-opacity: 0.7;
+  }
+}
+
+/* Muscle fill classes applied dynamically to SVG paths */
+.muscle-default {
+  fill: rgba(255, 255, 255, 0.08);
+  transition: fill 0.4s;
+}
+
+.muscle-green {
+  fill: #00E676;
+  fill-opacity: 0.45;
+  animation: pulse-green 3s ease-in-out infinite;
+}
+
+.muscle-yellow {
+  fill: #FFD600;
+  animation: pulse-yellow 1.6s ease-in-out infinite;
+}
+
+.muscle-red {
+  fill: #FF1744;
+  animation: pulse-red 1.0s ease-in-out infinite;
+}
+
+.muscle-alert {
+  fill: #FF6D00;
+  animation: pulse-alert 1.3s ease-in-out infinite;
+}
+
+/* ── CMJ Dashboard Layout ── */
+.cmj-dashboard {
+  display: grid;
+  grid-template-columns: 440px 1fr;
+  gap: var(--sp-3);
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .cmj-dashboard {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── SVG Body Container ── */
+.cmj-body-panel {
+  position: sticky;
+  top: 80px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--sp-2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-1);
+}
+
+.cmj-body-views {
+  display: flex;
+  gap: var(--sp-2);
+  width: 100%;
+  justify-content: center;
+}
+
+.cmj-body-view {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.cmj-body-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.cmj-body-svg {
+  width: 100%;
+  max-width: 180px;
+  height: auto;
+}
+
+/* ── CMJ KPI Cards ── */
+.cmj-kpi-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-2);
+}
+
+@media (max-width: 600px) {
+  .cmj-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cmj-kpi-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--sp-2) var(--sp-3);
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.3s;
+}
+
+.cmj-kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--cmj-kpi-color, var(--color-text-muted));
+  box-shadow: 0 0 10px var(--cmj-kpi-color, transparent);
+  transition: background 0.4s;
+}
+
+.cmj-kpi-card.status-green {
+  --cmj-kpi-color: #00E676;
+}
+
+.cmj-kpi-card.status-yellow {
+  --cmj-kpi-color: #FFD600;
+}
+
+.cmj-kpi-card.status-red {
+  --cmj-kpi-color: #FF1744;
+}
+
+.cmj-kpi-card.status-alert {
+  --cmj-kpi-color: #FF6D00;
+}
+
+.cmj-kpi-name {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-muted);
+  margin-bottom: 6px;
+}
+
+.cmj-kpi-value {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--cmj-kpi-color, var(--color-white));
+  letter-spacing: -0.03em;
+}
+
+.cmj-kpi-unit {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--color-text-muted);
+  margin-left: 2px;
+}
+
+.cmj-kpi-delta {
+  font-size: 11px;
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cmj-kpi-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid;
+}
+
+.cmj-kpi-badge.green {
+  background: rgba(0, 230, 118, 0.12);
+  color: #00E676;
+  border-color: rgba(0, 230, 118, 0.3);
+}
+
+.cmj-kpi-badge.yellow {
+  background: rgba(255, 214, 0, 0.12);
+  color: #FFD600;
+  border-color: rgba(255, 214, 0, 0.3);
+}
+
+.cmj-kpi-badge.red {
+  background: rgba(255, 23, 68, 0.12);
+  color: #FF1744;
+  border-color: rgba(255, 23, 68, 0.3);
+}
+
+.cmj-kpi-badge.alert {
+  background: rgba(255, 109, 0, 0.12);
+  color: #FF6D00;
+  border-color: rgba(255, 109, 0, 0.3);
+}
+
+/* ── Force Curve Chart ── */
+.cmj-force-curve {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--sp-2) var(--sp-3);
+}
+
+.cmj-force-svg {
+  width: 100%;
+  height: 80px;
+  overflow: visible;
+}
+
+/* ── Coach Recommendation ── */
+.cmj-coach-msg {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--sp-2) var(--sp-3);
+  border-left: 3px solid var(--cmj-border-color, var(--color-text-muted));
+}
+
+.cmj-coach-msg.status-green {
+  --cmj-border-color: #00E676;
+}
+
+.cmj-coach-msg.status-yellow {
+  --cmj-border-color: #FFD600;
+}
+
+.cmj-coach-msg.status-red {
+  --cmj-border-color: #FF1744;
+}
+
+.cmj-coach-msg.status-alert {
+  --cmj-border-color: #FF6D00;
+}
+
+/* ── Muscle Legend ── */
+.cmj-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.cmj-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  color: var(--color-text-muted);
+}
+
+.cmj-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
