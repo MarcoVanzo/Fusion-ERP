@@ -1,0 +1,215 @@
+<?php
+/**
+ * Health Repository — Medical Certificates & Injury Records
+ * Fusion ERP v1.0 — Module C
+ */
+
+declare(strict_types=1);
+
+namespace FusionERP\Modules\Health;
+
+use FusionERP\Shared\Database;
+
+class HealthRepository
+{
+    private \PDO $db;
+
+    public function __construct()
+    {
+        $this->db = Database::getInstance();
+    }
+
+    // ─── MEDICAL CERTIFICATE ─────────────────────────────────────────────────
+
+    /**
+     * Update the medical certificate fields on the athlete record.
+     */
+    public function updateCertificate(string $athleteId, array $data): void
+    {
+        $stmt = $this->db->prepare(
+            'UPDATE athletes
+             SET medical_cert_type = :cert_type,
+                 medical_cert_expires_at = :expires_at,
+                 medical_cert_issued_at = :issued_at,
+                 medical_cert_file_path = :file_path
+             WHERE id = :id AND deleted_at IS NULL'
+        );
+        $data[':id'] = $athleteId;
+        $stmt->execute($data);
+    }
+
+    /**
+     * Get certificate status for an athlete.
+     * @return array { cert_type, expires_at, issued_at, file_path, valid, days_until_expiry, alert }
+     */
+    public function getCertificateStatus(string $athleteId): array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT medical_cert_type AS cert_type,
+                    medical_cert_expires_at AS expires_at,
+                    medical_cert_issued_at AS issued_at,
+                    medical_cert_file_path AS file_path
+             FROM athletes
+             WHERE id = :id AND deleted_at IS NULL
+             LIMIT 1'
+        );
+        $stmt->execute([':id' => $athleteId]);
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        if (!$row || empty($row['expires_at'])) {
+            return [
+                'cert_type' => $row['cert_type'] ?? null,
+                'expires_at' => null,
+                'issued_at' => $row['issued_at'] ?? null,
+                'file_path' => $row['file_path'] ?? null,
+                'valid' => false,
+                'days_until_expiry' => null,
+                'alert' => 'NONE',
+            ];
+        }
+
+        $expiry = new \DateTime($row['expires_at']);
+        $today = new \DateTime();
+        $diff = (int)$today->diff($expiry)->format('%r%a');
+        $valid = $diff >= 0;
+
+        $alert = match (true) {
+                $diff < 0 => 'EXPIRED',
+                $diff <= 7 => 'URGENT_7',
+                $diff <= 15 => 'WARNING_15',
+                $diff <= 30 => 'WARNING_30',
+                default => 'NONE',
+            };
+
+        return [
+            'cert_type' => $row['cert_type'],
+            'expires_at' => $row['expires_at'],
+            'issued_at' => $row['issued_at'],
+            'file_path' => $row['file_path'],
+            'valid' => $valid,
+            'days_until_expiry' => $diff,
+            'alert' => $alert,
+        ];
+    }
+
+    /**
+     * Get all athletes with certificates expiring within N days.
+     * Used by the cron job for alert notifications.
+     */
+    public function getExpiringCertificates(int $days = 30): array
+    {
+        $stmt = $this->db->prepare(
+            "SELECT a.id AS athlete_id, a.full_name, a.email, a.phone,
+                    a.medical_cert_type, a.medical_cert_expires_at,
+                    a.tenant_id, a.parent_contact, a.parent_phone,
+                    DATEDIFF(a.medical_cert_expires_at, CURDATE()) AS days_until_expiry
+             FROM athletes a
+             WHERE a.deleted_at IS NULL
+               AND a.is_active = 1
+               AND a.medical_cert_expires_at IS NOT NULL
+               AND a.medical_cert_expires_at <= DATE_ADD(CURDATE(), INTERVAL :days DAY)
+             ORDER BY a.medical_cert_expires_at ASC"
+        );
+        $stmt->bindValue(':days', $days, \PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    // ─── INJURIES ────────────────────────────────────────────────────────────
+
+    /**
+     * Insert a new injury record.
+     */
+    public function insertInjury(array $data): void
+    {
+        $stmt = $this->db->prepare(
+            'INSERT INTO injury_records (id, tenant_id, athlete_id, injury_date, type, body_part, severity, stop_days, return_date, notes, treated_by, created_by)
+             VALUES (:id, :tenant_id, :athlete_id, :injury_date, :type, :body_part, :severity, :stop_days, :return_date, :notes, :treated_by, :created_by)'
+        );
+        $stmt->execute($data);
+    }
+
+    /**
+     * Get the injury history for an athlete.
+     */
+    public function getInjuries(string $athleteId): array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT id, injury_date, type, body_part, severity, stop_days, return_date, notes, treated_by, created_at
+             FROM injury_records
+             WHERE athlete_id = :athlete_id
+             ORDER BY injury_date DESC'
+        );
+        $stmt->execute([':athlete_id' => $athleteId]);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Update injury (e.g. mark return date).
+     */
+    public function updateInjury(string $injuryId, array $data): void
+    {
+        $data[':id'] = $injuryId;
+        $stmt = $this->db->prepare(
+            'UPDATE injury_records
+             SET return_date = :return_date,
+                 notes = :notes,
+                 stop_days = :stop_days
+             WHERE id = :id'
+        );
+        $stmt->execute($data);
+    }
+
+    /**
+     * Get a global health summary for the Athletes Dashboard.
+     * Scoped to the current tenant to prevent cross-tenant data leaks.
+     *
+     * @param string $tenantId  The tenant to scope results to
+     */
+    public function getGlobalSummary(string $tenantId): array
+    {
+        $stats = [
+            'active_injuries' => 0,
+            'expired_certificates' => 0,
+            'expiring_soon_certificates' => 0,
+        ];
+
+        // 1. Active injuries (return_date IS NULL) — scoped to tenant via athletes join
+        $stmt = $this->db->prepare(
+            'SELECT COUNT(*)
+             FROM injury_records ir
+             JOIN athletes a ON a.id = ir.athlete_id
+             WHERE ir.return_date IS NULL
+               AND a.deleted_at IS NULL
+               AND a.tenant_id = :tid'
+        );
+        $stmt->execute([':tid' => $tenantId]);
+        $stats['active_injuries'] = (int)$stmt->fetchColumn();
+
+        // 2. Expired certificates — scoped to tenant
+        $stmt = $this->db->prepare(
+            'SELECT COUNT(*)
+             FROM athletes
+             WHERE deleted_at IS NULL
+               AND is_active = 1
+               AND tenant_id = :tid
+               AND medical_cert_expires_at < CURDATE()'
+        );
+        $stmt->execute([':tid' => $tenantId]);
+        $stats['expired_certificates'] = (int)$stmt->fetchColumn();
+
+        // 3. Expiring soon (next 15 days) — scoped to tenant
+        $stmt = $this->db->prepare(
+            'SELECT COUNT(*)
+             FROM athletes
+             WHERE deleted_at IS NULL
+               AND is_active = 1
+               AND tenant_id = :tid
+               AND medical_cert_expires_at BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 15 DAY)'
+        );
+        $stmt->execute([':tid' => $tenantId]);
+        $stats['expiring_soon_certificates'] = (int)$stmt->fetchColumn();
+
+        return $stats;
+    }
+}

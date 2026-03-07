@@ -1,0 +1,9 @@
+{
+    "constraint": "constraints/vertexai.allowedGenAIModels",
+    "listPolicy": {
+        "allowedValues": [
+            "ALL"
+        ],
+        "inheritFromParent": false
+    }
+}

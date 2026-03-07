@@ -27,8 +27,8 @@ class SocialController
      */
     public function status(): void
     {
-        $user = Auth::requireAuth();
-        $token = $this->repo->getToken((int)$user['id']);
+        $user = Auth::requireRead('social');
+        $token = $this->repo->getToken((string)$user['id']);
 
         if (!$token) {
             Response::success([
@@ -46,8 +46,8 @@ class SocialController
             if ($daysUntilExpiry < 7) {
                 $refreshed = $this->repo->refreshToken($token['access_token']);
                 if ($refreshed) {
-                    $this->repo->saveToken((int)$user['id'], array_merge($token, $refreshed));
-                    $token = $this->repo->getToken((int)$user['id']);
+                    $this->repo->saveToken((string)$user['id'], array_merge($token, $refreshed));
+                    $token = $this->repo->getToken((string)$user['id']);
                 }
             }
         }
@@ -71,7 +71,7 @@ class SocialController
      */
     public function connect(): void
     {
-        $user = Auth::requireRole('manager');
+        $user = Auth::requireWrite('social');
 
         $appId = getenv('META_APP_ID');
         if (empty($appId) || $appId === 'YOUR_META_APP_ID') {
@@ -79,7 +79,7 @@ class SocialController
         }
 
         // Store token → userId in DB (with file fallback), get short hex token for state
-        $stateToken = $this->repo->storeOAuthToken((int)$user['id']);
+        $stateToken = $this->repo->storeOAuthToken((string)$user['id']);
         $oauthUrl = $this->repo->getOAuthUrl($stateToken);
 
         error_log('[SOCIAL] connect: userId=' . $user['id'] . ', stateToken=' . $stateToken);
@@ -151,7 +151,7 @@ class SocialController
 
         try {
             $tokenData = $this->repo->exchangeCodeForToken($code);
-            $this->repo->saveToken($userId, $tokenData);
+            $this->repo->saveToken((string)$userId, $tokenData);
 
             Audit::log('META_CONNECT', 'meta_tokens', (string)$userId, null, [
                 'ig_username' => $tokenData['ig_username'],
@@ -167,7 +167,7 @@ class SocialController
             // in the redirect URL (potential XSS if frontend renders the hash without sanitisation).
             $errorCode = bin2hex(random_bytes(4)); // opaque reference for support
             error_log('[SOCIAL] OAuth callback error [' . $errorCode . ']: ' . $e->getMessage());
-            header('Location: ' . $returnUrl . '#social?error=' . urlencode('Errore di autenticazione (' . $errorCode . '). Contatta il supporto.'));
+            header('Location: ' . $returnUrl . '#social?error=' . urlencode('Errore di autenticazione (' . $errorCode . '): ' . $e->getMessage()));
             exit;
         }
     }
@@ -185,10 +185,10 @@ class SocialController
             Response::error('Endpoint non disponibile in produzione.', 403);
         }
 
-        Auth::requireAuth();
+        Auth::requireRead('social');
 
         $testToken = bin2hex(random_bytes(16));
-        $testUserId = 99;
+        $testUserId = '99';
         $testExpires = date('Y-m-d H:i:s', time() + 600);
 
         $result = ['token' => $testToken, 'steps' => []];
@@ -232,7 +232,7 @@ class SocialController
      */
     public function lastCallback(): void
     {
-        Auth::requireAuth();
+        Auth::requireRead('social');
 
         try {
             $rows = $this->repo->getDb()
@@ -261,10 +261,10 @@ class SocialController
      */
     public function disconnect(): void
     {
-        $user = Auth::requireRole('manager');
+        $user = Auth::requireWrite('social');
 
-        $token = $this->repo->getToken((int)$user['id']);
-        $this->repo->deleteToken((int)$user['id']);
+        $token = $this->repo->getToken((string)$user['id']);
+        $this->repo->deleteToken((string)$user['id']);
 
         Audit::log('META_DISCONNECT', 'meta_tokens', (string)$user['id'], $token, null);
         Response::success(['message' => 'Account Meta disconnesso']);
@@ -276,15 +276,16 @@ class SocialController
      */
     public function insights(): void
     {
-        $user = Auth::requireAuth();
+        $user = Auth::requireRead('social');
         $days = max(1, min(90, (int)(filter_input(INPUT_GET, 'days', FILTER_SANITIZE_NUMBER_INT) ?: 28)));
 
-        $token = $this->repo->getToken((int)$user['id']);
+        $token = $this->repo->getToken((string)$user['id']);
 
         // If no token connected, return mock data for demo
         if (!$token || !$this->repo->isTokenValid($token)) {
             $mockData = $this->repo->getMockData($days);
             Response::success($mockData);
+            return;
         }
 
         try {
@@ -301,7 +302,13 @@ class SocialController
             }
 
             if (!empty($token['page_id'])) {
-                $fbInsights = $this->repo->getFbPageInsights($token['page_id'], $token['access_token'], $days);
+                try {
+                    $fbInsights = $this->repo->getFbPageInsights($token['page_id'], $token['access_token'], $days);
+                }
+                catch (\Throwable $fbError) {
+                    error_log('[SOCIAL] Solo Facebook Insights fallito: ' . $fbError->getMessage());
+                // Proseguiamo mostrando instagram
+                }
             }
 
             // Transform time-series insights into a flat daily array
@@ -331,10 +338,10 @@ class SocialController
      */
     public function posts(): void
     {
-        $user = Auth::requireAuth();
+        $user = Auth::requireRead('social');
         $limit = max(1, min(50, (int)(filter_input(INPUT_GET, 'limit', FILTER_SANITIZE_NUMBER_INT) ?: 12)));
 
-        $token = $this->repo->getToken((int)$user['id']);
+        $token = $this->repo->getToken((string)$user['id']);
 
         if (!$token || !$this->repo->isTokenValid($token) || empty($token['ig_account_id'])) {
             // Return mock posts

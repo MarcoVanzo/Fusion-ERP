@@ -31,7 +31,12 @@ const Transport = (() => {
 
     try {
       _events = await Store.get('listEvents', 'transport');
-      renderEventList();
+      const currentRoute = typeof Router !== 'undefined' ? Router.getCurrentRoute() : null;
+      if (currentRoute === 'transport-drivers') {
+        showDriversTab();
+      } else {
+        renderEventList();
+      }
     } catch (err) {
       app.innerHTML = Utils.emptyState('Errore nel caricamento eventi', err.message);
       UI.toast('Errore caricamento eventi', 'error');
@@ -229,6 +234,8 @@ const Transport = (() => {
           </div>
           <div style="display:flex; gap:12px; flex-wrap:wrap;">
             <button class="btn-dash" id="storico-btn" type="button"><i class="ph ph-clock-counter-clockwise" style="font-size:18px;"></i> STORICO</button>
+            <button class="btn-dash" id="autisti-btn" type="button"><i class="ph ph-steering-wheel" style="font-size:18px;"></i> AUTISTI</button>
+            <button class="btn-dash" id="mezzi-btn" type="button"><i class="ph ph-bus" style="font-size:18px;"></i> GESTIONE MEZZI</button>
             <button class="btn-dash pink" id="nuovo-trasporto-btn" type="button"><i class="ph ph-van" style="font-size:18px;"></i> NUOVO TRASPORTO</button>
             ${canCreate ? `<button class="btn-dash primary" id="new-event-btn" type="button"><i class="ph ph-plus-circle" style="font-size:20px;"></i> NUOVO EVENTO</button>` : ''}
           </div>
@@ -312,6 +319,8 @@ const Transport = (() => {
     document.getElementById('new-event-btn')?.addEventListener('click', () => showCreateEventModal(), { signal: _ac.signal });
     document.getElementById('nuovo-trasporto-btn')?.addEventListener('click', () => showNuovoTrasporto(), { signal: _ac.signal });
     document.getElementById('storico-btn')?.addEventListener('click', () => showStorico(), { signal: _ac.signal });
+    document.getElementById('autisti-btn')?.addEventListener('click', () => showDriversTab(), { signal: _ac.signal });
+    document.getElementById('mezzi-btn')?.addEventListener('click', () => Router.navigate('transport-fleet'), { signal: _ac.signal });
     document.getElementById('qa-nuovo-trasporto')?.addEventListener('click', () => showNuovoTrasporto(), { signal: _ac.signal });
     document.getElementById('qa-new-event')?.addEventListener('click', () => showCreateEventModal(), { signal: _ac.signal });
     _attachEventListeners();
@@ -1893,11 +1902,191 @@ const Transport = (() => {
     }
   }
 
+  // ═══ TAB AUTISTI ═══════════════════════════════════════════════════════════
+  async function showDriversTab() {
+    const app = document.getElementById('app');
+    app.innerHTML = UI.skeletonPage();
+    const user = App.getUser();
+    const canManage = ['admin', 'manager', 'operator'].includes(user?.role);
+
+    try {
+      const drivers = await Store.get('listDrivers', 'transport');
+
+      const styles = `
+        <style>
+          .drv-page { padding: 24px; animation: fade-in 0.4s ease-out; }
+          @keyframes fade-in { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+          .drv-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:32px; flex-wrap:wrap; gap:16px; }
+          .drv-title { font-family:var(--font-display); font-size:28px; font-weight:800; text-transform:uppercase; background:linear-gradient(90deg,#fff,rgba(255,255,255,0.6)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; display:flex; align-items:center; gap:14px; }
+          .drv-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap:20px; }
+          .drv-card { background:rgba(20,20,25,0.6); backdrop-filter:blur(16px); border:1px solid rgba(255,255,255,0.06); border-radius:20px; padding:24px; position:relative; overflow:hidden; box-shadow:0 8px 32px rgba(0,0,0,0.3); transition:all 0.3s; }
+          .drv-card:hover { border-color:rgba(0,229,255,0.3); transform:translateY(-3px); }
+          .drv-card::before { content:''; position:absolute; top:0; left:0; width:100%; height:3px; background:linear-gradient(90deg,var(--accent-cyan,#00e5ff),transparent); }
+          .drv-card.inactive::before { background:linear-gradient(90deg,rgba(255,255,255,0.2),transparent); }
+          .drv-avatar { width:52px; height:52px; border-radius:14px; background:rgba(0,229,255,0.1); border:1px solid rgba(0,229,255,0.3); display:flex; align-items:center; justify-content:center; color:#00e5ff; font-size:24px; margin-bottom:16px; }
+          .drv-name { font-family:var(--font-display); font-size:18px; font-weight:800; text-transform:uppercase; color:#fff; margin-bottom:6px; }
+          .drv-meta { font-size:13px; color:rgba(255,255,255,0.5); display:flex; flex-direction:column; gap:4px; }
+          .drv-meta i { margin-right:6px; }
+          .drv-badge { display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px; margin-top:12px; }
+          .drv-badge.active { background:rgba(0,230,118,0.1); color:#00E676; border:1px solid rgba(0,230,118,0.3); }
+          .drv-badge.inactive { background:rgba(255,255,255,0.05); color:rgba(255,255,255,0.4); border:1px solid rgba(255,255,255,0.1); }
+          .drv-actions { display:flex; gap:8px; margin-top:16px; padding-top:16px; border-top:1px dashed rgba(255,255,255,0.08); }
+          .btn-drv { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); border-radius:10px; color:rgba(255,255,255,0.7); font-size:12px; font-weight:600; padding:6px 14px; cursor:pointer; transition:all 0.2s; text-transform:uppercase; letter-spacing:1px; display:inline-flex; align-items:center; gap:6px; }
+          .btn-drv:hover { background:rgba(255,255,255,0.12); color:#fff; }
+          .btn-drv.danger { border-color:rgba(255,26,26,0.3); color:#ff4444; }
+          .btn-drv.danger:hover { background:rgba(255,26,26,0.1); }
+        </style>
+      `;
+
+      app.innerHTML = styles + `
+        <div class="drv-page">
+          <div class="drv-top">
+            <div class="drv-title">
+              <button class="btn-dash" id="drv-back" type="button" style="padding:10px; -webkit-text-fill-color:unset; font-size:14px;"><i class="ph ph-arrow-left" style="font-size:20px;"></i></button>
+              Gestione <span style="color:#00e5ff;">Autisti</span>
+            </div>
+            ${canManage ? `<button class="btn-dash primary" id="drv-add-btn" type="button"><i class="ph ph-plus-circle" style="font-size:18px;"></i> AGGIUNGI AUTISTA</button>` : ''}
+          </div>
+
+          <div id="drv-list">
+            ${drivers.length === 0
+          ? Utils.emptyState('Nessun autista registrato', 'Aggiungi il primo autista per iniziare.')
+          : `<div class="drv-grid">${drivers.map(d => _renderDriverCard(d, canManage)).join('')}</div>`
+        }
+          </div>
+        </div>`;
+
+      document.getElementById('drv-back')?.addEventListener('click', () => renderEventList(), { signal: _ac.signal });
+      document.getElementById('drv-add-btn')?.addEventListener('click', () => _showAddDriverModal(), { signal: _ac.signal });
+      _attachDriverActions();
+
+    } catch (err) {
+      app.innerHTML = `<div style="padding:40px;text-align:center;"><p style="color:rgba(255,255,255,0.5);margin-bottom:24px;">Errore: ${Utils.escapeHtml(err.message)}</p><button class="btn btn-ghost" id="drv-err-back" type="button"><i class="ph ph-arrow-left"></i> Torna indietro</button></div>`;
+      document.getElementById('drv-err-back')?.addEventListener('click', () => renderEventList(), { signal: _ac.signal });
+      UI.toast('Errore: ' + err.message, 'error');
+    }
+  }
+
+  function _renderDriverCard(d, canManage) {
+    const initials = (d.full_name || '').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+    const isActive = !!d.is_active;
+    return `
+      <div class="drv-card ${isActive ? '' : 'inactive'}" data-driver-id="${Utils.escapeHtml(d.id)}">
+        <div style="display:flex; gap:16px; align-items:flex-start;">
+          <div class="drv-avatar"><i class="ph ph-steering-wheel"></i></div>
+          <div style="flex:1; min-width:0;">
+            <div class="drv-name">${Utils.escapeHtml(d.full_name)}</div>
+            <div class="drv-meta">
+              ${d.phone ? `<span><i class="ph ph-phone"></i>${Utils.escapeHtml(d.phone)}</span>` : ''}
+              ${d.license_number ? `<span><i class="ph ph-identification-card"></i>Patente: ${Utils.escapeHtml(d.license_number)}</span>` : ''}
+              ${d.hourly_rate ? `<span><i class="ph ph-currency-eur"></i>${Utils.formatCurrency(d.hourly_rate)}/h</span>` : ''}
+              ${d.notes ? `<span style="margin-top:4px; color:rgba(255,255,255,0.35); font-size:12px;"><i class="ph ph-note"></i>${Utils.escapeHtml(d.notes)}</span>` : ''}
+            </div>
+            <span class="drv-badge ${isActive ? 'active' : 'inactive'}">
+              <i class="ph ${isActive ? 'ph-check-circle' : 'ph-pause-circle'}"></i>
+              ${isActive ? 'Attivo' : 'Non Attivo'}
+            </span>
+          </div>
+        </div>
+        ${canManage ? `
+        <div class="drv-actions">
+          <button class="btn-drv" data-driver-toggle="${Utils.escapeHtml(d.id)}" data-driver-active="${isActive ? '1' : '0'}" type="button">
+            <i class="ph ${isActive ? 'ph-pause' : 'ph-play'}"></i> ${isActive ? 'Disattiva' : 'Attiva'}
+          </button>
+          <button class="btn-drv danger" data-driver-delete="${Utils.escapeHtml(d.id)}" type="button">
+            <i class="ph ph-trash"></i> Elimina
+          </button>
+        </div>` : ''}
+      </div>`;
+  }
+
+  function _attachDriverActions() {
+    Utils.qsa('[data-driver-toggle]').forEach(btn => btn.addEventListener('click', async () => {
+      const id = btn.dataset.driverToggle;
+      const nowActive = btn.dataset.driverActive === '1';
+      try {
+        await Store.api('toggleDriverActive', 'transport', { id, is_active: !nowActive });
+        UI.toast(nowActive ? 'Autista disattivato' : 'Autista attivato', 'success');
+        showDriversTab();
+      } catch (err) { UI.toast('Errore: ' + err.message, 'error'); }
+    }, { signal: _ac.signal }));
+
+    Utils.qsa('[data-driver-delete]').forEach(btn => btn.addEventListener('click', () => {
+      const id = btn.dataset.driverDelete;
+      UI.confirm('Eliminare questo autista?', async () => {
+        try {
+          await Store.api('deleteDriver', 'transport', { id });
+          UI.toast('Autista eliminato', 'success');
+          showDriversTab();
+        } catch (err) { UI.toast('Errore: ' + err.message, 'error'); }
+      });
+    }, { signal: _ac.signal }));
+  }
+
+  function _showAddDriverModal() {
+    const m = UI.modal({
+      title: 'Aggiungi Autista',
+      body: `
+        <div class="form-group">
+          <label class="form-label" for="drv-name">Nome completo *</label>
+          <input id="drv-name" class="form-input" type="text" placeholder="Mario Rossi" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="drv-phone">Telefono</label>
+          <input id="drv-phone" class="form-input" type="tel" placeholder="+39 340 1234567">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="drv-license">Numero Patente</label>
+          <input id="drv-license" class="form-input" type="text" placeholder="AB1234567">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="drv-rate">Tariffa oraria (€/h)</label>
+          <input id="drv-rate" class="form-input" type="number" min="0" step="0.5" placeholder="15.00">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="drv-notes">Note</label>
+          <textarea id="drv-notes" class="form-textarea" placeholder="Disponibilità, preferenze..." style="min-height:60px;"></textarea>
+        </div>
+        <div id="drv-error" class="form-error hidden"></div>`,
+      footer: `
+        <button class="btn btn-ghost btn-sm" id="drv-cancel" type="button">Annulla</button>
+        <button class="btn btn-primary btn-sm" id="drv-save" type="button">SALVA AUTISTA</button>`,
+    });
+
+    document.getElementById('drv-cancel')?.addEventListener('click', () => m.close(), { signal: _ac.signal });
+    document.getElementById('drv-save')?.addEventListener('click', async () => {
+      const name = document.getElementById('drv-name').value.trim();
+      if (!name) {
+        document.getElementById('drv-error').textContent = 'Il nome è obbligatorio';
+        document.getElementById('drv-error').classList.remove('hidden');
+        return;
+      }
+      const btn = document.getElementById('drv-save');
+      btn.disabled = true; btn.textContent = 'Salvataggio...';
+      try {
+        await Store.api('createDriver', 'transport', {
+          full_name: name,
+          phone: document.getElementById('drv-phone').value.trim() || null,
+          license_number: document.getElementById('drv-license').value.trim() || null,
+          hourly_rate: parseFloat(document.getElementById('drv-rate').value) || null,
+          notes: document.getElementById('drv-notes').value.trim() || null,
+        });
+        m.close();
+        UI.toast('Autista aggiunto!', 'success');
+        showDriversTab();
+      } catch (err) {
+        document.getElementById('drv-error').textContent = err.message;
+        document.getElementById('drv-error').classList.remove('hidden');
+        btn.disabled = false; btn.textContent = 'SALVA AUTISTA';
+      }
+    }, { signal: _ac.signal });
+  }
+
   function destroy() {
     _ac.abort();
     _ac = new AbortController();
   }
 
-  return { destroy, init, handleAttendeeStatusChange: _handleAttendeeStatusChange };
+  return { destroy, init, handleAttendeeStatusChange: _handleAttendeeStatusChange, showDriversTab };
 })();
 window.Transport = Transport;

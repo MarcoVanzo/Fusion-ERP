@@ -240,6 +240,30 @@ const App = (() => {
                 });
             }
 
+            // ─── Sidebar Toggle ────────────────────────────────────────────────────
+            const sidebar = document.getElementById('sidebar');
+            const toggleBtn = document.getElementById('sidebarToggle');
+            if (sidebar && toggleBtn) {
+                const COLLAPSED_KEY = 'sidebar_collapsed';
+                // Restore persisted state
+                if (localStorage.getItem(COLLAPSED_KEY) === '1') {
+                    sidebar.classList.add('collapsed');
+                    toggleBtn.setAttribute('aria-expanded', 'false');
+                }
+                toggleBtn.addEventListener('click', () => {
+                    const isCollapsed = sidebar.classList.toggle('collapsed');
+                    toggleBtn.setAttribute('aria-expanded', String(!isCollapsed));
+                    localStorage.setItem(COLLAPSED_KEY, isCollapsed ? '1' : '0');
+                });
+                // Keyboard shortcut: Ctrl+B
+                document.addEventListener('keydown', (e) => {
+                    if (e.ctrlKey && e.key === 'b') {
+                        e.preventDefault();
+                        toggleBtn.click();
+                    }
+                });
+            }
+
             // Initialize notifications (resiliently)
             try {
                 _initNotifications();
@@ -296,83 +320,112 @@ const App = (() => {
 
             const navConfig = JSON.parse(textContent);
 
-            const desktopContainer = document.getElementById('desktop-nav-container');
+            const desktopContainer = document.getElementById('sidebar-nav-container');
             const mobileContainer = document.getElementById('mobile-nav-container');
 
             if (desktopContainer) desktopContainer.innerHTML = '';
             if (mobileContainer) mobileContainer.innerHTML = '';
 
-            const userRole = user.role; // e.g. 'atleta', 'allenatore', 'operatore', 'manager', 'admin'
+            const userRole = user.role;
 
             navConfig.forEach(item => {
-                // Roles Check: item.roles lists which roles can see this tab
+                // Roles Check
                 if (item.roles && item.roles.length > 0) {
-                    if (!item.roles.includes(userRole)) return; // hide tab for this role
+                    if (!item.roles.includes(userRole)) return;
                 }
+
+                const isComingSoon = item.implemented === false;
 
                 // Desktop Nav Item
                 if (desktopContainer) {
-                    const hasChildren = item.children && item.children.length > 0;
+                    const visibleChildren = (item.children || []).filter(child =>
+                        !child.roles || child.roles.length === 0 || child.roles.includes(userRole)
+                    );
 
-                    if (hasChildren) {
-                        // Create wrapper for dropdown
-                        const wrapper = document.createElement('div');
-                        wrapper.className = 'nav-dropdown-wrapper';
+                    if (visibleChildren.length > 0) {
+                        // ── Accordion Group ─────────────────────────────────────────
+                        const group = document.createElement('div');
+                        group.className = 'nav-group';
+                        group.dataset.groupId = item.id || item.path;
 
-                        const btn = document.createElement('button');
-                        btn.className = 'nav-item';
-                        btn.type = 'button';
-                        btn.dataset.route = item.path;
-                        btn.innerHTML = item.title.toUpperCase() + ' <i class="ph ph-caret-down" style="font-size:10px;margin-left:4px;opacity:0.5;"></i>';
+                        const parentBtn = document.createElement('button');
+                        parentBtn.type = 'button';
+                        parentBtn.className = 'nav-item';
+                        parentBtn.dataset.route = item.path;
+                        parentBtn.setAttribute('aria-expanded', 'false');
+                        if (isComingSoon) parentBtn.style.opacity = '0.4';
 
-                        if (item.implemented === false) {
-                            btn.style.opacity = '0.35';
-                            btn.style.cursor = 'default';
-                        } else {
-                            btn.addEventListener('click', () => Router.navigate(item.path));
-                        }
-                        wrapper.appendChild(btn);
+                        parentBtn.innerHTML = `
+                            <span class="nav-icon"><i class="ph ph-${item.icon || 'circle'}" aria-hidden="true"></i></span>
+                            <span class="nav-label">${Utils.escapeHtml(item.title)}</span>
+                            <i class="ph ph-caret-down chevron" aria-hidden="true"></i>
+                        `;
 
-                        // Build dropdown
-                        const dropdown = document.createElement('div');
-                        dropdown.className = 'nav-dropdown';
+                        parentBtn.addEventListener('click', () => {
+                            if (isComingSoon) { UI.toast(`${item.title}: sezione in arrivo`, 'info', 2500); return; }
 
-                        item.children.forEach(child => {
-                            if (child.roles && child.roles.length > 0 && !child.roles.includes(userRole)) return;
-                            const link = document.createElement('button');
-                            link.className = 'nav-dropdown-item';
-                            link.type = 'button';
-                            link.innerHTML = `<i class="ph ph-${child.icon || 'dot'}" style="font-size:16px;"></i> ${child.title}`;
-                            if (child.implemented === false) {
-                                link.style.opacity = '0.4';
-                                link.addEventListener('click', () => UI.toast(`${child.title}: in arrivo`, 'info', 2000));
-                            } else {
-                                link.addEventListener('click', () => { Router.navigate(child.path); });
+                            const isExpanding = !group.classList.contains('expanded');
+
+                            if (isExpanding) {
+                                // Close all other expanded groups
+                                desktopContainer.querySelectorAll('.nav-group.expanded').forEach(otherGroup => {
+                                    if (otherGroup !== group) {
+                                        otherGroup.classList.remove('expanded');
+                                        const otherBtn = otherGroup.querySelector('.nav-item');
+                                        if (otherBtn) otherBtn.setAttribute('aria-expanded', 'false');
+                                    }
+                                });
                             }
-                            dropdown.appendChild(link);
+
+                            const expanded = group.classList.toggle('expanded');
+                            parentBtn.setAttribute('aria-expanded', String(expanded));
                         });
 
-                        wrapper.appendChild(dropdown);
-                        desktopContainer.appendChild(wrapper);
-                    } else {
-                        const btn = document.createElement('button');
-                        btn.className = 'nav-item';
-                        btn.type = 'button';
-                        btn.dataset.route = item.path;
-                        btn.textContent = item.title.toUpperCase();
+                        group.appendChild(parentBtn);
 
-                        if (item.implemented === false) {
-                            btn.classList.add('nav-item--coming-soon');
-                            btn.title = 'In arrivo';
-                            btn.style.opacity = '0.35';
-                            btn.style.cursor = 'default';
-                            btn.addEventListener('click', (e) => {
-                                e.preventDefault();
-                                UI.toast(`${item.title}: sezione in arrivo`, 'info', 2500);
+                        const submenu = document.createElement('div');
+                        submenu.className = 'submenu';
+
+                        visibleChildren.forEach(child => {
+                            const childIsComingSoon = child.implemented === false;
+                            const childBtn = document.createElement('button');
+                            childBtn.type = 'button';
+                            childBtn.className = 'submenu-item';
+                            childBtn.dataset.route = child.path;
+                            childBtn.dataset.parentGroup = item.id || item.path;
+                            if (childIsComingSoon) childBtn.style.opacity = '0.4';
+
+                            childBtn.innerHTML = `<i class="ph ph-${child.icon || 'dot'}" aria-hidden="true"></i>${Utils.escapeHtml(child.title)}`;
+
+                            childBtn.addEventListener('click', () => {
+                                if (childIsComingSoon) { UI.toast(`${child.title}: in arrivo`, 'info', 2000); return; }
+                                Router.navigate(child.path);
                             });
+
+                            submenu.appendChild(childBtn);
+                        });
+
+                        group.appendChild(submenu);
+                        desktopContainer.appendChild(group);
+
+                    } else {
+                        // ── Simple Nav Item ──────────────────────────────────────────
+                        const btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.className = 'nav-item';
+                        btn.dataset.route = item.path;
+                        if (isComingSoon) {
+                            btn.style.opacity = '0.4';
+                            btn.setAttribute('title', 'In arrivo');
+                            btn.addEventListener('click', () => UI.toast(`${item.title}: sezione in arrivo`, 'info', 2500));
                         } else {
                             btn.addEventListener('click', () => Router.navigate(item.path));
                         }
+
+                        btn.innerHTML = `
+                            <span class="nav-icon"><i class="ph ph-${item.icon || 'circle'}" aria-hidden="true"></i></span>
+                            <span class="nav-label">${Utils.escapeHtml(item.title)}</span>
+                        `;
                         desktopContainer.appendChild(btn);
                     }
                 }

@@ -4,7 +4,7 @@
    Fonts: Barlow Condensed (headers) + Inter (body)
    ════════════════════════════════════════════════════════════════════════════ */
 
-@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Inter:wght@300;400;500;600&family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
 /* ─── DESIGN TOKENS ────────────────────────────────────────────────────────── */
 :root {
@@ -247,6 +247,15 @@ h3 {
   gap: 12px;
   cursor: pointer;
   overflow: hidden;
+  border-radius: 8px;
+  padding: 4px 6px;
+  margin: -4px -6px;
+  transition: background var(--transition), opacity var(--transition);
+}
+
+.logo-area:hover {
+  background: var(--bg-surface-hover);
+  opacity: 0.9;
 }
 
 .logo-box {
@@ -284,6 +293,8 @@ h3 {
   height: 28px;
   border-radius: 6px;
   background: var(--bg-surface);
+  border: none;
+  color: var(--text-secondary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -393,19 +404,38 @@ h3 {
 }
 
 .submenu-item {
-  padding: 10px 20px 10px 56px;
+  padding: 9px 20px 9px 20px;
   color: var(--text-muted);
-  font-size: 0.85rem;
+  font-size: 0.83rem;
   transition: var(--transition);
   cursor: pointer;
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 9px;
   white-space: nowrap;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  padding-left: 52px;
+}
+
+.submenu-item i {
+  font-size: 14px;
+  opacity: 0.65;
+  flex-shrink: 0;
 }
 
 .submenu-item:hover,
 .submenu-item:focus-visible {
   color: var(--text-primary);
   background: var(--bg-surface);
+  outline: none;
+}
+
+.submenu-item:hover i,
+.submenu-item.active i {
+  opacity: 1;
 }
 
 .submenu-item.active,
@@ -413,6 +443,12 @@ h3 {
 .submenu-item.active:focus {
   color: var(--accent-secondary);
   background: rgba(255, 0, 122, 0.05);
+}
+
+/* Parent button highlighted when a child is active */
+.nav-item--parent-active {
+  color: var(--accent-secondary) !important;
+  background: rgba(255, 0, 122, 0.04) !important;
 }
 
 .sidebar.collapsed .submenu {

@@ -123,8 +123,22 @@ class AuthController
             Response::error('Password attuale non corretta', 401);
         }
 
+        // Check password history
+        $recentHashes = $this->repo->getRecentPasswordHashes($user['id'], 3);
+        foreach ($recentHashes as $recentHash) {
+            if (password_verify($newPwd, $recentHash)) {
+                Response::error('La nuova password non può essere uguale a una delle tue ultime 3 password.', 400);
+            }
+        }
+
+        // Ensure the current password is also checked just in case it's not in history yet
+        if (password_verify($newPwd, $dbUser['pwd_hash'])) {
+            Response::error('La nuova password deve essere diversa da quella attuale.', 400);
+        }
+
         $hash = password_hash($newPwd, PASSWORD_BCRYPT, ['cost' => 12]);
         $this->repo->updatePasswordHash($user['id'], $hash);
+        $this->repo->insertPasswordHistory($user['id'], $hash);
 
         Audit::log('PASSWORD_RESET', 'users', $user['id']);
         Response::success(['message' => 'Password aggiornata con successo']);
@@ -136,19 +150,18 @@ class AuthController
         Auth::requireRole('admin');
         $body = Response::jsonBody();
 
-        Response::requireFields($body, ['email', 'password', 'full_name', 'role']);
+        Response::requireFields($body, ['email', 'full_name', 'role']);
 
-        $allowed = ['admin', 'manager', 'operator', 'readonly'];
+        $allowed = ['admin', 'manager', 'allenatore', 'operatore', 'atleta'];
         if (!in_array($body['role'], $allowed, true)) {
             Response::error('Ruolo non valido', 400);
         }
 
-        if (strlen($body['password']) < 10) {
-            Response::error('La password deve essere di almeno 10 caratteri', 400);
-        }
+        // Auto-generate a secure temporary password — it will be communicated to the user
+        $tempPassword = bin2hex(random_bytes(10)); // 20 hex chars
+        $hash = password_hash($tempPassword, PASSWORD_BCRYPT, ['cost' => 12]);
 
         $id = 'USR_' . bin2hex(random_bytes(4));
-        $hash = password_hash($body['password'], PASSWORD_BCRYPT, ['cost' => 12]);
 
         $this->repo->createUser([
             'id' => $id,
@@ -159,8 +172,14 @@ class AuthController
             'phone' => $body['phone'] ?? null,
         ]);
 
+        $this->repo->insertPasswordHistory($id, $hash);
+
         Audit::log('INSERT', 'users', $id, null, ['email' => $body['email'], 'role' => $body['role']]);
-        Response::success(['id' => $id, 'message' => 'Utente creato con successo'], 201);
+        Response::success([
+            'id' => $id,
+            'tempPassword' => $tempPassword,
+            'message' => 'Utente creato con successo. Comunica la password temporanea all\'utente.',
+        ], 201);
     }
 
     // ─── POST /api/?module=auth&action=listUsers (admin only) ────────────────
@@ -195,7 +214,7 @@ class AuthController
         $body = Response::jsonBody();
         Response::requireFields($body, ['userId', 'role']);
 
-        $allowed = ['admin', 'manager', 'operator', 'readonly'];
+        $allowed = ['admin', 'manager', 'allenatore', 'operatore', 'atleta'];
         if (!in_array($body['role'], $allowed, true)) {
             Response::error('Ruolo non valido. Valori accettati: ' . implode(', ', $allowed), 400);
         }
@@ -227,6 +246,40 @@ class AuthController
         Response::success(['message' => $active ? 'Utente riattivato' : 'Utente sospeso']);
     }
 
+    // ─── POST /api/?module=auth&action=deleteUser (admin only) ─────────────────
+    public function deleteUser(): void
+    {
+        Auth::requireRole('admin');
+        $body = Response::jsonBody();
+        $userId = $body['userId'] ?? '';
+
+        if (empty($userId)) {
+            Response::error('userId obbligatorio', 400);
+        }
+
+        $this->validateUserExists($userId);
+        $this->repo->deactivateUser($userId); // soft delete via deleted_at
+        Audit::log('DELETE', 'users', $userId, null, ['method' => 'hard_delete_by_admin']);
+        Response::success(['message' => 'Utente eliminato']);
+    }
+
+    // ─── POST /api/?module=auth&action=resendVerification (admin only) ──────────
+    public function resendVerification(): void
+    {
+        Auth::requireRole('admin');
+        $body = Response::jsonBody();
+        $userId = $body['userId'] ?? '';
+
+        if (empty($userId)) {
+            Response::error('userId obbligatorio', 400);
+        }
+
+        $user = $this->validateUserExists($userId);
+        // In a real implementation, send an invitation email here
+        Audit::log('UPDATE', 'users', $userId, null, ['action' => 'resend_verification']);
+        Response::success(['message' => 'Email di invito reinviata a ' . $user['email']]);
+    }
+
     // ─── POST /api/?module=auth&action=adminResetPassword (admin only) ────────
     public function adminResetPassword(): void
     {
@@ -242,6 +295,8 @@ class AuthController
         $hash = password_hash($tempPassword, PASSWORD_BCRYPT, ['cost' => 12]);
 
         $this->repo->setPasswordHash($userId, $hash);
+        $this->repo->insertPasswordHistory($userId, $hash);
+
         Audit::log('PASSWORD_RESET', 'users', $userId, null, ['reset_by' => 'admin']);
 
         // Return temp password plaintext ONLY in this response

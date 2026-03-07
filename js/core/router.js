@@ -1,6 +1,6 @@
 /**
  * Router — SPA Client-Side Navigation with Lazy Module Loading
- * Fusion ERP v1.0
+ * Fusion ERP v1.0.1
  */
 
 'use strict';
@@ -10,18 +10,34 @@ const Router = (() => {
     // Cache-busting: read version from <meta name="app-version"> set by deploy.py
     const APP_VERSION = document.querySelector('meta[name="app-version"]')?.content || Date.now();
     let _currentRoute = null;
+    let _queryParams = {};
+
+    function _parseQuery(search) {
+        const params = {};
+        const q = new URLSearchParams(search);
+        for (const [key, value] of q.entries()) params[key] = value;
+        return params;
+    }
 
     // Module map: route → file path
     const MODULE_MAP = {
         dashboard: 'js/modules/dashboard.js',
         athletes: 'js/modules/athletes.js',
+        'athlete-profile': 'js/modules/athletes.js',
+        'athlete-payments': 'js/modules/athletes.js',
+        'athlete-metrics': 'js/modules/athletes.js',
+        'athlete-documents': 'js/modules/athletes.js',
         transport: 'js/modules/transport.js',
+        'transport-drivers': 'js/modules/transport.js',
+        'transport-fleet': 'js/modules/vehicles.js',
         admin: 'js/modules/admin.js',
         'admin-backup': 'js/modules/admin.js',
         'admin-logs': 'js/modules/admin.js',
         users: 'js/modules/admin.js',
         utenti: 'js/modules/admin.js',
         outseason: 'js/modules/outseason.js',
+        'outseason-camps': 'js/modules/outseason.js',
+        'outseason-tournaments': 'js/modules/tournaments.js',
         social: 'js/modules/social.js',
         results: 'js/modules/results.js',
         'results-matches': 'js/modules/results.js',
@@ -31,11 +47,7 @@ const Router = (() => {
         finance: 'js/modules/finance.js',
         'finance-invoices': 'js/modules/finance.js',
         'finance-74ter': 'js/modules/finance.js',
-        compliance: 'js/modules/compliance.js',
-        'compliance-contracts': 'js/modules/compliance.js',
-        'compliance-calendar': 'js/modules/compliance.js',
-        'compliance-medical': 'js/modules/compliance.js',
-        'compliance-federation': 'js/modules/compliance.js',
+        tournaments: 'js/modules/tournaments.js',
     };
 
     // Route access control using the permission map stored in user.permissions.
@@ -44,15 +56,22 @@ const Router = (() => {
     // Value: 'read' = requires at least read access, 'write' = requires write access.
     const ROUTE_ACCESS = {
         athletes: 'read',
+        'athlete-profile': 'read',
+        'athlete-payments': 'read',
+        'athlete-metrics': 'read',
+        'athlete-documents': 'read',
         teams: 'read',
         results: 'read',
         'results-matches': 'read',
         'results-standings': 'read',
         transport: 'read',
+        'transport-drivers': 'read',
+        'transport-fleet': 'read',
         outseason: 'read',
+        'outseason-camps': 'read',
+        'outseason-tournaments': 'read',
+        tournaments: 'read',
         social: 'read',
-        scouting: 'read',
-        ecommerce: 'read',
         finance: 'read',
         admin: 'read',
         'admin-backup': 'read',
@@ -64,29 +83,25 @@ const Router = (() => {
         finance: 'read',
         'finance-invoices': 'read',
         'finance-74ter': 'read',
-        compliance: 'read',
-        'compliance-contracts': 'read',
-        'compliance-calendar': 'read',
-        'compliance-medical': 'read',
-        'compliance-federation': 'read',
     };
 
     /**
      * Resolve the base module key from a route (e.g. 'results-matches' → 'results').
      */
     function _routeToModule(route) {
+        if (route.startsWith('athlete')) return 'athletes';
         if (route.startsWith('results')) return 'results';
         if (route.startsWith('admin')) return 'admin';
         if (route === 'utenti' || route === 'users') return 'admin';
         if (route.startsWith('transport')) return 'transport';
+        if (route === 'outseason-tournaments' || route === 'tournaments') return 'outseason-tournaments';
+        if (route === 'outseason-camps') return 'outseason';
         if (route.startsWith('outseason')) return 'outseason';
         if (route.startsWith('social')) return 'social';
         if (route.startsWith('scouting')) return 'scouting';
         if (route.startsWith('ecommerce')) return 'ecommerce';
         if (route.startsWith('finance')) return 'finance';
         if (route === 'team-chat') return 'chat';
-        if (route.startsWith('finance')) return 'finance';
-        if (route.startsWith('compliance')) return 'compliance';
         return route;
     }
 
@@ -102,7 +117,13 @@ const Router = (() => {
         const user = App.getUser();
         if (!user) return false;
 
-        const perms = user.permissions || {};
+        // Admin users have access to everything
+        if (user.role === 'admin') return true;
+
+        const perms = user.permissions;
+        // If permissions is empty/array/missing, allow access (no restrictions configured)
+        if (!perms || Array.isArray(perms) || Object.keys(perms).length === 0) return true;
+
         const module = _routeToModule(route);
         const level = perms[module] || 'none';
 
@@ -114,17 +135,26 @@ const Router = (() => {
     /**
      * Navigate to a route, lazy-loading the module if needed.
      */
-    async function navigate(route) {
-        if (_currentRoute === route) return;
+    async function navigate(route, params = {}) {
+        _queryParams = params;
+        if (_currentRoute === route && Object.keys(params).length === 0) return;
+
+        // Extract route and search from string if provided as single arg
+        let path = route;
+        if (route.includes('?')) {
+            const [base, query] = route.split('?');
+            path = base;
+            _queryParams = { ..._queryParams, ..._parseQuery('?' + query) };
+        }
 
         // Gestione link a pagine esterne o sezioni HTML standalone
-        if (route.includes('.html') || route.startsWith('http')) {
+        if (path.includes('.html') || path.startsWith('http')) {
             window.location.href = route;
             return;
         }
 
         // Role-based route protection
-        if (route !== 'dashboard' && !_hasRouteAccess(route)) {
+        if (path !== 'dashboard' && !_hasRouteAccess(path)) {
             UI.toast('Permessi insufficienti per accedere a questa sezione', 'error', 3500);
             if (_currentRoute !== 'dashboard') {
                 navigate('dashboard');
@@ -135,13 +165,22 @@ const Router = (() => {
         const moduleNames = {
             dashboard: 'Dashboard',
             athletes: 'Athletes',
+            'athlete-profile': 'Athletes',
+            'athlete-payments': 'Athletes',
+            'athlete-metrics': 'Athletes',
+            'athlete-documents': 'Athletes',
             transport: 'Transport',
+            'transport-drivers': 'Transport',
+            'transport-fleet': 'Vehicles',
             admin: 'Admin',
             'admin-backup': 'Admin',
             'admin-logs': 'Admin',
             users: 'UsersModule',
             utenti: 'Admin',
             outseason: 'OutSeason',
+            'outseason-camps': 'OutSeason',
+            'outseason-tournaments': 'Tournaments',
+            tournaments: 'Tournaments',
             social: 'Social',
             results: 'Results',
             'results-matches': 'Results',
@@ -151,11 +190,6 @@ const Router = (() => {
             finance: 'Finance',
             'finance-invoices': 'Finance',
             'finance-74ter': 'Finance',
-            compliance: 'Compliance',
-            'compliance-contracts': 'Compliance',
-            'compliance-calendar': 'Compliance',
-            'compliance-medical': 'Compliance',
-            'compliance-federation': 'Compliance',
         };
 
         // Call destroy on the previous module before switching to prevent memory leaks
@@ -170,10 +204,14 @@ const Router = (() => {
             }
         }
 
-        _currentRoute = route;
+        _currentRoute = path;
+
+        // Update URL hash for bookability
+        const queryStr = Object.keys(_queryParams).length ? '?' + new URLSearchParams(_queryParams).toString() : '';
+        window.location.hash = path + queryStr;
 
         // Update nav active state
-        _updateNavActive(route);
+        _updateNavActive(path);
 
         const app = document.getElementById('app');
         if (!app) return;
@@ -182,17 +220,17 @@ const Router = (() => {
 
         try {
             // Lazy-load the module script
-            if (!_modules[route]) {
-                if (!MODULE_MAP[route]) {
+            if (!_modules[path]) {
+                if (!MODULE_MAP[path]) {
                     app.innerHTML = Utils.emptyState('Sezione in arrivo', 'Questa funzionalità è in fase di sviluppo.', 'Torna alla Dashboard', 'dashboard');
                     return;
                 }
-                await _loadScript(MODULE_MAP[route]);
-                _modules[route] = true;
+                await _loadScript(MODULE_MAP[path]);
+                _modules[path] = true;
             }
 
             // Call module init — each module exposes itself as a global
-            const moduleName = moduleNames[route];
+            const moduleName = moduleNames[path];
             if (window[moduleName] && typeof window[moduleName].init === 'function') {
                 await window[moduleName].init();
             }
@@ -219,15 +257,42 @@ const Router = (() => {
     }
 
     function _updateNavActive(route) {
-        // Sidebar items
+        // Mark all nav items and submenu items
         Utils.qsa('[data-route]').forEach(item => {
             const isActive = item.dataset.route === route;
             item.classList.toggle('active', isActive);
             item.setAttribute('aria-current', isActive ? 'page' : 'false');
         });
+
+        // Expand the parent nav-group if a child route is active
+        Utils.qsa('.nav-group').forEach(group => {
+            const activeChild = group.querySelector('.submenu-item.active');
+            if (activeChild) {
+                group.classList.add('expanded');
+                const parentBtn = group.querySelector('.nav-item');
+                if (parentBtn) {
+                    parentBtn.setAttribute('aria-expanded', 'true');
+                    parentBtn.classList.add('nav-item--parent-active');
+                }
+            } else {
+                const parentBtn = group.querySelector('.nav-item');
+                if (parentBtn) parentBtn.classList.remove('nav-item--parent-active');
+            }
+        });
     }
 
     function getCurrentRoute() { return _currentRoute; }
+    function getParams() { return _queryParams; }
 
-    return { navigate, getCurrentRoute, updateNavActive: _updateNavActive };
+    /**
+     * Update the URL hash without triggering navigation.
+     * Used by modules that need to reflect state in the URL (e.g. athlete ID).
+     */
+    function updateHash(route, params = {}) {
+        _queryParams = params;
+        const queryStr = Object.keys(params).length ? '?' + new URLSearchParams(params).toString() : '';
+        window.location.hash = route + queryStr;
+    }
+
+    return { navigate, getCurrentRoute, getParams, updateHash, updateNavActive: _updateNavActive };
 })();

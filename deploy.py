@@ -31,8 +31,8 @@ def load_env():
     return True
 
 def get_file_hash(filepath):
-    """Calculate MD5 hash of a file."""
-    hasher = hashlib.md5()
+    """Calculate SHA-256 hash of a file."""
+    hasher = hashlib.sha256()
     try:
         with open(filepath, 'rb') as f:
             buf = f.read()

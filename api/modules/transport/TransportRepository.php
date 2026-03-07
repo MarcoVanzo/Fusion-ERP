@@ -361,6 +361,40 @@ class TransportRepository
         return $stmt->fetch() ?: null;
     }
 
+    // ─── DRIVERS ─────────────────────────────────────────────────────────────
+
+    public function listDrivers(): array
+    {
+        $stmt = $this->db->query(
+            'SELECT id, full_name, phone, license_number, hourly_rate, is_active, notes, created_at
+             FROM drivers
+             WHERE deleted_at IS NULL
+             ORDER BY full_name'
+        );
+        return $stmt->fetchAll();
+    }
+
+    public function createDriver(array $data): void
+    {
+        $stmt = $this->db->prepare(
+            'INSERT INTO drivers (id, full_name, phone, license_number, hourly_rate, notes, is_active, created_by)
+             VALUES (:id, :full_name, :phone, :license_number, :hourly_rate, :notes, 1, :created_by)'
+        );
+        $stmt->execute($data);
+    }
+
+    public function setDriverActive(string $id, bool $active): void
+    {
+        $stmt = $this->db->prepare('UPDATE drivers SET is_active = :active WHERE id = :id');
+        $stmt->execute([':active' => $active ? 1 : 0, ':id' => $id]);
+    }
+
+    public function softDeleteDriver(string $id): void
+    {
+        $stmt = $this->db->prepare('UPDATE drivers SET deleted_at = NOW() WHERE id = :id');
+        $stmt->execute([':id' => $id]);
+    }
+
     // ─── TEAMS LIST (for dropdowns) ──────────────────────────────────────────
 
     public function listTeams(): array

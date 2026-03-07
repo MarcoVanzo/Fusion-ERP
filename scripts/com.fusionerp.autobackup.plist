@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.fusionerp.autobackup</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/marcovanzo/Fusion ERP/scripts/git_auto_backup.sh</string>
+    </array>
+
+    <!-- Ogni ora (3600 secondi) -->
+    <key>StartInterval</key>
+    <integer>3600</integer>
+
+    <!-- Avvia subito al caricamento dell'agente -->
+    <key>RunAtLoad</key>
+    <false/>
+
+    <!-- Log di stdout e stderr -->
+    <key>StandardOutPath</key>
+    <string>/Users/marcovanzo/Fusion ERP/scripts/auto_backup.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/marcovanzo/Fusion ERP/scripts/auto_backup_error.log</string>
+
+    <!-- Riavvia in caso di crash -->
+    <key>KeepAlive</key>
+    <false/>
+</dict>
+</plist>

@@ -24,7 +24,7 @@ class AthletesController
     // ─── GET /api/?module=athletes&action=list ────────────────────────────────
     public function list(): void
     {
-        Auth::requireAuth();
+        Auth::requireRead('athletes');
         $teamId = filter_input(INPUT_GET, 'teamId', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
         Response::success($this->repo->listAthletes($teamId));
     }
@@ -32,7 +32,7 @@ class AthletesController
     // ─── GET /api/?module=athletes&action=get&id=ATH_xxx ─────────────────────
     public function get(): void
     {
-        Auth::requireAuth();
+        Auth::requireRead('athletes');
         $id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
         $athlete = $this->repo->getAthleteById($id);
         if (!$athlete) {
@@ -52,7 +52,7 @@ class AthletesController
     // ─── POST /api/?module=athletes&action=create ─────────────────────────────
     public function create(): void
     {
-        Auth::requireRole('operator');
+        Auth::requireWrite('athletes');
         $body = Response::jsonBody();
         Response::requireFields($body, ['first_name', 'last_name', 'team_id']);
 
@@ -93,7 +93,7 @@ class AthletesController
     // ─── POST /api/?module=athletes&action=update ─────────────────────────────
     public function update(): void
     {
-        Auth::requireRole('operator');
+        Auth::requireWrite('athletes');
         $body = Response::jsonBody();
         Response::requireFields($body, ['id', 'first_name', 'last_name', 'team_id']);
 
@@ -134,7 +134,7 @@ class AthletesController
     // ─── POST /api/?module=athletes&action=delete ─────────────────────────────
     public function delete(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireWrite('athletes');
         $body = Response::jsonBody();
         $id = $body['id'] ?? '';
         if (empty($id)) {
@@ -149,7 +149,7 @@ class AthletesController
     // ─── POST /api/?module=athletes&action=logMetric ──────────────────────────
     public function logMetric(): void
     {
-        Auth::requireRole('operator');
+        Auth::requireWrite('athletes');
         $body = Response::jsonBody();
         Response::requireFields($body, ['athlete_id', 'log_date', 'duration_min', 'rpe']);
 
@@ -194,7 +194,7 @@ class AthletesController
     // ─── GET /api/?module=athletes&action=acwr&id=ATH_xxx ────────────────────
     public function acwr(): void
     {
-        Auth::requireAuth();
+        Auth::requireRead('athletes');
         $id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
         Response::success($this->calcACWR($id));
     }
@@ -202,7 +202,7 @@ class AthletesController
     // ─── POST /api/?module=athletes&action=aiReport ───────────────────────────
     public function aiReport(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireWrite('athletes');
         $body = Response::jsonBody();
         Response::requireFields($body, ['athlete_id']);
 
@@ -241,7 +241,7 @@ class AthletesController
     // ─── GET /api/?module=athletes&action=aiSummary&id=ATH_xxx ───────────────
     public function aiSummary(): void
     {
-        Auth::requireAuth();
+        Auth::requireRead('athletes');
         $id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
         $summary = $this->repo->getLatestAiSummary($id);
         Response::success($summary);
@@ -250,15 +250,16 @@ class AthletesController
     // ─── GET /api/?module=athletes&action=alerts ──────────────────────────────
     public function alerts(): void
     {
-        Auth::requireRole('manager');
-        $alerts = $this->repo->getUnacknowledgedAlerts();
+        $user = Auth::requireRole('manager');
+        $tenantId = \FusionERP\Shared\TenantContext::id();
+        $alerts = $this->repo->getUnacknowledgedAlerts($tenantId);
         Response::success($alerts);
     }
 
     // ─── GET /api/?module=athletes&action=teams ───────────────────────────────
     public function teams(): void
     {
-        Auth::requireAuth();
+        Auth::requireRead('athletes');
         Response::success($this->repo->listTeams());
     }
 
