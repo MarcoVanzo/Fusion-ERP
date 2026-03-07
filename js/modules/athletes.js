@@ -1000,93 +1000,85 @@ const Athletes = (() => {
     return map[states[id]] || 'muscle-default';
   }
 
-  // ─── SVG ANATOMICO FEMMINILE FRONTALE ────────────────────────────────────
-  function _svgFrontale(states) {
+  // ─── BODY VIEW COMPOSITA (PNG anatomica + SVG overlay muscoli) ────────────
+  // Restituisce HTML con il PNG AI come base e un SVG overlay per gli highlight
+
+  function _bodyView(side, states) {
     const mc = (id) => _muscleClass(states, id);
-    return `<svg class="cmj-body-svg" viewBox="0 0 120 280" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Vista frontale corpo femminile">
-      <!-- Outline corpo (silhouetta) -->
-      <g fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1">
-        <!-- Testa -->
-        <ellipse cx="60" cy="22" rx="14" ry="16" fill="rgba(255,255,255,0.04)"/>
-        <!-- Collo -->
-        <rect x="54" y="36" width="12" height="10" rx="4" fill="rgba(255,255,255,0.04)"/>
-        <!-- Torso -->
-        <path d="M36 46 Q28 58 26 80 Q24 105 30 120 Q36 130 60 132 Q84 130 90 120 Q96 105 94 80 Q92 58 84 46 Z" fill="rgba(255,255,255,0.03)"/>
-        <!-- Braccia sx -->
-        <path d="M36 50 Q20 60 16 90 Q14 105 20 118" stroke-width="10" stroke-linecap="round" fill="none"/>
-        <!-- Braccia dx -->
-        <path d="M84 50 Q100 60 104 90 Q106 105 100 118" stroke-width="10" stroke-linecap="round" fill="none"/>
-      </g>
-      <!-- Core Anteriore -->
-      <path id="svgm-core" class="${mc('svgm-core')}"
-        d="M46 88 Q60 84 74 88 Q76 104 74 118 Q60 122 46 118 Z" />
-      <!-- Hip Flexors -->
-      <path id="svgm-hipflexors" class="${mc('svgm-hipflexors')}"
-        d="M40 120 Q50 116 60 118 Q70 116 80 120 Q76 136 72 140 Q60 144 48 140 Q44 136 40 120 Z" />
-      <!-- Quadriceps Sinistra (sx dal punto di vista dell'atleta = destra in vista frontale) -->
-      <path id="svgm-quadriceps-l" class="${mc('svgm-quadriceps-l')}"
-        d="M44 142 Q50 138 58 140 Q60 160 58 182 Q50 186 44 182 Q40 165 44 142 Z" />
-      <!-- Quadriceps Destra -->
-      <path id="svgm-quadriceps-r" class="${mc('svgm-quadriceps-r')}"
-        d="M62 140 Q70 138 76 142 Q80 165 76 182 Q70 186 62 182 Q60 160 62 140 Z" />
-      <!-- Adductors SX -->
-      <path id="svgm-adductors-l" class="muscle-default"
-        d="M56 142 Q60 144 60 160 Q58 175 56 180 Q52 175 52 160 Z" />
-      <!-- Adductors DX -->
-      <path id="svgm-adductors-r" class="muscle-default"
-        d="M64 142 Q60 144 60 160 Q62 175 64 180 Q68 175 68 160 Z" />
-      <!-- Tibialis SX -->
-      <path id="svgm-tibialis-l" class="muscle-default"
-        d="M45 186 Q50 184 56 186 Q54 210 52 224 Q48 226 44 222 Q42 206 45 186 Z" />
-      <!-- Tibialis DX -->
-      <path id="svgm-tibialis-r" class="muscle-default"
-        d="M64 186 Q70 184 75 186 Q78 206 76 222 Q72 226 68 224 Q66 210 64 186 Z" />
-      <!-- Piedi -->
-      <ellipse cx="50" cy="232" rx="10" ry="5" fill="rgba(255,255,255,0.05)"/>
-      <ellipse cx="70" cy="232" rx="10" ry="5" fill="rgba(255,255,255,0.05)"/>
-    </svg>`;
+    const imgSrc = `assets/img/anatomy/body_${side}.png`;
+
+    // Overlay SVG normalizzato 0–1 sulle coordinate dell'immagine 640x640
+    // I path qui usano coordinate percentuali relative all'immagine
+    // viewBox 0 0 100 100 — mappa su 100%x100% del wrapper
+    const overlayFront = `
+      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;" aria-hidden="true">
+        <defs>
+          <filter id="glow-front">
+            <feGaussianBlur stdDeviation="1.5" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <g filter="url(#glow-front)" opacity="0.82">
+          <!-- Core / Abs -->
+          <ellipse id="svgm-core" class="${mc('svgm-core')}" cx="50" cy="39" rx="9" ry="7" />
+          <!-- Hip Flexors -->
+          <ellipse id="svgm-hipflexors" class="${mc('svgm-hipflexors')}" cx="50" cy="49" rx="11" ry="4" />
+          <!-- Quadriceps SX (destra dello schermo = lato sinistro atleta) -->
+          <ellipse id="svgm-quadriceps-l" class="${mc('svgm-quadriceps-l')}" cx="43" cy="64" rx="7" ry="10" />
+          <!-- Quadriceps DX -->
+          <ellipse id="svgm-quadriceps-r" class="${mc('svgm-quadriceps-r')}" cx="57" cy="64" rx="7" ry="10" />
+          <!-- Adductors SX -->
+          <ellipse id="svgm-adductors-l" class="${mc('svgm-adductors-l') === 'muscle-default' ? 'muscle-default' : mc('svgm-adductors-l')}" cx="47" cy="66" rx="3" ry="9" />
+          <!-- Adductors DX -->
+          <ellipse id="svgm-adductors-r" class="muscle-default" cx="53" cy="66" rx="3" ry="9" />
+          <!-- Tibialis SX -->
+          <ellipse id="svgm-tibialis-l" class="muscle-default" cx="43" cy="83" rx="4" ry="7" />
+          <!-- Tibialis DX -->
+          <ellipse id="svgm-tibialis-r" class="muscle-default" cx="57" cy="83" rx="4" ry="7" />
+        </g>
+      </svg>`;
+
+    const overlayBack = `
+      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;" aria-hidden="true">
+        <defs>
+          <filter id="glow-back">
+            <feGaussianBlur stdDeviation="1.5" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <g filter="url(#glow-back)" opacity="0.82">
+          <!-- Thoracic (upper back) -->
+          <ellipse id="svgm-thoracic" class="muscle-default" cx="50" cy="28" rx="12" ry="7" />
+          <!-- Lumbar -->
+          <ellipse id="svgm-lumbar" class="${mc('svgm-lumbar')}" cx="50" cy="40" rx="8" ry="6" />
+          <!-- Glutes SX -->
+          <ellipse id="svgm-glutes-l" class="${mc('svgm-glutes-l')}" cx="44" cy="52" rx="8" ry="7" />
+          <!-- Glutes DX -->
+          <ellipse id="svgm-glutes-r" class="${mc('svgm-glutes-r')}" cx="56" cy="52" rx="8" ry="7" />
+          <!-- Hamstrings SX -->
+          <ellipse id="svgm-hamstrings-l" class="${mc('svgm-hamstrings-l')}" cx="43" cy="66" rx="7" ry="10" />
+          <!-- Hamstrings DX -->
+          <ellipse id="svgm-hamstrings-r" class="${mc('svgm-hamstrings-r')}" cx="57" cy="66" rx="7" ry="10" />
+          <!-- Calves SX -->
+          <ellipse id="svgm-calves-l" class="${mc('svgm-calves-l')}" cx="43" cy="83" rx="4.5" ry="7" />
+          <!-- Calves DX -->
+          <ellipse id="svgm-calves-r" class="${mc('svgm-calves-r')}" cx="57" cy="83" rx="4.5" ry="7" />
+        </g>
+      </svg>`;
+
+    const overlay = side === 'front' ? overlayFront : overlayBack;
+
+    return `<div style="position:relative;width:100%;max-width:180px;margin:0 auto;">
+      <img src="${imgSrc}" alt="Corpo femminile vista ${side === 'front' ? 'frontale' : 'posteriore'}"
+        style="width:100%;height:auto;display:block;border-radius:8px;object-fit:cover;"
+        onerror="this.style.display='none'">
+      ${overlay}
+    </div>`;
   }
 
-  // ─── SVG ANATOMICO FEMMINILE POSTERIORE ──────────────────────────────────
-  function _svgPosteriore(states) {
-    const mc = (id) => _muscleClass(states, id);
-    return `<svg class="cmj-body-svg" viewBox="0 0 120 280" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Vista posteriore corpo femminile">
-      <g fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1">
-        <ellipse cx="60" cy="22" rx="14" ry="16" fill="rgba(255,255,255,0.04)"/>
-        <rect x="54" y="36" width="12" height="10" rx="4" fill="rgba(255,255,255,0.04)"/>
-        <path d="M36 46 Q28 58 26 80 Q24 105 30 120 Q36 130 60 132 Q84 130 90 120 Q96 105 94 80 Q92 58 84 46 Z" fill="rgba(255,255,255,0.03)"/>
-        <path d="M36 50 Q20 60 16 90 Q14 105 20 118" stroke-width="10" stroke-linecap="round" fill="none"/>
-        <path d="M84 50 Q100 60 104 90 Q106 105 100 118" stroke-width="10" stroke-linecap="round" fill="none"/>
-      </g>
-      <!-- Thoracic (upper back) -->
-      <path id="svgm-thoracic" class="muscle-default"
-        d="M40 48 Q60 44 80 48 Q82 70 78 82 Q60 86 42 82 Q38 70 40 48 Z" />
-      <!-- Lumbar -->
-      <path id="svgm-lumbar" class="${mc('svgm-lumbar')}"
-        d="M42 84 Q60 80 78 84 Q80 100 78 116 Q60 120 42 116 Q40 100 42 84 Z" />
-      <!-- Glutes SX -->
-      <path id="svgm-glutes-l" class="${mc('svgm-glutes-l')}"
-        d="M40 118 Q52 114 60 118 Q62 134 58 144 Q50 148 42 142 Q38 134 40 118 Z" />
-      <!-- Glutes DX -->
-      <path id="svgm-glutes-r" class="${mc('svgm-glutes-r')}"
-        d="M60 118 Q72 114 80 118 Q82 134 78 142 Q70 148 62 144 Q58 134 60 118 Z" />
-      <!-- Hamstrings SX -->
-      <path id="svgm-hamstrings-l" class="${mc('svgm-hamstrings-l')}"
-        d="M42 146 Q52 142 60 144 Q60 164 58 182 Q50 186 44 182 Q40 165 42 146 Z" />
-      <!-- Hamstrings DX -->
-      <path id="svgm-hamstrings-r" class="${mc('svgm-hamstrings-r')}"
-        d="M60 144 Q70 142 78 146 Q80 165 76 182 Q70 186 62 182 Q60 164 60 144 Z" />
-      <!-- Calves SX -->
-      <path id="svgm-calves-l" class="${mc('svgm-calves-l')}"
-        d="M44 185 Q52 182 58 185 Q58 208 54 224 Q48 226 44 222 Q42 206 44 185 Z" />
-      <!-- Calves DX -->
-      <path id="svgm-calves-r" class="${mc('svgm-calves-r')}"
-        d="M62 185 Q68 182 76 185 Q78 206 76 222 Q72 226 66 224 Q62 208 62 185 Z" />
-      <!-- Piedi -->
-      <ellipse cx="50" cy="232" rx="10" ry="5" fill="rgba(255,255,255,0.05)"/>
-      <ellipse cx="70" cy="232" rx="10" ry="5" fill="rgba(255,255,255,0.05)"/>
-    </svg>`;
-  }
+  // Wrapper compatibility
+  function _svgFrontale(states) { return _bodyView('front', states); }
+  function _svgPosteriore(states) { return _bodyView('back', states); }
 
   // ─── FORCE CURVE SVG SPARKLINE ───────────────────────────────────────────
   function _forceCurveSvg(results, semStatus) {
