@@ -1815,7 +1815,4 @@ class ResultsController
         }
         return false;
     }
-}       }
-        return false;
-    }
 }
