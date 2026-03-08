@@ -1766,5 +1766,4 @@ class ResultsController
         }
         return false;
     }
-}   }
 }

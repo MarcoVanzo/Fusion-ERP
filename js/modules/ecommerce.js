@@ -190,9 +190,13 @@ const Ecommerce = (() => {
         .ec-table tbody td { padding: 13px 14px; border-bottom: 1px solid rgba(255,255,255,0.03); vertical-align: middle; }
         .ec-table tbody tr:last-child td { border-bottom: none; }
         .ec-table tbody tr:hover { background: rgba(255,255,255,0.03); }
+        .ec-table tbody tr:hover { background: rgba(255,255,255,0.03); }
         .ec-badge-pagato { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px;
             border-radius: 8px; font-size: 12px; font-weight: 600;
-            background: rgba(245,158,11,0.12); color: #f59e0b; }
+            background: rgba(16,185,129,0.12); color: #10b981; }
+        .ec-badge-nonpagato { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px;
+            border-radius: 8px; font-size: 12px; font-weight: 600;
+            background: rgba(239,68,68,0.12); color: #ef4444; }
         .ec-badge-consegnato { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px;
             border-radius: 8px; font-size: 12px; font-weight: 600;
             background: rgba(16,185,129,0.12); color: #10b981; }
@@ -841,7 +845,8 @@ const Ecommerce = (() => {
             let localStato = sm.get(String(o.id))?.stato || null;
             if (!localStato && o.statoForms) {
                 // sync the Cognito status if not manually overridden
-                localStato = String(o.statoForms).toLowerCase() === 'pagato' ? 'pagato' : null;
+                const st = String(o.statoForms).toLowerCase();
+                if (st === 'pagato' || st === 'non pagato') localStato = st;
             }
             const badgeHtml = _statoBadge(localStato);
             const dateStr = o.dataOrdine ? new Date(o.dataOrdine).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
@@ -871,7 +876,8 @@ const Ecommerce = (() => {
                 <td>
                     <select class="ec-stato-select" data-order-id="${Utils.escapeHtml(String(o.id))}">
                         <option value="" ${!localStato ? 'selected' : ''}>— Imposta Stato</option>
-                        <option value="pagato" ${localStato === 'pagato' ? 'selected' : ''}>🟡 Pagato</option>
+                        <option value="pagato" ${localStato === 'pagato' ? 'selected' : ''}>🟢 Pagato</option>
+                        <option value="non pagato" ${localStato === 'non pagato' ? 'selected' : ''}>🔴 Non Pagato</option>
                         <option value="consegnato" ${localStato === 'consegnato' ? 'selected' : ''}>🟢 Consegnato</option>
                     </select>
                 </td>
@@ -904,7 +910,8 @@ const Ecommerce = (() => {
         <div class="ec-orders-toolbar">
             <div class="ec-filter-bar">
                 <button class="ec-filter-btn active" data-filter="all" type="button">Tutti (${ordersAll.length})</button>
-                <button class="ec-filter-btn" data-filter="pagato" type="button">🟡 Pagati</button>
+                <button class="ec-filter-btn" data-filter="pagato" type="button">🟢 Pagati</button>
+                <button class="ec-filter-btn" data-filter="non pagato" type="button">🔴 Non Pagati</button>
                 <button class="ec-filter-btn" data-filter="consegnato" type="button">🟢 Consegnati</button>
             </div>
             <button class="ec-btn ec-btn-ghost" id="ec-orders-refresh" type="button" style="margin-left:auto;">
@@ -954,7 +961,8 @@ const Ecommerce = (() => {
     }
 
     function _statoBadge(stato) {
-        if (stato === 'pagato') return `<span class="ec-badge-pagato">🟡 Pagato</span>`;
+        if (stato === 'pagato') return `<span class="ec-badge-pagato">🟢 Pagato</span>`;
+        if (stato === 'non pagato') return `<span class="ec-badge-nonpagato">🔴 Non Pagato</span>`;
         if (stato === 'consegnato') return `<span class="ec-badge-consegnato">🟢 Consegnato</span>`;
         return `<span class="ec-badge-pending">⚪ Da definire</span>`;
     }

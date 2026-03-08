@@ -413,7 +413,10 @@ class EcommerceController
         // Map PaymentStatus to our internal stati se presente e rilevante
         $paymentStatus = $e['Order_PaymentStatus'] ?? $e['Order.PaymentStatus'] ?? null;
         if (strtoupper((string)$paymentStatus) === 'PAID') {
-            $statoForms = 'pagato'; // Matches JS frontend yellow badge
+            $statoForms = 'pagato'; // Matches JS frontend green badge
+        }
+        else if (strtoupper((string)$paymentStatus) === 'UNPAID') {
+            $statoForms = 'non pagato'; // Matches JS frontend red badge
         }
         else if (strtoupper((string)$statoForms) === 'SUBMITTED') {
             $statoForms = 'Inviato'; // Generic
