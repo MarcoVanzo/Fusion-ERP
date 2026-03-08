@@ -7,7 +7,6 @@ require 'vendor/autoload.php';
 $dotenv = Dotenv\Dotenv::createUnsafeImmutable(__DIR__);
 $dotenv->load();
 
-// We need to define Auth to pass the requireRead check
 class MockAuth
 {
     public static function requireRead($module)
@@ -27,15 +26,15 @@ if (!class_exists('FusionERP\Shared\Auth')) {
     class_alias('MockAuth', 'FusionERP\Shared\Auth');
 }
 
-// Ensure TenantContext exists
-if (!class_exists('FusionERP\Shared\TenantContext')) {
-    class MockTenantContext
+class MockTenantContext
+{
+    public static $current = '';
+    public static function id()
     {
-        public static function id()
-        {
-            return 'TNT_default';
-        }
+        return self::$current;
     }
+}
+if (!class_exists('FusionERP\Shared\TenantContext')) {
     class_alias('MockTenantContext', 'FusionERP\Shared\TenantContext');
 }
 
@@ -44,11 +43,20 @@ require_once 'api/Modules/Biometrics/BiometricsRepository.php';
 
 try {
     $db = FusionERP\Shared\Database::getInstance();
+    $stmt = $db->query("SELECT DISTINCT tenant_id FROM athletes");
+    $tenants = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
-    $repo = new FusionERP\Modules\Biometrics\BiometricsRepository($db);
-    $res = $repo->getGroupMetrics('TNT_default');
-    echo "Group Metrics OK: " . count($res['athletes']) . " athletes found\n";
-
+    foreach ($tenants as $tenantId) {
+        MockTenantContext::$current = $tenantId;
+        try {
+            $repo = new FusionERP\Modules\Biometrics\BiometricsRepository($db);
+            $res = $repo->getGroupMetrics($tenantId);
+            echo "Tenant [$tenantId]: OK - " . count($res['athletes']) . " athletes\n";
+        }
+        catch (Exception $e) {
+            echo "Tenant [$tenantId]: ERROR - " . $e->getMessage() . "\n";
+        }
+    }
 }
 catch (Exception $e) {
     echo "ERROR: " . $e->getMessage() . "\n";

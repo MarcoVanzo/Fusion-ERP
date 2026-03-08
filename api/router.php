@@ -80,7 +80,7 @@ try {
 }
 catch (\Throwable $e) {
     error_log('[ROUTER] Unhandled exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
-    Response::error('Errore interno del server', 500);
+    Response::error('PHP_ERROR: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine(), 400);
 }
 
 /**

@@ -23,21 +23,21 @@ const Athletes = (() => {
       m = App.getUser(),
       u = ["admin", "manager", "operator"].includes(m?.role);
     ((s.innerHTML = `\n      <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2);margin-bottom:var(--sp-3);flex-wrap:wrap;">\n        <p class="page-subtitle">${c.length} atleti${n ? " in squadra selezionata" : " totali"}</p>\n        <div style="display:flex;align-items:center;gap:var(--sp-2);">\n          <div class="input-wrapper" style="position:relative;min-width:220px;">\n            <i class="ph ph-magnifying-glass" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--color-text-muted);font-size:16px;"></i>\n            <input type="text" id="athlete-search" class="form-input" placeholder="Cerca atleta..." style="padding-left:36px;height:42px;font-size:13px;">\n          </div>\n          ${u ? '<button class="btn btn-primary" id="new-athlete-btn" type="button">+ NUOVO ATLETA</button>' : ""}\n        </div>\n      </div>\n      <div class="filter-bar" id="team-filter">\n        <button class="filter-chip ${n ? "" : "active"}" data-team="" type="button">Tutti</button>\n        ${a.map((e) => `<button class="filter-chip ${n === e.id ? "active" : ""}" data-team="${Utils.escapeHtml(e.id)}" type="button">${Utils.escapeHtml(i(e.category, e.name))}</button>`).join("")}\n      </div>\n      ${0 === c.length
-        ? Utils.emptyState(
-          "Nessun atleta trovato",
-          "Aggiungi il primo atleta con il pulsante in alto.",
+      ? Utils.emptyState(
+        "Nessun atleta trovato",
+        "Aggiungi il primo atleta con il pulsante in alto.",
+      )
+      : `<div class="grid-3" id="athletes-grid">${c
+        .map((e) =>
+          (function (e) {
+            const t = e.acwr_risk
+              ? Utils.acwrRiskColor(e.acwr_risk)
+              : "transparent",
+              a = o(e.full_name);
+            return `\n      <div class="card" style="cursor:pointer;position:relative;overflow:hidden;" data-athlete-id="${Utils.escapeHtml(e.id)}" data-name="${Utils.escapeHtml((e.full_name || "").toLowerCase())}" data-role="${Utils.escapeHtml((e.role || "").toLowerCase())}" data-team="${Utils.escapeHtml((e.team_name || "").toLowerCase())}">\n        ${e.acwr_risk && "moderate" !== e.acwr_risk && "low" !== e.acwr_risk ? `<div style="position:absolute;top:var(--sp-2);right:var(--sp-2);width:24px;height:24px;border-radius:50%;background:${t};display:flex;align-items:center;justify-content:center;font-size:14px;color:#000;box-shadow:0 0 8px ${t};"><i class="ph-fill ph-warning-circle"></i></div>` : ""}\n        <div style="display:flex;align-items:flex-start;gap:var(--sp-2);">\n          <div style="width:48px;height:48px;background:${a};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--font-display);font-weight:700;font-size:1.3rem;color:#000;border-radius:8px;">${e.photo_path ? `<img src="${Utils.escapeHtml(e.photo_path)}" style="width:100%;height:100%;object-fit:cover;object-position:center 15%;display:block;border-radius:8px;">` : `\n            ${null != e.jersey_number ? Utils.escapeHtml(String(e.jersey_number)) : Utils.initials(e.full_name)}`}\n          </div>\n          <div style="overflow:hidden;flex:1;">\n            <div style="font-family:var(--font-display);font-weight:700;font-size:1.1rem;">${Utils.escapeHtml(e.full_name)}</div>\n            <div style="font-size:12px;color:var(--color-text-muted);">${Utils.escapeHtml(e.role || "—")}</div>\n            <div style="margin-top:4px;">${Utils.badge(i(e.category, e.team_name), "muted")}</div>\n          </div>\n        </div>\n      </div>`;
+          })(e),
         )
-        : `<div class="grid-3" id="athletes-grid">${c
-          .map((e) =>
-            (function (e) {
-              const t = e.acwr_risk
-                ? Utils.acwrRiskColor(e.acwr_risk)
-                : "transparent",
-                a = o(e.full_name);
-              return `\n      <div class="card" style="cursor:pointer;position:relative;overflow:hidden;" data-athlete-id="${Utils.escapeHtml(e.id)}" data-name="${Utils.escapeHtml((e.full_name || "").toLowerCase())}" data-role="${Utils.escapeHtml((e.role || "").toLowerCase())}" data-team="${Utils.escapeHtml((e.team_name || "").toLowerCase())}">\n        ${e.acwr_risk && "moderate" !== e.acwr_risk && "low" !== e.acwr_risk ? `<div style="position:absolute;top:var(--sp-2);right:var(--sp-2);width:24px;height:24px;border-radius:50%;background:${t};display:flex;align-items:center;justify-content:center;font-size:14px;color:#000;box-shadow:0 0 8px ${t};"><i class="ph-fill ph-warning-circle"></i></div>` : ""}\n        <div style="display:flex;align-items:flex-start;gap:var(--sp-2);">\n          <div style="width:48px;height:48px;background:${a};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--font-display);font-weight:700;font-size:1.3rem;color:#000;border-radius:8px;">${e.photo_path ? `<img src="${Utils.escapeHtml(e.photo_path)}" style="width:100%;height:100%;object-fit:cover;object-position:center 15%;display:block;border-radius:8px;">` : `\n            ${null != e.jersey_number ? Utils.escapeHtml(String(e.jersey_number)) : Utils.initials(e.full_name)}`}\n          </div>\n          <div style="overflow:hidden;flex:1;">\n            <div style="font-family:var(--font-display);font-weight:700;font-size:1.1rem;">${Utils.escapeHtml(e.full_name)}</div>\n            <div style="font-size:12px;color:var(--color-text-muted);">${Utils.escapeHtml(e.role || "—")}</div>\n            <div style="margin-top:4px;">${Utils.badge(i(e.category, e.team_name), "muted")}</div>\n          </div>\n        </div>\n      </div>`;
-            })(e),
-          )
-          .join("")}</div>`
+        .join("")}</div>`
       }\n    `),
       s.querySelectorAll("[data-team]").forEach((t) =>
         t.addEventListener(
@@ -261,10 +261,10 @@ const Athletes = (() => {
         ),
       c(l));
   }
-  function c(a) {
-    ((l = a),
+  function c(tb) {
+    ((l = tb),
       document.querySelectorAll("[data-maintab]").forEach((e) => {
-        const t = e.dataset.maintab === a;
+        const t = e.dataset.maintab === tb;
         ((e.style.borderBottomColor = t ? "var(--color-pink)" : "transparent"),
           (e.style.color = t
             ? "var(--color-white)"
@@ -273,7 +273,7 @@ const Athletes = (() => {
       }));
     const s = document.getElementById("main-tab-content");
     if (s)
-      switch (a) {
+      switch (tb) {
         case "anagrafica":
           ((n = ""), r());
           break;
@@ -337,12 +337,12 @@ const Athletes = (() => {
           !(async function (t) {
             t.innerHTML = `<div style="display:flex;flex-direction:column;gap:8px;">${[1, 2, 3, 4].map(() => '<div class="skeleton skeleton-text"></div>').join("")}</div>`;
             try {
-              const a = n ? { team_id: n } : {},
+              const qParams = n ? { team_id: n } : {},
                 {
                   athletes: l,
                   averages: r,
                   metric_types: d,
-                } = await Store.get("getGroupMetrics", "biometrics", a),
+                } = await Store.get("getGroupMetrics", "biometrics", qParams),
                 p = Object.keys(d || {}),
                 m = {
                   SPRINT_10M: "Sprint 10m",
@@ -364,17 +364,17 @@ const Athletes = (() => {
                 v = (e, t) => {
                   if (!e || !e[t])
                     return '<span style="color:var(--color-text-muted);">—</span>';
-                  const a = e[t];
-                  return `<span style="font-weight:600;">${g(a.value)}</span><span style="font-size:10px;color:var(--color-text-muted);margin-left:2px;">${Utils.escapeHtml(a.unit)}</span>`;
+                  const m_val = e[t];
+                  return `<span style="font-weight:600;">${g(m_val.value)}</span><span style="font-size:10px;color:var(--color-text-muted);margin-left:2px;">${Utils.escapeHtml(m_val.unit)}</span>`;
                 };
-              ((t.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2);margin-bottom:var(--sp-3);flex-wrap:wrap;"><p class="page-subtitle">${l.length} atlete${n ? " nella squadra selezionata" : " totali"}</p><div class="filter-bar" id="metrics-team-filter"><button class="filter-chip ${n ? "" : "active"}" data-team="" type="button">Tutte</button>${t.map((e) => `<button class="filter-chip ${n === e.id ? "active" : ""}" data-team="${Utils.escapeHtml(e.id)}" type="button">${Utils.escapeHtml(i(e.category, e.name))}</button>`).join("")}</div></div>${0 === p.length
-                  ? '<div style="background:rgba(255,0,122,0.05);border:1px solid rgba(255,0,122,0.2);border-radius:var(--radius);padding:var(--sp-4);text-align:center;"><i class="ph ph-trend-up" style="font-size:40px;color:var(--color-pink);opacity:0.4;display:block;margin-bottom:12px;"></i><p style="font-size:14px;font-weight:700;margin-bottom:4px;">Nessuna metrica registrata</p><p style="font-size:12px;color:var(--color-text-muted);">Apri il profilo di un\'atleta e aggiungi le prime metriche per visualizzare il confronto di gruppo.</p></div>'
-                  : `<div class="table-wrapper"><table class="table"><thead><tr><th style="white-space:nowrap;">Atleta</th><th style="white-space:nowrap;">Squadra</th>${p.map((e) => `<th style="white-space:nowrap;text-align:center;">${Utils.escapeHtml(m[e] || e)}</th>`).join("")}</tr></thead><tbody>${l.map((e) => `<tr style="cursor:pointer;" data-athlete-id="${Utils.escapeHtml(e.id)}"><td><div style="display:flex;align-items:center;gap:10px;"><div style="width:32px;height:32px;background:${o(e.full_name)};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--font-display);font-weight:700;font-size:0.85rem;color:#000;border-radius:6px;">${null !== e.jersey_number ? Utils.escapeHtml(String(e.jersey_number)) : Utils.initials(e.full_name)}</div><span style="font-weight:600;">${Utils.escapeHtml(e.full_name)}</span></div></td><td style="font-size:12px;color:var(--color-text-muted);">${Utils.escapeHtml(i(e.category, e.team_name))}</td>${p.map((t) => `<td style="text-align:center;">${v(e.metrics, t)}</td>`).join("")}</tr>`).join("")}<tr style="background:rgba(255,255,255,0.03);border-top:2px solid var(--color-border);"><td colspan="2" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--color-text-muted);padding:10px 12px;"><i class="ph ph-chart-bar" style="margin-right:4px;"></i>Media gruppo</td>${p
-                    .map((e) => {
-                      const t = r && r[e];
-                      return `<td style="text-align:center;">${t ? `<span style="font-weight:700;color:var(--color-pink);">${g(t.value)}</span><span style="font-size:10px;color:var(--color-text-muted);margin-left:2px;">${Utils.escapeHtml(t.unit)}</span>` : '<span style="color:var(--color-text-muted);">—</span>'}</td>`;
-                    })
-                    .join("")}</tr></tbody></table></div>`
+              ((t.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2);margin-bottom:var(--sp-3);flex-wrap:wrap;"><p class="page-subtitle">${l.length} atlete${n ? " nella squadra selezionata" : " totali"}</p><div class="filter-bar" id="metrics-team-filter"><button class="filter-chip ${n ? "" : "active"}" data-team="" type="button">Tutte</button>${a.map((e) => `<button class="filter-chip ${n === e.id ? "active" : ""}" data-team="${Utils.escapeHtml(e.id)}" type="button">${Utils.escapeHtml(i(e.category, e.name))}</button>`).join("")}</div></div>${0 === p.length
+                ? '<div style="background:rgba(255,0,122,0.05);border:1px solid rgba(255,0,122,0.2);border-radius:var(--radius);padding:var(--sp-4);text-align:center;"><i class="ph ph-trend-up" style="font-size:40px;color:var(--color-pink);opacity:0.4;display:block;margin-bottom:12px;"></i><p style="font-size:14px;font-weight:700;margin-bottom:4px;">Nessuna metrica registrata</p><p style="font-size:12px;color:var(--color-text-muted);">Apri il profilo di un\'atleta e aggiungi le prime metriche per visualizzare il confronto di gruppo.</p></div>'
+                : `<div class="table-wrapper"><table class="table"><thead><tr><th style="white-space:nowrap;">Atleta</th><th style="white-space:nowrap;">Squadra</th>${p.map((e) => `<th style="white-space:nowrap;text-align:center;">${Utils.escapeHtml(m[e] || e)}</th>`).join("")}</tr></thead><tbody>${l.map((e) => `<tr style="cursor:pointer;" data-athlete-id="${Utils.escapeHtml(e.id)}"><td><div style="display:flex;align-items:center;gap:10px;"><div style="width:32px;height:32px;background:${o(e.full_name)};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--font-display);font-weight:700;font-size:0.85rem;color:#000;border-radius:6px;">${null !== e.jersey_number ? Utils.escapeHtml(String(e.jersey_number)) : Utils.initials(e.full_name)}</div><span style="font-weight:600;">${Utils.escapeHtml(e.full_name)}</span></div></td><td style="font-size:12px;color:var(--color-text-muted);">${Utils.escapeHtml(i(e.category, e.team_name))}</td>${p.map((t) => `<td style="text-align:center;">${v(e.metrics, t)}</td>`).join("")}</tr>`).join("")}<tr style="background:rgba(255,255,255,0.03);border-top:2px solid var(--color-border);"><td colspan="2" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--color-text-muted);padding:10px 12px;"><i class="ph ph-chart-bar" style="margin-right:4px;"></i>Media gruppo</td>${p
+                  .map((e) => {
+                    const t = r && r[e];
+                    return `<td style="text-align:center;">${t ? `<span style="font-weight:700;color:var(--color-pink);">${g(t.value)}</span><span style="font-size:10px;color:var(--color-text-muted);margin-left:2px;">${Utils.escapeHtml(t.unit)}</span>` : '<span style="color:var(--color-text-muted);">—</span>'}</td>`;
+                  })
+                  .join("")}</tr></tbody></table></div>`
                 }`),
                 t.querySelectorAll("[data-team]").forEach((t) =>
                   t.addEventListener(
@@ -402,7 +402,7 @@ const Athletes = (() => {
             } catch (e) {
               t.innerHTML = Utils.emptyState(
                 "Errore caricamento metriche",
-                Utils.friendlyError(e),
+                e.message,
               );
             }
           })(s);
@@ -453,7 +453,7 @@ const Athletes = (() => {
         ]),
           c = App.getUser(),
           p = ["admin", "manager", "operator"].includes(c?.role);
-        ((s.innerHTML = `\n        \x3c!-- BREADCRUMB NAV --\x3e\n        <div style="display:flex;align-items:center;gap:var(--sp-2);padding:var(--sp-2) var(--sp-4);border-bottom:1px solid var(--color-border);background:var(--color-bg);position:sticky;top:72px;z-index:50;">\n          <button class="btn btn-ghost btn-sm" id="back-to-list" style="color:var(--color-text-muted);border:none;padding:0;display:flex;align-items:center;gap:6px;font-size:12px;text-transform:uppercase;letter-spacing:0.06em;" type="button">\n            <i class="ph ph-arrow-left" style="font-size:16px;"></i> Atleti\n          </button>\n          <i class="ph ph-caret-right" style="font-size:12px;color:var(--color-text-muted);opacity:0.5;"></i>\n          <span style="font-size:12px;font-weight:600;color:var(--color-white);text-transform:uppercase;letter-spacing:0.06em;">${Utils.escapeHtml(r.full_name)}</span>\n          <div style="flex:1;"></div>\n          ${p ? '<button class="btn btn-primary btn-sm" id="edit-athlete-btn" type="button" style="margin-right:8px;"><i class="ph ph-pencil-simple"></i> MODIFICA</button>' : ""}\n          ${["admin", "manager"].includes(c?.role) ? '<button class="btn btn-default btn-sm" id="ai-report-btn" type="button">⚡ REPORT AI</button>' : ""}\n        </div>\n\n        \x3c!-- HERO SECTION --\x3e\n        <div class="athlete-hero" style="position:relative; min-height:400px; display:flex; align-items:flex-end; overflow:hidden; border-bottom:1px solid var(--color-border); background:var(--color-black);">\n          <img class="athlete-hero-photo duotone-img" style="position:absolute; right:0; bottom:0; height:100%; width:auto; object-fit:cover; object-position:top; opacity:0.6;" src="assets/media/player_hero_bg.png" alt="Athlete Silhouette">\n          <div class="athlete-hero-overlay" style="position:relative; z-index:2; padding:var(--sp-4); background:linear-gradient(to right, rgba(0,0,0,0.95) 30%, transparent 100%); width:100%; display:flex; flex-direction:column; gap:16px;">\n            <div>\n              <div class="athlete-jersey" style="font-family:var(--font-display); font-size:clamp(3rem, 8vw, 6rem); font-weight:800; color:var(--color-pink); line-height:1; letter-spacing:-0.04em;">#${null != r.jersey_number ? Utils.escapeHtml(String(r.jersey_number)) : "—"}</div>\n              <div class="athlete-name-hero" style="font-family:var(--font-display); font-size:clamp(2.5rem, 6vw, 4rem); font-weight:700; text-transform:uppercase; letter-spacing:-0.02em; line-height:1; color:var(--color-white);">${Utils.escapeHtml(r.full_name)}</div>\n            </div>\n\n            \x3c!-- Basic Stats compattate sotto il nome nella Hero --\x3e\n            <div style="display:flex; flex-wrap:wrap; gap:24px; margin-top:8px;">\n                <div style="display:flex; flex-direction:column;">\n                    <span style="font-family:var(--font-display); font-size:clamp(1.2rem, 3vw, 1.8rem); font-weight:700; line-height:1;">${Utils.escapeHtml(r.role || "—")}</span>\n                    <span style="font-size:10px; color:var(--color-text-muted); text-transform:uppercase; font-weight:600; letter-spacing:0.05em;">RUOLO</span>\n                </div>\n                <div style="display:flex; flex-direction:column;">\n                    <span style="font-family:var(--font-display); font-size:clamp(1.2rem, 3vw, 1.8rem); font-weight:700; line-height:1;">${r.height_cm || "—"}</span>\n                    <span style="font-size:10px; color:var(--color-text-muted); text-transform:uppercase; font-weight:600; letter-spacing:0.05em;">ALTEZZA (CM)</span>\n                </div>\n                <div style="display:flex; flex-direction:column;">\n                    <span style="font-family:var(--font-display); font-size:clamp(1.2rem, 3vw, 1.8rem); font-weight:700; line-height:1;">${r.weight_kg || "—"}</span>\n                    <span style="font-size:10px; color:var(--color-text-muted); text-transform:uppercase; font-weight:600; letter-spacing:0.05em;">PESO (KG)</span>\n                </div>\n                <div style="display:flex; flex-direction:column;">\n                    <span style="font-family:var(--font-display); font-size:clamp(1.2rem, 3vw, 1.8rem); font-weight:700; line-height:1;">${r.birth_date ? new Date().getFullYear() - new Date(r.birth_date).getFullYear() : "—"}</span>\n                    <span style="font-size:10px; color:var(--color-text-muted); text-transform:uppercase; font-weight:600; letter-spacing:0.05em;">ETÀ</span>\n                </div>\n            </div>\n          </div>\n        </div>\n\n        <div class="page-body" style="display:flex;flex-direction:column;gap:var(--sp-4); background:var(--color-black);">\n\n          <!-- TAB BAR -->\n          <div style="position:relative;margin:0 calc(var(--sp-4) * -1);padding:0 var(--sp-4);border-bottom:1px solid var(--color-border);margin-bottom:var(--sp-4);">\n            <div id="athlete-tab-bar" class="fusion-tabs-container" style="display:flex;gap:0;overflow-x:auto;scrollbar-width:none;position:relative;z-index:2;padding-bottom:1px;">\n              ${[
+        ((s.innerHTML = `\n        \x3c!-- BREADCRUMB NAV --\x3e\n        <div style="display:flex;align-items:center;gap:var(--sp-2);padding:var(--sp-2) var(--sp-4);border-bottom:1px solid var(--color-border);background:var(--color-bg);position:sticky;top:72px;z-index:50;">\n          <button class="btn btn-ghost btn-sm" id="back-to-list" style="color:var(--color-text-muted);border:none;padding:0;display:flex;align-items:center;gap:6px;font-size:12px;text-transform:uppercase;letter-spacing:0.06em;" type="button">\n            <i class="ph ph-arrow-left" style="font-size:16px;"></i> Atleti\n          </button>\n          <i class="ph ph-caret-right" style="font-size:12px;color:var(--color-text-muted);opacity:0.5;"></i>\n          <span style="font-size:12px;font-weight:600;color:var(--color-white);text-transform:uppercase;letter-spacing:0.06em;">${Utils.escapeHtml(r.full_name)}</span>\n          <div style="flex:1;"></div>\n          ${p ? '<button class="btn btn-primary btn-sm" id="edit-athlete-btn" type="button" style="margin-right:8px;"><i class="ph ph-pencil-simple"></i> MODIFICA</button>' : ""}\n          ${["admin", "manager"].includes(c?.role) ? '<button class="btn btn-default btn-sm" id="ai-report-btn" type="button">⚡ REPORT AI</button>' : ""}\n        </div>\n\n        <div class="page-body" style="display:flex;flex-direction:column;gap:var(--sp-4); background:var(--color-black);">\n\n          <!-- TAB BAR -->\n          <div style="position:relative;margin:0 calc(var(--sp-4) * -1);padding:0 var(--sp-4);border-bottom:1px solid var(--color-border);margin-bottom:var(--sp-4);">\n            <div id="athlete-tab-bar" class="fusion-tabs-container" style="display:flex;gap:0;overflow-x:auto;scrollbar-width:none;position:relative;z-index:2;padding-bottom:1px;">\n              ${[
           { id: "anagrafica", label: "Anagrafica" },
           { id: "metrics", label: "Metrics & Load" },
           { id: "antropometria", label: "Antropometria" },
