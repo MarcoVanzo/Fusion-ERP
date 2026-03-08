@@ -59,7 +59,7 @@ const Ecommerce = (() => {
         .ec-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
             border-radius: 16px; overflow: hidden; transition: transform .2s, box-shadow .2s; }
         .ec-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,0.35); }
-        .ec-card-img { width: 100%; height: 180px; object-fit: contain; padding: 12px; background: transparent; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4)) saturate(1.2) contrast(1.1); }
+        .ec-card-img { width: 100%; height: 180px; object-fit: contain; padding: 12px; background: transparent; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5)) saturate(1.3) contrast(1.15); }
         .ec-card-img-placeholder { width: 100%; height: 180px; display: flex; align-items: center; justify-content: center;
             background: rgba(255,255,255,0.03); font-size: 48px; color: rgba(255,255,255,0.15); }
         .ec-card-body { padding: 14px 16px; }
@@ -192,15 +192,28 @@ const Ecommerce = (() => {
 
                 const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                 const data = imgData.data;
-                const tolerance = 240;
 
                 for (let i = 0; i < data.length; i += 4) {
                     const r = data[i], g = data[i + 1], b = data[i + 2], a = data[i + 3];
-                    if (r > tolerance && g > tolerance && b > tolerance) {
-                        data[i + 3] = 0; // Rimuovi sfondo bianco
+
+                    // Distanza dal bianco puro (255, 255, 255)
+                    const distFromWhite = Math.sqrt((r - 255) ** 2 + (g - 255) ** 2 + (b - 255) ** 2);
+
+                    if (distFromWhite < 30) {
+                        data[i + 3] = 0; // Rimuove completamente lo sfondo bianco
+                    } else if (distFromWhite < 80) {
+                        // Anti-alias morbido per l'alone attorno ai bordi dell'oggetto
+                        const alphaRatio = Math.max(0, (distFromWhite - 30) / 50);
+                        data[i + 3] = Math.floor(a * alphaRatio);
+
+                        // Incrementa vividezza sull'oggetto sfumato
+                        const factor = (259 * (20 + 255)) / (255 * (259 - 20));
+                        data[i] = Math.max(0, Math.min(255, factor * (r - 128) + 128));
+                        data[i + 1] = Math.max(0, Math.min(255, factor * (g - 128) + 128));
+                        data[i + 2] = Math.max(0, Math.min(255, factor * (b - 128) + 128));
                     } else if (a > 0) {
-                        // Aumenta contrasto del 15% per rendere più "viva"
-                        const factor = (259 * (15 + 255)) / (255 * (259 - 15));
+                        // Aumenta contrasto del 20% per rendere l'immagine nettamente più viva
+                        const factor = (259 * (20 + 255)) / (255 * (259 - 20));
                         data[i] = Math.max(0, Math.min(255, factor * (r - 128) + 128));
                         data[i + 1] = Math.max(0, Math.min(255, factor * (g - 128) + 128));
                         data[i + 2] = Math.max(0, Math.min(255, factor * (b - 128) + 128));
@@ -228,6 +241,16 @@ const Ecommerce = (() => {
             <div class="ec-header">
                 <h1><i class="ph ph-shopping-cart" style="font-size:28px;-webkit-text-fill-color:#818cf8;"></i> eCommerce</h1>
                 <span class="ec-header-badge" id="ec-badge">—</span>
+            </div>
+
+            <!-- Sub-tabs -->
+            <div class="ec-tabs">
+                <button class="ec-tab ${_currentTab === 'articles' ? 'active' : ''}" id="ec-tab-articles" type="button">
+                    <i class="ph ph-tag"></i> Articoli
+                </button>
+                <button class="ec-tab ${_currentTab === 'orders' ? 'active' : ''}" id="ec-tab-orders" type="button">
+                    <i class="ph ph-package"></i> Ordini
+                </button>
             </div>
 
             <!-- Content panels -->
@@ -275,9 +298,43 @@ const Ecommerce = (() => {
     // ARTICOLI TAB
     // ══════════════════════════════════════════════════════════════════════
 
+    async function _upgradeImagesNanoBanana() {
+        try {
+            const done = await EcommerceDB.getMeta('nanoBananaUpgradeAggressivo_v2');
+            if (done) return;
+
+            const articoli = await EcommerceDB.getArticoli();
+            let count = 0;
+            for (let a of articoli) {
+                if (a.immagineBase64 && (!a.immagineMimeType || a.immagineMimeType === 'image/jpeg' || (a.immagineMimeType === 'image/png' && a.immagineBase64.length > 500))) {
+                    try {
+                        const newB64 = await _applyNanoBananaEffect(a.immagineBase64);
+                        if (newB64 !== a.immagineBase64) {
+                            a.immagineBase64 = newB64;
+                            a.immagineMimeType = 'image/png';
+                            await EcommerceDB.saveArticolo(a);
+                            count++;
+                        }
+                    } catch (err) { }
+                }
+            }
+            if (count > 0) {
+                console.log(`NanoBanana v2: upgraded ${count} legacy images.`);
+                const panel = document.getElementById('ec-panel-articles');
+                if (panel && _currentTab === 'articles') _renderArticoliGrid(panel);
+            }
+            await EcommerceDB.setMeta('nanoBananaUpgradeAggressivo_v2', true);
+        } catch (e) {
+            console.error('NanoBanana: auto-upgrade failed', e);
+        }
+    }
+
     async function _loadArticlesPanel() {
         const panel = document.getElementById('ec-panel-articles');
         if (!panel) return;
+
+        // Eseguiamo la migrazione silenziosa in background delle vecchie immagini JPG
+        _upgradeImagesNanoBanana();
 
         try {
             const count = await EcommerceDB.countArticoli();

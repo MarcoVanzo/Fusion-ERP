@@ -1329,6 +1329,11 @@ class ResultsController
      * Fetch standings for federvolley.it via the classifica.php endpoint.
      * Real response: { "classifica": "<html div>" } — unwrap JSON then parse HTML.
      */
+    /**
+     * Fetch standings for federvolley.it via the classifica.php endpoint.
+     * Real response: { "classifica": "<html div>" } — unwrap JSON then parse HTML manually 
+     * because the HTML contains malformed tags and asymmetrical divs that break DOMDocument.
+     */
     private function _parseStandingsFedervolley(array $p, int $giornata): array
     {
         $base     = $p['base'];
@@ -1340,7 +1345,7 @@ class ResultsController
         $url = "{$base}/moduli/campionati/classifica/classifica.php"
             . "?serie={$serie}&sesso={$sesso}&stagione={$stagione}&giornata={$giornata}&girone={$girone}";
 
-        $err  = '';
+        $err  = \'\';
         $body = $this->_fetch($url, $err);
         if (!$body) {
             error_log("[Results] FV classifica fetch failed: {$err}");
@@ -1349,94 +1354,94 @@ class ResultsController
 
         // Unwrap JSON envelope {"classifica": "<html>"}
         $html = $body;
-        if (str_starts_with(ltrim($body), '{')) {
+        if (str_starts_with(ltrim($body), \'{\')) {
             $json = json_decode($body, true);
-            if (isset($json['classifica']) && is_string($json['classifica'])) {
-                $html = $json['classifica'];
+            if (isset($json[\'classifica\']) && is_string($json[\'classifica\'])) {
+                $html = $json[\'classifica\'];
             }
         }
         if (empty(trim($html))) {
-            error_log('[Results] FV classifica: empty HTML after JSON unwrap');
+            error_log("[Results] FV classifica: empty HTML after JSON unwrap");
             return [];
         }
 
-        $dom = new \DOMDocument();
-        libxml_use_internal_errors(true);
-        @$dom->loadHTML('<?xml encoding="UTF-8"><div>' . $html . '</div>');
-        libxml_clear_errors();
-        $xpath = new \DOMXPath($dom);
-
         $standings = [];
 
-        // FederVolley: div rows with span.squadra-tabella (team name) and span.punti-tabella (numbers)
-        $rows = $xpath->query(
-            '//*[contains(@class,"sfondo-Blu") or contains(@class,"sfondo-Bianco") or ' .
-            '(contains(@class,"row") and descendant::*[contains(@class,"squadra-tabella")])]'
-        );
+        // Parse malformed HTML using Regex since DOMDocument chokes on it.
+        // Teams are grouped in `<div class='row sfondo-Blu'>...</div><div class='row sfondo-accordion'`
+        $matchesCount = preg_match_all(\'/<div class=[\\\'"]row sfondo-[Bb]lu[\\\'">](.*?)<\\/div><div class=[\\\'"]row sfondo-accordion[\\\'"]/is\', $html, $matches);
 
-        if ($rows && $rows->length > 0) {
-            $pos = 0;
-            foreach ($rows as $row) {
-                $teamNodes = $xpath->query('.//*[contains(@class,"squadra-tabella")]', $row);
-                if (!$teamNodes || $teamNodes->length === 0) continue;
-                $team = trim(preg_replace('/\s+/', ' ', $teamNodes->item(0)->textContent));
-                if (empty($team) || strlen($team) < 2) continue;
-
-                $pos++;
-                $numNodes = $xpath->query('.//*[contains(@class,"punti")]', $row);
-                $nums = [];
-                if ($numNodes) {
-                    foreach ($numNodes as $n) {
-                        $t = trim($n->textContent);
-                        if (is_numeric($t)) $nums[] = (int)$t;
-                    }
+        // Se regex matches falliscono, prova table generico
+        if ($matchesCount > 0 && !empty($matches[1])) {
+            foreach ($matches[1] as $index => $rowHtml) {
+                // Team Name: <span class='squadra-tabella'>...</span>
+                $teamName = \'\';
+                if (preg_match(\'/<span class=[\\\'"]squadra-tabella[\\\'"]>(.*?)<\\/span>/is\', $rowHtml, $mTeam)) {
+                    $teamName = trim(strip_tags($mTeam[1]));
                 }
-                $cnt  = count($nums);
-                $pts  = $cnt > 0 ? (int)$nums[$cnt - 1] : 0;
-                $pg   = $cnt >= 3 ? (int)$nums[$cnt - 3] : 0;
-                $v    = $cnt >= 2 ? (int)$nums[$cnt - 2] : 0;
+                
+                if (empty($teamName)) continue;
+                
+                // Points: <span class='punti-Blu'> o <span class='punti-blu'>
+                $pts = 0;
+                if (preg_match(\'/<span class=[\\\'"]punti-[Bb]lu[\\\'"]>(.*?)<\\/span>/is\', $rowHtml, $mPts)) {
+                    $pts = (int)trim(strip_tags($mPts[1]));
+                }
+
+                // Stats: <div class='col-xs-4'> inside the blu-tabella blocks
+                $pg = 0; $v = 0; $l = 0;
+                if (preg_match_all(\'/<div class=[\\\'"]col-xs-4[\\\'"]>(.*?)<\\/div>/is\', $rowHtml, $mStats) && count($mStats[1]) >= 3) {
+                    $pg = (int)trim(strip_tags($mStats[1][0]));
+                    $v  = (int)trim(strip_tags($mStats[1][1]));
+                    $l  = (int)trim(strip_tags($mStats[1][2]));
+                }
 
                 $standings[] = [
-                    'position'    => $pos,
-                    'team'        => $team,
-                    'played'      => $pg,
-                    'won'         => $v,
-                    'lost'        => max(0, $pg - $v),
-                    'points'      => $pts,
-                    'is_our_team' => $this->_isOurTeam($team),
+                    \'position\'    => $index + 1,
+                    \'team\'        => $teamName,
+                    \'played\'      => $pg,
+                    \'won\'         => $v,
+                    \'lost\'        => $l,
+                    \'points\'      => $pts,
+                    \'is_our_team\' => $this->_isOurTeam($teamName),
                 ];
             }
         }
 
-        // Generic table fallback
+        // Generic table fallback if RegEx found nothing
         if (empty($standings)) {
-            $tableRows = $xpath->query('//table//tr[td]');
+            $dom = new \\DOMDocument();
+            libxml_use_internal_errors(true);
+            @$dom->loadHTML(\'<?xml encoding="UTF-8"><div>\' . $html . \'</div>\');
+            libxml_clear_errors();
+            $xpath = new \\DOMXPath($dom);
+
+            $tableRows = $xpath->query(\'//table//tr[td]\');
             if ($tableRows) {
                 foreach ($tableRows as $row) {
-                    $cells = $xpath->query('td', $row);
+                    $cells = $xpath->query(\'td\', $row);
                     if (!$cells || $cells->length < 2) continue;
                     $texts = [];
                     foreach ($cells as $cell) $texts[] = trim($cell->textContent);
-                    $team = trim($texts[1] ?? '');
+                    $team = trim($texts[1] ?? \'\');
                     if (!$team) continue;
                     $cnt = count($texts);
                     $standings[] = [
-                        'position'    => (int)($texts[0] ?? 0) ?: count($standings) + 1,
-                        'team'        => $team,
-                        'played'      => (int)($texts[2] ?? 0),
-                        'won'         => (int)($texts[3] ?? 0),
-                        'lost'        => (int)($texts[4] ?? 0),
-                        'points'      => (int)($texts[$cnt - 1] ?? 0),
-                        'is_our_team' => $this->_isOurTeam($team),
+                        \'position\'    => (int)($texts[0] ?? 0) ?: count($standings) + 1,
+                        \'team\'        => $team,
+                        \'played\'      => (int)($texts[2] ?? 0),
+                        \'won\'         => (int)($texts[3] ?? 0),
+                        \'lost\'        => (int)($texts[4] ?? 0),
+                        \'points\'      => (int)($texts[$cnt - 1] ?? 0),
+                        \'is_our_team\' => $this->_isOurTeam($team),
                     ];
                 }
             }
         }
 
-        error_log('[Results] FV classifica: ' . count($standings) . ' entries from ' . $url);
+        error_log(\'[Results] FV classifica: \' . count($standings) . \' entries from \' . $url);
         return $standings;
     }
-
     /** Fallback: parse federvolley.it HTML calendar. */
     private function _parseMatchesFedervolleyHtml(string $html): array
     {
