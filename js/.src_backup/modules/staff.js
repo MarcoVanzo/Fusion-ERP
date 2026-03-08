@@ -255,7 +255,7 @@ const Staff = (() => {
                 <div class="form-group"><label class="form-label" for="ns-role">Ruolo / Qualifica</label>
                     <select id="ns-role" class="form-select">
                         <option value="">Seleziona...</option>
-                        <option>Allenatore</option><option>Vice Allenatore</option><option>Preparatore Atletico</option>
+                        <option>Preparatore Atletico</option>
                         <option>Medico</option><option>Fisioterapista</option><option>Segreteria</option><option>Dirigente</option><option>Altro</option>
                     </select>
                 </div>
@@ -401,7 +401,7 @@ const Staff = (() => {
                     <div class="form-group"><label class="form-label" for="es-role">Ruolo / Qualifica</label>
                         <select id="es-role" class="form-select">
                             <option value="">Seleziona...</option>
-                            ${['Primo Allenatore', 'Secondo Allenatore', 'Allenatore', 'Vice Allenatore', 'Preparatore Atletico', 'Medico', 'Fisioterapista', 'Segreteria', 'Dirigente', 'Addetta Stampa', 'Altro'].map(r => `<option ${m.role === r ? 'selected' : ''}>${r}</option>`).join('')}
+                            ${['Primo Allenatore', 'Secondo Allenatore', 'Preparatore Atletico', 'Medico', 'Fisioterapista', 'Segreteria', 'Dirigente', 'Addetta Stampa', 'Altro'].map(r => `<option ${m.role === r ? 'selected' : ''}>${r}</option>`).join('')}
                         </select>
                     </div>
                     <div class="form-group"><label class="form-label" for="es-birth">Data di Nascita</label><input id="es-birth" class="form-input" type="date" value="${m.birth_date ? m.birth_date.substring(0, 10) : ''}"></div>

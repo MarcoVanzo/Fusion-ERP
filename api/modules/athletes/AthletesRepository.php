@@ -219,14 +219,16 @@ class AthletesRepository
 
     public function getMetricsHistory(string $athleteId, int $days = 30): array
     {
+        // NOTE: MySQL does not support PDO named parameters inside INTERVAL expressions.
+        // The integer is cast strictly and interpolated directly — safe from SQL injection.
+        $daysInt = (int)$days;
         $stmt = $this->db->prepare(
-            'SELECT id, log_date, duration_min, rpe, load_value, acwr_score, notes
+            "SELECT id, log_date, duration_min, rpe, load_value, acwr_score, notes
              FROM metrics_logs
-             WHERE athlete_id = :id AND log_date >= DATE_SUB(CURDATE(), INTERVAL :days DAY)
-             ORDER BY log_date DESC'
+             WHERE athlete_id = :id AND log_date >= DATE_SUB(CURDATE(), INTERVAL {$daysInt} DAY)
+             ORDER BY log_date DESC"
         );
         $stmt->bindValue(':id', $athleteId);
-        $stmt->bindValue(':days', $days, \PDO::PARAM_INT);
         $stmt->execute();
         return $stmt->fetchAll();
     }
