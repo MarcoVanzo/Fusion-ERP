@@ -309,7 +309,7 @@
         "path": "website",
         "icon": "globe",
         "isMobileVisible": false,
-        "implemented": false,
+        "implemented": true,
         "roles": [
             "manager",
             "admin"
