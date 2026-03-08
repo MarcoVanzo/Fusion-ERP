@@ -318,7 +318,7 @@ class SocialController
                 'profile' => $profile,
                 'daily_insights' => $dailyInsights,
                 'posts' => $posts,
-                'fb_insights' => $this->transformFbInsights($fbInsights),
+                'fb_insights' => $fbInsights,
                 'is_mock' => false,
             ]);
         }

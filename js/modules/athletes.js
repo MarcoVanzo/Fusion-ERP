@@ -344,7 +344,7 @@ const Athletes = (() => {
                   metric_types: d,
                 } = await Store.get("getGroupMetrics", "biometrics", qParams),
                 p = Object.keys(d || {}),
-                m = {
+                labels = {
                   SPRINT_10M: "Sprint 10m",
                   SPRINT_20M: "Sprint 20m",
                   SPRINT_40M: "Sprint 40m",
@@ -360,27 +360,24 @@ const Athletes = (() => {
                   TRAINING_LOAD: "Carico",
                   STRENGTH_1RM: "1RM",
                 },
-                g = (e) => (null != e ? Utils.formatNum(e, 2) : "—"),
-                v = (e, t) => {
-                  if (!e || !e[t])
+                g = (val) => (null != val ? Utils.formatNum(val, 2) : "—"),
+                v = (athMetrics, mKey) => {
+                  if (!athMetrics || !athMetrics[mKey])
                     return '<span style="color:var(--color-text-muted);">—</span>';
-                  const m_val = e[t];
-                  return `<span style="font-weight:600;">${g(m_val.value)}</span><span style="font-size:10px;color:var(--color-text-muted);margin-left:2px;">${Utils.escapeHtml(m_val.unit)}</span>`;
+                  const mData = athMetrics[mKey];
+                  return `<span style="font-weight:600;">${g(mData.value)}</span><span style="font-size:10px;color:var(--color-text-muted);margin-left:2px;">${Utils.escapeHtml(mData.unit)}</span>`;
                 };
               const teamsList = Array.isArray(a) ? a : [];
-              ((t.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2);margin-bottom:var(--sp-3);flex-wrap:wrap;"><p class="page-subtitle">${l.length} atlete${n ? " nella squadra selezionata" : " totali"}</p><div class="filter-bar" id="metrics-team-filter"><button class="filter-chip ${n ? "" : "active"}" data-team="" type="button">Tutte</button>${teamsList.map((e) => `<button class="filter-chip ${n === e.id ? "active" : ""}" data-team="${Utils.escapeHtml(e.id)}" type="button">${Utils.escapeHtml(i(e.category, e.name))}</button>`).join("")}</div></div><div class="table-wrapper"><table class="table"><thead><tr><th style="white-space:nowrap;">Atleta</th><th style="white-space:nowrap;">Squadra</th>${0 === p.length
-                  ? '<th style="white-space:nowrap;text-align:center;color:var(--color-text-muted);">Metriche</th>'
-                  : p.map((m_key) => `<th style="white-space:nowrap;text-align:center;">${Utils.escapeHtml(m[m_key] || m_key)}</th>`).join("")
-                }</tr></thead><tbody>${l.map((ath) => `<tr style="cursor:pointer;" data-athlete-id="${Utils.escapeHtml(ath.id)}"><td><div style="display:flex;align-items:center;gap:10px;"><div style="width:32px;height:32px;background:${o(ath.full_name)};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--font-display);font-weight:700;font-size:0.85rem;color:#000;border-radius:6px;">${null !== ath.jersey_number ? Utils.escapeHtml(String(ath.jersey_number)) : Utils.initials(ath.full_name)}</div><span style="font-weight:600;">${Utils.escapeHtml(ath.full_name)}</span></div></td><td style="font-size:12px;color:var(--color-text-muted);">${Utils.escapeHtml(i(ath.category, ath.team_name))}</td>${0 === p.length
-                    ? '<td style="text-align:center;color:var(--color-text-muted);font-size:12px;">Nessuna metrica</td>'
-                    : p.map((m_type) => `<td style="text-align:center;">${v(ath.metrics, m_type)}</td>`).join("")
-                  }</tr>`).join("")}<tr style="background:rgba(255,255,255,0.03);border-top:2px solid var(--color-border);"><td colspan="2" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--color-text-muted);padding:10px 12px;"><i class="ph ph-chart-bar" style="margin-right:4px;"></i>Media gruppo</td>${0 === p.length
-                  ? '<td style="text-align:center;"><span style="color:var(--color-text-muted);">—</span></td>'
-                  : p.map((e) => {
-                    const t = r && r[e];
-                    return `<td style="text-align:center;">${t ? `<span style="font-weight:700;color:var(--color-pink);">${g(t.value)}</span><span style="font-size:10px;color:var(--color-text-muted);margin-left:2px;">${Utils.escapeHtml(t.unit)}</span>` : '<span style="color:var(--color-text-muted);">—</span>'}</td>`;
-                  }).join("")
-                }</tr></tbody></table></div>`),
+              const headerHtml = `<div style="display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2);margin-bottom:var(--sp-3);flex-wrap:wrap;"><p class="page-subtitle">${l.length} atlete${n ? " nella squadra selezionata" : " totali"}</p><div class="filter-bar" id="metrics-team-filter"><button class="filter-chip ${n ? "" : "active"}" data-team="" type="button">Tutte</button>${teamsList.map((tm) => `<button class="filter-chip ${n === tm.id ? "active" : ""}" data-team="${tm.id}" type="button">${Utils.escapeHtml(i(tm.category, tm.name))}</button>`).join("")}</div></div>`;
+              const metricHeaders = 0 === p.length ? '<th style="white-space:nowrap;text-align:center;color:var(--color-text-muted);">Metriche</th>' : p.map((k) => `<th style="white-space:nowrap;text-align:center;">${Utils.escapeHtml(labels[k] || k)}</th>`).join("");
+              const athleteRows = l.map((ath) => `<tr style="cursor:pointer;" data-athlete-id="${ath.id}"><td><div style="display:flex;align-items:center;gap:10px;"><div style="width:32px;height:32px;background:${o(ath.full_name)};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--font-display);font-weight:700;font-size:0.85rem;color:#000;border-radius:6px;">${null !== ath.jersey_number ? Utils.escapeHtml(String(ath.jersey_number)) : Utils.initials(ath.full_name)}</div><span style="font-weight:600;">${Utils.escapeHtml(ath.full_name)}</span></div></td><td style="font-size:12px;color:var(--color-text-muted);">${Utils.escapeHtml(i(ath.category, ath.team_name))}</td>${0 === p.length ? '<td style="text-align:center;color:var(--color-text-muted);font-size:12px;">Nessuna metrica</td>' : p.map((tk) => `<td style="text-align:center;">${v(ath.metrics, tk)}</td>`).join("")}</tr>`).join("");
+              const avgCells = 0 === p.length ? '<td style="text-align:center;"><span style="color:var(--color-text-muted);">—</span></td>' : p.map((k) => {
+                const avgData = r && r[k];
+                return `<td style="text-align:center;">${avgData ? `<span style="font-weight:700;color:var(--color-pink);">${g(avgData.value)}</span><span style="font-size:10px;color:var(--color-text-muted);margin-left:2px;">${Utils.escapeHtml(avgData.unit)}</span>` : '<span style="color:var(--color-text-muted);">—</span>'}</td>`;
+              }).join("");
+
+              ((t.innerHTML = `${headerHtml}<div class="table-wrapper"><table class="table"><thead><tr><th style="white-space:nowrap;">Atleta</th><th style="white-space:nowrap;">Squadra</th>${metricHeaders}</tr></thead><tbody>${athleteRows}<tr style="background:rgba(255,255,255,0.03);border-top:2px solid var(--color-border);"><td colspan="2" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--color-text-muted);padding:10px 12px;"><i class="ph ph-chart-bar" style="margin-right:4px;"></i>Media gruppo</td>${avgCells}</tr></tbody></table></div>`),
+
                 t.querySelectorAll("[data-team]").forEach((t) =>
                   t.addEventListener(
                     "click",
