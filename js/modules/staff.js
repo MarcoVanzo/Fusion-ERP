@@ -58,7 +58,7 @@ const Staff = (() => {
 
             <div class="filter-bar" id="staff-role-filter" style="margin-bottom:var(--sp-3);">
                 <button class="filter-chip active" data-role="" type="button">Tutti</button>
-                ${roles.map(r => `<button class="filter-chip" data-role="${Utils.escapeHtml(r)}" type="button">${Utils.escapeHtml(r)}</button>`).join('')}
+                ${roles.map(r => `<button class="filter-chip" data-role="${Utils.escapeHtml(r.toLowerCase())}" type="button">${Utils.escapeHtml(r)}</button>`).join('')}
             </div>
 
             <div class="grid-3" id="staff-grid">
