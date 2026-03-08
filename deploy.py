@@ -9,6 +9,52 @@ import subprocess
 import time as _time
 from typing import cast
 
+# ── Production DB credentials (used only during deploy, never committed) ──────
+_PROD_DB = {
+    'DB_HOST': '31.11.39.161',
+    'DB_NAME': 'Sql1804377_2',
+    'DB_USER': 'Sql1804377',
+    'DB_PASS': 'u3z4t994$@psAPr',
+    'DB_PORT': '3306',
+}
+# ── Local dev DB credentials (restored after deploy) ─────────────────────────
+_LOCAL_DB = {
+    'DB_HOST': '127.0.0.1',
+    'DB_NAME': 'fusion_dev',
+    'DB_USER': 'fusion',
+    'DB_PASS': 'fusion123',
+    'DB_PORT': '3306',
+}
+
+def _swap_env_db(target: dict) -> dict:
+    """Rewrite .env with the given DB credentials. Returns the OLD values."""
+    env_file = '.env'
+    try:
+        with open(env_file, 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+        old = {}
+        new_lines = []
+        for line in lines:
+            stripped = line.strip()
+            matched = False
+            for key, val in target.items():
+                if stripped.startswith(key + '=') or stripped.startswith(key + ' ='):
+                    # Save old value
+                    m = re.match(r'^([^=]+)=(.*)$', stripped)
+                    if m:
+                        old[key] = m.group(2).strip().strip("'\"")
+                    new_lines.append(f'{key}={val}\n')
+                    matched = True
+                    break
+            if not matched:
+                new_lines.append(line)
+        with open(env_file, 'w', encoding='utf-8') as f:
+            f.writelines(new_lines)
+        return old
+    except Exception as e:
+        print(f'⚠️  Could not swap .env DB credentials: {e}')
+        return {}
+
 CACHE_FILE = '.deploy_cache.json'
 
 def load_env():
@@ -265,17 +311,26 @@ def main():
     # 3. Aggiorna cache buster prima del deploy
     update_index_version()
 
-    # 4. Deploy directly
+    # 4. Swap .env to production DB before upload
+    print("🔄 Switching .env to production DB...")
+    _swap_env_db(_PROD_DB)
+
+    # 5. Deploy directly
     try:
         success = deploy_files_via_ftp()
-        if success:
-            print("\n🎉 Auto-deployment finished successfully!")
-            print("Your application is now live. Only changed files were uploaded.")
-        else:
-            print("\n💥 Deployment failed. Please check the errors above.")
-            sys.exit(1)
     except KeyboardInterrupt:
         print("\n🛑 Deployment interrupted by user. Cache saved for uploaded files.")
+        success = False
+    finally:
+        # 6. Always restore local .env after deploy
+        print("🔄 Restoring .env to local dev DB...")
+        _swap_env_db(_LOCAL_DB)
+
+    if success:
+        print("\n🎉 Auto-deployment finished successfully!")
+        print("Your application is now live. Only changed files were uploaded.")
+    else:
+        print("\n💥 Deployment failed. Please check the errors above.")
         sys.exit(1)
 
 if __name__ == '__main__':

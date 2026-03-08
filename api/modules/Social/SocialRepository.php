@@ -339,7 +339,7 @@ class SocialRepository
      */
     public function getIgInsights(string $igAccountId, string $accessToken, string $period = 'day', int $days = 28): array
     {
-        $since = date('Y-m-d', strtotime("-{$days} days"));
+        $since = date('Y-m-d', strtotime('-' . $days . ' days'));
         $until = date('Y-m-d');
 
         $fields = implode(',', [
@@ -460,26 +460,26 @@ class SocialRepository
      */
     public function getFbPageInsights(string $pageId, string $accessToken, int $days = 28): array
     {
-        $since = date('Y-m-d', strtotime("-{$days} days"));
+        $since = date('Y-m-d', strtotime('-' . $days . ' days'));
         $until = date('Y-m-d');
 
         // Daily metrics
         $urlDaily = self::GRAPH_BASE_URL . self::GRAPH_API_VERSION . '/' . $pageId . '/insights?'
             . http_build_query([
-                'metric' => 'page_views_total,page_engaged_users,page_post_engagements',
-                'period' => 'day',
-                'since' => $since,
-                'until' => $until,
-                'access_token' => $accessToken,
-            ]);
+            'metric' => 'page_views_total,page_engaged_users,page_post_engagements',
+            'period' => 'day',
+            'since' => $since,
+            'until' => $until,
+            'access_token' => $accessToken,
+        ]);
 
         // Lifetime metrics
         $urlLifetime = self::GRAPH_BASE_URL . self::GRAPH_API_VERSION . '/' . $pageId . '/insights?'
             . http_build_query([
-                'metric' => 'page_fans',
-                'period' => 'lifetime',
-                'access_token' => $accessToken,
-            ]);
+            'metric' => 'page_fans',
+            'period' => 'lifetime',
+            'access_token' => $accessToken,
+        ]);
 
         $result = [
             'page_views' => 0,

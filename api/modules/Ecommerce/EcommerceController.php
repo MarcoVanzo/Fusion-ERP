@@ -62,7 +62,7 @@ class EcommerceController
         }
 
         if ($httpCode !== 200) {
-            Response::error("Il negozio ha risposto HTTP {$httpCode}. Potrebbe essere offline.", 502);
+            Response::error('Il negozio ha risposto HTTP ' . $httpCode . '. Potrebbe essere offline.', 502);
         }
 
         $products = self::_parseShopHtml((string)$html);
@@ -323,7 +323,7 @@ class EcommerceController
         }
 
         $formId = self::cognitoOrderFormId();
-        $url = "https://www.cognitoforms.com/api/odata/Forms({$formId})/Views(1)/Entries?\$expand=*";
+        $url = 'https://www.cognitoforms.com/api/odata/Forms(' . $formId . ')/Views(1)/Entries?$expand=*';
 
         $ch = curl_init($url);
         curl_setopt_array($ch, [
@@ -344,7 +344,7 @@ class EcommerceController
         }
 
         if ($httpCode !== 200) {
-            $msg = "Cognito Forms ha risposto HTTP {$httpCode}.";
+            $msg = 'Cognito Forms ha risposto HTTP ' . $httpCode . '.';
             if ($httpCode === 401) {
                 $msg = 'Token Cognito scaduto o non valido (HTTP 401). Rinnova la chiave su cognitoforms.com.';
             }
@@ -403,7 +403,7 @@ class EcommerceController
                 $count++;
             }
             $db->commit();
-            Response::success(['message' => "Sincronizzati {$count} ordini dal cloud.", 'count' => $count]);
+            Response::success(['message' => 'Sincronizzati ' . $count . ' ordini dal cloud.', 'count' => $count]);
         }
         catch (\Exception $ex) {
             $db->rollBack();
