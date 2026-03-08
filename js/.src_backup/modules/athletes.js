@@ -775,6 +775,7 @@ const Athletes = (() => {
                   </tbody>
                 </table>
               </div>` : Utils.emptyState('Nessun pagamento registrato')}
+          </div>
           <!-- DOCUMENTI TAB -->
           <div id="tab-panel-documenti" class="athlete-tab-panel" style="display:none;flex-direction:column;gap:var(--sp-4);">
             <p class="section-label">Documenti Atleta</p>

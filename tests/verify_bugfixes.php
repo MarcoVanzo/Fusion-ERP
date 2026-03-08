@@ -102,7 +102,7 @@ $router = file_get_contents($root . '/api/router.php');
 assertNotContains($router, "'migrate'", 'Router: case migrate rimosso');
 assertNotContains($router, "fusionerp2025v037", 'Router: secret hardcoded rimosso');
 assertNotContains($router, "V037__federation_sync", 'Router: percorso file SQL rimosso');
-assertContains($router, 'dispatch(',       'Router: funzione dispatch presente');
+assertContains($router, 'dispatch(', 'Router: funzione dispatch presente');
 
 // Verifica che i 19 moduli legittimi siano ancora presenti
 $modules = ['auth', 'athletes', 'teams', 'events', 'transport', 'admin', 'dashboard',
@@ -144,7 +144,7 @@ echo "╚═══════════════════════�
 
 $maxLabel = max(array_map(fn($r) => strlen($r['label']), $results));
 foreach ($results as $r) {
-    $pad = str_repeat(' ', $maxLabel - strlen($r['label']));
+    $pad = str_repeat(' ', (int)($maxLabel - strlen($r['label'])));
     echo " {$r['status']}  {$r['label']}{$pad}";
     if (!empty($r['detail'])) {
         echo "  → {$r['detail']}";
@@ -154,9 +154,9 @@ foreach ($results as $r) {
 
 $total = $passed + $failed;
 echo "\n────────────────────────────────────────────────────────\n";
-echo " Risultato: {$passed}/{$total} test superati";
+echo " Risultato: " . $passed . "/" . $total . " test superati";
 if ($failed > 0) {
-    echo "  ⚠️  {$failed} falliti\n";
+    echo "  ⚠️  " . $failed . " falliti\n";
     exit(1);
 }
 else {

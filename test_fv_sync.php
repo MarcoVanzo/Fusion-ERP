@@ -1,11 +1,5 @@
 <?php
-require 'vendor/autoload.php';
-$dotenv = Dotenv\Dotenv::createUnsafeImmutable(__DIR__);
-$dotenv->load();
-
-require_once 'api/Shared/Database.php';
-
-// Mock TenantContext
+// Mock TenantContext — namespace must come before any non-declare statements
 namespace FusionERP\Shared {
     class TenantContext
     {
@@ -39,6 +33,12 @@ namespace FusionERP\Shared {
 }
 
 namespace {
+    require 'vendor/autoload.php';
+    $dotenv = Dotenv\Dotenv::createUnsafeImmutable(__DIR__);
+    $dotenv->load();
+
+    require_once 'api/Shared/Database.php';
+
     define('TEST_MODE', true);
     require_once 'api/Modules/Results/ResultsController.php';
 

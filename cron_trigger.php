@@ -33,7 +33,7 @@ $dotenv->load();
 // ── Database ──────────────────────────────────────────────────────────────────
 use FusionERP\Shared\Database;
 use FusionERP\Shared\GoogleDrive;
-use FusionERP\Modules\Admin\AdminController;
+use FusionERP\Shared\BackupService;
 use FusionERP\Modules\Admin\AdminRepository;
 
 $startTime = microtime(true);
@@ -41,12 +41,11 @@ $log = [];
 
 try {
     $db = Database::getInstance();
-    $ctrl = new AdminController();
     $repo = new AdminRepository($db);
 
     // ── 1. Esegui il dump ────────────────────────────────────────────────────
-    $result = AdminController::_performBackupDump(null, 'Cron Automatico (Web)');
-    if (!$result || isset($result['error'])) {
+    $result = (new BackupService($repo))->dump(null, 'Cron Automatico (Web)');
+    if (!$result['success'] || isset($result['error'])) {
         throw new \RuntimeException('Dump fallito: ' . ($result['error'] ?? 'errore sconosciuto'));
     }
 
@@ -73,7 +72,7 @@ try {
     }
 
     $elapsed = round(microtime(true) - $startTime, 2);
-    $log[] = "⏱ Tempo: {$elapsed}s";
+    $log[] = "⏱ Tempo: " . $elapsed . "s";
 
     echo json_encode([
         'success' => true,

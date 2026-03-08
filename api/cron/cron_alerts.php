@@ -203,4 +203,4 @@ foreach ($upcoming as $up) {
     }
 }
 
-echo "\n═══ CRON COMPLETE — Emails: {$emailsSent}, WhatsApp: {$waSent} ═══\n";
+echo "\n═══ CRON COMPLETE — Emails: " . $emailsSent . ", WhatsApp: " . $waSent . " ═══\n";

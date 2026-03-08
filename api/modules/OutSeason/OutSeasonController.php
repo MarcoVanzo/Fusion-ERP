@@ -113,7 +113,7 @@ class OutSeasonController
         // Cognito OData API: richiediamo tutti i campi (senza $select) perché
         // la notazione OData per i campi annidati (Entry_DateSubmitted ecc.)
         // nel parametro $select causa HTTP 400 su alcune versioni dell'API.
-        $url = "https://www.cognitoforms.com/api/odata/Forms({$formId})/Views({$viewId})/Entries";
+        $url = 'https://www.cognitoforms.com/api/odata/Forms(' . $formId . ')/Views(' . $viewId . ')/Entries';
 
 
         $ch = curl_init($url);
@@ -291,7 +291,7 @@ class OutSeasonController
         foreach ($bonificoEntries as $i => $entry) {
             $amount = str_contains((string)$entry['formula_scelta'], 'Full') ? $priceFull : $pricePartial;
             $n = $i + 1;
-            $entriesText .= "{$n}. {$entry['nome_e_cognome']} — " . (string)$amount . ",00 €\n";
+            $entriesText .= $n . '. ' . $entry['nome_e_cognome'] . ' — ' . (string)$amount . ",00 €\n";
             $bonificoList[] = ['name' => $entry['nome_e_cognome'], 'amount' => $amount];
         }
 

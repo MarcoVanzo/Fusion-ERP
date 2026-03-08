@@ -80,7 +80,7 @@ foreach ($statements as $stmt) {
 }
 
 echo "\n--- Riepilogo ---\n";
-echo "Eseguiti: {$executed}\nSaltati:  {$skipped}\nErrori:   {$errors}\n\n";
+echo "Eseguiti: " . $executed . "\nSaltati:  " . $skipped . "\nErrori:   " . $errors . "\n\n";
 
 // Verify after migration
 echo "--- Verifica finale ---\n";

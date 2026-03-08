@@ -412,6 +412,12 @@ class ResultsController
                 WHERE m.status = 'played'
                   AND m.home_score IS NOT NULL
                   AND m.away_score IS NOT NULL
+                  AND m.match_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+                  AND m.match_date <= NOW()
+                  AND (
+                    LOWER(m.home_team) LIKE '%fusion%'
+                    OR LOWER(m.away_team) LIKE '%fusion%'
+                  )
                 ORDER BY m.match_date DESC
                 LIMIT :lim
             ");
@@ -1284,13 +1290,13 @@ class ResultsController
         $ultimaGiocata = (int)($giornateData['ultimagiornata'] ?? 0);
         $totalGiornate = count($giornateData['giornate'] ?? []) ?: max($ultimaGiocata, 26);
 
-        error_log("[Results] FV REST {$serie}/{$sesso}/{$stagione}/{$girone}: ultima={$ultimaGiocata}, tot={$totalGiornate}");
+        error_log("[Results] FV REST " . $serie . "/" . $sesso . "/" . $stagione . "/" . $girone . ": ultima=" . $ultimaGiocata . ", tot=" . $totalGiornate);
 
         $allMatches = [];
         // Fetch played + 1 upcoming round
         $limit = min($ultimaGiocata + 1, $totalGiornate);
         for ($g = 1; $g <= $limit; $g++) {
-            $calUrl = "{$base}/live_score/live-score-calendario/{$serie}/{$sesso}/{$stagione}/{$girone}/{$g}";
+            $calUrl = $base . "/live_score/live-score-calendario/" . $serie . "/" . $sesso . "/" . $stagione . "/" . $girone . "/" . $g;
             $calBody = $this->_fetch($calUrl, $err);
             if (!$calBody)
                 continue;
@@ -1334,7 +1340,7 @@ class ResultsController
                     'time' => $timeStr,
                     'home' => $home,
                     'away' => $away,
-                    'score' => $played ? "{$setsHome} - {$setsAway}" : null,
+                    'score' => $played ? ($setsHome . ' - ' . $setsAway) : null,
                     'sets_home' => $setsHome,
                     'sets_away' => $setsAway,
                     'status' => $status,
@@ -1371,8 +1377,8 @@ class ResultsController
         $stagione = $p['stagione'];
         $girone = $p['girone'];
 
-        $url = "{$base}/moduli/campionati/classifica/classifica.php"
-            . "?serie={$serie}&sesso={$sesso}&stagione={$stagione}&giornata={$giornata}&girone={$girone}";
+        $url = $base . "/moduli/campionati/classifica/classifica.php"
+            . "?serie=" . $serie . "&sesso=" . $sesso . "&stagione=" . $stagione . "&giornata=" . $giornata . "&girone=" . $girone;
 
         $err = '';
         $body = $this->_fetch($url, $err);
