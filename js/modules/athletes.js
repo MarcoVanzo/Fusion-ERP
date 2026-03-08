@@ -225,42 +225,63 @@ const Athletes = (() => {
     }
   }
 
-  // ─── SQUAD-LEVEL TAB: PAGAMENTI ──────────────────────────────────
+  // ─── SQUAD-LEVEL TAB: PAGAMENTI ──────────────────────────────────────────────
   async function _renderSquadPayments(container) {
     container.innerHTML = `<div style="display:flex;flex-direction:column;gap:8px;">${[1, 2, 3].map(() => '<div class="skeleton skeleton-text"></div>').join('')}</div>`;
     try {
-      const allPayments = (await Promise.all(
-        _state.map(a => Store.get('payments', 'athletes', { id: a.id }).catch(() => []))
-      )).flat();
-      const total = allPayments.reduce((s, p) => s + parseFloat(p.amount || 0), 0);
-      const paid = allPayments.filter(p => p.status === 'paid').reduce((s, p) => s + parseFloat(p.amount || 0), 0);
-      const overdue = allPayments.filter(p => p.status === 'overdue').reduce((s, p) => s + parseFloat(p.amount || 0), 0);
-      const pending = allPayments.filter(p => p.status === 'pending').reduce((s, p) => s + parseFloat(p.amount || 0), 0);
+      // ✔ Single aggregated API call — replaces the previous N parallel getPlan() calls
+      const teamParam = _currentTeam ? { team_id: _currentTeam } : {};
+      const { installments: allPayments, stats } = await Store.get('squadSummary', 'payments', teamParam);
+
+      // Filter chip for quick status filter
+      let _statusFilter = '';
+      const renderTable = (items) => {
+        const filtered = _statusFilter ? items.filter(p => (p.status || '').toUpperCase() === _statusFilter.toUpperCase()) : items;
+        if (filtered.length === 0) return Utils.emptyState('Nessun pagamento trovato', _statusFilter ? 'Nessun elemento corrisponde al filtro.' : 'Nessun pagamento registrato per questa squadra.');
+        return `
+          <div class="table-wrapper">
+            <table class="table">
+              <thead><tr><th>Atleta</th><th>Scadenza</th><th>Importo</th><th>Stato</th><th>Metodo</th></tr></thead>
+              <tbody>
+                ${filtered.map(p => `<tr>
+                  <td><strong>${Utils.escapeHtml(p.athlete_name || '\u2014')}</strong></td>
+                  <td>${Utils.formatDate(p.due_date)}</td>
+                  <td><strong>\u20ac ${Utils.formatNum(p.amount, 2)}</strong></td>
+                  <td>${p.status === 'PAID' ? '<span class="badge badge-success">Pagato</span>' : p.status === 'OVERDUE' ? '<span class="badge badge-danger">Scaduto</span>' : '<span class="badge badge-warning">In attesa</span>'}</td>
+                  <td>${Utils.escapeHtml(p.payment_method || '\u2014')}</td>
+                </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>`;
+      };
+
       container.innerHTML = `
         <p class="section-label">Riepilogo Pagamenti Squadra</p>
         <div class="grid-3" style="margin-bottom:var(--sp-3);">
-          <div class="stat-card"><span class="stat-label">Totale</span><span class="stat-value">€ ${Utils.formatNum(total, 2)}</span></div>
-          <div class="stat-card"><span class="stat-label">Incassato</span><span class="stat-value" style="color:var(--color-success)">€ ${Utils.formatNum(paid, 2)}</span></div>
-          <div class="stat-card"><span class="stat-label">Scaduto</span><span class="stat-value" style="color:var(--color-pink)">€ ${Utils.formatNum(overdue, 2)}</span></div>
+          <div class="stat-card"><span class="stat-label">Atteso</span><span class="stat-value">&euro; ${Utils.formatNum(stats.total_expected, 2)}</span></div>
+          <div class="stat-card"><span class="stat-label">Incassato</span><span class="stat-value" style="color:var(--color-success)">&euro; ${Utils.formatNum(stats.total_paid, 2)}</span></div>
+          <div class="stat-card"><span class="stat-label">Scaduto</span><span class="stat-value" style="color:var(--color-pink)">&euro; ${Utils.formatNum(stats.total_overdue, 2)}</span></div>
         </div>
-        ${allPayments.length > 0 ? `
-        <div class="table-wrapper">
-          <table class="table">
-            <thead><tr><th>Atleta</th><th>Scadenza</th><th>Importo</th><th>Stato</th><th>Metodo</th></tr></thead>
-            <tbody>
-              ${allPayments.slice(0, 50).map(p => `<tr>
-                <td>${Utils.escapeHtml(p.athlete_name || p.payer_name || '—')}</td>
-                <td>${Utils.formatDate(p.due_date)}</td>
-                <td><strong>€ ${Utils.formatNum(p.amount, 2)}</strong></td>
-                <td>${p.status === 'paid' ? '<span class="badge badge-success">Pagato</span>' : p.status === 'overdue' ? '<span class="badge badge-danger">Scaduto</span>' : '<span class="badge badge-warning">In attesa</span>'}</td>
-                <td>${Utils.escapeHtml(p.payment_method || '—')}</td>
-              </tr>`).join('')}
-            </tbody>
-          </table>
-        </div>` : Utils.emptyState('Nessun pagamento registrato')}
+        <div class="filter-bar" style="margin-bottom:var(--sp-3);" id="pay-status-filter">
+          <button class="filter-chip active" data-status="" type="button">Tutti (${allPayments.length})</button>
+          <button class="filter-chip" data-status="PAID" type="button">Pagati</button>
+          <button class="filter-chip" data-status="OVERDUE" type="button">Scaduti</button>
+          <button class="filter-chip" data-status="PENDING" type="button">In attesa</button>
+        </div>
+        <div id="pay-table-container">${renderTable(allPayments)}</div>
       `;
+
+      // Wire status filter chips
+      container.querySelectorAll('#pay-status-filter [data-status]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          _statusFilter = btn.dataset.status;
+          container.querySelectorAll('#pay-status-filter [data-status]').forEach(b => b.classList.toggle('active', b === btn));
+          document.getElementById('pay-table-container').innerHTML = renderTable(allPayments);
+        }, { signal: _ac.signal });
+      });
+
     } catch (err) {
-      container.innerHTML = Utils.emptyState('Errore caricamento pagamenti', err.message);
+      container.innerHTML = Utils.emptyState('Errore caricamento pagamenti', Utils.friendlyError(err));
     }
   }
 
@@ -338,11 +359,16 @@ const Athletes = (() => {
     `;
   }
 
-  // ─── ATHLETE DETAIL NAVIGATION ────────────────────────────────────
+  // ─── ATHLETE DETAIL NAVIGATION ──────────────────────────────────────────────────
+  /**
+   * Open the athlete's full profile directly (MT#2 — skip intermediate dashboard screen).
+   * The activity log dashboard is now accessible via a "Storico Attività" button
+   * inside the athlete hero header.
+   */
   function _openAthleteDetail(athleteId) {
     _selectedAthleteId = athleteId;
     sessionStorage.setItem('last_athlete_id', athleteId);
-    _renderAthleteDashboard(athleteId);
+    _renderAthleteDetail(athleteId, 'anagrafica');
   }
 
   function _closeAthleteDetail() {
@@ -1068,7 +1094,7 @@ const Athletes = (() => {
 
     const overlay = side === 'front' ? overlayFront : overlayBack;
 
-    return `<div style="position:relative;width:100%;max-width:260px;margin:0 auto;">
+    return `<div style="position:relative;width:100%;">
       <img src="${imgSrc}" alt="Corpo femminile vista ${side === 'front' ? 'frontale' : 'posteriore'}"
         style="width:100%;height:auto;display:block;border-radius:8px;object-fit:cover;"
         onerror="this.style.display='none'">
@@ -1196,95 +1222,108 @@ const Athletes = (() => {
 
       container.innerHTML = `
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:var(--sp-2);padding-bottom:var(--sp-2);border-bottom:1px solid var(--color-border);">
-          <div style="width:10px;height:10px;border-radius:50%;background:${semColor};box-shadow:0 0 8px ${semColor};"></div>
+          <div style="width:10px;height:10px;border-radius:50%;background:${semColor};box-shadow:0 0 8px ${semColor};flex-shrink:0;"></div>
           <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;">${Utils.escapeHtml(semaphore?.label || overallStatus)}</span>
           <span style="font-size:10px;color:var(--color-text-muted);margin-left:auto;">Test: ${Utils.escapeHtml(testDate || '—')} · ${Utils.escapeHtml(testType || 'CMJ')}</span>
         </div>
 
-        <div class="cmj-dashboard">
-          <div class="cmj-body-panel">
-            <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-text-muted);width:100%;text-align:center;padding-bottom:4px;">Stato Neuromuscolare</div>
-            <div class="cmj-body-views">
-              <div class="cmj-body-view"><span class="cmj-body-label">Frontale</span>${_svgFrontale(muscleStates)}</div>
-              <div class="cmj-body-view"><span class="cmj-body-label">Posteriore</span>${_svgPosteriore(muscleStates)}</div>
-            </div>
-            <div class="cmj-legend" style="margin-top:8px;">
-              <div class="cmj-legend-item"><div class="cmj-legend-dot" style="background:#00E676;"></div>OK</div>
-              <div class="cmj-legend-item"><div class="cmj-legend-dot" style="background:#FFD600;"></div>Attenzione</div>
-              <div class="cmj-legend-item"><div class="cmj-legend-dot" style="background:#FF1744;"></div>Rischio</div>
-              <div class="cmj-legend-item"><div class="cmj-legend-dot" style="background:#FF6D00;"></div>Alert</div>
-            </div>
+        <!-- ── HERO: immagini a tutto schermo ── -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-2);margin-bottom:var(--sp-3);">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+            <span style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-text-muted);">Frontale</span>
+            ${_bodyView('front', muscleStates)}
           </div>
-
-          <div style="display:flex;flex-direction:column;gap:var(--sp-2);">
-            <div class="cmj-kpi-grid">
-              ${kpiCards.map(k => `
-                <div class="cmj-kpi-card ${_cmjStatusClass(k.status)}">
-                  <div class="cmj-kpi-name"><i class="ph ph-${k.icon}" style="margin-right:4px;"></i>${k.name}</div>
-                  <div class="cmj-kpi-value">${k.value}<span class="cmj-kpi-unit">${k.unit}</span></div>
-                  <div class="cmj-kpi-delta">${_cmjStatusBadge(k.status)} ${k.delta}</div>
-                </div>`).join('')}
-            </div>
-
-            <div class="cmj-coach-msg ${_cmjStatusClass(overallStatus)}">
-              <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--color-text-muted);margin-bottom:6px;">
-                <i class="ph ph-chalkboard-teacher" style="margin-right:4px;"></i>Raccomandazione Coach
-              </div>
-              <p style="font-size:13px;line-height:1.6;color:var(--color-text);font-style:italic;">${Utils.escapeHtml(coachMessage || '')}</p>
-              ${semaphore?.action ? `<div style="margin-top:8px;font-size:12px;font-weight:600;color:var(--color-text-muted);">${Utils.escapeHtml(semaphore.action)}</div>` : ''}
-            </div>
-
-            <div class="cmj-force-curve">
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-                <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--color-text-muted);">
-                  <i class="ph ph-chart-line-up" style="margin-right:4px;"></i>Trend RSImod / Salto (ultimi test)
-                </span>
-                <span style="font-size:10px;color:var(--color-text-muted);">${results?.length || 0} test</span>
-              </div>
-              ${_forceCurveSvg(results, overallStatus)}
-              <div style="display:flex;justify-content:space-between;margin-top:4px;">
-                <span style="font-size:9px;color:var(--color-text-muted);">Più vecchio</span>
-                <span style="font-size:9px;color:var(--color-text-muted);">Più recente</span>
-              </div>
-            </div>
-
-            ${asymmetry ? `
-            <div style="background:rgba(255,255,255,0.02);border:1px solid var(--color-border);border-radius:var(--radius);padding:var(--sp-2) var(--sp-3);">
-              <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--color-text-muted);margin-bottom:10px;">
-                <i class="ph ph-arrows-left-right" style="margin-right:4px;"></i>Dettaglio Asimmetria SX / DX
-              </div>
-              <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:var(--sp-1);">
-                <div style="text-align:left;">
-                  <div style="font-size:9px;color:var(--color-text-muted);text-transform:uppercase;margin-bottom:2px;">SX</div>
-                  <div style="font-size:1.2rem;font-family:var(--font-display);font-weight:700;">${asymmetry.landing?.left ?? '—'}<span style="font-size:11px;color:var(--color-text-muted);"> N</span></div>
-                  <div style="height:8px;background:rgba(255,255,255,0.06);border-radius:4px;margin-top:4px;overflow:hidden;"><div style="height:100%;background:#00f2fe;border-radius:4px;width:${Math.round((asymmetry.landing?.left || 0) / ((asymmetry.landing?.left || 0) + (asymmetry.landing?.right || 1)) * 100)}%;"></div></div>
-                </div>
-                <div style="text-align:center;"><div class="cmj-kpi-badge ${asymStatus === 'ALERT' ? 'alert' : asymStatus === 'YELLOW' ? 'yellow' : 'green'}" style="font-size:10px;padding:4px 10px;">${asymPct != null ? asymPct.toFixed(1) + '%' : '—'}</div></div>
-                <div style="text-align:right;">
-                  <div style="font-size:9px;color:var(--color-text-muted);text-transform:uppercase;margin-bottom:2px;">DX</div>
-                  <div style="font-size:1.2rem;font-family:var(--font-display);font-weight:700;">${asymmetry.landing?.right ?? '—'}<span style="font-size:11px;color:var(--color-text-muted);"> N</span></div>
-                  <div style="height:8px;background:rgba(255,255,255,0.06);border-radius:4px;margin-top:4px;overflow:hidden;"><div style="height:100%;background:#ff007a;border-radius:4px;margin-left:auto;width:${Math.round((asymmetry.landing?.right || 0) / ((asymmetry.landing?.left || 0) + (asymmetry.landing?.right || 1)) * 100)}%;"></div></div>
-                </div>
-              </div>
-            </div>` : ''}
-
-            ${ranking && ranking.length > 0 ? `
-            <div style="background:rgba(255,255,255,0.02);border:1px solid var(--color-border);border-radius:var(--radius);padding:var(--sp-2) var(--sp-3);">
-              <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--color-text-muted);margin-bottom:10px;">
-                <i class="ph ph-trophy" style="margin-right:4px;"></i>Classifica Squadra (RSImod)
-              </div>
-              <div style="display:flex;flex-direction:column;gap:4px;">
-                ${ranking.map((r, i) => `
-                  <div style="display:flex;align-items:center;gap:10px;padding:5px 8px;border-radius:6px;background:${r.athlete_id === athleteId ? 'rgba(255,0,122,0.08)' : 'transparent'};">
-                    <span style="font-size:12px;font-weight:700;color:var(--color-text-muted);width:18px;">#${i + 1}</span>
-                    <span style="flex:1;font-size:12px;">${Utils.escapeHtml(r.name || r.full_name || '—')}</span>
-                    <span style="font-size:12px;font-weight:700;color:${r.athlete_id === athleteId ? 'var(--color-pink)' : 'var(--color-text)'};">${r.rsimod ?? '—'}</span>
-                  </div>`).join('')}
-              </div>
-            </div>` : ''}
+          <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+            <span style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-text-muted);">Posteriore</span>
+            ${_bodyView('back', muscleStates)}
           </div>
         </div>
+
+        <!-- Legenda colori -->
+        <div class="cmj-legend" style="margin-bottom:var(--sp-3);">
+          <div class="cmj-legend-item"><div class="cmj-legend-dot" style="background:#00E676;"></div>OK</div>
+          <div class="cmj-legend-item"><div class="cmj-legend-dot" style="background:#FFD600;"></div>Attenzione</div>
+          <div class="cmj-legend-item"><div class="cmj-legend-dot" style="background:#FF1744;"></div>Rischio</div>
+          <div class="cmj-legend-item"><div class="cmj-legend-dot" style="background:#FF6D00;"></div>Alert</div>
+        </div>
+
+        <!-- ── INDICATORI SOTTO ── -->
+        <div style="display:flex;flex-direction:column;gap:var(--sp-2);">
+
+          <!-- 4 KPI card -->
+          <div class="cmj-kpi-grid">
+            ${kpiCards.map(k => `
+              <div class="cmj-kpi-card ${_cmjStatusClass(k.status)}">
+                <div class="cmj-kpi-name"><i class="ph ph-${k.icon}" style="margin-right:4px;"></i>${k.name}</div>
+                <div class="cmj-kpi-value">${k.value}<span class="cmj-kpi-unit">${k.unit}</span></div>
+                <div class="cmj-kpi-delta">${_cmjStatusBadge(k.status)} ${k.delta}</div>
+              </div>`).join('')}
+          </div>
+
+          <!-- Coach -->
+          <div class="cmj-coach-msg ${_cmjStatusClass(overallStatus)}">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--color-text-muted);margin-bottom:6px;">
+              <i class="ph ph-chalkboard-teacher" style="margin-right:4px;"></i>Raccomandazione Coach
+            </div>
+            <p style="font-size:13px;line-height:1.6;color:var(--color-text);font-style:italic;">${Utils.escapeHtml(coachMessage || '')}</p>
+            ${semaphore?.action ? `<div style="margin-top:8px;font-size:12px;font-weight:600;color:var(--color-text-muted);">${Utils.escapeHtml(semaphore.action)}</div>` : ''}
+          </div>
+
+          <!-- Trend RSImod -->
+          <div class="cmj-force-curve">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+              <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--color-text-muted);">
+                <i class="ph ph-chart-line-up" style="margin-right:4px;"></i>Trend RSImod / Salto (ultimi test)
+              </span>
+              <span style="font-size:10px;color:var(--color-text-muted);">${results?.length || 0} test</span>
+            </div>
+            ${_forceCurveSvg(results, overallStatus)}
+            <div style="display:flex;justify-content:space-between;margin-top:4px;">
+              <span style="font-size:9px;color:var(--color-text-muted);">Più vecchio</span>
+              <span style="font-size:9px;color:var(--color-text-muted);">Più recente</span>
+            </div>
+          </div>
+
+          <!-- Asimmetria SX / DX -->
+          ${asymmetry ? `
+          <div style="background:rgba(255,255,255,0.02);border:1px solid var(--color-border);border-radius:var(--radius);padding:var(--sp-2) var(--sp-3);">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--color-text-muted);margin-bottom:10px;">
+              <i class="ph ph-arrows-left-right" style="margin-right:4px;"></i>Dettaglio Asimmetria SX / DX
+            </div>
+            <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:var(--sp-1);">
+              <div style="text-align:left;">
+                <div style="font-size:9px;color:var(--color-text-muted);text-transform:uppercase;margin-bottom:2px;">SX</div>
+                <div style="font-size:1.2rem;font-family:var(--font-display);font-weight:700;">${asymmetry.landing?.left ?? '—'}<span style="font-size:11px;color:var(--color-text-muted);"> N</span></div>
+                <div style="height:8px;background:rgba(255,255,255,0.06);border-radius:4px;margin-top:4px;overflow:hidden;"><div style="height:100%;background:#00f2fe;border-radius:4px;width:${Math.round((asymmetry.landing?.left || 0) / ((asymmetry.landing?.left || 0) + (asymmetry.landing?.right || 1)) * 100)}%;"></div></div>
+              </div>
+              <div style="text-align:center;"><div class="cmj-kpi-badge ${asymStatus === 'ALERT' ? 'alert' : asymStatus === 'YELLOW' ? 'yellow' : 'green'}" style="font-size:10px;padding:4px 10px;">${asymPct != null ? asymPct.toFixed(1) + '%' : '—'}</div></div>
+              <div style="text-align:right;">
+                <div style="font-size:9px;color:var(--color-text-muted);text-transform:uppercase;margin-bottom:2px;">DX</div>
+                <div style="font-size:1.2rem;font-family:var(--font-display);font-weight:700;">${asymmetry.landing?.right ?? '—'}<span style="font-size:11px;color:var(--color-text-muted);"> N</span></div>
+                <div style="height:8px;background:rgba(255,255,255,0.06);border-radius:4px;margin-top:4px;overflow:hidden;"><div style="height:100%;background:#ff007a;border-radius:4px;margin-left:auto;width:${Math.round((asymmetry.landing?.right || 0) / ((asymmetry.landing?.left || 0) + (asymmetry.landing?.right || 1)) * 100)}%;"></div></div>
+              </div>
+            </div>
+          </div>` : ''}
+
+          <!-- Classifica -->
+          ${ranking && ranking.length > 0 ? `
+          <div style="background:rgba(255,255,255,0.02);border:1px solid var(--color-border);border-radius:var(--radius);padding:var(--sp-2) var(--sp-3);">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--color-text-muted);margin-bottom:10px;">
+              <i class="ph ph-trophy" style="margin-right:4px;"></i>Classifica Squadra (RSImod)
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px;">
+              ${ranking.map((r, i) => `
+                <div style="display:flex;align-items:center;gap:10px;padding:5px 8px;border-radius:6px;background:${r.athlete_id === athleteId ? 'rgba(255,0,122,0.08)' : 'transparent'};">
+                  <span style="font-size:12px;font-weight:700;color:var(--color-text-muted);width:18px;">#${i + 1}</span>
+                  <span style="flex:1;font-size:12px;">${Utils.escapeHtml(r.name || r.full_name || '—')}</span>
+                  <span style="font-size:12px;font-weight:700;color:${r.athlete_id === athleteId ? 'var(--color-pink)' : 'var(--color-text)'};">${r.rsimod ?? '—'}</span>
+                </div>`).join('')}
+            </div>
+          </div>` : ''}
+
+        </div>
       `;
+
 
     } catch (err) {
       container.innerHTML = `

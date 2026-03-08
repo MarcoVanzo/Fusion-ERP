@@ -442,7 +442,7 @@ const Dashboard = (() => {
           <!-- WIDGET 4: DEADLINES -->
           <div class="widget w-deadlines">
             <div class="widget-header">
-              <div class="widget-title">⏰ Scadenze Imminenti</div>
+              <div class="widget-title" style="display:flex;align-items:center;gap:8px;"><i class="ph-fill ph-clock-countdown" style="color:var(--color-warning);"></i> Scadenze Imminenti</div>
               <button class="btn btn-ghost btn-sm" onclick="Router.navigate('federation')">Vedi tutte</button>
             </div>
             ${_renderDeadlines(deadlines)}
@@ -475,7 +475,7 @@ const Dashboard = (() => {
                 <span>Task</span>
               </div>
               <div class="quick-link" id="vald-quick-link">
-                <i class="ph ph-lightning" style="color:var(--color-pink);"></i>
+                <i class="ph-fill ph-lightning" style="color:var(--color-pink);"></i>
                 <span>VALD Perf.</span>
               </div>
               <div class="quick-link" onclick="Router.navigate('social')">

@@ -260,6 +260,21 @@ class PaymentsController
         Response::success($overdue);
     }
 
+    // ─── GET ?module=payments&action=squadSummary&team_id=optional ────────────
+
+    /**
+     * Aggregated squad-level payment data in a single query.
+     * Replaces the N parallel getPlan() calls fired by the frontend tab.
+     */
+    public function squadSummary(): void
+    {
+        Auth::requireRead('payments');
+        $tenantId = TenantContext::id();
+        $teamId = filter_input(INPUT_GET, 'team_id', FILTER_SANITIZE_SPECIAL_CHARS) ?: null;
+        $data = $this->repo->getSquadSummary($tenantId, $teamId);
+        Response::success($data);
+    }
+
     // ─── PRIVATE: Generate Installments ──────────────────────────────────────
 
     /**

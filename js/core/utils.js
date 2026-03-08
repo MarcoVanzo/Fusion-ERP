@@ -113,10 +113,38 @@ const Utils = (() => {
         return name.trim().split(/\s+/).map(w => w[0]?.toUpperCase() || '').slice(0, 2).join('');
     }
 
+    // ─── Error Helpers ───────────────────────────────────────────────────────
+    /**
+     * Maps raw API/network error messages to user-friendly Italian strings.
+     * Domain errors (400 validation) from the server pass through as-is since
+     * they are already localised. Only infrastructure/transport errors are mapped.
+     */
+    function friendlyError(err) {
+        const raw = (err?.message || String(err)).toLowerCase();
+        if (raw.includes('401') || raw.includes('non autorizzato') || raw.includes('sessione'))
+            return 'Sessione scaduta. Ricarica la pagina e accedi nuovamente.';
+        if (raw.includes('403') || raw.includes('permesso') || raw.includes('accesso negato'))
+            return 'Non hai i permessi per eseguire questa operazione.';
+        if (raw.includes('404') || raw.includes('non trovato') || raw.includes('not found'))
+            return 'Elemento non trovato. Aggiorna la pagina e riprova.';
+        if (raw.includes('429') || raw.includes('too many'))
+            return 'Troppe richieste. Attendi qualche secondo e riprova.';
+        if (raw.includes('500') || raw.includes('server error') || raw.includes('internal'))
+            return 'Errore del server. Se il problema persiste, contatta l\'assistenza.';
+        if (raw.includes('rete') || raw.includes('network') || raw.includes('irraggiungibile') || raw.includes('failed to fetch'))
+            return 'Connessione non disponibile. Controlla la rete e riprova.';
+        if (raw.includes('timeout') || raw.includes('timed out'))
+            return 'La richiesta ha impiegato troppo tempo. Riprova tra qualche istante.';
+        // If the error looks like a readable Italian sentence (server validation), pass through
+        if (/^[A-ZÀ-Ú]/.test(err?.message || '') && (err?.message || '').length < 120)
+            return err.message;
+        return 'Si è verificato un errore imprevisto. Riprova o contatta l\'assistenza.';
+    }
+
     return {
         escapeHtml, formatCurrency, formatDate, formatDateTime, formatNum,
         daysUntil, acwrRiskColor, acwrRiskLabel,
         qs, qsa, el, emptyState, badge, riskBadge, skeletonRows,
-        isoDate, initials,
+        isoDate, initials, friendlyError,
     };
 })();

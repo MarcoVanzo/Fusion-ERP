@@ -1,0 +1,17 @@
+{
+    "extends": [
+        "stylelint-config-standard"
+    ],
+    "rules": {
+        "custom-property-no-undefined": true,
+        "color-no-invalid-hex": true,
+        "no-duplicate-selectors": true,
+        "declaration-block-no-duplicate-properties": true,
+        "alpha-value-notation": "number",
+        "color-function-notation": "legacy"
+    },
+    "ignoreFiles": [
+        "vendor/**",
+        "node_modules/**"
+    ]
+}
