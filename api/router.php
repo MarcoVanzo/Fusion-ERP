@@ -71,6 +71,7 @@ try {
             'health' => dispatch('Health', $action),
             'tournaments' => dispatch('Tournaments', $action),
             'vehicles' => dispatch('Vehicles', $action),
+            'tasks' => dispatch('Tasks', $action),
             'whatsapp' => dispatchWebhook($action),
             default => Response::error("Modulo '{$module}' non trovato", 404),
         };
@@ -92,7 +93,8 @@ function dispatchWebhook(string $action): void
     if (in_array($action, $publicActions, true)) {
         require_once __DIR__ . '/Modules/WhatsApp/WhatsAppWebhookController.php';
         $controller = new \FusionERP\Modules\WhatsApp\WhatsAppWebhookController();
-    } else {
+    }
+    else {
         require_once __DIR__ . '/Modules/WhatsApp/WhatsAppController.php';
         $controller = new \FusionERP\Modules\WhatsApp\WhatsAppController();
     }
