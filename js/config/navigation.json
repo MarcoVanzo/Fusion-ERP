@@ -79,6 +79,32 @@
         ]
     },
     {
+        "id": "whatsapp",
+        "title": "WhatsApp",
+        "path": "whatsapp-inbox",
+        "icon": "whatsapp-logo",
+        "isMobileVisible": true,
+        "roles": [
+            "operatore",
+            "manager",
+            "admin"
+        ],
+        "children": [
+            {
+                "title": "Inbox",
+                "path": "whatsapp-inbox",
+                "icon": "chat-circle-dots",
+                "isMobileVisible": false
+            },
+            {
+                "title": "Contatti",
+                "path": "whatsapp-contacts",
+                "icon": "address-book",
+                "isMobileVisible": false
+            }
+        ]
+    },
+    {
         "id": "transport",
         "title": "Trasporti",
         "path": "transport",

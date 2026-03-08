@@ -29,6 +29,17 @@ class AthletesController
         Response::success($this->repo->listAthletes($teamId));
     }
 
+    // ─── GET /api/?module=athletes&action=listLight ───────────────────────────
+    // PERF: Returns only the fields needed for the athlete card (~75% less payload).
+    // Full data is fetched on-demand via action=get when opening a single profile.
+    public function listLight(): void
+    {
+        Auth::requireRead('athletes');
+        $teamId = filter_input(INPUT_GET, 'teamId', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        Response::success($this->repo->listAthletesLight($teamId));
+    }
+
+
     // ─── GET /api/?module=athletes&action=get&id=ATH_xxx ─────────────────────
     public function get(): void
     {
@@ -353,8 +364,8 @@ class AthletesController
      */
     private function calcACWR(string $athleteId): array
     {
-        $acute = $this->repo->getAcuteLoad($athleteId);
-        $chronic = $this->repo->getChronicLoad($athleteId);
+        // PERF: single DB query instead of 2 (merged getAcuteLoad + getChronicLoad)
+        ['acute' => $acute, 'chronic' => $chronic] = $this->repo->getAcwrLoads($athleteId);
 
         if ($chronic <= 0) {
             return ['score' => 0.0, 'acute' => $acute, 'chronic' => 0.0, 'risk' => 'low'];

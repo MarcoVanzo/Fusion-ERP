@@ -48,6 +48,8 @@ const Router = (() => {
         'finance-invoices': 'js/modules/finance.js',
         'finance-74ter': 'js/modules/finance.js',
         tournaments: 'js/modules/tournaments.js',
+        'whatsapp-inbox': 'js/modules/whatsapp.js',
+        'whatsapp-contacts': 'js/modules/whatsapp.js',
     };
 
     // Route access control using the permission map stored in user.permissions.
@@ -83,6 +85,8 @@ const Router = (() => {
         finance: 'read',
         'finance-invoices': 'read',
         'finance-74ter': 'read',
+        'whatsapp-inbox': 'read',
+        'whatsapp-contacts': 'read',
     };
 
     /**
@@ -102,6 +106,7 @@ const Router = (() => {
         if (route.startsWith('ecommerce')) return 'ecommerce';
         if (route.startsWith('finance')) return 'finance';
         if (route === 'team-chat') return 'chat';
+        if (route.startsWith('whatsapp')) return 'whatsapp';
         return route;
     }
 
@@ -190,6 +195,8 @@ const Router = (() => {
             finance: 'Finance',
             'finance-invoices': 'Finance',
             'finance-74ter': 'Finance',
+            'whatsapp-inbox': 'WhatsApp',
+            'whatsapp-contacts': 'WhatsApp',
         };
 
         // Call destroy on the previous module before switching to prevent memory leaks

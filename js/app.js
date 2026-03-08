@@ -201,11 +201,16 @@ const App = (() => {
                     userDropdown.classList.toggle('hidden');
                 };
 
-                document.onclick = (e) => {
+                // FIX: usa addEventListener invece di document.onclick
+                // (document.onclick sovrascrive altri handler globali — bug potenziale)
+                const _closeDropdown = (e) => {
                     if (!userMenuBtn.contains(e.target) && !userDropdown.contains(e.target)) {
                         userDropdown.classList.add('hidden');
                     }
                 };
+                document.addEventListener('click', _closeDropdown);
+                // Cleanup al destroy dell'app (navigazione fuori) per prevenire memory leak
+                window.__cleanupUserMenu = () => document.removeEventListener('click', _closeDropdown);
 
                 const profileBtn = document.getElementById('profile-btn');
                 if (profileBtn) {

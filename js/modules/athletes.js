@@ -49,9 +49,11 @@ const Athletes = (() => {
         return;
       }
 
+      // PERF: usa listLight per la vista lista (solo campi necessari per le card)
+      // I dati completi si caricano on-demand aprendo il profilo singolo (action=get)
       [_teams, _state] = await Promise.all([
         Store.get('teams', 'athletes'),
-        Store.get('list', 'athletes'),
+        Store.get('listLight', 'athletes'),
       ]);
 
       // Sidebar sub-route → show main view with that tab active
@@ -1602,7 +1604,7 @@ const Athletes = (() => {
         m.close();
         UI.toast('Atleta creato', 'success');
         // Reload list and return to Anagrafica tab
-        _state = await Store.get('list', 'athletes').catch(() => _state);
+        _state = await Store.get('listLight', 'athletes').catch(() => _state);
         _activeMainTab = 'anagrafica';
         _renderMainView();
       } catch (err) {
@@ -1766,7 +1768,7 @@ const Athletes = (() => {
         m.close();
         UI.toast('Atleta aggiornato', 'success');
         // Refresh data and re-open detail view
-        Store.get('list', 'athletes').then(list => { _state = list; }).catch(() => { });
+        Store.get('listLight', 'athletes').then(list => { _state = list; }).catch(() => { });
         _renderAthleteDetail(a.id);
       } catch (err) {
         errEl.textContent = err.message;

@@ -46,6 +46,34 @@ class AthletesRepository
         return $stmt->fetchAll();
     }
 
+    /**
+     * PERF: Light version for the athlete list view — returns only the fields
+     * needed to render the athlete card (~75% less payload than listAthletes).
+     * Full data is fetched on-demand when opening a single athlete profile.
+     */
+    public function listAthletesLight(string $teamId = ''): array
+    {
+        $sql = 'SELECT a.id, a.full_name, a.jersey_number, a.role, a.photo_path, a.is_active,
+                       a.medical_cert_expires_at,
+                       COALESCE(t.name, "Nessuna squadra") AS team_name,
+                       COALESCE(t.category, "Nessuna") AS category
+                FROM athletes a
+                LEFT JOIN teams t ON a.team_id = t.id
+                WHERE a.deleted_at IS NULL AND a.is_active = 1';
+
+        $params = [];
+        if ($teamId !== '') {
+            $sql .= ' AND a.team_id = :team_id';
+            $params[':team_id'] = $teamId;
+        }
+        $sql .= ' ORDER BY a.full_name';
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll();
+    }
+
+
     public function getAthleteById(string $id): ?array
     {
         $stmt = $this->db->prepare(
@@ -166,31 +194,27 @@ class AthletesRepository
     }
 
     /**
-     * Returns the sum of load_value for the last 7 days.
+     * PERF: Returns both acute (7d) and chronic (28d) loads in a SINGLE query.
+     * Avoids 2 round-trips to the DB per athlete profile load.
+     *
+     * @return array{acute: float, chronic: float}
      */
-    public function getAcuteLoad(string $athleteId): float
+    public function getAcwrLoads(string $athleteId): array
     {
         $stmt = $this->db->prepare(
-            'SELECT COALESCE(SUM(load_value), 0)
+            'SELECT
+                COALESCE(SUM(CASE WHEN log_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)  THEN load_value ELSE 0 END), 0)      AS acute,
+                COALESCE(SUM(CASE WHEN log_date >= DATE_SUB(CURDATE(), INTERVAL 28 DAY) THEN load_value ELSE 0 END), 0) / 4  AS chronic
              FROM metrics_logs
-             WHERE athlete_id = :id AND log_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)'
+             WHERE athlete_id = :id
+               AND log_date >= DATE_SUB(CURDATE(), INTERVAL 28 DAY)'
         );
         $stmt->execute([':id' => $athleteId]);
-        return (float)$stmt->fetchColumn();
-    }
-
-    /**
-     * Returns the average weekly load over 4 weeks (28 days).
-     */
-    public function getChronicLoad(string $athleteId): float
-    {
-        $stmt = $this->db->prepare(
-            'SELECT COALESCE(SUM(load_value), 0) / 4
-             FROM metrics_logs
-             WHERE athlete_id = :id AND log_date >= DATE_SUB(CURDATE(), INTERVAL 28 DAY)'
-        );
-        $stmt->execute([':id' => $athleteId]);
-        return (float)$stmt->fetchColumn();
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+        return [
+            'acute' => (float)($row['acute'] ?? 0),
+            'chronic' => (float)($row['chronic'] ?? 0),
+        ];
     }
 
     public function getMetricsHistory(string $athleteId, int $days = 30): array
@@ -313,6 +337,11 @@ class AthletesRepository
      */
     public function getActivityLog(string $athleteId): array
     {
+        // PERF: dopo la migration V039, la colonna generata `json_entity_id` è indicizzata.
+        // Le query usano quella invece di JSON_EXTRACT() inline (full table scan → index lookup).
+        // Fallback: se la colonna non esiste ancora (migration non applicata), usa JSON_EXTRACT.
+        $useGeneratedCol = $this->_hasColumn('audit_logs', 'json_entity_id');
+
         $sql = function (string $whereClause) use ($athleteId): array {
             $stmt = $this->db->prepare(
                 "SELECT al.id, al.action, al.table_name, al.created_at,
@@ -329,6 +358,18 @@ class AthletesRepository
             return $stmt->fetchAll();
         };
 
+        if ($useGeneratedCol) {
+            // Fast path: usa la colonna generata indicizzata (V039 applicata)
+            return [
+                'anagrafica' => $sql("al.table_name = 'athletes' AND al.record_id = :athlete_id"),
+                'metrics' => $sql("al.table_name = 'metrics_logs' AND al.json_entity_id = :athlete_id"),
+                'pagamenti' => $sql("al.table_name IN ('payment_plans','installments') AND al.json_entity_id = :athlete_id"),
+                'documenti' => $sql("al.table_name = 'athlete_documents' AND al.json_entity_id = :athlete_id"),
+            ];
+        }
+
+        // Slow path (fallback pre-V039): JSON_EXTRACT inline → full table scan
+        // Applicare la migration db/migrations/V039__audit_logs_perf_indexes.sql per eliminare questo path.
         return [
             'anagrafica' => $sql("al.table_name IN ('athletes') AND al.record_id = :athlete_id"),
             'metrics' => $sql("al.table_name = 'metrics_logs' AND JSON_UNQUOTE(JSON_EXTRACT(al.after_snapshot, '$.athlete_id')) = :athlete_id"),
@@ -337,5 +378,23 @@ class AthletesRepository
                                     OR JSON_UNQUOTE(JSON_EXTRACT(al.before_snapshot, '$.athlete_id')) = :athlete_id)"),
             'documenti' => $sql("al.table_name = 'athlete_documents' AND JSON_UNQUOTE(JSON_EXTRACT(al.after_snapshot, '$.athlete_id')) = :athlete_id"),
         ];
+    }
+
+    /** Check if a column exists in a table (used for migration-aware code paths). */
+    private function _hasColumn(string $table, string $column): bool
+    {
+        try {
+            $stmt = $this->db->prepare(
+                "SELECT COUNT(*) FROM information_schema.COLUMNS
+                 WHERE TABLE_SCHEMA = DATABASE()
+                   AND TABLE_NAME   = :tbl
+                   AND COLUMN_NAME  = :col"
+            );
+            $stmt->execute([':tbl' => $table, ':col' => $column]);
+            return (int)$stmt->fetchColumn() > 0;
+        }
+        catch (\Throwable) {
+            return false;
+        }
     }
 }

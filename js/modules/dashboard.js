@@ -44,54 +44,17 @@ const Dashboard = (() => {
   }
 
   async function fetchResults(summary, teams, events, deadlines) {
-    const parseDate = (dStr) => {
-      if (!dStr) return new Date(0);
-      if (String(dStr).includes('/')) {
-        const p = String(dStr).split('/');
-        return new Date(`${p[2]}-${p[1]}-${p[0]}T00:00:00`);
-      }
-      return new Date(dStr);
-    };
     try {
-      // Step 1: load all saved championships
-      const campionatiPayload = await Store.get('getCampionati', 'results').catch((e) => {
-        console.warn('[Dashboard] getCampionati error:', e); return null;
+      // PERF: single API call → 1 SQL query across all championships
+      // Rimpiazza il vecchio pattern N+1: getCampionati → N×getResults
+      const payload = await Store.get('recentResults', 'results', { limit: 8 }).catch((e) => {
+        console.warn('[Dashboard] recentResults error:', e);
+        return null;
       });
-      const campionati = campionatiPayload?.campionati || [];
-      console.log('[Dashboard] campionati trovati:', campionati.length, campionati.map(c => c.id + ':' + c.label));
 
-      if (campionati.length === 0) {
-        console.warn('[Dashboard] Nessun campionato salvato — aggiungili nella sezione Risultati.');
-        render(summary, teams, events, deadlines, []);
-        return;
-      }
+      const weekResults = payload?.matches || [];
+      console.log('[Dashboard] recentResults:', weekResults.length, 'match');
 
-      // Step 2: fetch results for each championship in parallel
-      const allMatchArrays = await Promise.all(
-        campionati.map(c =>
-          Store.get('getResults', 'results', { campionato_id: c.id }).catch((e) => {
-            console.warn('[Dashboard] getResults error for', c.id, e);
-            return null;
-          })
-        )
-      );
-
-      const allMatches = allMatchArrays.flatMap(payload => payload?.matches || []);
-      console.log('[Dashboard] totale match aggregati:', allMatches.length);
-      if (allMatches.length > 0) {
-        console.log('[Dashboard] esempio primo match:', JSON.stringify(allMatches[0]));
-      }
-
-      // Step 3: keep only played matches, sort newest first, take last 8
-      const played = allMatches.filter(m =>
-        m.status === 'played' ||
-        (m.sets_home != null && m.sets_away != null) ||
-        (m.score_home != null && m.score_away != null)
-      );
-      played.sort((a, b) => parseDate(b.date) - parseDate(a.date));
-      const weekResults = played.slice(0, 8);
-
-      console.log('[Dashboard] weekResults da mostrare:', weekResults.length);
       render(summary, teams, events, deadlines, weekResults);
     } catch (err) {
       if (err.name === 'AbortError') return;
@@ -213,168 +176,7 @@ const Dashboard = (() => {
     `).join('')}`;
 
     app.innerHTML = `
-      <style>
-        .dash-container {
-          padding: 32px;
-          color: var(--color-text);
-          background: transparent;
-          min-height: 100%;
-          font-family: var(--font-body), sans-serif;
-        }
-
-        /* KPI Row */
-        .dash-kpi-row {
-          display: flex;
-          justify-content: space-between;
-          margin-bottom: 32px;
-          border-bottom: 1px solid #1c1c1e;
-          padding-bottom: 24px;
-        }
-
-        .kpi-item {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-          padding-right: 24px;
-          border-right: 1px solid #1c1c1e;
-        }
-        .kpi-item:last-child {
-          border-right: none;
-          padding-right: 0;
-        }
-
-        .kpi-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          font-size: 11px;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          font-weight: 700;
-          color: var(--color-text-muted);
-        }
-
-        .kpi-val-row {
-          display: flex;
-          align-items: baseline;
-          gap: 12px;
-        }
-
-        .kpi-val {
-          font-family: var(--font-display);
-          font-weight: 800;
-          font-size: 42px;
-          line-height: 1;
-          letter-spacing: -0.03em;
-        }
-
-        .kpi-trend {
-          font-size: 13px;
-          font-weight: 700;
-          color: var(--color-text-muted);
-        }
-
-        /* Main Grid */
-        .dash-grid {
-          display: grid;
-          grid-template-columns: 1.6fr 1.2fr 1.2fr;
-          grid-auto-rows: min-content;
-          gap: 20px;
-        }
-
-        .widget {
-          background: var(--color-bg-card);
-          backdrop-filter: var(--glass-blur);
-          -webkit-backdrop-filter: var(--glass-blur);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius);
-          padding: 20px;
-          display: flex;
-          flex-direction: column;
-          box-shadow: var(--shadow-sm);
-          transition: all var(--transition-base);
-        }
-        .widget:hover {
-          border-color: rgba(255, 0, 255, 0.4);
-          box-shadow: var(--shadow-lg), var(--glow-card-hover);
-        }
-
-        .widget-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 20px;
-        }
-
-        .widget-title {
-          font-family: var(--font-display);
-          font-size: 15px;
-          font-weight: 800;
-          text-transform: uppercase;
-          letter-spacing: 0.02em;
-        }
-
-        /* Grid placement */
-        .w-team-dist { grid-column: 1 / 2; grid-row: 1 / 2; }
-        .w-events { grid-column: 2 / 3; grid-row: 1 / 2; }
-        .w-completeness { grid-column: 3 / 4; grid-row: 1 / 2; }
-        .w-deadlines { grid-column: 1 / 4; grid-row: 2 / 3; }
-        .w-quick-links { grid-column: 1 / 4; grid-row: 3 / 4; }
-
-        /* Deadlines widget */
-        .deadline-list { display: flex; flex-direction: column; gap: 2px; }
-        .deadline-row {
-          display: flex; align-items: center; gap: 14px;
-          padding: 10px 14px; border-radius: 6px;
-          transition: all var(--transition-base);
-        }
-        .deadline-row:hover { background: rgba(255, 255, 255, 0.05); }
-        .deadline-row.urgent { border-left: 3px solid #FF3B30; }
-        .deadline-row.warning { border-left: 3px solid #FF9500; }
-        .deadline-row.ok { border-left: 3px solid #FFD600; }
-        .deadline-icon { width: 36px; height: 36px; border-radius: 8px; background: rgba(255, 255, 255, 0.05); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
-        .deadline-info { flex: 1; min-width: 0; }
-        .deadline-name { font-size: 14px; font-weight: 600; }
-        .deadline-label { font-size: 12px; color: var(--color-text-muted); }
-        .deadline-days { font-size: 13px; font-weight: 700; text-align: right; min-width: 70px; }
-        .deadline-days.urgent { color: #FF3B30; }
-        .deadline-days.warning { color: #FF9500; }
-        .deadline-days.ok { color: #FFD600; }
-
-        /* Bar Chart */
-        .bar-row { display: grid; grid-template-columns: 120px 1fr 40px; align-items: center; gap: 12px; margin-bottom: 12px; font-size: 13px; font-weight: 600; }
-        .bar-track { background: #1c1c1e; height: 8px; border-radius: 4px; overflow: hidden; }
-        .bar-fill { height: 100%; border-radius: 4px; }
-
-        /* Fixture Cards */
-        .fixture-card { background: rgba(255, 255, 255, 0.03); border: 1px solid var(--color-border); padding: 12px; border-radius: var(--radius-sm); margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; transition: all var(--transition-base); }
-        .fixture-card:hover { border-color: rgba(255, 0, 255, 0.3); box-shadow: var(--shadow-md), inset 0 0 10px rgba(255, 0, 255, 0.1); }
-        .fixture-card:last-child { margin-bottom: 0; }
-        .team-logo { width: 32px; height: 32px; border-radius: 50%; background: rgba(255, 255, 255, 0.05); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 800; color: white; }
-
-        /* Quick Link Card */
-        .quick-link { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: var(--sp-3); background: rgba(255, 255, 255, 0.03); border: 1px solid var(--color-border); border-radius: var(--radius); cursor: pointer; transition: all var(--transition-base); text-align: center; }
-        .quick-link:hover { background: rgba(255, 0, 255, 0.05); transform: translateY(-2px); border-color: rgba(255, 0, 255, 0.4); box-shadow: var(--shadow-md), var(--glow-card-hover); }
-        .quick-link i { font-size: 28px; color: var(--color-pink); text-shadow: 0 0 8px rgba(255,0,255,0.4); }
-        .quick-link span { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
-
-        /* Responsive */
-        @media (max-width: 960px) {
-          .dash-grid { grid-template-columns: 1fr !important; }
-          .w-team-dist, .w-events, .w-completeness { grid-column: auto; grid-row: auto; }
-          .w-quick-links { grid-column: auto; grid-row: auto; }
-        }
-        @media (max-width: 768px) {
-          .dash-container { padding: 16px; }
-          .dash-kpi-row { flex-wrap: wrap; gap: 16px; }
-          .kpi-item { flex: 0 0 calc(50% - 8px); border-right: none !important; padding-right: 0 !important; }
-          .kpi-val { font-size: 32px; }
-        }
-        @media (max-width: 480px) {
-          .kpi-item { flex: 0 0 100%; }
-        }
-      </style>
+      <!-- PERF: gli stili .dash-* sono ora in css/style_v2.css (cachati dal browser) -->
 
       <div class="dash-container">
 
