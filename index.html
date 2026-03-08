@@ -168,10 +168,13 @@
                 </div>
 
                 <div class="topbar-right">
-                    <div class="search-box">
+                    <div class="search-box" style="position:relative;">
                         <i class="ph ph-magnifying-glass"></i>
-                        <input type="text" id="global-search" name="global-search" aria-label="Ricerca globale"
-                            placeholder="Ricerca (in arrivo)" disabled role="searchbox">
+                        <input type="text" id="global-search" name="global-search" aria-label="Cerca atleta, sezione..."
+                            aria-autocomplete="list" aria-controls="global-search-results" aria-expanded="false"
+                            placeholder="Cerca atleta... (⌘K)" autocomplete="off" role="combobox">
+                        <div id="global-search-results" class="global-search-results hidden" role="listbox"
+                            aria-label="Risultati ricerca"></div>
                     </div>
 
                     <div class="topbar-actions">

@@ -271,6 +271,13 @@ const App = (() => {
                 console.error('[App] Failed to init notifications:', err);
             }
 
+            // Initialize global search
+            try {
+                _initGlobalSearch();
+            } catch (err) {
+                console.error('[App] Failed to init global search:', err);
+            }
+
             // Load and render navigation (resiliently)
             try {
                 await _renderNavigation(user);
@@ -536,6 +543,134 @@ const App = (() => {
     }
 
 
+    function _initGlobalSearch() {
+        const input = document.getElementById('global-search');
+        const results = document.getElementById('global-search-results');
+        if (!input || !results) return;
+
+        let _athleteIndex = null; // lazy-loaded
+        let _selectedIdx = -1;
+
+        const AVATAR_COLORS = ['#f472b6', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#0ea5e9'];
+        function _avatarColor(name) {
+            if (!name) return AVATAR_COLORS[0];
+            let h = 0;
+            for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h);
+            return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length];
+        }
+
+        function _highlight(text, q) {
+            if (!q) return Utils.escapeHtml(text);
+            const idx = text.toLowerCase().indexOf(q.toLowerCase());
+            if (idx === -1) return Utils.escapeHtml(text);
+            return Utils.escapeHtml(text.slice(0, idx)) +
+                `<mark class="search-result-mark">${Utils.escapeHtml(text.slice(idx, idx + q.length))}</mark>` +
+                Utils.escapeHtml(text.slice(idx + q.length));
+        }
+
+        async function _ensureIndex() {
+            if (_athleteIndex) return;
+            try {
+                const athletes = await Store.get('list', 'athletes');
+                _athleteIndex = athletes || [];
+            } catch {
+                _athleteIndex = [];
+            }
+        }
+
+        function _closeResults() {
+            results.classList.add('hidden');
+            input.setAttribute('aria-expanded', 'false');
+            _selectedIdx = -1;
+        }
+
+        function _openResults(items, q) {
+            _selectedIdx = -1;
+            if (items.length === 0) {
+                results.innerHTML = `<div class="search-result-empty">Nessun risultato per "${Utils.escapeHtml(q)}"</div>`;
+            } else {
+                results.innerHTML = items.slice(0, 8).map((a, i) => {
+                    const bg = _avatarColor(a.full_name);
+                    const initials = Utils.initials(a.full_name);
+                    const display = a.jersey_number != null ? String(a.jersey_number) : initials;
+                    return `<div class="search-result-item" role="option" tabindex="-1" data-id="${Utils.escapeHtml(String(a.id))}" data-idx="${i}">
+                        <div class="search-result-avatar" style="background:${bg};">${Utils.escapeHtml(display)}</div>
+                        <div style="flex:1;min-width:0;">
+                            <div class="search-result-name">${_highlight(a.full_name || '', q)}</div>
+                            <div class="search-result-meta">${Utils.escapeHtml(a.role || '')}${a.team_name ? ' · ' + Utils.escapeHtml(a.team_name) : ''}</div>
+                        </div>
+                        <i class="ph ph-arrow-right" style="font-size:14px;color:var(--text-muted);flex-shrink:0;"></i>
+                    </div>`;
+                }).join('');
+            }
+            results.classList.remove('hidden');
+            input.setAttribute('aria-expanded', 'true');
+        }
+
+        function _navigate(athleteId) {
+            _closeResults();
+            input.value = '';
+            Router.navigate('athletes', { id: athleteId });
+        }
+
+        let _debounceTimer;
+        input.addEventListener('input', () => {
+            clearTimeout(_debounceTimer);
+            const q = input.value.trim();
+            if (!q) { _closeResults(); return; }
+            _debounceTimer = setTimeout(async () => {
+                await _ensureIndex();
+                const filtered = (_athleteIndex || []).filter(a =>
+                    (a.full_name || '').toLowerCase().includes(q.toLowerCase()) ||
+                    (a.role || '').toLowerCase().includes(q.toLowerCase()) ||
+                    (a.team_name || '').toLowerCase().includes(q.toLowerCase())
+                );
+                _openResults(filtered, q);
+            }, 150);
+        });
+
+        input.addEventListener('focus', () => { _ensureIndex(); });
+
+        input.addEventListener('keydown', (e) => {
+            const items = results.querySelectorAll('.search-result-item');
+            if (e.key === 'Escape') { _closeResults(); input.blur(); return; }
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                _selectedIdx = Math.min(_selectedIdx + 1, items.length - 1);
+                items.forEach((el, i) => el.classList.toggle('selected', i === _selectedIdx));
+                if (items[_selectedIdx]) items[_selectedIdx].scrollIntoView({ block: 'nearest' });
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                _selectedIdx = Math.max(_selectedIdx - 1, 0);
+                items.forEach((el, i) => el.classList.toggle('selected', i === _selectedIdx));
+                if (items[_selectedIdx]) items[_selectedIdx].scrollIntoView({ block: 'nearest' });
+            } else if (e.key === 'Enter' && _selectedIdx >= 0 && items[_selectedIdx]) {
+                _navigate(items[_selectedIdx].dataset.id);
+            }
+        });
+
+        results.addEventListener('click', (e) => {
+            const item = e.target.closest('.search-result-item');
+            if (item?.dataset.id) _navigate(item.dataset.id);
+        });
+
+        // Keyboard shortcut ⌘K / Ctrl+K
+        document.addEventListener('keydown', (e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                input.focus();
+                input.select();
+            }
+        });
+
+        // Close on click outside
+        document.addEventListener('click', (e) => {
+            if (!input.contains(e.target) && !results.contains(e.target)) {
+                _closeResults();
+            }
+        });
+    }
+
     function renderForgotPassword() {
         const m = UI.modal({
             title: 'Password dimenticata',
@@ -553,7 +688,7 @@ const App = (() => {
                 <div id="fp-error" class="form-error hidden"></div>`,
             footer: `
                 <button class="btn btn-ghost btn-sm" id="fp-cancel" type="button">Annulla</button>
-                <button class="btn btn-primary btn-sm" id="fp-send" type="button">📧 INVIA LINK</button>`,
+                <button class="btn btn-primary btn-sm" id="fp-send" type="button"><i class="ph ph-envelope" style="font-size:14px;"></i> INVIA LINK</button>`,
         });
         document.getElementById('fp-cancel')?.addEventListener('click', () => m.close());
         document.getElementById('fp-send')?.addEventListener('click', async () => {

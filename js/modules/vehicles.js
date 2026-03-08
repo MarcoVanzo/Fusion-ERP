@@ -289,18 +289,23 @@ const Vehicles = (() => {
       }
     }, { signal: _ac.signal });
 
-    document.getElementById('veh-del')?.addEventListener('click', async () => {
-      if (!confirm('Eliminare definitivamente questo mezzo? Verranno eliminati anche tutto lo storico manutenzioni e anomalie!')) return;
-      document.getElementById('veh-del').disabled = true;
-      try {
-        await Store.api('deleteVehicle', 'vehicles', { id: vehicle.id });
-        UI.toast('Veicolo eliminato', 'success');
-        m.close();
-        await init();
-      } catch (err) {
-        UI.toast(err.message, 'error');
-        document.getElementById('veh-del').disabled = false;
-      }
+    document.getElementById('veh-del')?.addEventListener('click', () => {
+      UI.confirm(
+        `Eliminare definitivamente il mezzo "${vehicle?.name || ''}"? Verranno eliminati anche tutto lo storico manutenzioni e anomalie!`,
+        async () => {
+          const delBtn = document.getElementById('veh-del');
+          if (delBtn) delBtn.disabled = true;
+          try {
+            await Store.api('deleteVehicle', 'vehicles', { id: vehicle.id });
+            UI.toast('Veicolo eliminato', 'success');
+            m.close();
+            await init();
+          } catch (err) {
+            UI.toast(err.message, 'error');
+            if (delBtn) delBtn.disabled = false;
+          }
+        }
+      );
     }, { signal: _ac.signal });
   }
 
