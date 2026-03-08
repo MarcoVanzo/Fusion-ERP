@@ -243,15 +243,7 @@ const Ecommerce = (() => {
                 <span class="ec-header-badge" id="ec-badge">—</span>
             </div>
 
-            <!-- Sub-tabs -->
-            <div class="ec-tabs">
-                <button class="ec-tab ${_currentTab === 'articles' ? 'active' : ''}" id="ec-tab-articles" type="button">
-                    <i class="ph ph-tag"></i> Articoli
-                </button>
-                <button class="ec-tab ${_currentTab === 'orders' ? 'active' : ''}" id="ec-tab-orders" type="button">
-                    <i class="ph ph-package"></i> Ordini
-                </button>
-            </div>
+            <!-- Sub-tabs removed -->
 
             <!-- Content panels -->
             <div id="ec-panel-articles" style="${_currentTab === 'articles' ? '' : 'display:none;'}"></div>
