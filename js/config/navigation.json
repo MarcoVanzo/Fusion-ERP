@@ -66,19 +66,6 @@
         ]
     },
     {
-        "id": "chat",
-        "title": "Chat",
-        "path": "team-chat",
-        "icon": "chat-circle",
-        "isMobileVisible": true,
-        "roles": [
-            "allenatore",
-            "operatore",
-            "manager",
-            "admin"
-        ]
-    },
-    {
         "id": "whatsapp",
         "title": "WhatsApp",
         "path": "whatsapp-inbox",
