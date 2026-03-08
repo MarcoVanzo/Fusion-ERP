@@ -720,10 +720,23 @@ const Ecommerce = (() => {
             const dateStr = o.dataOrdine ? new Date(o.dataOrdine).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
             const totaleStr = o.totale > 0 ? o.totale.toLocaleString('it-IT', { minimumFractionDigits: 2 }) + ' €' : '—';
 
+            // Articoli: use mapped field or orderSummary fallback (plain text)
+            const articoliText = o.articoli
+                || (o.orderSummary ? o.orderSummary.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim() : '')
+                || '—';
+
+            // Debug: list available Cognito field names (shown on hover)
+            const campiStr = Array.isArray(o._campiDisponibili)
+                ? o._campiDisponibili.join(', ')
+                : '';
+            const debugIcon = campiStr
+                ? `<span title="Campi Cognito disponibili:\n${campiStr}" style="cursor:help;opacity:.4;font-size:11px;margin-left:4px;">ℹ</span>`
+                : '';
+
             return `<tr>
-                <td style="font-weight:600;">${Utils.escapeHtml(o.nomeCliente || '—')}</td>
-                <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${Utils.escapeHtml(String(o.articoli || ''))}">
-                    ${Utils.escapeHtml(String(o.articoli || '—').substring(0, 60))}
+                <td style="font-weight:600;">${Utils.escapeHtml(o.nomeCliente || '—')}${debugIcon}</td>
+                <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${Utils.escapeHtml(articoliText)}">
+                    ${Utils.escapeHtml(articoliText.substring(0, 70))}${articoliText.length > 70 ? '…' : ''}
                 </td>
                 <td style="font-weight:700;">${totaleStr}</td>
                 <td>${dateStr}</td>

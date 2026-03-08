@@ -8,6 +8,11 @@ declare(strict_types=1);
 
 namespace FusionERP\Modules\Staff;
 
+// Explicit require_once needed because server uses optimized classmap autoloader
+// that was not regenerated after adding new Staff module files.
+require_once __DIR__ . '/../../Shared/DB.php';
+require_once __DIR__ . '/../../Shared/TenantContext.php';
+
 use FusionERP\Shared\DB;
 use FusionERP\Shared\TenantContext;
 

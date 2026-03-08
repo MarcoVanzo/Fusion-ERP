@@ -310,24 +310,110 @@ class EcommerceController
         ]);
     }
 
-    /** Map raw Cognito entry fields → standardised order object */
+    /** Map raw Cognito entry fields → standardised order object.
+     *
+     * Cognito serialises field values using the form's internal field names,
+     * which differ per form. We try the most likely variants; whatever doesn't
+     * match stays null/empty. The full rawEntry is always included so the
+     * frontend can debug what came back.
+     */
     private static function _normalizeOrder(array $e): array
     {
-        $rawDate = $e['Entry_DateSubmitted'] ?? $e['Entry.DateSubmitted'] ?? null;
-        $dateStr = !empty($rawDate) ? date('Y-m-d H:i:s', (int)strtotime((string)$rawDate)) : null;
+        // ── Submission date ─────────────────────────────────────────────────
+        $rawDate = $e['Entry_DateSubmitted']
+            ?? $e['Entry.DateSubmitted']
+            ?? $e['Entry']['DateSubmitted']
+            ?? null;
+        $dateStr = !empty($rawDate)
+            ? date('Y-m-d H:i:s', (int)strtotime((string)$rawDate))
+            : null;
+
+        // ── Customer name ────────────────────────────────────────────────────
+        // Cognito often nests Name as { First, Last } object
+        $nameRaw = $e['Name'] ?? $e['NomeECognome'] ?? $e['Nome'] ?? $e['Cliente'] ?? null;
+        if (is_array($nameRaw)) {
+            $nomeCliente = trim(($nameRaw['First'] ?? '') . ' ' . ($nameRaw['Last'] ?? ''));
+        }
+        else {
+            $nomeCliente = (string)($nameRaw ?? '');
+        }
+
+        // ── Order summary (Cognito standard computed field) ──────────────────
+        $orderSummary = $e['Order_OrderSummary']
+            ?? $e['Order.OrderSummary']
+            ?? ($e['Order']['OrderSummary'] ?? null);
+
+        // ── Articoli ────────────────────────────────────────────────────────
+        // Try dedicated fields first; fall back to orderSummary
+        $articoliRaw = $e['Articoli']
+            ?? $e['Prodotti']
+            ?? $e['Items']
+            ?? $e['Prodotto']
+            ?? $e['Article']
+            ?? $e['Articles']
+            ?? null;
+
+        // If it's an array (multi-select or repeater), join values
+        if (is_array($articoliRaw)) {
+            $articoliRaw = implode(', ', array_filter(array_map('strval', $articoliRaw)));
+        }
+
+        // Use order summary as fallback (strip HTML tags if present)
+        if (empty($articoliRaw) && !empty($orderSummary)) {
+            $articoliRaw = strip_tags((string)$orderSummary);
+        }
+
+        // ── Totale ──────────────────────────────────────────────────────────
+        $totaleRaw = $e['Totale'] ?? $e['Total'] ?? $e['Importo'] ?? $e['Prezzo'] ?? '';
+        $totale = self::_parsePrice((string)$totaleRaw);
+
+        // If totale is still 0, attempt to extract from orderSummary
+        // (Cognito orderSummary format: "Product × €50.00\nTotal: €50.00")
+        if ($totale === 0.0 && !empty($orderSummary)) {
+            $summaryText = strip_tags((string)$orderSummary);
+            // Look for "Total: €XX" or "Totale: XX,00 €" pattern
+            if (preg_match('/(?:Total[e]?|Totale)\s*[:\-]?\s*[€$£]?\s*([\d.,]+)/i', $summaryText, $tm)) {
+                $totale = self::_parsePrice($tm[1]);
+            }
+            // Also try last money-like value in the string
+            if ($totale === 0.0 && preg_match_all('/[€$£]\s*([\d.,]+)|([\d.,]+)\s*[€$£]/', $summaryText, $tm2)) {
+                $lastMatch = end($tm2[1]) ?: end($tm2[2]);
+                if ($lastMatch)
+                    $totale = self::_parsePrice($lastMatch);
+            }
+        }
+
+        // ── Payment method ───────────────────────────────────────────────────
+        $metodo = $e['MetodoPagamento']
+            ?? $e['PaymentMethod']
+            ?? $e['Pagamento']
+            ?? $e['Payment']
+            ?? null;
+
+        // ── Email ────────────────────────────────────────────────────────────
+        $email = $e['Email'] ?? $e['EmailAddress'] ?? $e['email'] ?? null;
+
+        // ── Phone ────────────────────────────────────────────────────────────
+        $telefono = $e['Telefono'] ?? $e['Cellulare'] ?? $e['Phone'] ?? $e['Tel'] ?? null;
+
+        // ── Entry status from Cognito ─────────────────────────────────────────
+        $statoForms = $e['Entry_Status']
+            ?? $e['Entry.Status']
+            ?? ($e['Entry']['Status'] ?? null);
 
         return [
             'id' => $e['Id'] ?? null,
-            'nomeCliente' => (string)($e['Name'] ?? $e['NomeECognome'] ?? $e['Nome'] ?? ''),
-            'email' => $e['Email'] ?? null,
-            'telefono' => $e['Telefono'] ?? $e['Cellulare'] ?? null,
-            'articoli' => $e['Articoli'] ?? $e['Prodotti'] ?? $e['Items'] ?? '',
-            'totale' => self::_parsePrice((string)($e['Totale'] ?? $e['Total'] ?? '')),
-            'metodoPagamento' => $e['MetodoPagamento'] ?? $e['PaymentMethod'] ?? null,
+            'nomeCliente' => $nomeCliente,
+            'email' => $email,
+            'telefono' => $telefono,
+            'articoli' => (string)($articoliRaw ?? ''),
+            'totale' => $totale,
+            'metodoPagamento' => $metodo,
             'dataOrdine' => $dateStr,
-            'statoForms' => $e['Entry_Status'] ?? $e['Entry.Status'] ?? null,
-            'orderSummary' => $e['Order_OrderSummary'] ?? $e['Order.OrderSummary'] ?? null,
-            'rawEntry' => $e, // keep full entry for debugging
+            'statoForms' => $statoForms,
+            'orderSummary' => $orderSummary,
+            // Debug: expose all top-level keys (helpful for first-time setup)
+            '_campiDisponibili' => array_keys($e),
         ];
     }
 }

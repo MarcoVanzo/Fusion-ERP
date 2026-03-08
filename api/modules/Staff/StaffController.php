@@ -8,6 +8,13 @@ declare(strict_types=1);
 
 namespace FusionERP\Modules\Staff;
 
+// Explicit require_once needed because server uses optimized classmap autoloader
+require_once __DIR__ . '/../../Shared/Auth.php';
+require_once __DIR__ . '/../../Shared/Audit.php';
+require_once __DIR__ . '/../../Shared/Response.php';
+require_once __DIR__ . '/../../Shared/TenantContext.php';
+require_once __DIR__ . '/StaffRepository.php';
+
 use FusionERP\Shared\Auth;
 use FusionERP\Shared\Audit;
 use FusionERP\Shared\Response;
