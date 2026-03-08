@@ -613,9 +613,7 @@ ${standings.map((s, i) => {
         }
       };
 
-      if (UI.confirm) {
-        UI.confirm(`Rimuovere il campionato "${label}"?`, doDelete);
-      } else if (confirm(`Rimuovere il campionato "${label}"?`)) {
+      if (confirm(`Rimuovere il campionato "${label}"?`)) {
         await doDelete();
       }
     },

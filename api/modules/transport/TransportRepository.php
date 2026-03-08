@@ -190,31 +190,7 @@ class TransportRepository
         return $stmt->rowCount();
     }
 
-    /**
-     * Matching query: find best carpool routes for athletes in the same team for an event.
-     * Returns athletes without a confirmed route and available routes with free seats.
-     */
-    public function matchCarpoolForEvent(string $eventId): array
-    {
-        $stmt = $this->db->prepare(
-            'SELECT cr.id AS route_id, cr.seats_available, cr.meeting_point_name,
-                    cr.departure_time, u.full_name AS driver_name,
-                    a.id AS athlete_id, a.full_name AS athlete_name, a.parent_phone,
-                    cp.status AS passenger_status
-             FROM carpool_routes cr
-             JOIN users u ON u.id = cr.driver_user_id
-             JOIN events e ON e.id = cr.event_id
-             JOIN athletes a ON a.team_id = e.team_id
-             LEFT JOIN carpool_passengers cp ON cp.route_id = cr.id AND cp.athlete_id = a.id
-             WHERE cr.event_id = :event_id
-               AND cr.deleted_at IS NULL
-               AND cr.seats_available > 0
-               AND (cp.status IS NULL OR cp.status = \'requested\')
-             ORDER BY cr.departure_time, cr.seats_available DESC'
-        );
-        $stmt->execute([':event_id' => $eventId]);
-        return $stmt->fetchAll();
-    }
+
 
     // ─── MILEAGE ──────────────────────────────────────────────────────────────
 

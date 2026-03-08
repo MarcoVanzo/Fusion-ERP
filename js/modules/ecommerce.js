@@ -55,24 +55,64 @@ const Ecommerce = (() => {
         .ec-import-banner p { font-size: 13px; opacity: .65; margin: 0; }
 
         /* Products grid */
-        .ec-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
-        .ec-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 16px; overflow: hidden; transition: transform .2s, box-shadow .2s; }
-        .ec-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,0.35); }
-        .ec-card-img { width: 100%; height: 180px; object-fit: contain; padding: 12px; background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.02) 70%, transparent 100%); filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5)) saturate(1.3) contrast(1.15); }
-        .ec-card-img-placeholder { width: 100%; height: 180px; display: flex; align-items: center; justify-content: center;
-            background: rgba(255,255,255,0.03); font-size: 48px; color: rgba(255,255,255,0.15); }
-        .ec-card-body { padding: 14px 16px; }
-        .ec-card-name { font-size: 14px; font-weight: 700; margin-bottom: 6px;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .ec-card-cat { font-size: 11px; opacity: .5; text-transform: uppercase; margin-bottom: 8px; }
-        .ec-card-price { font-size: 1.2rem; font-weight: 800; color: #818cf8; }
-        .ec-card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; }
-        .ec-badge-disponibile { padding: 3px 10px; border-radius: 8px; font-size: 12px; font-weight: 600;
-            background: rgba(16,185,129,0.12); color: #10b981; }
-        .ec-badge-non-disponibile { padding: 3px 10px; border-radius: 8px; font-size: 12px; font-weight: 600;
-            background: rgba(239,68,68,0.12); color: #ef4444; }
-        .ec-card-actions { display: flex; gap: 6px; }
+        .ec-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 24px; }
+        
+        .ec-card { 
+            position: relative;
+            background: linear-gradient(145deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.01) 100%); 
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px; overflow: hidden; 
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+        }
+        .ec-card::before {
+            content: ""; position: absolute; inset: 0; pointer-events: none;
+            background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 40%);
+            opacity: 0; transition: opacity 0.4s ease; z-index: 2;
+        }
+        .ec-card:hover { 
+            transform: translateY(-8px) scale(1.02); 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4), 0 0 20px rgba(99,102,241,0.15) inset; 
+            border-color: rgba(99,102,241,0.4); 
+        }
+        .ec-card:hover::before { opacity: 1; }
+
+        .ec-card-img-wrapper {
+            position: relative; width: 100%; height: 210px; display: flex; align-items: center; justify-content: center;
+            background: radial-gradient(circle at top, rgba(99,102,241,0.12) 0%, transparent 70%);
+            overflow: hidden; padding: 24px;
+        }
+        .ec-card-img { 
+            width: 100%; height: 100%; object-fit: contain; 
+            filter: drop-shadow(0 8px 16px rgba(0,0,0,0.4)) saturate(1.2); 
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); 
+            z-index: 10; 
+        }
+        .ec-card:hover .ec-card-img {
+            transform: scale(1.15) translateY(-5px) rotate(2.5deg);
+            filter: drop-shadow(0 15px 25px rgba(99,102,241,0.4)) saturate(1.4) contrast(1.1);
+        }
+        .ec-card-img-placeholder { 
+            width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+            background: rgba(255,255,255,0.02); font-size: 56px; color: rgba(255,255,255,0.1); 
+            transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .ec-card:hover .ec-card-img-placeholder { transform: scale(1.1) rotate(2.5deg); color: rgba(99,102,241,0.3); }
+
+        .ec-card-body { padding: 18px 20px 20px; position: relative; z-index: 10; }
+        .ec-card-cat { font-size: 11px; opacity: .6; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; font-weight: 700; color: #a78bfa; }
+        .ec-card-name { font-size: 16px; font-weight: 800; margin-bottom: 8px; line-height: 1.3;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .ec-card-price { font-size: 1.4rem; font-weight: 900; 
+            background: linear-gradient(135deg, #ffffff 0%, #a78bfa 100%); 
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
+            display: inline-block; }
+        .ec-card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; padding-top: 16px; border-top: 1px dashed rgba(255,255,255,0.1); }
+        .ec-badge-disponibile { padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: 700;
+            background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); color: #10b981; box-shadow: 0 2px 8px rgba(16,185,129,0.1); }
+        .ec-badge-non-disponibile { padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: 700;
+            background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #ef4444; }
+        .ec-card-actions { display: flex; gap: 8px; }
         .ec-icon-btn { width: 30px; height: 30px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);
             background: rgba(255,255,255,0.04); cursor: pointer; display: flex; align-items: center;
             justify-content: center; font-size: 14px; transition: all .15s; }
@@ -431,7 +471,9 @@ const Ecommerce = (() => {
             : `<span class="ec-badge-non-disponibile">● Non Disponibile</span>`;
         return `
         <div class="ec-card" data-id="${a.id}">
-            ${imgHtml}
+            <div class="ec-card-img-wrapper">
+                ${imgHtml}
+            </div>
             <div class="ec-card-body">
                 <div class="ec-card-cat">${Utils.escapeHtml(a.categoria || '—')}</div>
                 <div class="ec-card-name" title="${Utils.escapeHtml(a.nome)}">${Utils.escapeHtml(a.nome)}</div>
