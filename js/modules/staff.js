@@ -58,7 +58,7 @@ const Staff = (() => {
 
             <div class="filter-bar" id="staff-role-filter" style="margin-bottom:var(--sp-3);">
                 <button class="filter-chip active" data-role="" type="button">Tutti</button>
-                ${roles.map(r => `<button class="filter-chip" data-role="${Utils.escapeHtml(r)}" type="button">${Utils.escapeHtml(r)}</button>`).join('')}
+                ${roles.map(r => `<button class="filter-chip" data-role="${Utils.escapeHtml(r.toLowerCase())}" type="button">${Utils.escapeHtml(r)}</button>`).join('')}
             </div>
 
             <div class="grid-3" id="staff-grid">
@@ -401,7 +401,7 @@ const Staff = (() => {
                     <div class="form-group"><label class="form-label" for="es-role">Ruolo / Qualifica</label>
                         <select id="es-role" class="form-select">
                             <option value="">Seleziona...</option>
-                            ${['Allenatore', 'Vice Allenatore', 'Preparatore Atletico', 'Medico', 'Fisioterapista', 'Segreteria', 'Dirigente', 'Altro'].map(r => `<option ${m.role === r ? 'selected' : ''}>${r}</option>`).join('')}
+                            ${['Primo Allenatore', 'Secondo Allenatore', 'Allenatore', 'Vice Allenatore', 'Preparatore Atletico', 'Medico', 'Fisioterapista', 'Segreteria', 'Dirigente', 'Addetta Stampa', 'Altro'].map(r => `<option ${m.role === r ? 'selected' : ''}>${r}</option>`).join('')}
                         </select>
                     </div>
                     <div class="form-group"><label class="form-label" for="es-birth">Data di Nascita</label><input id="es-birth" class="form-input" type="date" value="${m.birth_date ? m.birth_date.substring(0, 10) : ''}"></div>
@@ -463,8 +463,10 @@ const Staff = (() => {
                 });
                 modal.close();
                 UI.toast('Membro staff aggiornato', 'success');
-                // Reload list cache
-                Store.get('list', 'staff').then(d => { _list = d; }).catch(() => { });
+                // Invalida la cache sia della lista che del profilo specifico
+                Store.invalidate('list/staff');
+                Store.invalidate('get/staff');
+                _list = await Store.get('list', 'staff').catch(() => _list);
                 _openProfile(m.id);
             } catch (err) {
                 errEl.textContent = err.message;

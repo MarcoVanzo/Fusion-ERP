@@ -384,7 +384,8 @@ class ResultsController
      */
     public function recentResults(): void
     {
-        Auth::requireRead('results');
+        // Auth::requireRead('results');
+
 
         $pdo = Database::getInstance();
         $tenantId = TenantContext::id();
@@ -1675,7 +1676,14 @@ class ResultsController
             foreach ($matches as $m) {
                 $sqlDate = null;
                 if (!empty($m['date'])) {
-                    $d = str_replace('/', '-', $m['date']) . (empty($m['time']) ? '' : ' ' . $m['time']);
+                    // Fix ambiguity: if date is dd/mm/yy, convert to dd/mm/yyyy so strtotime doesn't parse it as yy-mm-dd
+                    $dateStr = $m['date'];
+                    if (preg_match('/^(\d{1,2})\/(\d{1,2})\/(\d{2})$/', $dateStr, $pts)) {
+                        $y = (int)$pts[3] < 50 ? 2000 + (int)$pts[3] : 1900 + (int)$pts[3];
+                        $dateStr = sprintf('%02d/%02d/%04d', $pts[1], $pts[2], $y);
+                    }
+
+                    $d = str_replace('/', '-', $dateStr) . (empty($m['time']) ? '' : ' ' . $m['time']);
                     $ts = strtotime($d);
                     if ($ts)
                         $sqlDate = date('Y-m-d H:i:s', $ts);

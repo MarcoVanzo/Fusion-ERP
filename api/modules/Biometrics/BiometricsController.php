@@ -9,6 +9,7 @@
  *   POST ?module=biometrics&action=addMetric         — add athletic metric
  *   GET  ?module=biometrics&action=getMetrics        — metric history (filterable)
  *   GET  ?module=biometrics&action=getMetricsSummary — latest + trends
+ *   GET  ?module=biometrics&action=getGroupMetrics   — all athletes latest metrics + group averages
  */
 
 declare(strict_types=1);
@@ -183,6 +184,25 @@ class BiometricsController
 
         $summary = $this->repo->getMetricsSummary($athleteId);
         Response::success($summary);
+    }
+
+    // ─── GET ?module=biometrics&action=getGroupMetrics ───────────────────────
+
+    /**
+     * Get latest metric values for all athletes in the tenant (or filtered by team).
+     * Returns per-athlete metrics and group averages per metric type.
+     *
+     * Query params:
+     *   team_id (optional) — filter by team
+     */
+    public function getGroupMetrics(): void
+    {
+        Auth::requireRead('biometrics');
+        $tenantId = TenantContext::id();
+        $teamId = filter_input(INPUT_GET, 'team_id', FILTER_SANITIZE_SPECIAL_CHARS) ?: null;
+
+        $data = $this->repo->getGroupMetrics($tenantId, $teamId);
+        Response::success($data);
     }
 
     // ─── GET ?module=biometrics&action=metricTypes ───────────────────────────

@@ -205,6 +205,115 @@ class BiometricsRepository
     }
 
     /**
+     * Get the latest metric value for every metric type for each athlete in the tenant.
+     * Optionally filter by team_id. Returns per-athlete rows and group averages.
+     *
+     * @param string $tenantId
+     * @param string|null $teamId  Filter by specific team
+     * @return array ['athletes' => [...], 'averages' => [...], 'metric_types' => [...]]
+     */
+    public function getGroupMetrics(string $tenantId, ?string $teamId = null): array
+    {
+        // 1) Get all athletes (with team info)
+        $whereSql = 'a.tenant_id = :tenant_id AND a.deleted_at IS NULL';
+        $params = [':tenant_id' => $tenantId];
+        if ($teamId !== null) {
+            $whereSql .= ' AND a.team_id = :team_id';
+            $params[':team_id'] = $teamId;
+        }
+
+        $athleteStmt = $this->db->prepare(
+            "SELECT a.id, a.first_name, a.last_name,
+                    CONCAT(a.first_name, ' ', a.last_name) AS full_name,
+                    a.jersey_number, a.role, a.height_cm, a.weight_kg,
+                    t.id AS team_id, t.name AS team_name, t.category
+             FROM athletes a
+             LEFT JOIN teams t ON t.id = a.team_id
+             WHERE {$whereSql}
+             ORDER BY t.name, a.last_name, a.first_name"
+        );
+        $athleteStmt->execute($params);
+        $athletes = $athleteStmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        if (empty($athletes)) {
+            return ['athletes' => [], 'averages' => [], 'metric_types' => []];
+        }
+
+        $athleteIds = array_column($athletes, 'id');
+        $inList = implode(',', array_fill(0, count($athleteIds), '?'));
+
+        // 2) Get latest metric per (athlete_id, metric_type)
+        $metricStmt = $this->db->prepare(
+            "SELECT am.athlete_id, am.metric_type, am.value, am.unit, am.record_date
+             FROM athletic_metrics am
+             INNER JOIN (
+                 SELECT athlete_id, metric_type, MAX(record_date) AS max_date
+                 FROM athletic_metrics
+                 WHERE athlete_id IN ($inList)
+                 GROUP BY athlete_id, metric_type
+             ) latest ON am.athlete_id = latest.athlete_id
+                      AND am.metric_type = latest.metric_type
+                      AND am.record_date = latest.max_date
+             WHERE am.athlete_id IN ($inList)"
+        );
+        $metricStmt->execute(array_merge($athleteIds, $athleteIds));
+        $metrics = $metricStmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        // 3) Index metrics by athlete_id
+        $metricsByAthlete = [];
+        $allMetricTypes = [];
+        foreach ($metrics as $m) {
+            $metricsByAthlete[$m['athlete_id']][$m['metric_type']] = [
+                'value' => (float)$m['value'],
+                'unit' => $m['unit'],
+                'record_date' => $m['record_date'],
+            ];
+            $allMetricTypes[$m['metric_type']] = $m['unit'];
+        }
+
+        // 4) Build athlete rows
+        $athleteRows = [];
+        foreach ($athletes as $a) {
+            $athleteRows[] = [
+                'id' => $a['id'],
+                'full_name' => $a['full_name'],
+                'jersey_number' => $a['jersey_number'],
+                'role' => $a['role'],
+                'height_cm' => $a['height_cm'],
+                'weight_kg' => $a['weight_kg'],
+                'team_id' => $a['team_id'],
+                'team_name' => $a['team_name'],
+                'category' => $a['category'],
+                'metrics' => $metricsByAthlete[$a['id']] ?? [],
+            ];
+        }
+
+        // 5) Compute group averages per metric type
+        $sums = [];
+        $counts = [];
+        foreach ($metricsByAthlete as $metricsMap) {
+            foreach ($metricsMap as $type => $data) {
+                $sums[$type] = ($sums[$type] ?? 0) + $data['value'];
+                $counts[$type] = ($counts[$type] ?? 0) + 1;
+            }
+        }
+        $averages = [];
+        foreach ($sums as $type => $sum) {
+            $averages[$type] = [
+                'value' => round($sum / $counts[$type], 2),
+                'unit' => $allMetricTypes[$type] ?? '',
+                'count' => $counts[$type],
+            ];
+        }
+
+        return [
+            'athletes' => $athleteRows,
+            'averages' => $averages,
+            'metric_types' => $allMetricTypes,
+        ];
+    }
+
+    /**
      * Get metrics summary: latest values + trend for each metric type.
      */
     public function getMetricsSummary(string $athleteId): array

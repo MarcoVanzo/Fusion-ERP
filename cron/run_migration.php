@@ -36,6 +36,7 @@ $whitelist = [
     'V025__finance_core.sql',
     'V026__invoices.sql',
     'V027__federation.sql',
+    'V044__import_staff.sql',
 ];
 
 if (!in_array($file, $whitelist, true)) {

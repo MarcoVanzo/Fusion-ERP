@@ -92,6 +92,8 @@ if ($calData) {
         echo "  squadraA: " . json_encode($m['squadraA'] ?? null) . "\n";
         echo "  squadraB: " . json_encode($m['squadraB'] ?? null) . "\n";
         echo "  risultato: " . json_encode($m['risultato'] ?? null) . "\n";
+        echo "  data_gara_short: " . ($m['data_gara_short'] ?? 'null') . "\n";
+        echo "  ora_gara: " . ($m['ora_gara'] ?? 'null') . "\n";
     }
 }
 
