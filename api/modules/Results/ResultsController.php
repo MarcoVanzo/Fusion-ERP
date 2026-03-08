@@ -1169,7 +1169,7 @@ class ResultsController
      */
     private function _parseMatchesFedervolley(string $originalUrl, string $html): array
     {
-        $p = $this->_extractFedervolleyApiParams($originalUrl);
+        $p = $this->_extractFedervolleyApiParams($originalUrl, $html);
         if ($p) {
             $matches = $this->_parseMatchesFedervolleyAPI($p);
             if (!empty($matches))
@@ -1183,7 +1183,7 @@ class ResultsController
      * Extract API params {base, serie, sesso, stagione, girone} from a federvolley.it URL.
      * Serie: B2, A1, A2... Sesso: M/F  Stagione: starting year (2025 for 2025-26)
      */
-    private function _extractFedervolleyApiParams(string $url): ?array
+    private function _extractFedervolleyApiParams(string $url, string $html = ''): ?array
     {
         $base = 'https://www.federvolley.it';
         $path = strtolower(parse_url($url, PHP_URL_PATH) ?? '');
@@ -1228,6 +1228,13 @@ class ResultsController
         // If girone not in URL, try to auto-detect from slug (e.g. /girone-d/)
         if (!$girone && preg_match('/girone[_-]([a-z])/i', $path, $gm)) {
             $girone = strtoupper($gm[1]);
+        }
+
+        // If still no girone, try to extract it from the HTML javascript variable
+        if (!$girone && $html) {
+            if (preg_match('/fv_girone\s*=\s*[\'"]([A-Z0-9]+)[\'"]/i', $html, $hm)) {
+                $girone = strtoupper($hm[1]);
+            }
         }
 
         return compact('base', 'serie', 'sesso', 'stagione', 'girone');
@@ -1623,7 +1630,7 @@ class ResultsController
         $standingsUrlUsed = null;
 
         if (str_contains($url, 'federvolley.it')) {
-            $fvParams = $this->_extractFedervolleyApiParams($url);
+            $fvParams = $this->_extractFedervolleyApiParams($url, $htmlM);
             if ($fvParams && $fvParams['girone']) {
                 $err = '';
                 $giornateBody = $this->_fetch(
