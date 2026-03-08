@@ -1,4 +1,8 @@
 <?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 require 'vendor/autoload.php';
 $dotenv = Dotenv\Dotenv::createUnsafeImmutable(__DIR__);
 $dotenv->load();
@@ -29,6 +33,7 @@ try {
         ];
     }
     echo json_encode(['success' => true, 'orders' => $orders]);
-} catch (Throwable $e) {
+}
+catch (Throwable $e) {
     echo "ERROR: " . $e->getMessage() . " on line " . $e->getLine();
 }
