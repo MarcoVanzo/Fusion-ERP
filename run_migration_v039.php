@@ -25,65 +25,74 @@ try {
         'mysql:host=' . getenv('DB_HOST') . ';dbname=' . getenv('DB_NAME') . ';charset=utf8mb4',
         getenv('DB_USER'),
         getenv('DB_PASS'),
-    [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
-        );
-    echo "✅ Connessione al database OK\n\n";
-}
-catch (PDOException $e) {
-    die("❌ Connessione fallita: " . $e->getMessage() . "\n");
+        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
+    );
+    echo "OK Connessione al database OK\n\n";
+} catch (PDOException $e) {
+    die("ERRORE Connessione fallita: " . $e->getMessage() . "\n");
 }
 
-$rows = $pdo->query("SHOW TABLES LIKE 'contacts'")->fetchAll();
+$rows   = $pdo->query("SHOW TABLES LIKE 'contacts'")->fetchAll();
 $exists = count($rows) > 0;
-echo ($exists ? "✅" : "❌") . " contacts: " . ($exists ? 'ESISTE GIÀ' : 'MANCANTE') . "\n\n";
+echo ($exists ? "GIA ESISTE" : "MANCANTE") . " contacts\n\n";
 
 echo "--- Applicazione V039 ---\n\n";
 
 $sqlFile = __DIR__ . '/db/migrations/V039__contacts.sql';
 if (!file_exists($sqlFile)) {
-    die("❌ File SQL non trovato: {$sqlFile}\n");
+    die("ERRORE File SQL non trovato\n");
 }
 
-$sql = file_get_contents($sqlFile);
-$statements = array_filter(array_map('trim', explode(';', $sql)));
+// Leggi il file SQL, rimuovi le righe di commento e splitta per ';'
+$rawSql   = file_get_contents($sqlFile);
+$lines    = explode("\n", $rawSql);
+$cleaned  = [];
+foreach ($lines as $line) {
+    $t = trim($line);
+    if ($t === '' || strpos($t, '--') === 0) continue;
+    $cleaned[] = $line;
+}
+$cleanSql   = implode("\n", $cleaned);
+$statements = array_filter(array_map('trim', explode(';', $cleanSql)));
 
 $errors = $skipped = $executed = 0;
 
 foreach ($statements as $stmt) {
-    if (empty($stmt) || str_starts_with(ltrim($stmt), '--')) {
+    if (empty($stmt)) {
         $skipped++;
         continue;
     }
     try {
         $pdo->exec($stmt);
-        echo "✅ OK: " . substr($stmt, 0, 80) . "...\n";
+        echo "OK: " . substr($stmt, 0, 80) . "...\n";
         $executed++;
-    }
-    catch (PDOException $e) {
-        if (str_contains($e->getMessage(), 'already exists')) {
-            echo "ℹ️  SKIP (già esiste): " . substr($stmt, 0, 60) . "\n";
+    } catch (PDOException $e) {
+        if (strpos($e->getMessage(), 'already exists') !== false) {
+            echo "SKIP (gia esiste): " . substr($stmt, 0, 60) . "\n";
             $skipped++;
-        }
-        else {
-            echo "❌ ERRORE: " . $e->getMessage() . "\n   Statement: " . substr($stmt, 0, 80) . "\n";
+        } else {
+            echo "ERRORE: " . $e->getMessage() . "\n   -> " . substr($stmt, 0, 80) . "\n";
             $errors++;
         }
     }
 }
 
-echo "\n--- Riepilogo ---\nEseguiti: {$executed}\nSaltati:  {$skipped}\nErrori:   {$errors}\n\n";
+echo "\n--- Riepilogo ---\n";
+echo "Eseguiti: {$executed}\n";
+echo "Saltati:  {$skipped}\n";
+echo "Errori:   {$errors}\n\n";
 
 echo "--- Verifica finale ---\n";
 $rows = $pdo->query("SHOW TABLES LIKE 'contacts'")->fetchAll();
-$ok = count($rows) > 0;
-echo ($ok ? "✅" : "❌") . " contacts: " . ($ok ? 'CREATA CON SUCCESSO' : 'ANCORA MANCANTE') . "\n";
+$ok   = count($rows) > 0;
+echo ($ok ? "SUCCESSO" : "FALLITO") . " contacts: " . ($ok ? 'CREATA' : 'ANCORA MANCANTE') . "\n";
 
 if ($ok) {
     $cols = $pdo->query("DESCRIBE contacts")->fetchAll(PDO::FETCH_ASSOC);
     echo "\nColonne:\n";
-    foreach ($cols as $col)
-        echo "  • {$col['Field']} ({$col['Type']})\n";
+    foreach ($cols as $col) {
+        echo "  - " . $col['Field'] . " (" . $col['Type'] . ")\n";
+    }
 }
 
-echo "\n⚠️  ELIMINA QUESTO FILE DAL SERVER DOPO L'USO!\n";
-echo "   Percorso: " . __FILE__ . "\n";
+echo "\nELIMINA QUESTO FILE DAL SERVER DOPO L'USO!\n";
