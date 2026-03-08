@@ -3,12 +3,15 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-require_once __DIR__ . '/vendor/autoload.php';
-
-$dotenv = Dotenv\Dotenv::createUnsafeImmutable(__DIR__);
-$dotenv->load();
-
 try {
+    echo "Check 1: Started<br>";
+    require_once __DIR__ . '/vendor/autoload.php';
+    echo "Check 2: Autoloader loaded<br>";
+    
+    $dotenv = Dotenv\Dotenv::createUnsafeImmutable(__DIR__);
+    $dotenv->load();
+    echo "Check 3: Dotenv loaded<br>";
+    
     $db = new PDO(
         "mysql:host=" . $_ENV['DB_HOST'] . ";port=" . $_ENV['DB_PORT'] . ";dbname=" . $_ENV['DB_NAME'] . ";charset=utf8mb4",
         $_ENV['DB_USER'],
@@ -19,15 +22,15 @@ try {
             PDO::ATTR_EMULATE_PREPARES => false,
         ]
     );
+    echo "Check 4: Database connected<br>";
 
     $stmt = $db->query("SELECT DISTINCT tenant_id FROM athletes");
     $tenants = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    echo "Check 5: Found " . count($tenants) . " tenants.<br>";
 
     foreach ($tenants as $tenantId) {
-        if ($tenantId === 'TNT_default') continue;
-        
-        try {
-            // Replicate BiometricsRepository::getGroupMetrics step 1
+        if ($tenantId === 'fusion') {
+            
             $whereSql = 'a.tenant_id = :tenant_id AND a.deleted_at IS NULL';
             $params = [':tenant_id' => $tenantId];
             
@@ -44,15 +47,11 @@ try {
             $athleteStmt->execute($params);
             $athletes = $athleteStmt->fetchAll(PDO::FETCH_ASSOC);
 
-            if (empty($athletes)) {
-                echo "Tenant [$tenantId]: 0 athletes<br>\n";
-                continue;
-            }
+            if (empty($athletes)) continue;
 
             $athleteIds = array_column($athletes, 'id');
             $inList = implode(',', array_fill(0, count($athleteIds), '?'));
 
-            // Replicate BiometricsRepository::getGroupMetrics step 2
             $metricStmt = $db->prepare(
                 "SELECT am.athlete_id, am.metric_type, am.value, am.unit, am.record_date
                  FROM athletic_metrics am
@@ -67,16 +66,15 @@ try {
                  WHERE am.athlete_id IN ($inList)"
             );
             
-            // This is the SUSPECT line causing the PDO bug "array_merge"
-            $metricStmt->execute(array_merge($athleteIds, $athleteIds));
-            $metrics = $metricStmt->fetchAll(PDO::FETCH_ASSOC);
-
-            echo "Tenant [$tenantId]: OK - " . count($athletes) . " athletes, " . count($metrics) . " metrics<br>\n";
-
-        } catch (Exception $e) {
-            echo "Tenant [$tenantId]: ERROR - " . $e->getMessage() . "<br>\n";
+            try {
+                $metricStmt->execute(array_merge($athleteIds, $athleteIds));
+                $metrics = $metricStmt->fetchAll(PDO::FETCH_ASSOC);
+                echo "Tenant [$tenantId]: OK - " . count($athletes) . " athletes, " . count($metrics) . " metrics<br>";
+            } catch (Exception $e) {
+                echo "Tenant [$tenantId]: SQL ERROR! " . $e->getMessage() . "<br>\n";
+            }
         }
     }
-} catch (Exception $e) {
-    echo "GENERAL ERROR: " . $e->getMessage() . "<br>\n";
+} catch (Throwable $e) {
+    echo "<br>FATAL ERROR CATCHED: " . $e->getMessage() . " at " . $e->getFile() . ":" . $e->getLine();
 }
