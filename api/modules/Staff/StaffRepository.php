@@ -10,15 +10,20 @@ namespace FusionERP\Modules\Staff;
 
 // Explicit require_once needed because server uses optimized classmap autoloader
 $_staffShared = dirname(__DIR__, 2) . '/Shared/';
-require_once $_staffShared . 'DB.php';
 require_once $_staffShared . 'TenantContext.php';
 unset($_staffShared);
 
-use FusionERP\Shared\DB;
+use FusionERP\Shared\Database;
 use FusionERP\Shared\TenantContext;
 
 class StaffRepository
 {
+    private \PDO $db;
+
+    public function __construct()
+    {
+        $this->db = Database::getInstance();
+    }
     // ─── List all active staff members ────────────────────────────────────────
     public function listStaff(): array
     {
@@ -29,7 +34,9 @@ class StaffRepository
                 FROM staff_members
                 WHERE tenant_id = :tenant_id AND is_deleted = 0
                 ORDER BY last_name ASC, first_name ASC";
-        return DB::fetchAll($sql, [':tenant_id' => $tenantId]);
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':tenant_id' => $tenantId]);
+        return $stmt->fetchAll();
     }
 
     // ─── Get single staff member by ID ────────────────────────────────────────
@@ -39,7 +46,9 @@ class StaffRepository
         $sql = "SELECT *, CONCAT(first_name, ' ', last_name) AS full_name
                 FROM staff_members
                 WHERE id = :id AND tenant_id = :tenant_id AND is_deleted = 0";
-        $row = DB::fetchOne($sql, [':id' => $id, ':tenant_id' => $tenantId]);
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':id' => $id, ':tenant_id' => $tenantId]);
+        $row = $stmt->fetch();
         return $row ?: null;
     }
 
@@ -56,7 +65,8 @@ class StaffRepository
                      :birth_date, :birth_place, :residence_address, :residence_city,
                      :phone, :email, :fiscal_code, :identity_document,
                      :medical_cert_expires_at, :notes)";
-        DB::execute($sql, $data);
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($data);
     }
 
     // ─── Update ───────────────────────────────────────────────────────────────
@@ -78,16 +88,15 @@ class StaffRepository
                     medical_cert_expires_at = :medical_cert_expires_at,
                     notes                   = :notes
                 WHERE id = :id AND tenant_id = :tenant_id AND is_deleted = 0";
-        DB::execute($sql, array_merge($data, [':id' => $id, ':tenant_id' => $tenantId]));
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(array_merge($data, [':id' => $id, ':tenant_id' => $tenantId]));
     }
 
     // ─── Soft Delete ──────────────────────────────────────────────────────────
     public function softDelete(string $id): void
     {
         $tenantId = TenantContext::id();
-        DB::execute(
-            "UPDATE staff_members SET is_deleted = 1 WHERE id = :id AND tenant_id = :tenant_id",
-        [':id' => $id, ':tenant_id' => $tenantId]
-        );
+        $stmt = $this->db->prepare("UPDATE staff_members SET is_deleted = 1 WHERE id = :id AND tenant_id = :tenant_id");
+        $stmt->execute([':id' => $id, ':tenant_id' => $tenantId]);
     }
 }

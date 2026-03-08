@@ -31,13 +31,7 @@ const Ecommerce = (() => {
         .ec-header-badge { padding: 4px 14px; border-radius: 20px; font-size: 13px; font-weight: 600;
             background: rgba(99,102,241,0.15); color: #818cf8; }
 
-        /* Sub-tabs */
-        .ec-tabs { display: flex; gap: 4px; margin-bottom: 28px; background: rgba(255,255,255,0.04);
-            border-radius: 12px; padding: 4px; border: 1px solid rgba(255,255,255,0.06); max-width: 360px; }
-        .ec-tab { flex: 1; padding: 10px 18px; border: none; background: none; color: inherit;
-            font-size: 14px; font-weight: 500; border-radius: 8px; cursor: pointer; transition: all .2s; opacity: 0.6; }
-        .ec-tab:hover { opacity: 0.9; background: rgba(255,255,255,0.05); }
-        .ec-tab.active { background: rgba(99,102,241,0.15); color: #818cf8; opacity: 1; font-weight: 700; }
+        /* Removed Sub-tabs */
 
         /* Action btn */
         .ec-btn { display: inline-flex; align-items: center; gap: 8px; padding: 9px 18px;
@@ -198,40 +192,14 @@ const Ecommerce = (() => {
                 <span class="ec-header-badge" id="ec-badge">—</span>
             </div>
 
-            <!-- Sub-tabs -->
-            <div class="ec-tabs">
-                <button class="ec-tab active" id="ec-tab-articles" type="button">
-                    <i class="ph ph-tag"></i> Articoli
-                </button>
-                <button class="ec-tab" id="ec-tab-orders" type="button">
-                    <i class="ph ph-package"></i> Ordini
-                </button>
-            </div>
-
             <!-- Content panels -->
-            <div id="ec-panel-articles"></div>
-            <div id="ec-panel-orders" style="display:none;"></div>
+            <div id="ec-panel-articles" style="${_currentTab === 'articles' ? '' : 'display:none;'}"></div>
+            <div id="ec-panel-orders" style="${_currentTab === 'orders' ? '' : 'display:none;'}"></div>
         </div>
         `;
 
-        // Tab switching
-        document.getElementById('ec-tab-articles').addEventListener('click', () => _switchTab('articles'), { signal: _abortCtrl.signal });
-        document.getElementById('ec-tab-orders').addEventListener('click', () => _switchTab('orders'), { signal: _abortCtrl.signal });
-
         // Load initial panel
-        _loadArticlesPanel();
-    }
-
-    function _switchTab(tab) {
-        _currentTab = tab;
-        const isArt = tab === 'articles';
-
-        document.getElementById('ec-tab-articles').classList.toggle('active', isArt);
-        document.getElementById('ec-tab-orders').classList.toggle('active', !isArt);
-        document.getElementById('ec-panel-articles').style.display = isArt ? '' : 'none';
-        document.getElementById('ec-panel-orders').style.display = isArt ? 'none' : '';
-
-        if (isArt) {
+        if (_currentTab === 'articles') {
             _loadArticlesPanel();
         } else {
             _loadOrdersPanel();
@@ -844,11 +812,12 @@ const Ecommerce = (() => {
         async init() {
             _abortCtrl.abort();
             _abortCtrl = new AbortController();
-            _currentTab = 'articles';
+            const route = window.Router ? window.Router.getCurrentRoute() : 'ecommerce-articles';
+            _currentTab = route === 'ecommerce-orders' ? 'orders' : 'articles';
             _lastOrdersFetch = null;
 
             document.getElementById('page-title').textContent = 'eCommerce';
-            document.getElementById('page-subtitle').textContent = 'Gestione articoli e ordini negozio.';
+            document.getElementById('page-subtitle').textContent = _currentTab === 'orders' ? 'Gestione ordini negozio' : 'Gestione articoli negozio';
 
             _renderPage();
         },
