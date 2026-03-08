@@ -554,6 +554,7 @@ const Ecommerce = (() => {
         fetchBtn.innerHTML = '<div class="ec-spinner"></div> Recupero in corso...';
 
         try {
+            Store.invalidate('scrapeShop');
             const data = await Store.get('scrapeShop', 'ecommerce');
             const products = data.products || [];
 
