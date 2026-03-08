@@ -838,7 +838,11 @@ const Ecommerce = (() => {
             : '';
 
         const _renderRows = (orders, sm) => orders.map(o => {
-            const localStato = sm.get(String(o.id))?.stato || null;
+            let localStato = sm.get(String(o.id))?.stato || null;
+            if (!localStato && o.statoForms) {
+                // sync the Cognito status if not manually overridden
+                localStato = String(o.statoForms).toLowerCase() === 'pagato' ? 'pagato' : null;
+            }
             const badgeHtml = _statoBadge(localStato);
             const dateStr = o.dataOrdine ? new Date(o.dataOrdine).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
             const totaleStr = o.totale > 0 ? o.totale.toLocaleString('it-IT', { minimumFractionDigits: 2 }) + ' €' : '—';
