@@ -116,10 +116,10 @@ class EcommerceController
             return [];
         }
 
-        $products    = [];
-        $currentCat  = '';
+        $products = [];
+        $currentCat = '';
         $pendingName = '';
-        $pendingImg  = '';
+        $pendingImg = '';
 
         foreach (self::_walkNodes($container) as $node) {
 
@@ -143,49 +143,51 @@ class EcommerceController
 
             // <a>acquista</a> → seal the current product
             if ($node->nodeType === XML_ELEMENT_NODE && $tag === 'a'
-                && strtolower(trim($node->textContent ?? '')) === 'acquista'
-                && !empty($pendingName)
+            && strtolower(trim($node->textContent ?? '')) === 'acquista'
+            && !empty($pendingName)
             ) {
-                $price     = 0.0;
+                $price = 0.0;
                 $cleanName = $pendingName;
 
                 // Extract price embedded in name string: "NOME\n30,00 Euro"
                 if (preg_match('/(.+?)\s*([\d.,]+)\s*Euro/si', $pendingName, $m)) {
                     $cleanName = trim(preg_replace('/\s+/', ' ', $m[1]));
-                    $price     = self::_parsePrice($m[2] . ' Euro');
+                    $price = self::_parsePrice($m[2] . ' Euro');
                 }
 
                 if (!empty($cleanName)) {
                     $products[] = [
-                        'nome'        => $cleanName,
-                        'prezzo'      => $price,
+                        'nome' => $cleanName,
+                        'prezzo' => $price,
                         'immagineUrl' => $pendingImg,
                         'descrizione' => '',
-                        'categoria'   => $currentCat,
-                        'productUrl'  => '',
+                        'categoria' => $currentCat,
+                        'productUrl' => '',
                     ];
                 }
                 $pendingName = '';
-                $pendingImg  = '';
+                $pendingImg = '';
                 continue;
             }
 
             // Text nodes → accumulate name/price
             if ($node->nodeType === XML_TEXT_NODE) {
                 $text = trim($node->nodeValue ?? '');
-                if (empty($text) || strlen($text) < 3) continue;
+                if (empty($text) || strlen($text) < 3)
+                    continue;
 
                 // Skip footer/legal lines
                 $lower = strtolower($text);
                 if (str_contains($lower, '©') || str_contains($lower, 'fusion team')
-                    || str_contains($lower, 'privacy') || str_contains($lower, 'cookie')
-                    || str_contains($lower, 'p.i.') || preg_match('/^\d+$/', $text)) {
+                || str_contains($lower, 'privacy') || str_contains($lower, 'cookie')
+                || str_contains($lower, 'p.i.') || preg_match('/^\d+$/', $text)) {
                     continue;
                 }
 
                 if (str_contains($text, 'Euro') || str_contains($text, 'euro')) {
                     $pendingName .= "\n" . $text;
-                } else {
+                }
+                else {
                     $pendingName = $text;
                 }
                 continue;
@@ -193,13 +195,13 @@ class EcommerceController
         }
 
         // Deduplicate (the shop has identical products listed per gender section)
-        $seen   = [];
+        $seen = [];
         $unique = [];
         foreach ($products as $p) {
             $key = strtolower($p['nome']);
             if (!isset($seen[$key])) {
                 $seen[$key] = true;
-                $unique[]   = $p;
+                $unique[] = $p;
             }
         }
 
@@ -215,7 +217,7 @@ class EcommerceController
         foreach ($parent->childNodes as $child) {
             yield $child;
             if ($child->hasChildNodes()) {
-                yield from self::_walkNodes($child);
+                yield fromself::_walkNodes($child);
             }
         }
     }
@@ -259,7 +261,7 @@ class EcommerceController
         }
 
         $formId = self::cognitoOrderFormId();
-        $url = "https://www.cognitoforms.com/api/odata/Forms({$formId})/Entries";
+        $url = "https://www.cognitoforms.com/api/odata/Forms({$formId})/Views(1)/Entries";
 
         $ch = curl_init($url);
         curl_setopt_array($ch, [
