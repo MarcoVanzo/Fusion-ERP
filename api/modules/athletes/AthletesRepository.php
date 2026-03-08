@@ -53,7 +53,7 @@ class AthletesRepository
      */
     public function listAthletesLight(string $teamId = ''): array
     {
-        $sql = 'SELECT a.id, a.full_name, a.jersey_number, a.role, a.photo_path, a.is_active,
+        $sql = 'SELECT a.id, a.team_id, a.full_name, a.jersey_number, a.role, a.photo_path, a.is_active,
                        a.medical_cert_expires_at,
                        COALESCE(t.name, "Nessuna squadra") AS team_name,
                        COALESCE(t.category, "Nessuna") AS category
