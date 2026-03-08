@@ -810,10 +810,9 @@ const Ecommerce = (() => {
         try {
             const data = await Store.get('getOrders', 'ecommerce');
             const orders = data.orders || [];
-            const statiMap = await EcommerceDB.getAllStatiOrdini();
 
             _lastOrdersFetch = new Date();
-            _renderOrdersTable(panel, orders, statiMap);
+            _renderOrdersTable(panel, orders);
 
             const badge = document.getElementById('ec-badge');
             if (badge) badge.textContent = `${orders.length} Ordini`;
@@ -826,29 +825,36 @@ const Ecommerce = (() => {
         }
     }
 
-    function _renderOrdersTable(panel, ordersAll, statiMap) {
+    function _renderOrdersTable(panel, ordersAll) {
         let _activeFilter = 'all';
+
+        const _getEffectiveStato = (o) => {
+            const local = String(o.statoInterno || '').toLowerCase();
+            if (local && local !== 'da definire') return local;
+            const forms = String(o.statoForms || '').toLowerCase();
+            if (forms === 'pagato' || forms === 'non pagato') return forms;
+            return 'da definire';
+        };
 
         const _getFilteredOrders = () => {
             if (_activeFilter === 'all') return ordersAll;
-            return ordersAll.filter(o => {
-                const stato = statiMap.get(String(o.id))?.stato || null;
-                return stato === _activeFilter;
-            });
+            return ordersAll.filter(o => _getEffectiveStato(o) === _activeFilter);
         };
 
         const _lastUpdateStr = () => _lastOrdersFetch
             ? 'Ultimo aggiornamento: ' + _lastOrdersFetch.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })
             : '';
 
-        const _renderRows = (orders, sm) => orders.map(o => {
-            let localStato = sm.get(String(o.id))?.stato || null;
+        const _renderRows = (orders) => orders.map(o => {
+            let localStato = o.statoInterno;
+            if (!localStato || localStato.toLowerCase() === 'da definire') {
+                localStato = null;
+            }
             if (!localStato && o.statoForms) {
-                // sync the Cognito status if not manually overridden
                 const st = String(o.statoForms).toLowerCase();
                 if (st === 'pagato' || st === 'non pagato') localStato = st;
             }
-            const badgeHtml = _statoBadge(localStato);
+            const badgeHtml = _statoBadge(localStato || 'da definire');
             const dateStr = o.dataOrdine ? new Date(o.dataOrdine).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
             const totaleStr = o.totale > 0 ? o.totale.toLocaleString('it-IT', { minimumFractionDigits: 2 }) + ' €' : '—';
 
@@ -889,7 +895,7 @@ const Ecommerce = (() => {
             const tbody = panel.querySelector('#ec-orders-tbody');
             if (tbody) tbody.innerHTML = filtered.length === 0
                 ? `<tr><td colspan="6" style="text-align:center;padding:40px;opacity:.5;">Nessun ordine trovato</td></tr>`
-                : _renderRows(filtered, statiMap);
+                : _renderRows(filtered);
 
             // Re-bind selects
             panel.querySelectorAll('.ec-stato-select').forEach(sel => {
@@ -897,10 +903,21 @@ const Ecommerce = (() => {
                     const orderId = sel.dataset.orderId;
                     const stato = sel.value;
                     if (stato) {
-                        await EcommerceDB.setStatoOrdine(orderId, stato);
-                        statiMap.set(String(orderId), { ordineId: orderId, stato });
-                        UI.toast('Stato aggiornato', 'success', 2000);
-                        _render();
+                        try {
+                            const res = await fetch('/api?module=ecommerce&action=updateOrderStatus', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ id: orderId, stato })
+                            });
+                            const rj = await res.json();
+                            if (!rj.success) throw new Error(rj.error || 'Errore');
+                            const orderToUpdate = ordersAll.find(o => String(o.id) === String(orderId));
+                            if (orderToUpdate) orderToUpdate.statoInterno = stato;
+                            UI.toast('Stato aggiornato nel server', 'success', 2000);
+                            _render();
+                        } catch (err) {
+                            UI.toast(err.message, 'error');
+                        }
                     }
                 }, { signal: _abortCtrl.signal });
             });
@@ -935,7 +952,7 @@ const Ecommerce = (() => {
                 <tbody id="ec-orders-tbody">
                     ${ordersAll.length === 0
                 ? `<tr><td colspan="6" style="text-align:center;padding:40px;opacity:.5;">Nessun ordine trovato</td></tr>`
-                : _renderRows(ordersAll, statiMap)}
+                : _renderRows(ordersAll)}
                 </tbody>
             </table>
         </div>`;
@@ -951,9 +968,22 @@ const Ecommerce = (() => {
         });
 
         // Refresh button
-        document.getElementById('ec-orders-refresh').addEventListener('click', async () => {
-            Store.invalidate('getOrders');
-            await _loadOrdersPanel();
+        document.getElementById('ec-orders-refresh').addEventListener('click', async (e) => {
+            const btn = e.currentTarget;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Sincronizzazione...';
+            try {
+                const res = await fetch('/api?module=ecommerce&action=syncOrders', { method: 'POST' });
+                const rj = await res.json();
+                if (!rj.success) throw new Error(rj.error || 'C\'è stato un errore di sincronizzazione');
+                UI.toast(rj.data?.message || 'Sincronizzazione completata', 'success');
+                Store.invalidate('getOrders');
+                await _loadOrdersPanel();
+            } catch (err) {
+                UI.toast(err.message, 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="ph ph-arrows-clockwise"></i> Aggiorna';
+            }
         }, { signal: _abortCtrl.signal });
 
         // Bind initial selects
