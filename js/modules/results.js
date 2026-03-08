@@ -1,37 +1,37 @@
 "use strict";
 
 const Results = (() => {
-    // ── State ────────────────────────────────────────────────────────────────
-    let _abort = new AbortController();
-    let _campionati = [];
-    let _selected = null;   // { id, url, label }
-    let _view = 'matches'; // 'matches' | 'standings'
+  // ── State ────────────────────────────────────────────────────────────────
+  let _abort = new AbortController();
+  let _campionati = [];
+  let _selected = null;   // { id, url, label }
+  let _view = 'matches'; // 'matches' | 'standings'
 
-    // ── Init / Destroy ────────────────────────────────────────────────────────
-    async function init() {
-        _abort = new AbortController();
-        const route = Router.getCurrentRoute();
-        _view = route === 'results-standings' ? 'standings' : 'matches';
+  // ── Init / Destroy ────────────────────────────────────────────────────────
+  async function init() {
+    _abort = new AbortController();
+    const route = Router.getCurrentRoute();
+    _view = route === 'results-standings' ? 'standings' : 'matches';
 
-        _renderShell();
-        _setActiveViewBtn();
-        await _loadCampionati();
-    }
+    _renderShell();
+    _setActiveViewBtn();
+    await _loadCampionati();
+  }
 
-    function destroy() {
-        _abort.abort();
-        _abort = new AbortController();
-    }
+  function destroy() {
+    _abort.abort();
+    _abort = new AbortController();
+  }
 
-    // ── Shell ─────────────────────────────────────────────────────────────────
-    function _renderShell() {
-        const app = document.getElementById('app');
-        if (!app) return;
-        const mc = document.getElementById('main-content');
-        if (mc) { mc.style.padding = '0'; mc.style.backgroundColor = '#0a0a0c'; }
-        App.getUser();
+  // ── Shell ─────────────────────────────────────────────────────────────────
+  function _renderShell() {
+    const app = document.getElementById('app');
+    if (!app) return;
+    const mc = document.getElementById('main-content');
+    if (mc) { mc.style.padding = '0'; mc.style.backgroundColor = '#0a0a0c'; }
+    App.getUser();
 
-        app.innerHTML = `
+    app.innerHTML = `
 <style>
   /* ── Results Module ──────────────────────────────── */
   .res-container { padding:28px 32px; color:white; background:#0a0a0c; min-height:100%; font-family:var(--font-body),sans-serif; }
@@ -142,179 +142,192 @@ const Results = (() => {
   </div>
   <div id="res-content">${_skeletonHtml()}</div>
 </div>`;
+  }
+
+  // ── Load campionati ───────────────────────────────────────────────────────
+  async function _loadCampionati() {
+    try {
+      const data = await Store.get('getCampionati', 'results');
+      _campionati = data.campionati || [];
+      const sel = document.getElementById('res-campionato-select');
+      if (!sel) return;
+
+      if (_campionati.length === 0) {
+        sel.innerHTML = '<option value="">Nessun campionato configurato</option>';
+        _showEmpty(
+          'Nessun campionato configurato',
+          'Aggiungi un campionato tramite il tasto ⚙️ in alto a destra.\nPortali supportati: venezia.portalefipav.net · fipavveneto.net · federvolley.it'
+        );
+        return;
+      }
+
+      sel.innerHTML = _campionati.map(c =>
+        `<option value="${Utils.escapeHtml(c.id)}" data-url="${Utils.escapeHtml(c.url || '')}">${Utils.escapeHtml(c.label)}</option>`
+      ).join('');
+
+      sel.removeEventListener('change', _onCampionatoChange);
+      sel.addEventListener('change', _onCampionatoChange);
+
+      const first = sel.options[0];
+      _selected = { id: first.value, url: first.dataset.url, label: first.textContent };
+      await _loadView();
+    } catch (err) {
+      console.error('[Results] getCampionati error:', err);
+      _showError('Impossibile caricare i campionati. ' + (err.message || ''));
     }
+  }
 
-    // ── Load campionati ───────────────────────────────────────────────────────
-    async function _loadCampionati() {
-        try {
-            const data = await Store.get('getCampionati', 'results');
-            _campionati = data.campionati || [];
-            const sel = document.getElementById('res-campionato-select');
-            if (!sel) return;
+  function _onCampionatoChange() {
+    const sel = document.getElementById('res-campionato-select');
+    if (!sel) return;
+    const opt = sel.options[sel.selectedIndex];
+    _selected = { id: opt.value, url: opt.dataset.url, label: opt.textContent };
+    _loadView();
+  }
 
-            if (_campionati.length === 0) {
-                sel.innerHTML = '<option value="">Nessun campionato configurato</option>';
-                _showEmpty(
-                    'Nessun campionato configurato',
-                    'Aggiungi un campionato tramite il tasto ⚙️ in alto a destra.\nPortali supportati: venezia.portalefipav.net · fipavveneto.net · federvolley.it'
-                );
-                return;
-            }
-
-            sel.innerHTML = _campionati.map(c =>
-                `<option value="${Utils.escapeHtml(c.id)}" data-url="${Utils.escapeHtml(c.url || '')}">${Utils.escapeHtml(c.label)}</option>`
-            ).join('');
-
-            sel.removeEventListener('change', _onCampionatoChange);
-            sel.addEventListener('change', _onCampionatoChange);
-
-            const first = sel.options[0];
-            _selected = { id: first.value, url: first.dataset.url, label: first.textContent };
-            await _loadView();
-        } catch (err) {
-            console.error('[Results] getCampionati error:', err);
-            _showError('Impossibile caricare i campionati. ' + (err.message || ''));
-        }
+  // ── View loading ──────────────────────────────────────────────────────────
+  async function _loadView() {
+    if (_view === 'matches') {
+      await _loadMatches();
+    } else {
+      await _loadStandings();
     }
+  }
 
-    function _onCampionatoChange() {
-        const sel = document.getElementById('res-campionato-select');
-        if (!sel) return;
-        const opt = sel.options[sel.selectedIndex];
-        _selected = { id: opt.value, url: opt.dataset.url, label: opt.textContent };
-        _loadView();
+  async function _loadMatches() {
+    const content = document.getElementById('res-content');
+    if (content) content.innerHTML = _skeletonHtml();
+    if (!_selected?.id && !_selected?.url) {
+      _showEmpty('Nessun campionato selezionato', 'Seleziona un campionato dal menu in alto.');
+      return;
     }
+    const params = _selected.id ? { campionato_id: _selected.id } : { campionato_url: _selected.url };
+    try {
+      const data = await Store.get('getResults', 'results', params);
+      if (data.needs_sync) {
+        const content = document.getElementById('res-content');
+        if (content) content.innerHTML = `
+<div class="res-empty">
+  <i class="ph ph-cloud-arrow-down" style="color:var(--color-pink);opacity:1;"></i>
+  <div class="res-empty-title">Partite non ancora sincronizzate</div>
+  <div class="res-empty-sub">Premi <strong>☁ Sincronizza</strong> per scaricare le partite dal portale.</div>
+  <button class="btn btn-primary btn-sm" onclick="Results._sync()" style="margin-top:12px;">
+    <i class="ph ph-cloud-arrow-down"></i> Sincronizza ora
+  </button>
+</div>`;
+        return;
+      }
+      _renderMatches(data);
+    } catch (err) {
+      if (err.name === 'AbortError') return;
+      console.error('[Results] getResults error:', err);
+      _showError('Impossibile caricare i risultati. ' + (err.message || ''));
+    }
+  }
 
-    // ── View loading ──────────────────────────────────────────────────────────
-    async function _loadView() {
-        if (_view === 'matches') {
-            await _loadMatches();
+  async function _loadStandings() {
+    const content = document.getElementById('res-content');
+    if (content) content.innerHTML = _skeletonHtml();
+    if (!_selected?.id && !_selected?.url) {
+      _showEmpty('Nessun campionato selezionato', 'Seleziona un campionato dal menu in alto.');
+      return;
+    }
+    const params = _selected.id ? { campionato_id: _selected.id } : { campionato_url: _selected.url };
+    try {
+      const data = await Store.get('getStandings', 'results', params);
+      if (data.needs_sync) {
+        if (data.already_synced) {
+          _renderStandingsUnavailable(data.last_updated);
         } else {
-            await _loadStandings();
+          _renderStandingsNotSynced();
         }
+        return;
+      }
+      _renderStandings(data);
+    } catch (err) {
+      if (err.name === 'AbortError') return;
+      console.error('[Results] getStandings error:', err);
+      _showError('Impossibile caricare la classifica. ' + (err.message || ''));
+    }
+  }
+
+  // ── Renderers ─────────────────────────────────────────────────────────────
+  function _renderMatches(data) {
+    const content = document.getElementById('res-content');
+    if (!content) return;
+    const matches = data.matches || [];
+    const lastUpdated = data.last_updated ? new Date(data.last_updated).toLocaleString('it-IT') : '';
+    const sourceUrl = data.source_url || (_selected?.url || 'https://venezia.portalefipav.net');
+
+    if (matches.length === 0) {
+      _showEmpty('Nessuna partita trovata', 'Non ci sono partite disponibili per questo campionato.');
+      return;
     }
 
-    async function _loadMatches() {
-        const content = document.getElementById('res-content');
-        if (content) content.innerHTML = _skeletonHtml();
-        if (!_selected?.id && !_selected?.url) {
-            _showEmpty('Nessun campionato selezionato', 'Seleziona un campionato dal menu in alto.');
-            return;
-        }
-        const params = _selected.id ? { campionato_id: _selected.id } : { campionato_url: _selected.url };
-        try {
-            const data = await Store.get('getResults', 'results', params);
-            _renderMatches(data);
-        } catch (err) {
-            if (err.name === 'AbortError') return;
-            console.error('[Results] getResults error:', err);
-            _showError('Impossibile caricare i risultati. ' + (err.message || ''));
-        }
-    }
+    // Group by round
+    const byRound = {};
+    matches.forEach(m => {
+      const r = m.round || 'Altre';
+      if (!byRound[r]) byRound[r] = [];
+      byRound[r].push(m);
+    });
+    const rounds = Object.keys(byRound).sort((a, b) => {
+      if (a === 'Altre') return 1;
+      if (b === 'Altre') return -1;
+      return parseInt(a) - parseInt(b);
+    });
 
-    async function _loadStandings() {
-        const content = document.getElementById('res-content');
-        if (content) content.innerHTML = _skeletonHtml();
-        if (!_selected?.id && !_selected?.url) {
-            _showEmpty('Nessun campionato selezionato', 'Seleziona un campionato dal menu in alto.');
-            return;
-        }
-        const params = _selected.id ? { campionato_id: _selected.id } : { campionato_url: _selected.url };
-        try {
-            const data = await Store.get('getStandings', 'results', params);
-            if (data.needs_sync) {
-                if (data.already_synced) {
-                    _renderStandingsUnavailable(data.last_updated);
-                } else {
-                    _renderStandingsNotSynced();
-                }
-                return;
-            }
-            _renderStandings(data);
-        } catch (err) {
-            if (err.name === 'AbortError') return;
-            console.error('[Results] getStandings error:', err);
-            _showError('Impossibile caricare la classifica. ' + (err.message || ''));
-        }
-    }
-
-    // ── Renderers ─────────────────────────────────────────────────────────────
-    function _renderMatches(data) {
-        const content = document.getElementById('res-content');
-        if (!content) return;
-        const matches = data.matches || [];
-        const lastUpdated = data.last_updated ? new Date(data.last_updated).toLocaleString('it-IT') : '';
-        const sourceUrl = data.source_url || (_selected?.url || 'https://venezia.portalefipav.net');
-
-        if (matches.length === 0) {
-            _showEmpty('Nessuna partita trovata', 'Non ci sono partite disponibili per questo campionato.');
-            return;
-        }
-
-        // Group by round
-        const byRound = {};
-        matches.forEach(m => {
-            const r = m.round || 'Altre';
-            if (!byRound[r]) byRound[r] = [];
-            byRound[r].push(m);
-        });
-        const rounds = Object.keys(byRound).sort((a, b) => {
-            if (a === 'Altre') return 1;
-            if (b === 'Altre') return -1;
-            return parseInt(a) - parseInt(b);
-        });
-
-        let html = '';
-        rounds.forEach((r, i) => {
-            const cards = byRound[r];
-            html += `
+    let html = '';
+    rounds.forEach((r, i) => {
+      const cards = byRound[r];
+      html += `
 <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:white;margin-top:${i === 0 ? '20px' : '32px'};margin-bottom:12px;display:flex;align-items:center;gap:6px;border-bottom:1px solid #1c1c1e;padding-bottom:8px;">
   <i class="ph ph-calendar-blank" style="color:var(--color-pink);"></i>
   ${r === 'Altre' ? 'Partite senza giornata' : `Giornata ${r}`}
 </div>
 <div class="res-grid">${cards.map(_matchCard).join('')}</div>`;
-        });
+    });
 
-        if (lastUpdated) {
-            const domain = (() => { try { return new URL(sourceUrl).hostname; } catch (e) { return 'portale federale'; } })();
-            html += `<div class="res-last-update">Aggiornato: ${lastUpdated} &nbsp;·&nbsp; Fonte: <a href="${Utils.escapeHtml(sourceUrl)}" target="_blank" style="color:var(--color-text-muted);">${Utils.escapeHtml(domain)}</a></div>`;
-        }
-        content.innerHTML = html;
+    if (lastUpdated) {
+      const domain = (() => { try { return new URL(sourceUrl).hostname; } catch (e) { return 'portale federale'; } })();
+      html += `<div class="res-last-update">Aggiornato: ${lastUpdated} &nbsp;·&nbsp; Fonte: <a href="${Utils.escapeHtml(sourceUrl)}" target="_blank" style="color:var(--color-text-muted);">${Utils.escapeHtml(domain)}</a></div>`;
+    }
+    content.innerHTML = html;
+  }
+
+  function _matchCard(m) {
+    const isOur = m.is_our_team;
+    const played = m.status === 'played';
+    const statusBadge = m.status === 'live'
+      ? '<span class="res-badge live"><i class="ph ph-circle" style="font-size:8px;"></i> Live</span>'
+      : played
+        ? '<span class="res-badge played"><i class="ph ph-check-circle"></i> Giocata</span>'
+        : m.status === 'unknown'
+          ? '<span class="res-badge unknown"><i class="ph ph-question"></i> Da omologare</span>'
+          : '<span class="res-badge scheduled"><i class="ph ph-clock"></i> In programma</span>';
+    const ourBadge = isOur ? '<span class="res-badge our-match"><i class="ph ph-star-four"></i> Noi</span>' : '';
+
+    let scoreClass = { home: '', away: '' };
+    if (played && isOur) {
+      const homeIsUs = Results._isOurTeam(m.home || '');
+      const awayIsUs = Results._isOurTeam(m.away || '');
+      if (homeIsUs) {
+        scoreClass.home = (m.sets_home || 0) > (m.sets_away || 0) ? 'win' : 'loss';
+        scoreClass.away = scoreClass.home === 'win' ? 'loss' : 'win';
+      } else if (awayIsUs) {
+        scoreClass.away = (m.sets_away || 0) > (m.sets_home || 0) ? 'win' : 'loss';
+        scoreClass.home = scoreClass.away === 'win' ? 'loss' : 'win';
+      }
     }
 
-    function _matchCard(m) {
-        const isOur = m.is_our_team;
-        const played = m.status === 'played';
-        const statusBadge = m.status === 'live'
-            ? '<span class="res-badge live"><i class="ph ph-circle" style="font-size:8px;"></i> Live</span>'
-            : played
-                ? '<span class="res-badge played"><i class="ph ph-check-circle"></i> Giocata</span>'
-                : m.status === 'unknown'
-                    ? '<span class="res-badge unknown"><i class="ph ph-question"></i> Da omologare</span>'
-                    : '<span class="res-badge scheduled"><i class="ph ph-clock"></i> In programma</span>';
-        const ourBadge = isOur ? '<span class="res-badge our-match"><i class="ph ph-star-four"></i> Noi</span>' : '';
+    const dateStr = m.date ? `${m.date}${m.time ? ' · ' + m.time : ''}` : (m.time || '—');
+    const homeClass = Results._isOurTeam(m.home || '') ? 'res-team-name our-name' : 'res-team-name';
+    const awayClass = Results._isOurTeam(m.away || '') ? 'res-team-name our-name' : 'res-team-name';
+    const scoreBlock = played && m.score
+      ? `<div class="res-score ${scoreClass.home}">${m.sets_home ?? ''}</div><div class="res-time-label">-</div><div class="res-score ${scoreClass.away}">${m.sets_away ?? ''}</div>`
+      : '<div class="res-score vs">vs</div>';
 
-        let scoreClass = { home: '', away: '' };
-        if (played && isOur) {
-            const homeIsUs = Results._isOurTeam(m.home || '');
-            const awayIsUs = Results._isOurTeam(m.away || '');
-            if (homeIsUs) {
-                scoreClass.home = (m.sets_home || 0) > (m.sets_away || 0) ? 'win' : 'loss';
-                scoreClass.away = scoreClass.home === 'win' ? 'loss' : 'win';
-            } else if (awayIsUs) {
-                scoreClass.away = (m.sets_away || 0) > (m.sets_home || 0) ? 'win' : 'loss';
-                scoreClass.home = scoreClass.away === 'win' ? 'loss' : 'win';
-            }
-        }
-
-        const dateStr = m.date ? `${m.date}${m.time ? ' · ' + m.time : ''}` : (m.time || '—');
-        const homeClass = Results._isOurTeam(m.home || '') ? 'res-team-name our-name' : 'res-team-name';
-        const awayClass = Results._isOurTeam(m.away || '') ? 'res-team-name our-name' : 'res-team-name';
-        const scoreBlock = played && m.score
-            ? `<div class="res-score ${scoreClass.home}">${m.sets_home ?? ''}</div><div class="res-time-label">-</div><div class="res-score ${scoreClass.away}">${m.sets_away ?? ''}</div>`
-            : '<div class="res-score vs">vs</div>';
-
-        return `
+    return `
 <div class="res-card${isOur ? ' our-team' : ''}">
   <div class="res-card-top">
     <span>${Utils.escapeHtml(dateStr)}</span>
@@ -326,22 +339,22 @@ const Results = (() => {
     <div class="res-team away"><div class="${awayClass}">${Utils.escapeHtml(m.away || 'Ospite')}</div></div>
   </div>
 </div>`;
+  }
+
+  function _renderStandings(data) {
+    const content = document.getElementById('res-content');
+    if (!content) return;
+    const standings = data.standings || [];
+    const lastUpdated = data.last_updated ? new Date(data.last_updated).toLocaleString('it-IT') : '';
+    const sourceUrl = data.source_url || (_selected?.url || 'https://venezia.portalefipav.net');
+
+    if (standings.length === 0) {
+      _showEmpty('Classifica non disponibile', 'Non è stato possibile estrarre la classifica per questo campionato.');
+      return;
     }
 
-    function _renderStandings(data) {
-        const content = document.getElementById('res-content');
-        if (!content) return;
-        const standings = data.standings || [];
-        const lastUpdated = data.last_updated ? new Date(data.last_updated).toLocaleString('it-IT') : '';
-        const sourceUrl = data.source_url || (_selected?.url || 'https://venezia.portalefipav.net');
-
-        if (standings.length === 0) {
-            _showEmpty('Classifica non disponibile', 'Non è stato possibile estrarre la classifica per questo campionato.');
-            return;
-        }
-
-        const medals = ['🥇', '🥈', '🥉'];
-        let html = `
+    const medals = ['🥇', '🥈', '🥉'];
+    let html = `
 <div class="res-table-wrap">
   <table class="res-table">
     <thead>
@@ -356,9 +369,9 @@ const Results = (() => {
     </thead>
     <tbody>
 ${standings.map((s, i) => {
-            const pos = s.position ?? i + 1;
-            const isOur = s.is_our_team;
-            return `
+      const pos = s.position ?? i + 1;
+      const isOur = s.is_our_team;
+      return `
       <tr class="${isOur ? 'our-row' : ''}">
         <td class="center">${pos <= 3 ? `<span class="pos-medal">${medals[pos - 1]}</span>` : `<span class="res-pos">${pos}</span>`}</td>
         <td>
@@ -372,22 +385,22 @@ ${standings.map((s, i) => {
         <td class="center" style="color:#ef5350;">${s.lost ?? '—'}</td>
         <td class="center"><strong style="font-size:15px;">${s.points ?? '—'}</strong></td>
       </tr>`;
-        }).join('')}
+    }).join('')}
     </tbody>
   </table>
 </div>`;
 
-        if (lastUpdated) {
-            const domain = (() => { try { return new URL(sourceUrl).hostname; } catch (e) { return 'portale federale'; } })();
-            html += `<div class="res-last-update">Aggiornato: ${lastUpdated} &nbsp;·&nbsp; Fonte: <a href="${Utils.escapeHtml(sourceUrl)}" target="_blank" style="color:var(--color-text-muted);">${Utils.escapeHtml(domain)}</a></div>`;
-        }
-        content.innerHTML = html;
+    if (lastUpdated) {
+      const domain = (() => { try { return new URL(sourceUrl).hostname; } catch (e) { return 'portale federale'; } })();
+      html += `<div class="res-last-update">Aggiornato: ${lastUpdated} &nbsp;·&nbsp; Fonte: <a href="${Utils.escapeHtml(sourceUrl)}" target="_blank" style="color:var(--color-text-muted);">${Utils.escapeHtml(domain)}</a></div>`;
     }
+    content.innerHTML = html;
+  }
 
-    function _renderStandingsNotSynced() {
-        const content = document.getElementById('res-content');
-        if (!content) return;
-        content.innerHTML = `
+  function _renderStandingsNotSynced() {
+    const content = document.getElementById('res-content');
+    if (!content) return;
+    content.innerHTML = `
 <div class="res-empty">
   <i class="ph ph-cloud-arrow-down" style="color:var(--color-pink);opacity:1;"></i>
   <div class="res-empty-title">Classifica non ancora sincronizzata</div>
@@ -396,13 +409,13 @@ ${standings.map((s, i) => {
     <i class="ph ph-cloud-arrow-down"></i> Sincronizza ora
   </button>
 </div>`;
-    }
+  }
 
-    function _renderStandingsUnavailable(lastUpdated) {
-        const content = document.getElementById('res-content');
-        if (!content) return;
-        const dateStr = lastUpdated ? new Date(lastUpdated).toLocaleString('it-IT') : '';
-        content.innerHTML = `
+  function _renderStandingsUnavailable(lastUpdated) {
+    const content = document.getElementById('res-content');
+    if (!content) return;
+    const dateStr = lastUpdated ? new Date(lastUpdated).toLocaleString('it-IT') : '';
+    content.innerHTML = `
 <div class="res-empty">
   <i class="ph ph-table" style="color:var(--color-text-muted);opacity:0.5;"></i>
   <div class="res-empty-title">Classifica non disponibile</div>
@@ -414,24 +427,24 @@ ${standings.map((s, i) => {
     <i class="ph ph-arrows-clockwise"></i> Riprova sincronizzazione
   </button>
 </div>`;
-    }
+  }
 
-    // ── Utils ─────────────────────────────────────────────────────────────────
-    function _showEmpty(title, sub) {
-        const content = document.getElementById('res-content');
-        if (!content) return;
-        content.innerHTML = `
+  // ── Utils ─────────────────────────────────────────────────────────────────
+  function _showEmpty(title, sub) {
+    const content = document.getElementById('res-content');
+    if (!content) return;
+    content.innerHTML = `
 <div class="res-empty">
   <i class="ph ph-volleyball"></i>
   <div class="res-empty-title">${Utils.escapeHtml(title)}</div>
   <div class="res-empty-sub">${Utils.escapeHtml(sub)}</div>
 </div>`;
-    }
+  }
 
-    function _showError(msg) {
-        const content = document.getElementById('res-content');
-        if (!content) return;
-        content.innerHTML = `
+  function _showError(msg) {
+    const content = document.getElementById('res-content');
+    if (!content) return;
+    content.innerHTML = `
 <div class="res-empty">
   <i class="ph ph-warning-circle" style="color:#ef5350;opacity:1;"></i>
   <div class="res-empty-title">Errore di connessione</div>
@@ -440,10 +453,10 @@ ${standings.map((s, i) => {
     <i class="ph ph-arrows-clockwise"></i> Riprova
   </button>
 </div>`;
-    }
+  }
 
-    function _skeletonHtml() {
-        return `<div class="res-loading-grid">${Array.from({ length: 6 }, () => `
+  function _skeletonHtml() {
+    return `<div class="res-loading-grid">${Array.from({ length: 6 }, () => `
 <div class="res-skel-card">
   <div class="skeleton skeleton-text" style="width:60%;"></div>
   <div style="display:flex;gap:12px;align-items:center;">
@@ -452,71 +465,71 @@ ${standings.map((s, i) => {
     <div class="skeleton skeleton-text" style="flex:1;width:auto;"></div>
   </div>
 </div>`).join('')}</div>`;
-    }
+  }
 
-    function _setActiveViewBtn() {
-        document.querySelectorAll('.res-view-btn').forEach(b => b.classList.remove('active'));
-        const btn = document.getElementById(`res-btn-${_view}`);
-        if (btn) btn.classList.add('active');
-    }
+  function _setActiveViewBtn() {
+    document.querySelectorAll('.res-view-btn').forEach(b => b.classList.remove('active'));
+    const btn = document.getElementById(`res-btn-${_view}`);
+    if (btn) btn.classList.add('active');
+  }
 
-    // ── Public API ────────────────────────────────────────────────────────────
-    return {
-        init,
-        destroy,
+  // ── Public API ────────────────────────────────────────────────────────────
+  return {
+    init,
+    destroy,
 
-        _switchView(view) {
-            _view = view;
-            _setActiveViewBtn();
-            _loadView();
-        },
+    _switchView(view) {
+      _view = view;
+      _setActiveViewBtn();
+      _loadView();
+    },
 
-        async _refresh() {
-            const btn = document.getElementById('res-refresh-btn');
-            if (btn) btn.classList.add('loading');
-            Store.invalidate?.('getResults', 'results');
-            Store.invalidate?.('getStandings', 'results');
-            await _loadView();
-            if (btn) btn.classList.remove('loading');
-            UI.toast('Risultati aggiornati', 'success', 2000);
-        },
+    async _refresh() {
+      const btn = document.getElementById('res-refresh-btn');
+      if (btn) btn.classList.add('loading');
+      Store.invalidate?.('getResults', 'results');
+      Store.invalidate?.('getStandings', 'results');
+      await _loadView();
+      if (btn) btn.classList.remove('loading');
+      UI.toast('Risultati aggiornati', 'success', 2000);
+    },
 
-        async _sync() {
-            if (!_selected?.id) { UI.toast('Seleziona un campionato.', 'warning', 2000); return; }
-            const btn = document.getElementById('res-sync-btn');
-            if (btn) { btn.classList.add('loading'); btn.disabled = true; }
-            try {
-                UI.toast('Sincronizzazione in corso...', 'info', 3000);
-                const res = await Store.api('sync', 'results', { id: _selected.id });
-                if (!res.success) throw new Error(res.error || 'Errore sconosciuto');
-                if (res.standings > 0) {
-                    UI.toast(`Sincronizzazione completata: ${res.matches} partite, ${res.standings} squadre in classifica.`, 'success', 4000);
-                } else {
-                    UI.toast(`Sincronizzazione parziale: ${res.matches} partite trovate, classifica non disponibile.`, 'warning', 5000);
-                    console.warn('[Results] Sync: no standings found. URL:', res.standings_url ?? 'n/a');
-                }
-                Store.invalidate?.('getResults', 'results');
-                Store.invalidate?.('getStandings', 'results');
-                await _loadView();
-            } catch (err) {
-                console.error('[Results] sync error:', err);
-                UI.toast('Errore sync: ' + err.message, 'error', 4000);
-            } finally {
-                if (btn) { btn.classList.remove('loading'); btn.disabled = false; }
-            }
-        },
+    async _sync() {
+      if (!_selected?.id) { UI.toast('Seleziona un campionato.', 'warning', 2000); return; }
+      const btn = document.getElementById('res-sync-btn');
+      if (btn) { btn.classList.add('loading'); btn.disabled = true; }
+      try {
+        UI.toast('Sincronizzazione in corso...', 'info', 3000);
+        const res = await Store.api('sync', 'results', { id: _selected.id });
+        if (!res.success) throw new Error(res.error || 'Errore sconosciuto');
+        if (res.standings > 0) {
+          UI.toast(`Sincronizzazione completata: ${res.matches} partite, ${res.standings} squadre in classifica.`, 'success', 4000);
+        } else {
+          UI.toast(`Sincronizzazione parziale: ${res.matches} partite trovate, classifica non disponibile.`, 'warning', 5000);
+          console.warn('[Results] Sync: no standings found. URL:', res.standings_url ?? 'n/a');
+        }
+        Store.invalidate?.('getResults', 'results');
+        Store.invalidate?.('getStandings', 'results');
+        await _loadView();
+      } catch (err) {
+        console.error('[Results] sync error:', err);
+        UI.toast('Errore sync: ' + err.message, 'error', 4000);
+      } finally {
+        if (btn) { btn.classList.remove('loading'); btn.disabled = false; }
+      }
+    },
 
-        _isOurTeam(name) {
-            const lower = name.toLowerCase();
-            if (/a\.?\s?p\.?\s?v\.?/i.test(lower)) return false;
-            return ['fusion', 'team volley', 'fusionteam'].some(kw => lower.includes(kw));
-        },
+    _isOurTeam(name) {
+      const lower = name.toLowerCase();
+      if (/a\.?\s?p\.?\s?v\.?/i.test(lower)) return false;
+      return ['fusion', 'team volley', 'fusionteam'].some(kw => lower.includes(kw));
+    },
 
-        _openManage() {
-            document.getElementById('res-manage-overlay')?.remove();
-            const listHtml = _campionati.length === 0
-                ? '<div style="font-size:13px;color:var(--color-text-muted);text-align:center;padding:10px 0;">Nessun campionato configurato.</div>'
-                : _campionati.map(c => `
+    _openManage() {
+      document.getElementById('res-manage-overlay')?.remove();
+      const listHtml = _campionati.length === 0
+        ? '<div style="font-size:13px;color:var(--color-text-muted);text-align:center;padding:10px 0;">Nessun campionato configurato.</div>'
+        : _campionati.map(c => `
 <div class="res-campionato-item">
   <div style="flex:1;min-width:0;">
     <div class="res-campionato-item-label">${Utils.escapeHtml(c.label)}</div>
@@ -527,10 +540,10 @@ ${standings.map((s, i) => {
   </button>
 </div>`).join('');
 
-            const overlay = document.createElement('div');
-            overlay.id = 'res-manage-overlay';
-            overlay.className = 'res-modal-overlay';
-            overlay.innerHTML = `
+      const overlay = document.createElement('div');
+      overlay.id = 'res-manage-overlay';
+      overlay.className = 'res-modal-overlay';
+      overlay.innerHTML = `
 <div class="res-modal">
   <div class="res-modal-title">⚙️ Gestisci Campionati</div>
 
@@ -561,53 +574,53 @@ ${standings.map((s, i) => {
     <button class="btn btn-ghost btn-sm" onclick="document.getElementById('res-manage-overlay')?.remove()">Chiudi</button>
   </div>
 </div>`;
-            overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
-            document.body.appendChild(overlay);
-        },
+      overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+      document.body.appendChild(overlay);
+    },
 
-        async _addCampionato() {
-            const label = document.getElementById('res-new-label')?.value.trim();
-            const url = document.getElementById('res-new-url')?.value.trim();
-            if (!label || !url) { UI.toast('Compila nome e URL.', 'warning', 2500); return; }
-            if (!url.startsWith('http')) { UI.toast('URL non valido — deve iniziare con https://', 'error', 3000); return; }
+    async _addCampionato() {
+      const label = document.getElementById('res-new-label')?.value.trim();
+      const url = document.getElementById('res-new-url')?.value.trim();
+      if (!label || !url) { UI.toast('Compila nome e URL.', 'warning', 2500); return; }
+      if (!url.startsWith('http')) { UI.toast('URL non valido — deve iniziare con https://', 'error', 3000); return; }
 
-            const btn = document.getElementById('res-add-btn');
-            if (btn) { btn.disabled = true; btn.innerHTML = '<i class="ph ph-spinner"></i> Sincronizzazione...'; }
+      const btn = document.getElementById('res-add-btn');
+      if (btn) { btn.disabled = true; btn.innerHTML = '<i class="ph ph-spinner"></i> Sincronizzazione...'; }
 
-            try {
-                await Store.api('addCampionato', 'results', { label, url });
-                UI.toast('Campionato aggiunto e sincronizzato!', 'success', 3000);
-                document.getElementById('res-manage-overlay')?.remove();
-                Store.invalidate?.('getCampionati', 'results');
-                await _loadCampionati();
-            } catch (err) {
-                console.error('[Results] addCampionato error:', err);
-                UI.toast('Errore: ' + (err.message || 'Errore sconosciuto'), 'error', 4000);
-                if (btn) { btn.disabled = false; btn.innerHTML = '<i class="ph ph-plus"></i> Aggiungi e Sincronizza'; }
-            }
-        },
+      try {
+        await Store.api('addCampionato', 'results', { label, url });
+        UI.toast('Campionato aggiunto e sincronizzato!', 'success', 3000);
+        document.getElementById('res-manage-overlay')?.remove();
+        Store.invalidate?.('getCampionati', 'results');
+        await _loadCampionati();
+      } catch (err) {
+        console.error('[Results] addCampionato error:', err);
+        UI.toast('Errore: ' + (err.message || 'Errore sconosciuto'), 'error', 4000);
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="ph ph-plus"></i> Aggiungi e Sincronizza'; }
+      }
+    },
 
-        async _deleteCampionato(id, label) {
-            const doDelete = async () => {
-                try {
-                    await Store.api('deleteCampionato', 'results', { id });
-                    UI.toast('Campionato rimosso.', 'success', 2500);
-                    document.getElementById('res-manage-overlay')?.remove();
-                    Store.invalidate?.('getCampionati', 'results');
-                    await _loadCampionati();
-                } catch (err) {
-                    console.error('[Results] deleteCampionato error:', err);
-                    UI.toast('Errore: ' + err.message, 'error', 3000);
-                }
-            };
+    async _deleteCampionato(id, label) {
+      const doDelete = async () => {
+        try {
+          await Store.api('deleteCampionato', 'results', { id });
+          UI.toast('Campionato rimosso.', 'success', 2500);
+          document.getElementById('res-manage-overlay')?.remove();
+          Store.invalidate?.('getCampionati', 'results');
+          await _loadCampionati();
+        } catch (err) {
+          console.error('[Results] deleteCampionato error:', err);
+          UI.toast('Errore: ' + err.message, 'error', 3000);
+        }
+      };
 
-            if (UI.confirm) {
-                UI.confirm(`Rimuovere il campionato "${label}"?`, doDelete);
-            } else if (confirm(`Rimuovere il campionato "${label}"?`)) {
-                await doDelete();
-            }
-        },
-    };
+      if (UI.confirm) {
+        UI.confirm(`Rimuovere il campionato "${label}"?`, doDelete);
+      } else if (confirm(`Rimuovere il campionato "${label}"?`)) {
+        await doDelete();
+      }
+    },
+  };
 })();
 
 window.Results = Results;

@@ -72,6 +72,7 @@ try {
             'tournaments' => dispatch('Tournaments', $action),
             'vehicles' => dispatch('Vehicles', $action),
             'tasks' => dispatch('Tasks', $action),
+            'ecommerce' => dispatch('Ecommerce', $action),
             'whatsapp' => dispatchWebhook($action),
             default => Response::error("Modulo '{$module}' non trovato", 404),
         };

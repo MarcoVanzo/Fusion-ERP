@@ -210,32 +210,16 @@ class ResultsController
             return;
         }
 
-        // ── Fallback: real-time scrape if not in DB ──────────────────────────
-        // This is a temporary fallback for "discovery" mode
-        $url = !empty($campionatoUrl) ? $campionatoUrl : self::BASE_URL . '/mobile/risultati.asp?CampionatoId=' . urlencode($campionatoId);
-
-        $errDetails = '';
-        $html = $this->_fetch($url, $errDetails);
-        if ($html === null) {
-            Response::error("Impossibile connettersi al portale FIPAV.", 502);
-        }
-
-        $matches = str_contains($url, 'fipavveneto.net')
-            ? $this->_parseMatchesFipavVeneto($html)
-            : $this->_parseMatches($html);
-
-        foreach ($matches as &$match) {
-            $match['is_our_team'] = $this->_isOurTeam($match['home'] ?? '', $match['away'] ?? '');
-        }
-
+        // ── No data in DB → ask user to sync first (no live scraping on load) ──
         Response::success([
-            'matches' => $matches,
-            'total' => count($matches),
-            'last_updated' => date('c'),
-            'source' => 'portal',
-            'source_url' => $url,
+            'matches' => [],
+            'total' => 0,
+            'needs_sync' => true,
+            'last_updated' => null,
+            'source' => 'db_empty',
         ]);
     }
+
 
     // ─────────────────────────────────────────────────────────────────────────
 

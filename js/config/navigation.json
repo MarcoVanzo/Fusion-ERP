@@ -230,29 +230,23 @@
         "title": "eCommerce",
         "path": "ecommerce",
         "icon": "shopping-cart",
-        "isMobileVisible": true,
-        "implemented": false,
+        "isMobileVisible": false,
         "roles": [
             "operatore",
+            "manager",
             "admin"
         ],
         "children": [
             {
-                "title": "Acquista",
-                "path": "ecommerce-store",
-                "icon": "storefront",
+                "title": "Articoli",
+                "path": "ecommerce-articles",
+                "icon": "tag",
                 "isMobileVisible": false
             },
             {
-                "title": "Magazzino",
-                "path": "ecommerce-inventory",
+                "title": "Ordini",
+                "path": "ecommerce-orders",
                 "icon": "package",
-                "isMobileVisible": false
-            },
-            {
-                "title": "Fornitori",
-                "path": "ecommerce-suppliers",
-                "icon": "truck",
                 "isMobileVisible": false
             }
         ]
