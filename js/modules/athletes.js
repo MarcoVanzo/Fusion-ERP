@@ -337,12 +337,12 @@ const Athletes = (() => {
           !(async function (t) {
             t.innerHTML = `<div style="display:flex;flex-direction:column;gap:8px;">${[1, 2, 3, 4].map(() => '<div class="skeleton skeleton-text"></div>').join("")}</div>`;
             try {
-              const a = n ? { team_id: n } : {},
+              const qParams = n ? { team_id: n } : {},
                 {
                   athletes: l,
                   averages: r,
                   metric_types: d,
-                } = await Store.get("getGroupMetrics", "biometrics", a),
+                } = await Store.get("getGroupMetrics", "biometrics", qParams),
                 p = Object.keys(d || {}),
                 m = {
                   SPRINT_10M: "Sprint 10m",
