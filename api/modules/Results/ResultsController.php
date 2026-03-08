@@ -505,7 +505,7 @@ class ResultsController
     {
         // ── Try GAS Proxy first (bypasses FIPAV WAF IP block on production server) ──
         // BUT skip GAS proxy for fipavveneto.net because they block Google IPs and return 403
-        if (self::GAS_PROXY_URL !== null && !str_contains($url, 'fipavveneto.net')) {
+        if (self::GAS_PROXY_URL !== null && !str_contains($url, 'fipavveneto.net') && !str_contains($url, 'federvolley.it')) {
             $proxyUrl = self::GAS_PROXY_URL . '?url=' . urlencode($url);
             $ch = curl_init($proxyUrl);
             curl_setopt_array($ch, [
