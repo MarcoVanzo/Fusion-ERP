@@ -304,6 +304,18 @@
         ]
     },
     {
+        "id": "website",
+        "title": "Sito Web",
+        "path": "website",
+        "icon": "globe",
+        "isMobileVisible": false,
+        "implemented": false,
+        "roles": [
+            "manager",
+            "admin"
+        ]
+    },
+    {
         "id": "admin",
         "title": "Amministrazione",
         "path": "admin",
