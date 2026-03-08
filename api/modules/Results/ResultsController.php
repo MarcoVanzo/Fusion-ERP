@@ -400,6 +400,7 @@ class ResultsController
                     DATE_FORMAT(m.match_date, '%H:%i')    AS time,
                     m.match_date,
                     m.status,
+                    m.round,
                     c.label AS championship_label,
                     c.id    AS championship_id
                 FROM federation_matches m
@@ -1663,7 +1664,7 @@ class ResultsController
         try {
             $pdo->beginTransaction();
             $pdo->prepare("DELETE FROM federation_matches WHERE championship_id = :cid")->execute([':cid' => $id]);
-            $insM = $pdo->prepare("INSERT INTO federation_matches (id, championship_id, match_number, match_date, home_team, away_team, home_score, away_score, status) VALUES (:id, :cid, :num, :date, :home, :away, :hs, :as, :status)");
+            $insM = $pdo->prepare("INSERT INTO federation_matches (id, championship_id, match_number, match_date, home_team, away_team, home_score, away_score, status, round) VALUES (:id, :cid, :num, :date, :home, :away, :hs, :as, :status, :round)");
             foreach ($matches as $m) {
                 $sqlDate = null;
                 if (!empty($m['date'])) {
@@ -1672,7 +1673,7 @@ class ResultsController
                     if ($ts)
                         $sqlDate = date('Y-m-d H:i:s', $ts);
                 }
-                $insM->execute([':id' => 'm_' . substr(md5($id . ($m['id'] ?? uniqid())), 0, 10), ':cid' => $id, ':num' => $m['id'] ?? null, ':date' => $sqlDate, ':home' => $m['home'], ':away' => $m['away'], ':hs' => $m['sets_home'], ':as' => $m['sets_away'], ':status' => $m['status']]);
+                $insM->execute([':id' => 'm_' . substr(md5($id . ($m['id'] ?? uniqid())), 0, 10), ':cid' => $id, ':num' => $m['id'] ?? null, ':date' => $sqlDate, ':home' => $m['home'], ':away' => $m['away'], ':hs' => $m['sets_home'], ':as' => $m['sets_away'], ':status' => $m['status'], ':round' => $m['round'] ?? null]);
             }
 
             $pdo->prepare("DELETE FROM federation_standings WHERE championship_id = :cid")->execute([':cid' => $id]);

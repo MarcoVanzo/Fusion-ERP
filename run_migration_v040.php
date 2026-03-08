@@ -1,6 +1,6 @@
 <?php
 require 'vendor/autoload.php';
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
+$dotenv = Dotenv\Dotenv::createUnsafeImmutable(__DIR__);
 $dotenv->load();
 
 require_once 'api/Shared/Database.php';
@@ -11,7 +11,6 @@ try {
     $sql = file_get_contents('db/migrations/V040__ec_orders.sql');
     $db->exec($sql);
     echo "Migration V040 executed successfully.\n";
-}
-catch (PDOException $e) {
+} catch (PDOException $e) {
     echo "Migration failed: " . $e->getMessage() . "\n";
 }
