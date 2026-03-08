@@ -28,6 +28,17 @@ class ResultsController
     private const OUR_TEAM_KEYWORDS = ['fusion', 'team volley', 'fusionteam'];
 
     /**
+     * Portals that this controller can scrape/sync.
+     * Used to validate user-provided URLs (must belong to at least one of these domains).
+     */
+    private const ALLOWED_DOMAINS = [
+        'fipav', // venezia.portalefipav.net, fipavveneto.net, etc.
+        'federvolley.it', // FIPAV national portal (B2, A1, A2…)
+        'legavolley.it', // Lega Volley serie A
+        'fipavonline.it', // Alternative FIPAV portal
+    ];
+
+    /**
      * Google Apps Script proxy URL — bypasses FIPAV WAF IP block on production server.
      * The GAS proxy fetches the FIPAV page from Google's IP and returns the raw HTML.
      * Set to null to disable and use direct cURL only.
@@ -323,8 +334,23 @@ class ResultsController
         if (empty($label) || empty($url)) {
             Response::error('Campi label e url obbligatori', 400);
         }
-        if (!str_contains(strtolower($url), 'fipav')) {
-            Response::error('URL non valido — deve provenire dal portale FIPAV', 400);
+        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+            Response::error('URL non valido — inserire un URL completo (https://...)', 400);
+        }
+        // Accept any configured portal domain
+        $urlLower = strtolower($url);
+        $allowed = false;
+        foreach (self::ALLOWED_DOMAINS as $domain) {
+            if (str_contains($urlLower, $domain)) {
+                $allowed = true;
+                break;
+            }
+        }
+        if (!$allowed) {
+            Response::error(
+                'URL non supportato. Portali accettati: venezia.portalefipav.net, fipavveneto.net, federvolley.it, legavolley.it',
+                400
+            );
         }
 
         $id = $this->_upsertChampionship(null, $label, $url);
@@ -1126,6 +1152,190 @@ class ResultsController
         return $matches;
     }
 
+    /**
+     * Parse federvolley.it championship pages.
+     * Strategy 1: Try Drupal JSON API (views REST endpoint).
+     * Strategy 2: Fall back to HTML div-based parsing.
+     */
+    private function _parseMatchesFedervolley(string $originalUrl, string $html): array
+    {
+        // ── Strategy 1: Drupal Views JSON API ───────────────────────────────────
+        // federvolley.it uses Drupal Views. The calendar view often exposes a JSON endpoint.
+        // Pattern: /serie-b2-femminile-calendario → /api/views/calendario_risultati_b2?_format=json
+        // We probe a few known endpoint patterns.
+        $jsonEndpoints = $this->_buildFedervolleyApiUrls($originalUrl);
+        foreach ($jsonEndpoints as $apiUrl) {
+            $err = '';
+            $jsonBody = $this->_fetch($apiUrl, $err);
+            if (!$jsonBody)
+                continue;
+
+            $data = json_decode($jsonBody, true);
+            if (!is_array($data) || empty($data))
+                continue;
+
+            $matches = [];
+            // Drupal Views JSON returns an array of nodes/rows
+            foreach ($data as $row) {
+                // Field names vary by view config; try common patterns
+                $home = trim((string)($row['field_squadra_casa'] ?? $row['home'] ?? $row['squadra_casa'] ?? ''));
+                $away = trim((string)($row['field_squadra_ospite'] ?? $row['away'] ?? $row['squadra_ospite'] ?? ''));
+                if (empty($home) || empty($away))
+                    continue;
+
+                $dateRaw = $row['field_data_gara'] ?? $row['date'] ?? $row['data'] ?? null;
+                $sqlDate = null;
+                if ($dateRaw) {
+                    $ts = is_numeric($dateRaw) ? (int)$dateRaw : strtotime((string)$dateRaw);
+                    if ($ts)
+                        $sqlDate = date('Y-m-d H:i:s', $ts);
+                }
+
+                $scoreRaw = trim((string)($row['field_risultato'] ?? $row['score'] ?? $row['risultato'] ?? ''));
+                $setsHome = null;
+                $setsAway = null;
+                $status = 'scheduled';
+                if (preg_match('/(\d)\s*[-–]\s*(\d)/', $scoreRaw, $sm)) {
+                    $setsHome = (int)$sm[1];
+                    $setsAway = (int)$sm[2];
+                    $status = 'played';
+                }
+
+                $matches[] = [
+                    'id' => $row['nid'] ?? $row['id'] ?? null,
+                    'date' => $sqlDate ? date('d/m/Y', strtotime($sqlDate)) : null,
+                    'time' => $sqlDate ? date('H:i', strtotime($sqlDate)) : null,
+                    'home' => $home,
+                    'away' => $away,
+                    'score' => ($setsHome !== null) ? $setsHome . ' - ' . $setsAway : null,
+                    'sets_home' => $setsHome,
+                    'sets_away' => $setsAway,
+                    'status' => $status,
+                    'round' => isset($row['field_giornata']) ? (int)$row['field_giornata'] : null,
+                ];
+            }
+
+            if (!empty($matches)) {
+                error_log('[Results] federvolley.it JSON API success (' . count($matches) . ' matches) from: ' . $apiUrl);
+                return $matches;
+            }
+        }
+
+        // ── Strategy 2: HTML div-based parsing ───────────────────────────────────
+        // federvolley.it renders match cards in div.views-row blocks
+        error_log('[Results] federvolley.it JSON API failed, falling back to HTML parser');
+        return $this->_parseMatchesFedervolleyHtml($html);
+    }
+
+    /** Build candidate Drupal Views JSON API URLs from the original federvolley.it page URL. */
+    private function _buildFedervolleyApiUrls(string $pageUrl): array
+    {
+        $base = 'https://www.federvolley.it';
+        $path = parse_url($pageUrl, PHP_URL_PATH) ?? '';
+        $qs = parse_url($pageUrl, PHP_URL_QUERY) ?? '';
+        $qsAppend = $qs ? '?' . $qs . '&_format=json' : '?_format=json';
+
+        $candidates = [
+            // Same path + JSON format query (Drupal REST style)
+            $base . $path . $qsAppend,
+            // Known REST view paths used by federvolley.it (vary per season)
+            $base . '/api/views/calendario_risultati_b2?_format=json',
+            $base . '/api/views/serie_b2_calendario?_format=json',
+            $base . '/api/views/b2_femminile_calendario?_format=json',
+            // Drupal JSON:API collections
+            $base . '/jsonapi/node/gara?filter[status]=1&sort=-field_data_gara',
+        ];
+
+        return array_unique($candidates);
+    }
+
+    /** Parse federvolley.it HTML calendar — div.views-row based structure. */
+    private function _parseMatchesFedervolleyHtml(string $html): array
+    {
+        $dom = new \DOMDocument();
+        libxml_use_internal_errors(true);
+        $dom->loadHTML('<?xml encoding="UTF-8">' . $html);
+        libxml_clear_errors();
+        $xpath = new \DOMXPath($dom);
+
+        $matches = [];
+
+        // Each match is inside a div with class containing 'views-row'
+        $rows = $xpath->query('//*[contains(@class,"views-row") or contains(@class,"match-card") or contains(@class,"gara-row")]');
+        if (!$rows || $rows->length === 0) {
+            // Fallback: any article or div that contains team names and a score
+            $rows = $xpath->query('//div[contains(@class,"gara") or contains(@class,"partita") or contains(@class,"match")]');
+        }
+
+        if (!$rows)
+            return [];
+
+        foreach ($rows as $row) {
+            /** @var \DOMElement $row */
+            $text = trim(preg_replace('/\s+/', ' ', $row->textContent));
+
+            // Score pattern: "3 - 0" or "3-0"
+            $setsHome = null;
+            $setsAway = null;
+            $status = 'scheduled';
+            if (preg_match('/\b([0-3])\s*[-–]\s*([0-3])\b/', $text, $sm) &&
+            (int)$sm[1] + (int)$sm[2] > 0) {
+                $setsHome = (int)$sm[1];
+                $setsAway = (int)$sm[2];
+                $status = 'played';
+            }
+
+            // Date pattern: "dd.mm.yy" or "dd/mm/yyyy"
+            $dateStr = null;
+            $timeStr = null;
+            if (preg_match('/(\d{1,2})[.\/](\d{1,2})[.\/](\d{2,4})/', $text, $dm)) {
+                $y = strlen($dm[3]) === 2 ? '20' . $dm[3] : $dm[3];
+                $dateStr = sprintf('%02d/%02d/%s', (int)$dm[1], (int)$dm[2], $y);
+            }
+            if (preg_match('/h\.?\s*(\d{1,2}:\d{2})/', $text, $tm)) {
+                $timeStr = $tm[1];
+            }
+            elseif (preg_match('/\b(\d{2}:\d{2})\b/', $text, $tm)) {
+                $timeStr = $tm[1];
+            }
+
+            // Team names — look for .squadraCasa / .squadraOspite or similar
+            $homeEl = $xpath->query('.//*[contains(@class,"squadraCasa") or contains(@class,"casa") or contains(@class,"home") or contains(@class,"various3")]', $row);
+            $awayEl = $xpath->query('.//*[contains(@class,"squadraOspite") or contains(@class,"ospite") or contains(@class,"away") or contains(@class,"various3")]', $row);
+
+            $home = null;
+            $away = null;
+
+            if ($homeEl && $homeEl->length > 0)
+                $home = trim(preg_replace('/\s+/', ' ', $homeEl->item(0)->textContent));
+            if ($awayEl && $awayEl->length > 1)
+                $away = trim(preg_replace('/\s+/', ' ', $awayEl->item(1)->textContent));
+            elseif ($awayEl && $awayEl->length > 0 && $awayEl->item(0) !== ($homeEl->item(0) ?? null))
+                $away = trim(preg_replace('/\s+/', ' ', $awayEl->item(0)->textContent));
+
+            if (empty($home) || empty($away) || $home === $away)
+                continue;
+            if (strlen($home) < 3 || strlen($away) < 3)
+                continue;
+
+            $matches[] = [
+                'id' => null,
+                'date' => $dateStr,
+                'time' => $timeStr,
+                'home' => $home,
+                'away' => $away,
+                'score' => ($setsHome !== null) ? "{$setsHome} - {$setsAway}" : null,
+                'sets_home' => $setsHome,
+                'sets_away' => $setsAway,
+                'status' => $status,
+                'round' => null,
+            ];
+        }
+
+        error_log('[Results] federvolley.it HTML fallback parser found ' . count($matches) . ' matches');
+        return $matches;
+    }
+
     /** Parse fipavveneto.net standings. */
     private function _parseStandingsFipavVeneto(string $html): array
     {
@@ -1230,7 +1440,22 @@ class ResultsController
 
         $err = '';
         $htmlM = $this->_fetch($url, $err);
-        $matches = $htmlM ? (str_contains($url, 'fipavveneto.net') ? $this->_parseMatchesFipavVeneto($htmlM) : $this->_parseMatches($htmlM)) : [];
+
+        if ($htmlM) {
+            if (str_contains($url, 'fipavveneto.net')) {
+                $matches = $this->_parseMatchesFipavVeneto($htmlM);
+            }
+            elseif (str_contains($url, 'federvolley.it')) {
+                // Try JSON API first, fall back to HTML parsing
+                $matches = $this->_parseMatchesFedervolley($url, $htmlM);
+            }
+            else {
+                $matches = $this->_parseMatches($htmlM);
+            }
+        }
+        else {
+            $matches = [];
+        }
 
         // ── Try all standings URL candidates in order until one yields data ──
         $standings = [];
@@ -1291,6 +1516,14 @@ class ResultsController
     /** Get standings URL from match URL. Returns the best candidate URL for standings. */
     private function _getStandingsUrl(string $url): string
     {
+        // federvolley.it — standings via classifica page
+        if (str_contains($url, 'federvolley.it')) {
+            // Try to replace calendario/results page with classifica page
+            if (str_contains($url, 'calendario'))
+                return str_replace('calendario', 'classifica', $url);
+            return $url . (str_contains($url, '?') ? '&' : '?') . 'view=classifica';
+        }
+
         // Desktop: risultati-classifiche.aspx?...CId=XXX → /classifica.aspx?CId=XXX
         if (str_contains($url, 'risultati-classifiche.aspx') && preg_match('/[?&]CId=(\d+)/i', $url, $m))
             return self::BASE_URL . '/classifica.aspx?CId=' . $m[1];
