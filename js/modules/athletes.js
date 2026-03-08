@@ -398,7 +398,7 @@ const Athletes = (() => {
       ),
       switchMainTab(globalActiveTab));
   }
-  function c(tb) {
+  function switchMainTab(activeTabId) {
     ((l = tb),
       document.querySelectorAll("[data-maintab]").forEach((e) => {
         const t = e.dataset.maintab === tb;
@@ -459,7 +459,7 @@ const Athletes = (() => {
                             "pay-table-container",
                           ).innerHTML = r(l)));
                       },
-                      { signal: e.signal },
+                      { signal: moduleAbortController.signal },
                     );
                   }));
             } catch (e) {
@@ -540,9 +540,10 @@ const Athletes = (() => {
                   btn.addEventListener(
                     "click",
                     () => {
-                      ((n = btn.dataset.team), c("metrics"));
+                      ((globalTeamFilter = btn.dataset.team),
+                        switchMainTab("metrics"));
                     },
-                    { signal: e.signal },
+                    { signal: moduleAbortController.signal },
                   ),
                 ),
                 targetEl.querySelectorAll("[data-athlete-id]").forEach((row) =>
@@ -552,9 +553,9 @@ const Athletes = (() => {
                       const id = row.dataset.athleteId;
                       ((s = id),
                         sessionStorage.setItem("last_athlete_id", id),
-                        u(id, "metrics"));
+                        renderAthleteProfile(id, "metrics"));
                     },
-                    { signal: e.signal },
+                    { signal: moduleAbortController.signal },
                   ),
                 ));
             } catch (err) {
@@ -671,7 +672,9 @@ const Athletes = (() => {
         }\n            </div>\n          </div>\n\n          \x3c!-- PAGAMENTI --\x3e\n          <div id="tab-panel-pagamenti" class="athlete-tab-panel" style="display:none;">\n            <p class="section-label">Storico Pagamenti</p>\n            ${d && d.length > 0 ? `\n              <div class="table-wrapper">\n                <table class="table">\n                  <thead><tr><th>Scadenza</th><th>Importo</th><th>Stato</th><th>Pagante</th><th>Metodo</th><th>Data Pagamento</th></tr></thead>\n                  <tbody>\n                    ${d.map((e) => `<tr>\n                      <td>${Utils.formatDate(e.due_date)}</td>\n                      <td><strong>€ ${Utils.formatNum(e.amount, 2)}</strong></td>\n                      <td>${"paid" === e.status ? '<span class="badge badge-success">Pagato</span>' : "overdue" === e.status ? '<span class="badge badge-danger">Scaduto</span>' : '<span class="badge badge-warning">In attesa</span>'}</td>\n                      <td>${Utils.escapeHtml(e.payer_name || "—")}</td>\n                      <td>${Utils.escapeHtml(e.payment_method || "—")}</td>\n                      <td style="font-size:12px;color:var(--color-text-muted);">${e.paid_at ? Utils.formatDate(e.paid_at) : "—"}</td>\n                    </tr>`).join("")}\n                  </tbody>\n                </table>\n              </div>` : Utils.emptyState("Nessun pagamento registrato")}\n          </div>\n          \x3c!-- DOCUMENTI TAB --\x3e\n          <div id="tab-panel-documenti" class="athlete-tab-panel" style="display:none;flex-direction:column;gap:var(--sp-4);">\n            <p class="section-label">Documenti Atleta</p>\n            <div class="card" style="padding:var(--sp-3);">\n              <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3);">\n                ${g("Documento d'Identità", r.identity_document)}\n                ${g("Codice Fiscale", r.fiscal_code)}\n                ${g("Matricola FIPAV", r.federal_id)}\n                ${g("Scadenza Cert. Medico", r.medical_cert_expires_at ? Utils.formatDate(r.medical_cert_expires_at) : null, r.medical_cert_expires_at && new Date(r.medical_cert_expires_at) < new Date() ? "var(--color-pink)" : null)}\n              </div>\n            </div>\n          </div>\n        </div>\n        \n        `),
           document
             .getElementById("back-to-list")
-            ?.addEventListener("click", () => m(), { signal: e.signal }),
+            ?.addEventListener("click", () => renderMainList(), {
+              signal: moduleAbortController.signal,
+            }),
           document.getElementById("edit-athlete-btn")?.addEventListener(
             "click",
             () =>
@@ -789,7 +792,7 @@ const Athletes = (() => {
                 (document
                   .getElementById("ea-cancel")
                   ?.addEventListener("click", () => s.close(), {
-                    signal: e.signal,
+                    signal: moduleAbortController.signal,
                   }),
                   document.getElementById("ea-save")?.addEventListener(
                     "click",
@@ -863,7 +866,7 @@ const Athletes = (() => {
                           (r.textContent = "SALVA MODIFICHE"));
                       }
                     },
-                    { signal: e.signal },
+                    { signal: moduleAbortController.signal },
                   ),
                   x(() =>
                     $(
@@ -877,7 +880,7 @@ const Athletes = (() => {
                     ),
                   ));
               })(r),
-            { signal: e.signal },
+            { signal: moduleAbortController.signal },
           ),
           document.getElementById("ai-report-btn")?.addEventListener(
             "click",
@@ -895,7 +898,7 @@ const Athletes = (() => {
                   t && ((t.disabled = !1), (t.textContent = "⚡ REPORT AI"));
                 }
               })(n),
-            { signal: e.signal },
+            { signal: moduleAbortController.signal },
           ));
         const w = document.getElementById("athlete-photo-upload");
         w &&
@@ -939,7 +942,7 @@ const Athletes = (() => {
                   URL.revokeObjectURL(s));
               }
             },
-            { signal: e.signal },
+            { signal: moduleAbortController.signal },
           );
         let E = !1;
         const _ = (e) => {
@@ -1160,7 +1163,7 @@ const Athletes = (() => {
         };
         document.querySelectorAll(".athlete-tab-btn").forEach((t) => {
           t.addEventListener("click", () => _(t.dataset.tab), {
-            signal: e.signal,
+            signal: moduleAbortController.signal,
           });
         });
         const k = document.getElementById("athlete-tab-bar"),
@@ -1170,7 +1173,9 @@ const Athletes = (() => {
             const e = k.scrollLeft + k.clientWidth >= k.scrollWidth - 10;
             I.style.opacity = e ? "0" : "0.8";
           };
-          (k.addEventListener("scroll", t, { signal: e.signal }),
+          (k.addEventListener("scroll", t, {
+            signal: moduleAbortController.signal,
+          }),
             setTimeout(t, 100));
         }
         (_(l), v(n));
@@ -1305,11 +1310,14 @@ const Athletes = (() => {
           "athlete-documents": "documenti",
         };
       try {
-        if ("atleta" === n?.role && n.athleteId)
+        if ("atleta" === n?.role && currentUser.athleteId)
           return (
             (a = await Store.get("teams", "athletes")),
-            (s = n.athleteId),
-            void (await u(n.athleteId, "anagrafica"))
+            (s = currentUser.athleteId),
+            void (await renderAthleteProfile(
+              currentUser.athleteId,
+              "anagrafica",
+            ))
           );
         if (
           (([a, t] = await Promise.all([
@@ -1318,11 +1326,18 @@ const Athletes = (() => {
           ])),
           r[i])
         )
-          return ((l = r[i]), (s = null), void renderMainLayout());
+          return (
+            (globalActiveTab = routeMap[currentRoute]),
+            (globalSelectedId = null),
+            void renderMainLayout()
+          );
         const e = Router.getParams();
         e.id
-          ? ((s = e.id), await u(e.id, "anagrafica"))
-          : ((s = null), (l = "anagrafica"), d());
+          ? ((globalSelectedId = params.id),
+            await renderAthleteProfile(params.id, "anagrafica"))
+          : ((globalSelectedId = null),
+            (globalActiveTab = "anagrafica"),
+            renderMainLayout());
       } catch (err) {
         ((e.innerHTML = Utils.emptyState(
           "Errore nel caricamento atleti",
