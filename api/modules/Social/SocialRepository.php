@@ -116,6 +116,8 @@ class SocialRepository
             'redirect_uri' => $redirectUri,
             'response_type' => 'code',
             'state' => $stateToken, // short hex token — safe in URLs
+            'auth_type' => 'rerequest', // FORCE permissions check
+            'display' => 'page'
         ];
 
         // Facebook Login for Business uses config_id instead of scope
@@ -249,51 +251,56 @@ class SocialRepository
 
         // Step 3: Get Pages managed by the user
         $pagesUrl = self::GRAPH_BASE_URL . self::GRAPH_API_VERSION . '/me/accounts?'
-            . http_build_query(['access_token' => $longLivedToken, 'fields' => 'id,name,access_token']);
+            . http_build_query([
+            'access_token' => $longLivedToken,
+            'fields' => 'id,name,access_token,instagram_business_account{id,username}'
+        ]);
 
         $pagesResponse = $this->graphGet($pagesUrl);
         $pages = $pagesResponse['data'] ?? [];
 
         if (empty($pages)) {
-            throw new \RuntimeException('Nessuna Pagina Facebook trovata. Assicurati di avere almeno una Pagina collegata.');
+            throw new \RuntimeException('Nessuna Pagina Facebook trovata. Assicurati di essere amministratore di almeno una Pagina Facebook.');
         }
 
-        // Use the first page (or you can let the user choose in a future iteration)
-        $page = $pages[0];
-        $pageAccessToken = $page['access_token'];
-
-        // Step 4: Get the Instagram Business Account linked to this Page
-        // Use a more robust check via /me/accounts with fields
+        // Step 4: Find a Page that has an Instagram Business Account linked.
+        // If multiple, we take the first one with an IG account.
+        $selectedPage = null;
         $igAccount = null;
+
         foreach ($pages as $p) {
-            if ($p['id'] === $page['id'] && !empty($p['instagram_business_account'])) {
+            if (!empty($p['instagram_business_account'])) {
+                $selectedPage = $p;
                 $igAccount = $p['instagram_business_account'];
                 break;
             }
         }
 
-        // Fallback to direct check if not found in me/accounts
-        if (!$igAccount) {
+        // Fallback: If no IG account found on any page, just use the first available FB Page
+        if (!$selectedPage) {
+            $selectedPage = $pages[0];
+
+            // Final attempt: Direct check for the first page
             try {
-                $igUrl = self::GRAPH_BASE_URL . self::GRAPH_API_VERSION . '/' . $page['id'] . '?'
+                $igUrl = self::GRAPH_BASE_URL . self::GRAPH_API_VERSION . '/' . $selectedPage['id'] . '?'
                     . http_build_query([
-                    'access_token' => $pageAccessToken,
-                    'fields' => 'instagram_business_account{id,username,profile_picture_url,followers_count}',
+                    'access_token' => $selectedPage['access_token'],
+                    'fields' => 'instagram_business_account{id,username}',
                 ]);
                 $igResponse = $this->graphGet($igUrl);
                 $igAccount = $igResponse['instagram_business_account'] ?? null;
             }
             catch (\Throwable $e) {
-                error_log('[SOCIAL] IG Account fetch failed: ' . $e->getMessage());
+                error_log('[SOCIAL] IG Account fetch fallback failed: ' . $e->getMessage());
             }
         }
 
         return [
-            'access_token' => $pageAccessToken,
+            'access_token' => $selectedPage['access_token'],
             'token_type' => 'long_lived',
             'expires_at' => date('Y-m-d H:i:s', time() + (int)$expiresIn),
-            'page_id' => $page['id'],
-            'page_name' => $page['name'],
+            'page_id' => $selectedPage['id'],
+            'page_name' => $selectedPage['name'],
             'ig_account_id' => $igAccount['id'] ?? null,
             'ig_username' => $igAccount['username'] ?? null,
         ];
@@ -608,12 +615,29 @@ class SocialRepository
     // ─── HTTP UTILITY ─────────────────────────────────────────────────────────
 
     /**
+     * Write a debug message to the server error log.
+     */
+    public function logDebug(string $message): void
+    {
+        try {
+            $this->db->exec("CREATE TABLE IF NOT EXISTS meta_logs (id INT AUTO_INCREMENT PRIMARY KEY, message TEXT NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
+            $stmt = $this->db->prepare("INSERT INTO meta_logs (message) VALUES (:m)");
+            $stmt->execute([':m' => $message]);
+        }
+        catch (\Throwable $e) {
+        }
+    }
+
+    /**
      * Make a GET request to the Meta Graph API.
      *
      * @throws \RuntimeException on HTTP error or JSON decode failure.
      */
     private function graphGet(string $url): array
     {
+        $maskedUrl = preg_replace('/access_token=[^&]+/', 'access_token=***', $url);
+        $this->logDebug("GRAPH GET: {$maskedUrl}");
+
         $ch = curl_init($url);
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
@@ -628,21 +652,25 @@ class SocialRepository
         curl_close($ch);
 
         if ($curlErr) {
+            $this->logDebug("CURL ERROR: {$curlErr}");
             throw new \RuntimeException('cURL error: ' . $curlErr);
         }
 
         $decoded = json_decode((string)$body, true);
         if (!is_array($decoded)) {
+            $this->logDebug("NON-JSON RESPONSE (HTTP {$httpCode}): " . substr((string)$body, 0, 200));
             throw new \RuntimeException('Graph API non-JSON response (HTTP ' . $httpCode . '): ' . substr((string)$body, 0, 200));
         }
 
         if (isset($decoded['error'])) {
+            $this->logDebug("GRAPH ERROR: " . json_encode($decoded['error']));
             $err = $decoded['error'];
             throw new \RuntimeException(
                 'Graph API error ' . ($err['code'] ?? '?') . ': ' . ($err['message'] ?? json_encode($err))
                 );
         }
 
+        $this->logDebug("GRAPH SUCCESS: HTTP {$httpCode}");
         return $decoded;
     }
 }

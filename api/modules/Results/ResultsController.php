@@ -803,10 +803,13 @@ class ResultsController
                 $dataNodes = $xpath->query('.//*[contains(@class,"data") or contains(@class,"orario") or contains(@class,"dataora")]', $gara);
                 if ($dataNodes && $dataNodes->length > 0) {
                     $dateText = trim($dataNodes->item(0)->textContent);
-                    if (preg_match('/(\d{1,2}\/\d{1,2}\/\d{2,4})/', $dateText, $md))
-                        $match['date'] = $md[1];
-                    if (preg_match('/(\d{1,2}:\d{2})/', $dateText, $mt))
+                    // Handle dd/mm/yyyy, dd/mm/yy, and dd/mm with slash or hyphen
+                    if (preg_match('/(\d{1,2}[\/\-]\d{1,2}(?:[\/\-]\d{2,4})?)/', $dateText, $md)) {
+                        $match['date'] = str_replace('-', '/', $md[1]);
+                    }
+                    if (preg_match('/(\d{1,2}:\d{2})/', $dateText, $mt)) {
                         $match['time'] = $mt[1];
+                    }
                 }
 
                 $matches[] = $match;
@@ -888,6 +891,7 @@ class ResultsController
             $match['home'] = $teamCells[0];
             $match['away'] = $teamCells[1];
         }
+           
 
         return ($match['home'] && $match['away']) ? $match : null;
     }
@@ -1061,8 +1065,18 @@ class ResultsController
                 continue;
 
             $texts = [];
-            foreach ($cells as $cell)
+            $cellLogos = [];
+            foreach ($cells as $ci => $cell) {
                 $texts[] = trim(preg_replace('/\s+/', ' ', $cell->textContent));
+                // Extract logo URL from <img> tags inside the cell
+                $imgs = $xpath->query('.//img', $cell);
+                if ($imgs && $imgs->length > 0) {
+                    $src = $imgs->item(0)->getAttribute('src');
+                    if ($src && !str_contains($src, 'no-image')) {
+                        $cellLogos[$ci] = $src;
+                    }
+                }
+            }
 
             $combined = implode(' ', $texts);
             $lower = strtolower($combined);
@@ -1079,7 +1093,7 @@ class ResultsController
                 continue;
 
             $entry = [
-                'position' => null, 'team' => null,
+                'position' => null, 'team' => null, 'logo' => null,
                 'played' => null, 'won' => null, 'lost' => null,
                 'points' => null, 'is_our_team' => false,
             ];
@@ -1088,8 +1102,16 @@ class ResultsController
                 $cleanText = trim(str_replace("\xc2\xa0", ' ', $text));
                 if ($i === 0 && preg_match('/^\d+$/', $cleanText))
                     $entry['position'] = (int)$cleanText;
-                elseif ($i === 1 && strlen($cleanText) > 2 && !preg_match('/^\d+$/', $cleanText))
+                elseif ($i === 1 && strlen($cleanText) > 2 && !preg_match('/^\d+$/', $cleanText)) {
                     $entry['team'] = $cleanText;
+                    // Logo is typically in the same cell as the team name (index 1)
+                    if (isset($cellLogos[$i])) {
+                        $entry['logo'] = $cellLogos[$i];
+                    }
+                    elseif (!empty($cellLogos)) {
+                        $entry['logo'] = reset($cellLogos);
+                    }
+                }
                 elseif (preg_match('/^\d+$/', $cleanText)) {
                     $val = (int)$cleanText;
                     if ($i === 2)
@@ -1678,29 +1700,53 @@ class ResultsController
         try {
             $pdo->beginTransaction();
             $pdo->prepare("DELETE FROM federation_matches WHERE championship_id = :cid")->execute([':cid' => $id]);
-            $insM = $pdo->prepare("INSERT INTO federation_matches (id, championship_id, match_number, match_date, home_team, away_team, home_score, away_score, status, round) VALUES (:id, :cid, :num, :date, :home, :away, :hs, :as, :status, :round)");
+            $insM = $pdo->prepare("INSERT INTO federation_matches (id, championship_id, match_number, match_date, home_team, away_team, home_logo, away_logo, home_score, away_score, status, round) VALUES (:id, :cid, :num, :date, :home, :away, :hl, :al, :hs, :as, :status, :round)");
             foreach ($matches as $m) {
                 $sqlDate = null;
                 if (!empty($m['date'])) {
-                    // Fix ambiguity: if date is dd/mm/yy, convert to dd/mm/yyyy so strtotime doesn't parse it as yy-mm-dd
                     $dateStr = $m['date'];
-                    if (preg_match('/^(\d{1,2})\/(\d{1,2})\/(\d{2})$/', $dateStr, $pts)) {
-                        $y = (int)$pts[3] < 50 ? 2000 + (int)$pts[3] : 1900 + (int)$pts[3];
-                        $dateStr = sprintf('%02d/%02d/%04d', $pts[1], $pts[2], $y);
+                    $parts = explode('/', $dateStr);
+
+                    if (count($parts) === 3) {
+                        // dd/mm/yy -> dd/mm/yyyy
+                        if (strlen($parts[2]) === 2) {
+                            $y = (int)$parts[2] < 50 ? 2000 + (int)$parts[2] : 1900 + (int)$parts[2];
+                            $dateStr = sprintf('%02d/%02d/%04d', $parts[0], $parts[1], $y);
+                        }
+                    }
+                    else if (count($parts) === 2) {
+                        // dd/mm -> guess year based on current date (Volleyball season: Aug-July)
+                        $currMonth = (int)date('n');
+                        $currYear = (int)date('Y');
+                        $matchMonth = (int)$parts[1];
+
+                        // If we are in the second half of the year (Aug-Dec) 
+                        // and match is in first half (Jan-Jul), it belongs to next year.
+                        // Conversely, if we are in Jan-Jul and match is in Aug-Dec, it belongs to last year.
+                        $targetYear = $currYear;
+                        if ($currMonth >= 8 && $matchMonth <= 7) {
+                            $targetYear++;
+                        }
+                        else if ($currMonth <= 7 && $matchMonth >= 8) {
+                            $targetYear--;
+                        }
+
+                        $dateStr = sprintf('%02d/%02d/%04d', $parts[0], $parts[1], $targetYear);
                     }
 
                     $d = str_replace('/', '-', $dateStr) . (empty($m['time']) ? '' : ' ' . $m['time']);
                     $ts = strtotime($d);
-                    if ($ts)
+                    if ($ts) {
                         $sqlDate = date('Y-m-d H:i:s', $ts);
+                    }
                 }
-                $insM->execute([':id' => 'm_' . substr(md5($id . ($m['id'] ?? uniqid())), 0, 10), ':cid' => $id, ':num' => $m['id'] ?? null, ':date' => $sqlDate, ':home' => $m['home'], ':away' => $m['away'], ':hs' => $m['sets_home'], ':as' => $m['sets_away'], ':status' => $m['status'], ':round' => $m['round'] ?? null]);
+                $insM->execute([':id' => 'm_' . substr(md5($id . ($m['id'] ?? uniqid())), 0, 10), ':cid' => $id, ':num' => $m['id'] ?? null, ':date' => $sqlDate, ':home' => $m['home'], ':away' => $m['away'], ':hl' => $m['home_logo'] ?? null, ':al' => $m['away_logo'] ?? null, ':hs' => $m['sets_home'], ':as' => $m['sets_away'], ':status' => $m['status'], ':round' => $m['round'] ?? null]);
             }
 
             $pdo->prepare("DELETE FROM federation_standings WHERE championship_id = :cid")->execute([':cid' => $id]);
-            $insS = $pdo->prepare("INSERT INTO federation_standings (id, championship_id, position, team, points, played, won, lost) VALUES (:id, :cid, :pos, :team, :pts, :p, :w, :l)");
+            $insS = $pdo->prepare("INSERT INTO federation_standings (id, championship_id, position, team, logo, points, played, won, lost) VALUES (:id, :cid, :pos, :team, :logo, :pts, :p, :w, :l)");
             foreach ($standings as $s) {
-                $insS->execute([':id' => 's_' . substr(md5($id . $s['team']), 0, 10), ':cid' => $id, ':pos' => $s['position'], ':team' => $s['team'], ':pts' => $s['points'] ?? 0, ':p' => $s['played'] ?? 0, ':w' => $s['won'] ?? 0, ':l' => $s['lost'] ?? 0]);
+                $insS->execute([':id' => 's_' . substr(md5($id . $s['team']), 0, 10), ':cid' => $id, ':pos' => $s['position'], ':team' => $s['team'], ':logo' => $s['logo'] ?? null, ':pts' => $s['points'] ?? 0, ':p' => $s['played'] ?? 0, ':w' => $s['won'] ?? 0, ':l' => $s['lost'] ?? 0]);
             }
 
             // Update last_synced_at and save the winning standings_url for future syncs

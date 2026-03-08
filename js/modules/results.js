@@ -77,13 +77,13 @@ const Results = (() => {
               );
             const r = {};
             let lastPlayedRound = null;
-            let maxPlayedRound = -1;
+            let maxPlayedRoundNum = -1;
             s.forEach((e) => {
               const t = e.round || "Altre";
               if (e.status === "played" && t !== "Altre") {
                 const rNum = parseInt(t);
-                if (!isNaN(rNum) && rNum > maxPlayedRound) {
-                  maxPlayedRound = rNum;
+                if (!isNaN(rNum) && rNum > maxPlayedRoundNum) {
+                  maxPlayedRoundNum = rNum;
                   lastPlayedRound = t;
                 }
               }
@@ -100,7 +100,8 @@ const Results = (() => {
             if (
               (c.forEach((e, t) => {
                 const n = r[e];
-                d += `\n<div ${e === lastPlayedRound ? 'id="res-last-played-round"' : ''} style="font-size:15px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.9);margin-top:${0 === t ? "24px" : "44px"};margin-bottom:18px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:12px;text-shadow:0 0 10px rgba(255,255,255,0.1);"><i class="ph ph-calendar-blank" style="color:var(--color-pink);font-size:18px;filter:drop-shadow(0 0 10px rgba(255,0,255,0.4));"></i>\n  ${"Altre" === e ? "Partite senza giornata" : \`Giornata \${e}\`}\n</div>\n<div class="res-grid">${n.map(i).join("")}</div>`;
+                const isCurrent = lastPlayedRound && e === lastPlayedRound;
+                d += `\n<div ${isCurrent ? 'id="res-last-played-round"' : ''} style="font-size:15px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.9);margin-top:${0 === t ? "24px" : "44px"};margin-bottom:18px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:12px;text-shadow:0 0 10px rgba(255,255,255,0.1);"><i class="ph ph-calendar-blank" style="color:var(--color-pink);font-size:18px;filter:drop-shadow(0 0 10px rgba(255,0,255,0.4));"></i>\n  ${"Altre" === e ? "Partite senza giornata" : "Giornata " + e}\n</div>\n<div class="res-grid">${n.map(i).join("")}</div>`;
               }),
                 o)
             ) {
@@ -117,13 +118,8 @@ const Results = (() => {
             if (lastPlayedRound) {
               setTimeout(() => {
                 const el = document.getElementById("res-last-played-round");
-                if (el) {
-                  el.scrollIntoView({ behavior: "smooth", block: "start" });
-                  // optional: adjust for sticky header
-                  const scrollContainer = document.getElementById("res-content")?.parentElement || window;
-                  scrollContainer.scrollBy(0, -60);
-                }
-              }, 100);
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }, 150);
             }
           })(e);
         } catch (e) {
@@ -175,7 +171,7 @@ const Results = (() => {
               .map((e, t) => {
                 const n = e.position ?? t + 1,
                   s = e.is_our_team;
-                return `\n      <tr class="${s ? "our-row" : ""}">\n        <td class="center">${n <= 3 ? `<span class="pos-medal">${r[n - 1]}</span>` : `<span class="res-pos">${n}</span>`}</td>\n        <td>\n          <div class="res-team-cell">\n            ${s ? '<div class="res-team-dot"></div>' : ""}\n            <span style="${s ? "color:var(--color-pink);font-weight:700;" : ""}">${Utils.escapeHtml(e.team || "—")}</span>\n          </div>\n        </td>\n        <td class="center">${e.played ?? "—"}</td>\n        <td class="center" style="color:#4caf50;">${e.won ?? "—"}</td>\n        <td class="center" style="color:#ef5350;">${e.lost ?? "—"}</td>\n        <td class="center"><strong style="font-size:15px;">${e.points ?? "—"}</strong></td>\n      </tr>`;
+                return `\n      <tr class="${s ? "our-row" : ""}">\n        <td class="center">${n <= 3 ? `<span class="pos-medal">${r[n - 1]}</span>` : `<span class="res-pos">${n}</span>`}</td>\n        <td>\n          <div class="res-team-cell">\n            ${e.logo ? `<img class="res-team-logo" src="${Utils.escapeHtml(e.logo)}" alt="" onerror="this.style.display='none'">` : ""}\n            ${s ? '<div class="res-team-dot"></div>' : ""}\n            <span style="${s ? "color:var(--color-pink);font-weight:700;" : ""}">${Utils.escapeHtml(e.team || "—")}</span>\n          </div>\n        </td>\n        <td class="center">${e.played ?? "—"}</td>\n        <td class="center" style="color:#4caf50;">${e.won ?? "—"}</td>\n        <td class="center" style="color:#ef5350;">${e.lost ?? "—"}</td>\n        <td class="center"><strong style="font-size:15px;">${e.points ?? "—"}</strong></td>\n      </tr>`;
               })
               .join("")}\n    </tbody>\n  </table>\n</div>`;
             if (o) {
@@ -235,7 +231,9 @@ const Results = (() => {
         n && e.score
           ? `<div class="res-score ${a.home}">${e.sets_home ?? ""}</div><div class="res-time-label">-</div><div class="res-score ${a.away}">${e.sets_away ?? ""}</div>`
           : '<div class="res-score vs">vs</div>';
-    return `\n<div class="res-card${t ? " our-team" : ""}">\n  <div class="res-card-top">\n    <span>${Utils.escapeHtml(r)}</span>\n    <span>${s}${o}</span>\n  </div>\n  <div class="res-teams">\n    <div class="res-team"><div class="${i}">${Utils.escapeHtml(e.home || "Casa")}</div></div>\n    <div class="res-score-block">${c}</div>\n    <div class="res-team away"><div class="${l}">${Utils.escapeHtml(e.away || "Ospite")}</div></div>\n  </div>\n</div>`;
+    const hLogo = e.home_logo ? `<img class="res-team-logo" src="${Utils.escapeHtml(e.home_logo)}" alt="" onerror="this.style.display='none'">` : "",
+      aLogo = e.away_logo ? `<img class="res-team-logo" src="${Utils.escapeHtml(e.away_logo)}" alt="" onerror="this.style.display='none'">` : "";
+    return `\n<div class="res-card${t ? " our-team" : ""}">\n  <div class="res-card-top">\n    <span>${Utils.escapeHtml(r)}</span>\n    <span>${s}${o}</span>\n  </div>\n  <div class="res-teams">\n    <div class="res-team">${hLogo}<div class="${i}">${Utils.escapeHtml(e.home || "Casa")}</div></div>\n    <div class="res-score-block">${c}</div>\n    <div class="res-team away"><div class="${l}">${Utils.escapeHtml(e.away || "Ospite")}</div>${aLogo}</div>\n  </div>\n</div>`;
   }
   function l(e, t) {
     const n = document.getElementById("res-content");
@@ -331,6 +329,8 @@ const Results = (() => {
   .res-table tr:hover .pos-medal { transform:translateY(-2px) scale(1.15); }
   .res-team-cell { display:flex; align-items:center; gap:12px; }
   .res-team-dot { width:10px; height:10px; border-radius:50%; background:var(--color-pink); flex-shrink:0; box-shadow:0 0 12px var(--color-pink); }
+  .res-team-logo { width:28px; height:28px; border-radius:50%; object-fit:contain; flex-shrink:0; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.12); box-shadow:0 2px 8px rgba(0,0,0,0.3); }
+  .res-card .res-team-logo { width:32px; height:32px; }
   .res-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:100px 20px; color:var(--color-text-muted); gap:20px; text-align:center; background:rgba(18,18,20,0.5); border-radius:24px; border:2px dashed rgba(255,255,255,0.06); margin-top:24px; transition:all 0.3s; }
   .res-empty:hover { border-color:rgba(255,255,255,0.15); background:rgba(18,18,20,0.7); }
   .res-empty i { font-size:72px; opacity:0.3; background:linear-gradient(135deg, rgba(255,255,255,0.6), rgba(255,255,255,0.1)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; filter:drop-shadow(0 10px 20px rgba(0,0,0,0.3)); }
@@ -359,7 +359,7 @@ const Results = (() => {
   .res-campionato-item-url { font-size:12px; color:rgba(255,255,255,0.4); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:240px; margin-top:2px; }
   .res-del-btn { background:rgba(239,83,80,0.1); border:1px solid rgba(239,83,80,0.2); border-radius:10px; color:#ef5350; padding:10px; cursor:pointer; font-size:18px; flex-shrink:0; transition:all 0.3s cubic-bezier(0.4,0,0.2,1); display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(0,0,0,0.2); }
   .res-del-btn:hover { background:rgba(239,83,80,0.2); border-color:rgba(239,83,80,0.4); transform:scale(1.1); box-shadow:0 8px 24px rgba(239,83,80,0.3); }
-  .res-modal-footer { display:flex; justify-content:flex-end; gap:14px; margin-top:12px; padding-top:24px; border-top:1px solid rgba(255,255,255,0.05); }n\n<div class="res-container">\n  <div class="res-header">\n    <div class="res-title-block">\n      <div class="res-title">🏐 Risultati</div>\n      <div class="res-subtitle">Portale Federale Pallavolo</div>\n    </div>\n    <div class="res-toolbar">\n      <select id="res-campionato-select" class="res-select">\n        <option value="">Caricamento campionati...</option>\n      </select>\n      <div class="res-view-toggle" style="display:none;">\n        \x3c!-- Pulsanti rimossi su richiesta --\x3e\n      </div>\n      <button class="res-icon-btn" id="res-sync-btn" title="Sincronizza con portale" onclick="Results._sync()">\n        <i class="ph ph-cloud-arrow-down"></i>\n      </button>\n      <button class="res-icon-btn" id="res-refresh-btn" title="Aggiorna" onclick="Results._refresh()">\n        <i class="ph ph-arrows-clockwise"></i>\n      </button>\n      <button class="res-icon-btn" id="res-manage-btn" title="Gestisci campionati" onclick="Results._openManage()">\n        <i class="ph ph-gear"></i>\n      </button>\n    </div>\n  </div>\n  <div id="res-content">${d()}</div>\n</div>`));
+  .res-modal-footer { display:flex; justify-content:flex-end; gap:14px; margin-top:12px; padding-top:24px; border-top:1px solid rgba(255,255,255,0.05); }\n</style>\n<div class="res-container">\n  <div class="res-header">\n    <div class="res-title-block">\n      <div class="res-title">🏐 Risultati</div>\n      <div class="res-subtitle">Portale Federale Pallavolo</div>\n    </div>\n    <div class="res-toolbar">\n      <select id="res-campionato-select" class="res-select">\n        <option value="">Caricamento campionati...</option>\n      </select>\n      <div class="res-view-toggle" style="display:none;">\n        <!-- Pulsanti rimossi su richiesta -->\n      </div>\n      <button class="res-icon-btn" id="res-sync-btn" title="Sincronizza con portale" onclick="Results._sync()">\n        <i class="ph ph-cloud-arrow-down"></i>\n      </button>\n      <button class="res-icon-btn" id="res-refresh-btn" title="Aggiorna" onclick="Results._refresh()">\n        <i class="ph ph-arrows-clockwise"></i>\n      </button>\n      <button class="res-icon-btn" id="res-manage-btn" title="Gestisci campionati" onclick="Results._openManage()">\n        <i class="ph ph-gear"></i>\n      </button>\n    </div>\n  </div>\n  <div id="res-content">${d()}</div>\n</div>`));
         })(),
         p(),
         await o());

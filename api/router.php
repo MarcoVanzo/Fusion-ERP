@@ -60,6 +60,7 @@ try {
             'admin' => dispatch('Admin', $action),
             'dashboard' => dispatch('Dashboard', $action),
             'social' => dispatch('Social', $action),
+            'website' => dispatch('Website', $action),
             'outseason' => dispatch('OutSeason', $action),
             'results' => dispatch('Results', $action),
             'vald' => dispatch('Vald', $action),
