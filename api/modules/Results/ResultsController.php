@@ -803,10 +803,13 @@ class ResultsController
                 $dataNodes = $xpath->query('.//*[contains(@class,"data") or contains(@class,"orario") or contains(@class,"dataora")]', $gara);
                 if ($dataNodes && $dataNodes->length > 0) {
                     $dateText = trim($dataNodes->item(0)->textContent);
-                    if (preg_match('/(\d{1,2}\/\d{1,2}\/\d{2,4})/', $dateText, $md))
-                        $match['date'] = $md[1];
-                    if (preg_match('/(\d{1,2}:\d{2})/', $dateText, $mt))
+                    // Handle dd/mm/yyyy, dd/mm/yy, and dd/mm with slash or hyphen
+                    if (preg_match('/(\d{1,2}[\/\-]\d{1,2}(?:[\/\-]\d{2,4})?)/', $dateText, $md)) {
+                        $match['date'] = str_replace('-', '/', $md[1]);
+                    }
+                    if (preg_match('/(\d{1,2}:\d{2})/', $dateText, $mt)) {
                         $match['time'] = $mt[1];
+                    }
                 }
 
                 $matches[] = $match;
@@ -1682,17 +1685,41 @@ class ResultsController
             foreach ($matches as $m) {
                 $sqlDate = null;
                 if (!empty($m['date'])) {
-                    // Fix ambiguity: if date is dd/mm/yy, convert to dd/mm/yyyy so strtotime doesn't parse it as yy-mm-dd
                     $dateStr = $m['date'];
-                    if (preg_match('/^(\d{1,2})\/(\d{1,2})\/(\d{2})$/', $dateStr, $pts)) {
-                        $y = (int)$pts[3] < 50 ? 2000 + (int)$pts[3] : 1900 + (int)$pts[3];
-                        $dateStr = sprintf('%02d/%02d/%04d', $pts[1], $pts[2], $y);
+                    $parts = explode('/', $dateStr);
+
+                    if (count($parts) === 3) {
+                        // dd/mm/yy -> dd/mm/yyyy
+                        if (strlen($parts[2]) === 2) {
+                            $y = (int)$parts[2] < 50 ? 2000 + (int)$parts[2] : 1900 + (int)$parts[2];
+                            $dateStr = sprintf('%02d/%02d/%04d', $parts[0], $parts[1], $y);
+                        }
+                    }
+                    else if (count($parts) === 2) {
+                        // dd/mm -> guess year based on current date (Volleyball season: Aug-July)
+                        $currMonth = (int)date('n');
+                        $currYear = (int)date('Y');
+                        $matchMonth = (int)$parts[1];
+
+                        // If we are in the second half of the year (Aug-Dec) 
+                        // and match is in first half (Jan-Jul), it belongs to next year.
+                        // Conversely, if we are in Jan-Jul and match is in Aug-Dec, it belongs to last year.
+                        $targetYear = $currYear;
+                        if ($currMonth >= 8 && $matchMonth <= 7) {
+                            $targetYear++;
+                        }
+                        else if ($currMonth <= 7 && $matchMonth >= 8) {
+                            $targetYear--;
+                        }
+
+                        $dateStr = sprintf('%02d/%02d/%04d', $parts[0], $parts[1], $targetYear);
                     }
 
                     $d = str_replace('/', '-', $dateStr) . (empty($m['time']) ? '' : ' ' . $m['time']);
                     $ts = strtotime($d);
-                    if ($ts)
+                    if ($ts) {
                         $sqlDate = date('Y-m-d H:i:s', $ts);
+                    }
                 }
                 $insM->execute([':id' => 'm_' . substr(md5($id . ($m['id'] ?? uniqid())), 0, 10), ':cid' => $id, ':num' => $m['id'] ?? null, ':date' => $sqlDate, ':home' => $m['home'], ':away' => $m['away'], ':hs' => $m['sets_home'], ':as' => $m['sets_away'], ':status' => $m['status'], ':round' => $m['round'] ?? null]);
             }
@@ -1786,6 +1813,9 @@ class ResultsController
                     return true;
             }
         }
+        return false;
+    }
+}       }
         return false;
     }
 }

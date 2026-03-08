@@ -17,27 +17,38 @@ const Athletes = (() => {
   function r() {
     const s = document.getElementById("main-tab-content");
     if (!s) return;
-    const c = n
-      ? t.filter((e) => String(e.team_id) === String(n) || e.team_name === n)
-      : t,
-      m = App.getUser(),
-      u = ["admin", "manager", "operator"].includes(m?.role);
-    ((s.innerHTML = `\n      <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2);margin-bottom:var(--sp-3);flex-wrap:wrap;">\n        <p class="page-subtitle">${c.length} atleti${n ? " in squadra selezionata" : " totali"}</p>\n        <div style="display:flex;align-items:center;gap:var(--sp-2);">\n          <div class="input-wrapper" style="position:relative;min-width:220px;">\n            <i class="ph ph-magnifying-glass" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--color-text-muted);font-size:16px;"></i>\n            <input type="text" id="athlete-search" class="form-input" placeholder="Cerca atleta..." style="padding-left:36px;height:42px;font-size:13px;">\n          </div>\n          ${u ? '<button class="btn btn-primary" id="new-athlete-btn" type="button">+ NUOVO ATLETA</button>' : ""}\n        </div>\n      </div>\n      <div class="filter-bar" id="team-filter">\n        <button class="filter-chip ${n ? "" : "active"}" data-team="" type="button">Tutti</button>\n        ${a.map((e) => `<button class="filter-chip ${n === e.id ? "active" : ""}" data-team="${Utils.escapeHtml(e.id)}" type="button">${Utils.escapeHtml(i(e.category, e.name))}</button>`).join("")}\n      </div>\n      ${0 === c.length
-      ? Utils.emptyState(
-        "Nessun atleta trovato",
-        "Aggiungi il primo atleta con il pulsante in alto.",
-      )
-      : `<div class="grid-3" id="athletes-grid">${c
-        .map((e) =>
-          (function (e) {
-            const t = e.acwr_risk
-              ? Utils.acwrRiskColor(e.acwr_risk)
-              : "transparent",
-              a = o(e.full_name);
-            return `\n      <div class="card" style="cursor:pointer;position:relative;overflow:hidden;" data-athlete-id="${Utils.escapeHtml(e.id)}" data-name="${Utils.escapeHtml((e.full_name || "").toLowerCase())}" data-role="${Utils.escapeHtml((e.role || "").toLowerCase())}" data-team="${Utils.escapeHtml((e.team_name || "").toLowerCase())}">\n        ${e.acwr_risk && "moderate" !== e.acwr_risk && "low" !== e.acwr_risk ? `<div style="position:absolute;top:var(--sp-2);right:var(--sp-2);width:24px;height:24px;border-radius:50%;background:${t};display:flex;align-items:center;justify-content:center;font-size:14px;color:#000;box-shadow:0 0 8px ${t};"><i class="ph-fill ph-warning-circle"></i></div>` : ""}\n        <div style="display:flex;align-items:flex-start;gap:var(--sp-2);">\n          <div style="width:48px;height:48px;background:${a};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--font-display);font-weight:700;font-size:1.3rem;color:#000;border-radius:8px;">${e.photo_path ? `<img src="${Utils.escapeHtml(e.photo_path)}" style="width:100%;height:100%;object-fit:cover;object-position:center 15%;display:block;border-radius:8px;">` : `\n            ${null != e.jersey_number ? Utils.escapeHtml(String(e.jersey_number)) : Utils.initials(e.full_name)}`}\n          </div>\n          <div style="overflow:hidden;flex:1;">\n            <div style="font-family:var(--font-display);font-weight:700;font-size:1.1rem;">${Utils.escapeHtml(e.full_name)}</div>\n            <div style="font-size:12px;color:var(--color-text-muted);">${Utils.escapeHtml(e.role || "—")}</div>\n            <div style="margin-top:4px;">${Utils.badge(i(e.category, e.team_name), "muted")}</div>\n          </div>\n        </div>\n      </div>`;
-          })(e),
+    const teamsList = Array.isArray(a) ? a : [];
+    ((s.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2);margin-bottom:var(--sp-3);flex-wrap:wrap;">
+        <p class="page-subtitle">${c.length} atleti${n ? " in squadra selezionata" : " totali"}</p>
+        <div style="display:flex;align-items:center;gap:var(--sp-2);">
+          <div class="input-wrapper" style="position:relative;min-width:220px;">
+            <i class="ph ph-magnifying-glass" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--color-text-muted);font-size:16px;"></i>
+            <input type="text" id="athlete-search" class="form-input" placeholder="Cerca atleta..." style="padding-left:36px;height:42px;font-size:13px;">
+          </div>
+          ${u ? '<button class="btn btn-primary" id="new-athlete-btn" type="button">+ NUOVO ATLETA</button>' : ""}
+        </div>
+      </div>
+      <div class="filter-bar" id="team-filter">
+        <button class="filter-chip ${n ? "" : "active"}" data-team="" type="button">Tutti</button>
+        ${teamsList.map((e) => `<button class="filter-chip ${n === e.id ? "active" : ""}" data-team="${Utils.escapeHtml(e.id)}" type="button">${Utils.escapeHtml(i(e.category, e.name))}</button>`).join("")}
+      </div>
+      ${0 === c.length
+        ? Utils.emptyState(
+          "Nessun atleta trovato",
+          "Aggiungi il primo atleta con il pulsante in alto.",
         )
-        .join("")}</div>`
+        : `<div class="grid-3" id="athletes-grid">${c
+          .map((e) =>
+            (function (e) {
+              const t = e.acwr_risk
+                ? Utils.acwrRiskColor(e.acwr_risk)
+                : "transparent",
+                a = o(e.full_name);
+              return `\n      <div class="card" style="cursor:pointer;position:relative;overflow:hidden;" data-athlete-id="${Utils.escapeHtml(e.id)}" data-name="${Utils.escapeHtml((e.full_name || "").toLowerCase())}" data-role="${Utils.escapeHtml((e.role || "").toLowerCase())}" data-team="${Utils.escapeHtml((e.team_name || "").toLowerCase())}">\n        ${e.acwr_risk && "moderate" !== e.acwr_risk && "low" !== e.acwr_risk ? `<div style="position:absolute;top:var(--sp-2);right:var(--sp-2);width:24px;height:24px;border-radius:50%;background:${t};display:flex;align-items:center;justify-content:center;font-size:14px;color:#000;box-shadow:0 0 8px ${t};"><i class="ph-fill ph-warning-circle"></i></div>` : ""}\n        <div style="display:flex;align-items:flex-start;gap:var(--sp-2);">\n          <div style="width:48px;height:48px;background:${a};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--font-display);font-weight:700;font-size:1.3rem;color:#000;border-radius:8px;">${e.photo_path ? `<img src="${Utils.escapeHtml(e.photo_path)}" style="width:100%;height:100%;object-fit:cover;object-position:center 15%;display:block;border-radius:8px;">` : `\n            ${null != e.jersey_number ? Utils.escapeHtml(String(e.jersey_number)) : Utils.initials(e.full_name)}`}\n          </div>\n          <div style="overflow:hidden;flex:1;">\n            <div style="font-family:var(--font-display);font-weight:700;font-size:1.1rem;">${Utils.escapeHtml(e.full_name)}</div>\n            <div style="font-size:12px;color:var(--color-text-muted);">${Utils.escapeHtml(e.role || "—")}</div>\n            <div style="margin-top:4px;">${Utils.badge(i(e.category, e.team_name), "muted")}</div>\n          </div>\n        </div>\n      </div>`;
+            })(e),
+          )
+          .join("")}</div>`
       }\n    `),
       s.querySelectorAll("[data-team]").forEach((t) =>
         t.addEventListener(
@@ -334,17 +345,17 @@ const Athletes = (() => {
           })(s);
           break;
         case "metrics":
-          !(async function (t) {
-            t.innerHTML = `<div style="display:flex;flex-direction:column;gap:8px;">${[1, 2, 3, 4].map(() => '<div class="skeleton skeleton-text"></div>').join("")}</div>`;
+          !(async function (targetEl) {
+            targetEl.innerHTML = `<div style="display:flex;flex-direction:column;gap:8px;">${[1, 2, 3, 4].map(() => '<div class="skeleton skeleton-text"></div>').join("")}</div>`;
             try {
-              const qParams = n ? { team_id: n } : {},
+              const queryParams = n ? { team_id: n } : {},
                 {
-                  athletes: l,
-                  averages: r,
-                  metric_types: d,
-                } = await Store.get("getGroupMetrics", "biometrics", qParams),
-                p = Object.keys(d || {}),
-                labels = {
+                  athletes: metricsAthletes,
+                  averages: groupAverages,
+                  metric_types: metricTypes,
+                } = await Store.get("getGroupMetrics", "biometrics", queryParams),
+                metricKeys = Object.keys(metricTypes || {}),
+                metricLabels = {
                   SPRINT_10M: "Sprint 10m",
                   SPRINT_20M: "Sprint 20m",
                   SPRINT_40M: "Sprint 40m",
@@ -360,50 +371,43 @@ const Athletes = (() => {
                   TRAINING_LOAD: "Carico",
                   STRENGTH_1RM: "1RM",
                 },
-                g = (val) => (null != val ? Utils.formatNum(val, 2) : "—"),
-                v = (athMetrics, mKey) => {
-                  if (!athMetrics || !athMetrics[mKey])
+                formatMetricValue = (val) => (null != val ? Utils.formatNum(val, 2) : "—"),
+                renderMetricCell = (athleteMetrics, key) => {
+                  if (!athleteMetrics || !athleteMetrics[key])
                     return '<span style="color:var(--color-text-muted);">—</span>';
-                  const mData = athMetrics[mKey];
-                  return `<span style="font-weight:600;">${g(mData.value)}</span><span style="font-size:10px;color:var(--color-text-muted);margin-left:2px;">${Utils.escapeHtml(mData.unit)}</span>`;
+                  const data = athleteMetrics[key];
+                  return `<span style="font-weight:600;">${formatMetricValue(data.value)}</span><span style="font-size:10px;color:var(--color-text-muted);margin-left:2px;">${Utils.escapeHtml(data.unit)}</span>`;
                 };
               const teamsList = Array.isArray(a) ? a : [];
-              const headerHtml = `<div style="display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2);margin-bottom:var(--sp-3);flex-wrap:wrap;"><p class="page-subtitle">${l.length} atlete${n ? " nella squadra selezionata" : " totali"}</p><div class="filter-bar" id="metrics-team-filter"><button class="filter-chip ${n ? "" : "active"}" data-team="" type="button">Tutte</button>${teamsList.map((tm) => `<button class="filter-chip ${n === tm.id ? "active" : ""}" data-team="${tm.id}" type="button">${Utils.escapeHtml(i(tm.category, tm.name))}</button>`).join("")}</div></div>`;
-              const metricHeaders = 0 === p.length ? '<th style="white-space:nowrap;text-align:center;color:var(--color-text-muted);">Metriche</th>' : p.map((k) => `<th style="white-space:nowrap;text-align:center;">${Utils.escapeHtml(labels[k] || k)}</th>`).join("");
-              const athleteRows = l.map((ath) => `<tr style="cursor:pointer;" data-athlete-id="${ath.id}"><td><div style="display:flex;align-items:center;gap:10px;"><div style="width:32px;height:32px;background:${o(ath.full_name)};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--font-display);font-weight:700;font-size:0.85rem;color:#000;border-radius:6px;">${null !== ath.jersey_number ? Utils.escapeHtml(String(ath.jersey_number)) : Utils.initials(ath.full_name)}</div><span style="font-weight:600;">${Utils.escapeHtml(ath.full_name)}</span></div></td><td style="font-size:12px;color:var(--color-text-muted);">${Utils.escapeHtml(i(ath.category, ath.team_name))}</td>${0 === p.length ? '<td style="text-align:center;color:var(--color-text-muted);font-size:12px;">Nessuna metrica</td>' : p.map((tk) => `<td style="text-align:center;">${v(ath.metrics, tk)}</td>`).join("")}</tr>`).join("");
-              const avgCells = 0 === p.length ? '<td style="text-align:center;"><span style="color:var(--color-text-muted);">—</span></td>' : p.map((k) => {
-                const avgData = r && r[k];
-                return `<td style="text-align:center;">${avgData ? `<span style="font-weight:700;color:var(--color-pink);">${g(avgData.value)}</span><span style="font-size:10px;color:var(--color-text-muted);margin-left:2px;">${Utils.escapeHtml(avgData.unit)}</span>` : '<span style="color:var(--color-text-muted);">—</span>'}</td>`;
+              const headerHtml = `<div style="display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2);margin-bottom:var(--sp-3);flex-wrap:wrap;"><p class="page-subtitle">${(metricsAthletes || []).length} atlete${n ? " nella squadra selezionata" : " totali"}</p><div class="filter-bar" id="metrics-team-filter"><button class="filter-chip ${n ? "" : "active"}" data-team="" type="button">Tutte</button>${teamsList.map((tm) => `<button class="filter-chip ${n === tm.id ? "active" : ""}" data-team="${tm.id}" type="button">${Utils.escapeHtml(i(tm.category, tm.name))}</button>`).join("")}</div></div>`;
+              const metricHeaders = 0 === metricKeys.length ? '<th style="white-space:nowrap;text-align:center;color:var(--color-text-muted);">Metriche</th>' : metricKeys.map((k) => `<th style="white-space:nowrap;text-align:center;">${Utils.escapeHtml(metricLabels[k] || k)}</th>`).join("");
+              const athleteRows = (metricsAthletes || []).map((athlete) => `<tr style="cursor:pointer;" data-athlete-id="${athlete.id}"><td><div style="display:flex;align-items:center;gap:10px;"><div style="width:32px;height:32px;background:${o(athlete.full_name)};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--font-display);font-weight:700;font-size:0.85rem;color:#000;border-radius:6px;">${null !== athlete.jersey_number ? Utils.escapeHtml(String(athlete.jersey_number)) : Utils.initials(athlete.full_name)}</div><span style="font-weight:600;">${Utils.escapeHtml(athlete.full_name)}</span></div></td><td style="font-size:12px;color:var(--color-text-muted);">${Utils.escapeHtml(i(athlete.category, athlete.team_name))}</td>${0 === metricKeys.length ? '<td style="text-align:center;color:var(--color-text-muted);font-size:12px;">Nessuna metrica</td>' : metricKeys.map((tk) => `<td style="text-align:center;">${renderMetricCell(athlete.metrics, tk)}</td>`).join("")}</tr>`).join("");
+              const avgCells = 0 === metricKeys.length ? '<td style="text-align:center;"><span style="color:var(--color-text-muted);">—</span></td>' : metricKeys.map((k) => {
+                const avgData = groupAverages && groupAverages[k];
+                return `<td style="text-align:center;">${avgData ? `<span style="font-weight:700;color:var(--color-pink);">${formatMetricValue(avgData.value)}</span><span style="font-size:10px;color:var(--color-text-muted);margin-left:2px;">${Utils.escapeHtml(avgData.unit)}</span>` : '<span style="color:var(--color-text-muted);">—</span>'}</td>`;
               }).join("");
-
-              ((t.innerHTML = `${headerHtml}<div class="table-wrapper"><table class="table"><thead><tr><th style="white-space:nowrap;">Atleta</th><th style="white-space:nowrap;">Squadra</th>${metricHeaders}</tr></thead><tbody>${athleteRows}<tr style="background:rgba(255,255,255,0.03);border-top:2px solid var(--color-border);"><td colspan="2" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--color-text-muted);padding:10px 12px;"><i class="ph ph-chart-bar" style="margin-right:4px;"></i>Media gruppo</td>${avgCells}</tr></tbody></table></div>`),
-
-                t.querySelectorAll("[data-team]").forEach((t) =>
-                  t.addEventListener(
+              ((targetEl.innerHTML = `${headerHtml}<div class="table-wrapper"><table class="table"><thead><tr><th style="white-space:nowrap;">Atleta</th><th style="white-space:nowrap;">Squadra</th>${metricHeaders}</tr></thead><tbody>${athleteRows}<tr style="background:rgba(255,255,255,0.03);border-top:2px solid var(--color-border);"><td colspan="2" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--color-text-muted);padding:10px 12px;"><i class="ph ph-chart-bar" style="margin-right:4px;"></i>Media gruppo</td>${avgCells}</tr></tbody></table></div>`),
+                targetEl.querySelectorAll("[data-team]").forEach((btn) =>
+                  btn.addEventListener(
                     "click",
                     () => {
-                      ((n = t.dataset.team), c("metrics"));
+                      ((n = btn.dataset.team), c("metrics"));
                     },
                     { signal: e.signal },
                   ),
                 ),
-                t.querySelectorAll("[data-athlete-id]").forEach((t) =>
-                  t.addEventListener(
+                targetEl.querySelectorAll("[data-athlete-id]").forEach((row) =>
+                  row.addEventListener(
                     "click",
                     () => {
-                      const id = t.dataset.athleteId;
-                      ((s = id),
-                        sessionStorage.setItem("last_athlete_id", id),
-                        u(id, "metrics"));
+                      const id = row.dataset.athleteId;
+                      ((s = id), sessionStorage.setItem("last_athlete_id", id), u(id, "metrics"));
                     },
                     { signal: e.signal },
                   ),
                 ));
-            } catch (e) {
-              t.innerHTML = Utils.emptyState(
-                "Errore caricamento metriche",
-                e.message,
-              );
+            } catch (err) {
+              targetEl.innerHTML = Utils.emptyState("Errore caricamento metriche", err.message);
             }
           })(s);
           break;
@@ -493,19 +497,113 @@ const Athletes = (() => {
           document.getElementById("edit-athlete-btn")?.addEventListener(
             "click",
             () =>
-              (function (n) {
-                const l = a
+              (function (athleteData) {
+                const teamOptions = Array.isArray(a) ? a
                   .map(
-                    (e) =>
-                      `< option value = "${Utils.escapeHtml(e.id)}" ${n.team_id === e.id ? "selected" : ""}> ${Utils.escapeHtml(i(e.category, e.name))}</option > `,
-                  )
-                  .join(""),
-                  s = UI.modal({
-                    title: "Modifica Atleta",
-                    body: `\n  < div class="form-grid" >\n          <div class="form-group">\n            <label class="form-label" for="ea-fname">Nome *</label>\n            <input id="ea-fname" class="form-input" type="text" value="${Utils.escapeHtml(n.first_name || "")}" required>\n          </div>\n          <div class="form-group">\n            <label class="form-label" for="ea-lname">Cognome *</label>\n            <input id="ea-lname" class="form-input" type="text" value="${Utils.escapeHtml(n.last_name || "")}" required>\n          </div>\n        </div >\n        <div class="form-grid">\n          <div class="form-group">\n            <label class="form-label" for="ea-team">Squadra *</label>\n            <select id="ea-team" class="form-select">${l}</select>\n          </div>\n          <div class="form-group">\n            <label class="form-label" for="ea-jersey">N° Maglia</label>\n            <input id="ea-jersey" class="form-input" type="number" min="1" max="99" value="${n.jersey_number || ""}">\n          </div>\n        </div>\n        <div class="form-grid">\n          <div class="form-group">\n            <label class="form-label" for="ea-role">Ruolo</label>\n            <input id="ea-role" class="form-input" type="text" value="${Utils.escapeHtml(n.role || "")}">\n          </div>\n          <div class="form-group">\n            <label class="form-label" for="ea-birth">Data di Nascita</label>\n            <input id="ea-birth" class="form-input" type="date" value="${n.birth_date ? n.birth_date.substring(0, 10) : ""}">\n          </div>\n        </div>\n        <div class="form-grid">\n          <div class="form-group">\n            <label class="form-label" for="ea-birthplace">Luogo di Nascita</label>\n            <input id="ea-birthplace" class="form-input" type="text" value="${Utils.escapeHtml(n.birth_place || "")}">\n          </div>\n          <div class="form-group">\n            <label class="form-label" for="ea-rescity">Città di Residenza</label>\n            <input id="ea-rescity" class="form-input" type="text" value="${Utils.escapeHtml(n.residence_city || "")}">\n          </div>\n        </div>\n        <div class="form-group">\n          <label class="form-label" for="ea-resaddr" style="display:flex;align-items:center;gap:8px;">\n            Via di Residenza\n            <span style="display:inline-flex;align-items:center;gap:4px;background:rgba(66,133,244,0.15);border:1px solid rgba(66,133,244,0.3);border-radius:6px;padding:2px 8px;font-size:10px;color:#4285F4;font-weight:700;letter-spacing:0.5px;">\n              <i class="ph ph-google-logo"></i> Google Maps\n            </span>\n          </label>\n          <div style="position:relative;">\n            <i class="ph ph-magnifying-glass" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,0.35);font-size:16px;pointer-events:none;"></i>\n            <input id="ea-resaddr" class="form-input" type="text" value="${Utils.escapeHtml(n.residence_address || "")}" autocomplete="off" style="padding-left:40px;">\n          </div>\n        </div>\n        <div class="form-grid">\n          <div class="form-group">\n            <label class="form-label" for="ea-phone">Cellulare</label>\n            <input id="ea-phone" class="form-input" type="tel" value="${Utils.escapeHtml(n.phone || "")}">\n          </div>\n          <div class="form-group">\n            <label class="form-label" for="ea-email">E-Mail</label>\n            <input id="ea-email" class="form-input" type="email" value="${Utils.escapeHtml(n.email || "")}">\n          </div>\n        </div>\n        <div class="form-grid">\n          <div class="form-group">\n            <label class="form-label" for="ea-doc">Documento d'Identità</label>\n            <input id="ea-doc" class="form-input" type="text" value="${Utils.escapeHtml(n.identity_document || "")}">\n          </div>\n          <div class="form-group">\n            <label class="form-label" for="ea-fiscal">Codice Fiscale</label>\n            <input id="ea-fiscal" class="form-input" type="text" value="${Utils.escapeHtml(n.fiscal_code || "")}" maxlength="16" style="text-transform:uppercase;">\n          </div>\n        </div>\n        <div class="form-grid">\n          <div class="form-group">\n            <label class="form-label" for="ea-medcert">Scadenza Certificato Medico</label>\n            <input id="ea-medcert" class="form-input" type="date" value="${n.medical_cert_expires_at ? n.medical_cert_expires_at.substring(0, 10) : ""}">\n          </div>\n          <div class="form-group">\n            <label class="form-label" for="ea-fipav">Matricola FIPAV</label>\n            <input id="ea-fipav" class="form-input" type="text" value="${Utils.escapeHtml(n.federal_id || "")}">\n          </div>\n        </div>\n        <div class="form-grid">\n          <div class="form-group">\n            <label class="form-label" for="ea-height">Altezza (cm)</label>\n            <input id="ea-height" class="form-input" type="number" value="${n.height_cm || ""}">\n          </div>\n          <div class="form-group">\n            <label class="form-label" for="ea-weight">Peso (kg)</label>\n            <input id="ea-weight" class="form-input" type="number" value="${n.weight_kg || ""}">\n          </div>\n        </div>\n        <div class="form-group">\n          <label class="form-label" for="ea-parent">Contatto genitore (per minori)</label>\n          <input id="ea-parent" class="form-input" type="text" value="${Utils.escapeHtml(n.parent_contact || "")}">\n        </div>\n        <div id="ea-error" class="form-error hidden"></div>`,
-                    footer:
-                      '\n  < button class="btn btn-ghost btn-sm" id = "ea-cancel" type = "button" > Annulla</button >\n    <button class="btn btn-primary btn-sm" id="ea-save" type="button">SALVA MODIFICHE</button>',
-                  });
+                    (tm) =>
+                      `<option value="${Utils.escapeHtml(tm.id)}" ${athleteData.team_id === tm.id ? "selected" : ""}>${Utils.escapeHtml(i(tm.category, tm.name))}</option>`,
+                  ).join("") : "";
+                const s = UI.modal({
+                  title: "Modifica Atleta",
+                  body: `<div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="ea-fname">Nome *</label>
+            <input id="ea-fname" class="form-input" type="text" value="${Utils.escapeHtml(athleteData.first_name || "")}" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="ea-lname">Cognome *</label>
+            <input id="ea-lname" class="form-input" type="text" value="${Utils.escapeHtml(athleteData.last_name || "")}" required>
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="ea-team">Squadra *</label>
+            <select id="ea-team" class="form-select">${teamOptions}</select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="ea-jersey">N° Maglia</label>
+            <input id="ea-jersey" class="form-input" type="number" min="1" max="99" value="${athleteData.jersey_number || ""}">
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="ea-role">Ruolo</label>
+            <input id="ea-role" class="form-input" type="text" value="${Utils.escapeHtml(athleteData.role || "")}">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="ea-birth">Data di Nascita</label>
+            <input id="ea-birth" class="form-input" type="date" value="${athleteData.birth_date ? athleteData.birth_date.substring(0, 10) : ""}">
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="ea-birthplace">Luogo di Nascita</label>
+            <input id="ea-birthplace" class="form-input" type="text" value="${Utils.escapeHtml(athleteData.birth_place || "")}">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="ea-rescity">Città di Residenza</label>
+            <input id="ea-rescity" class="form-input" type="text" value="${Utils.escapeHtml(athleteData.residence_city || "")}">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="ea-resaddr" style="display:flex;align-items:center;gap:8px;">
+            Via di Residenza
+            <span style="display:inline-flex;align-items:center;gap:4px;background:rgba(66,133,244,0.15);border:1px solid rgba(66,133,244,0.3);border-radius:6px;padding:2px 8px;font-size:10px;color:#4285F4;font-weight:700;letter-spacing:0.5px;">
+              <i class="ph ph-google-logo"></i> Google Maps
+            </span>
+          </label>
+          <div style="position:relative;">
+            <i class="ph ph-magnifying-glass" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,0.35);font-size:16px;pointer-events:none;"></i>
+            <input id="ea-resaddr" class="form-input" type="text" value="${Utils.escapeHtml(athleteData.residence_address || "")}" autocomplete="off" style="padding-left:40px;">
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="ea-phone">Cellulare</label>
+            <input id="ea-phone" class="form-input" type="tel" value="${Utils.escapeHtml(athleteData.phone || "")}">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="ea-email">E-Mail</label>
+            <input id="ea-email" class="form-input" type="email" value="${Utils.escapeHtml(athleteData.email || "")}">
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="ea-doc">Documento d'Identità</label>
+            <input id="ea-doc" class="form-input" type="text" value="${Utils.escapeHtml(athleteData.identity_document || "")}">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="ea-fiscal">Codice Fiscale</label>
+            <input id="ea-fiscal" class="form-input" type="text" value="${Utils.escapeHtml(athleteData.fiscal_code || "")}" maxlength="16" style="text-transform:uppercase;">
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="ea-medcert">Scadenza Certificato Medico</label>
+            <input id="ea-medcert" class="form-input" type="date" value="${athleteData.medical_cert_expires_at ? athleteData.medical_cert_expires_at.substring(0, 10) : ""}">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="ea-fipav">Matricola FIPAV</label>
+            <input id="ea-fipav" class="form-input" type="text" value="${Utils.escapeHtml(athleteData.federal_id || "")}">
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="ea-height">Altezza (cm)</label>
+            <input id="ea-height" class="form-input" type="number" value="${athleteData.height_cm || ""}">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="ea-weight">Peso (kg)</label>
+            <input id="ea-weight" class="form-input" type="number" value="${athleteData.weight_kg || ""}">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="ea-parent">Contatto genitore (per minori)</label>
+          <input id="ea-parent" class="form-input" type="text" value="${Utils.escapeHtml(athleteData.parent_contact || "")}">
+        </div>
+        <div id="ea-error" class="form-error hidden"></div>`,
+                  footer: '<button class="btn btn-ghost btn-sm" id="ea-cancel" type="button">Annulla</button><button class="btn btn-primary btn-sm" id="ea-save" type="button">SALVA MODIFICHE</button>',
+                });
                 (document
                   .getElementById("ea-cancel")
                   ?.addEventListener("click", () => s.close(), {
@@ -1043,10 +1141,10 @@ const Athletes = (() => {
         e.id
           ? ((s = e.id), await u(e.id, "anagrafica"))
           : ((s = null), (l = "anagrafica"), d());
-      } catch (t) {
+      } catch (err) {
         ((e.innerHTML = Utils.emptyState(
           "Errore nel caricamento atleti",
-          t.message,
+          err.message + (err.stack ? ` [${err.stack.split("\n")[0]}]` : ""),
         )),
           UI.toast("Errore caricamento atleti", "error"));
       } finally {

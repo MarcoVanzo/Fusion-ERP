@@ -116,6 +116,8 @@ class SocialRepository
             'redirect_uri' => $redirectUri,
             'response_type' => 'code',
             'state' => $stateToken, // short hex token — safe in URLs
+            'auth_type' => 'rerequest', // FORCE permissions check
+            'display' => 'page'
         ];
 
         // Facebook Login for Business uses config_id instead of scope

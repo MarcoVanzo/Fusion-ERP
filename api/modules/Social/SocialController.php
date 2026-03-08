@@ -315,10 +315,18 @@ class SocialController
             $dailyInsights = $this->transformInsights($igInsights, $days);
 
             Response::success([
-                'profile' => $profile,
+                'profile' => [
+                    'id' => $token['ig_account_id'] ?? null,
+                    'username' => $token['ig_username'] ?? '',
+                    'name' => $token['ig_username'] ?? '',
+                    'profile_picture_url' => null, // Placeholder as it's not currently stored in token
+                    'followers_count' => $profile['followers_count'] ?? 0,
+                    'media_count' => $profile['media_count'] ?? 0,
+                ],
                 'daily_insights' => $dailyInsights,
                 'posts' => $posts,
                 'fb_insights' => $fbInsights,
+                'fb_page_name' => $token['page_name'] ?? 'Facebook Page',
                 'is_mock' => false,
             ]);
         }
