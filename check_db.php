@@ -1,11 +1,14 @@
 <?php
-require_once __DIR__ . '/api/vendor/autoload.php';
-$dotenv = Dotenv\Dotenv::createUnsafeImmutable(__DIR__ . '/api');
+require_once __DIR__ . '/vendor/autoload.php';
+$dotenv = Dotenv\Dotenv::createUnsafeImmutable(__DIR__);
 $dotenv->load();
 
 use FusionERP\Shared\Database;
 
 header('Content-Type: application/json');
+
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
 
 try {
     $db = Database::getInstance();
@@ -27,6 +30,6 @@ try {
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
     echo json_encode(['success' => true, 'data' => $row]);
 }
-catch (Exception $e) {
+catch (Throwable $e) {
     echo json_encode(['success' => false, 'error' => $e->getMessage()]);
 }
