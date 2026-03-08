@@ -1,8 +1,8 @@
 [
     {
-        "title": "Atleta",
+        "title": "Atleti",
         "path": "athletes",
-        "icon": "user",
+        "icon": "users",
         "isMobileVisible": true,
         "roles": [
             "atleta",
@@ -25,17 +25,38 @@
                 "isMobileVisible": false
             },
             {
-                "title": "Metrics",
-                "path": "athlete-metrics",
-                "icon": "trend-up",
-                "isMobileVisible": false
-            },
-            {
                 "title": "Documenti",
                 "path": "athlete-documents",
                 "icon": "file-text",
                 "isMobileVisible": false
             }
+        ]
+    },
+    {
+        "id": "metrics",
+        "title": "Metrics",
+        "path": "athlete-metrics",
+        "icon": "trend-up",
+        "accent": "pink",
+        "isMobileVisible": true,
+        "roles": [
+            "allenatore",
+            "operatore",
+            "manager",
+            "admin"
+        ]
+    },
+    {
+        "id": "staff",
+        "title": "Staff",
+        "path": "staff",
+        "icon": "identification-badge",
+        "isMobileVisible": false,
+        "roles": [
+            "allenatore",
+            "operatore",
+            "manager",
+            "admin"
         ]
     },
     {
@@ -227,32 +248,26 @@
     },
     {
         "id": "ecommerce",
-        "title": "Store",
+        "title": "eCommerce",
         "path": "ecommerce",
         "icon": "shopping-cart",
-        "isMobileVisible": true,
-        "implemented": false,
+        "isMobileVisible": false,
         "roles": [
             "operatore",
+            "manager",
             "admin"
         ],
         "children": [
             {
-                "title": "Acquista",
-                "path": "ecommerce-store",
-                "icon": "storefront",
+                "title": "Articoli",
+                "path": "ecommerce-articles",
+                "icon": "tag",
                 "isMobileVisible": false
             },
             {
-                "title": "Magazzino",
-                "path": "ecommerce-inventory",
+                "title": "Ordini",
+                "path": "ecommerce-orders",
                 "icon": "package",
-                "isMobileVisible": false
-            },
-            {
-                "title": "Fornitori",
-                "path": "ecommerce-suppliers",
-                "icon": "truck",
                 "isMobileVisible": false
             }
         ]

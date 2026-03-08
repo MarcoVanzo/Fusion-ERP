@@ -6,7 +6,7 @@ def load_env():
                 k,v = line.strip().split('=', 1)
                 os.environ[k.strip()] = v.strip().strip("'\"")
 
-files_to_deploy = ['api/Modules/Social/SocialRepository.php', 'api/Modules/Social/SocialController.php']
+files_to_deploy = ['js/modules/ecommerce.js']
 
 load_env()
 ftp = ftplib.FTP_TLS(os.environ['FTP_HOST'])
