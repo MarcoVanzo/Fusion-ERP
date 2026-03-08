@@ -40,11 +40,19 @@ const Store = (() => {
         try {
             data = await response.json();
         } catch (e) {
-            throw new Error(`Errore di rete o server irraggiungibile (HTTP ${response.status})`);
+            // Network / parse error — use friendly message
+            const raw = new Error(`Errore di rete o server irraggiungibile (HTTP ${response.status})`);
+            throw new Error(Utils.friendlyError(raw));
         }
 
         if (!response.ok || !data.success) {
-            throw new Error(data.error || 'Errore sconosciuto durante la richiesta API');
+            // Domain errors (validation, business logic) are already human-readable — pass through.
+            // Infrastructure errors (5xx) get mapped to friendly messages.
+            const rawMsg = data.error || 'Errore sconosciuto durante la richiesta API';
+            const err = new Error(rawMsg);
+            throw response.status >= 500
+                ? new Error(Utils.friendlyError(err))
+                : err;
         }
 
         return data.data;

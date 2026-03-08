@@ -225,42 +225,63 @@ const Athletes = (() => {
     }
   }
 
-  // ─── SQUAD-LEVEL TAB: PAGAMENTI ──────────────────────────────────
+  // ─── SQUAD-LEVEL TAB: PAGAMENTI ──────────────────────────────────────────────
   async function _renderSquadPayments(container) {
     container.innerHTML = `<div style="display:flex;flex-direction:column;gap:8px;">${[1, 2, 3].map(() => '<div class="skeleton skeleton-text"></div>').join('')}</div>`;
     try {
-      const allPayments = (await Promise.all(
-        _state.map(a => Store.get('payments', 'athletes', { id: a.id }).catch(() => []))
-      )).flat();
-      const total = allPayments.reduce((s, p) => s + parseFloat(p.amount || 0), 0);
-      const paid = allPayments.filter(p => p.status === 'paid').reduce((s, p) => s + parseFloat(p.amount || 0), 0);
-      const overdue = allPayments.filter(p => p.status === 'overdue').reduce((s, p) => s + parseFloat(p.amount || 0), 0);
-      const pending = allPayments.filter(p => p.status === 'pending').reduce((s, p) => s + parseFloat(p.amount || 0), 0);
+      // ✔ Single aggregated API call — replaces the previous N parallel getPlan() calls
+      const teamParam = _currentTeam ? { team_id: _currentTeam } : {};
+      const { installments: allPayments, stats } = await Store.get('squadSummary', 'payments', teamParam);
+
+      // Filter chip for quick status filter
+      let _statusFilter = '';
+      const renderTable = (items) => {
+        const filtered = _statusFilter ? items.filter(p => (p.status || '').toUpperCase() === _statusFilter.toUpperCase()) : items;
+        if (filtered.length === 0) return Utils.emptyState('Nessun pagamento trovato', _statusFilter ? 'Nessun elemento corrisponde al filtro.' : 'Nessun pagamento registrato per questa squadra.');
+        return `
+          <div class="table-wrapper">
+            <table class="table">
+              <thead><tr><th>Atleta</th><th>Scadenza</th><th>Importo</th><th>Stato</th><th>Metodo</th></tr></thead>
+              <tbody>
+                ${filtered.map(p => `<tr>
+                  <td><strong>${Utils.escapeHtml(p.athlete_name || '\u2014')}</strong></td>
+                  <td>${Utils.formatDate(p.due_date)}</td>
+                  <td><strong>\u20ac ${Utils.formatNum(p.amount, 2)}</strong></td>
+                  <td>${p.status === 'PAID' ? '<span class="badge badge-success">Pagato</span>' : p.status === 'OVERDUE' ? '<span class="badge badge-danger">Scaduto</span>' : '<span class="badge badge-warning">In attesa</span>'}</td>
+                  <td>${Utils.escapeHtml(p.payment_method || '\u2014')}</td>
+                </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>`;
+      };
+
       container.innerHTML = `
         <p class="section-label">Riepilogo Pagamenti Squadra</p>
         <div class="grid-3" style="margin-bottom:var(--sp-3);">
-          <div class="stat-card"><span class="stat-label">Totale</span><span class="stat-value">€ ${Utils.formatNum(total, 2)}</span></div>
-          <div class="stat-card"><span class="stat-label">Incassato</span><span class="stat-value" style="color:var(--color-success)">€ ${Utils.formatNum(paid, 2)}</span></div>
-          <div class="stat-card"><span class="stat-label">Scaduto</span><span class="stat-value" style="color:var(--color-pink)">€ ${Utils.formatNum(overdue, 2)}</span></div>
+          <div class="stat-card"><span class="stat-label">Atteso</span><span class="stat-value">&euro; ${Utils.formatNum(stats.total_expected, 2)}</span></div>
+          <div class="stat-card"><span class="stat-label">Incassato</span><span class="stat-value" style="color:var(--color-success)">&euro; ${Utils.formatNum(stats.total_paid, 2)}</span></div>
+          <div class="stat-card"><span class="stat-label">Scaduto</span><span class="stat-value" style="color:var(--color-pink)">&euro; ${Utils.formatNum(stats.total_overdue, 2)}</span></div>
         </div>
-        ${allPayments.length > 0 ? `
-        <div class="table-wrapper">
-          <table class="table">
-            <thead><tr><th>Atleta</th><th>Scadenza</th><th>Importo</th><th>Stato</th><th>Metodo</th></tr></thead>
-            <tbody>
-              ${allPayments.slice(0, 50).map(p => `<tr>
-                <td>${Utils.escapeHtml(p.athlete_name || p.payer_name || '—')}</td>
-                <td>${Utils.formatDate(p.due_date)}</td>
-                <td><strong>€ ${Utils.formatNum(p.amount, 2)}</strong></td>
-                <td>${p.status === 'paid' ? '<span class="badge badge-success">Pagato</span>' : p.status === 'overdue' ? '<span class="badge badge-danger">Scaduto</span>' : '<span class="badge badge-warning">In attesa</span>'}</td>
-                <td>${Utils.escapeHtml(p.payment_method || '—')}</td>
-              </tr>`).join('')}
-            </tbody>
-          </table>
-        </div>` : Utils.emptyState('Nessun pagamento registrato')}
+        <div class="filter-bar" style="margin-bottom:var(--sp-3);" id="pay-status-filter">
+          <button class="filter-chip active" data-status="" type="button">Tutti (${allPayments.length})</button>
+          <button class="filter-chip" data-status="PAID" type="button">Pagati</button>
+          <button class="filter-chip" data-status="OVERDUE" type="button">Scaduti</button>
+          <button class="filter-chip" data-status="PENDING" type="button">In attesa</button>
+        </div>
+        <div id="pay-table-container">${renderTable(allPayments)}</div>
       `;
+
+      // Wire status filter chips
+      container.querySelectorAll('#pay-status-filter [data-status]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          _statusFilter = btn.dataset.status;
+          container.querySelectorAll('#pay-status-filter [data-status]').forEach(b => b.classList.toggle('active', b === btn));
+          document.getElementById('pay-table-container').innerHTML = renderTable(allPayments);
+        }, { signal: _ac.signal });
+      });
+
     } catch (err) {
-      container.innerHTML = Utils.emptyState('Errore caricamento pagamenti', err.message);
+      container.innerHTML = Utils.emptyState('Errore caricamento pagamenti', Utils.friendlyError(err));
     }
   }
 
@@ -338,11 +359,16 @@ const Athletes = (() => {
     `;
   }
 
-  // ─── ATHLETE DETAIL NAVIGATION ────────────────────────────────────
+  // ─── ATHLETE DETAIL NAVIGATION ──────────────────────────────────────────────────
+  /**
+   * Open the athlete's full profile directly (MT#2 — skip intermediate dashboard screen).
+   * The activity log dashboard is now accessible via a "Storico Attività" button
+   * inside the athlete hero header.
+   */
   function _openAthleteDetail(athleteId) {
     _selectedAthleteId = athleteId;
     sessionStorage.setItem('last_athlete_id', athleteId);
-    _renderAthleteDashboard(athleteId);
+    _renderAthleteDetail(athleteId, 'anagrafica');
   }
 
   function _closeAthleteDetail() {

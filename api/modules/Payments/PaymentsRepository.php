@@ -314,4 +314,78 @@ class PaymentsRepository
             'total_expected' => $paid + $overdue + $pending,
         ];
     }
+
+    // ─── SQUAD SUMMARY ────────────────────────────────────────────────────────
+
+    /**
+     * Get all installments for a squad in a single aggregated query.
+     * Replaces the N parallel getPlan() calls previously fired by the frontend.
+     *
+     * @param string      $tenantId  Tenant scope (mandatory — prevents cross-tenant leaks)
+     * @param string|null $teamId    Optional team filter (athletes.team_id)
+     * @return array{installments: array, stats: array}
+     */
+    public function getSquadSummary(string $tenantId, ?string $teamId = null): array
+    {
+        $teamFilter = $teamId ? 'AND a.team_id = :team_id' : '';
+
+        $sql = "
+            SELECT
+                i.id            AS installment_id,
+                i.due_date,
+                i.amount,
+                i.status,
+                i.paid_date,
+                i.payment_method,
+                pp.athlete_id,
+                pp.frequency,
+                pp.season,
+                a.full_name     AS athlete_name,
+                a.team_id,
+                t.name          AS team_name,
+                t.category      AS team_category
+            FROM installments i
+            JOIN payment_plans pp ON pp.id = i.plan_id
+            JOIN athletes a       ON a.id  = pp.athlete_id
+            LEFT JOIN teams t     ON t.id  = a.team_id
+            WHERE pp.tenant_id = :tid
+              AND pp.status    = 'active'
+              AND a.deleted_at IS NULL
+              {$teamFilter}
+            ORDER BY a.full_name ASC, i.due_date ASC
+        ";
+
+        $params = [':tid' => $tenantId];
+        if ($teamId) {
+            $params[':team_id'] = $teamId;
+        }
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        $installments = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        // Compute aggregate stats server-side so frontend gets plain numbers
+        $totalPaid = 0.0;
+        $totalOverdue = 0.0;
+        $totalPending = 0.0;
+
+        foreach ($installments as $row) {
+            $amount = (float)$row['amount'];
+            match (strtoupper($row['status'])) {
+                    'PAID' => $totalPaid += $amount,
+                    'OVERDUE' => $totalOverdue += $amount,
+                    default => $totalPending += $amount,
+                };
+        }
+
+        return [
+            'installments' => $installments,
+            'stats' => [
+                'total_paid' => round($totalPaid, 2),
+                'total_overdue' => round($totalOverdue, 2),
+                'total_pending' => round($totalPending, 2),
+                'total_expected' => round($totalPaid + $totalOverdue + $totalPending, 2),
+            ],
+        ];
+    }
 }

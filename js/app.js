@@ -278,6 +278,16 @@ const App = (() => {
                 console.error('[App] Failed to init global search:', err);
             }
 
+            // Initialize contextual help tooltips and first-run tour
+            try {
+                if (typeof Onboarding !== 'undefined') {
+                    Onboarding.initTooltips();
+                    Onboarding.startIfNew();
+                }
+            } catch (err) {
+                console.error('[App] Failed to init onboarding:', err);
+            }
+
             // Load and render navigation (resiliently)
             try {
                 await _renderNavigation(user);

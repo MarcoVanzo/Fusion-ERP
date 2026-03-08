@@ -4950,3 +4950,169 @@ h3 {
   border-radius: 50%;
   flex-shrink: 0;
 }
+
+/* ─── ONBOARDING TOUR ─────────────────────────────────────────────────────── */
+#tour-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  pointer-events: none;
+}
+
+#tour-spotlight-hole {
+  position: fixed;
+  transition: top 0.3s ease, left 0.3s ease, width 0.3s ease, height 0.3s ease, border-radius 0.3s ease;
+  pointer-events: none;
+  /* box-shadow creates the dimmed surrounding via outline */
+}
+
+.tour-card {
+  position: fixed;
+  z-index: 10002;
+  width: 320px;
+  background: rgba(12, 12, 16, 0.97);
+  backdrop-filter: var(--glass);
+  -webkit-backdrop-filter: var(--glass);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg), 0 0 40px rgba(230, 0, 126, 0.15);
+  padding: 20px;
+  animation: slideUp 0.22s ease;
+}
+
+.tour-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.tour-step-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.tour-skip {
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: color var(--transition-fast);
+}
+
+.tour-skip:hover {
+  color: var(--text-primary);
+}
+
+.tour-card-title {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 8px;
+}
+
+.tour-card-body {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  margin: 0 0 16px;
+}
+
+.tour-card-body kbd {
+  display: inline-block;
+  background: var(--bg-surface-hover);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 0.75rem;
+  font-family: var(--font-mono, monospace);
+  color: var(--accent-primary);
+}
+
+.tour-dots {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.tour-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--border-subtle);
+  transition: background var(--transition-fast), width var(--transition-fast);
+}
+
+.tour-dot.active {
+  background: var(--accent-primary);
+  width: 18px;
+  border-radius: 3px;
+}
+
+.tour-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* ─── CONTEXTUAL HELP TOOLTIPS ────────────────────────────────────────────── */
+.help-tooltip-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-subtle);
+  background: none;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+  cursor: pointer;
+  vertical-align: middle;
+  margin-left: 4px;
+  transition: border-color var(--transition-fast), color var(--transition-fast);
+}
+
+.help-tooltip-btn:hover {
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+
+.help-tooltip-popup {
+  position: absolute;
+  z-index: 9000;
+  max-width: 280px;
+  background: rgba(12, 12, 16, 0.97);
+  backdrop-filter: var(--glass);
+  -webkit-backdrop-filter: var(--glass);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  padding: 12px 14px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  animation: slideUp 0.15s ease;
+}
+
+.help-tooltip-popup p {
+  margin: 0;
+}
+
+/* ─── MT#5: MISSING TOKEN ALIASES ────────────────────────────────────────── */
+/* Badge muted variant */
+.badge-muted {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-muted);
+  border: 1px solid var(--border-subtle);
+}
