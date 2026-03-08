@@ -1,8 +1,8 @@
 <?php
-// Tmp api file to view data
-require_once __DIR__ . '/../vendor/autoload.php';
-$dotenv = Dotenv\Dotenv::createUnsafeImmutable(__DIR__ . '/..');
+require_once __DIR__ . '/vendor/autoload.php';
+$dotenv = Dotenv\Dotenv::createUnsafeImmutable(__DIR__);
 $dotenv->load();
+
 use FusionERP\Shared\Database;
 
 header('Content-Type: application/json');
@@ -22,8 +22,8 @@ try {
                     SUM(parent_phone     IS NOT NULL AND parent_phone <> '') AS with_parent_ph
                  FROM athletes
                  WHERE is_active = 1
-                   AND deleted_at IS NULL
-                   AND tenant_id = 1");
+                   AND deleted_at IS NULL");
+
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
     echo json_encode(['success' => true, 'data' => $row]);
 }

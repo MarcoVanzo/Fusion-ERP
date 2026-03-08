@@ -59,7 +59,7 @@ const Ecommerce = (() => {
         .ec-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
             border-radius: 16px; overflow: hidden; transition: transform .2s, box-shadow .2s; }
         .ec-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,0.35); }
-        .ec-card-img { width: 100%; height: 180px; object-fit: contain; padding: 12px; background: transparent; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5)) saturate(1.3) contrast(1.15); }
+        .ec-card-img { width: 100%; height: 180px; object-fit: contain; padding: 12px; background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.02) 70%, transparent 100%); filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5)) saturate(1.3) contrast(1.15); }
         .ec-card-img-placeholder { width: 100%; height: 180px; display: flex; align-items: center; justify-content: center;
             background: rgba(255,255,255,0.03); font-size: 48px; color: rgba(255,255,255,0.15); }
         .ec-card-body { padding: 14px 16px; }
@@ -243,15 +243,7 @@ const Ecommerce = (() => {
                 <span class="ec-header-badge" id="ec-badge">—</span>
             </div>
 
-            <!-- Sub-tabs -->
-            <div class="ec-tabs">
-                <button class="ec-tab ${_currentTab === 'articles' ? 'active' : ''}" id="ec-tab-articles" type="button">
-                    <i class="ph ph-tag"></i> Articoli
-                </button>
-                <button class="ec-tab ${_currentTab === 'orders' ? 'active' : ''}" id="ec-tab-orders" type="button">
-                    <i class="ph ph-package"></i> Ordini
-                </button>
-            </div>
+            <!-- Sub-tabs removed -->
 
             <!-- Content panels -->
             <div id="ec-panel-articles" style="${_currentTab === 'articles' ? '' : 'display:none;'}"></div>
@@ -262,8 +254,8 @@ const Ecommerce = (() => {
         // Tab switching
         const tabArt = document.getElementById('ec-tab-articles');
         const tabOrd = document.getElementById('ec-tab-orders');
-        if (tabArt) tabArt.addEventListener('click', () => _switchTab('articles'), { signal: _abortCtrl.signal });
-        if (tabOrd) tabOrd.addEventListener('click', () => _switchTab('orders'), { signal: _abortCtrl.signal });
+        if (tabArt) tabArt.addEventListener('click', () => Router.navigate('ecommerce-articles'), { signal: _abortCtrl.signal });
+        if (tabOrd) tabOrd.addEventListener('click', () => Router.navigate('ecommerce-orders'), { signal: _abortCtrl.signal });
 
         // Load initial panel
         if (_currentTab === 'articles') {
@@ -286,12 +278,6 @@ const Ecommerce = (() => {
         const panelOrd = document.getElementById('ec-panel-orders');
         if (panelArt) panelArt.style.display = isArt ? '' : 'none';
         if (panelOrd) panelOrd.style.display = isArt ? 'none' : '';
-
-        if (isArt) {
-            _loadArticlesPanel();
-        } else {
-            _loadOrdersPanel();
-        }
     }
 
     // ══════════════════════════════════════════════════════════════════════
@@ -939,7 +925,7 @@ const Ecommerce = (() => {
         async init() {
             _abortCtrl.abort();
             _abortCtrl = new AbortController();
-            const route = window.Router ? window.Router.getCurrentRoute() : 'ecommerce-articles';
+            const route = (typeof Router !== 'undefined') ? Router.getCurrentRoute() : 'ecommerce-articles';
             _currentTab = route === 'ecommerce-orders' ? 'orders' : 'articles';
             _lastOrdersFetch = null;
 
