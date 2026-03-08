@@ -59,7 +59,7 @@ const Ecommerce = (() => {
         .ec-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
             border-radius: 16px; overflow: hidden; transition: transform .2s, box-shadow .2s; }
         .ec-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,0.35); }
-        .ec-card-img { width: 100%; height: 180px; object-fit: cover; background: rgba(255,255,255,0.03); }
+        .ec-card-img { width: 100%; height: 180px; object-fit: contain; padding: 12px; background: transparent; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4)) saturate(1.2) contrast(1.1); }
         .ec-card-img-placeholder { width: 100%; height: 180px; display: flex; align-items: center; justify-content: center;
             background: rgba(255,255,255,0.03); font-size: 48px; color: rgba(255,255,255,0.15); }
         .ec-card-body { padding: 14px 16px; }
@@ -124,8 +124,8 @@ const Ecommerce = (() => {
             gap: 12px; max-height: 360px; overflow-y: auto; margin: 16px 0; padding-right: 4px; }
         .ec-product-preview-item { background: rgba(255,255,255,0.04); border-radius: 10px;
             padding: 10px; text-align: center; border: 1px solid rgba(255,255,255,0.07); }
-        .ec-product-preview-img { width: 100%; height: 100px; object-fit: cover; border-radius: 8px;
-            background: rgba(255,255,255,0.02); margin-bottom: 6px; }
+        .ec-product-preview-img { width: 100%; height: 100px; object-fit: contain; padding: 6px; border-radius: 8px;
+            background: transparent; margin-bottom: 6px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)) saturate(1.2) contrast(1.1); }
         .ec-product-preview-name { font-size: 12px; font-weight: 600; overflow: hidden;
             text-overflow: ellipsis; white-space: nowrap; }
         .ec-product-preview-price { font-size: 13px; color: #818cf8; font-weight: 700; }
@@ -175,6 +175,44 @@ const Ecommerce = (() => {
             .ec-header h1 { font-size: 1.4rem; }
         }
     `;
+
+    // ══════════════════════════════════════════════════════════════════════
+    // NANO BANANA OPTIMIZER (Image Enhancement)
+    // ══════════════════════════════════════════════════════════════════════
+    function _applyNanoBananaEffect(base64Src) {
+        return new Promise((resolve) => {
+            if (!base64Src || !base64Src.startsWith('data:image/')) return resolve(base64Src);
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.drawImage(img, 0, 0);
+
+                const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const data = imgData.data;
+                const tolerance = 240;
+
+                for (let i = 0; i < data.length; i += 4) {
+                    const r = data[i], g = data[i + 1], b = data[i + 2], a = data[i + 3];
+                    if (r > tolerance && g > tolerance && b > tolerance) {
+                        data[i + 3] = 0; // Rimuovi sfondo bianco
+                    } else if (a > 0) {
+                        // Aumenta contrasto del 15% per rendere più "viva"
+                        const factor = (259 * (15 + 255)) / (255 * (259 - 15));
+                        data[i] = Math.max(0, Math.min(255, factor * (r - 128) + 128));
+                        data[i + 1] = Math.max(0, Math.min(255, factor * (g - 128) + 128));
+                        data[i + 2] = Math.max(0, Math.min(255, factor * (b - 128) + 128));
+                    }
+                }
+                ctx.putImageData(imgData, 0, 0);
+                resolve(canvas.toDataURL('image/png'));
+            };
+            img.onerror = () => resolve(base64Src);
+            img.src = base64Src;
+        });
+    }
 
     // ══════════════════════════════════════════════════════════════════════
     // MAIN RENDER
@@ -460,6 +498,10 @@ const Ecommerce = (() => {
             saveBtn.disabled = true;
             saveBtn.textContent = 'Salvataggio...';
             try {
+                if (_currentBase64) {
+                    _currentBase64 = await _applyNanoBananaEffect(_currentBase64);
+                    _currentMime = 'image/png';
+                }
                 await EcommerceDB.saveArticolo({
                     id: isEdit ? articolo.id : undefined,
                     nome,
@@ -605,6 +647,7 @@ const Ecommerce = (() => {
             let mime = null;
             if (p.immagineUrl) {
                 b64 = await EcommerceDB.urlToBase64(p.immagineUrl);
+                if (b64) b64 = await _applyNanoBananaEffect(b64);
                 mime = b64 ? (b64.startsWith('data:image/png') ? 'image/png' : 'image/jpeg') : null;
             }
             downloaded++;
