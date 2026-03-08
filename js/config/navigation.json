@@ -39,6 +39,19 @@
         ]
     },
     {
+        "id": "staff",
+        "title": "Staff",
+        "path": "staff",
+        "icon": "identification-badge",
+        "isMobileVisible": false,
+        "roles": [
+            "allenatore",
+            "operatore",
+            "manager",
+            "admin"
+        ]
+    },
+    {
         "id": "results",
         "title": "Risultati",
         "path": "results",

@@ -23,7 +23,8 @@ class EcommerceController
 
     private static function cognitoApiKey(): string
     {
-        return (string)(getenv('COGNITO_API_KEY') ?: '');
+        // Prefer the dedicated eCommerce key; fall back to the generic OutSeason key
+        return (string)(getenv('ECOMMERCE_COGNITO_API_KEY') ?: getenv('COGNITO_API_KEY') ?: '');
     }
 
     private static function cognitoOrderFormId(): int
@@ -73,8 +74,151 @@ class EcommerceController
     }
 
     /* ──────────────────────────────────────────────────────────────────────────
-     * _parseShopHtml — extracts product data from WooCommerce-style HTML
+     * _parseShopHtml — custom parser for fusionteamvolley.it/fusion-shop/
+     *
+     * The shop is NOT WooCommerce. It uses a flat custom structure where:
+     *   <h2> = category name (WOMAN / MAN / UNISEX)
+     *   text node = product name
+     *   "XX,00 Euro" text = price line
+     *   <a>acquista</a> = closes a product block
      * ────────────────────────────────────────────────────────────────────────── */
+    private static function _parseShopHtml(string $html): array
+    {
+        $doc = new \DOMDocument('1.0', 'UTF-8');
+        libxml_use_internal_errors(true);
+        $doc->loadHTML('<?xml encoding="UTF-8">' . $html);
+        libxml_clear_errors();
+
+        $xpath = new \DOMXPath($doc);
+
+        // Find the main content container (try progressively broader selectors)
+        $containers = [
+            '//div[contains(@class,"entry-content")]',
+            '//div[contains(@class,"page-content")]',
+            '//div[contains(@class,"post-content")]',
+            '//article',
+            '//main',
+        ];
+
+        $container = null;
+        foreach ($containers as $query) {
+            $nodes = $xpath->query($query);
+            if ($nodes && $nodes->length > 0) {
+                $container = $nodes->item(0);
+                break;
+            }
+        }
+        if (!$container) {
+            $bodyNodes = $doc->getElementsByTagName('body');
+            $container = $bodyNodes->length > 0 ? $bodyNodes->item(0) : null;
+        }
+        if (!$container) {
+            return [];
+        }
+
+        $products    = [];
+        $currentCat  = '';
+        $pendingName = '';
+        $pendingImg  = '';
+
+        foreach (self::_walkNodes($container) as $node) {
+
+            $tag = strtolower($node->nodeName ?? '');
+
+            // h2 → new category
+            if ($node->nodeType === XML_ELEMENT_NODE && $tag === 'h2') {
+                $currentCat = trim($node->textContent ?? '');
+                continue;
+            }
+
+            // img → store as pending image for next product
+            if ($node->nodeType === XML_ELEMENT_NODE && $tag === 'img') {
+                /** @var \DOMElement $node */
+                $src = $node->getAttribute('data-src') ?: $node->getAttribute('src') ?: '';
+                if ($src && !str_contains($src, 'data:image') && !str_contains($src, '.svg')) {
+                    $pendingImg = $src;
+                }
+                continue;
+            }
+
+            // <a>acquista</a> → seal the current product
+            if ($node->nodeType === XML_ELEMENT_NODE && $tag === 'a'
+                && strtolower(trim($node->textContent ?? '')) === 'acquista'
+                && !empty($pendingName)
+            ) {
+                $price     = 0.0;
+                $cleanName = $pendingName;
+
+                // Extract price embedded in name string: "NOME\n30,00 Euro"
+                if (preg_match('/(.+?)\s*([\d.,]+)\s*Euro/si', $pendingName, $m)) {
+                    $cleanName = trim(preg_replace('/\s+/', ' ', $m[1]));
+                    $price     = self::_parsePrice($m[2] . ' Euro');
+                }
+
+                if (!empty($cleanName)) {
+                    $products[] = [
+                        'nome'        => $cleanName,
+                        'prezzo'      => $price,
+                        'immagineUrl' => $pendingImg,
+                        'descrizione' => '',
+                        'categoria'   => $currentCat,
+                        'productUrl'  => '',
+                    ];
+                }
+                $pendingName = '';
+                $pendingImg  = '';
+                continue;
+            }
+
+            // Text nodes → accumulate name/price
+            if ($node->nodeType === XML_TEXT_NODE) {
+                $text = trim($node->nodeValue ?? '');
+                if (empty($text) || strlen($text) < 3) continue;
+
+                // Skip footer/legal lines
+                $lower = strtolower($text);
+                if (str_contains($lower, '©') || str_contains($lower, 'fusion team')
+                    || str_contains($lower, 'privacy') || str_contains($lower, 'cookie')
+                    || str_contains($lower, 'p.i.') || preg_match('/^\d+$/', $text)) {
+                    continue;
+                }
+
+                if (str_contains($text, 'Euro') || str_contains($text, 'euro')) {
+                    $pendingName .= "\n" . $text;
+                } else {
+                    $pendingName = $text;
+                }
+                continue;
+            }
+        }
+
+        // Deduplicate (the shop has identical products listed per gender section)
+        $seen   = [];
+        $unique = [];
+        foreach ($products as $p) {
+            $key = strtolower($p['nome']);
+            if (!isset($seen[$key])) {
+                $seen[$key] = true;
+                $unique[]   = $p;
+            }
+        }
+
+        return $unique;
+    }
+
+    /**
+     * Generator: yields all descendant nodes in document order.
+     * @return \Generator<\DOMNode>
+     */
+    private static function _walkNodes(\DOMNode $parent): \Generator
+    {
+        foreach ($parent->childNodes as $child) {
+            yield $child;
+            if ($child->hasChildNodes()) {
+                yield from self::_walkNodes($child);
+            }
+        }
+    }
     private static function _parseShopHtml(string $html): array
     {
         $products = [];
