@@ -100,7 +100,7 @@ const Results = (() => {
               if (
                 (c.forEach((e, t) => {
                   const n = r[e];
-                  d += `\n<div ${e === lastPlayedRound ? 'id="res-last-played-round"' : ''} style="font-size:15px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.9);margin-top:${0 === t ? \"24px\" : \"44px\"};margin-bottom:18px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:12px;text-shadow:0 0 10px rgba(255,255,255,0.1);"><i class="ph ph-calendar-blank" style="color:var(--color-pink);font-size:18px;filter:drop-shadow(0 0 10px rgba(255,0,255,0.4));"></i>\n  ${"Altre" === e ? "Partite senza giornata" : `Giornata ${e}`}\n</div>\n<div class="res-grid">${n.map(i).join("")}</div>`;
+                  d += `\n<div ${e === lastPlayedRound ? 'id="res-last-played-round"' : ''} style="font-size:15px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.9);margin-top:${0 === t ? "24px" : "44px"};margin-bottom:18px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:12px;text-shadow:0 0 10px rgba(255,255,255,0.1);"><i class="ph ph-calendar-blank" style="color:var(--color-pink);font-size:18px;filter:drop-shadow(0 0 10px rgba(255,0,255,0.4));"></i>\n  ${"Altre" === e ? "Partite senza giornata" : `Giornata ${e}`}\n</div>\n<div class="res-grid">${n.map(i).join("")}</div>`;
                 }),
                 o)
               ) {

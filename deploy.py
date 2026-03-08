@@ -165,7 +165,7 @@ def deploy_files_via_ftp():
         ftp.cwd('/')
         ensure_remote_dir(ftp, base_remote_dir, created_dirs)
         
-        ignore_dirs = ['.git', 'node_modules', 'tests', '__pycache__', '.pytest_cache', '.gemini', '.venv']
+        ignore_dirs = ['.git', 'node_modules', 'tests', '__pycache__', '.pytest_cache', '.gemini', '.venv', 'uploads']
         ignore_extensions = ['.zip', '.log']
         ignore_files = ['deploy.py', 'deploy.mp', 'deploy_ftp.sh', CACHE_FILE]
 
