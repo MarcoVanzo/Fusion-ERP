@@ -8,7 +8,7 @@
     <meta name="description"
         content="Fusion ERP — Sistema di gestione sportiva per atleti, trasferte e amministrazione.">
     <meta name="robots" content="noindex, nofollow">
-    <meta name="app-version" content="1772928357">
+    <meta name="app-version" content="1772928965">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Fusion ERP</title>
@@ -24,10 +24,13 @@
         rel="stylesheet">
     <!-- Phosphor Icons: defer evita il blocco del render -->
     <script src="https://unpkg.com/@phosphor-icons/web" defer></script>
-    <link rel="stylesheet" href="css/style_v2.css?v=1772928357">
+    <link rel="stylesheet" href="css/style_v2.css?v=1772928965">
 </head>
 
 <body>
+
+    <!-- ─── SKIP NAVIGATION (LT#3 WCAG 2.4.1) ──────────────────────────────── -->
+    <a href="#app" class="skip-nav">Vai al contenuto principale</a>
 
     <!-- Splash Screen removed as requested -->
 
@@ -194,6 +197,28 @@
             </main>
         </div>
 
+        <!-- ─── BOTTOM NAV (mobile <768px) (LT#2) ──────────────────────────── -->
+        <nav class="bottom-nav" id="bottom-nav" aria-label="Navigazione principale mobile" role="navigation">
+            <div class="bottom-nav-inner">
+                <button class="bottom-nav-item" data-route="dashboard" type="button" aria-label="Dashboard">
+                    <i class="ph ph-squares-four" aria-hidden="true"></i>
+                    <span class="bottom-nav-label">Home</span>
+                </button>
+                <button class="bottom-nav-item" data-route="athletes" type="button" aria-label="Atleti">
+                    <i class="ph ph-users" aria-hidden="true"></i>
+                    <span class="bottom-nav-label">Atleti</span>
+                </button>
+                <button class="bottom-nav-item" data-route="tasks" type="button" aria-label="Scadenze">
+                    <i class="ph ph-calendar-check" aria-hidden="true"></i>
+                    <span class="bottom-nav-label">Scadenze</span>
+                </button>
+                <button class="bottom-nav-item" data-route="profile" type="button" aria-label="Profilo">
+                    <i class="ph ph-user-circle" aria-hidden="true"></i>
+                    <span class="bottom-nav-label">Profilo</span>
+                </button>
+            </div>
+        </nav>
+
         <div id="user-dropdown" class="dropdown-menu hidden">
             <button class="dropdown-item" id="profile-btn" type="button">
                 <i class="ph ph-user"></i> Il mio profilo
@@ -217,11 +242,11 @@
     <!-- ─── SCRIPTS ──────────────────────────────────────────────────────────── -->
     <!-- ─── CONFIG ───────────────────────────────────────────────────────────── -->
     <script>window.GOOGLE_MAPS_API_KEY = 'AIzaSyBhPUVEj5X5jZ2zsG1pzDys5QiYHbtN6oI';</script>
-    <script src="js/core/utils.js?v=1772928357"></script>
-    <script src="js/core/store.js?v=1772928357"></script>
-    <script src="js/core/router.js?v=1772928357"></script>
-    <script src="js/core/onboarding.js?v=1772928357"></script>
-    <script src="js/app.js?v=1772928357"></script>
+    <script src="js/core/utils.js?v=1772928965"></script>
+    <script src="js/core/store.js?v=1772928965"></script>
+    <script src="js/core/router.js?v=1772928965"></script>
+    <script src="js/core/onboarding.js?v=1772928965"></script>
+    <script src="js/app.js?v=1772928965"></script>
 
 </body>
 

@@ -288,6 +288,13 @@ const App = (() => {
                 console.error('[App] Failed to init onboarding:', err);
             }
 
+            // Initialize mobile bottom navigation (LT#2)
+            try {
+                _initBottomNav();
+            } catch (err) {
+                console.error('[App] Failed to init bottom nav:', err);
+            }
+
             // Load and render navigation (resiliently)
             try {
                 await _renderNavigation(user);
@@ -757,6 +764,56 @@ const App = (() => {
                 btn.disabled = false; btn.textContent = 'SALVA NUOVA PASSWORD';
             }
         }, { once: true });
+    }
+    // ─── LT#2: Mobile Bottom Navigation ────────────────────────────────────────
+    /**
+     * Wire the mobile bottom nav (visible at <768px).
+     * Syncs active state with Router on every route change by observing
+     * the #page-title element (updated by each module on init).
+     */
+    function _initBottomNav() {
+        const nav = document.getElementById('bottom-nav');
+        if (!nav) return;
+
+        const items = nav.querySelectorAll('[data-route]');
+
+        function _setActive(route) {
+            items.forEach(btn => {
+                const matches = btn.dataset.route === route;
+                btn.classList.toggle('active', matches);
+                btn.setAttribute('aria-current', matches ? 'page' : 'false');
+            });
+        }
+
+        // Wire click handlers
+        items.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const route = btn.dataset.route;
+                if (route === 'profile') {
+                    // Profile in the app opens the user dropdown
+                    document.getElementById('user-menu-btn')?.click();
+                    return;
+                }
+                Router.navigate(route);
+                _setActive(route);
+            });
+        });
+
+        // Observe route changes by watching Router's current route
+        // We piggyback on the existing Router.navigate() side-effect that
+        // updates #page-title to detect route changes without patching Router.
+        const titleEl = document.getElementById('page-title');
+        if (titleEl) {
+            const _routeObserver = new MutationObserver(() => {
+                const current = Router.current?.() ?? '';
+                _setActive(current);
+            });
+            _routeObserver.observe(titleEl, { childList: true, characterData: true, subtree: true });
+        }
+
+        // Set initial active state
+        const initialRoute = Router.current?.() ?? 'dashboard';
+        _setActive(initialRoute);
     }
 
     function _initNotifications() {

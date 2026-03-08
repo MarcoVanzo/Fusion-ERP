@@ -5116,3 +5116,144 @@ h3 {
   color: var(--text-muted);
   border: 1px solid var(--border-subtle);
 }
+
+/* ─── LT#3: SKIP NAVIGATION (WCAG 2.4.1 Bypass Blocks) ──────────────────── */
+.skip-nav {
+  position: absolute;
+  top: -100%;
+  left: 16px;
+  z-index: 99999;
+  padding: 10px 20px;
+  background: var(--accent-primary);
+  color: #000;
+  font-weight: 700;
+  font-size: 0.875rem;
+  border-radius: 0 0 var(--radius) var(--radius);
+  text-decoration: none;
+  transition: top 0.15s ease;
+}
+
+.skip-nav:focus {
+  top: 0;
+  outline: 3px solid #fff;
+  outline-offset: 2px;
+}
+
+/* ─── LT#3: EXTEND FOCUS VISIBLE TO FORM ELEMENTS (WCAG 2.4.7) ──────────── */
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+/* ─── LT#2: BOTTOM NAV ACTIVE STATE ─────────────────────────────────────── */
+.bottom-nav-item[aria-current="page"],
+.bottom-nav-item.active {
+  color: var(--accent-primary);
+}
+
+.bottom-nav-item[aria-current="page"] i,
+.bottom-nav-item.active i {
+  color: var(--accent-primary);
+}
+
+/* ─── LT#2: MOBILE TOUCH TARGETS & UX IMPROVEMENTS ──────────────────────── */
+@media (max-width: 768px) {
+
+  /* WCAG 2.5.5: min 44×44px touch targets */
+  .btn,
+  .filter-chip,
+  .bottom-nav-item {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Horizontal-scroll filter-bar without overflow breaking layout */
+  .filter-bar {
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    flex-wrap: nowrap;
+    padding-bottom: 4px;
+  }
+
+  .filter-bar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Horizontally scrollable tables */
+  .table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* At 480–768px: 2-column grid for athlete cards (not 1-column) */
+  @media (min-width: 481px) {
+
+    .grid-2,
+    .grid-3 {
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--sp-2);
+    }
+  }
+
+  /* Topbar: hide page title text on mobile, keep search + icons */
+  .page-title-box {
+    display: none;
+  }
+}
+
+/* ─── LT#1: DESIGN SYSTEM UTILITY CLASSES ────────────────────────────────── */
+/* Replaces the most-abused inline styles across module JS templates */
+.text-muted {
+  color: var(--text-muted);
+}
+
+.text-secondary {
+  color: var(--text-secondary);
+}
+
+.text-primary {
+  color: var(--text-primary);
+}
+
+.text-success {
+  color: var(--color-success);
+}
+
+.text-danger {
+  color: var(--color-pink);
+}
+
+.text-warning {
+  color: var(--color-warning);
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+}
+
+.section-gap {
+  margin-bottom: var(--sp-3);
+}
+
+.section-gap-sm {
+  margin-bottom: var(--sp-2);
+}
+
+.w-full {
+  width: 100%;
+}

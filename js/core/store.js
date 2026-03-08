@@ -21,6 +21,60 @@ const Store = (() => {
     const getApiUrl = (module, action) =>
         `${_baseUrl}api/router.php?module=${encodeURIComponent(module)}&action=${encodeURIComponent(action)}`;
 
+    // ─── CLIENT-SIDE TTL CACHE (LT#4) ────────────────────────────────────────
+    // Session-scoped (not persisted) — avoids stale data across logins.
+    // Keys are `action/module?param=value` strings.
+    const _cache = new Map();
+
+    /** TTL in milliseconds per action/module key. Falls back to _TTL.default. */
+    const _TTL = {
+        'list/athletes': 5 * 60_000,   // 5 min
+        'teams/athletes': 10 * 60_000,  // 10 min
+        'list/tasks': 2 * 60_000,   // 2 min
+        'list/transport': 2 * 60_000,
+        'squadSummary/payments': 2 * 60_000,
+        'dashboard/payments': 1 * 60_000,
+        'overdueList/payments': 1 * 60_000,
+        'dashboard/dashboard': 1 * 60_000,
+        'list/vehicles': 5 * 60_000,
+        'list/suppliers': 5 * 60_000,
+        'list/teams': 10 * 60_000,
+        default: 60_000,                      // 1 min fallback
+    };
+
+    function _cacheKey(action, module, params) {
+        const qs = Object.keys(params).length
+            ? '?' + new URLSearchParams(params).toString()
+            : '';
+        return `${action}/${module}${qs}`;
+    }
+
+    function _cacheGet(key) {
+        const entry = _cache.get(key);
+        if (!entry) return null;
+        if (Date.now() > entry.expiresAt) { _cache.delete(key); return null; }
+        return entry.data;
+    }
+
+    function _cacheSet(key, data, action, module) {
+        const ttl = _TTL[`${action}/${module}`] ?? _TTL.default;
+        _cache.set(key, { data, expiresAt: Date.now() + ttl });
+    }
+
+    /**
+     * Bust all cache entries whose key starts with the given prefix.
+     * Call this with `action/module` from mutation handlers after writes.
+     * Example: Store.invalidate('list/athletes') after saving an athlete.
+     */
+    function invalidate(prefix) {
+        for (const key of _cache.keys()) {
+            if (key.startsWith(prefix)) _cache.delete(key);
+        }
+    }
+
+    /** Clear the entire cache — call on logout. */
+    function clearCache() { _cache.clear(); }
+
     /**
      * Helper per gestire la risposta fetch.
      * Gestisce i 401 (Unauthorized) in modo globale ricaricando la pagina.
@@ -80,8 +134,14 @@ const Store = (() => {
         }
     }
 
-    // Convenience GET wrapper
+    // Convenience GET wrapper — reads from TTL cache before hitting the network.
     async function get(action, module, params = {}) {
+        const cacheKey = _cacheKey(action, module, params);
+        const cached = _cacheGet(cacheKey);
+        if (cached !== null) {
+            return cached;
+        }
+
         let url = getApiUrl(module, action);
 
         // Append optional params to URL string
@@ -101,15 +161,18 @@ const Store = (() => {
 
         try {
             const response = await fetch(url, options);
-            return await _handleResponse(response);
+            const data = await _handleResponse(response);
+            _cacheSet(cacheKey, data, action, module);
+            return data;
         } catch (error) {
             console.error(`Store.get Error [${module}/${action}]:`, error);
             throw error;
         }
     }
 
-    return { api, get };
+    return { api, get, invalidate, clearCache };
 })();
+
 
 // ─── UI Helpers ────────────────────────────────────────────────────────────
 const UI = (() => {
@@ -161,12 +224,16 @@ const UI = (() => {
     /**
      * @param {Object} props
      * @param {string} props.title - Il titolo della modale. Verrà eseguito in escape sicuro.
-     * @param {string|Element} props.body - [ATTENZIONE XSS] Il corpo in HTML o Elemento DOM. Se si passa stringa HTML, DEVE ESSERE PREVENTIVAMENTE SANIFICATO (es. Utils.escapeHtml) SE CONTIENE DATI UTENTE.
-     * @param {string|Element} [props.footer=''] - [ATTENZIONE XSS] Il footer in HTML o Elemento DOM. Se stringa, DEVE ESSERE PREVENTIVAMENTE SANIFICATO.
+     * @param {string|Element} props.body - [ATTENZIONE XSS] Il corpo in HTML o Elemento DOM.
+     * @param {string|Element} [props.footer=''] - [ATTENZIONE XSS] Il footer in HTML o Elemento DOM.
+     * @param {Function} [props.onClose] - Callback chiamato alla chiusura.
      */
     function modal({ title, body, footer = '', onClose }) {
         const container = document.getElementById('modal-container');
         if (!container) return null;
+
+        // LT#3: remember the element that triggered the modal to restore focus on close
+        const _trigger = document.activeElement;
 
         container.innerHTML = `
       <div class="modal-overlay" id="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
@@ -202,19 +269,51 @@ const UI = (() => {
         const overlay = document.getElementById('modal-overlay');
         const closeBtn = document.getElementById('modal-close-btn');
 
-        const handler = (e) => {
-            if (e.key === 'Escape') close();
+        // LT#3: hide sidebar and topbar from screen readers while modal is open
+        const _ariaHideTargets = ['#sidebar', '#topbar'].map(s => document.querySelector(s)).filter(Boolean);
+        _ariaHideTargets.forEach(el => el.setAttribute('aria-hidden', 'true'));
+
+        // LT#3: Focus Trap — collect all focusable elements inside the modal
+        const FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
+        const _getFocusable = () => Array.from(overlay.querySelectorAll(FOCUSABLE));
+
+        const _trapFocus = (e) => {
+            if (e.key !== 'Tab') return;
+            const focusable = _getFocusable();
+            if (!focusable.length) { e.preventDefault(); return; }
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            if (e.shiftKey) {
+                if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+            } else {
+                if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+            }
         };
 
+        const _escHandler = (e) => { if (e.key === 'Escape') close(); };
+
         const close = () => {
-            document.removeEventListener('keydown', handler);
+            document.removeEventListener('keydown', _trapFocus);
+            document.removeEventListener('keydown', _escHandler);
             container.innerHTML = '';
+            // Restore aria-hidden and focus
+            _ariaHideTargets.forEach(el => el.removeAttribute('aria-hidden'));
+            if (_trigger && typeof _trigger.focus === 'function') {
+                try { _trigger.focus(); } catch (_) { }
+            }
             if (onClose) onClose();
         };
 
         closeBtn.addEventListener('click', close);
         overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
-        document.addEventListener('keydown', handler);
+        document.addEventListener('keydown', _trapFocus);
+        document.addEventListener('keydown', _escHandler);
+
+        // LT#3: focus first focusable element in modal on open
+        requestAnimationFrame(() => {
+            const focusable = _getFocusable();
+            if (focusable.length) focusable[0].focus();
+        });
 
         return { close };
     }
