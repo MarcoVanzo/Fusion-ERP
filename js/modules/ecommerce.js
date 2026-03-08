@@ -199,7 +199,7 @@ const Ecommerce = (() => {
             background: rgba(239,68,68,0.12); color: #ef4444; }
         .ec-badge-consegnato { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px;
             border-radius: 8px; font-size: 12px; font-weight: 600;
-            background: rgba(16,185,129,0.12); color: #10b981; }
+            background: rgba(59,130,246,0.12); color: #3b82f6; }
         .ec-badge-pending { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px;
             border-radius: 8px; font-size: 12px; font-weight: 600;
             background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.5); }
