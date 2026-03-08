@@ -366,6 +366,72 @@ class ResultsController
     }
 
     /**
+     * GET /api?module=results&action=recentResults&limit=10
+     *
+     * PERF: Returns the last N played matches across ALL active championships
+     * in a SINGLE SQL query. Replaces the N+1 pattern in dashboard.js
+     * (getCampionati → N×getResults) with a single HTTP request.
+     */
+    public function recentResults(): void
+    {
+        Auth::requireRead('results');
+
+        $pdo = Database::getInstance();
+        $tenantId = TenantContext::id();
+        $limit = max(1, min(50, (int)(filter_input(INPUT_GET, 'limit', FILTER_SANITIZE_NUMBER_INT) ?? 10)));
+
+        try {
+            $stmt = $pdo->prepare("
+                SELECT
+                    m.id, m.home_team AS home, m.away_team AS away,
+                    m.home_score AS sets_home, m.away_score AS sets_away,
+                    CONCAT(COALESCE(m.home_score,'?'),' - ',COALESCE(m.away_score,'?')) AS score,
+                    DATE_FORMAT(m.match_date, '%d/%m/%Y') AS date,
+                    DATE_FORMAT(m.match_date, '%H:%i')    AS time,
+                    m.match_date,
+                    m.status,
+                    c.label AS championship_label,
+                    c.id    AS championship_id
+                FROM federation_matches m
+                JOIN federation_championships c
+                    ON m.championship_id = c.id
+                   AND c.tenant_id = :tid
+                   AND c.is_active  = 1
+                WHERE m.status = 'played'
+                  AND m.home_score IS NOT NULL
+                  AND m.away_score IS NOT NULL
+                ORDER BY m.match_date DESC
+                LIMIT :lim
+            ");
+            $stmt->bindValue(':tid', $tenantId);
+            $stmt->bindValue(':lim', $limit, PDO::PARAM_INT);
+            $stmt->execute();
+            $matches = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Mark "our team" matches
+            foreach ($matches as &$m) {
+                $m['is_our_team'] = $this->_isOurTeam($m['home'], $m['away']);
+            }
+
+            Response::success([
+                'matches' => $matches,
+                'total' => count($matches),
+                'last_updated' => date('c'),
+                'source' => 'db',
+            ]);
+        }
+        catch (\PDOException $e) {
+            $sqlState = $e->errorInfo[0] ?? (string)$e->getCode();
+            if ($sqlState === '42S02' || str_contains($e->getMessage(), "doesn't exist")) {
+                Response::success(['matches' => [], 'total' => 0, 'source' => 'db']);
+                return;
+            }
+            error_log('[Results] recentResults error: ' . $e->getMessage());
+            Response::error('Errore database', 500);
+        }
+    }
+
+    /**
      * GET /api?module=results&action=sync&id=XYZ
      */
     public function sync(): void

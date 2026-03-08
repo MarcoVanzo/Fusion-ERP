@@ -81,15 +81,24 @@ catch (\Throwable $e) {
 }
 
 /**
- * Dispatch speciale per il webhook WhatsApp.
- * Non richiede Auth (Meta chiama dall'esterno con firma HMAC).
+ * Dispatch WhatsApp:
+ *   - verify / receive → WebhookController (pubblico, no Auth)
+ *   - tutto il resto   → WhatsAppController (autenticato)
  */
 function dispatchWebhook(string $action): void
 {
-    require_once __DIR__ . '/Modules/WhatsApp/WhatsAppWebhookController.php';
-    $controller = new \FusionERP\Modules\WhatsApp\WhatsAppWebhookController();
+    $publicActions = ['verify', 'receive'];
+
+    if (in_array($action, $publicActions, true)) {
+        require_once __DIR__ . '/Modules/WhatsApp/WhatsAppWebhookController.php';
+        $controller = new \FusionERP\Modules\WhatsApp\WhatsAppWebhookController();
+    } else {
+        require_once __DIR__ . '/Modules/WhatsApp/WhatsAppController.php';
+        $controller = new \FusionERP\Modules\WhatsApp\WhatsAppController();
+    }
+
     if (!method_exists($controller, $action)) {
-        \FusionERP\Shared\Response::error("Azione webhook '{$action}' non trovata", 404);
+        \FusionERP\Shared\Response::error("Azione WhatsApp '{$action}' non trovata", 404);
     }
     $controller->$action();
 }

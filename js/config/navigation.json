@@ -66,16 +66,29 @@
         ]
     },
     {
-        "id": "chat",
-        "title": "Chat",
-        "path": "team-chat",
-        "icon": "chat-circle",
+        "id": "whatsapp",
+        "title": "WhatsApp",
+        "path": "whatsapp-inbox",
+        "icon": "whatsapp-logo",
         "isMobileVisible": true,
         "roles": [
-            "allenatore",
             "operatore",
             "manager",
             "admin"
+        ],
+        "children": [
+            {
+                "title": "Inbox",
+                "path": "whatsapp-inbox",
+                "icon": "chat-circle-dots",
+                "isMobileVisible": false
+            },
+            {
+                "title": "Contatti",
+                "path": "whatsapp-contacts",
+                "icon": "address-book",
+                "isMobileVisible": false
+            }
         ]
     },
     {
