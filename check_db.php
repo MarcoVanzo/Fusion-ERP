@@ -16,4 +16,11 @@ try {
                     COUNT(*)                                                AS total_athletes,
                 SUM(role        
     IS NOT NULL AND role <> '')      AS with_role,
- 
+    $stmt = $db->query("SELECT tenant_id, COUNT(*) AS count FROM athletes WHERE deleted_at IS NULL GROUP BY tenant_id");
+
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    echo json_encode(['success' => true, 'data' => $rows]);
+}
+catch (Throwable $e) {
+    echo "Error: " . $e->getMessage();
+}
