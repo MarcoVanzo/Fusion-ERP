@@ -171,7 +171,7 @@ const Results = (() => {
               .map((e, t) => {
                 const n = e.position ?? t + 1,
                   s = e.is_our_team;
-                return `\n      <tr class="${s ? "our-row" : ""}">\n        <td class="center">${n <= 3 ? `<span class="pos-medal">${r[n - 1]}</span>` : `<span class="res-pos">${n}</span>`}</td>\n        <td>\n          <div class="res-team-cell">\n            ${s ? '<div class="res-team-dot"></div>' : ""}\n            <span style="${s ? "color:var(--color-pink);font-weight:700;" : ""}">${Utils.escapeHtml(e.team || "—")}</span>\n          </div>\n        </td>\n        <td class="center">${e.played ?? "—"}</td>\n        <td class="center" style="color:#4caf50;">${e.won ?? "—"}</td>\n        <td class="center" style="color:#ef5350;">${e.lost ?? "—"}</td>\n        <td class="center"><strong style="font-size:15px;">${e.points ?? "—"}</strong></td>\n      </tr>`;
+                return `\n      <tr class="${s ? "our-row" : ""}">\n        <td class="center">${n <= 3 ? `<span class="pos-medal">${r[n - 1]}</span>` : `<span class="res-pos">${n}</span>`}</td>\n        <td>\n          <div class="res-team-cell">\n            ${e.logo ? `<img class="res-team-logo" src="${Utils.escapeHtml(e.logo)}" alt="" onerror="this.style.display='none'">` : ""}\n            ${s ? '<div class="res-team-dot"></div>' : ""}\n            <span style="${s ? "color:var(--color-pink);font-weight:700;" : ""}">${Utils.escapeHtml(e.team || "—")}</span>\n          </div>\n        </td>\n        <td class="center">${e.played ?? "—"}</td>\n        <td class="center" style="color:#4caf50;">${e.won ?? "—"}</td>\n        <td class="center" style="color:#ef5350;">${e.lost ?? "—"}</td>\n        <td class="center"><strong style="font-size:15px;">${e.points ?? "—"}</strong></td>\n      </tr>`;
               })
               .join("")}\n    </tbody>\n  </table>\n</div>`;
             if (o) {
@@ -231,7 +231,9 @@ const Results = (() => {
         n && e.score
           ? `<div class="res-score ${a.home}">${e.sets_home ?? ""}</div><div class="res-time-label">-</div><div class="res-score ${a.away}">${e.sets_away ?? ""}</div>`
           : '<div class="res-score vs">vs</div>';
-    return `\n<div class="res-card${t ? " our-team" : ""}">\n  <div class="res-card-top">\n    <span>${Utils.escapeHtml(r)}</span>\n    <span>${s}${o}</span>\n  </div>\n  <div class="res-teams">\n    <div class="res-team"><div class="${i}">${Utils.escapeHtml(e.home || "Casa")}</div></div>\n    <div class="res-score-block">${c}</div>\n    <div class="res-team away"><div class="${l}">${Utils.escapeHtml(e.away || "Ospite")}</div></div>\n  </div>\n</div>`;
+    const hLogo = e.home_logo ? `<img class="res-team-logo" src="${Utils.escapeHtml(e.home_logo)}" alt="" onerror="this.style.display='none'">` : "",
+      aLogo = e.away_logo ? `<img class="res-team-logo" src="${Utils.escapeHtml(e.away_logo)}" alt="" onerror="this.style.display='none'">` : "";
+    return `\n<div class="res-card${t ? " our-team" : ""}">\n  <div class="res-card-top">\n    <span>${Utils.escapeHtml(r)}</span>\n    <span>${s}${o}</span>\n  </div>\n  <div class="res-teams">\n    <div class="res-team">${hLogo}<div class="${i}">${Utils.escapeHtml(e.home || "Casa")}</div></div>\n    <div class="res-score-block">${c}</div>\n    <div class="res-team away"><div class="${l}">${Utils.escapeHtml(e.away || "Ospite")}</div>${aLogo}</div>\n  </div>\n</div>`;
   }
   function l(e, t) {
     const n = document.getElementById("res-content");
@@ -327,6 +329,8 @@ const Results = (() => {
   .res-table tr:hover .pos-medal { transform:translateY(-2px) scale(1.15); }
   .res-team-cell { display:flex; align-items:center; gap:12px; }
   .res-team-dot { width:10px; height:10px; border-radius:50%; background:var(--color-pink); flex-shrink:0; box-shadow:0 0 12px var(--color-pink); }
+  .res-team-logo { width:28px; height:28px; border-radius:50%; object-fit:contain; flex-shrink:0; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.12); box-shadow:0 2px 8px rgba(0,0,0,0.3); }
+  .res-card .res-team-logo { width:32px; height:32px; }
   .res-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:100px 20px; color:var(--color-text-muted); gap:20px; text-align:center; background:rgba(18,18,20,0.5); border-radius:24px; border:2px dashed rgba(255,255,255,0.06); margin-top:24px; transition:all 0.3s; }
   .res-empty:hover { border-color:rgba(255,255,255,0.15); background:rgba(18,18,20,0.7); }
   .res-empty i { font-size:72px; opacity:0.3; background:linear-gradient(135deg, rgba(255,255,255,0.6), rgba(255,255,255,0.1)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; filter:drop-shadow(0 10px 20px rgba(0,0,0,0.3)); }

@@ -615,12 +615,29 @@ class SocialRepository
     // ─── HTTP UTILITY ─────────────────────────────────────────────────────────
 
     /**
+     * Write a debug message to the server error log.
+     */
+    public function logDebug(string $message): void
+    {
+        try {
+            $this->db->exec("CREATE TABLE IF NOT EXISTS meta_logs (id INT AUTO_INCREMENT PRIMARY KEY, message TEXT NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
+            $stmt = $this->db->prepare("INSERT INTO meta_logs (message) VALUES (:m)");
+            $stmt->execute([':m' => $message]);
+        }
+        catch (\Throwable $e) {
+        }
+    }
+
+    /**
      * Make a GET request to the Meta Graph API.
      *
      * @throws \RuntimeException on HTTP error or JSON decode failure.
      */
     private function graphGet(string $url): array
     {
+        $maskedUrl = preg_replace('/access_token=[^&]+/', 'access_token=***', $url);
+        $this->logDebug("GRAPH GET: {$maskedUrl}");
+
         $ch = curl_init($url);
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
@@ -635,21 +652,25 @@ class SocialRepository
         curl_close($ch);
 
         if ($curlErr) {
+            $this->logDebug("CURL ERROR: {$curlErr}");
             throw new \RuntimeException('cURL error: ' . $curlErr);
         }
 
         $decoded = json_decode((string)$body, true);
         if (!is_array($decoded)) {
+            $this->logDebug("NON-JSON RESPONSE (HTTP {$httpCode}): " . substr((string)$body, 0, 200));
             throw new \RuntimeException('Graph API non-JSON response (HTTP ' . $httpCode . '): ' . substr((string)$body, 0, 200));
         }
 
         if (isset($decoded['error'])) {
+            $this->logDebug("GRAPH ERROR: " . json_encode($decoded['error']));
             $err = $decoded['error'];
             throw new \RuntimeException(
                 'Graph API error ' . ($err['code'] ?? '?') . ': ' . ($err['message'] ?? json_encode($err))
                 );
         }
 
+        $this->logDebug("GRAPH SUCCESS: HTTP {$httpCode}");
         return $decoded;
     }
 }
