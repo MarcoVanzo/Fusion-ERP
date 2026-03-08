@@ -1345,7 +1345,7 @@ class ResultsController
         $url = "{$base}/moduli/campionati/classifica/classifica.php"
             . "?serie={$serie}&sesso={$sesso}&stagione={$stagione}&giornata={$giornata}&girone={$girone}";
 
-        $err  = \'\';
+        $err  = '';
         $body = $this->_fetch($url, $err);
         if (!$body) {
             error_log("[Results] FV classifica fetch failed: {$err}");
@@ -1354,10 +1354,10 @@ class ResultsController
 
         // Unwrap JSON envelope {"classifica": "<html>"}
         $html = $body;
-        if (str_starts_with(ltrim($body), \'{\')) {
+        if (str_starts_with(ltrim($body), '{')) {
             $json = json_decode($body, true);
-            if (isset($json[\'classifica\']) && is_string($json[\'classifica\'])) {
-                $html = $json[\'classifica\'];
+            if (isset($json['classifica']) && is_string($json['classifica'])) {
+                $html = $json['classifica'];
             }
         }
         if (empty(trim($html))) {
@@ -1369,14 +1369,14 @@ class ResultsController
 
         // Parse malformed HTML using Regex since DOMDocument chokes on it.
         // Teams are grouped in `<div class='row sfondo-Blu'>...</div><div class='row sfondo-accordion'`
-        $matchesCount = preg_match_all(\'/<div class=[\\\'"]row sfondo-[Bb]lu[\\\'">](.*?)<\\/div><div class=[\\\'"]row sfondo-accordion[\\\'"]/is\', $html, $matches);
+        $matchesCount = preg_match_all('/<div class=[\'"]row sfondo-[Bb]lu[\'">](.*?)<\/div><div class=[\'"]row sfondo-accordion[\'"]/is', $html, $matches);
 
         // Se regex matches falliscono, prova table generico
         if ($matchesCount > 0 && !empty($matches[1])) {
             foreach ($matches[1] as $index => $rowHtml) {
                 // Team Name: <span class='squadra-tabella'>...</span>
-                $teamName = \'\';
-                if (preg_match(\'/<span class=[\\\'"]squadra-tabella[\\\'"]>(.*?)<\\/span>/is\', $rowHtml, $mTeam)) {
+                $teamName = '';
+                if (preg_match('/<span class=[\'"]squadra-tabella[\'"]>(.*?)<\/span>/is', $rowHtml, $mTeam)) {
                     $teamName = trim(strip_tags($mTeam[1]));
                 }
                 
@@ -1384,62 +1384,62 @@ class ResultsController
                 
                 // Points: <span class='punti-Blu'> o <span class='punti-blu'>
                 $pts = 0;
-                if (preg_match(\'/<span class=[\\\'"]punti-[Bb]lu[\\\'"]>(.*?)<\\/span>/is\', $rowHtml, $mPts)) {
+                if (preg_match('/<span class=[\'"]punti-[Bb]lu[\'"]>(.*?)<\/span>/is', $rowHtml, $mPts)) {
                     $pts = (int)trim(strip_tags($mPts[1]));
                 }
 
                 // Stats: <div class='col-xs-4'> inside the blu-tabella blocks
                 $pg = 0; $v = 0; $l = 0;
-                if (preg_match_all(\'/<div class=[\\\'"]col-xs-4[\\\'"]>(.*?)<\\/div>/is\', $rowHtml, $mStats) && count($mStats[1]) >= 3) {
+                if (preg_match_all('/<div class=[\'"]col-xs-4[\'"]>(.*?)<\/div>/is', $rowHtml, $mStats) && count($mStats[1]) >= 3) {
                     $pg = (int)trim(strip_tags($mStats[1][0]));
                     $v  = (int)trim(strip_tags($mStats[1][1]));
                     $l  = (int)trim(strip_tags($mStats[1][2]));
                 }
 
                 $standings[] = [
-                    \'position\'    => $index + 1,
-                    \'team\'        => $teamName,
-                    \'played\'      => $pg,
-                    \'won\'         => $v,
-                    \'lost\'        => $l,
-                    \'points\'      => $pts,
-                    \'is_our_team\' => $this->_isOurTeam($teamName),
+                    'position'    => $index + 1,
+                    'team'        => $teamName,
+                    'played'      => $pg,
+                    'won'         => $v,
+                    'lost'        => $l,
+                    'points'      => $pts,
+                    'is_our_team' => $this->_isOurTeam($teamName),
                 ];
             }
         }
 
         // Generic table fallback if RegEx found nothing
         if (empty($standings)) {
-            $dom = new \\DOMDocument();
+            $dom = new \DOMDocument();
             libxml_use_internal_errors(true);
-            @$dom->loadHTML(\'<?xml encoding="UTF-8"><div>\' . $html . \'</div>\');
+            @$dom->loadHTML('<?xml encoding="UTF-8"><div>' . $html . '</div>');
             libxml_clear_errors();
-            $xpath = new \\DOMXPath($dom);
+            $xpath = new \DOMXPath($dom);
 
-            $tableRows = $xpath->query(\'//table//tr[td]\');
+            $tableRows = $xpath->query('//table//tr[td]');
             if ($tableRows) {
                 foreach ($tableRows as $row) {
-                    $cells = $xpath->query(\'td\', $row);
+                    $cells = $xpath->query('td', $row);
                     if (!$cells || $cells->length < 2) continue;
                     $texts = [];
                     foreach ($cells as $cell) $texts[] = trim($cell->textContent);
-                    $team = trim($texts[1] ?? \'\');
+                    $team = trim($texts[1] ?? '');
                     if (!$team) continue;
                     $cnt = count($texts);
                     $standings[] = [
-                        \'position\'    => (int)($texts[0] ?? 0) ?: count($standings) + 1,
-                        \'team\'        => $team,
-                        \'played\'      => (int)($texts[2] ?? 0),
-                        \'won\'         => (int)($texts[3] ?? 0),
-                        \'lost\'        => (int)($texts[4] ?? 0),
-                        \'points\'      => (int)($texts[$cnt - 1] ?? 0),
-                        \'is_our_team\' => $this->_isOurTeam($team),
+                        'position'    => (int)($texts[0] ?? 0) ?: count($standings) + 1,
+                        'team'        => $team,
+                        'played'      => (int)($texts[2] ?? 0),
+                        'won'         => (int)($texts[3] ?? 0),
+                        'lost'        => (int)($texts[4] ?? 0),
+                        'points'      => (int)($texts[$cnt - 1] ?? 0),
+                        'is_our_team' => $this->_isOurTeam($team),
                     ];
                 }
             }
         }
 
-        error_log(\'[Results] FV classifica: \' . count($standings) . \' entries from \' . $url);
+        error_log('[Results] FV classifica: ' . count($standings) . ' entries from ' . $url);
         return $standings;
     }
     /** Fallback: parse federvolley.it HTML calendar. */

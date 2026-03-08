@@ -24,13 +24,13 @@ class EcommerceController
     private static function cognitoApiKey(): string
     {
         // Prefer the dedicated eCommerce key; fall back to the generic OutSeason key
-        return (string)(getenv('ECOMMERCE_COGNITO_API_KEY') ?: getenv('COGNITO_API_KEY') ?: '');
+        return (string)($_ENV['ECOMMERCE_COGNITO_API_KEY'] ?? getenv('ECOMMERCE_COGNITO_API_KEY') ?: $_ENV['COGNITO_API_KEY'] ?? getenv('COGNITO_API_KEY') ?: '');
     }
 
     private static function cognitoOrderFormId(): int
     {
-        // Uses dedicated ECOMMERCE_FORM_ID; falls back to COGNITO_FORM_ID if not set.
-        return (int)(getenv('ECOMMERCE_FORM_ID') ?: getenv('COGNITO_FORM_ID') ?: 20);
+        // Uses dedicated ECOMMERCE_FORM_ID; falls back to 17 (Ecommerce) instead of 20 (OutSeason).
+        return (int)($_ENV['ECOMMERCE_FORM_ID'] ?? getenv('ECOMMERCE_FORM_ID') ?: 17);
     }
 
     /* ──────────────────────────────────────────────────────────────────────────
