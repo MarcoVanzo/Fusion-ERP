@@ -30,7 +30,7 @@ class TasksController
      */
     public function listTasks(): void
     {
-        Auth::requireRead('admin');
+        Auth::requireAuth();
 
         $status = filter_input(INPUT_GET, 'status', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
         $priority = filter_input(INPUT_GET, 'priority', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
@@ -48,7 +48,7 @@ class TasksController
      */
     public function createTask(): void
     {
-        Auth::requireWrite('admin');
+        Auth::requireAuth();
 
         $body = json_decode(file_get_contents('php://input'), true) ?? [];
 
@@ -59,6 +59,7 @@ class TasksController
         $dueDate = trim($body['due_date'] ?? '');
         $notes = trim($body['notes'] ?? '');
         $assignedTo = trim($body['assigned_to'] ?? '');
+        $attachment = $body['attachment'] ?? null; // base64 data-URI
 
         if ($title === '') {
             Response::error('Il titolo è obbligatorio', 422);
@@ -66,7 +67,8 @@ class TasksController
 
         $id = $this->repo->createTask(
             $title, $category, $priority, $status,
-            $dueDate ?: null, $notes ?: null, $assignedTo ?: null
+            $dueDate ?: null, $notes ?: null, $assignedTo ?: null,
+            $attachment ?: null
         );
 
         Audit::log('INSERT', 'tasks', $id, null, ['title' => $title, 'status' => $status], 'crud');
@@ -78,7 +80,7 @@ class TasksController
      */
     public function updateTask(): void
     {
-        Auth::requireWrite('admin');
+        Auth::requireAuth();
 
         $body = json_decode(file_get_contents('php://input'), true) ?? [];
         $id = trim($body['id'] ?? '');
@@ -101,7 +103,7 @@ class TasksController
      */
     public function deleteTask(): void
     {
-        Auth::requireWrite('admin');
+        Auth::requireAuth();
 
         $body = json_decode(file_get_contents('php://input'), true) ?? [];
         $id = trim($body['id'] ?? '');
@@ -126,7 +128,7 @@ class TasksController
      */
     public function listTaskLogs(): void
     {
-        Auth::requireRead('admin');
+        Auth::requireAuth();
 
         $taskId = filter_input(INPUT_GET, 'task_id', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
         if ($taskId === '')
@@ -141,13 +143,15 @@ class TasksController
      */
     public function createTaskLog(): void
     {
-        Auth::requireWrite('admin');
+        Auth::requireAuth();
 
         $body = json_decode(file_get_contents('php://input'), true) ?? [];
         $taskId = trim($body['task_id'] ?? '');
         $date = trim($body['interaction_date'] ?? date('Y-m-d H:i:s'));
         $notes = trim($body['notes'] ?? '');
         $outcome = trim($body['outcome'] ?? '');
+        $esito = trim($body['esito'] ?? '');
+        $attachment = $body['attachment'] ?? null; // base64 data-URI
         $scheduleFollowup = (int)($body['schedule_followup'] ?? 0);
         $followupDate = trim($body['followup_date'] ?? '');
 
@@ -156,6 +160,7 @@ class TasksController
 
         $id = $this->repo->createTaskLog(
             $taskId, $date, $notes ?: null, $outcome ?: null,
+            $esito ?: null, $attachment ?: null,
             $scheduleFollowup, $followupDate ?: null
         );
 
@@ -167,7 +172,7 @@ class TasksController
      */
     public function deleteTaskLog(): void
     {
-        Auth::requireWrite('admin');
+        Auth::requireAuth();
 
         $body = json_decode(file_get_contents('php://input'), true) ?? [];
         $id = trim($body['id'] ?? '');

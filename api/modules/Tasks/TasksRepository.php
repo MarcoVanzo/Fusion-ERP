@@ -35,7 +35,8 @@ class TasksRepository
         $sql = '
             SELECT
                 t.id, t.title, t.category, t.priority, t.status,
-                t.due_date, t.notes, t.assigned_to, t.created_at, t.updated_at,
+                t.due_date, t.notes, t.attachment, t.assigned_to,
+                t.created_at, t.updated_at, t.user_id,
                 uc.full_name AS creator_name,
                 ua.full_name AS assignee_name
             FROM tasks t
@@ -94,25 +95,27 @@ class TasksRepository
         string $status,
         ?string $dueDate,
         ?string $notes,
-        ?string $assignedTo
+        ?string $assignedTo,
+        ?string $attachment = null
         ): string
     {
         $id = 'TSK_' . bin2hex(random_bytes(4));
         $userId = Auth::user()['id'] ?? null;
 
         $stmt = $this->db->prepare('
-            INSERT INTO tasks (id, user_id, title, category, priority, status, due_date, notes, assigned_to)
-            VALUES (:id, :user_id, :title, :category, :priority, :status, :due_date, :notes, :assigned_to)
+            INSERT INTO tasks (id, user_id, title, category, priority, status, due_date, notes, attachment, assigned_to)
+            VALUES (:id, :user_id, :title, :category, :priority, :status, :due_date, :notes, :attachment, :assigned_to)
         ');
         $stmt->execute([
-            ':id' => $id,
-            ':user_id' => $userId,
-            ':title' => $title,
-            ':category' => $category,
-            ':priority' => $priority,
-            ':status' => $status,
-            ':due_date' => $dueDate,
-            ':notes' => $notes,
+            ':id'          => $id,
+            ':user_id'     => $userId,
+            ':title'       => $title,
+            ':category'    => $category,
+            ':priority'    => $priority,
+            ':status'      => $status,
+            ':due_date'    => $dueDate,
+            ':notes'       => $notes,
+            ':attachment'  => $attachment,
             ':assigned_to' => $assignedTo,
         ]);
 
@@ -121,7 +124,7 @@ class TasksRepository
 
     public function updateTask(string $id, array $data): void
     {
-        $allowed = ['title', 'category', 'priority', 'status', 'due_date', 'notes', 'assigned_to'];
+        $allowed = ['title', 'category', 'priority', 'status', 'due_date', 'notes', 'attachment', 'assigned_to'];
         $sets = [];
         $params = [':id' => $id];
 
@@ -164,6 +167,8 @@ class TasksRepository
         string $interactionDate,
         ?string $notes,
         ?string $outcome,
+        ?string $esito,
+        ?string $attachment,
         int $scheduleFollowup,
         ?string $followupDate
         ): string
@@ -173,19 +178,21 @@ class TasksRepository
 
         $stmt = $this->db->prepare('
             INSERT INTO task_logs
-                (id, task_id, user_id, interaction_date, notes, outcome, schedule_followup, followup_date)
+                (id, task_id, user_id, interaction_date, notes, outcome, esito, attachment, schedule_followup, followup_date)
             VALUES
-                (:id, :task_id, :user_id, :interaction_date, :notes, :outcome, :schedule_followup, :followup_date)
+                (:id, :task_id, :user_id, :interaction_date, :notes, :outcome, :esito, :attachment, :schedule_followup, :followup_date)
         ');
         $stmt->execute([
-            ':id' => $id,
-            ':task_id' => $taskId,
-            ':user_id' => $userId,
-            ':interaction_date' => $interactionDate,
-            ':notes' => $notes,
-            ':outcome' => $outcome,
+            ':id'                => $id,
+            ':task_id'           => $taskId,
+            ':user_id'           => $userId,
+            ':interaction_date'  => $interactionDate,
+            ':notes'             => $notes,
+            ':outcome'           => $outcome,
+            ':esito'             => $esito,
+            ':attachment'        => $attachment,
             ':schedule_followup' => $scheduleFollowup,
-            ':followup_date' => $followupDate,
+            ':followup_date'     => $followupDate,
         ]);
 
         return $id;
