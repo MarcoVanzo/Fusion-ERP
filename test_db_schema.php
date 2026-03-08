@@ -1,29 +1,34 @@
 <?php
-require 'api/Shared/Database.php';
+require 'vendor/autoload.php';
+$dotenv = Dotenv\Dotenv::createUnsafeImmutable(__DIR__);
+$dotenv->load();
+
+require_once 'api/Shared/Database.php';
+use FusionERP\Shared\Database;
+use PDO;
 
 try {
-    // Parse .env
-    if (file_exists('.env')) {
-        $lines = file('.env', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        foreach ($lines as $line) {
-            if (strpos(trim($line), '#') === 0)
-                continue;
-            list($name, $value) = explode('=', $line, 2);
-            putenv(trim($name) . '=' . trim($value));
-        }
-    }
+    $db = Database::getInstance();
+    $stmt = $db->query("SELECT * FROM ec_orders ORDER BY data_ordine DESC LIMIT 5");
+    $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    $pdo = \FusionERP\Shared\Database::getInstance();
-    $stmt = $pdo->query("DESCRIBE federation_matches");
-    $columns = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    print_r($columns);
-
-    // Also check logs
-    echo "\n\n--- TAIL OF ERROR LOG ---\n";
-    if (file_exists('php_errors.log')) {
-        system('tail -n 20 php_errors.log');
+    $orders = [];
+    foreach ($results as $r) {
+        $orders[] = [
+            'id' => $r['cognito_id'],
+            'dataOrdine' => $r['data_ordine'],
+            'nomeCliente' => $r['nome_cliente'],
+            'email' => $r['email'],
+            'telefono' => $r['telefono'],
+            'articoli' => current(json_decode($r['articoli'] ?? '[]', true) ?: []),
+            'totale' => (float)$r['totale'],
+            'metodoPagamento' => $r['metodo_pagamento'],
+            'statoForms' => $r['stato_forms'],
+            'statoInterno' => $r['stato_interno'],
+            'rawEntry' => $r['raw_data'] ? json_decode($r['raw_data'], true) : []
+        ];
     }
-}
-catch (Exception $e) {
-    echo "Error: " . $e->getMessage() . "\n";
+    echo json_encode(['success' => true, 'orders' => $orders]);
+} catch (Throwable $e) {
+    echo "ERROR: " . $e->getMessage() . " on line " . $e->getLine();
 }
