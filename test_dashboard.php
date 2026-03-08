@@ -1,11 +1,12 @@
 <?php
-require 'api/vendor/autoload.php';
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/api');
+require 'vendor/autoload.php';
+
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->load();
 
 $host = $_ENV['DB_HOST'];
 $port = $_ENV['DB_PORT'] ?? 3306;
-$db   = $_ENV['DB_DATABASE'];
+$db = $_ENV['DB_DATABASE'];
 $user = $_ENV['DB_USERNAME'];
 $pass = $_ENV['DB_PASSWORD'];
 

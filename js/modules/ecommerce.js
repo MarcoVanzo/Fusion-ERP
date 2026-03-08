@@ -904,13 +904,7 @@ const Ecommerce = (() => {
                     const stato = sel.value;
                     if (stato) {
                         try {
-                            const res = await fetch('/api?module=ecommerce&action=updateOrderStatus', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ id: orderId, stato })
-                            });
-                            const rj = await res.json();
-                            if (!rj.success) throw new Error(rj.error || 'Errore');
+                            await Store.api('updateOrderStatus', 'ecommerce', { id: orderId, stato });
                             const orderToUpdate = ordersAll.find(o => String(o.id) === String(orderId));
                             if (orderToUpdate) orderToUpdate.statoInterno = stato;
                             UI.toast('Stato aggiornato nel server', 'success', 2000);
@@ -973,10 +967,8 @@ const Ecommerce = (() => {
             btn.disabled = true;
             btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Sincronizzazione...';
             try {
-                const res = await fetch('/api?module=ecommerce&action=syncOrders', { method: 'POST' });
-                const rj = await res.json();
-                if (!rj.success) throw new Error(rj.error || 'C\'è stato un errore di sincronizzazione');
-                UI.toast(rj.data?.message || 'Sincronizzazione completata', 'success');
+                const data = await Store.api('syncOrders', 'ecommerce');
+                UI.toast(data?.message || 'Sincronizzazione completata', 'success');
                 Store.invalidate('getOrders');
                 await _loadOrdersPanel();
             } catch (err) {
