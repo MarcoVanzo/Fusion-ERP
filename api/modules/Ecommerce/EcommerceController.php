@@ -368,18 +368,27 @@ class EcommerceController
         $totale = self::_parsePrice((string)$totaleRaw);
 
         // If totale is still 0, attempt to extract from orderSummary
-        // (Cognito orderSummary format: "Product × €50.00\nTotal: €50.00")
+        // (Cognito orderSummary format: "Product × €50.00\nTotal: €50.00" or "80,00 € Paid")
         if ($totale === 0.0 && !empty($orderSummary)) {
             $summaryText = strip_tags((string)$orderSummary);
-            // Look for "Total: €XX" or "Totale: XX,00 €" pattern
-            if (preg_match('/(?:Total[e]?|Totale)\s*[:\-]?\s*[€$£]?\s*([\d.,]+)/i', $summaryText, $tm)) {
+            // First look for explicitly named totals
+            if (preg_match('/(?:Total[e]?|Totale)\s*[:\-]?\s*(?:[€\$£]|&euro;)?\s*([\d.,]+)/ui', $summaryText, $tm)) {
                 $totale = self::_parsePrice($tm[1]);
             }
-            // Also try last money-like value in the string
-            if ($totale === 0.0 && preg_match_all('/[€$£]\s*([\d.,]+)|([\d.,]+)\s*[€$£]/', $summaryText, $tm2)) {
-                $lastMatch = end($tm2[1]) ?: end($tm2[2]);
-                if ($lastMatch)
+            // If still zero, try to extract any money-formatted value
+            if ($totale === 0.0 && preg_match_all('/(?:[€\$£]|&euro;)\s*([\d.,]+)|([\d.,]+)\s*(?:[€\$£]|&euro;)/ui', $summaryText, $tm2)) {
+                $a1 = array_filter($tm2[1]);
+                $a2 = array_filter($tm2[2]);
+                $lastMatch = !empty($a1) ? end($a1) : (!empty($a2) ? end($a2) : null);
+                if ($lastMatch) {
                     $totale = self::_parsePrice($lastMatch);
+                }
+            }
+
+            // If articoliRaw just equals the orderSummary and orderSummary is just a price (like "80,00 € Paid"),
+            // let's give it a better generic name so the table doesn't say "80,00 € Paid" in the Articoli column.
+            if ($articoliRaw === $summaryText && preg_match('/^[\d., ]+(?:[€\$£]|&euro;)+\s*(?:Paid|Unpaid)?$/ui', trim($summaryText))) {
+                $articoliRaw = "Acquisto da Form Ordinazione";
             }
         }
 
@@ -400,6 +409,15 @@ class EcommerceController
         $statoForms = $e['Entry_Status']
             ?? $e['Entry.Status']
             ?? ($e['Entry']['Status'] ?? null);
+
+        // Map PaymentStatus to our internal stati se presente e rilevante
+        $paymentStatus = $e['Order_PaymentStatus'] ?? $e['Order.PaymentStatus'] ?? null;
+        if (strtoupper((string)$paymentStatus) === 'PAID') {
+            $statoForms = 'pagato'; // Matches JS frontend yellow badge
+        }
+        else if (strtoupper((string)$statoForms) === 'SUBMITTED') {
+            $statoForms = 'Inviato'; // Generic
+        }
 
         return [
             'id' => $e['Id'] ?? null,
