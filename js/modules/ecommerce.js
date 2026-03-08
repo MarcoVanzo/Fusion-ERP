@@ -925,7 +925,7 @@ const Ecommerce = (() => {
         async init() {
             _abortCtrl.abort();
             _abortCtrl = new AbortController();
-            const route = window.Router ? window.Router.getCurrentRoute() : 'ecommerce-articles';
+            const route = (typeof Router !== 'undefined') ? Router.getCurrentRoute() : 'ecommerce-articles';
             _currentTab = route === 'ecommerce-orders' ? 'orders' : 'articles';
             _lastOrdersFetch = null;
 
