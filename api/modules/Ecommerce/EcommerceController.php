@@ -15,6 +15,8 @@ namespace FusionERP\Modules\Ecommerce;
 
 use FusionERP\Shared\Auth;
 use FusionERP\Shared\Response;
+use FusionERP\Shared\Database;
+use PDO;
 
 class EcommerceController
 {
@@ -248,12 +250,72 @@ class EcommerceController
     }
 
     /* ──────────────────────────────────────────────────────────────────────────
-     * getOrders — retrieves Cognito Forms orders (live, no DB caching)
+     * getOrders — retrieves eCommerce orders from the local database
      * GET /api?module=ecommerce&action=getOrders
      * ────────────────────────────────────────────────────────────────────────── */
     public function getOrders(): void
     {
         Auth::requireRead('ecommerce');
+
+        $db = Database::getInstance();
+        $stmt = $db->query("SELECT * FROM ec_orders ORDER BY data_ordine DESC");
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $orders = [];
+        foreach ($results as $r) {
+            $orders[] = [
+                'id' => $r['cognito_id'],
+                'dataOrdine' => $r['data_ordine'],
+                'nomeCliente' => $r['nome_cliente'],
+                'email' => $r['email'],
+                'telefono' => $r['telefono'],
+                'articoli' => current(json_decode($r['articoli'] ?? '[]', true) ?: []),
+                'totale' => (float)$r['totale'],
+                'metodoPagamento' => $r['metodo_pagamento'],
+                'statoForms' => $r['stato_forms'],
+                'statoInterno' => $r['stato_interno'],
+                'rawEntry' => $r['raw_data'] ? json_decode($r['raw_data'], true) : []
+            ];
+        }
+
+        Response::success([
+            'orders' => $orders,
+            'count' => count($orders),
+            'fetched_at' => date('Y-m-d H:i:s'),
+        ]);
+    }
+
+    /* ──────────────────────────────────────────────────────────────────────────
+     * updateOrderStatus — updates local internal state
+     * POST /api?module=ecommerce&action=updateOrderStatus
+     * POST Body: {"id": "1", "stato": "consegnato"}
+     * ────────────────────────────────────────────────────────────────────────── */
+    public function updateOrderStatus(): void
+    {
+        Auth::requireWrite('ecommerce');
+
+        $data = json_decode(file_get_contents('php://input'), true);
+        $cognitoId = $data['id'] ?? null;
+        $stato = trim($data['stato'] ?? '');
+
+        if (!$cognitoId) {
+            Response::error('ID ordine mancante', 400);
+        }
+
+        $db = Database::getInstance();
+        $stmt = $db->prepare("UPDATE ec_orders SET stato_interno = ?, updated_at = NOW() WHERE cognito_id = ?");
+        $stmt->execute([$stato, $cognitoId]);
+
+        Response::success(['message' => 'Stato ordine aggiornato.']);
+    }
+
+    /* ──────────────────────────────────────────────────────────────────────────
+     * syncOrders — downloads new changes from Cognito and merges them into DB
+     * POST /api?module=ecommerce&action=syncOrders
+     * ────────────────────────────────────────────────────────────────────────── */
+    public function syncOrders(): void
+    {
+        Auth::requireWrite('ecommerce');
 
         $apiKey = self::cognitoApiKey();
         if (empty($apiKey)) {
@@ -261,7 +323,7 @@ class EcommerceController
         }
 
         $formId = self::cognitoOrderFormId();
-        $url = "https://www.cognitoforms.com/api/odata/Forms({$formId})/Views(1)/Entries";
+        $url = "https://www.cognitoforms.com/api/odata/Forms({$formId})/Views(1)/Entries?\$expand=*";
 
         $ch = curl_init($url);
         curl_setopt_array($ch, [
@@ -270,7 +332,7 @@ class EcommerceController
                 'Authorization: Bearer ' . $apiKey,
                 'Accept: application/json',
             ],
-            CURLOPT_TIMEOUT => 30,
+            CURLOPT_TIMEOUT => 45,
         ]);
         $response = curl_exec($ch);
         $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -284,10 +346,7 @@ class EcommerceController
         if ($httpCode !== 200) {
             $msg = "Cognito Forms ha risposto HTTP {$httpCode}.";
             if ($httpCode === 401) {
-                $msg = 'Token Cognito scaduto o non valido (HTTP 401). Rinnova la chiave su cognitoforms.com → Account → API Keys.';
-            }
-            elseif ($httpCode === 404) {
-                $msg = "Form ID {$formId} non trovato (HTTP 404). Controlla ECOMMERCE_FORM_ID nel file .env.";
+                $msg = 'Token Cognito scaduto o non valido (HTTP 401). Rinnova la chiave su cognitoforms.com.';
             }
             Response::error($msg, 502);
         }
@@ -296,18 +355,60 @@ class EcommerceController
         $entries = $decoded['value'] ?? ($decoded ?: []);
 
         if (!is_array($entries)) {
-            $entries = [];
+            Response::success(['message' => 'Nessun ordine trovato.']);
+            return;
         }
 
-        // Normalize entries into a clean, predictable shape for the frontend
-        $orders = array_map(fn($e) => self::_normalizeOrder($e), $entries);
+        $db = Database::getInstance();
+        $db->beginTransaction();
 
-        Response::success([
-            'orders' => $orders,
-            'count' => count($orders),
-            'form_id' => $formId,
-            'fetched_at' => date('Y-m-d H:i:s'),
-        ]);
+        try {
+            $stmt = $db->prepare("
+                INSERT INTO ec_orders (
+                    cognito_id, nome_cliente, email, telefono, articoli, totale,
+                    metodo_pagamento, stato_forms, data_ordine, order_summary, raw_data, created_at
+                ) VALUES (
+                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW()
+                )
+                ON DUPLICATE KEY UPDATE
+                    nome_cliente = VALUES(nome_cliente),
+                    email = VALUES(email),
+                    telefono = VALUES(telefono),
+                    articoli = VALUES(articoli),
+                    totale = VALUES(totale),
+                    metodo_pagamento = VALUES(metodo_pagamento),
+                    stato_forms = VALUES(stato_forms),
+                    order_summary = VALUES(order_summary),
+                    raw_data = VALUES(raw_data)
+            ");
+
+            $count = 0;
+            foreach ($entries as $e) {
+                $o = self::_normalizeOrder($e);
+
+                $articoliStr = json_encode([$o['articoli']]);
+                $stmt->execute([
+                    $o['id'],
+                    $o['nomeCliente'],
+                    $o['email'] ?? '',
+                    $o['telefono'] ?? '',
+                    $articoliStr,
+                    $o['totale'],
+                    $o['metodoPagamento'] ?? '',
+                    $o['statoForms'] ?? 'Da definire',
+                    $o['dataOrdine'],
+                    '', // summary can be omitted or extracted inside
+                    json_encode($o['rawEntry'])
+                ]);
+                $count++;
+            }
+            $db->commit();
+            Response::success(['message' => "Sincronizzati {$count} ordini dal cloud.", 'count' => $count]);
+        }
+        catch (\Exception $ex) {
+            $db->rollBack();
+            Response::error('Errore durante il salvataggio: ' . $ex->getMessage(), 500);
+        }
     }
 
     /** Map raw Cognito entry fields → standardised order object.
@@ -368,18 +469,27 @@ class EcommerceController
         $totale = self::_parsePrice((string)$totaleRaw);
 
         // If totale is still 0, attempt to extract from orderSummary
-        // (Cognito orderSummary format: "Product × €50.00\nTotal: €50.00")
+        // (Cognito orderSummary format: "Product × €50.00\nTotal: €50.00" or "80,00 € Paid")
         if ($totale === 0.0 && !empty($orderSummary)) {
             $summaryText = strip_tags((string)$orderSummary);
-            // Look for "Total: €XX" or "Totale: XX,00 €" pattern
-            if (preg_match('/(?:Total[e]?|Totale)\s*[:\-]?\s*[€$£]?\s*([\d.,]+)/i', $summaryText, $tm)) {
+            // First look for explicitly named totals
+            if (preg_match('/(?:Total[e]?|Totale)\s*[:\-]?\s*(?:[€\$£]|&euro;)?\s*([\d.,]+)/ui', $summaryText, $tm)) {
                 $totale = self::_parsePrice($tm[1]);
             }
-            // Also try last money-like value in the string
-            if ($totale === 0.0 && preg_match_all('/[€$£]\s*([\d.,]+)|([\d.,]+)\s*[€$£]/', $summaryText, $tm2)) {
-                $lastMatch = end($tm2[1]) ?: end($tm2[2]);
-                if ($lastMatch)
+            // If still zero, try to extract any money-formatted value
+            if ($totale === 0.0 && preg_match_all('/(?:[€\$£]|&euro;)\s*([\d.,]+)|([\d.,]+)\s*(?:[€\$£]|&euro;)/ui', $summaryText, $tm2)) {
+                $a1 = array_filter($tm2[1]);
+                $a2 = array_filter($tm2[2]);
+                $lastMatch = !empty($a1) ? end($a1) : (!empty($a2) ? end($a2) : null);
+                if ($lastMatch) {
                     $totale = self::_parsePrice($lastMatch);
+                }
+            }
+
+            // If articoliRaw just equals the orderSummary and orderSummary is just a price (like "80,00 € Paid"),
+            // let's give it a better generic name so the table doesn't say "80,00 € Paid" in the Articoli column.
+            if ($articoliRaw === $summaryText && preg_match('/^[\d., ]+(?:[€\$£]|&euro;)+\s*(?:Paid|Unpaid)?$/ui', trim($summaryText))) {
+                $articoliRaw = "Acquisto da Form Ordinazione";
             }
         }
 
@@ -401,6 +511,18 @@ class EcommerceController
             ?? $e['Entry.Status']
             ?? ($e['Entry']['Status'] ?? null);
 
+        // Map PaymentStatus to our internal stati se presente e rilevante
+        $paymentStatus = $e['Order_PaymentStatus'] ?? $e['Order.PaymentStatus'] ?? null;
+        if (strtoupper((string)$paymentStatus) === 'PAID') {
+            $statoForms = 'pagato'; // Matches JS frontend green badge
+        }
+        else if (strtoupper((string)$paymentStatus) === 'UNPAID') {
+            $statoForms = 'non pagato'; // Matches JS frontend red badge
+        }
+        else if (strtoupper((string)$statoForms) === 'SUBMITTED') {
+            $statoForms = 'Inviato'; // Generic
+        }
+
         return [
             'id' => $e['Id'] ?? null,
             'nomeCliente' => $nomeCliente,
@@ -412,8 +534,8 @@ class EcommerceController
             'dataOrdine' => $dateStr,
             'statoForms' => $statoForms,
             'orderSummary' => $orderSummary,
-            // Debug: expose all top-level keys (helpful for first-time setup)
             '_campiDisponibili' => array_keys($e),
+            'rawEntry' => $e
         ];
     }
 }

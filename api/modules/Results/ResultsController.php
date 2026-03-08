@@ -400,6 +400,7 @@ class ResultsController
                     DATE_FORMAT(m.match_date, '%H:%i')    AS time,
                     m.match_date,
                     m.status,
+                    m.round,
                     c.label AS championship_label,
                     c.id    AS championship_id
                 FROM federation_matches m
@@ -765,11 +766,20 @@ class ResultsController
                 if (empty($home) || empty($away))
                     continue;
 
+                $round = null;
+                $precedings = $xpath->query('preceding::*[contains(translate(text(), "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz"), "giornata")][1]', $gara);
+                if ($precedings && $precedings->length > 0) {
+                    $roundText = trim($precedings->item(0)->textContent);
+                    if (preg_match('/(\d+)[°a-zA-Z\s]*\s*giornata/i', $roundText, $mRound) || preg_match('/giornata\s*(\d+)/i', $roundText, $mRound)) {
+                        $round = $mRound[1];
+                    }
+                }
+
                 $match = [
                     'id' => $garaId, 'date' => null, 'time' => null,
                     'home' => $home, 'away' => $away,
                     'score' => null, 'sets_home' => null, 'sets_away' => null,
-                    'status' => 'scheduled', 'round' => null, 'is_our_team' => false,
+                    'status' => 'scheduled', 'round' => $round, 'is_our_team' => false,
                 ];
 
                 $scoreNodes = $xpath->query('.//*[contains(@class,"risultatoFinal") or contains(@class,"risultato") or contains(@class,"setResult")]', $gara);
@@ -800,6 +810,7 @@ class ResultsController
         // FALLBACK: table-based layout
         $rows = $xpath->query('//table//tr[td]');
         if ($rows && $rows->length > 0) {
+            $currentRound = null;
             foreach ($rows as $row) {
                 /** @var \DOMElement $row */
                 $cells = $xpath->query('td', $row);
@@ -808,9 +819,19 @@ class ResultsController
                 $texts = [];
                 foreach ($cells as $cell)
                     $texts[] = trim(preg_replace('/\s+/', ' ', $cell->textContent));
+
+                $combined = implode(' ', $texts);
+                if (preg_match('/(\d+)[°a-zA-Z\s]*\s*giornata/i', $combined, $mRound) || preg_match('/giornata\s*(\d+)/i', $combined, $mRound)) {
+                    $currentRound = $mRound[1];
+                }
+
                 $match = $this->_extractMatchData($texts, $row, $xpath);
-                if ($match !== null)
+                if ($match !== null) {
+                    if (empty($match['round'])) {
+                        $match['round'] = $currentRound;
+                    }
                     $matches[] = $match;
+                }
             }
         }
 
@@ -1336,16 +1357,16 @@ class ResultsController
      */
     private function _parseStandingsFedervolley(array $p, int $giornata): array
     {
-        $base     = $p['base'];
-        $serie    = $p['serie'];
-        $sesso    = $p['sesso'];
+        $base = $p['base'];
+        $serie = $p['serie'];
+        $sesso = $p['sesso'];
         $stagione = $p['stagione'];
-        $girone   = $p['girone'];
+        $girone = $p['girone'];
 
         $url = "{$base}/moduli/campionati/classifica/classifica.php"
             . "?serie={$serie}&sesso={$sesso}&stagione={$stagione}&giornata={$giornata}&girone={$girone}";
 
-        $err  = '';
+        $err = '';
         $body = $this->_fetch($url, $err);
         if (!$body) {
             error_log("[Results] FV classifica fetch failed: {$err}");
@@ -1379,9 +1400,10 @@ class ResultsController
                 if (preg_match('/<span class=[\'"]squadra-tabella[\'"]>(.*?)<\/span>/is', $rowHtml, $mTeam)) {
                     $teamName = trim(strip_tags($mTeam[1]));
                 }
-                
-                if (empty($teamName)) continue;
-                
+
+                if (empty($teamName))
+                    continue;
+
                 // Points: <span class='punti-Blu'> o <span class='punti-blu'>
                 $pts = 0;
                 if (preg_match('/<span class=[\'"]punti-[Bb]lu[\'"]>(.*?)<\/span>/is', $rowHtml, $mPts)) {
@@ -1389,20 +1411,22 @@ class ResultsController
                 }
 
                 // Stats: <div class='col-xs-4'> inside the blu-tabella blocks
-                $pg = 0; $v = 0; $l = 0;
+                $pg = 0;
+                $v = 0;
+                $l = 0;
                 if (preg_match_all('/<div class=[\'"]col-xs-4[\'"]>(.*?)<\/div>/is', $rowHtml, $mStats) && count($mStats[1]) >= 3) {
                     $pg = (int)trim(strip_tags($mStats[1][0]));
-                    $v  = (int)trim(strip_tags($mStats[1][1]));
-                    $l  = (int)trim(strip_tags($mStats[1][2]));
+                    $v = (int)trim(strip_tags($mStats[1][1]));
+                    $l = (int)trim(strip_tags($mStats[1][2]));
                 }
 
                 $standings[] = [
-                    'position'    => $index + 1,
-                    'team'        => $teamName,
-                    'played'      => $pg,
-                    'won'         => $v,
-                    'lost'        => $l,
-                    'points'      => $pts,
+                    'position' => $index + 1,
+                    'team' => $teamName,
+                    'played' => $pg,
+                    'won' => $v,
+                    'lost' => $l,
+                    'points' => $pts,
                     'is_our_team' => $this->_isOurTeam($teamName),
                 ];
             }
@@ -1420,19 +1444,22 @@ class ResultsController
             if ($tableRows) {
                 foreach ($tableRows as $row) {
                     $cells = $xpath->query('td', $row);
-                    if (!$cells || $cells->length < 2) continue;
+                    if (!$cells || $cells->length < 2)
+                        continue;
                     $texts = [];
-                    foreach ($cells as $cell) $texts[] = trim($cell->textContent);
+                    foreach ($cells as $cell)
+                        $texts[] = trim($cell->textContent);
                     $team = trim($texts[1] ?? '');
-                    if (!$team) continue;
+                    if (!$team)
+                        continue;
                     $cnt = count($texts);
                     $standings[] = [
-                        'position'    => (int)($texts[0] ?? 0) ?: count($standings) + 1,
-                        'team'        => $team,
-                        'played'      => (int)($texts[2] ?? 0),
-                        'won'         => (int)($texts[3] ?? 0),
-                        'lost'        => (int)($texts[4] ?? 0),
-                        'points'      => (int)($texts[$cnt - 1] ?? 0),
+                        'position' => (int)($texts[0] ?? 0) ?: count($standings) + 1,
+                        'team' => $team,
+                        'played' => (int)($texts[2] ?? 0),
+                        'won' => (int)($texts[3] ?? 0),
+                        'lost' => (int)($texts[4] ?? 0),
+                        'points' => (int)($texts[$cnt - 1] ?? 0),
                         'is_our_team' => $this->_isOurTeam($team),
                     ];
                 }
@@ -1637,7 +1664,7 @@ class ResultsController
         try {
             $pdo->beginTransaction();
             $pdo->prepare("DELETE FROM federation_matches WHERE championship_id = :cid")->execute([':cid' => $id]);
-            $insM = $pdo->prepare("INSERT INTO federation_matches (id, championship_id, match_number, match_date, home_team, away_team, home_score, away_score, status) VALUES (:id, :cid, :num, :date, :home, :away, :hs, :as, :status)");
+            $insM = $pdo->prepare("INSERT INTO federation_matches (id, championship_id, match_number, match_date, home_team, away_team, home_score, away_score, status, round) VALUES (:id, :cid, :num, :date, :home, :away, :hs, :as, :status, :round)");
             foreach ($matches as $m) {
                 $sqlDate = null;
                 if (!empty($m['date'])) {
@@ -1646,7 +1673,7 @@ class ResultsController
                     if ($ts)
                         $sqlDate = date('Y-m-d H:i:s', $ts);
                 }
-                $insM->execute([':id' => 'm_' . substr(md5($id . ($m['id'] ?? uniqid())), 0, 10), ':cid' => $id, ':num' => $m['id'] ?? null, ':date' => $sqlDate, ':home' => $m['home'], ':away' => $m['away'], ':hs' => $m['sets_home'], ':as' => $m['sets_away'], ':status' => $m['status']]);
+                $insM->execute([':id' => 'm_' . substr(md5($id . ($m['id'] ?? uniqid())), 0, 10), ':cid' => $id, ':num' => $m['id'] ?? null, ':date' => $sqlDate, ':home' => $m['home'], ':away' => $m['away'], ':hs' => $m['sets_home'], ':as' => $m['sets_away'], ':status' => $m['status'], ':round' => $m['round'] ?? null]);
             }
 
             $pdo->prepare("DELETE FROM federation_standings WHERE championship_id = :cid")->execute([':cid' => $id]);

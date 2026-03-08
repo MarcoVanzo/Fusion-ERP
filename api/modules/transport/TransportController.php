@@ -194,15 +194,7 @@ class TransportController
         Response::success(['message' => 'Passeggero confermato']);
     }
 
-    public function matchCarpool(): void
-    {
-        Auth::requireWrite('transport');
-        $eventId = filter_input(INPUT_GET, 'eventId', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
-        if (empty($eventId)) {
-            Response::error('eventId obbligatorio', 400);
-        }
-        Response::success($this->repo->matchCarpoolForEvent($eventId));
-    }
+
 
     // ─── REIMBURSEMENTS ───────────────────────────────────────────────────────
 

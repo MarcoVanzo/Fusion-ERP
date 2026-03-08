@@ -240,4 +240,55 @@ class DashboardController
 
         Response::success($items);
     }
+
+    // ─── GET /api/?module=dashboard&action=weeklyKpis ───────────────────────
+    public function weeklyKpis(): void
+    {
+        Auth::requireAuth();
+        $db = Database::getInstance();
+        $tid = TenantContext::id();
+
+        // 1. Trasporti della settimana
+        $stmt = $db->prepare("SELECT COUNT(e.id) FROM events e JOIN teams t ON e.team_id = t.id WHERE t.tenant_id = :tid AND e.deleted_at IS NULL AND e.event_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)");
+        $stmt->execute([':tid' => $tid]);
+        $weeklyTransports = (int)$stmt->fetchColumn();
+
+        // 2. Nuovi ordini eCommerce
+        $stmt = $db->prepare("SELECT COUNT(id) FROM ec_orders WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)");
+        $stmt->execute();
+        $newOrders = (int)$stmt->fetchColumn();
+
+        // 3. Messaggi WA da leggere
+        $stmt = $db->prepare("SELECT COUNT(id) FROM whatsapp_messages WHERE tenant_id = :tid AND status = 'received'");
+        $stmt->execute([':tid' => $tid]);
+        $unreadWhatsapp = (int)$stmt->fetchColumn();
+
+        // 4. Nuovi iscritti Out Season
+        try {
+            $stmt = $db->prepare("SELECT COUNT(id) FROM outseason_entries WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)");
+            $stmt->execute();
+            $newOutseason = (int)$stmt->fetchColumn();
+        }
+        catch (\Throwable $e) {
+            $newOutseason = 0;
+        }
+
+        // 5. Pagamenti in sospeso
+        try {
+            $stmt = $db->prepare("SELECT COUNT(i.id) FROM installments i JOIN payment_plans p ON i.plan_id = p.id WHERE p.tenant_id = :tid AND i.status IN ('PENDING', 'OVERDUE') AND i.due_date <= CURDATE()");
+            $stmt->execute([':tid' => $tid]);
+            $pendingPayments = (int)$stmt->fetchColumn();
+        }
+        catch (\Throwable $e) {
+            $pendingPayments = 0;
+        }
+
+        Response::success([
+            'weekly_transports' => $weeklyTransports,
+            'new_orders' => $newOrders,
+            'unread_whatsapp' => $unreadWhatsapp,
+            'new_outseason' => $newOutseason,
+            'pending_payments' => $pendingPayments
+        ]);
+    }
 }

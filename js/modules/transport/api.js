@@ -26,9 +26,6 @@ const TransportAPI = (() => {
         return await Store.api('createRoute', 'transport', data);
     }
 
-    async function matchCarpool(eventId) {
-        return await Store.get('matchCarpool', 'transport', { eventId });
-    }
 
     async function sendConvocations(eventId) {
         return await Store.api('sendConvocations', 'transport', { eventId });
@@ -64,7 +61,7 @@ const TransportAPI = (() => {
 
     return {
         listEvents, listRoutes, listAttendees, listDrivers, createRoute,
-        matchCarpool, sendConvocations, updateAttendeeStatus,
+        sendConvocations, updateAttendeeStatus,
         listGyms, listTeams, listAthletes, listTransports, createTransport, createDriver
     };
 })();
