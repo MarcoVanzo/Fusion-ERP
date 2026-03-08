@@ -227,7 +227,7 @@
     },
     {
         "id": "ecommerce",
-        "title": "Store",
+        "title": "eCommerce",
         "path": "ecommerce",
         "icon": "shopping-cart",
         "isMobileVisible": true,
