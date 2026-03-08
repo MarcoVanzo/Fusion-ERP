@@ -1,1 +1,103 @@
-"use strict";const Dashboard=(()=>{let i=new AbortController;function e(i=null,e=[],s=[]){const n=document.getElementById("app");if(!n)return;const t=i?.weekly_transports??0,l=i?.new_orders??0,a=i?.unread_whatsapp??0,d=i?.new_outseason??0,r=i?.pending_payments??0;let o="";o=null===e?'\n        <div style="display:flex; flex-direction:column; gap:12px; padding:var(--sp-2);">\n          <div class="skeleton" style="height:60px; border-radius:var(--radius-sm);"></div>\n          <div class="skeleton" style="height:60px; border-radius:var(--radius-sm); opacity:0.6;"></div>\n          <div class="skeleton" style="height:60px; border-radius:var(--radius-sm); opacity:0.3;"></div>\n        </div>':e.length>0?e.map(i=>{const e=(i.home||"").toLowerCase().includes("fusion"),s=e?i.away||"—":i.home||"—",n=i.sets_home??i.score_home??"—",t=i.sets_away??i.score_away??"—",l=e?n:t,a=e?t:n;let d="var(--color-text-muted)";return"—"!==l&&"—"!==a&&(d=l>a?"#00E676":l<a?"#FF3B30":"#FFD600"),`\n          <div class="fixture-card">\n            <div class="team-logo" style="background:rgba(255,0,255,0.1);color:#FF00FF;"><i class="ph ph-volleyball" style="font-size:18px;"></i></div>\n            <div style="flex:1;">\n              <div style="font-size:13px; font-weight:700;">Fusion Team vs ${Utils.escapeHtml(s)}</div>\n              <div style="font-size:11px; color:var(--color-text-muted); margin-top:2px;">${Utils.escapeHtml(i.date||"")} ${i.time?"• "+Utils.escapeHtml(i.time):""}</div>\n            </div>\n            <div style="font-size:18px; font-weight:800; color:${d};">${l}–${a}</div>\n          </div>`}).join(""):'\n        <div style="text-align:center; padding:var(--sp-4); color:var(--color-text-muted); font-size:13px;">\n          <i class="ph ph-trophy" style="font-size:32px; display:block; margin-bottom:var(--sp-1);"></i>\n          Nessuna partita questa settimana\n        </div>';let c="";c=s&&s.length>0?'<div class="deadline-list">'+s.map(i=>{const e=i.days_left<=7?"urgent":i.days_left<=15?"warning":"ok",s=0===i.days_left?"OGGI":1===i.days_left?"domani":`${i.days_left} giorni`;return`<div class="deadline-row ${e}">\n          <div class="deadline-icon" style="color:${"urgent"===e?"#FF3B30":"warning"===e?"#FF9500":"#FFD600"};"><i class="ph ph-${Utils.escapeHtml(i.icon)}"></i></div>\n          <div class="deadline-info">\n            <div class="deadline-name">${Utils.escapeHtml(i.name)}</div>\n            <div class="deadline-label">${Utils.escapeHtml(i.label)} • scade ${Utils.escapeHtml(i.expiry_date)}</div>\n          </div>\n          <div class="deadline-days ${e}">${s}</div>\n        </div>`}).join("")+"</div>":'<div style="text-align:center; padding:20px; color:var(--color-text-muted); font-size:13px;">\n          <i class="ph ph-check-circle" style="font-size:32px; display:block; margin-bottom:8px; color:#00E676;"></i>\n          Nessuna scadenza nei prossimi 60 giorni 🎉\n        </div>',n.innerHTML=`\n      <div class="dash-container">\n        \x3c!-- KPI ROW --\x3e\n        <div class="dash-kpi-row" style="display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 24px;">\n          \n          <div class="kpi-item" onclick="Router.navigate('transport')" style="cursor: pointer; flex: 1; min-width: 140px;">\n            <div class="kpi-header">TRASPORTI SETTIMANA <i class="ph-fill ph-bus"></i></div>\n            <div class="kpi-val-row">\n              <div class="kpi-val" style="color: ${t>0?"#FFD600":"var(--color-text)"}">${t}</div>\n              <div class="kpi-trend">in programma</div>\n            </div>\n          </div>\n          \n          <div class="kpi-item" onclick="Router.navigate('outseason')" style="cursor: pointer; flex: 1; min-width: 140px;">\n            <div class="kpi-header">NUOVI OUT SEASON <i class="ph-fill ph-users"></i></div>\n            <div class="kpi-val-row">\n              <div class="kpi-val" style="color: ${d>0?"#00E676":"var(--color-text)"}">${d}</div>\n              <div class="kpi-trend">ultimi 7 gg</div>\n            </div>\n          </div>\n\n          <div class="kpi-item" onclick="Router.navigate('ecommerce')" style="cursor: pointer; flex: 1; min-width: 140px;">\n            <div class="kpi-header">NUOVI ORDINI ECOMMERCE <i class="ph-fill ph-shopping-cart"></i></div>\n            <div class="kpi-val-row">\n              <div class="kpi-val" style="color: ${l>0?"#FF00FF":"var(--color-text)"}">${l}</div>\n              <div class="kpi-trend">ultimi 7 gg</div>\n            </div>\n          </div>\n\n          <div class="kpi-item" onclick="Router.navigate('finance')" style="cursor: pointer; flex: 1; min-width: 140px;">\n            <div class="kpi-header">PAGAMENTI IN SOSPESO <i class="ph-fill ph-credit-card"></i></div>\n            <div class="kpi-val-row">\n              <div class="kpi-val" style="color: ${r>0?"#FF3B30":"var(--color-text)"}">${r}</div>\n              <div class="kpi-trend">da saldare</div>\n            </div>\n          </div>\n\n          <div class="kpi-item" onclick="Router.navigate('whatsapp-inbox')" style="cursor: pointer; flex: 1; min-width: 140px;">\n            <div class="kpi-header">MESSAGGI WA <i class="ph-fill ph-whatsapp-logo"></i></div>\n            <div class="kpi-val-row">\n              <div class="kpi-val" style="color: ${a>0?"#00E676":"var(--color-text)"}">${a}</div>\n              <div class="kpi-trend">da leggere</div>\n            </div>\n          </div>\n\n        </div>\n\n        \x3c!-- MAIN GRID --\x3e\n        <div class="dash-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">\n\n          \x3c!-- WIDGET: WEEKLY RESULTS --\x3e\n          <div class="widget w-events" style="grid-column: 1;">\n            <div class="widget-header">\n              <div class="widget-title">Risultati della Settimana</div>\n              <i class="ph ph-trophy" style="color:var(--color-pink);"></i>\n            </div>\n            ${o}\n          </div>\n\n          \x3c!-- WIDGET: DEADLINES --\x3e\n          <div class="widget w-deadlines" style="grid-column: 2;">\n            <div class="widget-header">\n              <div class="widget-title" style="display:flex;align-items:center;gap:8px;">\n                <i class="ph-fill ph-clock-countdown" style="color:var(--color-warning);"></i> Scadenze Imminenti\n              </div>\n              <button class="btn btn-ghost btn-sm" onclick="Router.navigate('federation')">Vedi tutte</button>\n            </div>\n            ${c}\n          </div>\n\n        </div> \x3c!-- END MAIN GRID --\x3e\n      </div>\n    `}return{destroy:function(){i.abort(),i=new AbortController},init:async function(){const i=document.getElementById("app");if(!i)return;const s=document.getElementById("main-content");s&&(s.style.padding="0",s.style.backgroundColor="#0a0a0c"),i.innerHTML=UI.skeletonPage();try{const[i,s]=await Promise.all([Store.get("weeklyKpis","dashboard").catch(i=>(console.error("[Dashboard] Error fetching weeklyKpis",i),null)),Store.get("deadlines","dashboard").catch(i=>(console.error("[Dashboard] Error fetching deadlines",i),[]))]);e(i,null,s);try{const n=await Store.get("recentResults","results",{limit:8}).catch(i=>(console.warn("[Dashboard] recentResults error:",i),null));e(i,n?.matches||[],s)}catch(n){if("AbortError"===n.name)return;console.warn("[Dashboard] fetchResults error:",n),e(i,[],s)}}catch(i){console.error("[Dashboard] Init error:",i),e(null,[],[])}}}})();window.Dashboard=Dashboard;
+"use strict";
+const Dashboard = (() => {
+  let i = new AbortController();
+  function e(i = null, e = [], s = []) {
+    const n = document.getElementById("app");
+    if (!n) return;
+    const t = i?.weekly_transports ?? 0,
+      l = i?.new_orders ?? 0,
+      a = i?.unread_whatsapp ?? 0,
+      d = i?.new_outseason ?? 0,
+      r = i?.pending_payments ?? 0;
+    let o = "";
+    o =
+      null === e
+        ? '\n        <div style="display:flex; flex-direction:column; gap:12px; padding:var(--sp-2);">\n          <div class="skeleton" style="height:60px; border-radius:var(--radius-sm);"></div>\n          <div class="skeleton" style="height:60px; border-radius:var(--radius-sm); opacity:0.6;"></div>\n          <div class="skeleton" style="height:60px; border-radius:var(--radius-sm); opacity:0.3;"></div>\n        </div>'
+        : e.length > 0
+          ? e
+              .map((i) => {
+                const e = (i.home || "").toLowerCase().includes("fusion"),
+                  s = e ? i.away || "—" : i.home || "—",
+                  n = i.sets_home ?? i.score_home ?? "—",
+                  t = i.sets_away ?? i.score_away ?? "—",
+                  l = e ? n : t,
+                  a = e ? t : n;
+                let d = "var(--color-text-muted)";
+                return (
+                  "—" !== l &&
+                    "—" !== a &&
+                    (d = l > a ? "#00E676" : l < a ? "#FF3B30" : "#FFD600"),
+                  `\n          <div class="fixture-card">\n            <div class="team-logo" style="background:rgba(255,0,255,0.1);color:#FF00FF;"><i class="ph ph-volleyball" style="font-size:18px;"></i></div>\n            <div style="flex:1;">\n              <div style="font-size:13px; font-weight:700;">Fusion Team vs ${Utils.escapeHtml(s)}</div>\n              <div style="font-size:11px; color:var(--color-text-muted); margin-top:2px;">${Utils.escapeHtml(i.date || "")} ${i.time ? "• " + Utils.escapeHtml(i.time) : ""}</div>\n            </div>\n            <div style="font-size:18px; font-weight:800; color:${d};">${l}–${a}</div>\n          </div>`
+                );
+              })
+              .join("")
+          : '\n        <div style="text-align:center; padding:var(--sp-4); color:var(--color-text-muted); font-size:13px;">\n          <i class="ph ph-trophy" style="font-size:32px; display:block; margin-bottom:var(--sp-1);"></i>\n          Nessuna partita questa settimana\n        </div>';
+    let c = "";
+    ((c =
+      s && s.length > 0
+        ? '<div class="deadline-list">' +
+          s
+            .map((i) => {
+              const e =
+                  i.days_left <= 7
+                    ? "urgent"
+                    : i.days_left <= 15
+                      ? "warning"
+                      : "ok",
+                s =
+                  0 === i.days_left
+                    ? "OGGI"
+                    : 1 === i.days_left
+                      ? "domani"
+                      : `${i.days_left} giorni`;
+              return `<div class="deadline-row ${e}">\n          <div class="deadline-icon" style="color:${"urgent" === e ? "#FF3B30" : "warning" === e ? "#FF9500" : "#FFD600"};"><i class="ph ph-${Utils.escapeHtml(i.icon)}"></i></div>\n          <div class="deadline-info">\n            <div class="deadline-name">${Utils.escapeHtml(i.name)}</div>\n            <div class="deadline-label">${Utils.escapeHtml(i.label)} • scade ${Utils.escapeHtml(i.expiry_date)}</div>\n          </div>\n          <div class="deadline-days ${e}">${s}</div>\n        </div>`;
+            })
+            .join("") +
+          "</div>"
+        : '<div style="text-align:center; padding:20px; color:var(--color-text-muted); font-size:13px;">\n          <i class="ph ph-check-circle" style="font-size:32px; display:block; margin-bottom:8px; color:#00E676;"></i>\n          Nessuna scadenza nei prossimi 60 giorni 🎉\n        </div>'),
+      (n.innerHTML = `\n      <div class="dash-container">\n        \x3c!-- KPI ROW --\x3e\n        <div class="dash-kpi-row" style="display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 24px;">\n          \n          <div class="kpi-item" onclick="Router.navigate('transport')" style="cursor: pointer; flex: 1; min-width: 140px;">\n            <div class="kpi-header">TRASPORTI SETTIMANA <i class="ph-fill ph-bus"></i></div>\n            <div class="kpi-val-row">\n              <div class="kpi-val" style="color: ${t > 0 ? "#FFD600" : "var(--color-text)"}">${t}</div>\n              <div class="kpi-trend">in programma</div>\n            </div>\n          </div>\n          \n          <div class="kpi-item" onclick="Router.navigate('outseason')" style="cursor: pointer; flex: 1; min-width: 140px;">\n            <div class="kpi-header">NUOVI OUT SEASON <i class="ph-fill ph-users"></i></div>\n            <div class="kpi-val-row">\n              <div class="kpi-val" style="color: ${d > 0 ? "#00E676" : "var(--color-text)"}">${d}</div>\n              <div class="kpi-trend">ultimi 7 gg</div>\n            </div>\n          </div>\n\n          <div class="kpi-item" onclick="Router.navigate('ecommerce')" style="cursor: pointer; flex: 1; min-width: 140px;">\n            <div class="kpi-header">NUOVI ORDINI ECOMMERCE <i class="ph-fill ph-shopping-cart"></i></div>\n            <div class="kpi-val-row">\n              <div class="kpi-val" style="color: ${l > 0 ? "#FF00FF" : "var(--color-text)"}">${l}</div>\n              <div class="kpi-trend">ultimi 7 gg</div>\n            </div>\n          </div>\n\n          <div class="kpi-item" onclick="Router.navigate('finance')" style="cursor: pointer; flex: 1; min-width: 140px;">\n            <div class="kpi-header">PAGAMENTI IN SOSPESO <i class="ph-fill ph-credit-card"></i></div>\n            <div class="kpi-val-row">\n              <div class="kpi-val" style="color: ${r > 0 ? "#FF3B30" : "var(--color-text)"}">${r}</div>\n              <div class="kpi-trend">da saldare</div>\n            </div>\n          </div>\n\n          <div class="kpi-item" onclick="Router.navigate('whatsapp-inbox')" style="cursor: pointer; flex: 1; min-width: 140px;">\n            <div class="kpi-header">MESSAGGI WA <i class="ph-fill ph-whatsapp-logo"></i></div>\n            <div class="kpi-val-row">\n              <div class="kpi-val" style="color: ${a > 0 ? "#00E676" : "var(--color-text)"}">${a}</div>\n              <div class="kpi-trend">da leggere</div>\n            </div>\n          </div>\n\n        </div>\n\n        \x3c!-- MAIN GRID --\x3e\n        <div class="dash-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">\n\n          \x3c!-- WIDGET: WEEKLY RESULTS --\x3e\n          <div class="widget w-events" style="grid-column: 1;">\n            <div class="widget-header">\n              <div class="widget-title">Risultati della Settimana</div>\n              <i class="ph ph-trophy" style="color:var(--color-pink);"></i>\n            </div>\n            ${o}\n          </div>\n\n          \x3c!-- WIDGET: DEADLINES --\x3e\n          <div class="widget w-deadlines" style="grid-column: 2;">\n            <div class="widget-header">\n              <div class="widget-title" style="display:flex;align-items:center;gap:8px;">\n                <i class="ph-fill ph-clock-countdown" style="color:var(--color-warning);"></i> Scadenze Imminenti\n              </div>\n              <button class="btn btn-ghost btn-sm" onclick="Router.navigate('federation')">Vedi tutte</button>\n            </div>\n            ${c}\n          </div>\n\n        </div> \x3c!-- END MAIN GRID --\x3e\n      </div>\n    `));
+  }
+  return {
+    destroy: function () {
+      (i.abort(), (i = new AbortController()));
+    },
+    init: async function () {
+      const i = document.getElementById("app");
+      if (!i) return;
+      const s = document.getElementById("main-content");
+      (s && ((s.style.padding = "0"), (s.style.backgroundColor = "#0a0a0c")),
+        (i.innerHTML = UI.skeletonPage()));
+      try {
+        const [i, s] = await Promise.all([
+          Store.get("weeklyKpis", "dashboard").catch(
+            (i) => (
+              console.error("[Dashboard] Error fetching weeklyKpis", i),
+              null
+            ),
+          ),
+          Store.get("deadlines", "dashboard").catch(
+            (i) => (
+              console.error("[Dashboard] Error fetching deadlines", i),
+              []
+            ),
+          ),
+        ]);
+        e(i, null, s);
+        try {
+          const n = await Store.get("recentResults", "results", {
+            limit: 8,
+          }).catch(
+            (i) => (console.warn("[Dashboard] recentResults error:", i), null),
+          );
+          e(i, n?.matches || [], s);
+        } catch (n) {
+          if ("AbortError" === n.name) return;
+          (console.warn("[Dashboard] fetchResults error:", n), e(i, [], s));
+        }
+      } catch (i) {
+        (console.error("[Dashboard] Init error:", i), e(null, [], []));
+      }
+    },
+  };
+})();
+window.Dashboard = Dashboard;

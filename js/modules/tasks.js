@@ -1,1 +1,683 @@
-"use strict";const Tasks=(()=>{let t=new AbortController;const e=[{value:"Interno",label:"Interno",icon:"🔧",color:"#8b5cf6"},{value:"Atleta",label:"Atleta",icon:"🏃",color:"#3b82f6"},{value:"Evento",label:"Evento",icon:"🎯",color:"#f59e0b"},{value:"Marketing",label:"Marketing",icon:"📣",color:"#ec4899"},{value:"Amministrativo",label:"Amministrativo",icon:"📋",color:"#14b8a6"},{value:"Altro",label:"Altro",icon:"📌",color:"#6b7280"}],a=[{value:"Alta",label:"Alta",color:"#ef4444",icon:"ph-arrow-up"},{value:"Media",label:"Media",color:"#f59e0b",icon:"ph-minus"},{value:"Bassa",label:"Bassa",color:"#6ee7b7",icon:"ph-arrow-down"}],s=[{value:"Da fare",label:"Da fare",color:"#8892a4"},{value:"In corso",label:"In corso",color:"#3b82f6"},{value:"In attesa",label:"In attesa",color:"#6b7280"},{value:"Completato",label:"Completato",color:"#22c55e"},{value:"Annullato",label:"Annullato",color:"#ef4444"}],l=["Non ha risposto","Interessato","Richiamare","Confermato","Non interessato","In attesa","Altro"],n={Interessato:"#22c55e",Confermato:"#22c55e",Richiamare:"#f59e0b","Non ha risposto":"#8892a4","Non interessato":"#ef4444","In attesa":"#6b7280",Altro:"#6366f1"};let i=[],o=[],r=null,c="mine",d="",u="",p="",v=null;function m(t){return e.find(e=>e.value===t)||e[0]}function g(t){return a.find(e=>e.value===t)||a[1]}function b(t){return s.find(e=>e.value===t)||s[0]}function f(t,e,a=!0){return`<span class="task-badge" style="background:${a?e:"transparent"};color:${a?"#fff":e};border:1px solid ${e};">${Utils.escapeHtml(t)}</span>`}function h(t){return t?o.find(e=>e.id===t)?.full_name||t:"—"}function y(t){return t.due_date&&!["Completato","Annullato"].includes(t.status)&&new Date(t.due_date)<new Date}async function k(t){return t.size>5242880?(UI.toast("Il file non può superare i 5 MB","warning"),null):new Promise((e,a)=>{const s=new FileReader;s.onload=t=>e(t.target.result),s.onerror=()=>a(new Error("Lettura file fallita")),s.readAsDataURL(t)})}function $(e){v?async function(e){const r=i.find(t=>t.id===v);if(!r)return v=null,void x(e);const c=m(r.category),d=g(r.priority),u=b(r.status),p=y(r),L=s.map(t=>`<option value="${t.value}"${r.status===t.value?" selected":""}>${t.label}</option>`).join(""),_=a.map(t=>`<option value="${t.value}"${r.priority===t.value?" selected":""}>${t.label}</option>`).join(""),q=o.map(t=>`<option value="${t.id}"${r.assigned_to===t.id?" selected":""}>${Utils.escapeHtml(t.full_name)}</option>`).join("");let E=[];try{const t=await Store.get("listTaskLogs","tasks",{task_id:v});E=t?.logs||[]}catch(t){}const I=["",...l].map(t=>`<option value="${t}">${t||"— Seleziona esito —"}</option>`).join(""),T=E.length>0?E.map(t=>{const e=t.esito||t.outcome||"",a=n[e]||"#6366f1";return`\n                <div class="task-log-entry">\n                    <div class="task-log-dot"></div>\n                    <div class="task-log-content">\n                        <div class="task-log-header">\n                            <span class="task-log-date">${new Date(t.interaction_date||t.created_at).toLocaleString("it-IT",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"})}</span>\n                            ${e?f(e,a,!0):""}\n                            <button class="btn btn-ghost btn-xs task-log-delete" data-log-id="${Utils.escapeHtml(t.id)}" title="Elimina" type="button">\n                                <i class="ph ph-trash" style="color:var(--color-danger);font-size:13px;"></i>\n                            </button>\n                        </div>\n                        ${t.notes?`<p class="task-log-notes">${Utils.escapeHtml(t.notes)}</p>`:""}\n                        ${t.schedule_followup&&t.followup_date?`<div class="task-log-followup"><i class="ph ph-calendar-check"></i> Richiamata: <strong>${new Date(t.followup_date).toLocaleDateString("it-IT")}</strong></div>`:""}\n                        ${t.attachment?`\n                            <div class="task-log-attachment">\n                                <i class="ph ph-paperclip"></i>\n                                <button class="btn btn-ghost btn-sm task-log-view-att" data-att="${Utils.escapeHtml(t.id)}" type="button">Visualizza allegato</button>\n                            </div>`:""}\n                    </div>\n                </div>`}).join(""):'<p style="color:var(--text-muted);font-size:13px;text-align:center;padding:var(--sp-2) 0;">Nessun log ancora. Aggiungi il primo aggiornamento.</p>',U=r.due_date?new Date(r.due_date).toLocaleDateString("it-IT",{day:"2-digit",month:"long",year:"numeric"}):null;e.innerHTML=`\n            <div class="tasks-page">\n                \x3c!-- Back button --\x3e\n                <button class="btn btn-ghost btn-sm" id="btn-back-list" type="button" style="margin-bottom:var(--sp-2);">\n                    <i class="ph ph-arrow-left"></i> Torna alla lista\n                </button>\n\n                \x3c!-- Task card detail --\x3e\n                <div class="task-detail-card">\n                    <div class="task-detail-header">\n                        <span class="task-cat-icon" style="background:${c.color}20;color:${c.color};font-size:1.5rem;width:48px;height:48px;">${c.icon}</span>\n                        <div style="flex:1;">\n                            <h2 class="task-detail-title">${Utils.escapeHtml(r.title)}</h2>\n                            <div class="task-card-badges" style="margin-top:6px;">\n                                ${f(c.label,c.color,!1)}\n                                ${f(d.label,d.color,!0)}\n                                ${f(u.label,u.color,!0)}\n                                ${p?f("⚠ SCADUTO","#ef4444",!0):""}\n                            </div>\n                        </div>\n                    </div>\n\n                    \x3c!-- Meta --\x3e\n                    <div class="task-detail-meta">\n                        <div class="task-detail-meta-item">\n                            <span class="task-detail-meta-label">Creato da</span>\n                            <span>${Utils.escapeHtml(h(r.user_id))}</span>\n                        </div>\n                        <div class="task-detail-meta-item">\n                            <span class="task-detail-meta-label">Assegnato a</span>\n                            <span>${Utils.escapeHtml(h(r.assigned_to||r.user_id))}</span>\n                        </div>\n                        ${U?`<div class="task-detail-meta-item"><span class="task-detail-meta-label">Scadenza</span><span${p?' style="color:var(--color-danger);"':""}>${U}</span></div>`:""}\n                    </div>\n\n                    ${r.notes?`<div class="task-detail-notes">${Utils.escapeHtml(r.notes)}</div>`:""}\n\n                    ${r.attachment?'\n                    <div class="task-detail-attachment">\n                        <i class="ph ph-paperclip"></i>\n                        <button class="btn btn-ghost btn-sm" id="btn-view-task-att" type="button">Visualizza allegato</button>\n                        <button class="btn btn-ghost btn-sm" id="btn-remove-task-att" type="button" style="color:var(--color-danger);">Rimuovi</button>\n                    </div>':""}\n\n                    \x3c!-- Quick update --\x3e\n                    <div class="task-detail-actions">\n                        <label class="task-inline-field">\n                            <span>Stato</span>\n                            <select id="qk-status">${L}</select>\n                        </label>\n                        <label class="task-inline-field">\n                            <span>Priorità</span>\n                            <select id="qk-priority">${_}</select>\n                        </label>\n                        <label class="task-inline-field">\n                            <span>Assegnato a</span>\n                            <select id="qk-assignee">${q}</select>\n                        </label>\n                        <button class="btn btn-secondary btn-sm" id="btn-edit-task" type="button">\n                            <i class="ph ph-pencil"></i> Modifica\n                        </button>\n                        <button class="btn btn-ghost btn-sm" id="btn-delete-task" type="button" style="color:var(--color-danger);">\n                            <i class="ph ph-trash"></i>\n                        </button>\n                    </div>\n                </div>\n\n                \x3c!-- Add log form --\x3e\n                <div class="task-add-log-card">\n                    <h3 class="task-section-title"><i class="ph ph-plus-circle"></i> Aggiungi Aggiornamento</h3>\n                    <form id="task-log-form">\n                        <div class="task-log-form-row">\n                            <div class="form-group" style="margin:0;flex:1;">\n                                <label class="form-label">Data interazione</label>\n                                <input type="datetime-local" id="log-date" class="form-input"\n                                    value="${(new Date).toISOString().slice(0,16)}" required>\n                            </div>\n                            <div class="form-group" style="margin:0;flex:1;">\n                                <label class="form-label">Esito</label>\n                                <select id="log-esito" class="form-input">${I}</select>\n                            </div>\n                        </div>\n                        <div class="form-group">\n                            <label class="form-label">Note</label>\n                            <textarea id="log-notes" class="form-input" rows="3" placeholder="Cosa è stato fatto o detto..."></textarea>\n                        </div>\n                        \x3c!-- Toggle richiamata --\x3e\n                        <div class="task-callback-row">\n                            <label class="task-switch-label">\n                                <span><i class="ph ph-calendar-check"></i> Pianifica Richiamata</span>\n                                <div class="task-switch">\n                                    <input type="checkbox" id="log-callback-toggle">\n                                    <span class="task-switch-slider"></span>\n                                </div>\n                            </label>\n                            <div id="log-callback-date-wrap" class="hidden">\n                                <div class="form-group" style="margin:0;margin-top:var(--sp-1);">\n                                    <label class="form-label">Data Richiamata</label>\n                                    <input type="datetime-local" id="log-callback-date" class="form-input">\n                                </div>\n                            </div>\n                        </div>\n                        \x3c!-- Allegato --\x3e\n                        <div class="form-group">\n                            <label class="form-label"><i class="ph ph-paperclip"></i> Allegato</label>\n                            <input type="file" id="log-file" class="form-input" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt" style="padding:8px;">\n                        </div>\n                        <div id="log-error" class="form-error hidden" aria-live="polite"></div>\n                        <button type="submit" class="btn btn-primary" id="log-submit-btn">\n                            <i class="ph ph-floppy-disk"></i> Salva Aggiornamento\n                        </button>\n                    </form>\n                </div>\n\n                \x3c!-- Log timeline --\x3e\n                <div class="task-logs-section">\n                    <h3 class="task-section-title"><i class="ph ph-clock-clockwise"></i> Cronologia (${E.length})</h3>\n                    <div class="task-log-timeline" id="task-log-timeline">\n                        ${T}\n                    </div>\n                </div>\n            </div>`,function(e,a,s){const l=document.getElementById("app");if(!l)return;const n={signal:t.signal};l.querySelector("#btn-back-list")?.addEventListener("click",()=>{v=null,$(l)},n),l.querySelector("#qk-status")?.addEventListener("change",async t=>{try{await Store.api("updateTask","tasks",{id:a.id,status:t.target.value});const e=i.find(t=>t.id===a.id);e&&(e.status=t.target.value),UI.toast("Stato aggiornato","success"),"Completato"===t.target.value&&UI.toast("🎉 Task completata!","success")}catch(t){UI.toast(t.message||"Errore","error")}},n),l.querySelector("#qk-priority")?.addEventListener("change",async t=>{try{await Store.api("updateTask","tasks",{id:a.id,priority:t.target.value});const e=i.find(t=>t.id===a.id);e&&(e.priority=t.target.value),UI.toast("Priorità aggiornata","success")}catch(t){UI.toast(t.message||"Errore","error")}},n),l.querySelector("#qk-assignee")?.addEventListener("change",async t=>{try{await Store.api("updateTask","tasks",{id:a.id,assigned_to:t.target.value||null});const e=i.find(t=>t.id===a.id);e&&(e.assigned_to=t.target.value||null),UI.toast("Assegnato aggiornato","success")}catch(t){UI.toast(t.message||"Errore","error")}},n),l.querySelector("#btn-edit-task")?.addEventListener("click",()=>w(a.id),n),l.querySelector("#btn-delete-task")?.addEventListener("click",()=>{UI.confirm(`Eliminare la task "${a.title}"? L'operazione è irreversibile.`,async()=>{try{await Store.api("deleteTask","tasks",{id:a.id}),i=i.filter(t=>t.id!==a.id),v=null,UI.toast("Task eliminata","info"),$(l)}catch(t){UI.toast(t.message||"Errore","error")}})},n),l.querySelector("#btn-view-task-att")?.addEventListener("click",()=>{S(a.attachment,`allegato_${a.title.substring(0,20)}`)},n),l.querySelector("#btn-remove-task-att")?.addEventListener("click",()=>{UI.confirm("Rimuovere l'allegato dal task?",async()=>{await Store.api("updateTask","tasks",{id:a.id,attachment:null});const t=i.find(t=>t.id===a.id);t&&(t.attachment=null),UI.toast("Allegato rimosso","info"),v=a.id,$(l)})},n),l.querySelector("#log-callback-toggle")?.addEventListener("change",t=>{l.querySelector("#log-callback-date-wrap")?.classList.toggle("hidden",!t.target.checked)},n),l.querySelector("#task-log-form")?.addEventListener("submit",async t=>{t.preventDefault();const e=l.querySelector("#log-error"),s=l.querySelector("#log-submit-btn"),n=l.querySelector("#log-date").value;if(!n)return e.textContent="La data è obbligatoria",void e.classList.remove("hidden");const o=l.querySelector("#log-callback-toggle").checked,r={task_id:a.id,interaction_date:n.replace("T"," ")+":00",notes:l.querySelector("#log-notes").value.trim()||null,esito:l.querySelector("#log-esito").value||null,outcome:l.querySelector("#log-esito").value||null,schedule_followup:o?1:0,followup_date:o&&l.querySelector("#log-callback-date").value||null},c=l.querySelector("#log-file");if(!(c?.files.length>0)||(r.attachment=await k(c.files[0]),r.attachment)){s.disabled=!0,s.innerHTML='<i class="ph ph-circle-notch ph-spin"></i> Salvataggio...',e.classList.add("hidden");try{if(await Store.api("createTaskLog","tasks",r),o&&r.followup_date){await Store.api("updateTask","tasks",{id:a.id,due_date:r.followup_date});const t=i.find(t=>t.id===a.id);t&&(t.due_date=r.followup_date)}UI.toast("Aggiornamento salvato!","success"),$(l)}catch(t){e.textContent=t.message||"Errore",e.classList.remove("hidden"),s.disabled=!1,s.innerHTML='<i class="ph ph-floppy-disk"></i> Salva Aggiornamento'}}},n),l.querySelectorAll(".task-log-delete").forEach(t=>{t.addEventListener("click",async()=>{try{await Store.api("deleteTaskLog","tasks",{id:t.dataset.logId}),UI.toast("Log eliminato","info"),$(l)}catch(t){UI.toast(t.message||"Errore","error")}})}),l.querySelectorAll(".task-log-view-att").forEach(t=>{t.addEventListener("click",()=>{const e=s.find(e=>e.id===t.dataset.att);e?.attachment&&S(e.attachment,`log_${e.id}`)})})}(0,r,E)}(e):x(e)}function x(a){new Date;let l=[...i];if(l="mine"===c?l.filter(t=>t.user_id===r||t.assigned_to===r):l.filter(t=>t.user_id!==r&&t.assigned_to!==r),p){const t=p.toLowerCase();l=l.filter(e=>(e.title||"").toLowerCase().includes(t)||(e.category||"").toLowerCase().includes(t)||(e.notes||"").toLowerCase().includes(t)||h(e.assigned_to||e.user_id).toLowerCase().includes(t))}d&&(l=l.filter(t=>t.category===d)),u&&(l=l.filter(t=>t.status===u));const n={"In corso":0,"Da fare":1,"In attesa":2,Completato:3,Annullato:4},o={Alta:0,Media:1,Bassa:2};l.sort((t,e)=>{const a=(n[t.status]??2)-(n[e.status]??2);if(0!==a)return a;const s=(o[t.priority]??1)-(o[e.priority]??1);return 0!==s?s:(t.due_date?new Date(t.due_date).getTime():1/0)-(e.due_date?new Date(e.due_date).getTime():1/0)});const k=i.filter(t=>t.user_id===r||t.assigned_to===r).length,x=i.filter(t=>t.user_id!==r&&t.assigned_to!==r).length;let S=[...i];S="mine"===c?S.filter(t=>t.user_id===r||t.assigned_to===r):S.filter(t=>t.user_id!==r&&t.assigned_to!==r);const L=S.length,_=S.filter(t=>"Da fare"===t.status).length,q=S.filter(t=>"In corso"===t.status).length,E=S.filter(t=>"Completato"===t.status).length,I=S.filter(t=>y(t)).length,T=e.map(t=>{const e=d===t.value;return`<button class="task-filter-chip${e?" active":""}" data-cat="${t.value}" style="${e?`--chip-c:${t.color};`:""}">${t.icon} ${t.label}</button>`}).join(""),U=s.map(t=>{const e=u===t.value;return`<button class="task-filter-chip${e?" active":""}" data-status="${t.value}" style="${e?`--chip-c:${t.color};`:""}">${Utils.escapeHtml(t.label)}</button>`}).join(""),A=l.length>0?l.map(t=>{const e=m(t.category),a=g(t.priority),s=b(t.status),l=y(t),n=["Completato","Annullato"].includes(t.status),i=t.assigned_to||t.user_id,o=function(t){const e=h(t);return"—"===e?"?":e.split(" ").map(t=>t[0]).join("").toUpperCase().substring(0,2)}(i),c=i===r,d=t.due_date?new Date(t.due_date).toLocaleDateString("it-IT",{day:"2-digit",month:"short"}):null;return`\n                <div class="task-card${n?" completed":""}${l?" overdue":""}" data-id="${Utils.escapeHtml(t.id)}" style="--card-border:${s.color};" tabindex="0" role="button" aria-label="Apri task: ${Utils.escapeHtml(t.title)}">\n                    <div class="task-card-header">\n                        <span class="task-cat-icon" style="background:${e.color}20;color:${e.color};">${e.icon}</span>\n                        <div class="task-card-title-wrap">\n                            <div class="task-card-title">${Utils.escapeHtml(t.title)}</div>\n                            <div class="task-card-badges">\n                                ${f(e.label,e.color,!1)}\n                                ${f(a.label,a.color,!0)}\n                            </div>\n                        </div>\n                        ${f(s.label,s.color,!0)}\n                    </div>\n                    <div class="task-card-footer">\n                        <div class="task-card-footer-left">\n                            ${d?`<span class="task-card-due${l?" overdue":""}"><i class="ph ph-calendar-blank"></i> ${d}${l?' <i class="ph ph-warning-circle"></i>':""}</span>`:""}\n                            ${t.attachment?'<span class="task-card-att" title="Allegato"><i class="ph ph-paperclip"></i></span>':""}\n                        </div>\n                        <div class="task-card-assignee" title="${Utils.escapeHtml(h(i))}">\n                            <span class="task-assignee-avatar${c?" is-me":""}">${o}</span>\n                        </div>\n                    </div>\n                </div>`}).join(""):`\n            <div class="tasks-empty">\n                <i class="ph ph-check-square" style="font-size:48px;opacity:0.15;"></i>\n                <p>${"mine"===c?"Nessun task personale":"Nessun task del team"}</p>\n            </div>`;a.innerHTML=`\n            <div class="tasks-page">\n\n                \x3c!-- Tab mine/team --\x3e\n                <div class="todo-tabs">\n                    <button class="todo-tab${"mine"===c?" active":""}" data-tab="mine">\n                        <i class="ph ph-user"></i> I miei task <span class="todo-tab-count">${k}</span>\n                    </button>\n                    <button class="todo-tab${"team"===c?" active":""}" data-tab="team">\n                        <i class="ph ph-users"></i> Team <span class="todo-tab-count">${x}</span>\n                    </button>\n                </div>\n\n                \x3c!-- Stats --\x3e\n                <div class="todo-stats-row">\n                    <div class="todo-stat"><div class="todo-stat-value">${L}</div><div class="todo-stat-label">Totali</div></div>\n                    <div class="todo-stat"><div class="todo-stat-value" style="color:#8892a4">${_}</div><div class="todo-stat-label">Da fare</div></div>\n                    <div class="todo-stat"><div class="todo-stat-value" style="color:#3b82f6">${q}</div><div class="todo-stat-label">In corso</div></div>\n                    <div class="todo-stat"><div class="todo-stat-value" style="color:#22c55e">${E}</div><div class="todo-stat-label">Completati</div></div>\n                    ${I>0?`<div class="todo-stat"><div class="todo-stat-value" style="color:#ef4444">⚠ ${I}</div><div class="todo-stat-label">Scaduti</div></div>`:""}\n                </div>\n\n                \x3c!-- Toolbar --\x3e\n                <div class="tasks-title-row" style="margin-bottom:0;">\n                    <h1 class="page-title" style="display:flex;align-items:center;gap:10px;">\n                        <i class="ph ph-check-square" style="color:var(--color-primary);"></i>\n                        Task &amp; Attività\n                    </h1>\n                    <button class="btn btn-primary" id="btn-new-task" type="button">\n                        <i class="ph ph-plus"></i> Nuova Task\n                    </button>\n                </div>\n\n                \x3c!-- Search --\x3e\n                <div class="tasks-filter-row" style="margin-top:var(--sp-2);">\n                    <div class="search-input-wrapper" style="flex:1;max-width:340px;">\n                        <i class="ph ph-magnifying-glass search-icon"></i>\n                        <input type="search" id="tasks-search" class="form-input" placeholder="Cerca task..."\n                            value="${Utils.escapeHtml(p)}" style="padding-left:36px;">\n                    </div>\n                </div>\n\n                \x3c!-- Chip filters --\x3e\n                <div class="todo-filter-group" style="margin-bottom:var(--sp-1);">\n                    <span class="todo-filter-label">Categoria:</span>\n                    ${T}\n                </div>\n                <div class="todo-filter-group">\n                    <span class="todo-filter-label">Stato:</span>\n                    ${U}\n                </div>\n\n                \x3c!-- Cards --\x3e\n                <div class="todo-cards-list" id="tasks-cards">\n                    ${A}\n                </div>\n            </div>`,function(){const e=document.getElementById("app");if(!e)return;const a={signal:t.signal};e.querySelector("#btn-new-task")?.addEventListener("click",()=>w(null),a),e.querySelector("#tasks-search")?.addEventListener("input",t=>{p=t.target.value.trim().toLowerCase(),$(e)},a),e.querySelectorAll(".todo-tab").forEach(t=>{t.addEventListener("click",()=>{c=t.dataset.tab,p="",d="",u="",$(e)},a)}),e.querySelectorAll("[data-cat]").forEach(t=>{t.addEventListener("click",()=>{d=d===t.dataset.cat?"":t.dataset.cat,$(e)},a)}),e.querySelectorAll("[data-status]").forEach(t=>{t.addEventListener("click",()=>{u=u===t.dataset.status?"":t.dataset.status,$(e)},a)}),e.querySelector("#tasks-cards")?.addEventListener("click",t=>{const a=t.target.closest(".task-card");a&&(v=a.dataset.id,$(e))},a),e.querySelector("#tasks-cards")?.addEventListener("keydown",t=>{if("Enter"===t.key){const a=t.target.closest(".task-card");a&&(v=a.dataset.id,$(e))}},a)}()}function w(t){const l=t?i.find(e=>e.id===t):null,n=!!l,c=e.map(t=>`<option value="${t.value}"${(l?.category||"Interno")===t.value?" selected":""}>${t.icon} ${t.label}</option>`).join(""),d=a.map(t=>`<option value="${t.value}"${(l?.priority||"Media")===t.value?" selected":""}>${t.label}</option>`).join(""),u=s.map(t=>`<option value="${t.value}"${(l?.status||"Da fare")===t.value?" selected":""}>${t.label}</option>`).join(""),p='<option value="">— Nessuno —</option>'+o.map(t=>`<option value="${t.id}"${l?.assigned_to===t.id?" selected":""}>${Utils.escapeHtml(t.full_name)}</option>`).join(""),v=document.createElement("div");v.style.cssText="display:flex;flex-direction:column;gap:var(--sp-2);",v.innerHTML=`\n            <form id="task-modal-form" style="display:flex;flex-direction:column;gap:var(--sp-2);">\n                <div class="form-group" style="margin:0;">\n                    <label class="form-label">Titolo *</label>\n                    <input type="text" id="tf-title" class="form-input" required\n                        value="${Utils.escapeHtml(l?.title||"")}" placeholder="Titolo della task">\n                </div>\n                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--sp-2);">\n                    <div class="form-group" style="margin:0;">\n                        <label class="form-label">Categoria</label>\n                        <select id="tf-category" class="form-input">${c}</select>\n                    </div>\n                    <div class="form-group" style="margin:0;">\n                        <label class="form-label">Priorità</label>\n                        <select id="tf-priority" class="form-input">${d}</select>\n                    </div>\n                    <div class="form-group" style="margin:0;">\n                        <label class="form-label">Stato</label>\n                        <select id="tf-status" class="form-input">${u}</select>\n                    </div>\n                </div>\n                <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-2);">\n                    <div class="form-group" style="margin:0;">\n                        <label class="form-label">Assegnata a</label>\n                        <select id="tf-assigned" class="form-input">${p}</select>\n                    </div>\n                    <div class="form-group" style="margin:0;">\n                        <label class="form-label">Scadenza</label>\n                        <input type="date" id="tf-due" class="form-input"\n                            value="${l?.due_date?l.due_date.split("T")[0]:""}">\n                    </div>\n                </div>\n                <div class="form-group" style="margin:0;">\n                    <label class="form-label">Note</label>\n                    <textarea id="tf-notes" class="form-input" rows="3" style="resize:vertical;">${Utils.escapeHtml(l?.notes||"")}</textarea>\n                </div>\n                <div class="form-group" style="margin:0;">\n                    <label class="form-label"><i class="ph ph-paperclip"></i> Allegato ${l?.attachment?'<span style="color:var(--color-success);font-size:0.7rem;">✓ già presente</span>':""}</label>\n                    <input type="file" id="tf-attachment" class="form-input" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt" style="padding:8px;">\n                    ${l?.attachment?'<div style="font-size:0.7rem;color:var(--text-muted);margin-top:2px;">Seleziona file per sostituire, oppure lascia vuoto per mantenere il corrente.</div>':""}\n                </div>\n                <div id="tf-error" class="form-error hidden" aria-live="polite"></div>\n                <button type="submit" class="btn btn-primary" id="tf-submit">\n                    ${n?'<i class="ph ph-floppy-disk"></i> Salva Modifiche':'<i class="ph ph-plus"></i> Crea Task'}\n                </button>\n            </form>`;const m=UI.modal({title:n?`Modifica: ${l.title}`:"Nuova Task",body:v,size:"lg"});v.querySelector("#task-modal-form").addEventListener("submit",async e=>{e.preventDefault();const a=v.querySelector("#tf-error"),s=v.querySelector("#tf-submit"),o=v.querySelector("#tf-title").value.trim();if(!o)return a.textContent="Il titolo è obbligatorio",void a.classList.remove("hidden");const c={title:o,category:v.querySelector("#tf-category").value,priority:v.querySelector("#tf-priority").value,status:v.querySelector("#tf-status").value,due_date:v.querySelector("#tf-due").value||null,notes:v.querySelector("#tf-notes").value.trim()||null,assigned_to:v.querySelector("#tf-assigned").value||null},d=v.querySelector("#tf-attachment");if(d.files.length>0){if(c.attachment=await k(d.files[0]),!c.attachment)return}else n&&l.attachment||(c.attachment=null);s.disabled=!0,a.classList.add("hidden");try{if(n){await Store.api("updateTask","tasks",{id:t,...c});const e=i.findIndex(e=>e.id===t);-1!==e&&(i[e]={...i[e],...c}),UI.toast("Task aggiornata!","success")}else{const t=await Store.api("createTask","tasks",c);i.unshift({...c,id:t.id,user_id:r,created_at:(new Date).toISOString()}),UI.toast("Task creata!","success")}m.close(),$(document.getElementById("app"))}catch(t){a.textContent=t.message||"Errore durante il salvataggio",a.classList.remove("hidden"),s.disabled=!1}})}function S(t,e){if(!t)return;const a=t.match(/^data:([^;]+);/);if(!a)return void UI.toast("Formato non supportato","error");const s=a[1];let l="",n=null;if("application/pdf"===s){const e=atob(t.split(",")[1]),a=new Uint8Array(e.length);for(let t=0;t<e.length;t++)a[t]=e.charCodeAt(t);n=URL.createObjectURL(new Blob([a],{type:"application/pdf"})),l=`<iframe src="${n}" style="width:100%;height:100%;border:none;border-radius:8px;"></iframe>`}else l=s.startsWith("image/")?`<img src="${t}" style="max-width:100%;max-height:85vh;object-fit:contain;border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,0.5);">`:'<div style="text-align:center;padding:60px 30px;">\n                <div style="font-size:4rem;margin-bottom:16px;">📄</div>\n                <p style="color:#9ca3af;font-size:1rem;margin-bottom:20px;">Anteprima non disponibile per questo formato.</p>\n                <button id="att-dl-alt" class="btn btn-primary" style="padding:10px 24px;">⬇️ Scarica File</button>\n            </div>';const i=document.createElement("div");i.style.cssText="position:fixed;top:0;left:0;width:100%;height:100%;z-index:10000;background:rgba(0,0,0,0.88);backdrop-filter:blur(6px);display:flex;flex-direction:column;align-items:center;justify-content:center;animation:fadeIn 0.2s ease;",i.innerHTML=`\n            <div style="position:absolute;top:16px;right:20px;display:flex;gap:10px;z-index:10001;">\n                <button id="att-dl" style="background:rgba(255,255,255,0.12);border:none;color:#fff;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:0.8rem;">⬇️ SCARICA</button>\n                <button id="att-close" style="background:rgba(255,255,255,0.12);border:none;color:#fff;width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:1.2rem;">✕</button>\n            </div>\n            <div style="width:90%;height:85%;display:flex;align-items:center;justify-content:center;">${l}</div>`,document.body.appendChild(i);const o=()=>{i.style.opacity="0",setTimeout(()=>{i.remove(),n&&URL.revokeObjectURL(n)},200)};i.querySelector("#att-close").addEventListener("click",o),i.addEventListener("click",t=>{t.target===i&&o()});const r=()=>{const a=document.createElement("a");a.href=t,a.download=e||"allegato",a.click()};i.querySelector("#att-dl").addEventListener("click",r);const c=i.querySelector("#att-dl-alt");c&&c.addEventListener("click",r);const d=t=>{"Escape"===t.key&&(o(),document.removeEventListener("keydown",d))};document.addEventListener("keydown",d)}return{async init(){t=new AbortController,v=null,c="mine",p="",d="",u="";const e=document.getElementById("app");if(e){e.innerHTML=UI.skeletonPage();try{const[t,a,s]=await Promise.all([Store.get("listTasks","tasks"),Store.get("listUsers","auth").catch(()=>({users:[]})),Store.get("me","auth").catch(()=>null)]);i=t?.tasks||[],o=a?.users||a||[],r=s?.user?.id||s?.id||null,$(e)}catch(t){console.error("[Tasks] Init error:",t),e.innerHTML=Utils.emptyState("Errore nel caricamento",t.message,"Riprova",null,()=>this.init())}}},destroy(){t.abort(),i=[],o=[]}}})();window.Tasks=Tasks;
+"use strict";
+const Tasks = (() => {
+  let t = new AbortController();
+  const e = [
+    { value: "Interno", label: "Interno", icon: "🔧", color: "#8b5cf6" },
+    { value: "Atleta", label: "Atleta", icon: "🏃", color: "#3b82f6" },
+    { value: "Evento", label: "Evento", icon: "🎯", color: "#f59e0b" },
+    { value: "Marketing", label: "Marketing", icon: "📣", color: "#ec4899" },
+    {
+      value: "Amministrativo",
+      label: "Amministrativo",
+      icon: "📋",
+      color: "#14b8a6",
+    },
+    { value: "Altro", label: "Altro", icon: "📌", color: "#6b7280" },
+  ],
+    a = [
+      { value: "Alta", label: "Alta", color: "#ef4444", icon: "ph-arrow-up" },
+      { value: "Media", label: "Media", color: "#f59e0b", icon: "ph-minus" },
+      {
+        value: "Bassa",
+        label: "Bassa",
+        color: "#6ee7b7",
+        icon: "ph-arrow-down",
+      },
+    ],
+    s = [
+      { value: "Da fare", label: "Da fare", color: "#8892a4" },
+      { value: "In corso", label: "In corso", color: "#3b82f6" },
+      { value: "In attesa", label: "In attesa", color: "#6b7280" },
+      { value: "Completato", label: "Completato", color: "#22c55e" },
+      { value: "Annullato", label: "Annullato", color: "#ef4444" },
+    ],
+    l = [
+      "Non ha risposto",
+      "Interessato",
+      "Richiamare",
+      "Confermato",
+      "Non interessato",
+      "In attesa",
+      "Altro",
+    ],
+    n = {
+      Interessato: "#22c55e",
+      Confermato: "#22c55e",
+      Richiamare: "#f59e0b",
+      "Non ha risposto": "#8892a4",
+      "Non interessato": "#ef4444",
+      "In attesa": "#6b7280",
+      Altro: "#6366f1",
+    };
+  let i = [],
+    o = [],
+    r = null,
+    c = "mine",
+    d = "",
+    u = "",
+    p = "",
+    v = null;
+  function m(t) {
+    return e.find((e) => e.value === t) || e[0];
+  }
+  function g(t) {
+    return a.find((e) => e.value === t) || a[1];
+  }
+  function b(t) {
+    return s.find((e) => e.value === t) || s[0];
+  }
+  function f(t, e, a = !0) {
+    return `<span class="task-badge" style="background:${a ? e : "transparent"};color:${a ? "#fff" : e};border:1px solid ${e};">${Utils.escapeHtml(t)}</span>`;
+  }
+  function h(t) {
+    return t ? o.find((e) => e.id === t)?.full_name || t : "—";
+  }
+  function y(t) {
+    return (
+      t.due_date &&
+      !["Completato", "Annullato"].includes(t.status) &&
+      new Date(t.due_date) < new Date()
+    );
+  }
+  async function k(t) {
+    return t.size > 5242880
+      ? (UI.toast("Il file non può superare i 5 MB", "warning"), null)
+      : new Promise((e, a) => {
+        const s = new FileReader();
+        ((s.onload = (t) => e(t.target.result)),
+          (s.onerror = () => a(new Error("Lettura file fallita"))),
+          s.readAsDataURL(t));
+      });
+  }
+  function $(e) {
+    v
+      ? (async function (e) {
+        const r = i.find((t) => t.id === v);
+        if (!r) return ((v = null), void x(e));
+        const c = m(r.category),
+          d = g(r.priority),
+          u = b(r.status),
+          p = y(r),
+          L = s
+            .map(
+              (t) =>
+                `<option value="${t.value}"${r.status === t.value ? " selected" : ""}>${t.label}</option>`,
+            )
+            .join(""),
+          _ = a
+            .map(
+              (t) =>
+                `<option value="${t.value}"${r.priority === t.value ? " selected" : ""}>${t.label}</option>`,
+            )
+            .join(""),
+          q = o
+            .map(
+              (t) =>
+                `<option value="${t.id}"${r.assigned_to === t.id ? " selected" : ""}>${Utils.escapeHtml(t.full_name)}</option>`,
+            )
+            .join("");
+        let E = [];
+        try {
+          const t = await Store.get("listTaskLogs", "tasks", { task_id: v });
+          E = t?.logs || [];
+        } catch (t) { }
+        const I = ["", ...l]
+          .map(
+            (t) =>
+              `<option value="${t}">${t || "— Seleziona esito —"}</option>`,
+          )
+          .join(""),
+          T =
+            E.length > 0
+              ? E.map((t) => {
+                const e = t.esito || t.outcome || "",
+                  a = n[e] || "#6366f1";
+                return `\n                <div class="task-log-entry">\n                    <div class="task-log-dot"></div>\n                    <div class="task-log-content">\n                        <div class="task-log-header">\n                            <span class="task-log-date">${new Date(t.interaction_date || t.created_at).toLocaleString("it-IT", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>\n                            ${e ? f(e, a, !0) : ""}\n                            <button class="btn btn-ghost btn-xs task-log-delete" data-log-id="${Utils.escapeHtml(t.id)}" title="Elimina" type="button">\n                                <i class="ph ph-trash" style="color:var(--color-danger);font-size:13px;"></i>\n                            </button>\n                        </div>\n                        ${t.notes ? `<p class="task-log-notes">${Utils.escapeHtml(t.notes)}</p>` : ""}\n                        ${t.schedule_followup && t.followup_date ? `<div class="task-log-followup"><i class="ph ph-calendar-check"></i> Richiamata: <strong>${new Date(t.followup_date).toLocaleDateString("it-IT")}</strong></div>` : ""}\n                        ${t.attachment ? `\n                            <div class="task-log-attachment">\n                                <i class="ph ph-paperclip"></i>\n                                <button class="btn btn-ghost btn-sm task-log-view-att" data-att="${Utils.escapeHtml(t.id)}" type="button">Visualizza allegato</button>\n                            </div>` : ""}\n                    </div>\n                </div>`;
+              }).join("")
+              : '<p style="color:var(--text-muted);font-size:13px;text-align:center;padding:var(--sp-2) 0;">Nessun log ancora. Aggiungi il primo aggiornamento.</p>',
+          U = r.due_date
+            ? new Date(r.due_date).toLocaleDateString("it-IT", {
+              day: "2-digit",
+              month: "long",
+              year: "numeric",
+            })
+            : null;
+        ((e.innerHTML = `\n            <div class="tasks-page">\n                \x3c!-- Back button --\x3e\n                <button class="btn btn-ghost btn-sm" id="btn-back-list" type="button" style="margin-bottom:var(--sp-2);">\n                    <i class="ph ph-arrow-left"></i> Torna alla lista\n                </button>\n\n                \x3c!-- Task card detail --\x3e\n                <div class="task-detail-card">\n                    <div class="task-detail-header">\n                        <span class="task-cat-icon" style="background:${c.color}20;color:${c.color};font-size:1.5rem;width:48px;height:48px;">${c.icon}</span>\n                        <div style="flex:1;">\n                            <h2 class="task-detail-title">${Utils.escapeHtml(r.title)}</h2>\n                            <div class="task-card-badges" style="margin-top:6px;">\n                                ${f(c.label, c.color, !1)}\n                                ${f(d.label, d.color, !0)}\n                                ${f(u.label, u.color, !0)}\n                                ${p ? f("⚠ SCADUTO", "#ef4444", !0) : ""}\n                            </div>\n                        </div>\n                    </div>\n\n                    \x3c!-- Meta --\x3e\n                    <div class="task-detail-meta">\n                        <div class="task-detail-meta-item">\n                            <span class="task-detail-meta-label">Creato da</span>\n                            <span>${Utils.escapeHtml(h(r.user_id))}</span>\n                        </div>\n                        <div class="task-detail-meta-item">\n                            <span class="task-detail-meta-label">Assegnato a</span>\n                            <span>${Utils.escapeHtml(h(r.assigned_to || r.user_id))}</span>\n                        </div>\n                        ${U ? `<div class="task-detail-meta-item"><span class="task-detail-meta-label">Scadenza</span><span${p ? ' style="color:var(--color-danger);"' : ""}>${U}</span></div>` : ""}\n                    </div>\n\n                    ${r.notes ? `<div class="task-detail-notes">${Utils.escapeHtml(r.notes)}</div>` : ""}\n\n                    ${r.attachment ? '\n                    <div class="task-detail-attachment">\n                        <i class="ph ph-paperclip"></i>\n                        <button class="btn btn-ghost btn-sm" id="btn-view-task-att" type="button">Visualizza allegato</button>\n                        <button class="btn btn-ghost btn-sm" id="btn-remove-task-att" type="button" style="color:var(--color-danger);">Rimuovi</button>\n                    </div>' : ""}\n\n                    \x3c!-- Quick update --\x3e\n                    <div class="task-detail-actions">\n                        <label class="task-inline-field">\n                            <span>Stato</span>\n                            <select id="qk-status">${L}</select>\n                        </label>\n                        <label class="task-inline-field">\n                            <span>Priorità</span>\n                            <select id="qk-priority">${_}</select>\n                        </label>\n                        <label class="task-inline-field">\n                            <span>Assegnato a</span>\n                            <select id="qk-assignee">${q}</select>\n                        </label>\n                        <button class="btn btn-secondary btn-sm" id="btn-edit-task" type="button">\n                            <i class="ph ph-pencil"></i> Modifica\n                        </button>\n                        <button class="btn btn-ghost btn-sm" id="btn-delete-task" type="button" style="color:var(--color-danger);">\n                            <i class="ph ph-trash"></i>\n                        </button>\n                    </div>\n                </div>\n\n                \x3c!-- Add log form --\x3e\n                <div class="task-add-log-card">\n                    <h3 class="task-section-title"><i class="ph ph-plus-circle"></i> Aggiungi Aggiornamento</h3>\n                    <form id="task-log-form">\n                        <div class="task-log-form-row">\n                            <div class="form-group" style="margin:0;flex:1;">\n                                <label class="form-label">Data interazione</label>\n                                <input type="datetime-local" id="log-date" class="form-input"\n                                    value="${new Date().toISOString().slice(0, 16)}" required>\n                            </div>\n                            <div class="form-group" style="margin:0;flex:1;">\n                                <label class="form-label">Esito</label>\n                                <select id="log-esito" class="form-input">${I}</select>\n                            </div>\n                        </div>\n                        <div class="form-group">\n                            <label class="form-label">Note</label>\n                            <textarea id="log-notes" class="form-input" rows="3" placeholder="Cosa è stato fatto o detto..."></textarea>\n                        </div>\n                        \x3c!-- Toggle richiamata --\x3e\n                        <div class="task-callback-row">\n                            <label class="task-switch-label">\n                                <span><i class="ph ph-calendar-check"></i> Pianifica Richiamata</span>\n                                <div class="task-switch">\n                                    <input type="checkbox" id="log-callback-toggle">\n                                    <span class="task-switch-slider"></span>\n                                </div>\n                            </label>\n                            <div id="log-callback-date-wrap" class="hidden">\n                                <div class="form-group" style="margin:0;margin-top:var(--sp-1);">\n                                    <label class="form-label">Data Richiamata</label>\n                                    <input type="datetime-local" id="log-callback-date" class="form-input">\n                                </div>\n                            </div>\n                        </div>\n                        \x3c!-- Allegato --\x3e\n                        <div class="form-group">\n                            <label class="form-label"><i class="ph ph-paperclip"></i> Allegato</label>\n                            <input type="file" id="log-file" class="form-input" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt" style="padding:8px;">\n                        </div>\n                        <div id="log-error" class="form-error hidden" aria-live="polite"></div>\n                        <button type="submit" class="btn btn-primary" id="log-submit-btn">\n                            <i class="ph ph-floppy-disk"></i> Salva Aggiornamento\n                        </button>\n                    </form>\n                </div>\n\n                \x3c!-- Log timeline --\x3e\n                <div class="task-logs-section">\n                    <h3 class="task-section-title"><i class="ph ph-clock-clockwise"></i> Cronologia (${E.length})</h3>\n                    <div class="task-log-timeline" id="task-log-timeline">\n                        ${T}\n                    </div>\n                </div>\n            </div>`),
+          (function (e, a, s) {
+            const l = document.getElementById("app");
+            if (!l) return;
+            const n = { signal: t.signal };
+            (l.querySelector("#btn-back-list")?.addEventListener(
+              "click",
+              () => {
+                ((v = null), $(l));
+              },
+              n,
+            ),
+              l.querySelector("#qk-status")?.addEventListener(
+                "change",
+                async (t) => {
+                  try {
+                    await Store.api("updateTask", "tasks", {
+                      id: a.id,
+                      status: t.target.value,
+                    });
+                    const e = i.find((t) => t.id === a.id);
+                    (e && (e.status = t.target.value),
+                      UI.toast("Stato aggiornato", "success"),
+                      "Completato" === t.target.value &&
+                      UI.toast("🎉 Task completata!", "success"));
+                  } catch (t) {
+                    UI.toast(t.message || "Errore", "error");
+                  }
+                },
+                n,
+              ),
+              l.querySelector("#qk-priority")?.addEventListener(
+                "change",
+                async (t) => {
+                  try {
+                    await Store.api("updateTask", "tasks", {
+                      id: a.id,
+                      priority: t.target.value,
+                    });
+                    const e = i.find((t) => t.id === a.id);
+                    (e && (e.priority = t.target.value),
+                      UI.toast("Priorità aggiornata", "success"));
+                  } catch (t) {
+                    UI.toast(t.message || "Errore", "error");
+                  }
+                },
+                n,
+              ),
+              l.querySelector("#qk-assignee")?.addEventListener(
+                "change",
+                async (t) => {
+                  try {
+                    await Store.api("updateTask", "tasks", {
+                      id: a.id,
+                      assigned_to: t.target.value || null,
+                    });
+                    const e = i.find((t) => t.id === a.id);
+                    (e && (e.assigned_to = t.target.value || null),
+                      UI.toast("Assegnato aggiornato", "success"));
+                  } catch (t) {
+                    UI.toast(t.message || "Errore", "error");
+                  }
+                },
+                n,
+              ),
+              l
+                .querySelector("#btn-edit-task")
+                ?.addEventListener("click", () => w(a.id), n),
+              l.querySelector("#btn-delete-task")?.addEventListener(
+                "click",
+                () => {
+                  UI.confirm(
+                    `Eliminare la task "${a.title}"? L'operazione è irreversibile.`,
+                    async () => {
+                      try {
+                        (await Store.api("deleteTask", "tasks", { id: a.id }),
+                          (i = i.filter((t) => t.id !== a.id)),
+                          (v = null),
+                          UI.toast("Task eliminata", "info"),
+                          $(l));
+                      } catch (t) {
+                        UI.toast(t.message || "Errore", "error");
+                      }
+                    },
+                  );
+                },
+                n,
+              ),
+              l.querySelector("#btn-view-task-att")?.addEventListener(
+                "click",
+                () => {
+                  S(a.attachment, `allegato_${a.title.substring(0, 20)}`);
+                },
+                n,
+              ),
+              l.querySelector("#btn-remove-task-att")?.addEventListener(
+                "click",
+                () => {
+                  UI.confirm("Rimuovere l'allegato dal task?", async () => {
+                    await Store.api("updateTask", "tasks", {
+                      id: a.id,
+                      attachment: null,
+                    });
+                    const t = i.find((t) => t.id === a.id);
+                    (t && (t.attachment = null),
+                      UI.toast("Allegato rimosso", "info"),
+                      (v = a.id),
+                      $(l));
+                  });
+                },
+                n,
+              ),
+              l.querySelector("#log-callback-toggle")?.addEventListener(
+                "change",
+                (t) => {
+                  l.querySelector(
+                    "#log-callback-date-wrap",
+                  )?.classList.toggle("hidden", !t.target.checked);
+                },
+                n,
+              ),
+              l.querySelector("#task-log-form")?.addEventListener(
+                "submit",
+                async (t) => {
+                  t.preventDefault();
+                  const e = l.querySelector("#log-error"),
+                    s = l.querySelector("#log-submit-btn"),
+                    n = l.querySelector("#log-date").value;
+                  if (!n)
+                    return (
+                      (e.textContent = "La data è obbligatoria"),
+                      void e.classList.remove("hidden")
+                    );
+                  const o = l.querySelector("#log-callback-toggle").checked,
+                    r = {
+                      task_id: a.id,
+                      interaction_date: n.replace("T", " ") + ":00",
+                      notes:
+                        l.querySelector("#log-notes").value.trim() || null,
+                      esito: l.querySelector("#log-esito").value || null,
+                      outcome: l.querySelector("#log-esito").value || null,
+                      schedule_followup: o ? 1 : 0,
+                      followup_date:
+                        (o && l.querySelector("#log-callback-date").value) ||
+                        null,
+                    },
+                    c = l.querySelector("#log-file");
+                  if (
+                    !(c?.files.length > 0) ||
+                    ((r.attachment = await k(c.files[0])), r.attachment)
+                  ) {
+                    ((s.disabled = !0),
+                      (s.innerHTML =
+                        '<i class="ph ph-circle-notch ph-spin"></i> Salvataggio...'),
+                      e.classList.add("hidden"));
+                    try {
+                      if (
+                        (await Store.api("createTaskLog", "tasks", r),
+                          o && r.followup_date)
+                      ) {
+                        await Store.api("updateTask", "tasks", {
+                          id: a.id,
+                          due_date: r.followup_date,
+                        });
+                        const t = i.find((t) => t.id === a.id);
+                        t && (t.due_date = r.followup_date);
+                      }
+                      (UI.toast("Aggiornamento salvato!", "success"), $(l));
+                    } catch (t) {
+                      ((e.textContent = t.message || "Errore"),
+                        e.classList.remove("hidden"),
+                        (s.disabled = !1),
+                        (s.innerHTML =
+                          '<i class="ph ph-floppy-disk"></i> Salva Aggiornamento'));
+                    }
+                  }
+                },
+                n,
+              ),
+              l.querySelectorAll(".task-log-delete").forEach((t) => {
+                t.addEventListener("click", async () => {
+                  try {
+                    (await Store.api("deleteTaskLog", "tasks", {
+                      id: t.dataset.logId,
+                    }),
+                      UI.toast("Log eliminato", "info"),
+                      $(l));
+                  } catch (t) {
+                    UI.toast(t.message || "Errore", "error");
+                  }
+                });
+              }),
+              l.querySelectorAll(".task-log-view-att").forEach((t) => {
+                t.addEventListener("click", () => {
+                  const e = s.find((e) => e.id === t.dataset.att);
+                  e?.attachment && S(e.attachment, `log_${e.id}`);
+                });
+              }));
+          })(0, r, E));
+      })(e)
+      : x(e);
+  }
+  function x(a) {
+    new Date();
+    let l = [...i];
+    if (
+      ((l =
+        "mine" === c
+          ? l.filter((t) => t.user_id === r || t.assigned_to === r)
+          : l.filter((t) => t.user_id !== r && t.assigned_to !== r)),
+        p)
+    ) {
+      const t = p.toLowerCase();
+      l = l.filter(
+        (e) =>
+          (e.title || "").toLowerCase().includes(t) ||
+          (e.category || "").toLowerCase().includes(t) ||
+          (e.notes || "").toLowerCase().includes(t) ||
+          h(e.assigned_to || e.user_id)
+            .toLowerCase()
+            .includes(t),
+      );
+    }
+    (d && (l = l.filter((t) => t.category === d)),
+      u && (l = l.filter((t) => t.status === u)));
+    const n = {
+      "In corso": 0,
+      "Da fare": 1,
+      "In attesa": 2,
+      Completato: 3,
+      Annullato: 4,
+    },
+      o = { Alta: 0, Media: 1, Bassa: 2 };
+    l.sort((t, e) => {
+      const a = (n[t.status] ?? 2) - (n[e.status] ?? 2);
+      if (0 !== a) return a;
+      const s = (o[t.priority] ?? 1) - (o[e.priority] ?? 1);
+      return 0 !== s
+        ? s
+        : (t.due_date ? new Date(t.due_date).getTime() : 1 / 0) -
+        (e.due_date ? new Date(e.due_date).getTime() : 1 / 0);
+    });
+    const k = i.filter((t) => t.user_id === r || t.assigned_to === r).length,
+      x = i.filter((t) => t.user_id !== r && t.assigned_to !== r).length;
+    let S = [...i];
+    S =
+      "mine" === c
+        ? S.filter((t) => t.user_id === r || t.assigned_to === r)
+        : S.filter((t) => t.user_id !== r && t.assigned_to !== r);
+    const L = S.length,
+      _ = S.filter((t) => "Da fare" === t.status).length,
+      q = S.filter((t) => "In corso" === t.status).length,
+      E = S.filter((t) => "Completato" === t.status).length,
+      I = S.filter((t) => y(t)).length,
+      T = e
+        .map((t) => {
+          const e = d === t.value;
+          return `<button class="task-filter-chip${e ? " active" : ""}" data-cat="${t.value}" style="${e ? `--chip-c:${t.color};` : ""}">${t.icon} ${t.label}</button>`;
+        })
+        .join(""),
+      U = s
+        .map((t) => {
+          const e = u === t.value;
+          return `<button class="task-filter-chip${e ? " active" : ""}" data-status="${t.value}" style="${e ? `--chip-c:${t.color};` : ""}">${Utils.escapeHtml(t.label)}</button>`;
+        })
+        .join(""),
+      A =
+        l.length > 0
+          ? l
+            .map((t) => {
+              const e = m(t.category),
+                a = g(t.priority),
+                s = b(t.status),
+                l = y(t),
+                n = ["Completato", "Annullato"].includes(t.status),
+                i = t.assigned_to || t.user_id,
+                o = (function (t) {
+                  const e = h(t);
+                  return "—" === e
+                    ? "?"
+                    : e
+                      .split(" ")
+                      .map((t) => t[0])
+                      .join("")
+                      .toUpperCase()
+                      .substring(0, 2);
+                })(i),
+                c = i === r,
+                d = t.due_date
+                  ? new Date(t.due_date).toLocaleDateString("it-IT", {
+                    day: "2-digit",
+                    month: "short",
+                  })
+                  : null;
+              return `\n                <div class="task-card${n ? " completed" : ""}${l ? " overdue" : ""}" data-id="${Utils.escapeHtml(t.id)}" style="--card-border:${s.color};" tabindex="0" role="button" aria-label="Apri task: ${Utils.escapeHtml(t.title)}">\n                    <div class="task-card-header">\n                        <span class="task-cat-icon" style="background:${e.color}20;color:${e.color};">${e.icon}</span>\n                        <div class="task-card-title-wrap">\n                            <div class="task-card-title">${Utils.escapeHtml(t.title)}</div>\n                            <div class="task-card-badges">\n                                ${f(e.label, e.color, !1)}\n                                ${f(a.label, a.color, !0)}\n                            </div>\n                        </div>\n                        ${f(s.label, s.color, !0)}\n                    </div>\n                    <div class="task-card-footer">\n                        <div class="task-card-footer-left">\n                            ${d ? `<span class="task-card-due${l ? " overdue" : ""}"><i class="ph ph-calendar-blank"></i> ${d}${l ? ' <i class="ph ph-warning-circle"></i>' : ""}</span>` : ""}\n                            ${t.attachment ? '<span class="task-card-att" title="Allegato"><i class="ph ph-paperclip"></i></span>' : ""}\n                        </div>\n                        <div class="task-card-assignee" title="${Utils.escapeHtml(h(i))}">\n                            <span class="task-assignee-avatar${c ? " is-me" : ""}">${o}</span>\n                        </div>\n                    </div>\n                </div>`;
+            })
+            .join("")
+          : `\n            <div class="tasks-empty">\n                <i class="ph ph-check-square" style="font-size:48px;opacity:0.15;"></i>\n                <p>${"mine" === c ? "Nessun task personale" : "Nessun task del team"}</p>\n            </div>`;
+    ((a.innerHTML = `\n            <div class="tasks-page">\n\n                <!-- Tab mine/team -->
+                <div class="todo-tabs fusion-tabs-container">
+                    <button class="todo-tab fusion-tab${"mine" === c ? " active" : ""}" data-tab="mine">
+                        <i class="ph ph-user"></i> I miei task <span class="todo-tab-count">${k}</span>
+                    </button>
+                    <button class="todo-tab fusion-tab${"team" === c ? " active" : ""}" data-tab="team">
+                        <i class="ph ph-users"></i> Team <span class="todo-tab-count">${x}</span>
+                    </button>
+                </div>\n\n                \x3c!-- Stats --\x3e\n                <div class="todo-stats-row">\n                    <div class="todo-stat"><div class="todo-stat-value">${L}</div><div class="todo-stat-label">Totali</div></div>\n                    <div class="todo-stat"><div class="todo-stat-value" style="color:#8892a4">${_}</div><div class="todo-stat-label">Da fare</div></div>\n                    <div class="todo-stat"><div class="todo-stat-value" style="color:#3b82f6">${q}</div><div class="todo-stat-label">In corso</div></div>\n                    <div class="todo-stat"><div class="todo-stat-value" style="color:#22c55e">${E}</div><div class="todo-stat-label">Completati</div></div>\n                    ${I > 0 ? `<div class="todo-stat"><div class="todo-stat-value" style="color:#ef4444">⚠ ${I}</div><div class="todo-stat-label">Scaduti</div></div>` : ""}\n                </div>\n\n                \x3c!-- Toolbar --\x3e\n                <div class="tasks-title-row" style="margin-bottom:0;">\n                    <h1 class="page-title" style="display:flex;align-items:center;gap:10px;">\n                        <i class="ph ph-check-square" style="color:var(--color-primary);"></i>\n                        Task &amp; Attività\n                    </h1>\n                    <button class="btn btn-primary" id="btn-new-task" type="button">\n                        <i class="ph ph-plus"></i> Nuova Task\n                    </button>\n                </div>\n\n                \x3c!-- Search --\x3e\n                <div class="tasks-filter-row" style="margin-top:var(--sp-2);">\n                    <div class="search-input-wrapper" style="flex:1;max-width:340px;">\n                        <i class="ph ph-magnifying-glass search-icon"></i>\n                        <input type="search" id="tasks-search" class="form-input" placeholder="Cerca task..."\n                            value="${Utils.escapeHtml(p)}" style="padding-left:36px;">\n                    </div>\n                </div>\n\n                \x3c!-- Chip filters --\x3e\n                <div class="todo-filter-group" style="margin-bottom:var(--sp-1);">\n                    <span class="todo-filter-label">Categoria:</span>\n                    ${T}\n                </div>\n                <div class="todo-filter-group">\n                    <span class="todo-filter-label">Stato:</span>\n                    ${U}\n                </div>\n\n                \x3c!-- Cards --\x3e\n                <div class="todo-cards-list" id="tasks-cards">\n                    ${A}\n                </div>\n            </div>`),
+      (function () {
+        const e = document.getElementById("app");
+        if (!e) return;
+        const a = { signal: t.signal };
+        (e
+          .querySelector("#btn-new-task")
+          ?.addEventListener("click", () => w(null), a),
+          e.querySelector("#tasks-search")?.addEventListener(
+            "input",
+            (t) => {
+              ((p = t.target.value.trim().toLowerCase()), $(e));
+            },
+            a,
+          ),
+          e.querySelectorAll(".todo-tab").forEach((t) => {
+            t.addEventListener(
+              "click",
+              () => {
+                ((c = t.dataset.tab), (p = ""), (d = ""), (u = ""), $(e));
+              },
+              a,
+            );
+          }),
+          e.querySelectorAll("[data-cat]").forEach((t) => {
+            t.addEventListener(
+              "click",
+              () => {
+                ((d = d === t.dataset.cat ? "" : t.dataset.cat), $(e));
+              },
+              a,
+            );
+          }),
+          e.querySelectorAll("[data-status]").forEach((t) => {
+            t.addEventListener(
+              "click",
+              () => {
+                ((u = u === t.dataset.status ? "" : t.dataset.status), $(e));
+              },
+              a,
+            );
+          }),
+          e.querySelector("#tasks-cards")?.addEventListener(
+            "click",
+            (t) => {
+              const a = t.target.closest(".task-card");
+              a && ((v = a.dataset.id), $(e));
+            },
+            a,
+          ),
+          e.querySelector("#tasks-cards")?.addEventListener(
+            "keydown",
+            (t) => {
+              if ("Enter" === t.key) {
+                const a = t.target.closest(".task-card");
+                a && ((v = a.dataset.id), $(e));
+              }
+            },
+            a,
+          ));
+      })());
+  }
+  function w(t) {
+    const l = t ? i.find((e) => e.id === t) : null,
+      n = !!l,
+      c = e
+        .map(
+          (t) =>
+            `<option value="${t.value}"${(l?.category || "Interno") === t.value ? " selected" : ""}>${t.icon} ${t.label}</option>`,
+        )
+        .join(""),
+      d = a
+        .map(
+          (t) =>
+            `<option value="${t.value}"${(l?.priority || "Media") === t.value ? " selected" : ""}>${t.label}</option>`,
+        )
+        .join(""),
+      u = s
+        .map(
+          (t) =>
+            `<option value="${t.value}"${(l?.status || "Da fare") === t.value ? " selected" : ""}>${t.label}</option>`,
+        )
+        .join(""),
+      p =
+        '<option value="">— Nessuno —</option>' +
+        o
+          .map(
+            (t) =>
+              `<option value="${t.id}"${l?.assigned_to === t.id ? " selected" : ""}>${Utils.escapeHtml(t.full_name)}</option>`,
+          )
+          .join(""),
+      v = document.createElement("div");
+    ((v.style.cssText = "display:flex;flex-direction:column;gap:var(--sp-2);"),
+      (v.innerHTML = `\n            <form id="task-modal-form" style="display:flex;flex-direction:column;gap:var(--sp-2);">\n                <div class="form-group" style="margin:0;">\n                    <label class="form-label">Titolo *</label>\n                    <input type="text" id="tf-title" class="form-input" required\n                        value="${Utils.escapeHtml(l?.title || "")}" placeholder="Titolo della task">\n                </div>\n                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--sp-2);">\n                    <div class="form-group" style="margin:0;">\n                        <label class="form-label">Categoria</label>\n                        <select id="tf-category" class="form-input">${c}</select>\n                    </div>\n                    <div class="form-group" style="margin:0;">\n                        <label class="form-label">Priorità</label>\n                        <select id="tf-priority" class="form-input">${d}</select>\n                    </div>\n                    <div class="form-group" style="margin:0;">\n                        <label class="form-label">Stato</label>\n                        <select id="tf-status" class="form-input">${u}</select>\n                    </div>\n                </div>\n                <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-2);">\n                    <div class="form-group" style="margin:0;">\n                        <label class="form-label">Assegnata a</label>\n                        <select id="tf-assigned" class="form-input">${p}</select>\n                    </div>\n                    <div class="form-group" style="margin:0;">\n                        <label class="form-label">Scadenza</label>\n                        <input type="date" id="tf-due" class="form-input"\n                            value="${l?.due_date ? l.due_date.split("T")[0] : ""}">\n                    </div>\n                </div>\n                <div class="form-group" style="margin:0;">\n                    <label class="form-label">Note</label>\n                    <textarea id="tf-notes" class="form-input" rows="3" style="resize:vertical;">${Utils.escapeHtml(l?.notes || "")}</textarea>\n                </div>\n                <div class="form-group" style="margin:0;">\n                    <label class="form-label"><i class="ph ph-paperclip"></i> Allegato ${l?.attachment ? '<span style="color:var(--color-success);font-size:0.7rem;">✓ già presente</span>' : ""}</label>\n                    <input type="file" id="tf-attachment" class="form-input" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt" style="padding:8px;">\n                    ${l?.attachment ? '<div style="font-size:0.7rem;color:var(--text-muted);margin-top:2px;">Seleziona file per sostituire, oppure lascia vuoto per mantenere il corrente.</div>' : ""}\n                </div>\n                <div id="tf-error" class="form-error hidden" aria-live="polite"></div>\n                <button type="submit" class="btn btn-primary" id="tf-submit">\n                    ${n ? '<i class="ph ph-floppy-disk"></i> Salva Modifiche' : '<i class="ph ph-plus"></i> Crea Task'}\n                </button>\n            </form>`));
+    const m = UI.modal({
+      title: n ? `Modifica: ${l.title}` : "Nuova Task",
+      body: v,
+      size: "lg",
+    });
+    v.querySelector("#task-modal-form").addEventListener(
+      "submit",
+      async (e) => {
+        e.preventDefault();
+        const a = v.querySelector("#tf-error"),
+          s = v.querySelector("#tf-submit"),
+          o = v.querySelector("#tf-title").value.trim();
+        if (!o)
+          return (
+            (a.textContent = "Il titolo è obbligatorio"),
+            void a.classList.remove("hidden")
+          );
+        const c = {
+          title: o,
+          category: v.querySelector("#tf-category").value,
+          priority: v.querySelector("#tf-priority").value,
+          status: v.querySelector("#tf-status").value,
+          due_date: v.querySelector("#tf-due").value || null,
+          notes: v.querySelector("#tf-notes").value.trim() || null,
+          assigned_to: v.querySelector("#tf-assigned").value || null,
+        },
+          d = v.querySelector("#tf-attachment");
+        if (d.files.length > 0) {
+          if (((c.attachment = await k(d.files[0])), !c.attachment)) return;
+        } else (n && l.attachment) || (c.attachment = null);
+        ((s.disabled = !0), a.classList.add("hidden"));
+        try {
+          if (n) {
+            await Store.api("updateTask", "tasks", { id: t, ...c });
+            const e = i.findIndex((e) => e.id === t);
+            (-1 !== e && (i[e] = { ...i[e], ...c }),
+              UI.toast("Task aggiornata!", "success"));
+          } else {
+            const t = await Store.api("createTask", "tasks", c);
+            (i.unshift({
+              ...c,
+              id: t.id,
+              user_id: r,
+              created_at: new Date().toISOString(),
+            }),
+              UI.toast("Task creata!", "success"));
+          }
+          (m.close(), $(document.getElementById("app")));
+        } catch (t) {
+          ((a.textContent = t.message || "Errore durante il salvataggio"),
+            a.classList.remove("hidden"),
+            (s.disabled = !1));
+        }
+      },
+    );
+  }
+  function S(t, e) {
+    if (!t) return;
+    const a = t.match(/^data:([^;]+);/);
+    if (!a) return void UI.toast("Formato non supportato", "error");
+    const s = a[1];
+    let l = "",
+      n = null;
+    if ("application/pdf" === s) {
+      const e = atob(t.split(",")[1]),
+        a = new Uint8Array(e.length);
+      for (let t = 0; t < e.length; t++) a[t] = e.charCodeAt(t);
+      ((n = URL.createObjectURL(new Blob([a], { type: "application/pdf" }))),
+        (l = `<iframe src="${n}" style="width:100%;height:100%;border:none;border-radius:8px;"></iframe>`));
+    } else
+      l = s.startsWith("image/")
+        ? `<img src="${t}" style="max-width:100%;max-height:85vh;object-fit:contain;border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,0.5);">`
+        : '<div style="text-align:center;padding:60px 30px;">\n                <div style="font-size:4rem;margin-bottom:16px;">📄</div>\n                <p style="color:#9ca3af;font-size:1rem;margin-bottom:20px;">Anteprima non disponibile per questo formato.</p>\n                <button id="att-dl-alt" class="btn btn-primary" style="padding:10px 24px;">⬇️ Scarica File</button>\n            </div>';
+    const i = document.createElement("div");
+    ((i.style.cssText =
+      "position:fixed;top:0;left:0;width:100%;height:100%;z-index:10000;background:rgba(0,0,0,0.88);backdrop-filter:blur(6px);display:flex;flex-direction:column;align-items:center;justify-content:center;animation:fadeIn 0.2s ease;"),
+      (i.innerHTML = `\n            <div style="position:absolute;top:16px;right:20px;display:flex;gap:10px;z-index:10001;">\n                <button id="att-dl" style="background:rgba(255,255,255,0.12);border:none;color:#fff;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:0.8rem;">⬇️ SCARICA</button>\n                <button id="att-close" style="background:rgba(255,255,255,0.12);border:none;color:#fff;width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:1.2rem;">✕</button>\n            </div>\n            <div style="width:90%;height:85%;display:flex;align-items:center;justify-content:center;">${l}</div>`),
+      document.body.appendChild(i));
+    const o = () => {
+      ((i.style.opacity = "0"),
+        setTimeout(() => {
+          (i.remove(), n && URL.revokeObjectURL(n));
+        }, 200));
+    };
+    (i.querySelector("#att-close").addEventListener("click", o),
+      i.addEventListener("click", (t) => {
+        t.target === i && o();
+      }));
+    const r = () => {
+      const a = document.createElement("a");
+      ((a.href = t), (a.download = e || "allegato"), a.click());
+    };
+    i.querySelector("#att-dl").addEventListener("click", r);
+    const c = i.querySelector("#att-dl-alt");
+    c && c.addEventListener("click", r);
+    const d = (t) => {
+      "Escape" === t.key && (o(), document.removeEventListener("keydown", d));
+    };
+    document.addEventListener("keydown", d);
+  }
+  return {
+    async init() {
+      ((t = new AbortController()),
+        (v = null),
+        (c = "mine"),
+        (p = ""),
+        (d = ""),
+        (u = ""));
+      const e = document.getElementById("app");
+      if (e) {
+        e.innerHTML = UI.skeletonPage();
+        try {
+          const [t, a, s] = await Promise.all([
+            Store.get("listTasks", "tasks"),
+            Store.get("listUsers", "auth").catch(() => ({ users: [] })),
+            Store.get("me", "auth").catch(() => null),
+          ]);
+          ((i = t?.tasks || []),
+            (o = a?.users || a || []),
+            (r = s?.user?.id || s?.id || null),
+            $(e));
+        } catch (t) {
+          (console.error("[Tasks] Init error:", t),
+            (e.innerHTML = Utils.emptyState(
+              "Errore nel caricamento",
+              t.message,
+              "Riprova",
+              null,
+              () => this.init(),
+            )));
+        }
+      }
+    },
+    destroy() {
+      (t.abort(), (i = []), (o = []));
+    },
+  };
+})();
+window.Tasks = Tasks;
