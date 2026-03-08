@@ -456,7 +456,12 @@ const Athletes = (() => {
           Store.get("payments", "athletes", { id: n }).catch(() => []),
         ]),
           c = App.getUser(),
-          p = ["admin", "manager", "operator"].includes(c?.role);
+          p = ["admin", "manager", "operator"].includes(c?.role),
+          g = (label, value, color) => `
+            <div class="stat-card" style="padding:var(--sp-2); border:1px solid var(--color-border); ${color ? `border-left:4px solid ${color};` : ""}">
+              <span class="stat-label" style="font-size:10px;text-transform:uppercase;color:var(--color-text-muted);">${label}</span>
+              <span class="stat-value" style="font-size:13px;font-weight:600;display:block;">${Utils.escapeHtml(value || "—")}</span>
+            </div>`;
         ((s.innerHTML = `\n        \x3c!-- BREADCRUMB NAV --\x3e\n        <div style="display:flex;align-items:center;gap:var(--sp-2);padding:var(--sp-2) var(--sp-4);border-bottom:1px solid var(--color-border);background:var(--color-bg);position:sticky;top:72px;z-index:50;">\n          <button class="btn btn-ghost btn-sm" id="back-to-list" style="color:var(--color-text-muted);border:none;padding:0;display:flex;align-items:center;gap:6px;font-size:12px;text-transform:uppercase;letter-spacing:0.06em;" type="button">\n            <i class="ph ph-arrow-left" style="font-size:16px;"></i> Atleti\n          </button>\n          <i class="ph ph-caret-right" style="font-size:12px;color:var(--color-text-muted);opacity:0.5;"></i>\n          <span style="font-size:12px;font-weight:600;color:var(--color-white);text-transform:uppercase;letter-spacing:0.06em;">${Utils.escapeHtml(r.full_name)}</span>\n          <div style="flex:1;"></div>\n          ${p ? '<button class="btn btn-primary btn-sm" id="edit-athlete-btn" type="button" style="margin-right:8px;"><i class="ph ph-pencil-simple"></i> MODIFICA</button>' : ""}\n          ${["admin", "manager"].includes(c?.role) ? '<button class="btn btn-default btn-sm" id="ai-report-btn" type="button">⚡ REPORT AI</button>' : ""}\n        </div>\n\n        <div class="page-body" style="display:flex;flex-direction:column;gap:var(--sp-4); background:var(--color-black);">\n\n          <!-- TAB BAR -->\n          <div style="position:relative;margin:0 calc(var(--sp-4) * -1);padding:0 var(--sp-4);border-bottom:1px solid var(--color-border);margin-bottom:var(--sp-4);">\n            <div id="athlete-tab-bar" class="fusion-tabs-container" style="display:flex;gap:0;overflow-x:auto;scrollbar-width:none;position:relative;z-index:2;padding-bottom:1px;">\n              ${[
           { id: "anagrafica", label: "Anagrafica" },
           { id: "metrics", label: "Metrics & Load" },
