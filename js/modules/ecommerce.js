@@ -236,8 +236,35 @@ const Ecommerce = (() => {
         </div>
         `;
 
+        // Tab switching
+        const tabArt = document.getElementById('ec-tab-articles');
+        const tabOrd = document.getElementById('ec-tab-orders');
+        if (tabArt) tabArt.addEventListener('click', () => _switchTab('articles'), { signal: _abortCtrl.signal });
+        if (tabOrd) tabOrd.addEventListener('click', () => _switchTab('orders'), { signal: _abortCtrl.signal });
+
         // Load initial panel
         if (_currentTab === 'articles') {
+            _loadArticlesPanel();
+        } else {
+            _loadOrdersPanel();
+        }
+    }
+
+    function _switchTab(tab) {
+        _currentTab = tab;
+        const isArt = (tab === 'articles');
+
+        const tabArtBtn = document.getElementById('ec-tab-articles');
+        const tabOrdBtn = document.getElementById('ec-tab-orders');
+        if (tabArtBtn) tabArtBtn.classList.toggle('active', isArt);
+        if (tabOrdBtn) tabOrdBtn.classList.toggle('active', !isArt);
+
+        const panelArt = document.getElementById('ec-panel-articles');
+        const panelOrd = document.getElementById('ec-panel-orders');
+        if (panelArt) panelArt.style.display = isArt ? '' : 'none';
+        if (panelOrd) panelOrd.style.display = isArt ? 'none' : '';
+
+        if (isArt) {
             _loadArticlesPanel();
         } else {
             _loadOrdersPanel();
