@@ -76,8 +76,17 @@ const Results = (() => {
                   "Non ci sono partite disponibili per questo campionato.",
                 );
               const r = {};
+              let lastPlayedRound = null;
+              let maxPlayedRound = -1;
               s.forEach((e) => {
                 const t = e.round || "Altre";
+                if (e.status === "played" && t !== "Altre") {
+                  const rNum = parseInt(t);
+                  if (!isNaN(rNum) && rNum > maxPlayedRound) {
+                    maxPlayedRound = rNum;
+                    lastPlayedRound = t;
+                  }
+                }
                 (r[t] || (r[t] = []), r[t].push(e));
               });
               const c = Object.keys(r).sort((e, t) =>
@@ -91,7 +100,7 @@ const Results = (() => {
               if (
                 (c.forEach((e, t) => {
                   const n = r[e];
-                  d += `\n<div style="font-size:15px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.9);margin-top:${0 === t ? \"24px\" : \"44px\"};margin-bottom:18px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:12px;text-shadow:0 0 10px rgba(255,255,255,0.1);"><i class="ph ph-calendar-blank" style="color:var(--color-pink);font-size:18px;filter:drop-shadow(0 0 10px rgba(255,0,255,0.4));"></i>\n  ${"Altre" === e ? "Partite senza giornata" : `Giornata ${e}`}\n</div>\n<div class="res-grid">${n.map(i).join("")}</div>`;
+                  d += `\n<div ${e === lastPlayedRound ? 'id="res-last-played-round"' : ''} style="font-size:15px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.9);margin-top:${0 === t ? \"24px\" : \"44px\"};margin-bottom:18px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:12px;text-shadow:0 0 10px rgba(255,255,255,0.1);"><i class="ph ph-calendar-blank" style="color:var(--color-pink);font-size:18px;filter:drop-shadow(0 0 10px rgba(255,0,255,0.4));"></i>\n  ${"Altre" === e ? "Partite senza giornata" : `Giornata ${e}`}\n</div>\n<div class="res-grid">${n.map(i).join("")}</div>`;
                 }),
                 o)
               ) {
@@ -104,7 +113,18 @@ const Results = (() => {
                 })();
                 d += `<div class="res-last-update">Aggiornato: ${o} &nbsp;·&nbsp; Fonte: <a href="${Utils.escapeHtml(a)}" target="_blank" style="color:var(--color-text-muted);">${Utils.escapeHtml(e)}</a></div>`;
               }
-              t.innerHTML = d;
+                            t.innerHTML = d;
+              if (lastPlayedRound) {
+                setTimeout(() => {
+                  const el = document.getElementById("res-last-played-round");
+                  if (el) {
+                    el.scrollIntoView({ behavior: "smooth", block: "start" });
+                    // optional: adjust for sticky header
+                    const scrollContainer = document.getElementById("res-content")?.parentElement || window;
+                    scrollContainer.scrollBy(0, -60);
+                  }
+                }, 100);
+              }
             })(e);
           } catch (e) {
             if ("AbortError" === e.name) return;
