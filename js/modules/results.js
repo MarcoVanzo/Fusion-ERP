@@ -125,9 +125,8 @@ const Results = (() => {
       <select id="res-campionato-select" class="res-select">
         <option value="">Caricamento campionati...</option>
       </select>
-      <div class="res-view-toggle">
-        <button class="res-view-btn active" id="res-btn-matches" onclick="Results._switchView('matches')">Partite</button>
-        <button class="res-view-btn" id="res-btn-standings" onclick="Results._switchView('standings')">Classifica</button>
+      <div class="res-view-toggle" style="display:none;">
+        <!-- Pulsanti rimossi su richiesta -->
       </div>
       <button class="res-icon-btn" id="res-sync-btn" title="Sincronizza con portale" onclick="Results._sync()">
         <i class="ph ph-cloud-arrow-down"></i>
