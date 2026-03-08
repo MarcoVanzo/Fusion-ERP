@@ -44,158 +44,158 @@ const Results = (() => {
   async function r() {
     "matches" === s
       ? await (async function () {
-          const e = document.getElementById("res-content");
-          if ((e && (e.innerHTML = d()), !n?.id && !n?.url))
-            return void l(
-              "Nessun campionato selezionato",
-              "Seleziona un campionato dal menu in alto.",
+        const e = document.getElementById("res-content");
+        if ((e && (e.innerHTML = d()), !n?.id && !n?.url))
+          return void l(
+            "Nessun campionato selezionato",
+            "Seleziona un campionato dal menu in alto.",
+          );
+        const t = n.id ? { campionato_id: n.id } : { campionato_url: n.url };
+        try {
+          const e = await Store.get("getResults", "results", t);
+          if (e.needs_sync) {
+            const e = document.getElementById("res-content");
+            return void (
+              e &&
+              (e.innerHTML =
+                '\n<div class="res-empty">\n  <i class="ph ph-cloud-arrow-down" style="color:var(--color-pink);opacity:1;"></i>\n  <div class="res-empty-title">Partite non ancora sincronizzate</div>\n  <div class="res-empty-sub">Premi <strong>☁ Sincronizza</strong> per scaricare le partite dal portale.</div>\n  <button class="btn btn-primary btn-sm" onclick="Results._sync()" style="margin-top:12px;">\n    <i class="ph ph-cloud-arrow-down"></i> Sincronizza ora\n  </button>\n</div>')
             );
-          const t = n.id ? { campionato_id: n.id } : { campionato_url: n.url };
-          try {
-            const e = await Store.get("getResults", "results", t);
-            if (e.needs_sync) {
-              const e = document.getElementById("res-content");
-              return void (
-                e &&
-                (e.innerHTML =
-                  '\n<div class="res-empty">\n  <i class="ph ph-cloud-arrow-down" style="color:var(--color-pink);opacity:1;"></i>\n  <div class="res-empty-title">Partite non ancora sincronizzate</div>\n  <div class="res-empty-sub">Premi <strong>☁ Sincronizza</strong> per scaricare le partite dal portale.</div>\n  <button class="btn btn-primary btn-sm" onclick="Results._sync()" style="margin-top:12px;">\n    <i class="ph ph-cloud-arrow-down"></i> Sincronizza ora\n  </button>\n</div>')
+          }
+          !(function (e) {
+            const t = document.getElementById("res-content");
+            if (!t) return;
+            const s = e.matches || [],
+              o = e.last_updated
+                ? new Date(e.last_updated).toLocaleString("it-IT")
+                : "",
+              a =
+                e.source_url || n?.url || "https://venezia.portalefipav.net";
+            if (0 === s.length)
+              return void l(
+                "Nessuna partita trovata",
+                "Non ci sono partite disponibili per questo campionato.",
               );
-            }
-            !(function (e) {
-              const t = document.getElementById("res-content");
-              if (!t) return;
-              const s = e.matches || [],
-                o = e.last_updated
-                  ? new Date(e.last_updated).toLocaleString("it-IT")
-                  : "",
-                a =
-                  e.source_url || n?.url || "https://venezia.portalefipav.net";
-              if (0 === s.length)
-                return void l(
-                  "Nessuna partita trovata",
-                  "Non ci sono partite disponibili per questo campionato.",
-                );
-              const r = {};
-              let lastPlayedRound = null;
-              let maxPlayedRound = -1;
-              s.forEach((e) => {
-                const t = e.round || "Altre";
-                if (e.status === "played" && t !== "Altre") {
-                  const rNum = parseInt(t);
-                  if (!isNaN(rNum) && rNum > maxPlayedRound) {
-                    maxPlayedRound = rNum;
-                    lastPlayedRound = t;
-                  }
+            const r = {};
+            let lastPlayedRound = null;
+            let maxPlayedRound = -1;
+            s.forEach((e) => {
+              const t = e.round || "Altre";
+              if (e.status === "played" && t !== "Altre") {
+                const rNum = parseInt(t);
+                if (!isNaN(rNum) && rNum > maxPlayedRound) {
+                  maxPlayedRound = rNum;
+                  lastPlayedRound = t;
                 }
-                (r[t] || (r[t] = []), r[t].push(e));
-              });
-              const c = Object.keys(r).sort((e, t) =>
-                "Altre" === e
-                  ? 1
-                  : "Altre" === t
-                    ? -1
-                    : parseInt(e) - parseInt(t),
-              );
-              let d = "";
-              if (
-                (c.forEach((e, t) => {
-                  const n = r[e];
-                  d += `\n<div ${e === lastPlayedRound ? 'id="res-last-played-round"' : ''} style="font-size:15px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.9);margin-top:${0 === t ? "24px" : "44px"};margin-bottom:18px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:12px;text-shadow:0 0 10px rgba(255,255,255,0.1);"><i class="ph ph-calendar-blank" style="color:var(--color-pink);font-size:18px;filter:drop-shadow(0 0 10px rgba(255,0,255,0.4));"></i>\n  ${"Altre" === e ? "Partite senza giornata" : `Giornata ${e}`}\n</div>\n<div class="res-grid">${n.map(i).join("")}</div>`;
-                }),
-                o)
-              ) {
-                const e = (() => {
-                  try {
-                    return new URL(a).hostname;
-                  } catch (e) {
-                    return "portale federale";
-                  }
-                })();
-                d += `<div class="res-last-update">Aggiornato: ${o} &nbsp;·&nbsp; Fonte: <a href="${Utils.escapeHtml(a)}" target="_blank" style="color:var(--color-text-muted);">${Utils.escapeHtml(e)}</a></div>`;
               }
-                            t.innerHTML = d;
-              if (lastPlayedRound) {
-                setTimeout(() => {
-                  const el = document.getElementById("res-last-played-round");
-                  if (el) {
-                    el.scrollIntoView({ behavior: "smooth", block: "start" });
-                    // optional: adjust for sticky header
-                    const scrollContainer = document.getElementById("res-content")?.parentElement || window;
-                    scrollContainer.scrollBy(0, -60);
-                  }
-                }, 100);
-              }
-            })(e);
-          } catch (e) {
-            if ("AbortError" === e.name) return;
-            (console.error("[Results] getResults error:", e),
-              c("Impossibile caricare i risultati. " + (e.message || "")));
-          }
-        })()
-      : await (async function () {
-          const e = document.getElementById("res-content");
-          if ((e && (e.innerHTML = d()), !n?.id && !n?.url))
-            return void l(
-              "Nessun campionato selezionato",
-              "Seleziona un campionato dal menu in alto.",
+              (r[t] || (r[t] = []), r[t].push(e));
+            });
+            const c = Object.keys(r).sort((e, t) =>
+              "Altre" === e
+                ? 1
+                : "Altre" === t
+                  ? -1
+                  : parseInt(e) - parseInt(t),
             );
-          const t = n.id ? { campionato_id: n.id } : { campionato_url: n.url };
-          try {
-            const e = await Store.get("getStandings", "results", t);
-            if (e.needs_sync)
-              return void (e.already_synced
-                ? (function (e) {
-                    const t = document.getElementById("res-content");
-                    if (!t) return;
-                    const n = e ? new Date(e).toLocaleString("it-IT") : "";
-                    t.innerHTML = `\n<div class="res-empty">\n  <i class="ph ph-table" style="color:var(--color-text-muted);opacity:0.5;"></i>\n  <div class="res-empty-title">Classifica non disponibile</div>\n  <div class="res-empty-sub">\n    La sincronizzazione è avvenuta${n ? " il " + Utils.escapeHtml(n) : ""}, ma il portale non ha pubblicato la classifica per questo campionato.<br><br>\n    Prova a risincronizzare tra qualche minuto.\n  </div>\n  <button class="btn btn-ghost btn-sm" onclick="Results._sync()" style="margin-top:12px;">\n    <i class="ph ph-arrows-clockwise"></i> Riprova sincronizzazione\n  </button>\n</div>`;
-                  })(e.last_updated)
-                : (function () {
-                    const e = document.getElementById("res-content");
-                    e &&
-                      (e.innerHTML =
-                        '\n<div class="res-empty">\n  <i class="ph ph-cloud-arrow-down" style="color:var(--color-pink);opacity:1;"></i>\n  <div class="res-empty-title">Classifica non ancora sincronizzata</div>\n  <div class="res-empty-sub">Premi il bottone <strong>☁ Sincronizza</strong> in alto a destra per caricare la classifica dal portale.</div>\n  <button class="btn btn-primary btn-sm" onclick="Results._sync()" style="margin-top:12px;">\n    <i class="ph ph-cloud-arrow-down"></i> Sincronizza ora\n  </button>\n</div>');
-                  })());
-            !(function (e) {
-              const t = document.getElementById("res-content");
-              if (!t) return;
-              const s = e.standings || [],
-                o = e.last_updated
-                  ? new Date(e.last_updated).toLocaleString("it-IT")
-                  : "",
-                a =
-                  e.source_url || n?.url || "https://venezia.portalefipav.net";
-              if (0 === s.length)
-                return void l(
-                  "Classifica non disponibile",
-                  "Non è stato possibile estrarre la classifica per questo campionato.",
-                );
-              const r = ["🥇", "🥈", "🥉"];
-              let i = `\n<div class="res-table-wrap">\n  <table class="res-table">\n    <thead>\n      <tr>\n        <th class="center" style="width:50px;">#</th>\n        <th>Squadra</th>\n        <th class="center">PG</th>\n        <th class="center">V</th>\n        <th class="center">P</th>\n        <th class="center">Punti</th>\n      </tr>\n    </thead>\n    <tbody>\n${s
-                .map((e, t) => {
-                  const n = e.position ?? t + 1,
-                    s = e.is_our_team;
-                  return `\n      <tr class="${s ? "our-row" : ""}">\n        <td class="center">${n <= 3 ? `<span class="pos-medal">${r[n - 1]}</span>` : `<span class="res-pos">${n}</span>`}</td>\n        <td>\n          <div class="res-team-cell">\n            ${s ? '<div class="res-team-dot"></div>' : ""}\n            <span style="${s ? "color:var(--color-pink);font-weight:700;" : ""}">${Utils.escapeHtml(e.team || "—")}</span>\n          </div>\n        </td>\n        <td class="center">${e.played ?? "—"}</td>\n        <td class="center" style="color:#4caf50;">${e.won ?? "—"}</td>\n        <td class="center" style="color:#ef5350;">${e.lost ?? "—"}</td>\n        <td class="center"><strong style="font-size:15px;">${e.points ?? "—"}</strong></td>\n      </tr>`;
-                })
-                .join("")}\n    </tbody>\n  </table>\n</div>`;
-              if (o) {
-                const e = (() => {
-                  try {
-                    return new URL(a).hostname;
-                  } catch (e) {
-                    return "portale federale";
-                  }
-                })();
-                i += `<div class="res-last-update">Aggiornato: ${o} &nbsp;·&nbsp; Fonte: <a href="${Utils.escapeHtml(a)}" target="_blank" style="color:var(--color-text-muted);">${Utils.escapeHtml(e)}</a></div>`;
-              }
-              t.innerHTML = i;
-            })(e);
-          } catch (e) {
-            if ("AbortError" === e.name) return;
-            (console.error("[Results] getStandings error:", e),
-              c("Impossibile caricare la classifica. " + (e.message || "")));
-          }
-        })();
+            let d = "";
+            if (
+              (c.forEach((e, t) => {
+                const n = r[e];
+                d += `\n<div ${e === lastPlayedRound ? 'id="res-last-played-round"' : ''} style="font-size:15px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.9);margin-top:${0 === t ? "24px" : "44px"};margin-bottom:18px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:12px;text-shadow:0 0 10px rgba(255,255,255,0.1);"><i class="ph ph-calendar-blank" style="color:var(--color-pink);font-size:18px;filter:drop-shadow(0 0 10px rgba(255,0,255,0.4));"></i>\n  ${"Altre" === e ? "Partite senza giornata" : \`Giornata \${e}\`}\n</div>\n<div class="res-grid">${n.map(i).join("")}</div>`;
+              }),
+                o)
+            ) {
+              const e = (() => {
+                try {
+                  return new URL(a).hostname;
+                } catch (e) {
+                  return "portale federale";
+                }
+              })();
+              d += `<div class="res-last-update">Aggiornato: ${o} &nbsp;·&nbsp; Fonte: <a href="${Utils.escapeHtml(a)}" target="_blank" style="color:var(--color-text-muted);">${Utils.escapeHtml(e)}</a></div>`;
+            }
+            t.innerHTML = d;
+            if (lastPlayedRound) {
+              setTimeout(() => {
+                const el = document.getElementById("res-last-played-round");
+                if (el) {
+                  el.scrollIntoView({ behavior: "smooth", block: "start" });
+                  // optional: adjust for sticky header
+                  const scrollContainer = document.getElementById("res-content")?.parentElement || window;
+                  scrollContainer.scrollBy(0, -60);
+                }
+              }, 100);
+            }
+          })(e);
+        } catch (e) {
+          if ("AbortError" === e.name) return;
+          (console.error("[Results] getResults error:", e),
+            c("Impossibile caricare i risultati. " + (e.message || "")));
+        }
+      })()
+      : await (async function () {
+        const e = document.getElementById("res-content");
+        if ((e && (e.innerHTML = d()), !n?.id && !n?.url))
+          return void l(
+            "Nessun campionato selezionato",
+            "Seleziona un campionato dal menu in alto.",
+          );
+        const t = n.id ? { campionato_id: n.id } : { campionato_url: n.url };
+        try {
+          const e = await Store.get("getStandings", "results", t);
+          if (e.needs_sync)
+            return void (e.already_synced
+              ? (function (e) {
+                const t = document.getElementById("res-content");
+                if (!t) return;
+                const n = e ? new Date(e).toLocaleString("it-IT") : "";
+                t.innerHTML = `\n<div class="res-empty">\n  <i class="ph ph-table" style="color:var(--color-text-muted);opacity:0.5;"></i>\n  <div class="res-empty-title">Classifica non disponibile</div>\n  <div class="res-empty-sub">\n    La sincronizzazione è avvenuta${n ? " il " + Utils.escapeHtml(n) : ""}, ma il portale non ha pubblicato la classifica per questo campionato.<br><br>\n    Prova a risincronizzare tra qualche minuto.\n  </div>\n  <button class="btn btn-ghost btn-sm" onclick="Results._sync()" style="margin-top:12px;">\n    <i class="ph ph-arrows-clockwise"></i> Riprova sincronizzazione\n  </button>\n</div>`;
+              })(e.last_updated)
+              : (function () {
+                const e = document.getElementById("res-content");
+                e &&
+                  (e.innerHTML =
+                    '\n<div class="res-empty">\n  <i class="ph ph-cloud-arrow-down" style="color:var(--color-pink);opacity:1;"></i>\n  <div class="res-empty-title">Classifica non ancora sincronizzata</div>\n  <div class="res-empty-sub">Premi il bottone <strong>☁ Sincronizza</strong> in alto a destra per caricare la classifica dal portale.</div>\n  <button class="btn btn-primary btn-sm" onclick="Results._sync()" style="margin-top:12px;">\n    <i class="ph ph-cloud-arrow-down"></i> Sincronizza ora\n  </button>\n</div>');
+              })());
+          !(function (e) {
+            const t = document.getElementById("res-content");
+            if (!t) return;
+            const s = e.standings || [],
+              o = e.last_updated
+                ? new Date(e.last_updated).toLocaleString("it-IT")
+                : "",
+              a =
+                e.source_url || n?.url || "https://venezia.portalefipav.net";
+            if (0 === s.length)
+              return void l(
+                "Classifica non disponibile",
+                "Non è stato possibile estrarre la classifica per questo campionato.",
+              );
+            const r = ["🥇", "🥈", "🥉"];
+            let i = `\n<div class="res-table-wrap">\n  <table class="res-table">\n    <thead>\n      <tr>\n        <th class="center" style="width:50px;">#</th>\n        <th>Squadra</th>\n        <th class="center">PG</th>\n        <th class="center">V</th>\n        <th class="center">P</th>\n        <th class="center">Punti</th>\n      </tr>\n    </thead>\n    <tbody>\n${s
+              .map((e, t) => {
+                const n = e.position ?? t + 1,
+                  s = e.is_our_team;
+                return `\n      <tr class="${s ? "our-row" : ""}">\n        <td class="center">${n <= 3 ? `<span class="pos-medal">${r[n - 1]}</span>` : `<span class="res-pos">${n}</span>`}</td>\n        <td>\n          <div class="res-team-cell">\n            ${s ? '<div class="res-team-dot"></div>' : ""}\n            <span style="${s ? "color:var(--color-pink);font-weight:700;" : ""}">${Utils.escapeHtml(e.team || "—")}</span>\n          </div>\n        </td>\n        <td class="center">${e.played ?? "—"}</td>\n        <td class="center" style="color:#4caf50;">${e.won ?? "—"}</td>\n        <td class="center" style="color:#ef5350;">${e.lost ?? "—"}</td>\n        <td class="center"><strong style="font-size:15px;">${e.points ?? "—"}</strong></td>\n      </tr>`;
+              })
+              .join("")}\n    </tbody>\n  </table>\n</div>`;
+            if (o) {
+              const e = (() => {
+                try {
+                  return new URL(a).hostname;
+                } catch (e) {
+                  return "portale federale";
+                }
+              })();
+              i += `<div class="res-last-update">Aggiornato: ${o} &nbsp;·&nbsp; Fonte: <a href="${Utils.escapeHtml(a)}" target="_blank" style="color:var(--color-text-muted);">${Utils.escapeHtml(e)}</a></div>`;
+            }
+            t.innerHTML = i;
+          })(e);
+        } catch (e) {
+          if ("AbortError" === e.name) return;
+          (console.error("[Results] getStandings error:", e),
+            c("Impossibile caricare la classifica. " + (e.message || "")));
+        }
+      })();
   }
   function i(e) {
     const t = e.is_our_team,
@@ -219,12 +219,12 @@ const Results = (() => {
         ? ((a.home = (e.sets_home || 0) > (e.sets_away || 0) ? "win" : "loss"),
           (a.away = "win" === a.home ? "loss" : "win"))
         : n &&
-          ((a.away = (e.sets_away || 0) > (e.sets_home || 0) ? "win" : "loss"),
+        ((a.away = (e.sets_away || 0) > (e.sets_home || 0) ? "win" : "loss"),
           (a.home = "win" === a.away ? "loss" : "win"));
     }
     const r = e.date
-        ? `${e.date}${e.time ? " · " + e.time : ""}`
-        : e.time || "—",
+      ? `${e.date}${e.time ? " · " + e.time : ""}`
+      : e.time || "—",
       i = Results._isOurTeam(e.home || "")
         ? "res-team-name our-name"
         : "res-team-name",
@@ -390,15 +390,15 @@ const Results = (() => {
         if (!e.success) throw new Error(e.error || "Errore sconosciuto");
         (e.standings > 0
           ? UI.toast(
-              `Sincronizzazione completata: ${e.matches} partite, ${e.standings} squadre in classifica.`,
-              "success",
-              4e3,
-            )
+            `Sincronizzazione completata: ${e.matches} partite, ${e.standings} squadre in classifica.`,
+            "success",
+            4e3,
+          )
           : (UI.toast(
-              `Sincronizzazione parziale: ${e.matches} partite trovate, classifica non disponibile.`,
-              "warning",
-              5e3,
-            ),
+            `Sincronizzazione parziale: ${e.matches} partite trovate, classifica non disponibile.`,
+            "warning",
+            5e3,
+          ),
             console.warn(
               "[Results] Sync: no standings found. URL:",
               e.standings_url ?? "n/a",
@@ -423,14 +423,14 @@ const Results = (() => {
     _openManage() {
       document.getElementById("res-manage-overlay")?.remove();
       const e =
-          0 === t.length
-            ? '<div style="font-size:13px;color:var(--color-text-muted);text-align:center;padding:10px 0;">Nessun campionato configurato.</div>'
-            : t
-                .map(
-                  (e) =>
-                    `\n<div class="res-campionato-item">\n  <div style="flex:1;min-width:0;">\n    <div class="res-campionato-item-label">${Utils.escapeHtml(e.label)}</div>\n    <div class="res-campionato-item-url">${Utils.escapeHtml(e.url)}</div>\n  </div>\n  <button class="res-del-btn" onclick="Results._deleteCampionato('${Utils.escapeHtml(e.id)}','${Utils.escapeHtml(e.label)}')">\n    <i class="ph ph-trash"></i>\n  </button>\n</div>`,
-                )
-                .join(""),
+        0 === t.length
+          ? '<div style="font-size:13px;color:var(--color-text-muted);text-align:center;padding:10px 0;">Nessun campionato configurato.</div>'
+          : t
+            .map(
+              (e) =>
+                `\n<div class="res-campionato-item">\n  <div style="flex:1;min-width:0;">\n    <div class="res-campionato-item-label">${Utils.escapeHtml(e.label)}</div>\n    <div class="res-campionato-item-url">${Utils.escapeHtml(e.url)}</div>\n  </div>\n  <button class="res-del-btn" onclick="Results._deleteCampionato('${Utils.escapeHtml(e.id)}','${Utils.escapeHtml(e.label)}')">\n    <i class="ph ph-trash"></i>\n  </button>\n</div>`,
+            )
+            .join(""),
         n = document.createElement("div");
       ((n.id = "res-manage-overlay"),
         (n.className = "res-modal-overlay"),
@@ -454,7 +454,7 @@ const Results = (() => {
       const n = document.getElementById("res-add-btn");
       n &&
         ((n.disabled = !0),
-        (n.innerHTML = '<i class="ph ph-spinner"></i> Sincronizzazione...'));
+          (n.innerHTML = '<i class="ph ph-spinner"></i> Sincronizzazione...'));
       try {
         (await Store.api("addCampionato", "results", { label: e, url: t }),
           UI.toast("Campionato aggiunto e sincronizzato!", "success", 3e3),
@@ -469,7 +469,7 @@ const Results = (() => {
             4e3,
           ),
           n &&
-            ((n.disabled = !1),
+          ((n.disabled = !1),
             (n.innerHTML =
               '<i class="ph ph-plus"></i> Aggiungi e Sincronizza')));
       }

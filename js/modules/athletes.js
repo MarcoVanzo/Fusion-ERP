@@ -261,10 +261,10 @@ const Athletes = (() => {
         ),
       c(l));
   }
-  function c(a) {
-    ((l = a),
+  function c(tb) {
+    ((l = tb),
       document.querySelectorAll("[data-maintab]").forEach((e) => {
-        const t = e.dataset.maintab === a;
+        const t = e.dataset.maintab === tb;
         ((e.style.borderBottomColor = t ? "var(--color-pink)" : "transparent"),
           (e.style.color = t
             ? "var(--color-white)"
@@ -273,7 +273,7 @@ const Athletes = (() => {
       }));
     const s = document.getElementById("main-tab-content");
     if (s)
-      switch (a) {
+      switch (tb) {
         case "anagrafica":
           ((n = ""), r());
           break;
@@ -364,8 +364,8 @@ const Athletes = (() => {
                 v = (e, t) => {
                   if (!e || !e[t])
                     return '<span style="color:var(--color-text-muted);">—</span>';
-                  const a = e[t];
-                  return `<span style="font-weight:600;">${g(a.value)}</span><span style="font-size:10px;color:var(--color-text-muted);margin-left:2px;">${Utils.escapeHtml(a.unit)}</span>`;
+                  const m_val = e[t];
+                  return `<span style="font-weight:600;">${g(m_val.value)}</span><span style="font-size:10px;color:var(--color-text-muted);margin-left:2px;">${Utils.escapeHtml(m_val.unit)}</span>`;
                 };
               ((t.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2);margin-bottom:var(--sp-3);flex-wrap:wrap;"><p class="page-subtitle">${l.length} atlete${n ? " nella squadra selezionata" : " totali"}</p><div class="filter-bar" id="metrics-team-filter"><button class="filter-chip ${n ? "" : "active"}" data-team="" type="button">Tutte</button>${a.map((e) => `<button class="filter-chip ${n === e.id ? "active" : ""}" data-team="${Utils.escapeHtml(e.id)}" type="button">${Utils.escapeHtml(i(e.category, e.name))}</button>`).join("")}</div></div>${0 === p.length
                 ? '<div style="background:rgba(255,0,122,0.05);border:1px solid rgba(255,0,122,0.2);border-radius:var(--radius);padding:var(--sp-4);text-align:center;"><i class="ph ph-trend-up" style="font-size:40px;color:var(--color-pink);opacity:0.4;display:block;margin-bottom:12px;"></i><p style="font-size:14px;font-weight:700;margin-bottom:4px;">Nessuna metrica registrata</p><p style="font-size:12px;color:var(--color-text-muted);">Apri il profilo di un\'atleta e aggiungi le prime metriche per visualizzare il confronto di gruppo.</p></div>'
