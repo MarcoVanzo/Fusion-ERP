@@ -1151,7 +1151,8 @@ class ResultsController
         $p = $this->_extractFedervolleyApiParams($originalUrl);
         if ($p) {
             $matches = $this->_parseMatchesFedervolleyAPI($p);
-            if (!empty($matches)) return $matches;
+            if (!empty($matches))
+                return $matches;
             error_log('[Results] federvolley.it REST API returned 0 matches, falling back to HTML');
         }
         return $this->_parseMatchesFedervolleyHtml($html);
@@ -1165,7 +1166,7 @@ class ResultsController
     {
         $base = 'https://www.federvolley.it';
         $path = strtolower(parse_url($url, PHP_URL_PATH) ?? '');
-        $qs   = parse_url($url, PHP_URL_QUERY) ?? '';
+        $qs = parse_url($url, PHP_URL_QUERY) ?? '';
         parse_str($qs, $qsParsed);
 
         // Extract girone from query string (?girone=D)
@@ -1179,7 +1180,10 @@ class ResultsController
             'serie-b2' => 'B2', 'serie-b1' => 'B1', 'serie-a1' => 'A1', 'serie-a2' => 'A2',
         ];
         foreach ($serieMap as $slug => $code) {
-            if (str_contains($path, $slug)) { $serie = $code; break; }
+            if (str_contains($path, $slug)) {
+                $serie = $code;
+                break;
+            }
         }
         if (!$serie) {
             error_log('[Results] federvolley.it: cannot detect serie from URL: ' . $url);
@@ -1187,14 +1191,17 @@ class ResultsController
         }
 
         // Detect sesso
-        if (str_contains($path, 'femmin') || str_contains($path, '-f-')) $sesso = 'F';
-        elseif (str_contains($path, 'maschil') || str_contains($path, '-m-')) $sesso = 'M';
-        else $sesso = 'F'; // default for B2
+        if (str_contains($path, 'femmin') || str_contains($path, '-f-'))
+            $sesso = 'F';
+        elseif (str_contains($path, 'maschil') || str_contains($path, '-m-'))
+            $sesso = 'M';
+        else
+            $sesso = 'F'; // default for B2
 
         // Stagione: FederVolley uses the STARTING year of the season
         // Season runs Sep-May: Jan-Jul → current year - 1; Aug-Dec → current year
         $month = (int)date('n');
-        $year  = (int)date('Y');
+        $year = (int)date('Y');
         $stagione = ($month <= 7) ? (string)($year - 1) : (string)$year;
 
         // If girone not in URL, try to auto-detect from slug (e.g. /girone-d/)
@@ -1207,110 +1214,107 @@ class ResultsController
 
     /**
      * Fetch all matches using the official /live_score/* REST API.
+     * Real JSON structure (verified March 2026):
+     *   { "calendario": [ { "squadraA": { "name": "..." }, "squadraB": { "name": "..." },
+     *     "risultato": { "A": { "status": "win|loose|", "points": 3 }, "B": {...} },
+     *     "data_gara_short": "11/10/2025", "ora_gara": "20:30", "sets": [...] } ] }
      */
     private function _parseMatchesFedervolleyAPI(array $p): array
     {
-        $base     = $p['base'];
-        $serie    = $p['serie'];
-        $sesso    = $p['sesso'];
+        $base = $p['base'];
+        $serie = $p['serie'];
+        $sesso = $p['sesso'];
         $stagione = $p['stagione'];
-        $girone   = $p['girone'];
+        $girone = $p['girone'];
 
-        // If no girone, discover available gironi
+        // Discover girone if not set
         if (!$girone) {
-            $err  = '';
+            $err = '';
             $body = $this->_fetch("{$base}/live_score/giornate/{$serie}/{$sesso}/{$stagione}", $err);
             if ($body) {
                 $data = json_decode($body, true);
-                if (is_array($data) && !empty($data['gironi'])) {
+                if (isset($data['gironi'][0]))
                     $girone = (string)$data['gironi'][0];
-                }
             }
         }
-
         if (!$girone) {
             error_log("[Results] federvolley.it REST: cannot determine girone for {$serie}/{$sesso}/{$stagione}");
             return [];
         }
 
-        // Fetch giornate list
-        $err          = '';
-        $giornateUrl  = "{$base}/live_score/giornate/{$serie}/{$sesso}/{$stagione}/{$girone}";
+        // Giornate list
+        $err = '';
+        $giornateUrl = "{$base}/live_score/giornate/{$serie}/{$sesso}/{$stagione}/{$girone}";
         $giornateBody = $this->_fetch($giornateUrl, $err);
         $giornateData = $giornateBody ? json_decode($giornateBody, true) : null;
-
         if (!$giornateData) {
-            error_log("[Results] federvolley.it REST: giornate fetch failed for {$giornateUrl}: {$err}");
+            error_log("[Results] federvolley.it REST: giornate fetch failed: {$err}");
             return [];
         }
 
         $ultimaGiocata = (int)($giornateData['ultimagiornata'] ?? 0);
-        $totalGiornate = (int)($giornateData['totalegiornate'] ?? $ultimaGiocata);
-        if ($totalGiornate <= 0) $totalGiornate = max($ultimaGiocata, 26);
+        $totalGiornate = count($giornateData['giornate'] ?? []) ?: max($ultimaGiocata, 26);
 
-        error_log("[Results] federvolley.it REST: {$serie}/{$sesso}/{$stagione}/{$girone} — ultima={$ultimaGiocata}, tot={$totalGiornate}");
+        error_log("[Results] FV REST {$serie}/{$sesso}/{$stagione}/{$girone}: ultima={$ultimaGiocata}, tot={$totalGiornate}");
 
-        // Fetch all giornate (past and upcoming)
         $allMatches = [];
-        $limit = max($ultimaGiocata + 2, $totalGiornate);
+        // Fetch played + 1 upcoming round
+        $limit = min($ultimaGiocata + 1, $totalGiornate);
         for ($g = 1; $g <= $limit; $g++) {
-            $calUrl  = "{$base}/live_score/live-score-calendario/{$serie}/{$sesso}/{$stagione}/{$girone}/{$g}";
+            $calUrl = "{$base}/live_score/live-score-calendario/{$serie}/{$sesso}/{$stagione}/{$girone}/{$g}";
             $calBody = $this->_fetch($calUrl, $err);
-            if (!$calBody) continue;
+            if (!$calBody)
+                continue;
 
             $calData = json_decode($calBody, true);
-            if (!is_array($calData)) continue;
+            if (!is_array($calData))
+                continue;
 
-            // Response can be array of matches or wrapped in a key
-            $rows = [];
-            if (isset($calData[0]) && is_array($calData[0])) {
-                $rows = $calData;
-            } elseif (isset($calData['partite']) && is_array($calData['partite'])) {
-                $rows = $calData['partite'];
-            } elseif (isset($calData['data']) && is_array($calData['data'])) {
-                $rows = $calData['data'];
-            }
+            // Real structure: { "calendario": [ {...}, {...} ] }
+            $rows = $calData['calendario'] ?? (isset($calData[0]) ? $calData : []);
+            if (empty($rows))
+                continue;
 
             foreach ($rows as $row) {
-                $home = trim((string)($row['squadracasa']    ?? $row['home']  ?? $row['casa']    ?? ''));
-                $away = trim((string)($row['squadraospite']  ?? $row['away']  ?? $row['ospite']  ?? ''));
-                if (!$home || !$away) continue;
+                $home = trim((string)($row['squadraA']['name'] ?? $row['squadraA']['id'] ?? ''));
+                $away = trim((string)($row['squadraB']['name'] ?? $row['squadraB']['id'] ?? ''));
+                if (!$home || !$away)
+                    continue;
 
-                // Score / sets
-                $setsHome = isset($row['setParzialeCasa'])   ? (int)$row['setParzialeCasa']   : null;
-                $setsAway = isset($row['setParzialeFuori'])  ? (int)$row['setParzialeFuori']  : null;
-                if ($setsHome === null && isset($row['risulcasa']))   $setsHome = (int)$row['risulcasa'];
-                if ($setsAway === null && isset($row['risulospite'])) $setsAway = (int)$row['risulospite'];
-
-                $played = ($setsHome !== null && $setsAway !== null
-                    && ($setsHome > 0 || $setsAway > 0));
+                // Result: risultato.A.points / risultato.B.points
+                $rA = $row['risultato']['A'] ?? [];
+                $rB = $row['risultato']['B'] ?? [];
+                $setsHome = isset($rA['points']) && $rA['points'] !== '' ? (int)$rA['points'] : null;
+                $setsAway = isset($rB['points']) && $rB['points'] !== '' ? (int)$rB['points'] : null;
+                $played = $setsHome !== null && ($setsHome > 0 || $setsAway > 0 || ($rA['status'] ?? '') !== '');
                 $status = $played ? 'played' : 'scheduled';
 
-                // Date
-                $dateRaw = $row['dataora'] ?? $row['data'] ?? $row['date'] ?? null;
+                // Date: "dd/mm/yyyy" + ora_gara "HH:MM"
                 $dateStr = null;
                 $timeStr = null;
-                if ($dateRaw) {
-                    $ts = is_numeric($dateRaw) ? (int)$dateRaw : strtotime((string)$dateRaw);
-                    if ($ts) { $dateStr = date('d/m/Y', $ts); $timeStr = date('H:i', $ts); }
+                if (!empty($row['data_gara_short'])) {
+                    $dateStr = $row['data_gara_short']; // already "dd/mm/yyyy"
+                }
+                if (!empty($row['ora_gara'])) {
+                    $timeStr = $row['ora_gara'];
                 }
 
                 $allMatches[] = [
-                    'id'        => $row['id'] ?? $row['idpartita'] ?? null,
-                    'date'      => $dateStr,
-                    'time'      => $timeStr,
-                    'home'      => $home,
-                    'away'      => $away,
-                    'score'     => $played ? "{$setsHome} - {$setsAway}" : null,
+                    'id' => $row['numero_gara'] ?? null,
+                    'date' => $dateStr,
+                    'time' => $timeStr,
+                    'home' => $home,
+                    'away' => $away,
+                    'score' => $played ? "{$setsHome} - {$setsAway}" : null,
                     'sets_home' => $setsHome,
                     'sets_away' => $setsAway,
-                    'status'    => $status,
-                    'round'     => $g,
+                    'status' => $status,
+                    'round' => $g,
                 ];
             }
         }
 
-        error_log('[Results] federvolley.it REST API: ' . count($allMatches) . " matches for {$serie}/{$sesso}/{$stagione}/{$girone}");
+        error_log('[Results] FV REST: ' . count($allMatches) . " matches for {$serie}/{$sesso}/{$stagione}/{$girone}");
         return $allMatches;
     }
 
@@ -1319,16 +1323,16 @@ class ResultsController
      */
     private function _parseStandingsFedervolley(array $p, int $giornata): array
     {
-        $base     = $p['base'];
-        $serie    = $p['serie'];
-        $sesso    = $p['sesso'];
+        $base = $p['base'];
+        $serie = $p['serie'];
+        $sesso = $p['sesso'];
         $stagione = $p['stagione'];
-        $girone   = $p['girone'];
+        $girone = $p['girone'];
 
         $url = "{$base}/moduli/campionati/classifica/classifica.php"
             . "?serie={$serie}&sesso={$sesso}&stagione={$stagione}&giornata={$giornata}&girone={$girone}";
 
-        $err  = '';
+        $err = '';
         $html = $this->_fetch($url, $err);
         if (!$html) {
             error_log("[Results] federvolley.it classifica fetch failed: {$err}");
@@ -1347,24 +1351,27 @@ class ResultsController
         if ($rows && $rows->length > 0) {
             foreach ($rows as $row) {
                 $cells = $xpath->query('td', $row);
-                if (!$cells || $cells->length < 2) continue;
+                if (!$cells || $cells->length < 2)
+                    continue;
                 $texts = [];
-                foreach ($cells as $cell) $texts[] = trim($cell->textContent);
+                foreach ($cells as $cell)
+                    $texts[] = trim($cell->textContent);
                 // Typical columns: pos, team, pg, v, p, punti
-                $pos   = (int)($texts[0] ?? 0);
-                $team  = trim($texts[1] ?? '');
-                $pg    = (int)($texts[2] ?? 0);
-                $v     = (int)($texts[3] ?? 0);
-                $l     = (int)($texts[4] ?? 0);
-                $pts   = (int)($texts[count($texts) - 1] ?? 0);
-                if (!$team) continue;
+                $pos = (int)($texts[0] ?? 0);
+                $team = trim($texts[1] ?? '');
+                $pg = (int)($texts[2] ?? 0);
+                $v = (int)($texts[3] ?? 0);
+                $l = (int)($texts[4] ?? 0);
+                $pts = (int)($texts[count($texts) - 1] ?? 0);
+                if (!$team)
+                    continue;
                 $standings[] = [
                     'position' => $pos ?: count($standings) + 1,
-                    'team'     => $team,
-                    'played'   => $pg,
-                    'won'      => $v,
-                    'lost'     => $l,
-                    'points'   => $pts,
+                    'team' => $team,
+                    'played' => $pg,
+                    'won' => $v,
+                    'lost' => $l,
+                    'points' => $pts,
                     'is_our_team' => $this->_isOurTeam($team),
                 ];
             }
@@ -1381,7 +1388,7 @@ class ResultsController
         libxml_use_internal_errors(true);
         @$dom->loadHTML('<?xml encoding="UTF-8">' . $html);
         libxml_clear_errors();
-        $xpath   = new \DOMXPath($dom);
+        $xpath = new \DOMXPath($dom);
         $matches = [];
 
         $rows = $xpath->query('//*[contains(@class,"views-row") or contains(@class,"match-row") or contains(@class,"gara")]');
@@ -1524,39 +1531,41 @@ class ResultsController
         }
 
         // ── Standings ─────────────────────────────────────────────────────────
-        $standings       = [];
+        $standings = [];
         $standingsUrlUsed = null;
 
         if (str_contains($url, 'federvolley.it')) {
             $fvParams = $this->_extractFedervolleyApiParams($url);
             if ($fvParams && $fvParams['girone']) {
-                $err          = '';
+                $err = '';
                 $giornateBody = $this->_fetch(
                     "{$fvParams['base']}/live_score/giornate/{$fvParams['serie']}/{$fvParams['sesso']}/{$fvParams['stagione']}/{$fvParams['girone']}",
                     $err
                 );
-                $giornateData  = $giornateBody ? json_decode($giornateBody, true) : null;
+                $giornateData = $giornateBody ? json_decode($giornateBody, true) : null;
                 $ultimaGiocata = (int)($giornateData['ultimagiornata'] ?? 1);
-                $standings     = $this->_parseStandingsFedervolley($fvParams, $ultimaGiocata);
+                $standings = $this->_parseStandingsFedervolley($fvParams, $ultimaGiocata);
                 $g = (string)$ultimaGiocata;
                 $standingsUrlUsed = "{$fvParams['base']}/moduli/campionati/classifica/classifica.php"
                     . "?serie={$fvParams['serie']}&sesso={$fvParams['sesso']}&stagione={$fvParams['stagione']}"
                     . "&giornata={$g}&girone={$fvParams['girone']}";
             }
-        } else {
+        }
+        else {
             $candidateUrls = $this->_getStandingsUrlCandidates($url);
             if (!empty($champ['standings_url']) && !in_array($champ['standings_url'], $candidateUrls, true)) {
                 array_unshift($candidateUrls, $champ['standings_url']);
             }
             foreach ($candidateUrls as $sUrl) {
                 $htmlS = $this->_fetch($sUrl, $err);
-                if (!$htmlS) continue;
+                if (!$htmlS)
+                    continue;
                 $parsed = str_contains($sUrl, 'fipavveneto.net')
                     ? $this->_parseStandingsFipavVeneto($htmlS)
                     : $this->_parseStandings($htmlS);
                 error_log("[Results] Standings candidate {$sUrl} → " . count($parsed) . ' entries');
                 if (!empty($parsed)) {
-                    $standings     = $parsed;
+                    $standings = $parsed;
                     $standingsUrlUsed = $sUrl;
                     break;
                 }

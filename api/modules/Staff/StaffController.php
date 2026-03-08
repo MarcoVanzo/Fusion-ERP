@@ -25,14 +25,14 @@ class StaffController
     // ─── GET /api/?module=staff&action=list ───────────────────────────────────
     public function list(): void
     {
-        Auth::requireRead('staff');
+        Auth::requireRole('operator');
         Response::success($this->repo->listStaff());
     }
 
     // ─── GET /api/?module=staff&action=get&id=STF_xxx ─────────────────────────
     public function get(): void
     {
-        Auth::requireRead('staff');
+        Auth::requireRole('operator');
         $id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
         if (empty($id)) {
             Response::error('id obbligatorio', 400);
@@ -47,7 +47,7 @@ class StaffController
     // ─── POST /api/?module=staff&action=create ────────────────────────────────
     public function create(): void
     {
-        Auth::requireWrite('staff');
+        Auth::requireRole('manager');
         $body = Response::jsonBody();
         Response::requireFields($body, ['first_name', 'last_name']);
 
@@ -80,7 +80,7 @@ class StaffController
     // ─── POST /api/?module=staff&action=update ────────────────────────────────
     public function update(): void
     {
-        Auth::requireWrite('staff');
+        Auth::requireRole('manager');
         $body = Response::jsonBody();
         Response::requireFields($body, ['id', 'first_name', 'last_name']);
 
@@ -113,7 +113,7 @@ class StaffController
     // ─── POST /api/?module=staff&action=delete ────────────────────────────────
     public function delete(): void
     {
-        Auth::requireWrite('staff');
+        Auth::requireRole('manager');
         $body = Response::jsonBody();
         $id = $body['id'] ?? '';
         if (empty($id)) {
