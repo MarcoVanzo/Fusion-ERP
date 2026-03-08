@@ -9,10 +9,11 @@ header('Content-Type: application/json');
 
 try {
     $db = Database::getInstance();
-    $stmt = $db->query("SELECT id, username, tenant_id FROM users");
+    $stmt = $db->query("SELECT id, full_name, tenant_id FROM users");
     $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     echo json_encode(['success' => true, 'data' => $users]);
-} catch (Throwable $e) {
+}
+catch (Throwable $e) {
     echo json_encode(['success' => false, 'error' => $e->getMessage()]);
 }
