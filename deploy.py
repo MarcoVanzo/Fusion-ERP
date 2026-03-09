@@ -152,6 +152,7 @@ def deploy_files_via_ftp():
         ftp = ftplib.FTP_TLS(host)
         ftp.login(user, password)
         ftp.prot_p() 
+        ftp.set_pasv(True)
         print("✅ Connected securely.\n")
         
         # Load local cache
@@ -169,10 +170,33 @@ def deploy_files_via_ftp():
         ignore_extensions = ['.zip', '.log']
         ignore_files = ['deploy.py', 'deploy.mp', 'deploy_ftp.sh', CACHE_FILE]
 
-        def _do_upload(local_path: str, remote_file: str) -> None:
-            """Upload a single file via the enclosing FTP connection."""
-            with open(local_path, 'rb') as fbin:
-                ftp.storbinary(f'STOR {remote_file}', fbin)
+        def _do_upload(local_path: str, remote_file: str, remote_dir: str, max_retries=3) -> None:
+            """Upload a single file via the enclosing FTP connection, with retry logic."""
+            nonlocal ftp
+            for attempt in range(1, max_retries + 1):
+                try:
+                    with open(local_path, 'rb') as fbin:
+                        ftp.storbinary(f'STOR {remote_file}', fbin)
+                    return
+                except Exception as e:
+                    print(f"      ⚠️ Upload error on attempt {attempt}/{max_retries} for {remote_file}: {e}")
+                    if attempt < max_retries:
+                        print("      🔄 Reconnecting to FTP in 2 seconds...")
+                        _time.sleep(2)
+                        try:
+                            try: ftp.quit()
+                            except: pass
+                            ftp = ftplib.FTP_TLS(host)
+                            ftp.login(user, password)
+                            ftp.prot_p()
+                            ftp.set_pasv(True)
+                            ftp.cwd('/')
+                            ensure_remote_dir(ftp, remote_dir, created_dirs)
+                            ftp.cwd(remote_dir)
+                        except Exception as re_e:
+                            print(f"      ❌ Reconnection failed: {re_e}")
+                    else:
+                        raise e
 
         upload_count: int = 0
         skip_count: int = 0
@@ -185,7 +209,13 @@ def deploy_files_via_ftp():
 
             # Calculate the corresponding remote path
             rel_path = os.path.relpath(root, '.')
-            remote_sub_dir = base_remote_dir if rel_path == '.' else f"{base_remote_dir}/{rel_path}".replace('\\', '/')
+            
+            # Map fusion-website/dist to the /demo folder in production
+            if rel_path == 'fusion-website/dist' or rel_path.startswith('fusion-website/dist/'):
+                sub_rel = rel_path.replace('fusion-website/dist', '').lstrip('/\\')
+                remote_sub_dir = '/www.fusionteamvolley.it/demo' if not sub_rel else f"/www.fusionteamvolley.it/demo/{sub_rel}".replace('\\', '/')
+            else:
+                remote_sub_dir = base_remote_dir if rel_path == '.' else f"{base_remote_dir}/{rel_path}".replace('\\', '/')
 
             # Lazy-CD: only change remote dir when we actually need to upload something
             dir_prepared: bool = False
@@ -223,7 +253,7 @@ def deploy_files_via_ftp():
                     dir_prepared = True
 
                 print(f"  ⬆️ Uploading {rel_path}/{file} ...")
-                _do_upload(local_file_path, file)
+                _do_upload(local_file_path, file, current_remote_dir)
                 upload_count = cast(int, upload_count) + 1
 
                 # Incrementally persist cache to survive interruptions

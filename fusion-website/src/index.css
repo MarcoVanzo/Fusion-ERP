@@ -1,0 +1,74 @@
+@import "tailwindcss";
+@import "@fontsource/syncopate/700.css";
+/* Bold caps font */
+@import "@fontsource/oswald/600.css";
+
+@theme {
+  --color-brand-400: #e84382;
+  --color-brand-500: #FF1493;
+  /* Saturated Vivid Fuchsia */
+  --color-brand-600: #d65a86;
+  /* Former primary preserved as fallback */
+  --color-brand-primary: #a1355c;
+  /* Darker Fuchsia */
+  --color-zinc-950: #050505;
+  --color-zinc-900: #121212;
+  /* Pure black aesthetic */
+}
+
+@layer base {
+  body {
+    background-color: var(--color-zinc-950);
+    color: white;
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+}
+
+@layer utilities {
+  .glass-panel {
+    background: rgba(17, 17, 17, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .font-heading {
+    font-family: 'Syncopate', 'Oswald', sans-serif;
+    text-transform: uppercase;
+  }
+
+  .font-subheading {
+    font-family: 'Oswald', sans-serif;
+    text-transform: uppercase;
+  }
+
+  /* Diagonal cuts used in Inter / Sports designs */
+  .clip-diagonal {
+    clip-path: polygon(0 0, 100% 0, 100% 90%, 0 100%);
+  }
+
+  .clip-diagonal-rev {
+    clip-path: polygon(0 10%, 100% 0, 100% 100%, 0 100%);
+  }
+}
+
+/* Custom Webkit Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-zinc-950);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1a1a1a;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-brand-500);
+}

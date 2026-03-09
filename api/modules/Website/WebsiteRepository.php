@@ -24,7 +24,7 @@ class WebsiteRepository
 
     public function __construct()
     {
-        $this->db = Database::getConnection();
+        $this->db = Database::getInstance();
     }
 
     /**
@@ -117,5 +117,43 @@ class WebsiteRepository
         $stmt = $this->db->prepare($sql);
         $stmt->execute($data);
         return (int)$this->db->lastInsertId();
+    }
+
+    /**
+     * Update news article
+     */
+    public function updateNews(int $id, array $data): bool
+    {
+        $tenantId = TenantContext::id();
+
+        $sql = "
+            UPDATE website_news 
+            SET category_id = :category_id, 
+                title = :title, 
+                slug = :slug,
+                cover_image_url = :cover_image_url, 
+                excerpt = :excerpt, 
+                content_html = :content_html, 
+                is_published = :is_published, 
+                published_at = :published_at
+            WHERE id = :id AND (tenant_id = :tenant_id OR tenant_id IS NULL)
+        ";
+
+        $data[':id'] = $id;
+        $data[':tenant_id'] = $tenantId;
+
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute($data);
+    }
+
+    /**
+     * Delete news article
+     */
+    public function deleteNews(int $id): bool
+    {
+        $tenantId = TenantContext::id();
+        $sql = "DELETE FROM website_news WHERE id = :id AND (tenant_id = :tenant_id OR tenant_id IS NULL)";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([':id' => $id, ':tenant_id' => $tenantId]);
     }
 }

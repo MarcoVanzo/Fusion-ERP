@@ -123,16 +123,18 @@ const WhatsApp = (() => {
             e.innerHTML = `<p style="text-align:center;color:var(--color-danger);">${Utils.escapeHtml(t.message)}</p>`;
           }
       })(i),
-      (function (t) {
+      (function (tPhone) {
         l();
-        if (n !== t) return;
+        if (n !== tPhone) return;
         let pRate = 5000;
+        let myS = { active: !0, id: 0 };
+        s = myS;
         const pFn = async () => {
-          if (n !== t) return;
+          if (n !== tPhone || !myS.active) return;
           try {
             const getE = await Store.get("getMessages", "whatsapp", {
-              from_phone: t,
-            }),
+              from_phone: tPhone,
+            }, { signal: t.signal }),
               msgs = getE?.messages || [];
             if (msgs.length > a.length) {
               a = msgs;
@@ -150,13 +152,13 @@ const WhatsApp = (() => {
           } catch {
             pRate = Math.min(pRate * 1.5, 60000);
           }
-          if (n === t) s = setTimeout(pFn, pRate);
+          if (n === tPhone && myS.active && !t.signal.aborted) myS.id = setTimeout(pFn, pRate);
         };
-        s = setTimeout(pFn, pRate);
+        myS.id = setTimeout(pFn, pRate);
       })(i));
   }
   function l() {
-    s && (clearTimeout(s), (s = null));
+    s && (clearTimeout(s.id || s), s.active = !1, (s = null));
   }
   function r(t) {
     if (!t || "me" === t) return "";
@@ -206,7 +208,7 @@ const WhatsApp = (() => {
                             n = t.athlete_name
                               ? `<span class="wa-contact-tag"><i class="ph ph-user"></i> ${Utils.escapeHtml(t.athlete_name.trim())}</span>`
                               : `<button class="btn btn-ghost btn-xs btn-link-athlete" data-contact-id="${Utils.escapeHtml(t.id)}" type="button">\n                   <i class="ph ph-link"></i> Collega atleta\n               </button>`;
-                          return `\n        <div class="wa-contact-card">\n            <div class="wa-avatar md">${Utils.escapeHtml(e)}</div>\n            <div class="wa-contact-info">\n                <span class="wa-contact-name">${Utils.escapeHtml(t.name)}</span>\n                <span class="wa-contact-phone">${r(t.phone_normalized)}</span>\n                ${n}\n            </div>\n        </div>`;
+                          return `\n        <div class="wa-contact-card">\n            <div class="wa-avatar md">${Utils.escapeHtml(e)}</div>\n            <div class="wa-contact-info">\n                <span class="wa-contact-name">${Utils.escapeHtml(t.name)}</span>\n                <span class="wa-contact-phone">${Utils.escapeHtml(r(t.phone_normalized))}</span>\n                ${n}\n            </div>\n        </div>`;
                         })(t),
                       )
                       .join("")}\n                       </div>`
@@ -245,7 +247,7 @@ const WhatsApp = (() => {
                                         "warning",
                                       );
                                     const e = document.createElement("div");
-                                    e.innerHTML = `\n        <p style="margin-bottom:var(--sp-2);color:var(--text-muted);font-size:13px;">\n            Trovati <strong>${t.length}</strong> numeri. Seleziona quelli da importare:\n        </p>\n        <div style="margin-bottom:var(--sp-2);display:flex;gap:8px;">\n            <button class="btn btn-ghost btn-sm" id="sel-all">Seleziona tutto</button>\n            <button class="btn btn-ghost btn-sm" id="sel-none">Deseleziona</button>\n        </div>\n        <div style="max-height:380px;overflow-y:auto;">\n            <table class="data-table" style="font-size:13px;">\n                <thead><tr>\n                    <th style="width:32px;"></th>\n                    <th>Nome</th><th>Numero</th><th>Match Atleta</th>\n                </tr></thead>\n                <tbody>\n                    ${t.map((t, e) => `\n                    <tr>\n                        <td><input type="checkbox" class="contact-check" data-idx="${e}" checked></td>\n                        <td>${Utils.escapeHtml(t.name)}</td>\n                        <td>${r(t.phone_normalized)}</td>\n                        <td>${t.athlete_match ? `<span class="badge badge-success"><i class="ph ph-check"></i> ${Utils.escapeHtml(t.athlete_match.name)}</span>` : '<span style="color:var(--text-muted);">—</span>'}</td>\n                    </tr>`).join("")}\n                </tbody>\n            </table>\n        </div>\n        <div style="margin-top:var(--sp-3);display:flex;justify-content:flex-end;gap:8px;">\n            <button class="btn btn-ghost" id="btn-cancel-import">Annulla</button>\n            <button class="btn btn-primary" id="btn-confirm-import">\n                <i class="ph ph-download-simple"></i> Importa selezionati\n            </button>\n        </div>`;
+                                    e.innerHTML = `\n        <p style="margin-bottom:var(--sp-2);color:var(--text-muted);font-size:13px;">\n            Trovati <strong>${t.length}</strong> numeri. Seleziona quelli da importare:\n        </p>\n        <div style="margin-bottom:var(--sp-2);display:flex;gap:8px;">\n            <button class="btn btn-ghost btn-sm" id="sel-all">Seleziona tutto</button>\n            <button class="btn btn-ghost btn-sm" id="sel-none">Deseleziona</button>\n        </div>\n        <div style="max-height:380px;overflow-y:auto;">\n            <table class="data-table" style="font-size:13px;">\n                <thead><tr>\n                    <th style="width:32px;"></th>\n                    <th>Nome</th><th>Numero</th><th>Match Atleta</th>\n                </tr></thead>\n                <tbody>\n                    ${t.map((t, e) => `\n                    <tr>\n                        <td><input type="checkbox" class="contact-check" data-idx="${e}" checked></td>\n                        <td>${Utils.escapeHtml(t.name)}</td>\n                        <td>${Utils.escapeHtml(r(t.phone_normalized))}</td>\n                        <td>${t.athlete_match ? `<span class="badge badge-success"><i class="ph ph-check"></i> ${Utils.escapeHtml(t.athlete_match.name)}</span>` : '<span style="color:var(--text-muted);">—</span>'}</td>\n                    </tr>`).join("")}\n                </tbody>\n            </table>\n        </div>\n        <div style="margin-top:var(--sp-3);display:flex;justify-content:flex-end;gap:8px;">\n            <button class="btn btn-ghost" id="btn-cancel-import">Annulla</button>\n            <button class="btn btn-primary" id="btn-confirm-import">\n                <i class="ph ph-download-simple"></i> Importa selezionati\n            </button>\n        </div>`;
                                     const n = UI.modal({
                                       title: "📱 Importa contatti iPhone",
                                       body: e,

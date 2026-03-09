@@ -33,7 +33,7 @@ class Auth
                 'domain' => '',
                 'secure' => (getenv('APP_ENV') === 'production'),
                 'httponly' => true,
-                'samesite' => 'Strict',
+                'samesite' => 'Lax',
             ]);
 
             session_start();

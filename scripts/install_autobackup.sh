@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================
 # install_autobackup.sh
-# Installa il LaunchAgent per il backup automatico orario.
+# Installa il LaunchAgent per il backup automatico notturno (mezzanotte).
 # Esegui UNA SOLA VOLTA: bash scripts/install_autobackup.sh
 # ============================================================
 
@@ -38,7 +38,7 @@ echo "✅ LaunchAgent caricato."
 
 echo ""
 echo "=== Backup automatico attivo! ==="
-echo "   Frequenza : ogni ora"
+echo "   Frequenza : ogni notte a mezzanotte"
 echo "   Versioni  : 12 (con rotazione automatica)"
 echo "   Branch    : auto-backup"
 echo "   Log       : $( dirname "$SCRIPT_PATH" )/auto_backup.log"

@@ -30,19 +30,7 @@ header('Content-Type: application/json; charset=utf-8');
 $input = json_decode(file_get_contents('php://input'), true) ?? [];
 $file = basename($input['file'] ?? ($_GET['file'] ?? ''));
 
-$whitelist = [
-    'V023__tenant_settings.sql',
-    'V024__tenant_invitations_and_chat.sql',
-    'V025__finance_core.sql',
-    'V026__invoices.sql',
-    'V027__federation.sql',
-    'V044__import_staff.sql',
-    'V045__federation_logos.sql',
-    'V046__ec_orders_tenant_indexes.sql',
-    'V040__ec_orders.sql',
-];
-
-if (!in_array($file, $whitelist, true)) {
+if (!preg_match('/^V\d{3}.*\.sql$/', $file)) {
     echo json_encode(['success' => false, 'error' => "File not allowed: " . htmlspecialchars($file, ENT_QUOTES, 'UTF-8')]);
     exit;
 }
@@ -68,6 +56,7 @@ try {
         );
 }
 catch (Exception $e) {
+    http_response_code(500);
     echo json_encode(['success' => false, 'error' => 'DB connection failed: ' . $e->getMessage()]);
     exit;
 }
@@ -75,31 +64,22 @@ catch (Exception $e) {
 // Read and execute
 $sql = file_get_contents($path);
 
-// We rely on PDO parsing capabilities rather than naive regex replacement for comments
-$pdo->exec('SET FOREIGN_KEY_CHECKS = 0');
-
-$parts = explode(';', $sql);
+$pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, 1);
 $executed = 0;
 $skipped = 0;
 $errors = [];
 
-foreach ($parts as $stmt) {
-    $stmt = trim($stmt);
-    if (empty($stmt))
-        continue;
-
-    try {
-        $pdo->exec($stmt);
-        $executed++;
+try {
+    $pdo->exec($sql);
+    $executed = 1;
+}
+catch (PDOException $e) {
+    $msg = $e->getMessage();
+    if (str_contains($msg, 'already exists') || str_contains($msg, 'Duplicate')) {
+        $skipped = 1;
     }
-    catch (PDOException $e) {
-        $msg = $e->getMessage();
-        if (str_contains($msg, 'already exists') || str_contains($msg, 'Duplicate')) {
-            $skipped++;
-        }
-        else {
-            $errors[] = $msg;
-        }
+    else {
+        $errors[] = $msg;
     }
 }
 

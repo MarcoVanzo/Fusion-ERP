@@ -466,4 +466,16 @@ PROMPT;
         return $data['candidates'][0]['content']['parts'][0]['text']
             ?? 'Riepilogo non disponibile.';
     }
+
+    // ─── PUBLIC ENDPOINTS FOR WEBSITE ──────────────────────────────────────────────
+    public function getPublicTeams(): void
+    {
+        Response::success($this->repo->listTeams());
+    }
+
+    public function getPublicTeamAthletes(): void
+    {
+        $teamId = filter_input(INPUT_GET, 'teamId', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        Response::success($this->repo->listAthletesLight($teamId));
+    }
 }

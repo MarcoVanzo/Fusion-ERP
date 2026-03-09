@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.fusionerp.dbbackup</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/opt/homebrew/bin/php</string>
+        <string>/Users/marcovanzo/Fusion ERP/cron/backup_nightly.php</string>
+    </array>
+
+    <!-- Ogni notte a mezzanotte -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>0</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+
+    <key>RunAtLoad</key>
+    <false/>
+
+    <key>StandardOutPath</key>
+    <string>/Users/marcovanzo/Fusion ERP/cron/db_backup.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/marcovanzo/Fusion ERP/cron/db_backup_error.log</string>
+
+    <key>KeepAlive</key>
+    <false/>
+</dict>
+</plist>

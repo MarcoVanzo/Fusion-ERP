@@ -22,11 +22,11 @@ class Database
     public static function getInstance(): PDO
     {
         if (self::$instance === null) {
-            $host = getenv('DB_HOST') ?: '127.0.0.1';
-            $port = getenv('DB_PORT') ?: '3306';
-            $dbname = getenv('DB_NAME') ?: 'fusion_erp';
-            $user = getenv('DB_USER') ?: '';
-            $pass = getenv('DB_PASS') ?: '';
+            $host = $_ENV['DB_HOST'] ?? getenv('DB_HOST') ?: '127.0.0.1';
+            $port = $_ENV['DB_PORT'] ?? getenv('DB_PORT') ?: '3306';
+            $dbname = $_ENV['DB_NAME'] ?? getenv('DB_NAME') ?: 'fusion_erp';
+            $user = $_ENV['DB_USER'] ?? getenv('DB_USER') ?: '';
+            $pass = $_ENV['DB_PASS'] ?? getenv('DB_PASS') ?: '';
 
             $dsn = "mysql:host={$host};port={$port};dbname={$dbname};charset=utf8mb4";
 

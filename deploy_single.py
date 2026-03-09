@@ -6,7 +6,10 @@ def load_env():
                 k,v = line.strip().split('=', 1)
                 os.environ[k.strip()] = v.strip().strip("'\"")
 
-files_to_deploy = ['js/modules/ecommerce.js']
+files_to_deploy = sys.argv[1:]
+if not files_to_deploy:
+    print("Please specify files to deploy")
+    sys.exit(1)
 
 load_env()
 ftp = ftplib.FTP_TLS(os.environ['FTP_HOST'])

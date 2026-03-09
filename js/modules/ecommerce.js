@@ -45,6 +45,14 @@ const Ecommerce = (() => {
     if (n) {
       !(async function () {
         try {
+          if (!await EcommerceDB.getMeta("dedupArticles_v2")) {
+            const dedupCount = await EcommerceDB.deduplicateArticoli();
+            if (dedupCount > 0) {
+              const e = document.getElementById("ec-panel-articles");
+              e && "articles" === t && o(e);
+            }
+            await EcommerceDB.setMeta("dedupArticles_v2", !0);
+          }
           if (await EcommerceDB.getMeta("nanoBananaUpgradeAggressivo_v2"))
             return;
           const e = await EcommerceDB.getArticoli();
@@ -238,13 +246,14 @@ const Ecommerce = (() => {
           }
           const p = document.getElementById("ec-f-save");
           ((p.disabled = !0), (p.textContent = "Salvataggio..."));
+          await new Promise(r => setTimeout(r, 50));
           try {
             (s && ((s = await a(s)), (l = "image/png")),
               await EcommerceDB.saveArticolo({
                 id: n ? e.id : void 0,
                 nome: r,
                 prezzo:
-                  parseFloat(document.getElementById("ec-f-prezzo")?.value.replace(",", ".")) || 0,
+                  parseFloat(document.getElementById("ec-f-prezzo")?.value.replace(/[^0-9,.]/g, "").replace(",", ".")) || 0,
                 categoria: document
                   .getElementById("ec-f-categoria")
                   .value.trim(),
@@ -377,7 +386,9 @@ const Ecommerce = (() => {
                   ));
               })(t, i);
             } catch (e) {
-              ((n.innerHTML = `<div class="ec-cors-warning">\n                <strong>⚠️ Errore di connessione</strong><br>\n                ${Utils.escapeHtml(e.message)}<br><br>\n                Puoi aggiungere gli articoli manualmente cliccando "Aggiungi Manualmente".\n            </div>`),
+              const errMsg = e.message && e.message.toLowerCase().includes("fetch")
+                ? "Errore di rete o server non raggiungibile (Timeout/CORS). Assicurati di essere connesso." : Utils.escapeHtml(e.message);
+              ((n.innerHTML = `<div class="ec-cors-warning">\n                <strong>⚠️ Errore di connessione</strong><br>\n                ${errMsg}<br><br>\n                Puoi aggiungere gli articoli manualmente cliccando "Aggiungi Manualmente".\n            </div>`),
                 (i.disabled = !1),
                 (i.innerHTML =
                   '<i class="ph ph-cloud-arrow-down"></i> Riprova'));

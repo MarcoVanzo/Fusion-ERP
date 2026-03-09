@@ -62,7 +62,7 @@ const Website = (() => {
             </div>
         `;
 
-        document.getElementById('btn-add-news').onclick = _showCreateModal;
+        document.getElementById('btn-add-news').onclick = () => _showArticleModal();
     }
 
     async function loadNews() {
@@ -84,7 +84,7 @@ const Website = (() => {
     function _renderNewsList() {
         const listEl = document.getElementById('news-list-container');
         if (!_news || _news.length === 0) {
-            listEl.innerHTML = Utils.emptyState('Nessun articolo trovato', 'Inizia creando il tuo primo articolo.', 'Crea Articolo', () => _showCreateModal());
+            listEl.innerHTML = Utils.emptyState('Nessun articolo trovato', 'Inizia creando il tuo primo articolo.', 'Crea Articolo', () => _showArticleModal());
             return;
         }
 
@@ -136,63 +136,121 @@ const Website = (() => {
         document.getElementById('news-published').textContent = _news.filter(n => n.is_published == 1).length;
     }
 
-    async function _showCreateModal() {
-        // Fetch categories first
+    async function _showArticleModal(article = null) {
         let cats = [];
-        try {
-            cats = await Store.get('categories', 'website');
-        } catch (err) {
-            UI.toast('Errore caricamento categorie', 'error');
-            return;
-        }
+        try { cats = await Store.get('categories', 'website'); } catch (err) { UI.toast('Errore categorie', 'error'); return; }
+
+        const isEdit = !!article;
 
         const body = document.createElement('div');
         body.innerHTML = `
-            <form id="create-news-form" style="display: flex; flex-direction: column; gap: var(--sp-3);">
+            <form id="news-form" style="display: flex; flex-direction: column; gap: var(--sp-3);">
                 <div class="form-group">
                     <label class="form-label">Titolo</label>
-                    <input type="text" id="news-title" class="form-input" placeholder="Il titolo dell'articolo" required>
+                    <input type="text" id="news-title" class="form-input" required value="${isEdit ? Utils.escapeHtml(article.title) : ''}">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Slug (URL)</label>
-                    <input type="text" id="news-slug" class="form-input" placeholder="titolo-articolo" required>
+                    <input type="text" id="news-slug" class="form-input" required value="${isEdit ? Utils.escapeHtml(article.slug) : ''}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Copertina</label>
+                    <div style="display:flex; gap:10px; align-items:center;">
+                        <input type="file" id="news-cover-file" accept="image/*" style="flex:1;">
+                        <input type="hidden" id="news-cover-url" value="${isEdit && article.cover_image_url ? Utils.escapeHtml(article.cover_image_url) : ''}">
+                        <div id="cover-preview" style="width:50px; height:50px; background:#222; border-radius:4px; background-size:cover; background-position:center; ${isEdit && article.cover_image_url ? `background-image:url(${article.cover_image_url})` : ''}"></div>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Categoria</label>
                     <select id="news-category" class="form-input" required>
-                        ${cats.map(c => `<option value="${c.id}">${Utils.escapeHtml(c.name)}</option>`).join('')}
+                        ${cats.map(c => `<option value="${c.id}" ${isEdit && article.category_id == c.id ? 'selected' : ''}>${Utils.escapeHtml(c.name)}</option>`).join('')}
                     </select>
                 </div>
                 <div class="form-group">
+                    <label class="form-label">Riassunto (Excerpt)</label>
+                    <textarea id="news-excerpt" class="form-input" style="height: 60px;">${isEdit && article.excerpt ? Utils.escapeHtml(article.excerpt) : ''}</textarea>
+                </div>
+                <div class="form-group">
                     <label class="form-label">Contenuto (HTML)</label>
-                    <textarea id="news-content" class="form-input" style="height: 150px;" placeholder="<p>Scrivi qui il tuo articolo...</p>"></textarea>
+                    <textarea id="news-content" class="form-input" style="height: 150px; font-family: monospace;">${isEdit && article.content_html ? Utils.escapeHtml(article.content_html) : ''}</textarea>
                 </div>
                 <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                    <input type="checkbox" id="news-published-check"> Pubblica immediatamente
+                    <input type="checkbox" id="news-published-check" ${isEdit && article.is_published == 1 ? 'checked' : ''}> Pubblicato
                 </label>
             </form>
         `;
 
         const modal = UI.modal({
-            title: 'Nuovo Articolo',
+            title: isEdit ? 'Modifica Articolo' : 'Nuovo Articolo',
             body: body,
             footer: `
+                ${isEdit ? `<button class="btn" style="margin-right:auto; background:var(--color-danger); color:white; border:none;" id="btn-delete">ELIMINA</button>` : ''}
                 <button class="btn btn-ghost" id="btn-cancel">ANNULLA</button>
-                <button class="btn btn-primary" id="btn-save">SALVA ARTICOLO</button>
+                <button class="btn btn-primary" id="btn-save">${isEdit ? 'AGGIORNA' : 'SALVA'}</button>
             `
         });
 
         const titleInput = body.querySelector('#news-title');
         const slugInput = body.querySelector('#news-slug');
+        const fileInput = body.querySelector('#news-cover-file');
+        const urlInput = body.querySelector('#news-cover-url');
+        const preview = body.querySelector('#cover-preview');
 
         titleInput.oninput = () => {
-            slugInput.value = titleInput.value
-                .toLowerCase()
-                .trim()
-                .replace(/[^\w\s-]/g, '')
-                .replace(/[\s_-]+/g, '-')
-                .replace(/^-+|-+$/g, '');
+            if (!isEdit) {
+                slugInput.value = titleInput.value.toLowerCase().trim()
+                    .replace(/[^\w\s-]/g, '').replace(/[\s_-]+/g, '-').replace(/^-+|-+$/g, '');
+            }
         };
+
+        fileInput.onchange = async () => {
+            if (!fileInput.files[0]) return;
+
+            // Show loading state
+            preview.style.opacity = '0.5';
+
+            const formData = new FormData();
+            formData.append('image', fileInput.files[0]);
+
+            try {
+                const res = await fetch('api/router.php?module=website&action=uploadImage', {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'Authorization': 'Bearer ' + (Store.getToken() || '') }
+                });
+                const result = await res.json();
+                if (result.success) {
+                    urlInput.value = result.data.url;
+                    preview.style.backgroundImage = `url(${result.data.url})`;
+                    UI.toast('Immagine caricata', 'success');
+                } else {
+                    throw new Error(result.error || 'Errore upload');
+                }
+            } catch (e) {
+                UI.toast(e.message, 'error');
+            } finally {
+                preview.style.opacity = '1';
+                // Reset file input so same file can be selected again
+                fileInput.value = '';
+            }
+        };
+
+        if (isEdit) {
+            body.querySelector('#btn-delete').onclick = async () => {
+                if (!confirm('Sei sicuro di voler eliminare questo articolo?')) return;
+                body.querySelector('#btn-delete').disabled = true;
+                try {
+                    await Store.api('deleteNews', 'website', { id: article.id });
+                    UI.toast('Articolo eliminato', 'success');
+                    modal.close();
+                    await loadNews();
+                } catch (e) {
+                    UI.toast(e.message, 'error');
+                    body.querySelector('#btn-delete').disabled = false;
+                }
+            };
+        }
 
         body.querySelector('#btn-cancel').onclick = () => modal.close();
         body.querySelector('#btn-save').onclick = async () => {
@@ -200,26 +258,46 @@ const Website = (() => {
                 title: titleInput.value.trim(),
                 slug: slugInput.value.trim(),
                 category_id: body.querySelector('#news-category').value,
+                cover_image_url: urlInput.value,
+                excerpt: body.querySelector('#news-excerpt').value,
                 content_html: body.querySelector('#news-content').value,
-                is_published: body.querySelector('#news-published-check').checked ? 1 : 0,
-                published_at: body.querySelector('#news-published-check').checked ? new Date().toISOString().slice(0, 19).replace('T', ' ') : null
+                is_published: body.querySelector('#news-published-check').checked ? 1 : 0
             };
+
+            if (data.is_published && (!isEdit || !article.published_at)) {
+                data.published_at = new Date().toISOString().slice(0, 19).replace('T', ' ');
+            } else if (isEdit) {
+                data.published_at = article.published_at; // keep original publish date
+            }
 
             if (!data.title || !data.slug) return UI.toast('Titolo e Slug sono obbligatori', 'warning');
 
+            body.querySelector('#btn-save').disabled = true;
             try {
-                await Store.api('createNews', 'website', data);
-                UI.toast('Articolo creato!', 'success');
+                if (isEdit) {
+                    data.id = article.id;
+                    await Store.api('updateNews', 'website', data);
+                    UI.toast('Articolo aggiornato!', 'success');
+                } else {
+                    await Store.api('createNews', 'website', data);
+                    UI.toast('Articolo creato!', 'success');
+                }
                 modal.close();
                 await loadNews();
             } catch (err) {
                 UI.toast(err.message, 'error');
+                body.querySelector('#btn-save').disabled = false;
             }
         };
     }
 
-    function editArticle(id) {
-        UI.toast('Modifica articolo (ID: ' + id + ') in arrivo...', 'info');
+    async function editArticle(id) {
+        const article = _news.find(n => n.id == id);
+        if (article) {
+            _showArticleModal(article);
+        } else {
+            UI.toast('Articolo non trovato', 'error');
+        }
     }
 
     return {

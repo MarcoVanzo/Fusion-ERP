@@ -60,7 +60,7 @@ const Athletes = (() => {
         ${ath.acwr_risk && "moderate" !== ath.acwr_risk && "low" !== ath.acwr_risk ? `<div style="position:absolute;top:var(--sp-2);right:var(--sp-2);width:24px;height:24px;border-radius:50%;background:${riskColor};display:flex;align-items:center;justify-content:center;font-size:14px;color:#000;box-shadow:0 0 8px ${riskColor};"><i class="ph-fill ph-warning-circle"></i></div>` : ""}
         <div style="display:flex;align-items:flex-start;gap:var(--sp-2);">
           <div style="width:48px;height:48px;background:${initialsColor};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--font-display);font-weight:700;font-size:1.3rem;color:#000;border-radius:8px;">${ath.photo_path
-                  ? `<img src="${Utils.escapeHtml(ath.photo_path)}" style="width:100%;height:100%;object-fit:cover;object-position:center 15%;display:block;border-radius:8px;">`
+                  ? `<img src="${Utils.escapeHtml(ath.photo_path)}" style="width:100%;height:100%;object-fit:cover;object-position:center;display:block;border-radius:8px;">`
                   : `
             ${null != ath.jersey_number ? Utils.escapeHtml(String(ath.jersey_number)) : Utils.initials(ath.full_name)}`
                 }
@@ -77,24 +77,18 @@ const Athletes = (() => {
           .join("")}</div>`
       }
     `),
-      listContentEl.querySelectorAll("[data-team]").forEach((btn) =>
-        btn.addEventListener(
-          "click",
-          () => {
-            ((globalTeamFilter = btn.dataset.team), renderAthleteList());
-          },
-          { signal: moduleAbortController.signal },
-        ),
-      ),
-      listContentEl.querySelectorAll("[data-athlete-id]").forEach((card) =>
-        card.addEventListener(
-          "click",
-          () => {
-            showAthleteProfile(card.dataset.athleteId);
-          },
-          { signal: moduleAbortController.signal },
-        ),
-      ),
+      listContentEl.addEventListener("click", (e) => {
+        const teamBtn = e.target.closest("[data-team]");
+        if (teamBtn) {
+          globalTeamFilter = teamBtn.dataset.team;
+          renderAthleteList();
+        }
+
+        const athleteCard = e.target.closest("[data-athlete-id]");
+        if (athleteCard) {
+          showAthleteProfile(athleteCard.dataset.athleteId);
+        }
+      }, { signal: moduleAbortController.signal }),
       document.getElementById("new-athlete-btn")?.addEventListener(
         "click",
         () =>
@@ -323,39 +317,44 @@ const Athletes = (() => {
         { signal: moduleAbortController.signal },
       ));
     const searchInput = document.getElementById("athlete-search");
-    searchInput &&
+    if (searchInput) {
+      let debounceTimer;
       searchInput.addEventListener(
         "input",
         () => {
-          const query = searchInput.value.trim().toLowerCase();
-          let count = 0;
-          listContentEl
-            .querySelectorAll("[data-athlete-id]")
-            .forEach((card) => {
-              const matches =
-                (card.dataset.name || "").includes(query) ||
-                (card.dataset.role || "").includes(query) ||
-                (card.dataset.team || "").includes(query);
-              ((card.style.display = matches ? "" : "none"),
-                matches && count++);
-            });
-          const grid = document.getElementById("athletes-grid");
-          let searchEmpty = document.getElementById("search-empty-state");
-          const totalAthleteCards =
-            listContentEl.querySelectorAll("[data-athlete-id]").length;
-          0 === count && totalAthleteCards > 0
-            ? (!searchEmpty && grid
-              ? grid.insertAdjacentHTML(
-                "afterend",
-                `<div id="search-empty-state">${Utils.emptyState("Nessun atleta trovato", "Nessun risultato corrisponde alla tua ricerca.")}</div>`,
-              )
-              : searchEmpty && (searchEmpty.style.display = "block"),
-              grid && (grid.style.display = "none"))
-            : (searchEmpty && (searchEmpty.style.display = "none"),
-              grid && (grid.style.display = ""));
+          clearTimeout(debounceTimer);
+          debounceTimer = setTimeout(() => {
+            const query = searchInput.value.trim().toLowerCase();
+            let count = 0;
+            listContentEl
+              .querySelectorAll("[data-athlete-id]")
+              .forEach((card) => {
+                const matches =
+                  (card.dataset.name || "").includes(query) ||
+                  (card.dataset.role || "").includes(query) ||
+                  (card.dataset.team || "").includes(query);
+                ((card.style.display = matches ? "" : "none"),
+                  matches && count++);
+              });
+            const grid = document.getElementById("athletes-grid");
+            let searchEmpty = document.getElementById("search-empty-state");
+            const totalAthleteCards =
+              listContentEl.querySelectorAll("[data-athlete-id]").length;
+            0 === count && totalAthleteCards > 0
+              ? (!searchEmpty && grid
+                ? grid.insertAdjacentHTML(
+                  "afterend",
+                  `<div id="search-empty-state">${Utils.emptyState("Nessun atleta trovato", "Nessun risultato corrisponde alla tua ricerca.")}</div>`,
+                )
+                : searchEmpty && (searchEmpty.style.display = "block"),
+                grid && (grid.style.display = "none"))
+              : (searchEmpty && (searchEmpty.style.display = "none"),
+                grid && (grid.style.display = ""));
+          }, 250);
         },
         { signal: moduleAbortController.signal },
       );
+    }
   }
 
   function getAthleteColor(name) {
@@ -388,7 +387,12 @@ const Athletes = (() => {
       document.querySelectorAll("[data-maintab]").forEach((tab) =>
         tab.addEventListener(
           "click",
-          () => switchMainTab(tab.dataset.maintab),
+          () => {
+            if (tab.dataset.maintab === "metrics") {
+              globalTeamFilter = "";
+            }
+            switchMainTab(tab.dataset.maintab);
+          },
           {
             signal: moduleAbortController.signal,
           },
@@ -605,11 +609,15 @@ const Athletes = (() => {
     if (athleteId) {
       (sessionStorage.setItem("last_athlete_id", athleteId),
         Router.updateHash(Router.getCurrentRoute(), { id: athleteId }),
-        (appContainer.innerHTML = UI.skeletonPage()));
+        (appContainer.innerHTML = UI.skeletonPage()),
+        window.scrollTo({ top: 0, left: 0 }));
       try {
-        const [athleteData, paymentsParams] = await Promise.all([
+        const [athleteData, paymentsParams, metricsSummary] = await Promise.all([
           Store.get("get", "athletes", { id: athleteId }),
           Store.get("payments", "athletes", { id: athleteId }).catch(
+            () => [],
+          ),
+          Store.get("getMetricsSummary", "biometrics", { id: athleteId }).catch(
             () => [],
           ),
         ]),
@@ -620,12 +628,8 @@ const Athletes = (() => {
               <span class="stat-label" style="font-size:10px;text-transform:uppercase;color:var(--color-text-muted);">${label}</span>
               <span class="stat-value" style="font-size:13px;font-weight:600;display:block;">${Utils.escapeHtml(value || "—")}</span>
             </div>`;
-        ((appContainer.innerHTML = `\n        \x3c!-- BREADCRUMB NAV --\x3e\n        <div style="display:flex;align-items:center;gap:var(--sp-2);padding:var(--sp-2) var(--sp-4);border-bottom:1px solid var(--color-border);background:var(--color-bg);position:sticky;top:72px;z-index:50;">\n          <button class="btn btn-ghost btn-sm" id="back-to-list" style="color:var(--color-text-muted);border:none;padding:0;display:flex;align-items:center;gap:6px;font-size:12px;text-transform:uppercase;letter-spacing:0.06em;" type="button">\n            <i class="ph ph-arrow-left" style="font-size:16px;"></i> Atleti\n          </button>\n          <i class="ph ph-caret-right" style="font-size:12px;color:var(--color-text-muted);opacity:0.5;"></i>\n          <span style="font-size:12px;font-weight:600;color:var(--color-white);text-transform:uppercase;letter-spacing:0.06em;">${Utils.escapeHtml(athleteData.full_name)}</span>\n          <div style="flex:1;"></div>\n          ${hasEditPerms ? '<button class="btn btn-primary btn-sm" id="edit-athlete-btn" type="button" style="margin-right:8px;"><i class="ph ph-pencil-simple"></i> MODIFICA</button>' : ""}\n          ${["admin", "manager"].includes(currentUser?.role) ? '<button class="btn btn-default btn-sm" id="ai-report-btn" type="button">⚡ REPORT AI</button>' : ""}\n        </div>\n\n        <div class="page-body" style="display:flex;flex-direction:column;gap:var(--sp-4); background:var(--color-black);">\n\n          <!-- TAB BAR -->\n          <div style="position:relative;margin:0 calc(var(--sp-4) * -1);padding:0 var(--sp-4);border-bottom:1px solid var(--color-border);margin-bottom:var(--sp-4);">\n            <div id="athlete-tab-bar" class="fusion-tabs-container" style="display:flex;gap:0;overflow-x:auto;scrollbar-width:none;position:relative;z-index:2;padding-bottom:1px;">\n              ${[
+        ((appContainer.innerHTML = `\n        <div class="page-body" style="display:flex;flex-direction:column;gap:var(--sp-4); background:var(--color-black); min-height:100vh; padding-top:var(--sp-3);">\n\n          \x3c!-- BREADCRUMB NAV --\x3e\n          <div style="display:flex;align-items:center;gap:var(--sp-2);padding:0 var(--sp-4);">\n            <button class="btn btn-ghost btn-sm" id="back-to-list" style="color:var(--color-text-muted);border:none;padding:0;display:flex;align-items:center;gap:6px;font-size:12px;text-transform:uppercase;letter-spacing:0.06em;" type="button">\n              <i class="ph ph-arrow-left" style="font-size:16px;"></i> Atleti\n            </button>\n            <div style="flex:1;"></div>\n            ${hasEditPerms ? '<button class="btn btn-primary btn-sm" id="edit-athlete-btn" type="button" style="margin-right:8px;"><i class="ph ph-pencil-simple"></i> MODIFICA</button>' : ""}\n            ${["admin", "manager"].includes(currentUser?.role) ? '<button class="btn btn-default btn-sm" id="ai-report-btn" type="button">⚡ REPORT AI</button>' : ""}\n          </div>\n\n          <!-- HEADER ATLETA -->\n          <div style="display:flex; align-items:center; gap:var(--sp-4); padding:0 var(--sp-4); margin-top:var(--sp-2);">\n            ${athleteData.jersey_number != null ? `<div style="font-size:4rem; font-weight:800; color:var(--color-pink); font-family:var(--font-display); line-height:1; letter-spacing:-2px;">#${Utils.escapeHtml(String(athleteData.jersey_number))}</div>` : ''}\n            <div style="display:flex; flex-direction:column;">\n              <h2 style="font-size:2.5rem; font-weight:800; margin:0; line-height:1.1; font-family:var(--font-display); text-transform:uppercase; letter-spacing:-0.5px;">${Utils.escapeHtml(athleteData.first_name || '')} <span style="font-weight:300; color:var(--color-text-muted);">${Utils.escapeHtml(athleteData.last_name || '')}</span></h2>\n              <div style="font-size:15px; color:var(--color-white); margin-top:8px; display:flex; gap:12px; align-items:center;">\n                ${athleteData.role ? `<span style="background:rgba(255,255,255,0.1); padding:4px 10px; border-radius:6px; font-weight:600; font-size:13px; letter-spacing:0.5px; text-transform:uppercase;">${Utils.escapeHtml(athleteData.role)}</span>` : ''}\n                ${athleteData.team_name ? `<span style="color:var(--color-text-muted); font-weight:500;">${Utils.escapeHtml(formatTeamLabel(athleteData.category, athleteData.team_name))}</span>` : ''}\n              </div>\n            </div>\n          </div>\n\n          <!-- TAB BAR -->\n          <div style="position:relative;margin:0 calc(var(--sp-4) * -1);padding:0 var(--sp-4);border-bottom:1px solid var(--color-border);margin-bottom:var(--sp-4);">\n            <div id="athlete-tab-bar" class="fusion-tabs-container" style="display:flex;gap:0;overflow-x:auto;scrollbar-width:none;position:relative;z-index:2;padding-bottom:1px;">\n              ${[
           { id: "anagrafica", label: "Anagrafica" },
-          { id: "metrics", label: "Metrics & Load" },
-          { id: "antropometria", label: "Antropometria" },
-          { id: "test-fisici", label: "Test Fisici" },
-          { id: "vald", label: "Vald Performance", pink: !0 },
           { id: "pagamenti", label: "Pagamenti" },
           { id: "documenti", label: "Documenti" },
         ]
@@ -635,7 +639,7 @@ const Athletes = (() => {
           )
           .join(
             "",
-          )}\n            </div>\n            \x3c!-- Shadow gradient for scroll indication --\x3e\n            <div id="tab-scroll-indicator" style="position:absolute;top:0;right:0;bottom:0;width:48px;background:linear-gradient(to left, var(--color-black) 20%, transparent 100%);pointer-events:none;z-index:3;transition:opacity 0.3s;opacity:0.8;"></div>\n          </div>\n\n          \x3c!-- ANAGRAFICA TAB --\x3e\n          <div id="tab-panel-anagrafica" class="athlete-tab-panel" style="display:flex;flex-direction:column;gap:var(--sp-4);">\n            <div style="display:flex;flex-direction:row;align-items:flex-start;gap:var(--sp-4);">\n              \x3c!-- FOTO PERSONALE --\x3e\n              <div>\n                <p class="section-label">Foto Personale</p>\n                <div class="card" style="padding:var(--sp-3);">\n                  <div style="display:flex;align-items:center;gap:var(--sp-3);">\n                    <div id="athlete-photo-preview" style="width:200px;height:200px;border-radius:16px;overflow:hidden;flex-shrink:0;border:2px solid var(--color-border);background:${getAthleteColor(athleteData.full_name)};display:flex;align-items:center;justify-content:center;">\n                      ${athleteData.photo_path ? `<img src="${Utils.escapeHtml(athleteData.photo_path)}" alt="Foto atleta" style="width:100%;height:100%;object-fit:cover;;object-position:top">` : `<span style="font-family:var(--font-display);font-size:3.5rem;font-weight:700;color:#000;">${Utils.initials(athleteData.full_name)}</span>`}\n                    </div>\n                    <div style="display:flex;flex-direction:column;gap:8px;">\n                      <div style="font-size:13px;color:var(--color-text-muted);">\n                        ${athleteData.photo_path ? "Foto caricata" : "Nessuna foto caricata"}\n                      </div>\n                      ${hasEditPerms ? `\n                      <label for="athlete-photo-upload" class="btn btn-default btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;width:200px;justify-content:center;">\n                        <i class="ph ph-camera"></i> ${athleteData.photo_path ? "Cambia foto" : "Carica foto"}\n                      </label>\n                      <input id="athlete-photo-upload" type="file" accept="image/jpeg,image/png,image/webp" style="display:none;">\n                      <div id="athlete-photo-status" style="font-size:12px;color:var(--color-text-muted);"></div>` : ""}\n                    </div>\n                  </div>\n                </div>\n              </div>\n              <div style="flex:1;">\n                <p class="section-label">Dati Anagrafici e Contatti</p>\n                <div class="card" style="padding:var(--sp-3);">\n                  <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-3);">\n                    ${g("Nome", athleteData.first_name)}\n                    ${g("Cognome", athleteData.last_name)}\n                    ${g("Data di Nascita", athleteData.birth_date ? Utils.formatDate(athleteData.birth_date) : null)}\n                    ${g("Luogo di Nascita", athleteData.birth_place)}\n                    ${g("Via di Residenza", athleteData.residence_address)}\n                    ${g("Città di Residenza", athleteData.residence_city)}\n                    ${g("Cellulare", athleteData.phone)}\n                    ${g("E-Mail", athleteData.email)}\n                    ${g("Documento d'Identità", athleteData.identity_document)}\n                    ${g("Codice Fiscale", athleteData.fiscal_code)}\n                    ${g("Scadenza Cert. Medico", athleteData.medical_cert_expires_at ? Utils.formatDate(athleteData.medical_cert_expires_at) : null, athleteData.medical_cert_expires_at && new Date(athleteData.medical_cert_expires_at) < new Date() ? "var(--color-pink)" : null)}\n                    ${g("Matricola FIPAV", athleteData.federal_id)}\n                  </div>\n                </div>\n              </div>\n            </div>\n\n            \x3c!-- DOCUMENTI (in Anagrafica) --\x3e\n            <div>\n              <p class="section-label">Matricola e Documenti</p>\n              <div class="card" style="padding:var(--sp-3);">\n                <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:var(--sp-3);">\n                  ${g("Documento d'Identità", athleteData.identity_document)}\n                  ${g("Codice Fiscale", athleteData.fiscal_code)}\n                  ${g("Matricola FIPAV", athleteData.federal_id)}\n                  ${g("Scadenza Cert. Medico", athleteData.medical_cert_expires_at ? Utils.formatDate(athleteData.medical_cert_expires_at) : null, athleteData.medical_cert_expires_at && new Date(athleteData.medical_cert_expires_at) < new Date() ? "var(--color-pink)" : null)}\n                </div>\n              </div>\n            </div>\n\n            \x3c!-- PAGAMENTI (in Anagrafica) --\x3e\n            <div>\n              <p class="section-label">Recenti Pagamenti</p>\n              ${paymentsParams && paymentsParams.length > 0
+          )}\n            </div>\n            \x3c!-- Shadow gradient for scroll indication --\x3e\n            <div id="tab-scroll-indicator" style="position:absolute;top:0;right:0;bottom:0;width:48px;background:linear-gradient(to left, var(--color-black) 20%, transparent 100%);pointer-events:none;z-index:3;transition:opacity 0.3s;opacity:0.8;"></div>\n          </div>\n\n          \x3c!-- ANAGRAFICA TAB --\x3e\n          <div id="tab-panel-anagrafica" class="athlete-tab-panel" style="display:flex;flex-direction:column;gap:var(--sp-4);">\n            <div style="display:flex;flex-direction:row;align-items:flex-start;gap:var(--sp-4);">\n              \x3c!-- FOTO PERSONALE --\x3e\n              <div style="width:280px;flex-shrink:0;">\n                <p class="section-label" style="text-align:center;">Foto Personale</p>\n                <div class="card" style="padding:var(--sp-3);">\n                  <div style="display:flex;flex-direction:column;align-items:center;gap:var(--sp-3);">\n                    <div id="athlete-photo-preview" style="width:240px;height:240px;border-radius:16px;overflow:hidden;flex-shrink:0;border:2px solid var(--color-border);background:${getAthleteColor(athleteData.full_name)};display:flex;align-items:center;justify-content:center;">\n                      ${athleteData.photo_path ? `<img src="${Utils.escapeHtml(athleteData.photo_path)}" alt="Foto atleta" style="width:100%;height:100%;object-fit:cover;object-position:center">` : `<span style="font-family:var(--font-display);font-size:4.5rem;font-weight:700;color:#000;">${Utils.initials(athleteData.full_name)}</span>`}\n                    </div>\n                    <div style="display:flex;flex-direction:column;align-items:center;gap:8px;width:100%;">\n                      <div style="font-size:13px;color:var(--color-text-muted);text-align:center;">\n                        ${athleteData.photo_path ? "Foto caricata" : "Nessuna foto caricata"}\n                      </div>\n                      ${hasEditPerms ? `\n                      <label for="athlete-photo-upload" class="btn btn-default btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;width:100%;justify-content:center;">\n                        <i class="ph ph-camera"></i> ${athleteData.photo_path ? "Cambia foto" : "Carica foto"}\n                      </label>\n                      <input id="athlete-photo-upload" type="file" accept="image/jpeg,image/png,image/webp" style="display:none;">\n                      <div id="athlete-photo-status" style="font-size:12px;color:var(--color-text-muted);text-align:center;"></div>` : ""}\n                    </div>\n                  </div>\n                </div>\n              </div>\n              <div style="flex:1;">\n                <p class="section-label">Dati Anagrafici e Contatti</p>\n                <div class="card" style="padding:var(--sp-3);">\n                  <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-3);">\n                    ${g("Nome", athleteData.first_name)}\n                    ${g("Cognome", athleteData.last_name)}\n                    ${g("Data di Nascita", athleteData.birth_date ? Utils.formatDate(athleteData.birth_date) : null)}\n                    ${g("Luogo di Nascita", athleteData.birth_place)}\n                    ${g("Via di Residenza", athleteData.residence_address)}\n                    ${g("Città di Residenza", athleteData.residence_city)}\n                    ${g("Cellulare", athleteData.phone)}\n                    ${g("E-Mail", athleteData.email)}\n                    ${g("Documento d'Identità", athleteData.identity_document)}\n                    ${g("Codice Fiscale", athleteData.fiscal_code)}\n                    ${g("Scadenza Cert. Medico", athleteData.medical_cert_expires_at ? Utils.formatDate(athleteData.medical_cert_expires_at) : null, athleteData.medical_cert_expires_at && new Date(athleteData.medical_cert_expires_at) < new Date() ? "var(--color-pink)" : null)}\n                    ${g("Matricola FIPAV", athleteData.federal_id)}\n                  </div>\n                </div>\n              </div>\n            </div>\n\n            \x3c!-- DOCUMENTI (in Anagrafica) --\x3e\n            <div>\n              <p class="section-label">Matricola e Documenti</p>\n              <div class="card" style="padding:var(--sp-3);">\n                <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:var(--sp-3);">\n                  ${g("Documento d'Identità", athleteData.identity_document)}\n                  ${g("Codice Fiscale", athleteData.fiscal_code)}\n                  ${g("Matricola FIPAV", athleteData.federal_id)}\n                  ${g("Scadenza Cert. Medico", athleteData.medical_cert_expires_at ? Utils.formatDate(athleteData.medical_cert_expires_at) : null, athleteData.medical_cert_expires_at && new Date(athleteData.medical_cert_expires_at) < new Date() ? "var(--color-pink)" : null)}\n                </div>\n              </div>\n            </div>\n\n            \x3c!-- PAGAMENTI (in Anagrafica) --\x3e\n            <div>\n              <p class="section-label">Recenti Pagamenti</p>\n              ${paymentsParams && paymentsParams.length > 0
             ? `\n                <div class="table-wrapper">\n                  <table class="table">\n                    <thead><tr><th>Scadenza</th><th>Importo</th><th>Stato</th><th>Metodo</th><th>Data Pagamento</th></tr></thead>\n                    <tbody>\n                      ${paymentsParams
               .slice(0, 5)
               .map(
@@ -646,7 +650,7 @@ const Athletes = (() => {
                 "",
               )}\n                    </tbody>\n                  </table>\n                </div>`
             : Utils.emptyState("Nessun pagamento registrato")
-          }\n            </div>\n          </div>\n\n          \x3c!-- METRICS TAB --\x3e\n          <div id="tab-panel-metrics" class="athlete-tab-panel" style="display:none;flex-direction:column;gap:var(--sp-4);">\n\n            \x3c!-- ACWR Section --\x3e\n            <div>\n              <p class="section-label">Athlete Load — ACWR</p>\n              <div class="grid-3">\n                ${(function (
+          }\n            </div>\n          </div>\n\n          \x3c!-- METRICS TAB --\x3e\n          <div id="tab-panel-metrics" class="athlete-tab-panel" style="display:none;flex-direction:column;gap:var(--sp-4);">\n\n            \x3c!-- PARAMETRI FISICI E SALTO --\x3e\n            <div>\n              <p class="section-label">Parametri Fisici e Salto</p>\n              <div class="grid-3">\n                <div class="stat-card">\n                  <span class="stat-label">Peso Attuale</span>\n                  <span class="stat-value">${athleteData.weight_kg ? athleteData.weight_kg + ' kg' : '—'}</span>\n                </div>\n                <div class="stat-card">\n                  <span class="stat-label">Altezza Attuale</span>\n                  <span class="stat-value">${athleteData.height_cm ? athleteData.height_cm + ' cm' : '—'}</span>\n                </div>\n                <div class="stat-card">\n                  <span class="stat-label">Miglior Salto (di recente)</span>\n                  <span class="stat-value">${(function (ms) { if (!ms || !ms.length) return '—'; const jump = ms.find((m) => m.metric_type === 'VERTICAL_JUMP_CMJ' || m.metric_type === 'VERTICAL_JUMP_SJ' || m.metric_type === 'BROAD_JUMP'); return jump ? jump.value + (jump.unit ? ' ' + jump.unit : '') : '—'; })(metricsSummary)}</span>\n                </div>\n              </div>\n            </div>\n\n            \x3c!-- ACWR Section --\x3e\n            <div>\n              <p class="section-label">Athlete Load — ACWR</p>\n              <div class="grid-3">\n                ${(function (
             e,
           ) {
             if (!e)
@@ -672,9 +676,9 @@ const Athletes = (() => {
             ?.addEventListener("click", () => renderMainList(), {
               signal: moduleAbortController.signal,
             }),
-          document.getElementById("edit-athlete-btn")?.addEventListener(
-            "click",
-            () =>
+          (function () {
+            var btn = document.getElementById("edit-athlete-btn");
+            if (btn) btn.onclick = () =>
               (function (athleteData) {
                 const teamOptions = Array.isArray(globalTeamsList)
                   ? globalTeamsList
@@ -876,12 +880,11 @@ const Athletes = (() => {
                       },
                     ),
                   ));
-              })(athleteData),
-            { signal: moduleAbortController.signal },
-          ),
-          document.getElementById("ai-report-btn")?.addEventListener(
-            "click",
-            () =>
+              })(athleteData);
+          })(),
+          (function () {
+            var btn = document.getElementById("ai-report-btn");
+            if (btn) btn.onclick = () =>
               (async function (e) {
                 const t = document.getElementById("ai-report-btn");
                 t && ((t.disabled = !0), (t.textContent = "⏳ Generazione..."));
@@ -894,53 +897,47 @@ const Athletes = (() => {
                 } finally {
                   t && ((t.disabled = !1), (t.textContent = "⚡ REPORT AI"));
                 }
-              })(athleteId),
-            { signal: moduleAbortController.signal },
-          ));
+              })(athleteId);
+          })());
         const w = document.getElementById("athlete-photo-upload");
-        w &&
-          w.addEventListener(
-            "change",
-            async () => {
-              const e = w.files?.[0];
-              if (!e) return;
-              const t = document.getElementById("athlete-photo-status"),
-                a = document.getElementById("athlete-photo-preview"),
-                l = document.querySelector('label[for="athlete-photo-upload"]'),
-                s = URL.createObjectURL(e);
-              ((a.innerHTML = `<img src="${s}" alt="Foto atleta" style="width:100%;height:100%;object-fit:cover;;object-position:top">`),
-                t && (t.textContent = "Caricamento in corso..."),
-                l &&
-                ((l.style.opacity = "0.5"),
-                  (l.style.pointerEvents = "none")));
-              try {
-                const a = new FormData();
-                (a.append("id", athleteId), a.append("photo", e));
-                const l = await fetch(
-                  "api/router.php?module=athletes&action=uploadPhoto",
-                  { method: "POST", credentials: "same-origin", body: a },
-                ),
-                  s = await l.json();
-                if (!l.ok) throw new Error(s.message || "Errore upload");
-                (t &&
-                  ((t.textContent = "✓ Foto salvata"),
-                    (t.style.color = "var(--color-success)")),
-                  UI.toast("Foto caricata", "success"));
-              } catch (e) {
-                ((a.innerHTML = athleteData.photo_path
-                  ? `<img src="${Utils.escapeHtml(athleteData.photo_path)}" alt="Foto atleta" style="width:100%;height:100%;object-fit:cover;;object-position:top">`
-                  : `<span style="font-family:var(--font-display);font-size:3.5rem;font-weight:700;color:#000;">${Utils.initials(athleteData.full_name)}</span>`),
-                  t &&
-                  ((t.textContent = "Errore: " + e.message),
-                    (t.style.color = "var(--color-pink)")),
-                  UI.toast("Errore upload foto: " + e.message, "error"));
-              } finally {
-                (l && ((l.style.opacity = ""), (l.style.pointerEvents = "")),
-                  URL.revokeObjectURL(s));
-              }
-            },
-            { signal: moduleAbortController.signal },
-          );
+        if (w) w.onchange = async () => {
+          const e = w.files?.[0];
+          if (!e) return;
+          const t = document.getElementById("athlete-photo-status"),
+            a = document.getElementById("athlete-photo-preview"),
+            l = document.querySelector('label[for="athlete-photo-upload"]'),
+            s = URL.createObjectURL(e);
+          ((a.innerHTML = `<img src="${s}" alt="Foto atleta" style="width:100%;height:100%;object-fit:cover;object-position:center">`),
+            t && (t.textContent = "Caricamento in corso..."),
+            l &&
+            ((l.style.opacity = "0.5"),
+              (l.style.pointerEvents = "none")));
+          try {
+            const a = new FormData();
+            (a.append("id", athleteId), a.append("photo", e));
+            const l = await fetch(
+              "api/router.php?module=athletes&action=uploadPhoto",
+              { method: "POST", credentials: "same-origin", body: a },
+            ),
+              s = await l.json();
+            if (!l.ok) throw new Error(s.message || "Errore upload");
+            (t &&
+              ((t.textContent = "✓ Foto salvata"),
+                (t.style.color = "var(--color-success)")),
+              UI.toast("Foto caricata", "success"));
+          } catch (e) {
+            ((a.innerHTML = athleteData.photo_path
+              ? `<img src="${Utils.escapeHtml(athleteData.photo_path)}" alt="Foto atleta" style="width:100%;height:100%;object-fit:cover;object-position:center">`
+              : `<span style="font-family:var(--font-display);font-size:3.5rem;font-weight:700;color:#000;">${Utils.initials(athleteData.full_name)}</span>`),
+              t &&
+              ((t.textContent = "Errore: " + e.message),
+                (t.style.color = "var(--color-pink)")),
+              UI.toast("Errore upload foto: " + e.message, "error"));
+          } finally {
+            l && ((l.style.opacity = ""), (l.style.pointerEvents = ""));
+            URL.revokeObjectURL(s);
+          }
+        };
         let E = !1;
         const _ = (e) => {
           (document.querySelectorAll(".athlete-tab-panel").forEach((e) => {

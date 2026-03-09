@@ -69,7 +69,7 @@ const Results = (() => {
                 ? new Date(e.last_updated).toLocaleString("it-IT")
                 : "",
               a =
-                e.source_url || n?.url || "https://venezia.portalefipav.net";
+                e.source_url || n?.url || "";
             if (0 === s.length)
               return void l(
                 "Nessuna partita trovata",
@@ -112,7 +112,7 @@ const Results = (() => {
                   return "portale federale";
                 }
               })();
-              d += `<div class="res-last-update">Aggiornato: ${o} &nbsp;·&nbsp; Fonte: <a href="${Utils.escapeHtml(a)}" target="_blank" style="color:var(--color-text-muted);">${Utils.escapeHtml(e)}</a></div>`;
+              d += `<div class="res-last-update">Aggiornato: ${o}${a ? ` &nbsp;·&nbsp; Fonte: <a href="${Utils.escapeHtml(a)}" target="_blank" style="color:var(--color-text-muted);">${Utils.escapeHtml(e)}</a>` : ""}</div>`;
             }
             t.innerHTML = d;
             if (lastPlayedRound) {
@@ -160,7 +160,7 @@ const Results = (() => {
                 ? new Date(e.last_updated).toLocaleString("it-IT")
                 : "",
               a =
-                e.source_url || n?.url || "https://venezia.portalefipav.net";
+                e.source_url || n?.url || "";
             if (0 === s.length)
               return void l(
                 "Classifica non disponibile",
@@ -182,7 +182,7 @@ const Results = (() => {
                   return "portale federale";
                 }
               })();
-              i += `<div class="res-last-update">Aggiornato: ${o} &nbsp;·&nbsp; Fonte: <a href="${Utils.escapeHtml(a)}" target="_blank" style="color:var(--color-text-muted);">${Utils.escapeHtml(e)}</a></div>`;
+              i += `<div class="res-last-update">Aggiornato: ${o}${a ? ` &nbsp;·&nbsp; Fonte: <a href="${Utils.escapeHtml(a)}" target="_blank" style="color:var(--color-text-muted);">${Utils.escapeHtml(e)}</a>` : ""}</div>`;
             }
             t.innerHTML = i;
           })(e);

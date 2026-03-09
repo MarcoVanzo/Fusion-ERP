@@ -324,9 +324,16 @@ class ResultsController
         // Accept any configured portal domain
         $host = parse_url($url, PHP_URL_HOST);
         $hostLower = $host ? strtolower($host) : '';
+        $allowedDomains = [
+            'portalefipav.net',
+            'fipavveneto.net',
+            'federvolley.it',
+            'legavolley.it',
+            'fipavonline.it'
+        ];
         $allowed = false;
-        foreach (self::ALLOWED_DOMAINS as $domain) {
-            if (str_contains($hostLower, $domain)) {
+        foreach ($allowedDomains as $domain) {
+            if ($hostLower === $domain || str_ends_with($hostLower, '.' . $domain)) {
                 $allowed = true;
                 break;
             }
@@ -540,6 +547,23 @@ class ResultsController
         // Realistic browser User-Agent (improves compatibility with portals that block bots)
         $userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36';
 
+        // Check if URL is an allowed domain for SSRF mitigation
+        $isAllowedDomain = false;
+        $parsedHost = parse_url($url, PHP_URL_HOST) ?? '';
+        $allowedDomains = [
+            'portalefipav.net',
+            'fipavveneto.net',
+            'federvolley.it',
+            'legavolley.it',
+            'fipavonline.it'
+        ];
+        foreach ($allowedDomains as $domain) {
+            if ($parsedHost === $domain || str_ends_with($parsedHost, '.' . $domain)) {
+                $isAllowedDomain = true;
+                break;
+            }
+        }
+
         // Cookie jar for session handling (some portals require cookies)
         $cookieJar = sys_get_temp_dir() . '/fusion_fipav_cookies.txt';
 
@@ -559,10 +583,10 @@ class ResultsController
             $ch = curl_init($url);
             $opts = [
                 CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_FOLLOWLOCATION => true,
-                CURLOPT_MAXREDIRS => 10,
-                CURLOPT_TIMEOUT => 30,
-                CURLOPT_CONNECTTIMEOUT => 10,
+                CURLOPT_FOLLOWLOCATION => $isAllowedDomain,
+                CURLOPT_MAXREDIRS => 5,
+                CURLOPT_TIMEOUT => 15,
+                CURLOPT_CONNECTTIMEOUT => 5,
                 CURLOPT_ENCODING => '', // Accept any encoding (auto-decode)
                 CURLOPT_USERAGENT => $userAgent,
                 CURLOPT_COOKIEJAR => $cookieJar,
@@ -612,28 +636,35 @@ class ResultsController
         }
 
         if ($html === false || $curlErrNo !== 0 || $httpCode >= 400) {
-            error_log("[Results] Direct fetch failed (HTTP " . (string)$httpCode . ", cURL #" . (string)$curlErrNo . "), trying AllOrigins fallback...");
+            if ($curlErrNo === 28 || $curlErrNo === 7) {
+                // If the direct fetch was a timeout, skip AllOrigins fallback to avoid wasting time
+                $ce = (string)$curlErrNo;
+                error_log("[Results] Direct connection timed out (cURL #{$ce}), skipping AllOrigins fallback for: {$url}");
+            }
+            else {
+                error_log("[Results] Direct fetch failed (HTTP " . (string)$httpCode . ", cURL #" . (string)$curlErrNo . "), trying AllOrigins fallback...");
 
-            // Try AllOrigins public proxy as a fallback if direct connection is blocked by WAF
-            $allOriginsUrl = 'https://api.allorigins.win/get?url=' . urlencode($url);
-            $chProxy = curl_init($allOriginsUrl);
-            curl_setopt_array($chProxy, [
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_FOLLOWLOCATION => true,
-                CURLOPT_TIMEOUT => 20,
-                CURLOPT_CONNECTTIMEOUT => 10,
-                CURLOPT_USERAGENT => $userAgent,
-            ]);
-            $proxyRes = curl_exec($chProxy);
-            $proxyCode = (int)curl_getinfo($chProxy, CURLINFO_HTTP_CODE);
-            $proxyErr = curl_errno($chProxy);
-            curl_close($chProxy);
+                // Try AllOrigins public proxy as a fallback if direct connection is blocked by WAF
+                $allOriginsUrl = 'https://api.allorigins.win/get?url=' . urlencode($url);
+                $chProxy = curl_init($allOriginsUrl);
+                curl_setopt_array($chProxy, [
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_FOLLOWLOCATION => true,
+                    CURLOPT_TIMEOUT => 15,
+                    CURLOPT_CONNECTTIMEOUT => 5,
+                    CURLOPT_USERAGENT => $userAgent,
+                ]);
+                $proxyRes = curl_exec($chProxy);
+                $proxyCode = (int)curl_getinfo($chProxy, CURLINFO_HTTP_CODE);
+                $proxyErr = curl_errno($chProxy);
+                curl_close($chProxy);
 
-            if ($proxyErr === 0 && $proxyCode >= 200 && $proxyCode < 300 && is_string($proxyRes)) {
-                $jsonData = json_decode($proxyRes, true);
-                if (isset($jsonData['contents']) && is_string($jsonData['contents']) && strlen($jsonData['contents']) > 500) {
-                    error_log("[Results] AllOrigins fallback OK for: {$url}");
-                    return $jsonData['contents'];
+                if ($proxyErr === 0 && $proxyCode >= 200 && $proxyCode < 300 && is_string($proxyRes)) {
+                    $jsonData = json_decode($proxyRes, true);
+                    if (isset($jsonData['contents']) && is_string($jsonData['contents']) && strlen($jsonData['contents']) > 500) {
+                        error_log("[Results] AllOrigins fallback OK for: {$url}");
+                        return $jsonData['contents'];
+                    }
                 }
             }
 
@@ -1847,5 +1878,153 @@ class ResultsController
             }
         }
         return false;
+    }
+
+    // ─── PUBLIC ENDPOINTS FOR WEBSITE ──────────────────────────────────────────────
+    public function getPublicRecentResults(): void
+    {
+        $pdo = Database::getInstance();
+        $limit = max(1, min(50, (int)(filter_input(INPUT_GET, 'limit', FILTER_SANITIZE_NUMBER_INT) ?? 10)));
+
+        try {
+            $stmt = $pdo->prepare("
+                SELECT
+                    m.id, m.home_team AS home, m.away_team AS away,
+                    m.home_score AS sets_home, m.away_score AS sets_away,
+                    CONCAT(COALESCE(m.home_score,'?'),' - ',COALESCE(m.away_score,'?')) AS score,
+                    DATE_FORMAT(m.match_date, '%d/%m/%Y') AS date,
+                    DATE_FORMAT(m.match_date, '%H:%i')    AS time,
+                    m.match_date,
+                    m.status,
+                    m.round,
+                    c.label AS championship_label,
+                    c.id    AS championship_id
+                FROM federation_matches m
+                JOIN federation_championships c
+                    ON m.championship_id = c.id
+                   AND c.is_active  = 1
+                WHERE m.status = 'played'
+                  AND m.home_score IS NOT NULL
+                  AND m.away_score IS NOT NULL
+                  AND m.match_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+                  AND m.match_date <= NOW()
+                  AND (
+                    LOWER(m.home_team) LIKE '%fusion%'
+                    OR LOWER(m.away_team) LIKE '%fusion%'
+                  )
+                ORDER BY m.match_date DESC
+                LIMIT :lim
+            ");
+            $stmt->bindValue(':lim', $limit, \PDO::PARAM_INT);
+            $stmt->execute();
+            $matches = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+            foreach ($matches as &$m) {
+                $m['is_our_team'] = $this->_isOurTeam($m['home'], $m['away']);
+            }
+
+            Response::success([
+                'matches' => $matches,
+                'total' => count($matches),
+                'last_updated' => date('c'),
+                'source' => 'db',
+            ]);
+        }
+        catch (\PDOException $e) {
+            $sqlState = $e->errorInfo[0] ?? (string)$e->getCode();
+            if ($sqlState === '42S02' || str_contains($e->getMessage(), "doesn't exist")) {
+                Response::success(['matches' => [], 'total' => 0, 'source' => 'db']);
+                return;
+            }
+            error_log('[Results] getPublicRecentResults error: ' . $e->getMessage());
+            Response::error('Errore database', 500);
+        }
+    }
+
+    public function getPublicMatchCenter(): void
+    {
+        $pdo = Database::getInstance();
+
+        try {
+            $stmtMatches = $pdo->prepare("
+                SELECT
+                    m.id, m.home_team AS home, m.away_team AS away,
+                    m.home_score AS sets_home, m.away_score AS sets_away,
+                    DATE_FORMAT(m.match_date, '%d/%m/%Y') AS date,
+                    DATE_FORMAT(m.match_date, '%H:%i')    AS time,
+                    m.match_date,
+                    m.status,
+                    m.round,
+                    c.label AS championship_label,
+                    c.id    AS championship_id
+                FROM federation_matches m
+                JOIN federation_championships c
+                    ON m.championship_id = c.id
+                   AND c.is_active  = 1
+                WHERE (
+                    LOWER(m.home_team) LIKE '%fusion%'
+                    OR LOWER(m.away_team) LIKE '%fusion%'
+                  )
+                ORDER BY m.match_date DESC
+            ");
+            $stmtMatches->execute();
+            $matches = $stmtMatches->fetchAll(\PDO::FETCH_ASSOC);
+
+            foreach ($matches as &$m) {
+                $m['is_our_team'] = $this->_isOurTeam($m['home'], $m['away']);
+                $m['score'] = $m['home_score'] !== null ? "{$m['home_score']} - {$m['away_score']}" : "vs";
+            }
+
+            $stmtStandings = $pdo->prepare("
+                SELECT
+                    s.championship_id,
+                    s.position,
+                    s.team,
+                    s.points,
+                    s.played,
+                    s.won,
+                    s.lost,
+                    s.sets_won,
+                    s.sets_lost,
+                    c.label AS championship_label
+                FROM federation_standings s
+                JOIN federation_championships c
+                    ON s.championship_id = c.id
+                   AND c.is_active = 1
+                ORDER BY c.label ASC, s.position ASC
+            ");
+            $stmtStandings->execute();
+            $standingsRaw = $stmtStandings->fetchAll(\PDO::FETCH_ASSOC);
+
+            $standings = [];
+            foreach ($standingsRaw as $row) {
+                $cid = $row['championship_id'];
+                if (!isset($standings[$cid])) {
+                    $standings[$cid] = [
+                        'championship_id' => $cid,
+                        'championship_label' => $row['championship_label'],
+                        'rows' => []
+                    ];
+                }
+                $row['is_our_team'] = $this->_isOurTeam($row['team']);
+                $standings[$cid]['rows'][] = $row;
+            }
+
+            Response::success([
+                'matches' => $matches,
+                'standings' => array_values($standings),
+                'last_updated' => date('c'),
+                'source' => 'db',
+            ]);
+        }
+        catch (\PDOException $e) {
+            $sqlState = $e->errorInfo[0] ?? (string)$e->getCode();
+            if ($sqlState === '42S02' || str_contains($e->getMessage(), "doesn't exist")) {
+                Response::success(['matches' => [], 'standings' => [], 'source' => 'db']);
+                return;
+            }
+            error_log('[Results] getPublicMatchCenter error: ' . $e->getMessage());
+            Response::error('Errore database', 500);
+        }
     }
 }

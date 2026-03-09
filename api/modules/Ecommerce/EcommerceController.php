@@ -219,7 +219,7 @@ class EcommerceController
         foreach ($parent->childNodes as $child) {
             yield $child;
             if ($child->hasChildNodes()) {
-                yield fromself::_walkNodes($child);
+                yield from self::_walkNodes($child);
             }
         }
     }
@@ -537,5 +537,40 @@ class EcommerceController
             '_campiDisponibili' => array_keys($e),
             'rawEntry' => $e
         ];
+    }
+
+    // ─── PUBLIC ENDPOINTS FOR WEBSITE ──────────────────────────────────────────────
+    public function getPublicShop(): void
+    {
+        $ch = curl_init(self::SHOP_URL);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_TIMEOUT => 20,
+            CURLOPT_USERAGENT => 'Mozilla/5.0 (compatible; FusionERP/1.0)',
+            CURLOPT_SSL_VERIFYPEER => true,
+        ]);
+
+        $html = curl_exec($ch);
+        $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlErr = curl_error($ch);
+        curl_close($ch);
+
+        if ($html === false || !empty($curlErr)) {
+            Response::error('Impossibile raggiungere il negozio online: ' . $curlErr, 502);
+        }
+
+        if ($httpCode !== 200) {
+            Response::error('Il negozio ha risposto HTTP ' . $httpCode . '. Potrebbe essere offline.', 502);
+        }
+
+        $products = self::_parseShopHtml((string)$html);
+
+        Response::success([
+            'products' => $products,
+            'count' => count($products),
+            'source' => self::SHOP_URL,
+            'scraped_at' => date('Y-m-d H:i:s'),
+        ]);
     }
 }
