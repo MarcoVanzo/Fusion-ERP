@@ -75,7 +75,7 @@ const Footer = () => {
                         <p className="text-zinc-400 text-sm mb-4">
                             Accedi all'area gestionale Fusion ERP per gestire roster, risultati e calendari.
                         </p>
-                        <a href="/ERP" className="inline-flex items-center justify-center w-full px-5 py-3 rounded-lg bg-zinc-900 border border-white/10 text-white font-medium hover:bg-white hover:text-zinc-950 transition-colors">
+                        <a href="/ERP" className="inline-flex items-center justify-center w-full px-5 py-3 rounded-none bg-zinc-900 border border-white/10 text-white font-medium hover:bg-white hover:text-zinc-950 transition-colors">
                             Accesso Gestionale
                         </a>
                     </div>

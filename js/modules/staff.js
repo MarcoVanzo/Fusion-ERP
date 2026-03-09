@@ -289,7 +289,7 @@ const Staff = (() => {
                         (s.textContent = "Nome e cognome sono obbligatori"),
                         void s.classList.remove("hidden")
                       );
-                    const modalBody = document.getElementById("es-fname").closest(".fusion-modal");
+                    const modalBody = document.getElementById("es-fname").closest(".modal");
                     const checkedTeams = modalBody ? Array.from(modalBody.querySelectorAll('input[name="es-teams"]:checked')).map(el => el.value) : [];
                     console.log("Saving staff with teams:", checkedTeams);
                     const i = document.getElementById("es-save");

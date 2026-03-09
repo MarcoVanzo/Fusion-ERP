@@ -67,7 +67,7 @@ const News = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                         {[1, 2, 3, 4, 5, 6].map(i => (
                             <div key={i} className="glass-panel p-6 animate-pulse h-[400px]">
-                                <div className="h-48 bg-white/5 rounded-lg mb-6 w-full"></div>
+                                <div className="h-48 bg-white/5 rounded-none mb-6 w-full"></div>
                                 <div className="h-4 bg-white/10 rounded w-1/3 mb-4"></div>
                                 <div className="h-6 bg-white/10 rounded w-full mb-3"></div>
                                 <div className="h-6 bg-white/10 rounded w-4/5"></div>

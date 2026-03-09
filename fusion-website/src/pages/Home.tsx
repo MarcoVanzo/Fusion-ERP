@@ -91,7 +91,7 @@ const Home = () => {
                 </div>
 
                 {/* Dark Background Overlay & Fuchsia Glow */}
-                <div className="absolute inset-0 bg-zinc-950/40 z-10 transition-colors duration-500"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-[#09090B] via-[#09090B]/60 to-transparent/10 z-10 transition-colors duration-500"></div>
                 <div className="absolute inset-0 z-10 opacity-40 pointer-events-none mix-blend-overlay" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #a21caf 0, #a21caf 2px, transparent 2px, transparent 100px)' }}></div>
 
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60vw] bg-brand-primary/40 blur-[150px] rounded-full z-0 mix-blend-screen"></div>
@@ -135,7 +135,7 @@ const Home = () => {
             </section>
 
             {/* Recent Matches Widget */}
-            <section className="w-full px-4 md:px-12">
+            <section className="w-full px-4 md:px-12 py-20 md:py-28">
                 <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 border-b-2 border-zinc-800 pb-6 gap-4">
                     <div>
                         <h2 className="font-heading text-5xl md:text-7xl">ULTIMI <span className="text-brand-500">RISULTATI</span></h2>
@@ -181,7 +181,7 @@ const Home = () => {
             </section>
 
             {/* Latest News Widget */}
-            <section className="w-full px-4 md:px-12">
+            <section className="w-full px-4 md:px-12 py-20 md:py-28">
                 <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 border-b-2 border-zinc-800 pb-6 gap-6">
                     <div>
                         <h2 className="font-heading text-5xl md:text-7xl">LATEST <span className="text-brand-500">NEWS</span></h2>

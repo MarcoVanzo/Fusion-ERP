@@ -132,12 +132,12 @@ const TeamDetail = () => {
                             {athletes.map(athlete => {
                                 const photoUrl = athlete.photo_path ? `/ERP/${athlete.photo_path}` : null;
                                 return (
-                                    <div key={athlete.id} className="group relative h-[480px] bg-zinc-900 overflow-hidden clip-diagonal-rev transition-all duration-300 hover:z-10 hover:scale-105 border border-transparent hover:border-brand-500">
+                                    <div key={athlete.id} className="group relative h-[480px] bg-zinc-900 overflow-hidden clip-diagonal-rev transition-all duration-500 hover:-translate-y-2 hover:z-10 hover:scale-[1.02] border border-transparent hover:border-brand-500">
 
                                         {/* Background Texture/Image */}
                                         <div className="absolute inset-0 z-0">
                                             {photoUrl ? (
-                                                <img src={photoUrl} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 mix-blend-luminosity group-hover:mix-blend-normal transition-all duration-500" alt={athlete.last_name} />
+                                                <img src={photoUrl} className="w-full h-full object-cover opacity-80 group-hover:scale-110 group-hover:opacity-100 mix-blend-luminosity group-hover:mix-blend-normal transition-all duration-500" alt={athlete.last_name} />
                                             ) : (
                                                 <div className="w-full h-full flex flex-col items-center justify-center bg-zinc-950">
                                                     <span className="font-heading text-9xl text-zinc-800">F</span>

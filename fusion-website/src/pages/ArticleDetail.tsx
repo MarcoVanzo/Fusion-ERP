@@ -46,9 +46,9 @@ const ArticleDetail = () => {
 
     if (loading) {
         return (
-            <div className="max-w-4xl mx-auto px-4 py-12 animate-pulse">
+            <div className="max-w-4xl mx-auto px-4 py-20 md:py-28 animate-pulse">
                 <div className="h-8 w-24 bg-white/10 rounded mb-8"></div>
-                <div className="h-64 md:h-96 w-full bg-white/5 rounded-2xl mb-8"></div>
+                <div className="h-64 md:h-96 w-full bg-white/5 rounded-none mb-8"></div>
                 <div className="h-12 w-3/4 bg-white/10 rounded mb-6"></div>
                 <div className="space-y-4">
                     <div className="h-4 bg-white/5 rounded w-full"></div>
@@ -62,7 +62,7 @@ const ArticleDetail = () => {
 
     if (error || !article) {
         return (
-            <div className="max-w-4xl mx-auto px-4 py-24 text-center">
+            <div className="max-w-4xl mx-auto px-4 py-20 md:py-28 text-center">
                 <div className="glass-panel p-12 inline-block">
                     <h2 className="text-2xl font-bold text-white mb-4">Oops!</h2>
                     <p className="text-zinc-400 mb-8">{error || 'Articolo non trovato.'}</p>
@@ -90,7 +90,7 @@ const ArticleDetail = () => {
                 <div className="absolute bottom-0 left-0 w-full h-48 bg-gradient-to-t from-zinc-950 to-transparent z-10"></div>
 
                 {/* Content */}
-                <div className="relative z-20 max-w-5xl mx-auto px-4 w-full pb-12">
+                <div className="relative z-20 max-w-5xl mx-auto px-4 w-full pb-20 md:pb-28">
                     <Link to="/news" className="inline-flex items-center gap-2 text-zinc-300 hover:text-white transition-colors mb-6 font-heading text-sm tracking-widest uppercase bg-zinc-950/50 px-4 py-2 rounded-full backdrop-blur-md border border-white/10">
                         <ChevronLeft size={16} /> Tutte le news
                     </Link>
@@ -108,7 +108,7 @@ const ArticleDetail = () => {
                         {article.title}
                     </h1>
 
-                    <div className="flex items-center gap-6 text-zinc-300 text-sm font-subheading uppercase tracking-widest bg-zinc-950/40 inline-flex px-4 py-2 rounded-lg backdrop-blur-sm border border-white/5">
+                    <div className="flex items-center gap-6 text-zinc-300 text-sm font-subheading uppercase tracking-widest bg-zinc-950/40 inline-flex px-4 py-2 rounded-none backdrop-blur-sm border border-white/5">
                         <div className="flex items-center gap-2">
                             <Calendar size={16} className="text-brand-500" />
                             {new Date(article.published_at).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' })}
@@ -132,7 +132,7 @@ const ArticleDetail = () => {
 
                     {/* HTML Content Render */}
                     <div
-                        className="prose prose-invert prose-brand max-w-none prose-img:rounded-xl prose-img:shadow-lg prose-headings:font-bold prose-a:text-brand-500 hover:prose-a:text-brand-400 prose-p:text-zinc-300 prose-p:leading-relaxed"
+                        className="prose prose-invert prose-brand max-w-none prose-img:rounded-none prose-img:shadow-lg prose-headings:font-bold prose-a:text-brand-500 hover:prose-a:text-brand-400 prose-p:text-zinc-300 prose-p:leading-relaxed"
                         dangerouslySetInnerHTML={{ __html: article.content_html }}
                     />
                 </div>

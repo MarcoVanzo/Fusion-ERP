@@ -50,7 +50,7 @@ const Roster = () => {
                     <h1 className="font-heading text-6xl md:text-8xl tracking-tighter text-white mb-2 uppercase drop-shadow-xl">
                         LE <span className="text-brand-500 drop-shadow-[0_0_15px_rgba(214,90,134,0.5)]">SQUADRE</span>
                     </h1>
-                    <p className="font-subheading text-xl md:text-2xl text-zinc-300 tracking-widest mt-2 bg-zinc-950/50 inline-block px-4 py-1 border border-white/10 rounded-sm">
+                    <p className="font-subheading text-xl md:text-2xl text-zinc-300 tracking-widest mt-2 bg-zinc-950/50 inline-block px-4 py-1 border border-white/10 rounded-none">
                         FUSION TEAM VOLLEY ROSTER
                     </p>
                 </div>
@@ -73,7 +73,7 @@ const Roster = () => {
                             <Link
                                 to={`/teams/${team.id}`}
                                 key={team.id}
-                                className="group relative h-64 overflow-hidden bg-zinc-900 clip-diagonal-rev transition-all duration-500 hover:scale-[1.02]"
+                                className="group relative h-64 overflow-hidden bg-zinc-900 clip-diagonal-rev transition-all duration-500 hover:scale-[1.02] hover:-translate-y-2"
                             >
                                 {/* Conditional Background image  */}
                                 {(() => {

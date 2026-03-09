@@ -30,7 +30,7 @@ const ScratchTexture = () => {
     }, []);
 
     return (
-        <svg viewBox="0 0 100 125" preserveAspectRatio="xMidYMid slice" className="absolute inset-0 w-full h-full pointer-events-none group-hover:scale-105 transition-all duration-700 z-0 py-8 px-6">
+        <svg viewBox="0 0 100 125" preserveAspectRatio="xMidYMid slice" className="absolute inset-0 w-full h-full pointer-events-none group-hover:scale-105 transition-all duration-700 z-0 py-8 px-6 opacity-30 mix-blend-overlay">
             <path d={scribblePath} fill="none" stroke="white" strokeWidth="1.2" strokeLinecap="round" opacity="1" />
             <path d={scribblePath} fill="none" stroke="white" strokeWidth="0.8" strokeLinecap="round" opacity="0.6" transform="translate(1, -2) rotate(1 50 62)" />
         </svg>
@@ -101,7 +101,7 @@ const Shop = () => {
                     <h1 className="font-heading text-6xl md:text-8xl tracking-tighter mb-4 text-white uppercase drop-shadow-xl leading-none">
                         FUSION <span className="text-brand-500 drop-shadow-[0_0_15px_rgba(214,90,134,0.5)]">STORE</span>
                     </h1>
-                    <p className="font-subheading text-xl md:text-2xl text-zinc-300 tracking-widest bg-zinc-950/50 inline-block px-4 py-1 border border-white/10 rounded-sm">
+                    <p className="font-subheading text-xl md:text-2xl text-zinc-300 tracking-widest bg-zinc-950/50 inline-block px-4 py-1 border border-white/10 rounded-none">
                         ABBIGLIAMENTO UFFICIALE E MERCHANDISING
                     </p>
                 </div>
@@ -135,10 +135,10 @@ const Shop = () => {
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16">
                         {filteredProducts.map((product, idx) => (
-                            <div key={idx} className="group flex flex-col items-center">
+                            <div key={idx} className="group flex flex-col items-center relative transition-all duration-500 hover:scale-[1.02] hover:-translate-y-2">
 
                                 {/* Product Image Container */}
-                                <div className="relative w-full aspect-[4/5] bg-black border border-zinc-800 mb-8 overflow-hidden group-hover:border-brand-500 transition-all duration-500 rounded-sm flex items-center justify-center clip-diagonal">
+                                <div className="relative w-full aspect-[4/5] bg-black border border-zinc-800 mb-8 overflow-hidden group-hover:border-brand-500 transition-all duration-500 rounded-none flex items-center justify-center clip-diagonal">
 
                                     {/* Procedural "Scratch-Off" Background Texture */}
                                     <ScratchTexture />
