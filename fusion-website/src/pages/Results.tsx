@@ -24,7 +24,9 @@ const Results = () => {
                 const res = await fetch('/ERP/api/?module=results&action=getPublicRecentResults&limit=15');
                 const data = await res.json();
                 if (data.status === 'success') {
-                    setMatches(data.data.matches || []);
+                    // Extract matches from data.data.matches or data.data depending on structure
+                    const matchesArray = data.data.matches ? data.data.matches : data.data;
+                    setMatches(matchesArray || []);
                 }
             } catch (error) {
                 console.error('Failed to fetch matches:', error);

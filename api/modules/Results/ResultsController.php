@@ -1883,7 +1883,7 @@ class ResultsController
     // ─── PUBLIC ENDPOINTS FOR WEBSITE ──────────────────────────────────────────────
     public function getPublicRecentResults(): void
     {
-        $pdo = \FusionERP\Core\Database::getInstance();
+        $pdo = Database::getInstance();
         $limit = max(1, min(50, (int)(filter_input(INPUT_GET, 'limit', FILTER_SANITIZE_NUMBER_INT) ?? 10)));
 
         try {
@@ -1923,7 +1923,7 @@ class ResultsController
                 $m['is_our_team'] = $this->_isOurTeam($m['home'], $m['away']);
             }
 
-            \FusionERP\Core\Response::success([
+            Response::success([
                 'matches' => $matches,
                 'total' => count($matches),
                 'last_updated' => date('c'),
@@ -1933,11 +1933,11 @@ class ResultsController
         catch (\PDOException $e) {
             $sqlState = $e->errorInfo[0] ?? (string)$e->getCode();
             if ($sqlState === '42S02' || str_contains($e->getMessage(), "doesn't exist")) {
-                \FusionERP\Core\Response::success(['matches' => [], 'total' => 0, 'source' => 'db']);
+                Response::success(['matches' => [], 'total' => 0, 'source' => 'db']);
                 return;
             }
             error_log('[Results] getPublicRecentResults error: ' . $e->getMessage());
-            \FusionERP\Core\Response::error('Errore database', 500);
+            Response::error('Errore database', 500);
         }
     }
 }

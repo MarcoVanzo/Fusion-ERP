@@ -10,7 +10,7 @@ export default defineConfig({
       '/ERP/api': {
         target: 'http://localhost:8000',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/ERP\/api/, '/api'), // If the PHP server is rooted at Fusion ERP
+        rewrite: (path) => path.replace(/^\/ERP\/api/, '/api/router.php'), // Bypass .htaccess for local PHP server
       }
     }
   }
