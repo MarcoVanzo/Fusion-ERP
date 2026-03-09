@@ -33,9 +33,27 @@ const EcommerceDB = (() => {
       return n().articoli.delete(t);
     },
     bulkSaveArticoli: async function (t) {
-      const r = new Date().toISOString(),
-        e = t.map((t) => ({ ...t, importatoIl: r, modificatoIl: r }));
-      return n().articoli.bulkAdd(e);
+      const db = n(),
+        now = new Date().toISOString(),
+        existing = await db.articoli.toArray(),
+        nameMap = new Map();
+      existing.forEach((item) => {
+        if (item.nome) nameMap.set(item.nome.trim().toLowerCase(), item);
+      });
+      const toAdd = [],
+        toUpdate = [];
+      t.forEach((item) => {
+        const itemKey = item.nome ? item.nome.trim().toLowerCase() : "";
+        if (itemKey && nameMap.has(itemKey)) {
+          const matched = nameMap.get(itemKey);
+          toUpdate.push({ ...matched, ...item, id: matched.id, modificatoIl: now });
+        } else {
+          toAdd.push({ ...item, importatoIl: now, modificatoIl: now });
+        }
+      });
+      if (toAdd.length > 0) await db.articoli.bulkAdd(toAdd);
+      if (toUpdate.length > 0) await db.articoli.bulkPut(toUpdate);
+      return true;
     },
     countArticoli: async function () {
       return n().articoli.count();

@@ -222,6 +222,7 @@ h3 {
 /* ─── APP SHELL (Layout Core) ────────────────────────────── */
 .app-shell {
   display: flex;
+  height: 100dvh;
   min-height: 100vh;
   background-color: var(--bg-darker);
   overflow: hidden;
@@ -231,7 +232,7 @@ h3 {
   flex: 1;
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100dvh;
   overflow: hidden;
   position: relative;
 }
@@ -550,6 +551,7 @@ h3 {
 /* ─── TOPBAR ────────────────────────────────────────────── */
 .topbar {
   height: var(--topbar-height);
+  flex-shrink: 0;
   background: rgba(10, 10, 12, 0.6);
   backdrop-filter: var(--glass);
   -webkit-backdrop-filter: var(--glass);
@@ -813,6 +815,7 @@ h3 {
 /* ─── MAIN CONTENT ───────────────────────────────────────── */
 .main-content {
   flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   overflow-y: auto;
