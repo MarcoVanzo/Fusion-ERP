@@ -137,7 +137,7 @@ const TeamDetail = () => {
                                         {/* Background Texture/Image */}
                                         <div className="absolute inset-0 z-0">
                                             {photoUrl ? (
-                                                <img src={photoUrl} className="w-full h-full object-cover opacity-80 group-hover:scale-110 group-hover:opacity-100 mix-blend-luminosity group-hover:mix-blend-normal transition-all duration-500" alt={athlete.last_name} />
+                                                <img src={photoUrl} className="w-full h-full object-cover opacity-90 group-hover:scale-110 group-hover:opacity-100 transition-all duration-500" alt={athlete.last_name} />
                                             ) : (
                                                 <div className="w-full h-full flex flex-col items-center justify-center bg-zinc-950">
                                                     <span className="font-heading text-9xl text-zinc-800">F</span>
@@ -166,7 +166,7 @@ const TeamDetail = () => {
                                         </div>
 
                                         {/* Jumbo Jersey Number */}
-                                        <div className="absolute top-4 right-6 z-20 font-heading text-7xl text-white/10 group-hover:text-white/30 transition-colors">
+                                        <div className="absolute top-4 right-6 z-20 font-heading text-7xl text-white/10 group-hover:text-white group-hover:drop-shadow-[0_0_15px_rgba(255,255,255,0.8)] transition-all duration-300">
                                             {athlete.jersey_number || ''}
                                         </div>
 

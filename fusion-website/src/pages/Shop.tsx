@@ -147,7 +147,7 @@ const Shop = () => {
                                         <img
                                             src={product.immagineUrl}
                                             alt={product.nome}
-                                            className="w-full h-full object-contain p-6 relative z-10 group-hover:scale-110 transition-transform duration-700 mix-blend-multiply"
+                                            className="w-full h-full object-contain p-6 relative z-10 group-hover:scale-110 transition-transform duration-700"
                                         />
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center z-10 relative">
