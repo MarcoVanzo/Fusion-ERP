@@ -67,9 +67,23 @@ const EcommerceDB = (() => {
         if (!item.nome) continue;
         const key = item.nome.trim().toLowerCase();
         if (nameMap.has(key)) {
-          // If the existing one has less data (e.g. no image) but this one does, we might want to keep this one, 
-          // but for simplicity we will just delete the newer duplicates.
-          toDelete.push(item.id);
+          const existing = nameMap.get(key);
+          const existingHasImage = !!existing.immagineBase64;
+          const newHasImage = !!item.immagineBase64;
+          const existingDate = existing.modificatoIl ? new Date(existing.modificatoIl) : new Date(0);
+          const newDate = item.modificatoIl ? new Date(item.modificatoIl) : new Date(0);
+
+          if (!existingHasImage && newHasImage) {
+            toDelete.push(existing.id);
+            nameMap.set(key, item);
+          } else if (existingHasImage && !newHasImage) {
+            toDelete.push(item.id);
+          } else if (newDate > existingDate) {
+            toDelete.push(existing.id);
+            nameMap.set(key, item);
+          } else {
+            toDelete.push(item.id);
+          }
         } else {
           nameMap.set(key, item);
         }

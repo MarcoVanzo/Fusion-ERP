@@ -17,6 +17,5 @@ CREATE TABLE IF NOT EXISTS ec_orders (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_ec_orders_stato_interno ON ec_orders(stato_interno);
-CREATE INDEX idx_ec_orders_data ON ec_orders(data_ordine);
-CREATE INDEX idx_ec_orders_tenant ON ec_orders(tenant_id);
+CREATE INDEX idx_ec_orders_tenant_stato ON ec_orders(tenant_id, stato_interno);
+CREATE INDEX idx_ec_orders_tenant_data ON ec_orders(tenant_id, data_ordine);

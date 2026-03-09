@@ -540,6 +540,16 @@ class ResultsController
         // Realistic browser User-Agent (improves compatibility with portals that block bots)
         $userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36';
 
+        // Check if URL is an allowed domain for SSRF mitigation
+        $isAllowedDomain = false;
+        $parsedHost = parse_url($url, PHP_URL_HOST) ?? '';
+        foreach (self::ALLOWED_DOMAINS as $domain) {
+            if ($parsedHost === $domain || str_ends_with($parsedHost, '.' . $domain)) {
+                $isAllowedDomain = true;
+                break;
+            }
+        }
+
         // Cookie jar for session handling (some portals require cookies)
         $cookieJar = sys_get_temp_dir() . '/fusion_fipav_cookies.txt';
 
@@ -559,10 +569,10 @@ class ResultsController
             $ch = curl_init($url);
             $opts = [
                 CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_FOLLOWLOCATION => true,
-                CURLOPT_MAXREDIRS => 10,
-                CURLOPT_TIMEOUT => 30,
-                CURLOPT_CONNECTTIMEOUT => 10,
+                CURLOPT_FOLLOWLOCATION => $isAllowedDomain,
+                CURLOPT_MAXREDIRS => 5,
+                CURLOPT_TIMEOUT => 15,
+                CURLOPT_CONNECTTIMEOUT => 5,
                 CURLOPT_ENCODING => '', // Accept any encoding (auto-decode)
                 CURLOPT_USERAGENT => $userAgent,
                 CURLOPT_COOKIEJAR => $cookieJar,
@@ -612,28 +622,35 @@ class ResultsController
         }
 
         if ($html === false || $curlErrNo !== 0 || $httpCode >= 400) {
-            error_log("[Results] Direct fetch failed (HTTP " . (string)$httpCode . ", cURL #" . (string)$curlErrNo . "), trying AllOrigins fallback...");
+            if ($curlErrNo === 28 || $curlErrNo === 7) {
+                // If the direct fetch was a timeout, skip AllOrigins fallback to avoid wasting time
+                $ce = (string)$curlErrNo;
+                error_log("[Results] Direct connection timed out (cURL #{$ce}), skipping AllOrigins fallback for: {$url}");
+            }
+            else {
+                error_log("[Results] Direct fetch failed (HTTP " . (string)$httpCode . ", cURL #" . (string)$curlErrNo . "), trying AllOrigins fallback...");
 
-            // Try AllOrigins public proxy as a fallback if direct connection is blocked by WAF
-            $allOriginsUrl = 'https://api.allorigins.win/get?url=' . urlencode($url);
-            $chProxy = curl_init($allOriginsUrl);
-            curl_setopt_array($chProxy, [
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_FOLLOWLOCATION => true,
-                CURLOPT_TIMEOUT => 20,
-                CURLOPT_CONNECTTIMEOUT => 10,
-                CURLOPT_USERAGENT => $userAgent,
-            ]);
-            $proxyRes = curl_exec($chProxy);
-            $proxyCode = (int)curl_getinfo($chProxy, CURLINFO_HTTP_CODE);
-            $proxyErr = curl_errno($chProxy);
-            curl_close($chProxy);
+                // Try AllOrigins public proxy as a fallback if direct connection is blocked by WAF
+                $allOriginsUrl = 'https://api.allorigins.win/get?url=' . urlencode($url);
+                $chProxy = curl_init($allOriginsUrl);
+                curl_setopt_array($chProxy, [
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_FOLLOWLOCATION => true,
+                    CURLOPT_TIMEOUT => 15,
+                    CURLOPT_CONNECTTIMEOUT => 5,
+                    CURLOPT_USERAGENT => $userAgent,
+                ]);
+                $proxyRes = curl_exec($chProxy);
+                $proxyCode = (int)curl_getinfo($chProxy, CURLINFO_HTTP_CODE);
+                $proxyErr = curl_errno($chProxy);
+                curl_close($chProxy);
 
-            if ($proxyErr === 0 && $proxyCode >= 200 && $proxyCode < 300 && is_string($proxyRes)) {
-                $jsonData = json_decode($proxyRes, true);
-                if (isset($jsonData['contents']) && is_string($jsonData['contents']) && strlen($jsonData['contents']) > 500) {
-                    error_log("[Results] AllOrigins fallback OK for: {$url}");
-                    return $jsonData['contents'];
+                if ($proxyErr === 0 && $proxyCode >= 200 && $proxyCode < 300 && is_string($proxyRes)) {
+                    $jsonData = json_decode($proxyRes, true);
+                    if (isset($jsonData['contents']) && is_string($jsonData['contents']) && strlen($jsonData['contents']) > 500) {
+                        error_log("[Results] AllOrigins fallback OK for: {$url}");
+                        return $jsonData['contents'];
+                    }
                 }
             }
 

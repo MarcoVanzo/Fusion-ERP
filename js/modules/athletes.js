@@ -323,39 +323,44 @@ const Athletes = (() => {
         { signal: moduleAbortController.signal },
       ));
     const searchInput = document.getElementById("athlete-search");
-    searchInput &&
+    if (searchInput) {
+      let debounceTimer;
       searchInput.addEventListener(
         "input",
         () => {
-          const query = searchInput.value.trim().toLowerCase();
-          let count = 0;
-          listContentEl
-            .querySelectorAll("[data-athlete-id]")
-            .forEach((card) => {
-              const matches =
-                (card.dataset.name || "").includes(query) ||
-                (card.dataset.role || "").includes(query) ||
-                (card.dataset.team || "").includes(query);
-              ((card.style.display = matches ? "" : "none"),
-                matches && count++);
-            });
-          const grid = document.getElementById("athletes-grid");
-          let searchEmpty = document.getElementById("search-empty-state");
-          const totalAthleteCards =
-            listContentEl.querySelectorAll("[data-athlete-id]").length;
-          0 === count && totalAthleteCards > 0
-            ? (!searchEmpty && grid
-              ? grid.insertAdjacentHTML(
-                "afterend",
-                `<div id="search-empty-state">${Utils.emptyState("Nessun atleta trovato", "Nessun risultato corrisponde alla tua ricerca.")}</div>`,
-              )
-              : searchEmpty && (searchEmpty.style.display = "block"),
-              grid && (grid.style.display = "none"))
-            : (searchEmpty && (searchEmpty.style.display = "none"),
-              grid && (grid.style.display = ""));
+          clearTimeout(debounceTimer);
+          debounceTimer = setTimeout(() => {
+            const query = searchInput.value.trim().toLowerCase();
+            let count = 0;
+            listContentEl
+              .querySelectorAll("[data-athlete-id]")
+              .forEach((card) => {
+                const matches =
+                  (card.dataset.name || "").includes(query) ||
+                  (card.dataset.role || "").includes(query) ||
+                  (card.dataset.team || "").includes(query);
+                ((card.style.display = matches ? "" : "none"),
+                  matches && count++);
+              });
+            const grid = document.getElementById("athletes-grid");
+            let searchEmpty = document.getElementById("search-empty-state");
+            const totalAthleteCards =
+              listContentEl.querySelectorAll("[data-athlete-id]").length;
+            0 === count && totalAthleteCards > 0
+              ? (!searchEmpty && grid
+                ? grid.insertAdjacentHTML(
+                  "afterend",
+                  `<div id="search-empty-state">${Utils.emptyState("Nessun atleta trovato", "Nessun risultato corrisponde alla tua ricerca.")}</div>`,
+                )
+                : searchEmpty && (searchEmpty.style.display = "block"),
+                grid && (grid.style.display = "none"))
+              : (searchEmpty && (searchEmpty.style.display = "none"),
+                grid && (grid.style.display = ""));
+          }, 250);
         },
         { signal: moduleAbortController.signal },
       );
+    }
   }
 
   function getAthleteColor(name) {
@@ -680,9 +685,9 @@ const Athletes = (() => {
             ?.addEventListener("click", () => renderMainList(), {
               signal: moduleAbortController.signal,
             }),
-          document.getElementById("edit-athlete-btn")?.addEventListener(
-            "click",
-            () =>
+          (function () {
+            var btn = document.getElementById("edit-athlete-btn");
+            if (btn) btn.onclick = () =>
               (function (athleteData) {
                 const teamOptions = Array.isArray(globalTeamsList)
                   ? globalTeamsList
@@ -884,12 +889,11 @@ const Athletes = (() => {
                       },
                     ),
                   ));
-              })(athleteData),
-            { signal: moduleAbortController.signal },
-          ),
-          document.getElementById("ai-report-btn")?.addEventListener(
-            "click",
-            () =>
+              })(athleteData);
+          })(),
+          (function () {
+            var btn = document.getElementById("ai-report-btn");
+            if (btn) btn.onclick = () =>
               (async function (e) {
                 const t = document.getElementById("ai-report-btn");
                 t && ((t.disabled = !0), (t.textContent = "⏳ Generazione..."));
@@ -902,53 +906,47 @@ const Athletes = (() => {
                 } finally {
                   t && ((t.disabled = !1), (t.textContent = "⚡ REPORT AI"));
                 }
-              })(athleteId),
-            { signal: moduleAbortController.signal },
-          ));
+              })(athleteId);
+          })());
         const w = document.getElementById("athlete-photo-upload");
-        w &&
-          w.addEventListener(
-            "change",
-            async () => {
-              const e = w.files?.[0];
-              if (!e) return;
-              const t = document.getElementById("athlete-photo-status"),
-                a = document.getElementById("athlete-photo-preview"),
-                l = document.querySelector('label[for="athlete-photo-upload"]'),
-                s = URL.createObjectURL(e);
-              ((a.innerHTML = `<img src="${s}" alt="Foto atleta" style="width:100%;height:100%;object-fit:cover;;object-position:top">`),
-                t && (t.textContent = "Caricamento in corso..."),
-                l &&
-                ((l.style.opacity = "0.5"),
-                  (l.style.pointerEvents = "none")));
-              try {
-                const a = new FormData();
-                (a.append("id", athleteId), a.append("photo", e));
-                const l = await fetch(
-                  "api/router.php?module=athletes&action=uploadPhoto",
-                  { method: "POST", credentials: "same-origin", body: a },
-                ),
-                  s = await l.json();
-                if (!l.ok) throw new Error(s.message || "Errore upload");
-                (t &&
-                  ((t.textContent = "✓ Foto salvata"),
-                    (t.style.color = "var(--color-success)")),
-                  UI.toast("Foto caricata", "success"));
-              } catch (e) {
-                ((a.innerHTML = athleteData.photo_path
-                  ? `<img src="${Utils.escapeHtml(athleteData.photo_path)}" alt="Foto atleta" style="width:100%;height:100%;object-fit:cover;;object-position:top">`
-                  : `<span style="font-family:var(--font-display);font-size:3.5rem;font-weight:700;color:#000;">${Utils.initials(athleteData.full_name)}</span>`),
-                  t &&
-                  ((t.textContent = "Errore: " + e.message),
-                    (t.style.color = "var(--color-pink)")),
-                  UI.toast("Errore upload foto: " + e.message, "error"));
-              } finally {
-                (l && ((l.style.opacity = ""), (l.style.pointerEvents = "")),
-                  URL.revokeObjectURL(s));
-              }
-            },
-            { signal: moduleAbortController.signal },
-          );
+        if (w) w.onchange = async () => {
+          const e = w.files?.[0];
+          if (!e) return;
+          const t = document.getElementById("athlete-photo-status"),
+            a = document.getElementById("athlete-photo-preview"),
+            l = document.querySelector('label[for="athlete-photo-upload"]'),
+            s = URL.createObjectURL(e);
+          ((a.innerHTML = `<img src="${s}" alt="Foto atleta" style="width:100%;height:100%;object-fit:cover;;object-position:top">`),
+            t && (t.textContent = "Caricamento in corso..."),
+            l &&
+            ((l.style.opacity = "0.5"),
+              (l.style.pointerEvents = "none")));
+          try {
+            const a = new FormData();
+            (a.append("id", athleteId), a.append("photo", e));
+            const l = await fetch(
+              "api/router.php?module=athletes&action=uploadPhoto",
+              { method: "POST", credentials: "same-origin", body: a },
+            ),
+              s = await l.json();
+            if (!l.ok) throw new Error(s.message || "Errore upload");
+            (t &&
+              ((t.textContent = "✓ Foto salvata"),
+                (t.style.color = "var(--color-success)")),
+              UI.toast("Foto caricata", "success"));
+          } catch (e) {
+            ((a.innerHTML = athleteData.photo_path
+              ? `<img src="${Utils.escapeHtml(athleteData.photo_path)}" alt="Foto atleta" style="width:100%;height:100%;object-fit:cover;;object-position:top">`
+              : `<span style="font-family:var(--font-display);font-size:3.5rem;font-weight:700;color:#000;">${Utils.initials(athleteData.full_name)}</span>`),
+              t &&
+              ((t.textContent = "Errore: " + e.message),
+                (t.style.color = "var(--color-pink)")),
+              UI.toast("Errore upload foto: " + e.message, "error"));
+          } finally {
+            l && ((l.style.opacity = ""), (l.style.pointerEvents = ""));
+            URL.revokeObjectURL(s);
+          }
+        };
         let E = !1;
         const _ = (e) => {
           (document.querySelectorAll(".athlete-tab-panel").forEach((e) => {
