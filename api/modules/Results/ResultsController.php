@@ -798,6 +798,70 @@ class ResultsController
 
                 $casaNodes = $xpath->query('.//*[contains(@class,"squadraCasa")]', $gara);
                 $home = $casaNodes && $casaNodes->length > 0 ? trim(preg_replace('/\s+/', ' ', $casaNodes->item(0)->textContent)) : null;
+    
+
+    // ─── PUBLIC ENDPOINTS FOR WEBSITE ──────────────────────────────────────────────
+    public function getPublicRecentResults(): void
+    {
+        $pdo = \FusionERP\Core\Database::getInstance();
+        $limit = max(1, min(50, (int)(filter_input(INPUT_GET, 'limit', FILTER_SANITIZE_NUMBER_INT) ?? 10)));
+
+        try {
+            $stmt = $pdo->prepare("
+                SELECT
+                    m.id, m.home_team AS home, m.away_team AS away,
+                    m.home_score AS sets_home, m.away_score AS sets_away,
+                    CONCAT(COALESCE(m.home_score,'?'),' - ',COALESCE(m.away_score,'?')) AS score,
+                    DATE_FORMAT(m.match_date, '%d/%m/%Y') AS date,
+                    DATE_FORMAT(m.match_date, '%H:%i')    AS time,
+                    m.match_date,
+                    m.status,
+                    m.round,
+                    c.label AS championship_label,
+                    c.id    AS championship_id
+                FROM federation_matches m
+                JOIN federation_championships c
+                    ON m.championship_id = c.id
+                   AND c.is_active  = 1
+                WHERE m.status = 'played'
+                  AND m.home_score IS NOT NULL
+                  AND m.away_score IS NOT NULL
+                  AND m.match_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+                  AND m.match_date <= NOW()
+                  AND (
+                    LOWER(m.home_team) LIKE '%fusion%'
+                    OR LOWER(m.away_team) LIKE '%fusion%'
+                  )
+                ORDER BY m.match_date DESC
+                LIMIT :lim
+            ");
+            // Rimosso controllo tenant per la vista pubblica global (o si può cablare l'id tenant di default)
+            $stmt->bindValue(':lim', $limit, \PDO::PARAM_INT);
+            $stmt->execute();
+            $matches = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+            // Mark "our team" matches
+            foreach ($matches as &$m) {
+                $m['is_our_team'] = $this->_isOurTeam($m['home'], $m['away']);
+            }
+
+            \FusionERP\Core\Response::success([
+                'matches' => $matches,
+                'total' => count($matches),
+                'last_updated' => date('c'),
+                'source' => 'db',
+            ]);
+        }
+        catch (\PDOException $e) {
+            $sqlState = $e->errorInfo[0] ?? (string)$e->getCode();
+            if ($sqlState === '42S02' || str_contains($e->getMessage(), "doesn't exist")) {
+                \FusionERP\Core\Response::success(['matches' => [], 'total' => 0, 'source' => 'db']);
+                return;
+            }
+            error_log('[Results] getPublicRecentResults error: ' . $e->getMessage());
+            \FusionERP\Core\Response::error('Errore database', 500);
+        }
+    }
 
                 $ospiteNodes = $xpath->query('.//*[contains(@class,"squadraOspite")]', $gara);
                 $away = $ospiteNodes && $ospiteNodes->length > 0 ? trim(preg_replace('/\s+/', ' ', $ospiteNodes->item(0)->textContent)) : null;

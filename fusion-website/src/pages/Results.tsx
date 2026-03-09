@@ -1,0 +1,155 @@
+import { useState, useEffect } from 'react';
+import { Trophy, ChevronRight } from 'lucide-react';
+
+interface Match {
+    id: number;
+    home: string;
+    away: string;
+    date: string;
+    time?: string;
+    championship_label: string;
+    sets_home?: number;
+    sets_away?: number;
+    is_our_team: boolean;
+}
+
+const Results = () => {
+    const [matches, setMatches] = useState<Match[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        // Fetch real FIPAV synced matches from the ERP RecentResults endpoint
+        const fetchMatches = async () => {
+            try {
+                const res = await fetch('/ERP/api/?module=results&action=recentResults&limit=15');
+                const data = await res.json();
+                if (data.status === 'success') {
+                    setMatches(data.data.matches || []);
+                }
+            } catch (error) {
+                console.error('Failed to fetch matches:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchMatches();
+    }, []);
+
+    // The backend `recentResults` returns played matches (past). 
+    // If we want future matches we would call a different endpoint or modify the backend.
+    // Assuming backend returns past matches for now, we'll display them under "Ultime Partite".
+    const pastMatches = matches;
+
+    return (
+        <div className="bg-zinc-950 min-h-screen pb-24 font-sans text-white">
+
+            {/* Header Inter Style */}
+            <header className="relative pt-32 pb-20 px-4 overflow-hidden mb-12 border-b-8 border-brand-500 clip-diagonal">
+                <div className="absolute inset-0 z-0">
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-brand-primary/20 via-zinc-950 to-zinc-950"></div>
+                </div>
+
+                <div className="max-w-7xl mx-auto relative z-10 flex flex-col items-start border-l-8 border-brand-500 pl-8">
+                    <h1 className="font-heading text-6xl md:text-8xl tracking-tighter text-white mb-2 leading-none uppercase">
+                        MATCH <br /> <span className="text-zinc-600">CENTER</span>
+                    </h1>
+                    <p className="font-subheading text-2xl text-brand-500 tracking-widest mt-4">
+                        RISULTATI UFFICIALI FIPAV
+                    </p>
+                </div>
+            </header>
+
+            <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-3 gap-12">
+
+                {/* Left Column: Match Lists */}
+                <div className="lg:col-span-2 space-y-16">
+
+                    {/* Ultimi Risultati */}
+                    <section>
+                        <div className="flex items-center gap-4 mb-8 border-b-2 border-zinc-800 pb-4">
+                            <Trophy className="text-brand-500" size={32} />
+                            <h2 className="text-4xl font-heading text-white tracking-tight">ULTIMI RISULTATI</h2>
+                        </div>
+
+                        {loading ? (
+                            <div className="space-y-4">
+                                {[1, 2, 3, 4].map(i => <div key={i} className="animate-pulse bg-zinc-900 h-32 clip-diagonal border border-zinc-800"></div>)}
+                            </div>
+                        ) : pastMatches.length === 0 ? (
+                            <div className="p-12 text-center border border-zinc-800 bg-zinc-900/40 clip-diagonal">
+                                <p className="font-subheading text-2xl text-zinc-500">Nessuna partita registrata di recente.</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-6">
+                                {pastMatches.map(match => {
+                                    const isFusionHome = match.home.toLowerCase().includes('fusion');
+                                    const isFusionAway = match.away.toLowerCase().includes('fusion');
+                                    // Determina se Fusion ha vinto
+                                    let fusionWon = false;
+                                    if (isFusionHome && match.sets_home! > match.sets_away!) fusionWon = true;
+                                    if (isFusionAway && match.sets_away! > match.sets_home!) fusionWon = true;
+
+                                    return (
+                                        <div key={match.id} className="relative group flex flex-col md:flex-row items-center justify-between gap-4 p-6 bg-zinc-900 clip-diagonal border-l-4 border-transparent hover:border-brand-500 hover:bg-zinc-800 transition-colors">
+
+                                            <div className="text-center md:text-left min-w-[150px]">
+                                                <div className="font-subheading text-brand-500 text-sm tracking-widest mb-1">
+                                                    {match.date}
+                                                </div>
+                                                <div className="text-zinc-400 font-subheading text-xs uppercase">{match.championship_label}</div>
+                                            </div>
+
+                                            <div className="flex items-center gap-4 justify-center flex-grow w-full md:w-auto mt-4 md:mt-0">
+                                                <div className={`text-right font-heading text-xl w-2/5 truncate ${isFusionHome ? 'text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]' : 'text-zinc-500'}`}>
+                                                    {match.home}
+                                                </div>
+
+                                                <div className="flex items-center justify-center min-w-[100px] h-12 bg-zinc-950 border border-zinc-800 clip-diagonal font-heading text-2xl tracking-widest text-brand-500">
+                                                    {match.sets_home} - {match.sets_away}
+                                                </div>
+
+                                                <div className={`text-left font-heading text-xl w-2/5 truncate ${isFusionAway ? 'text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]' : 'text-zinc-500'}`}>
+                                                    {match.away}
+                                                </div>
+                                            </div>
+
+                                            <div className="hidden md:flex min-w-[100px] justify-end">
+                                                {fusionWon ? (
+                                                    <div className="font-subheading text-brand-500 tracking-widest text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity">WIN</div>
+                                                ) : (
+                                                    <div className="font-subheading text-zinc-600 tracking-widest text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity">LOSS</div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </section>
+                </div>
+
+                {/* Right Column: Mini Dashboard */}
+                <div className="lg:col-span-1">
+                    <div className="bg-zinc-900 border border-zinc-800 p-8 clip-diagonal-rev sticky top-24">
+                        <h3 className="font-heading text-2xl text-white mb-6 border-b-2 border-brand-500 pb-4">
+                            INFO <span className="text-zinc-500">GARE</span>
+                        </h3>
+
+                        <p className="text-zinc-400 font-sans text-sm mb-6 leading-relaxed">
+                            I risultati riportati in questa pagina riflettono il database ufficiale FIPAV (Federazione Italiana Pallavolo).
+                            I dati sono aggiornati automaticamente tramite il Match Center ERP.
+                        </p>
+
+                        <div className="w-full bg-zinc-950 p-6 border border-zinc-800 clip-diagonal group cursor-pointer hover:border-brand-primary transition-colors">
+                            <div className="font-heading text-xl text-white mb-2 group-hover:text-brand-500 transition-colors">TUTTE LE CLASSIFICHE</div>
+                            <div className="font-subheading text-zinc-500 text-sm flex items-center gap-2">Vedi Dettaglio <ChevronRight size={16} /></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    );
+};
+
+export default Results;
