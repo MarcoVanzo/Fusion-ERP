@@ -130,11 +130,15 @@ class StaffRepository
             $this->db->prepare("DELETE FROM staff_teams WHERE staff_id = :staff_id")->execute([':staff_id' => $id]);
 
             if (!empty($teamIds)) {
+                error_log("Inserting teams for staff $id: " . json_encode($teamIds));
                 $sqlTeams = "INSERT INTO staff_teams (staff_id, team_id) VALUES (:staff_id, :team_id)";
                 $stmtTeams = $this->db->prepare($sqlTeams);
                 foreach ($teamIds as $tid) {
                     $stmtTeams->execute([':staff_id' => $id, ':team_id' => $tid]);
                 }
+            }
+            else {
+                error_log("No teams provided for staff $id during update. Deleting existing.");
             }
 
             $this->db->commit();
