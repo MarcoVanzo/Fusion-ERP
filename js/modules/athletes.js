@@ -467,7 +467,7 @@ const Athletes = (() => {
                 Utils.friendlyError(e),
               );
             }
-          })(s);
+          })(tabContent);
           break;
         case "metrics":
           !(async function (targetEl) {
@@ -508,7 +508,7 @@ const Athletes = (() => {
                   const data = athleteMetrics[key];
                   return `<span style="font-weight:600;">${formatMetricValue(data.value)}</span><span style="font-size:10px;color:var(--color-text-muted);margin-left:2px;">${Utils.escapeHtml(data.unit)}</span>`;
                 };
-              const teamsList = Array.isArray(a) ? globalTeamsList : [];
+              const teamsList = Array.isArray(globalTeamsList) ? globalTeamsList : [];
               const headerHtml = `<div style="display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2);margin-bottom:var(--sp-3);flex-wrap:wrap;"><p class="page-subtitle">${(metricsAthletes || []).length} atlete${globalTeamFilter ? " nella squadra selezionata" : " totali"}</p><div class="filter-bar" id="metrics-team-filter"><button class="filter-chip ${globalTeamFilter ? "" : "active"}" data-team="" type="button">Tutte</button>${teamsList.map((tm) => `<button class="filter-chip ${globalTeamFilter === tm.id ? "active" : ""}" data-team="${tm.id}" type="button">${Utils.escapeHtml(formatTeamLabel(tm.category, tm.name))}</button>`).join("")}</div></div>`;
               const metricHeaders =
                 0 === metricKeys.length
@@ -563,7 +563,7 @@ const Athletes = (() => {
                 err.message,
               );
             }
-          })(s);
+          })(tabContent);
           break;
         case "documenti":
           !(function (e) {
@@ -583,9 +583,9 @@ const Athletes = (() => {
               }),
               s = l.filter((e) => e.expired).length,
               r = l.filter((e) => e.expiring).length,
-              o = t.length - s - r;
-            e.innerHTML = `\n      <p class="section-label">Stato Documenti Squadra</p>\n      <div class="grid-3" style="margin-bottom:var(--sp-3);">\n        <div class="stat-card"><span class="stat-label">Completati</span><span class="stat-value" style="color:var(--color-success)">${o}</span></div>\n        <div class="stat-card"><span class="stat-label">In scadenza (60gg)</span><span class="stat-value" style="color:var(--color-warning)">${r}</span></div>\n        <div class="stat-card"><span class="stat-label">Scaduti</span><span class="stat-value" style="color:var(--color-pink)">${s}</span></div>\n      </div>\n      <p class="section-label">Certificati Medici</p>\n      <div class="table-wrapper">\n        <table class="table">\n          <thead><tr><th>Atleta</th><th>Squadra</th><th>Scadenza Cert. Medico</th><th>Stato</th><th>Matricola FIPAV</th></tr></thead>\n          <tbody>\n            ${l.map(({ a: e, certDate: t, expired: a, expiring: n }) => `<tr>\n              <td><strong>${Utils.escapeHtml(e.full_name)}</strong></td>\n              <td>${Utils.escapeHtml(i(e.category, e.team_name))}</td>\n              <td style="color:${a ? "var(--color-pink)" : n ? "var(--color-warning)" : "var(--color-text)"}">\n                ${t ? Utils.formatDate(e.medical_cert_expires_at) : '<span style="color:var(--color-text-muted)">—</span>'}\n              </td>\n              <td>${a ? '<span class="badge badge-danger">Scaduto</span>' : n ? '<span class="badge badge-warning">In scadenza</span>' : t ? '<span class="badge badge-success">Valido</span>' : '<span class="badge">Mancante</span>'}</td>\n              <td>${Utils.escapeHtml(e.federal_id || "—")}</td>\n            </tr>`).join("")}\n          </tbody>\n        </table>\n      </div>\n    `;
-          })(s);
+              o = l.length - s - r;
+            e.innerHTML = `\n      <p class="section-label">Stato Documenti Squadra</p>\n      <div class="grid-3" style="margin-bottom:var(--sp-3);">\n        <div class="stat-card"><span class="stat-label">Completati</span><span class="stat-value" style="color:var(--color-success)">${o}</span></div>\n        <div class="stat-card"><span class="stat-label">In scadenza (60gg)</span><span class="stat-value" style="color:var(--color-warning)">${r}</span></div>\n        <div class="stat-card"><span class="stat-label">Scaduti</span><span class="stat-value" style="color:var(--color-pink)">${s}</span></div>\n      </div>\n      <p class="section-label">Certificati Medici</p>\n      <div class="table-wrapper">\n        <table class="table">\n          <thead><tr><th>Atleta</th><th>Squadra</th><th>Scadenza Cert. Medico</th><th>Stato</th><th>Matricola FIPAV</th></tr></thead>\n          <tbody>\n            ${l.map(({ a: e, certDate: t, expired: a, expiring: n }) => `<tr>\n              <td><strong>${Utils.escapeHtml(e.full_name)}</strong></td>\n              <td>${Utils.escapeHtml(formatTeamLabel(e.category, e.team_name))}</td>\n              <td style="color:${a ? "var(--color-pink)" : n ? "var(--color-warning)" : "var(--color-text)"}">\n                ${t ? Utils.formatDate(e.medical_cert_expires_at) : '<span style="color:var(--color-text-muted)">—</span>'}\n              </td>\n              <td>${a ? '<span class="badge badge-danger">Scaduto</span>' : n ? '<span class="badge badge-warning">In scadenza</span>' : t ? '<span class="badge badge-success">Valido</span>' : '<span class="badge">Mancante</span>'}</td>\n              <td>${Utils.escapeHtml(e.federal_id || "—")}</td>\n            </tr>`).join("")}\n          </tbody>\n        </table>\n      </div>\n    `;
+          })(tabContent);
       }
   }
   function showAthleteProfile(athleteId) {
@@ -655,9 +655,9 @@ const Athletes = (() => {
               a = Utils.acwrRiskColor(e.risk);
             return `\n      <div class="stat-card">\n        <span class="stat-label">ACWR Score</span>\n        <span class="stat-value" style="color:${a};">${Utils.formatNum(e.score, 2)}</span>\n        <div class="acwr-gauge" style="margin-top:8px;">\n          <div class="acwr-bar-track">\n            <div class="acwr-bar-fill" style="width:${t}%;background:${a};"></div>\n          </div>\n          <div class="acwr-zones">\n            <span>BASSO</span><span>OTTIMALE</span><span>CAUTO</span><span>PERICOLO</span>\n          </div>\n        </div>\n        <span class="stat-meta">${Utils.acwrRiskLabel(e.risk)}</span>\n      </div>`;
           })(
-            r.acwr,
-          )}\n                <div class="stat-card">\n                  <span class="stat-label">Carico Acuto (7g)</span>\n                  <span class="stat-value">${Utils.formatNum(r.acwr?.acute, 0)}</span>\n                </div>\n                <div class="stat-card">\n                  <span class="stat-label">Carico Cronico (28g)</span>\n                  <span class="stat-value">${Utils.formatNum(r.acwr?.chronic, 0)}</span>\n                </div>\n              </div>\n            </div>\n\n            \x3c!-- AI Summary section --\x3e\n            <div id="ai-summary-section"></div>\n\n            \x3c!-- VALD Performance Tracking --\x3e\n            <div>\n              <p class="section-label" style="display:flex;align-items:center;gap:8px;">\n                <span style="color:var(--color-pink);">⚡</span> VALD Performance Tracking\n              </p>\n              <div id="vald-tab-content">\n                <div style="display:flex;flex-direction:column;gap:8px;">\n                  <div class="skeleton skeleton-title"></div>\n                  <div class="skeleton skeleton-text" style="width:60%;"></div>\n                </div>\n              </div>\n            </div>\n\n            \x3c!-- Metrics history --\x3e\n            <div>\n              <p class="section-label">Storico Metriche (30 giorni)</p>\n              ${r.metrics?.length
-            ? `\n              <div class="table-wrapper">\n                <table class="table">\n                  <thead><tr><th>Data</th><th>Durata (min)</th><th>RPE</th><th>Carico</th><th>ACWR</th><th>Note</th></tr></thead>\n                  <tbody>\n                    ${r.metrics
+            athleteData.acwr,
+          )}\n                <div class="stat-card">\n                  <span class="stat-label">Carico Acuto (7g)</span>\n                  <span class="stat-value">${Utils.formatNum(athleteData.acwr?.acute, 0)}</span>\n                </div>\n                <div class="stat-card">\n                  <span class="stat-label">Carico Cronico (28g)</span>\n                  <span class="stat-value">${Utils.formatNum(athleteData.acwr?.chronic, 0)}</span>\n                </div>\n              </div>\n            </div>\n\n            \x3c!-- AI Summary section --\x3e\n            <div id="ai-summary-section"></div>\n\n            \x3c!-- VALD Performance Tracking --\x3e\n            <div>\n              <p class="section-label" style="display:flex;align-items:center;gap:8px;">\n                <span style="color:var(--color-pink);">⚡</span> VALD Performance Tracking\n              </p>\n              <div id="vald-tab-content">\n                <div style="display:flex;flex-direction:column;gap:8px;">\n                  <div class="skeleton skeleton-title"></div>\n                  <div class="skeleton skeleton-text" style="width:60%;"></div>\n                </div>\n              </div>\n            </div>\n\n            \x3c!-- Metrics history --\x3e\n            <div>\n              <p class="section-label">Storico Metriche (30 giorni)</p>\n              ${athleteData.metrics?.length
+            ? `\n              <div class="table-wrapper">\n                <table class="table">\n                  <thead><tr><th>Data</th><th>Durata (min)</th><th>RPE</th><th>Carico</th><th>ACWR</th><th>Note</th></tr></thead>\n                  <tbody>\n                    ${athleteData.metrics
               .map((e) => {
                 return `<tr>\n                      <td>${Utils.formatDate(e.log_date)}</td>\n                      <td>${Utils.escapeHtml(String(e.duration_min))}</td>\n                      <td>${Utils.escapeHtml(String(e.rpe))}/10</td>\n                      <td><strong>${Utils.formatNum(e.load_value, 0)}</strong></td>\n                      <td>${e.acwr_score ? Utils.riskBadge(((t = e.acwr_score), t < 0.8 ? "low" : t <= 1.3 ? "moderate" : t <= 1.5 ? "high" : "extreme")) : "—"}</td>\n                      <td style="font-size:12px;color:var(--color-text-muted);">${Utils.escapeHtml(e.notes || "")}</td>\n                    </tr>`;
                 var t;
@@ -666,7 +666,7 @@ const Athletes = (() => {
                 "",
               )}\n                  </tbody>\n                </table>\n              </div>`
             : Utils.emptyState("Nessuna metrica registrata")
-          }\n            </div>\n          </div>\n\n          \x3c!-- PAGAMENTI --\x3e\n          <div id="tab-panel-pagamenti" class="athlete-tab-panel" style="display:none;">\n            <p class="section-label">Storico Pagamenti</p>\n            ${d && d.length > 0 ? `\n              <div class="table-wrapper">\n                <table class="table">\n                  <thead><tr><th>Scadenza</th><th>Importo</th><th>Stato</th><th>Pagante</th><th>Metodo</th><th>Data Pagamento</th></tr></thead>\n                  <tbody>\n                    ${d.map((e) => `<tr>\n                      <td>${Utils.formatDate(e.due_date)}</td>\n                      <td><strong>€ ${Utils.formatNum(e.amount, 2)}</strong></td>\n                      <td>${"paid" === e.status ? '<span class="badge badge-success">Pagato</span>' : "overdue" === e.status ? '<span class="badge badge-danger">Scaduto</span>' : '<span class="badge badge-warning">In attesa</span>'}</td>\n                      <td>${Utils.escapeHtml(e.payer_name || "—")}</td>\n                      <td>${Utils.escapeHtml(e.payment_method || "—")}</td>\n                      <td style="font-size:12px;color:var(--color-text-muted);">${e.paid_at ? Utils.formatDate(e.paid_at) : "—"}</td>\n                    </tr>`).join("")}\n                  </tbody>\n                </table>\n              </div>` : Utils.emptyState("Nessun pagamento registrato")}\n          </div>\n          \x3c!-- DOCUMENTI TAB --\x3e\n          <div id="tab-panel-documenti" class="athlete-tab-panel" style="display:none;flex-direction:column;gap:var(--sp-4);">\n            <p class="section-label">Documenti Atleta</p>\n            <div class="card" style="padding:var(--sp-3);">\n              <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3);">\n                ${g("Documento d'Identità", r.identity_document)}\n                ${g("Codice Fiscale", r.fiscal_code)}\n                ${g("Matricola FIPAV", r.federal_id)}\n                ${g("Scadenza Cert. Medico", r.medical_cert_expires_at ? Utils.formatDate(r.medical_cert_expires_at) : null, r.medical_cert_expires_at && new Date(r.medical_cert_expires_at) < new Date() ? "var(--color-pink)" : null)}\n              </div>\n            </div>\n          </div>\n        </div>\n        \n        `),
+          }\n            </div>\n          </div>\n\n          \x3c!-- PAGAMENTI --\x3e\n          <div id="tab-panel-pagamenti" class="athlete-tab-panel" style="display:none;">\n            <p class="section-label">Storico Pagamenti</p>\n            ${paymentsParams && paymentsParams.length > 0 ? `\n              <div class="table-wrapper">\n                <table class="table">\n                  <thead><tr><th>Scadenza</th><th>Importo</th><th>Stato</th><th>Pagante</th><th>Metodo</th><th>Data Pagamento</th></tr></thead>\n                  <tbody>\n                    ${paymentsParams.map((e) => `<tr>\n                      <td>${Utils.formatDate(e.due_date)}</td>\n                      <td><strong>€ ${Utils.formatNum(e.amount, 2)}</strong></td>\n                      <td>${"paid" === e.status ? '<span class="badge badge-success">Pagato</span>' : "overdue" === e.status ? '<span class="badge badge-danger">Scaduto</span>' : '<span class="badge badge-warning">In attesa</span>'}</td>\n                      <td>${Utils.escapeHtml(e.payer_name || "—")}</td>\n                      <td>${Utils.escapeHtml(e.payment_method || "—")}</td>\n                      <td style="font-size:12px;color:var(--color-text-muted);">${e.paid_at ? Utils.formatDate(e.paid_at) : "—"}</td>\n                    </tr>`).join("")}\n                  </tbody>\n                </table>\n              </div>` : Utils.emptyState("Nessun pagamento registrato")}\n          </div>\n          \x3c!-- DOCUMENTI TAB --\x3e\n          <div id="tab-panel-documenti" class="athlete-tab-panel" style="display:none;flex-direction:column;gap:var(--sp-4);">\n            <p class="section-label">Documenti Atleta</p>\n            <div class="card" style="padding:var(--sp-3);">\n              <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3);">\n                ${g("Documento d'Identità", athleteData.identity_document)}\n                ${g("Codice Fiscale", athleteData.fiscal_code)}\n                ${g("Matricola FIPAV", athleteData.federal_id)}\n                ${g("Scadenza Cert. Medico", athleteData.medical_cert_expires_at ? Utils.formatDate(athleteData.medical_cert_expires_at) : null, athleteData.medical_cert_expires_at && new Date(athleteData.medical_cert_expires_at) < new Date() ? "var(--color-pink)" : null)}\n              </div>\n            </div>\n          </div>\n        </div>\n        \n        `),
           document
             .getElementById("back-to-list")
             ?.addEventListener("click", () => renderMainList(), {
@@ -676,11 +676,11 @@ const Athletes = (() => {
             "click",
             () =>
               (function (athleteData) {
-                const teamOptions = Array.isArray(a)
-                  ? a
+                const teamOptions = Array.isArray(globalTeamsList)
+                  ? globalTeamsList
                     .map(
                       (tm) =>
-                        `<option value="${Utils.escapeHtml(tm.id)}" ${athleteData.team_id === tm.id ? "selected" : ""}>${Utils.escapeHtml(i(tm.category, tm.name))}</option>`,
+                        `<option value="${Utils.escapeHtml(tm.id)}" ${athleteData.team_id === tm.id ? "selected" : ""}>${Utils.escapeHtml(formatTeamLabel(tm.category, tm.name))}</option>`,
                     )
                     .join("")
                   : "";
@@ -810,7 +810,7 @@ const Athletes = (() => {
                       ((r.disabled = !0), (r.textContent = "Salvataggio..."));
                       try {
                         (await Store.api("update", "athletes", {
-                          id: n.id,
+                          id: athleteData.id,
                           first_name: e,
                           last_name: a,
                           team_id: l,
@@ -852,7 +852,7 @@ const Athletes = (() => {
                           UI.toast("Atleta aggiornato", "success"),
                           Store.get("listLight", "athletes")
                             .then((e) => {
-                              t = e;
+                              globalAthletesList = e;
                             })
                             .catch(() => { }),
                           renderAthleteProfile(athleteId));
@@ -876,7 +876,7 @@ const Athletes = (() => {
                       },
                     ),
                   ));
-              })(r),
+              })(athleteData),
             { signal: moduleAbortController.signal },
           ),
           document.getElementById("ai-report-btn")?.addEventListener(
@@ -894,7 +894,7 @@ const Athletes = (() => {
                 } finally {
                   t && ((t.disabled = !1), (t.textContent = "⚡ REPORT AI"));
                 }
-              })(n),
+              })(athleteId),
             { signal: moduleAbortController.signal },
           ));
         const w = document.getElementById("athlete-photo-upload");
@@ -915,7 +915,7 @@ const Athletes = (() => {
                   (l.style.pointerEvents = "none")));
               try {
                 const a = new FormData();
-                (a.append("id", n), a.append("photo", e));
+                (a.append("id", athleteId), a.append("photo", e));
                 const l = await fetch(
                   "api/router.php?module=athletes&action=uploadPhoto",
                   { method: "POST", credentials: "same-origin", body: a },
@@ -927,9 +927,9 @@ const Athletes = (() => {
                     (t.style.color = "var(--color-success)")),
                   UI.toast("Foto caricata", "success"));
               } catch (e) {
-                ((a.innerHTML = r.photo_path
-                  ? `<img src="${Utils.escapeHtml(r.photo_path)}" alt="Foto atleta" style="width:100%;height:100%;object-fit:cover;;object-position:top">`
-                  : `<span style="font-family:var(--font-display);font-size:3.5rem;font-weight:700;color:#000;">${Utils.initials(r.full_name)}</span>`),
+                ((a.innerHTML = athleteData.photo_path
+                  ? `<img src="${Utils.escapeHtml(athleteData.photo_path)}" alt="Foto atleta" style="width:100%;height:100%;object-fit:cover;;object-position:top">`
+                  : `<span style="font-family:var(--font-display);font-size:3.5rem;font-weight:700;color:#000;">${Utils.initials(athleteData.full_name)}</span>`),
                   t &&
                   ((t.textContent = "Errore: " + e.message),
                     (t.style.color = "var(--color-pink)")),
@@ -1156,7 +1156,7 @@ const Athletes = (() => {
                     t.innerHTML = `\n        <div style="text-align:center;padding:var(--sp-4);background:rgba(255,59,48,0.04);border:1px solid rgba(255,59,48,0.2);border-radius:var(--radius);">\n          <i class="ph ph-warning" style="font-size:36px;color:#FF3B30;opacity:0.6;display:block;margin-bottom:8px;"></i>\n          <p style="font-size:13px;font-weight:700;color:var(--color-text);">Errore caricamento VALD</p>\n          <p style="font-size:12px;color:var(--color-text-muted);margin-top:4px;">${Utils.escapeHtml(e.message)}</p>\n        </div>`;
                   }
                 }
-              })(n)));
+              })(athleteId)));
         };
         document.querySelectorAll(".athlete-tab-btn").forEach((t) => {
           t.addEventListener("click", () => _(t.dataset.tab), {
@@ -1175,9 +1175,9 @@ const Athletes = (() => {
           }),
             setTimeout(t, 100));
         }
-        (_(l), v(n));
+        (_(startTab), v(athleteId));
       } catch (e) {
-        s.innerHTML = Utils.emptyState("Atleta non trovato", e.message);
+        appContainer.innerHTML = Utils.emptyState("Atleta non trovato", e.message);
       }
     } else renderMainList();
   }
