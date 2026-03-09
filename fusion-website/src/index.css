@@ -4,11 +4,11 @@
 @import "@fontsource/oswald/600.css";
 
 @theme {
-  --color-brand-500: #eab308;
-  /* Fusion Gold */
-  --color-brand-600: #ca8a04;
-  --color-brand-primary: #001A72;
-  /* Fusion Blue */
+  --color-brand-500: #d946ef;
+  /* Fusion Fuchsia */
+  --color-brand-600: #c026d3;
+  --color-brand-primary: #a21caf;
+  /* Darker Fuchsia */
   --color-zinc-950: #050505;
   /* Pure black aesthetic */
 }

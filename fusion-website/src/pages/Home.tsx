@@ -16,6 +16,14 @@ interface NewsArticle {
 const Home = () => {
     const [news, setNews] = useState<NewsArticle[]>([]);
     const [loadingNews, setLoadingNews] = useState(true);
+    const [currentSlide, setCurrentSlide] = useState(0);
+
+    useEffect(() => {
+        const slideInterval = setInterval(() => {
+            setCurrentSlide((prev) => (prev + 1) % 3);
+        }, 5000); // 5 seconds per slide
+        return () => clearInterval(slideInterval);
+    }, []);
 
     useEffect(() => {
         const fetchNews = async () => {
@@ -39,25 +47,40 @@ const Home = () => {
         <div className="flex flex-col gap-24 pb-20">
             {/* Hero Section */}
             <section className="relative h-[85vh] flex items-center justify-center overflow-hidden">
-                {/* Dark Background Overlay */}
-                <div className="absolute inset-0 bg-zinc-950 z-10"></div>
-                {/* Inter style diagonal lines / graphic elements */}
-                <div className="absolute inset-0 z-10 opacity-20 pointer-events-none" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #001A72 0, #001A72 2px, transparent 2px, transparent 100px)' }}></div>
+                {/* Image Slideshow Background */}
+                <div className="absolute inset-0 z-0">
+                    {[1, 2, 3].map((num, idx) => (
+                        <div
+                            key={num}
+                            className="absolute inset-0 transition-opacity duration-1000 ease-in-out"
+                            style={{
+                                backgroundImage: `url('/assets/hero-${num}.jpg')`,
+                                backgroundSize: 'cover',
+                                backgroundPosition: 'center 30%', // focal point slightly higher
+                                opacity: currentSlide === idx ? 1 : 0
+                            }}
+                        />
+                    ))}
+                </div>
 
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60vw] bg-brand-primary/30 blur-[150px] rounded-full z-0"></div>
+                {/* Dark Background Overlay & Fuchsia Glow */}
+                <div className="absolute inset-0 bg-zinc-950/70 z-10 transition-colors duration-500"></div>
+                <div className="absolute inset-0 z-10 opacity-30 pointer-events-none" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #a21caf 0, #a21caf 2px, transparent 2px, transparent 100px)' }}></div>
+
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60vw] bg-brand-primary/40 blur-[150px] rounded-full z-0 mix-blend-screen"></div>
 
                 <div className="relative z-20 text-center px-4 max-w-6xl mx-auto flex flex-col items-center">
-                    <div className="inline-flex items-center gap-3 px-6 py-2 border border-brand-500/50 bg-zinc-950/80 mb-8 clip-diagonal uppercase text-xs font-bold text-brand-500 tracking-[0.2em]">
+                    <div className="inline-flex items-center gap-3 px-6 py-2 border border-brand-500/50 bg-zinc-950/80 mb-8 clip-diagonal uppercase text-xs font-bold text-brand-500 tracking-[0.2em] backdrop-blur-sm">
                         Settore Giovanile d'Eccellenza
                     </div>
 
-                    <h1 className="font-heading text-6xl md:text-8xl lg:text-[9rem] tracking-tighter mb-4 text-white leading-[0.8]">
+                    <h1 className="font-heading text-6xl md:text-8xl lg:text-[9rem] tracking-tighter mb-4 text-white leading-[0.8] drop-shadow-2xl">
                         FUSION
                         <br />
-                        <span className="text-brand-primary drop-shadow-[0_0_15px_rgba(0,26,114,0.8)]">TEAM</span>
+                        <span className="text-brand-500 drop-shadow-[0_0_25px_rgba(217,70,239,0.5)]">TEAM</span>
                     </h1>
 
-                    <p className="font-subheading text-2xl md:text-3xl text-zinc-300 mt-6 mb-12 max-w-3xl leading-snug">
+                    <p className="font-subheading text-2xl md:text-3xl text-zinc-200 mt-6 mb-12 max-w-3xl leading-snug drop-shadow-md">
                         800 ATLETE. UN UNICO GRANDE SOGNO. IL VOLLEY COME NON L'HAI MAI VISTO.
                     </p>
 
@@ -65,9 +88,21 @@ const Home = () => {
                         <Link to="/teams" className="flex-1 py-5 bg-brand-500 text-zinc-950 font-heading text-xl hover:bg-white transition-colors flex items-center justify-center gap-2 clip-diagonal">
                             I ROSTER <ChevronRight size={24} />
                         </Link>
-                        <Link to="/shop" className="flex-1 py-5 bg-transparent border-2 border-white text-white font-heading text-xl hover:bg-white hover:text-zinc-950 transition-colors flex items-center justify-center gap-2 clip-diagonal">
+                        <Link to="/shop" className="flex-1 py-5 bg-zinc-950/50 backdrop-blur-md border-2 border-brand-500 text-brand-500 font-heading text-xl hover:bg-brand-500 hover:text-white transition-colors flex items-center justify-center gap-2 clip-diagonal">
                             LO STORE <ChevronRight size={24} />
                         </Link>
+                    </div>
+
+                    {/* Slideshow Indicators */}
+                    <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-3 z-30">
+                        {[0, 1, 2].map((idx) => (
+                            <button
+                                key={idx}
+                                onClick={() => setCurrentSlide(idx)}
+                                className={`w-12 h-1.5 transition-all duration-300 clip-diagonal ${currentSlide === idx ? 'bg-brand-500 shadow-[0_0_10px_rgba(217,70,239,0.8)]' : 'bg-white/30 hover:bg-white/60'}`}
+                                aria-label={`Vai alla slide ${idx + 1}`}
+                            />
+                        ))}
                     </div>
                 </div>
             </section>

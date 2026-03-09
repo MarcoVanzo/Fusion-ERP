@@ -36,9 +36,11 @@ const Navbar = () => {
 
                     {/* Logo */}
                     <Link to="/" className="flex items-center gap-4 group">
-                        <div className="w-12 h-12 bg-brand-500 flex items-center justify-center text-zinc-950 font-heading font-bold text-2xl clip-diagonal group-hover:scale-105 transition-transform">
-                            F
-                        </div>
+                        <img
+                            src="/assets/logo-colorato.png"
+                            alt="Fusion Team Volley"
+                            className="h-16 w-auto group-hover:scale-105 transition-transform duration-300 drop-shadow-[0_0_8px_rgba(217,70,239,0.3)]"
+                        />
                         <span className="font-heading text-2xl tracking-tighter uppercase text-white leading-none">
                             FUSION<br /><span className="text-zinc-500 text-lg group-hover:text-brand-500 transition-colors">TEAM</span>
                         </span>
