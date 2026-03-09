@@ -58,6 +58,28 @@ const EcommerceDB = (() => {
     countArticoli: async function () {
       return n().articoli.count();
     },
+    deduplicateArticoli: async function () {
+      const db = n(),
+        all = await db.articoli.toArray(),
+        nameMap = new Map(),
+        toDelete = [];
+      for (const item of all) {
+        if (!item.nome) continue;
+        const key = item.nome.trim().toLowerCase();
+        if (nameMap.has(key)) {
+          // If the existing one has less data (e.g. no image) but this one does, we might want to keep this one, 
+          // but for simplicity we will just delete the newer duplicates.
+          toDelete.push(item.id);
+        } else {
+          nameMap.set(key, item);
+        }
+      }
+      if (toDelete.length > 0) {
+        await db.articoli.bulkDelete(toDelete);
+        console.log(`EcommerceDB: Deduplicated ${toDelete.length} articles.`);
+      }
+      return toDelete.length;
+    },
     getAllStatiOrdini: async function () {
       const t = await n().statiOrdini.toArray(),
         r = new Map();
