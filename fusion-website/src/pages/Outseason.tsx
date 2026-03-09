@@ -20,7 +20,7 @@ const Outseason = () => {
                     </h1>
 
                     <p className="font-subheading text-xl md:text-2xl text-zinc-200 mb-12 max-w-2xl mx-auto tracking-widest leading-relaxed drop-shadow-lg">
-                        SCOPRI IL NOSTRO MASTER DI ALTA SPECIALIZZAZIONE SUL NOSTRO PORTALE DEDICATO.
+                        SCOPRI IL NOSTRO MASTER DI ALTA SPECIALIZZAZIONE SUL PORTALE DEDICATO.
                     </p>
 
                     <a

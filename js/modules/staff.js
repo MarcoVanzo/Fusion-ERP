@@ -291,6 +291,7 @@ const Staff = (() => {
                       );
                     const modalBody = document.getElementById("es-fname").closest(".fusion-modal");
                     const checkedTeams = modalBody ? Array.from(modalBody.querySelectorAll('input[name="es-teams"]:checked')).map(el => el.value) : [];
+                    console.log("Saving staff with teams:", checkedTeams);
                     const i = document.getElementById("es-save");
                     ((i.disabled = !0), (i.textContent = "Salvataggio..."));
                     try {

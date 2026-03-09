@@ -43,7 +43,7 @@ const Home = () => {
                 const res = await fetch('https://www.fusionteamvolley.it/ERP/api/router.php?module=results&action=getPublicRecentResults&limit=50');
                 const data = await res.json();
                 if (data.status === 'success' || data.success === true) {
-                    setRecentMatches(data.data || []);
+                    setRecentMatches(data.data?.matches || []);
                 }
             } catch (error) {
                 console.error('Failed to fetch recent matches:', error);
