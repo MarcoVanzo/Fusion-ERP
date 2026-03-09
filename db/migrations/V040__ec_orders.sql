@@ -1,17 +1,22 @@
 CREATE TABLE IF NOT EXISTS ec_orders (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    tenant_id VARCHAR(36) NOT NULL,
     cognito_id VARCHAR(50) UNIQUE,
     nome_cliente VARCHAR(150),
     email VARCHAR(150),
     telefono VARCHAR(50),
-    articoli TEXT,
+    articoli JSON,
     totale DECIMAL(10,2) DEFAULT 0.00,
     metodo_pagamento VARCHAR(100),
     stato_forms VARCHAR(50) DEFAULT 'da definire',
     stato_interno VARCHAR(50) DEFAULT 'da definire',
     data_ordine TIMESTAMP NULL,
-    order_summary TEXT,
+    order_summary JSON,
     raw_data JSON,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
+
+CREATE INDEX idx_ec_orders_stato_interno ON ec_orders(stato_interno);
+CREATE INDEX idx_ec_orders_data ON ec_orders(data_ordine);
+CREATE INDEX idx_ec_orders_tenant ON ec_orders(tenant_id);

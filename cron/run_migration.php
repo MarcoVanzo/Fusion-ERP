@@ -15,9 +15,9 @@ $dotenv = Dotenv\Dotenv::createUnsafeImmutable(dirname(__DIR__));
 $dotenv->load();
 
 // Verify secret
-$secret = $_SERVER['HTTP_X_CRON_SECRET'] ?? ($_GET['secret'] ?? '');
+$secret = $_SERVER['HTTP_X_CRON_SECRET'] ?? ($_POST['secret'] ?? '');
 $appSecret = getenv('APP_SECRET') ?: '';
-if (empty($secret) || $secret !== $appSecret) {
+if (empty($secret) || !hash_equals($appSecret, $secret)) {
     http_response_code(403);
     header('Content-Type: application/json');
     echo json_encode(['success' => false, 'error' => 'Forbidden']);
@@ -39,6 +39,7 @@ $whitelist = [
     'V044__import_staff.sql',
     'V045__federation_logos.sql',
     'V046__ec_orders_tenant_indexes.sql',
+    'V040__ec_orders.sql',
 ];
 
 if (!in_array($file, $whitelist, true)) {
@@ -73,8 +74,8 @@ catch (Exception $e) {
 
 // Read and execute
 $sql = file_get_contents($path);
-$sql = preg_replace('/--.*$/m', '', $sql);
 
+// We rely on PDO parsing capabilities rather than naive regex replacement for comments
 $pdo->exec('SET FOREIGN_KEY_CHECKS = 0');
 
 $parts = explode(';', $sql);
