@@ -38,6 +38,7 @@ $whitelist = [
     'V027__federation.sql',
     'V044__import_staff.sql',
     'V045__federation_logos.sql',
+    'V046__ec_orders_tenant_indexes.sql',
 ];
 
 if (!in_array($file, $whitelist, true)) {

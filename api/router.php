@@ -26,15 +26,12 @@ Response::setCorsHeaders();
 header('X-Content-Type-Options: nosniff');
 header('X-Frame-Options: SAMEORIGIN');
 
-// Permetti al browser di cacheare risposte GET (liste, stats) per 60 secondi.
-// Le richieste POST/mutazioni non vengono cachiate.
-if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    header('Cache-Control: private, max-age=60');
-    header('Vary: Cookie'); // Il contenuto dipende dalla sessione utente
-}
-else {
-    header('Cache-Control: no-store');
-}
+// Prevent CDN/proxy caching of API responses — Aruba's proxy ignores 'private'
+// and caches even session-dependent responses, causing stale/empty results.
+// Browser-side caching is handled by the JS Store layer instead.
+header('Cache-Control: no-store, no-cache, must-revalidate');
+header('Pragma: no-cache');
+header('Vary: Cookie');
 
 // Only accept POST (or OPTIONS for CORS preflight)
 if (!in_array($_SERVER['REQUEST_METHOD'], ['POST', 'GET', 'OPTIONS'])) {
