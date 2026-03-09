@@ -891,7 +891,7 @@ class ResultsController
             $match['home'] = $teamCells[0];
             $match['away'] = $teamCells[1];
         }
-           
+
 
         return ($match['home'] && $match['away']) ? $match : null;
     }
@@ -1635,6 +1635,13 @@ class ResultsController
 
         $url = $champ['url'];
 
+        // Upgrade mobile FIPAV URL to desktop equivalent for logo extraction
+        if (preg_match('/^(https?:\/\/[^\/]+)\/mobile\/(?:classifiche|risultati)\.asp\?CampionatoId=([A-Za-z0-9_]+)/i', $url, $m)) {
+            $baseUrl = $m[1];
+            $cid = $m[2];
+            $url = $baseUrl . '/risultati-classifiche.aspx?CId=' . $cid;
+        }
+
         $err = '';
         $htmlM = $this->_fetch($url, $err);
 
@@ -1800,17 +1807,23 @@ class ResultsController
     private function _getStandingsUrlCandidates(string $matchUrl): array
     {
         $candidates = [];
+        preg_match('/^(https?:\/\/[^\/]+)/i', $matchUrl, $baseM);
+        $baseUrl = $baseM[1] ?? 'https://venezia.portalefipav.net';
 
-        // Try mobile classifiche.asp first (most reliable for FIPAV Venezia)
+        // Detect mobile ID
         if (preg_match('/[?&]CampionatoId=([^&]+)/i', $matchUrl, $m)) {
             $cid = $m[1];
-            $candidates[] = self::BASE_URL . '/mobile/classifiche.asp?CampionatoId=' . $cid;
-            $candidates[] = self::BASE_URL . '/mobile/risultati.asp?CampionatoId=' . $cid . '&vis=classifica';
+            // Desktop first to get logos
+            $candidates[] = $baseUrl . '/risultati-classifiche.aspx?CId=' . $cid;
+            $candidates[] = $baseUrl . '/classifica.aspx?CId=' . $cid;
+            // Mobile fallback
+            $candidates[] = $baseUrl . '/mobile/classifiche.asp?CampionatoId=' . $cid;
+            $candidates[] = $baseUrl . '/mobile/risultati.asp?CampionatoId=' . $cid . '&vis=classifica';
         }
 
         // Desktop pattern
         if (preg_match('/[?&]CId=(\d+)/i', $matchUrl, $m)) {
-            $candidates[] = self::BASE_URL . '/classifica.aspx?CId=' . $m[1];
+            $candidates[] = $baseUrl . '/classifica.aspx?CId=' . $m[1];
         }
 
         // Generic fallback
@@ -1818,7 +1831,7 @@ class ResultsController
         if (!in_array($fallback, $candidates))
             $candidates[] = $fallback;
 
-        return array_unique($candidates);
+        return array_values(array_unique($candidates));
     }
 
     private function _isOurTeam(string...$names): bool
