@@ -3,12 +3,12 @@
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>com.fusionerp.autobackup</string>
+    <string>com.fusionerp.dbbackup</string>
 
     <key>ProgramArguments</key>
     <array>
-        <string>/bin/bash</string>
-        <string>/Users/marcovanzo/Fusion ERP/scripts/git_auto_backup.sh</string>
+        <string>/opt/homebrew/bin/php</string>
+        <string>/Users/marcovanzo/Fusion ERP/cron/backup_nightly.php</string>
     </array>
 
     <!-- Ogni notte a mezzanotte -->
@@ -20,17 +20,14 @@
         <integer>0</integer>
     </dict>
 
-    <!-- Avvia subito al caricamento dell'agente -->
     <key>RunAtLoad</key>
     <false/>
 
-    <!-- Log di stdout e stderr -->
     <key>StandardOutPath</key>
-    <string>/Users/marcovanzo/Fusion ERP/scripts/auto_backup.log</string>
+    <string>/Users/marcovanzo/Fusion ERP/cron/db_backup.log</string>
     <key>StandardErrorPath</key>
-    <string>/Users/marcovanzo/Fusion ERP/scripts/auto_backup_error.log</string>
+    <string>/Users/marcovanzo/Fusion ERP/cron/db_backup_error.log</string>
 
-    <!-- Riavvia in caso di crash -->
     <key>KeepAlive</key>
     <false/>
 </dict>

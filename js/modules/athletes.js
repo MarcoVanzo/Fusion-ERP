@@ -388,7 +388,12 @@ const Athletes = (() => {
       document.querySelectorAll("[data-maintab]").forEach((tab) =>
         tab.addEventListener(
           "click",
-          () => switchMainTab(tab.dataset.maintab),
+          () => {
+            if (tab.dataset.maintab === "metrics") {
+              globalTeamFilter = "";
+            }
+            switchMainTab(tab.dataset.maintab);
+          },
           {
             signal: moduleAbortController.signal,
           },
@@ -607,9 +612,12 @@ const Athletes = (() => {
         Router.updateHash(Router.getCurrentRoute(), { id: athleteId }),
         (appContainer.innerHTML = UI.skeletonPage()));
       try {
-        const [athleteData, paymentsParams] = await Promise.all([
+        const [athleteData, paymentsParams, metricsSummary] = await Promise.all([
           Store.get("get", "athletes", { id: athleteId }),
           Store.get("payments", "athletes", { id: athleteId }).catch(
+            () => [],
+          ),
+          Store.get("getMetricsSummary", "biometrics", { id: athleteId }).catch(
             () => [],
           ),
         ]),
@@ -646,7 +654,7 @@ const Athletes = (() => {
                 "",
               )}\n                    </tbody>\n                  </table>\n                </div>`
             : Utils.emptyState("Nessun pagamento registrato")
-          }\n            </div>\n          </div>\n\n          \x3c!-- METRICS TAB --\x3e\n          <div id="tab-panel-metrics" class="athlete-tab-panel" style="display:none;flex-direction:column;gap:var(--sp-4);">\n\n            \x3c!-- ACWR Section --\x3e\n            <div>\n              <p class="section-label">Athlete Load — ACWR</p>\n              <div class="grid-3">\n                ${(function (
+          }\n            </div>\n          </div>\n\n          \x3c!-- METRICS TAB --\x3e\n          <div id="tab-panel-metrics" class="athlete-tab-panel" style="display:none;flex-direction:column;gap:var(--sp-4);">\n\n            \x3c!-- PARAMETRI FISICI E SALTO --\x3e\n            <div>\n              <p class="section-label">Parametri Fisici e Salto</p>\n              <div class="grid-3">\n                <div class="stat-card">\n                  <span class="stat-label">Peso Attuale</span>\n                  <span class="stat-value">${athleteData.weight_kg ? athleteData.weight_kg + ' kg' : '—'}</span>\n                </div>\n                <div class="stat-card">\n                  <span class="stat-label">Altezza Attuale</span>\n                  <span class="stat-value">${athleteData.height_cm ? athleteData.height_cm + ' cm' : '—'}</span>\n                </div>\n                <div class="stat-card">\n                  <span class="stat-label">Miglior Salto (di recente)</span>\n                  <span class="stat-value">${(function (ms) { if (!ms || !ms.length) return '—'; const jump = ms.find((m) => m.metric_type === 'VERTICAL_JUMP_CMJ' || m.metric_type === 'VERTICAL_JUMP_SJ' || m.metric_type === 'BROAD_JUMP'); return jump ? jump.value + (jump.unit ? ' ' + jump.unit : '') : '—'; })(metricsSummary)}</span>\n                </div>\n              </div>\n            </div>\n\n            \x3c!-- ACWR Section --\x3e\n            <div>\n              <p class="section-label">Athlete Load — ACWR</p>\n              <div class="grid-3">\n                ${(function (
             e,
           ) {
             if (!e)
