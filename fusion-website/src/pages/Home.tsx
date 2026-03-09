@@ -83,8 +83,8 @@ const Home = () => {
                 <div className="absolute inset-0 z-0">
                     {[1, 2, 3].map((num, idx) => {
                         let bgPosition = 'center 30%';
-                        if (num === 1) bgPosition = 'center 0%';
-                        if (num === 2) bgPosition = 'center 0%';
+                        if (num === 1) bgPosition = 'center calc(0% - 30px)';
+                        if (num === 2) bgPosition = 'center calc(0% - 30px)';
 
                         return (
                             <div
