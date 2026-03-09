@@ -281,7 +281,8 @@ const Staff = (() => {
                         (s.textContent = "Nome e cognome sono obbligatori"),
                         void s.classList.remove("hidden")
                       );
-                    const checkedTeams = Array.from(document.querySelectorAll('#es-role').closest('.form-grid').parentElement.querySelectorAll('input[name="es-teams"]:checked')).map(el => el.value);
+                    const modalBody = document.getElementById("es-fname").closest(".fusion-modal");
+                    const checkedTeams = modalBody ? Array.from(modalBody.querySelectorAll('input[name="es-teams"]:checked')).map(el => el.value) : [];
                     const i = document.getElementById("es-save");
                     ((i.disabled = !0), (i.textContent = "Salvataggio..."));
                     try {

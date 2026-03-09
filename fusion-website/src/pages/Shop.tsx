@@ -1,5 +1,42 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { ShoppingBag, Star, ExternalLink } from 'lucide-react';
+
+const ScratchTexture = () => {
+    const lines = useMemo(() => {
+        const arr = [];
+        for (let i = 0; i < 400; i++) {
+            const cx = 10 + Math.random() * 80;
+            const cy = 10 + Math.random() * 80;
+            const length = 20 + Math.random() * 60;
+            const angle = -40 + (Math.random() * 20 - 10);
+            const rad = angle * Math.PI / 180;
+
+            const startX = cx - Math.cos(rad) * (length / 2);
+            const startY = cy - Math.sin(rad) * (length / 2);
+            const endX = cx + Math.cos(rad) * (length / 2);
+            const endY = cy + Math.sin(rad) * (length / 2);
+
+            const w = 0.5 + Math.random() * 1.5;
+            arr.push(
+                <line key={i} x1={startX} y1={startY} x2={endX} y2={endY}
+                    stroke="white" strokeWidth={w} strokeLinecap="round" />
+            );
+        }
+        return arr;
+    }, []);
+
+    return (
+        <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] pointer-events-none opacity-90 group-hover:drop-shadow-[0_0_20px_rgba(255,20,147,0.7)] group-hover:scale-110 transition-all duration-700 z-0">
+            <g fill="white" opacity="0.95">
+                <path d="M 25 25 Q 50 10 75 25 Q 90 50 75 75 Q 50 90 25 75 Q 10 50 25 25 Z" />
+                <path d="M 30 30 L 70 30 L 75 70 L 30 70 Z" />
+            </g>
+            <g opacity="0.8">
+                {lines}
+            </g>
+        </svg>
+    )
+};
 
 interface Product {
     nome: string;
@@ -102,16 +139,16 @@ const Shop = () => {
                             <div key={idx} className="group flex flex-col items-center">
 
                                 {/* Product Image Container */}
-                                <div className="relative w-full aspect-[4/5] bg-zinc-900 border border-zinc-800 mb-8 overflow-hidden group-hover:border-brand-500 transition-all duration-500 rounded-sm flex items-center justify-center clip-diagonal">
+                                <div className="relative w-full aspect-[4/5] bg-black border border-zinc-800 mb-8 overflow-hidden group-hover:border-brand-500 transition-all duration-500 rounded-sm flex items-center justify-center clip-diagonal">
 
-                                    {/* Neon Spotlight */}
-                                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[75%] h-[75%] bg-white blur-[2px] opacity-90 group-hover:shadow-[0_0_40px_rgba(255,20,147,0.5)] rounded-[40%_60%_70%_30%_/_40%_50%_60%_50%] group-hover:rounded-[70%_30%_50%_50%_/_30%_50%_70%_40%] group-hover:scale-105 transition-all duration-700"></div>
+                                    {/* Procedural "Scratch-Off" Background Texture */}
+                                    <ScratchTexture />
 
                                     {product.immagineUrl ? (
                                         <img
                                             src={product.immagineUrl}
                                             alt={product.nome}
-                                            className="w-full h-full object-contain p-6 relative z-10 group-hover:scale-110 transition-transform duration-700 mix-blend-multiply drop-shadow-xl"
+                                            className="w-full h-full object-contain p-6 relative z-10 group-hover:scale-110 transition-transform duration-700 mix-blend-multiply"
                                         />
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center z-10 relative">
