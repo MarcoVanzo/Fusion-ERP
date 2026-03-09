@@ -77,26 +77,53 @@ const TeamDetail = () => {
     }
 
     return (
-        <div className="bg-zinc-950 min-h-screen pb-24 overflow-hidden">
+        <div className="flex flex-col min-h-screen pb-24 bg-zinc-950">
+            {/* Emotional Header Hero */}
+            <section className="relative h-[40vh] min-h-[350px] flex items-center justify-center overflow-hidden mb-12">
+                {/* Background Image */}
+                <div
+                    className="absolute inset-0 z-0 bg-cover bg-center"
+                    style={{ backgroundImage: "url('/demo/assets/Gemini_Generated_Image_lj3yntlj3yntlj3y.jpeg')", filter: "brightness(0.7)" }}
+                />
 
-            {/* Aggressive Header */}
-            <header className="relative h-[40vh] bg-zinc-900 flex items-center justify-center border-b-[16px] border-brand-500 clip-diagonal">
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-brand-primary/20 via-zinc-950 to-zinc-950"></div>
+                {/* Overlays */}
+                <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-black/60 z-10"></div>
+                <div className="absolute inset-0 z-10 opacity-30 pointer-events-none mix-blend-overlay" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #d65a86 0, #d65a86 2px, transparent 2px, transparent 100px)' }}></div>
 
-                <Link to="/teams" className="absolute top-12 left-12 font-subheading text-zinc-400 hover:text-white flex items-center gap-2 z-20 transition-colors text-lg tracking-widest">
-                    <ChevronLeft size={20} /> TORNA ALLE SQUADRE
+                {/* Back Button */}
+                <Link to="/teams" className="absolute top-8 left-8 md:top-12 md:left-12 font-heading text-zinc-300 hover:text-white flex items-center gap-2 z-20 transition-colors text-sm tracking-widest uppercase bg-black/40 px-4 py-2 rounded-full backdrop-blur-md border border-white/10">
+                    <ChevronLeft size={16} /> Torna alle Squadre
                 </Link>
 
-                <h1 className="relative z-10 font-heading text-6xl md:text-[8rem] text-center text-white tracking-tighter leading-none px-4">
-                    {teamName}
-                </h1>
-            </header>
+                {/* Content */}
+                <div className="relative z-20 px-4 flex flex-col items-center w-full mt-8">
+                    <h1 className="font-heading text-5xl md:text-7xl lg:text-[7rem] text-center text-white tracking-tighter leading-none drop-shadow-2xl uppercase">
+                        {teamName}
+                    </h1>
+                </div>
+
+                {/* Bottom Border Accent */}
+                <div className="absolute bottom-0 left-0 w-full h-2 bg-brand-500 z-20 shadow-[0_0_20px_rgba(214,90,134,0.8)]"></div>
+            </section>
 
             <div className="max-w-[1400px] mx-auto px-4 -mt-16 relative z-20">
 
                 {/* Atlete Grid - "Heroic" Card Style */}
                 <div className="mb-24">
                     <h2 className="font-heading text-4xl text-zinc-500 mb-8 border-l-4 border-white pl-4">ATLETE</h2>
+
+                    {(() => {
+                        const nameUpper = teamName.toUpperCase();
+                        const isU16 = nameUpper.includes('U16') || nameUpper.includes('UNDER 16') || nameUpper.includes('UNDER16');
+                        const isU18 = nameUpper.includes('U18') || nameUpper.includes('UNDER 18') || nameUpper.includes('UNDER18');
+                        const teamPhoto = isU16 ? '/demo/assets/squadra-u16.jpeg' : isU18 ? '/demo/assets/squadra-u18.jpeg' : null;
+
+                        return teamPhoto ? (
+                            <div className="w-full mb-16 border border-zinc-800 bg-zinc-900 clip-diagonal overflow-hidden shadow-2xl">
+                                <img src={teamPhoto} alt={`Foto Ufficiale ${teamName}`} className="w-full h-auto object-cover max-h-[600px] hover:scale-105 transition-transform duration-700" />
+                            </div>
+                        ) : null;
+                    })()}
 
                     {athletes.length === 0 ? (
                         <div className="p-12 border border-zinc-800 bg-zinc-900/30 font-subheading text-xl text-zinc-500 text-center clip-diagonal">Nessuna atleta in rosa.</div>

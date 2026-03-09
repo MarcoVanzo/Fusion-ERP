@@ -15,21 +15,21 @@ const Footer = () => {
                             <div className="w-8 h-8 rounded-full bg-brand-500 flex items-center justify-center text-zinc-950 font-bold text-lg">
                                 F
                             </div>
-                            <span className="font-extrabold text-xl tracking-tight uppercase">
-                                Fusion <span className="text-zinc-400 font-light">Volley</span>
+                            <span className="font-extrabold text-xl tracking-tight uppercase text-white drop-shadow-[0_0_8px_rgba(255,20,147,0.4)]">
+                                Fusion Team <span className="text-brand-500 font-bold drop-shadow-[0_0_12px_rgba(255,20,147,0.8)]">Volley</span>
                             </span>
                         </div>
                         <p className="text-zinc-400 text-sm leading-relaxed">
                             Il settimo settore giovanile d'Italia. 800 giovani atlete, 800 famiglie, 800 sogni. Cresciamo insieme attraverso la passione per la pallavolo.
                         </p>
                         <div className="flex gap-4 pt-2">
-                            <a href="#" className="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-400 hover:bg-brand-500 hover:text-zinc-950 transition-all">
+                            <a href="https://instagram.com/fusionteamvolley" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-400 hover:bg-brand-500 hover:text-zinc-950 transition-all">
                                 <Instagram size={20} />
                             </a>
-                            <a href="#" className="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-400 hover:bg-brand-500 hover:text-zinc-950 transition-all">
+                            <a href="https://facebook.com/FusionTeamVolley" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-400 hover:bg-brand-500 hover:text-zinc-950 transition-all">
                                 <Facebook size={20} />
                             </a>
-                            <a href="#" className="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-400 hover:bg-brand-500 hover:text-zinc-950 transition-all">
+                            <a href="https://youtube.com/@fusionteamvolley9176" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-400 hover:bg-brand-500 hover:text-zinc-950 transition-all">
                                 <Youtube size={20} />
                             </a>
                         </div>
@@ -56,7 +56,7 @@ const Footer = () => {
                         <ul className="space-y-4">
                             <li className="flex items-start gap-3">
                                 <MapPin size={18} className="text-brand-500 shrink-0 mt-0.5" />
-                                <span className="text-zinc-400 text-sm">Via delle Olimpiadi, 1<br />30100 Venezia VE</span>
+                                <span className="text-zinc-400 text-sm">Via Vicentino 1<br />Trivignano (VE)</span>
                             </li>
                             <li className="flex items-center gap-3">
                                 <Mail size={18} className="text-brand-500 shrink-0" />
@@ -64,7 +64,7 @@ const Footer = () => {
                             </li>
                             <li className="flex items-center gap-3">
                                 <Phone size={18} className="text-brand-500 shrink-0" />
-                                <span className="text-zinc-400 text-sm">+39 041 1234567</span>
+                                <span className="text-zinc-400 text-sm">0422/485757</span>
                             </li>
                         </ul>
                     </div>

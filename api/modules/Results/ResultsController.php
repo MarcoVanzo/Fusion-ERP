@@ -1940,4 +1940,91 @@ class ResultsController
             Response::error('Errore database', 500);
         }
     }
+
+    public function getPublicMatchCenter(): void
+    {
+        $pdo = Database::getInstance();
+
+        try {
+            $stmtMatches = $pdo->prepare("
+                SELECT
+                    m.id, m.home_team AS home, m.away_team AS away,
+                    m.home_score AS sets_home, m.away_score AS sets_away,
+                    DATE_FORMAT(m.match_date, '%d/%m/%Y') AS date,
+                    DATE_FORMAT(m.match_date, '%H:%i')    AS time,
+                    m.match_date,
+                    m.status,
+                    m.round,
+                    c.label AS championship_label,
+                    c.id    AS championship_id
+                FROM federation_matches m
+                JOIN federation_championships c
+                    ON m.championship_id = c.id
+                   AND c.is_active  = 1
+                WHERE (
+                    LOWER(m.home_team) LIKE '%fusion%'
+                    OR LOWER(m.away_team) LIKE '%fusion%'
+                  )
+                ORDER BY m.match_date DESC
+            ");
+            $stmtMatches->execute();
+            $matches = $stmtMatches->fetchAll(\PDO::FETCH_ASSOC);
+
+            foreach ($matches as &$m) {
+                $m['is_our_team'] = $this->_isOurTeam($m['home'], $m['away']);
+                $m['score'] = $m['home_score'] !== null ? "{$m['home_score']} - {$m['away_score']}" : "vs";
+            }
+
+            $stmtStandings = $pdo->prepare("
+                SELECT
+                    s.championship_id,
+                    s.position,
+                    s.team,
+                    s.points,
+                    s.played,
+                    s.won,
+                    s.lost,
+                    s.sets_won,
+                    s.sets_lost,
+                    c.label AS championship_label
+                FROM federation_standings s
+                JOIN federation_championships c
+                    ON s.championship_id = c.id
+                   AND c.is_active = 1
+                ORDER BY c.label ASC, s.position ASC
+            ");
+            $stmtStandings->execute();
+            $standingsRaw = $stmtStandings->fetchAll(\PDO::FETCH_ASSOC);
+
+            $standings = [];
+            foreach ($standingsRaw as $row) {
+                $cid = $row['championship_id'];
+                if (!isset($standings[$cid])) {
+                    $standings[$cid] = [
+                        'championship_id' => $cid,
+                        'championship_label' => $row['championship_label'],
+                        'rows' => []
+                    ];
+                }
+                $row['is_our_team'] = $this->_isOurTeam($row['team']);
+                $standings[$cid]['rows'][] = $row;
+            }
+
+            Response::success([
+                'matches' => $matches,
+                'standings' => array_values($standings),
+                'last_updated' => date('c'),
+                'source' => 'db',
+            ]);
+        }
+        catch (\PDOException $e) {
+            $sqlState = $e->errorInfo[0] ?? (string)$e->getCode();
+            if ($sqlState === '42S02' || str_contains($e->getMessage(), "doesn't exist")) {
+                Response::success(['matches' => [], 'standings' => [], 'source' => 'db']);
+                return;
+            }
+            error_log('[Results] getPublicMatchCenter error: ' . $e->getMessage());
+            Response::error('Errore database', 500);
+        }
+    }
 }

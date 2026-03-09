@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Instagram, Facebook, Youtube } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
 const Navbar = () => {
@@ -37,12 +37,12 @@ const Navbar = () => {
                     {/* Logo */}
                     <Link to="/" className="flex items-center gap-4 group">
                         <img
-                            src="/assets/logo-colorato.png"
+                            src="/demo/assets/logo-colorato.png"
                             alt="Fusion Team Volley"
                             className="h-16 w-auto group-hover:scale-105 transition-transform duration-300 drop-shadow-[0_0_8px_rgba(217,70,239,0.3)]"
                         />
-                        <span className="font-heading text-2xl tracking-tighter uppercase text-white leading-none">
-                            FUSION<br /><span className="text-zinc-500 text-lg group-hover:text-brand-500 transition-colors">TEAM</span>
+                        <span className="font-heading text-2xl tracking-tighter uppercase text-white leading-none drop-shadow-[0_0_8px_rgba(255,20,147,0.5)]">
+                            FUSION TEAM<br /><span className="text-brand-500 text-lg group-hover:text-white transition-colors drop-shadow-[0_0_12px_rgba(255,20,147,0.8)]">VOLLEY</span>
                         </span>
                     </Link>
 
@@ -66,12 +66,17 @@ const Navbar = () => {
                             );
                         })}
 
-                        <a
-                            href="/ERP"
-                            className="px-6 py-3 bg-zinc-900 border border-zinc-700 text-zinc-300 hover:bg-white hover:text-zinc-950 hover:border-white font-subheading text-sm font-bold tracking-widest uppercase transition-all duration-300 clip-diagonal ml-4"
-                        >
-                            LOGIN ERP
-                        </a>
+                        <div className="flex gap-5 ml-4 border-l border-zinc-800 pl-6 items-center">
+                            <a href="https://instagram.com/fusionteamvolley" target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:text-brand-500 transition-colors">
+                                <Instagram size={20} />
+                            </a>
+                            <a href="https://facebook.com/FusionTeamVolley" target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:text-brand-500 transition-colors">
+                                <Facebook size={20} />
+                            </a>
+                            <a href="https://youtube.com/@fusionteamvolley9176" target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:text-brand-500 transition-colors">
+                                <Youtube size={24} />
+                            </a>
+                        </div>
                     </div>
 
                     {/* Mobile menu button */}

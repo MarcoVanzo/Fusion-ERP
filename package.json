@@ -5,7 +5,8 @@
     "lint:css": "stylelint \"css/**/*.css\""
   },
   "dependencies": {
-    "acorn": "^8.16.0"
+    "acorn": "^8.16.0",
+    "puppeteer": "^24.38.0"
   },
   "devDependencies": {
     "stylelint": "^16.0.0",

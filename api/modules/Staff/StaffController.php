@@ -81,8 +81,10 @@ class StaffController
             ':notes' => $body['notes'] ?? null,
         ];
 
-        $this->repo->create($data);
-        Audit::log('INSERT', 'staff_members', $id, null, ['first_name' => $body['first_name'], 'last_name' => $body['last_name']]);
+        $teamIds = isset($body['team_ids']) && is_array($body['team_ids']) ? $body['team_ids'] : [];
+
+        $this->repo->create($data, $teamIds);
+        Audit::log('INSERT', 'staff_members', $id, null, ['first_name' => $body['first_name'], 'last_name' => $body['last_name'], 'team_ids' => $teamIds]);
         Response::success(['id' => $id], 201);
     }
 
@@ -114,7 +116,9 @@ class StaffController
             ':notes' => $body['notes'] ?? null,
         ];
 
-        $this->repo->update($body['id'], $data);
+        $teamIds = isset($body['team_ids']) && is_array($body['team_ids']) ? $body['team_ids'] : [];
+
+        $this->repo->update($body['id'], $data, $teamIds);
         Audit::log('UPDATE', 'staff_members', $body['id'], $before, $body);
         Response::success(['message' => 'Membro staff aggiornato']);
     }

@@ -4,12 +4,15 @@
 @import "@fontsource/oswald/600.css";
 
 @theme {
-  --color-brand-500: #d946ef;
-  /* Fusion Fuchsia */
-  --color-brand-600: #c026d3;
-  --color-brand-primary: #a21caf;
+  --color-brand-400: #e84382;
+  --color-brand-500: #FF1493;
+  /* Saturated Vivid Fuchsia */
+  --color-brand-600: #d65a86;
+  /* Former primary preserved as fallback */
+  --color-brand-primary: #a1355c;
   /* Darker Fuchsia */
   --color-zinc-950: #050505;
+  --color-zinc-900: #121212;
   /* Pure black aesthetic */
 }
 

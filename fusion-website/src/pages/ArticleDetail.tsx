@@ -75,63 +75,67 @@ const ArticleDetail = () => {
     }
 
     return (
-        <article className="max-w-4xl mx-auto px-4 py-12 pb-24">
-            {/* Back button */}
-            <Link to="/news" className="inline-flex items-center gap-2 text-zinc-400 hover:text-brand-500 transition-colors mb-8 font-medium text-sm tracking-wide uppercase">
-                <ChevronLeft size={16} /> Tutte le news
-            </Link>
+        <article className="flex flex-col min-h-screen pb-24">
+            {/* Immersive Cover Header */}
+            <section className="relative h-[55vh] min-h-[400px] flex flex-col justify-end overflow-hidden mb-12">
+                {/* Background Image */}
+                <div
+                    className="absolute inset-0 z-0 bg-cover bg-center transition-transform duration-1000 scale-105"
+                    style={{ backgroundImage: `url('${article.cover_image_url || '/demo/assets/Gemini_Generated_Image_s2944zs2944zs294.jpeg'}')` }}
+                />
 
-            {/* Header */}
-            <header className="mb-10 text-center">
-                {article.category_name && (
-                    <div
-                        className="inline-block px-4 py-1 rounded-full text-xs font-bold text-white mb-6 uppercase tracking-wider"
-                        style={{ backgroundColor: article.color_hex || '#eab308' }}
-                    >
-                        {article.category_name}
-                    </div>
-                )}
+                {/* Overlays */}
+                <div className="absolute inset-0 bg-zinc-950/60 z-10"></div>
+                <div className="absolute inset-0 z-10 opacity-40 pointer-events-none mix-blend-overlay" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #d65a86 0, #d65a86 2px, transparent 2px, transparent 100px)' }}></div>
+                <div className="absolute bottom-0 left-0 w-full h-48 bg-gradient-to-t from-zinc-950 to-transparent z-10"></div>
 
-                <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight mb-6 leading-tight">
-                    {article.title}
-                </h1>
+                {/* Content */}
+                <div className="relative z-20 max-w-5xl mx-auto px-4 w-full pb-12">
+                    <Link to="/news" className="inline-flex items-center gap-2 text-zinc-300 hover:text-white transition-colors mb-6 font-heading text-sm tracking-widest uppercase bg-zinc-950/50 px-4 py-2 rounded-full backdrop-blur-md border border-white/10">
+                        <ChevronLeft size={16} /> Tutte le news
+                    </Link>
 
-                <div className="flex items-center justify-center gap-6 text-zinc-400 text-sm font-medium">
-                    <div className="flex items-center gap-2">
-                        <Calendar size={16} className="text-brand-500" />
-                        {new Date(article.published_at).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' })}
+                    {article.category_name && (
+                        <div
+                            className="inline-block px-4 py-1.5 rounded-full text-xs font-bold text-white mb-4 uppercase tracking-wider shadow-lg border border-white/20"
+                            style={{ backgroundColor: article.color_hex || '#d65a86' }}
+                        >
+                            {article.category_name}
+                        </div>
+                    )}
+
+                    <h1 className="text-4xl md:text-6xl font-heading text-white tracking-tighter mb-6 leading-tight drop-shadow-2xl">
+                        {article.title}
+                    </h1>
+
+                    <div className="flex items-center gap-6 text-zinc-300 text-sm font-subheading uppercase tracking-widest bg-zinc-950/40 inline-flex px-4 py-2 rounded-lg backdrop-blur-sm border border-white/5">
+                        <div className="flex items-center gap-2">
+                            <Calendar size={16} className="text-brand-500" />
+                            {new Date(article.published_at).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' })}
+                        </div>
                     </div>
                 </div>
-            </header>
+            </section>
 
-            {/* Cover Image */}
-            {article.cover_image_url && (
-                <div className="w-full h-[400px] md:h-[500px] rounded-2xl overflow-hidden mb-12 shadow-[0_20px_50px_-15px_rgba(0,0,0,0.5)] border border-white/5 relative">
-                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 to-transparent z-10 top-2/3"></div>
-                    <img
-                        src={article.cover_image_url}
-                        alt={article.title}
-                        className="w-full h-full object-cover"
+            <div className="max-w-4xl mx-auto px-4 w-full">
+
+                {/* Content */}
+                <div className="glass-panel p-8 md:p-12 relative overflow-hidden">
+                    {/* Decorative background glow */}
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-brand-500/5 blur-[80px] rounded-full pointer-events-none"></div>
+
+                    {article.excerpt && (
+                        <p className="text-xl font-light text-zinc-300 leading-relaxed mb-10 pb-10 border-b border-white/10 italic">
+                            "{article.excerpt}"
+                        </p>
+                    )}
+
+                    {/* HTML Content Render */}
+                    <div
+                        className="prose prose-invert prose-brand max-w-none prose-img:rounded-xl prose-img:shadow-lg prose-headings:font-bold prose-a:text-brand-500 hover:prose-a:text-brand-400 prose-p:text-zinc-300 prose-p:leading-relaxed"
+                        dangerouslySetInnerHTML={{ __html: article.content_html }}
                     />
                 </div>
-            )}
-
-            {/* Content */}
-            <div className="glass-panel p-8 md:p-12 relative overflow-hidden">
-                {/* Decorative background glow */}
-                <div className="absolute top-0 right-0 w-64 h-64 bg-brand-500/5 blur-[80px] rounded-full pointer-events-none"></div>
-
-                {article.excerpt && (
-                    <p className="text-xl font-light text-zinc-300 leading-relaxed mb-10 pb-10 border-b border-white/10 italic">
-                        "{article.excerpt}"
-                    </p>
-                )}
-
-                {/* HTML Content Render */}
-                <div
-                    className="prose prose-invert prose-brand max-w-none prose-img:rounded-xl prose-img:shadow-lg prose-headings:font-bold prose-a:text-brand-500 hover:prose-a:text-brand-400 prose-p:text-zinc-300 prose-p:leading-relaxed"
-                    dangerouslySetInnerHTML={{ __html: article.content_html }}
-                />
             </div>
         </article>
     );

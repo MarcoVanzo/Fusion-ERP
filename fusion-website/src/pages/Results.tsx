@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Trophy, ChevronRight, Filter } from 'lucide-react';
+import { Trophy, Filter } from 'lucide-react';
 
 interface Match {
     id: number;
@@ -13,21 +13,37 @@ interface Match {
     is_our_team: boolean;
 }
 
+interface StandingRow {
+    team: string;
+    position: number;
+    points: number;
+    played: number;
+    won: number;
+    lost: number;
+    is_our_team: boolean;
+}
+
+interface ChampionshipStanding {
+    championship_id: string;
+    championship_label: string;
+    rows: StandingRow[];
+}
+
 const Results = () => {
     const [matches, setMatches] = useState<Match[]>([]);
+    const [standings, setStandings] = useState<ChampionshipStanding[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedChamp, setSelectedChamp] = useState<string>('TUTTI');
 
     useEffect(() => {
-        // Fetch real FIPAV synced matches from the ERP RecentResults endpoint
+        // Fetch real FIPAV synced matches and standings from the ERP MatchCenter endpoint
         const fetchMatches = async () => {
             try {
-                const res = await fetch('https://www.fusionteamvolley.it/ERP/api/router.php?module=results&action=getPublicRecentResults&limit=15');
+                const res = await fetch('https://www.fusionteamvolley.it/ERP/api/router.php?module=results&action=getPublicMatchCenter');
                 const data = await res.json();
                 if (data.status === 'success' || data.success === true) {
-                    // Extract matches from data.data.matches or data.data depending on structure
-                    const matchesArray = data.data.matches ? data.data.matches : data.data;
-                    setMatches(matchesArray || []);
+                    setMatches(data.data.matches || []);
+                    setStandings(data.data.standings || []);
                 }
             } catch (error) {
                 console.error('Failed to fetch matches:', error);
@@ -55,24 +71,36 @@ const Results = () => {
 
     const pastMatches = filteredMatches;
 
+    // Filter standings by selected championship
+    const filteredStandings = useMemo(() => {
+        if (selectedChamp === 'TUTTI') return standings;
+        return standings.filter(s => s.championship_label === selectedChamp);
+    }, [standings, selectedChamp]);
+
     return (
-        <div className="bg-zinc-950 min-h-screen pb-24 font-sans text-white">
+        <div className="flex flex-col min-h-screen pb-24 font-sans text-white">
+            {/* Emotional Header Hero */}
+            <section className="relative h-[40vh] min-h-[300px] flex items-center justify-center overflow-hidden mb-12">
+                {/* Background Image */}
+                <div
+                    className="absolute inset-0 z-0 bg-cover bg-center"
+                    style={{ backgroundImage: "url('/demo/assets/Gemini_Generated_Image_g2wpx2g2wpx2g2wp.jpeg')", filter: "brightness(0.8)" }}
+                />
+                {/* Overlays */}
+                <div className="absolute inset-0 bg-zinc-950/70 z-10 transition-colors"></div>
+                <div className="absolute inset-0 z-10 opacity-30 pointer-events-none mix-blend-overlay" style={{ backgroundImage: 'repeating-linear-gradient(-45deg, #d65a86 0, #d65a86 2px, transparent 2px, transparent 100px)' }}></div>
+                <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-zinc-950 to-transparent z-10"></div>
 
-            {/* Header Inter Style */}
-            <header className="relative pt-32 pb-20 px-4 overflow-hidden mb-12 border-b-8 border-brand-500 clip-diagonal">
-                <div className="absolute inset-0 z-0">
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-brand-primary/20 via-zinc-950 to-zinc-950"></div>
-                </div>
-
-                <div className="max-w-7xl mx-auto relative z-10 flex flex-col items-start border-l-8 border-brand-500 pl-8">
-                    <h1 className="font-heading text-6xl md:text-8xl tracking-tighter text-white mb-2 leading-none uppercase">
-                        MATCH <br /> <span className="text-zinc-600">CENTER</span>
+                {/* Content */}
+                <div className="relative z-20 text-center px-4 max-w-4xl mx-auto flex flex-col items-center pt-8">
+                    <h1 className="font-heading text-6xl md:text-8xl tracking-tighter mb-4 text-white uppercase drop-shadow-xl leading-none">
+                        MATCH <br /> <span className="text-brand-500 drop-shadow-[0_0_15px_rgba(214,90,134,0.5)]">CENTER</span>
                     </h1>
                     <p className="font-subheading text-2xl text-brand-500 tracking-widest mt-4">
                         RISULTATI UFFICIALI FIPAV
                     </p>
                 </div>
-            </header>
+            </section>
 
             <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-3 gap-12">
 
@@ -136,7 +164,7 @@ const Results = () => {
                                             </div>
 
                                             <div className="flex items-center gap-4 justify-center flex-grow w-full md:w-auto mt-4 md:mt-0">
-                                                <div className={`text-right font-heading text-xl w-2/5 truncate ${isFusionHome ? 'text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]' : 'text-zinc-500'}`}>
+                                                <div className={`text-right font-heading text-sm md:text-xl w-2/5 break-words whitespace-normal leading-tight ${isFusionHome ? 'text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]' : 'text-zinc-500'}`}>
                                                     {match.home}
                                                 </div>
 
@@ -144,7 +172,7 @@ const Results = () => {
                                                     {match.sets_home} - {match.sets_away}
                                                 </div>
 
-                                                <div className={`text-left font-heading text-xl w-2/5 truncate ${isFusionAway ? 'text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]' : 'text-zinc-500'}`}>
+                                                <div className={`text-left font-heading text-sm md:text-xl w-2/5 break-words whitespace-normal leading-tight ${isFusionAway ? 'text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]' : 'text-zinc-500'}`}>
                                                     {match.away}
                                                 </div>
                                             </div>
@@ -164,22 +192,38 @@ const Results = () => {
                     </section>
                 </div>
 
-                {/* Right Column: Mini Dashboard */}
+                {/* Right Column: Classifiche */}
                 <div className="lg:col-span-1">
-                    <div className="bg-zinc-900 border border-zinc-800 p-8 clip-diagonal-rev sticky top-24">
-                        <h3 className="font-heading text-2xl text-white mb-6 border-b-2 border-brand-500 pb-4">
-                            INFO <span className="text-zinc-500">GARE</span>
-                        </h3>
+                    <div className="sticky top-24 space-y-8">
+                        {loading ? (
+                            <div className="bg-zinc-900 border border-zinc-800 p-8 clip-diagonal-rev h-96 animate-pulse"></div>
+                        ) : filteredStandings.length === 0 ? (
+                            <div className="bg-zinc-900 border border-zinc-800 p-8 clip-diagonal-rev font-subheading text-zinc-500 text-center">
+                                Nessuna classifica trovata per il campionato selezionato.
+                            </div>
+                        ) : (
+                            filteredStandings.map((champ) => (
+                                <div key={champ.championship_id} className="bg-zinc-900 border border-zinc-800 p-4 md:p-6 clip-diagonal-rev overflow-hidden">
+                                    <h3 className="font-heading text-lg md:text-xl text-white mb-4 border-b-2 border-brand-500 pb-2 uppercase break-words whitespace-normal leading-tight">
+                                        CLASSIFICA <span className="text-zinc-500 block mt-1">{champ.championship_label}</span>
+                                    </h3>
 
-                        <p className="text-zinc-400 font-sans text-sm mb-6 leading-relaxed">
-                            I risultati riportati in questa pagina riflettono il database ufficiale FIPAV (Federazione Italiana Pallavolo).
-                            I dati sono aggiornati automaticamente tramite il Match Center ERP.
-                        </p>
-
-                        <div className="w-full bg-zinc-950 p-6 border border-zinc-800 clip-diagonal group cursor-pointer hover:border-brand-primary transition-colors">
-                            <div className="font-heading text-xl text-white mb-2 group-hover:text-brand-500 transition-colors">TUTTE LE CLASSIFICHE</div>
-                            <div className="font-subheading text-zinc-500 text-sm flex items-center gap-2">Vedi Dettaglio <ChevronRight size={16} /></div>
-                        </div>
+                                    <div className="flex flex-col gap-1">
+                                        {champ.rows.map((row) => (
+                                            <div key={row.team} className={`flex items-center justify-between p-2 text-sm ${row.is_our_team ? 'bg-brand-500/20 text-white font-bold border-l-2 border-brand-500' : 'text-zinc-400 border-l-2 border-transparent hover:bg-zinc-800'}`}>
+                                                <div className="flex items-center gap-3 w-3/4">
+                                                    <span className="w-5 text-center text-zinc-600 font-heading text-xs">{row.position}</span>
+                                                    <span className="truncate uppercase text-xs tracking-wider">{row.team}</span>
+                                                </div>
+                                                <div className="w-1/4 text-right font-heading text-white">
+                                                    {row.points} <span className="text-brand-500 text-[10px]">PT</span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))
+                        )}
                     </div>
                 </div>
 

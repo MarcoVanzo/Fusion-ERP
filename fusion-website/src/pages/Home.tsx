@@ -13,9 +13,21 @@ interface NewsArticle {
     color_hex?: string;
 }
 
+interface Match {
+    id: number;
+    home: string;
+    away: string;
+    sets_home?: number;
+    sets_away?: number;
+    date: string;
+    championship_label: string;
+}
+
 const Home = () => {
     const [news, setNews] = useState<NewsArticle[]>([]);
     const [loadingNews, setLoadingNews] = useState(true);
+    const [recentMatches, setRecentMatches] = useState<Match[]>([]);
+    const [loadingMatches, setLoadingMatches] = useState(true);
     const [currentSlide, setCurrentSlide] = useState(0);
 
     useEffect(() => {
@@ -26,6 +38,20 @@ const Home = () => {
     }, []);
 
     useEffect(() => {
+        const fetchRecentMatches = async () => {
+            try {
+                const res = await fetch('https://www.fusionteamvolley.it/ERP/api/router.php?module=results&action=getPublicRecentResults');
+                const data = await res.json();
+                if (data.status === 'success' || data.success === true) {
+                    setRecentMatches((data.data || []).slice(0, 8)); // increased limit from 4 to 8
+                }
+            } catch (error) {
+                console.error('Failed to fetch recent matches:', error);
+            } finally {
+                setLoadingMatches(false);
+            }
+        };
+
         const fetchNews = async () => {
             try {
                 const res = await fetch('https://www.fusionteamvolley.it/ERP/api/router.php?module=website&action=getPublicNews&limit=3');
@@ -40,6 +66,7 @@ const Home = () => {
             }
         };
 
+        fetchRecentMatches();
         fetchNews();
     }, []);
 
@@ -54,7 +81,7 @@ const Home = () => {
                             key={num}
                             className="absolute inset-0 transition-opacity duration-1000 ease-in-out"
                             style={{
-                                backgroundImage: `url('/assets/hero-${num}.jpg')`,
+                                backgroundImage: `url('/demo/assets/hero-${num}.jpg')`,
                                 backgroundSize: 'cover',
                                 backgroundPosition: 'center 30%', // focal point slightly higher
                                 opacity: currentSlide === idx ? 1 : 0
@@ -74,17 +101,17 @@ const Home = () => {
                         Settore Giovanile d'Eccellenza
                     </div>
 
-                    <h1 className="font-heading text-6xl md:text-8xl lg:text-[9rem] tracking-tighter mb-4 text-white leading-[0.8] drop-shadow-2xl">
-                        FUSION
+                    <h1 className="font-heading text-6xl md:text-8xl lg:text-[7.5rem] tracking-tighter mb-4 text-white leading-[0.85] drop-shadow-2xl">
+                        FUSION TEAM
                         <br />
-                        <span className="text-brand-500 drop-shadow-[0_0_25px_rgba(217,70,239,0.5)]">TEAM</span>
+                        <span className="text-brand-500 drop-shadow-[0_0_25px_rgba(255,20,147,0.8)]">VOLLEY</span>
                     </h1>
 
                     <p className="font-subheading text-2xl md:text-3xl text-zinc-200 mt-6 mb-12 max-w-3xl leading-snug drop-shadow-md">
                         800 ATLETE. UN UNICO GRANDE SOGNO. IL VOLLEY COME NON L'HAI MAI VISTO.
                     </p>
 
-                    <div className="flex flex-col sm:flex-row gap-6 justify-center w-full max-w-lg">
+                    <div className="flex flex-col sm:flex-row gap-6 justify-center w-full max-w-lg mb-16 relative z-30">
                         <Link to="/teams" className="flex-1 py-5 bg-brand-500 text-zinc-950 font-heading text-xl hover:bg-white transition-colors flex items-center justify-center gap-2 clip-diagonal">
                             I ROSTER <ChevronRight size={24} />
                         </Link>
@@ -105,6 +132,52 @@ const Home = () => {
                         ))}
                     </div>
                 </div>
+            </section>
+
+            {/* Recent Matches Widget */}
+            <section className="w-full px-4 md:px-12">
+                <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 border-b-2 border-zinc-800 pb-6 gap-4">
+                    <div>
+                        <h2 className="font-heading text-5xl md:text-7xl">MATCH <span className="text-brand-500">CENTER</span></h2>
+                    </div>
+                </div>
+
+                {loadingMatches ? (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        {[1, 2, 3, 4].map(i => <div key={i} className="animate-pulse bg-zinc-900 h-24 clip-diagonal border border-zinc-800"></div>)}
+                    </div>
+                ) : recentMatches.length === 0 ? (
+                    <div className="p-8 text-center border border-zinc-800 bg-zinc-900/40 clip-diagonal">
+                        <p className="font-subheading text-xl text-zinc-500">Nessun risultato caricato recentemente.</p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {recentMatches.map((match: Match) => {
+                            const isFusionHome = match.home.toLowerCase().includes('fusion');
+                            const isFusionAway = match.away.toLowerCase().includes('fusion');
+
+                            return (
+                                <div key={match.id} className="group relative flex flex-col items-center justify-between p-4 bg-zinc-900 clip-diagonal border border-zinc-800 hover:border-brand-500 hover:bg-zinc-800 transition-colors">
+                                    <div className="w-full flex justify-between items-center mb-3">
+                                        <div className="font-subheading text-brand-500 text-xs tracking-widest">{match.date}</div>
+                                        <div className="text-zinc-500 font-subheading text-[10px] uppercase truncate max-w-[60%]">{match.championship_label}</div>
+                                    </div>
+                                    <div className="flex items-center w-full gap-3">
+                                        <div className={`text-right font-heading leading-tight text-sm sm:text-xl w-2/5 flex-grow break-words whitespace-normal ${isFusionHome ? 'text-white' : 'text-zinc-400'}`}>
+                                            {match.home}
+                                        </div>
+                                        <div className="flex items-center justify-center min-w-[80px] h-10 bg-zinc-950 border border-zinc-800 clip-diagonal font-heading text-xl tracking-widest text-brand-500">
+                                            {match.sets_home} - {match.sets_away}
+                                        </div>
+                                        <div className={`text-left font-heading leading-tight text-sm sm:text-xl w-2/5 flex-grow break-words whitespace-normal ${isFusionAway ? 'text-white' : 'text-zinc-400'}`}>
+                                            {match.away}
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
             </section>
 
             {/* Latest News Widget */}

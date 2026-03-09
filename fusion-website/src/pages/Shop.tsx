@@ -44,26 +44,32 @@ const Shop = () => {
         : products.filter(p => p.categoria === activeCategory);
 
     return (
-        <div className="bg-zinc-950 min-h-screen pb-24">
-            {/* Header Section - Luxury Merch Style */}
-            <header className="relative pt-32 pb-20 px-4 overflow-hidden mb-12 border-b-8 border-brand-500 clip-diagonal">
-                <div className="absolute inset-0 z-0">
-                    <div className="absolute inset-0 bg-zinc-900 opacity-50" style={{ backgroundImage: 'radial-gradient(#ffffff 1px, transparent 1px)', backgroundSize: '30px 30px' }}></div>
-                    <div className="absolute inset-0 bg-gradient-to-b from-brand-primary/20 to-zinc-950"></div>
-                </div>
+        <div className="flex flex-col min-h-screen pb-24 font-sans text-white">
+            {/* Emotional Header Hero */}
+            <section className="relative h-[40vh] min-h-[300px] flex items-center justify-center overflow-hidden mb-12">
+                {/* Background Image */}
+                <div
+                    className="absolute inset-0 z-0 bg-cover bg-center"
+                    style={{ backgroundImage: "url('/demo/assets/Gemini_Generated_Image_4wijvu4wijvu4wij.jpeg')", filter: "brightness(0.6)" }}
+                />
+                {/* Overlays */}
+                <div className="absolute inset-0 bg-zinc-950/70 z-10 transition-colors"></div>
+                <div className="absolute inset-0 z-10 opacity-30 pointer-events-none mix-blend-overlay" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #d65a86 0, #d65a86 2px, transparent 2px, transparent 100px)' }}></div>
+                <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-zinc-950 to-transparent z-10"></div>
 
-                <div className="max-w-7xl mx-auto relative z-10 text-center">
-                    <div className="inline-flex items-center justify-center w-20 h-20 bg-brand-500 text-zinc-950 mb-8 clip-diagonal-rev transform rotate-12">
+                {/* Content */}
+                <div className="relative z-20 text-center px-4 max-w-4xl mx-auto flex flex-col items-center pt-8">
+                    <div className="inline-flex items-center justify-center w-20 h-20 bg-brand-500 text-zinc-950 mb-6 clip-diagonal-rev transform rotate-12 shadow-[0_0_30px_rgba(214,90,134,0.6)]">
                         <ShoppingBag size={40} className="-rotate-12" />
                     </div>
-                    <h1 className="font-heading text-7xl md:text-9xl tracking-tighter text-white mb-6 leading-none">
-                        FUSION <span className="text-transparent bg-clip-text bg-gradient-to-br from-brand-400 to-brand-600">STORE</span>
+                    <h1 className="font-heading text-6xl md:text-8xl tracking-tighter mb-4 text-white uppercase drop-shadow-xl leading-none">
+                        FUSION <span className="text-brand-500 drop-shadow-[0_0_15px_rgba(214,90,134,0.5)]">STORE</span>
                     </h1>
-                    <p className="font-subheading text-2xl text-zinc-400 tracking-widest max-w-2xl mx-auto">
+                    <p className="font-subheading text-xl md:text-2xl text-zinc-300 tracking-widest bg-zinc-950/50 inline-block px-4 py-1 border border-white/10 rounded-sm">
                         ABBIGLIAMENTO UFFICIALE E MERCHANDISING
                     </p>
                 </div>
-            </header>
+            </section>
 
             <div className="max-w-7xl mx-auto px-4">
                 {/* Category Filters */}
@@ -96,15 +102,16 @@ const Shop = () => {
                             <div key={idx} className="group flex flex-col items-center">
 
                                 {/* Product Image Container */}
-                                <div className="relative w-full aspect-[4/5] bg-zinc-900 mb-8 clip-diagonal-rev overflow-hidden border border-zinc-800 group-hover:border-brand-500 transition-colors">
-                                    {/* Subtle background glow on hover */}
-                                    <div className="absolute inset-0 bg-brand-primary/0 group-hover:bg-brand-primary/10 transition-colors z-0"></div>
+                                <div className="relative w-full aspect-[4/5] bg-zinc-900 border border-zinc-800 mb-8 overflow-hidden group-hover:border-brand-500 transition-all duration-500 rounded-sm flex items-center justify-center clip-diagonal">
+
+                                    {/* Neon Spotlight */}
+                                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[75%] h-[75%] bg-white blur-[2px] opacity-90 group-hover:shadow-[0_0_40px_rgba(255,20,147,0.5)] rounded-[40%_60%_70%_30%_/_40%_50%_60%_50%] group-hover:rounded-[70%_30%_50%_50%_/_30%_50%_70%_40%] group-hover:scale-105 transition-all duration-700"></div>
 
                                     {product.immagineUrl ? (
                                         <img
                                             src={product.immagineUrl}
                                             alt={product.nome}
-                                            className="w-full h-full object-contain p-8 relative z-10 group-hover:scale-110 transition-transform duration-700 drop-shadow-2xl"
+                                            className="w-full h-full object-contain p-6 relative z-10 group-hover:scale-110 transition-transform duration-700 mix-blend-multiply drop-shadow-xl"
                                         />
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center z-10 relative">
@@ -142,7 +149,7 @@ const Shop = () => {
                                         {/* Cognito Integration Button - Replace # with actual general form URL if product ID needs passing, 
                         else just direct to the generic store registration form */}
                                         <a
-                                            href="https://www.cognitoforms.com/FusionTeamVolley/StoreRegistration" // Pseudo-URL as requested
+                                            href="https://www.cognitoforms.com/MVConsulting2/OrdineEcommerce"
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="w-full py-4 bg-white text-zinc-950 font-heading text-xl hover:bg-brand-500 transition-colors flex items-center justify-center gap-2 clip-diagonal"
