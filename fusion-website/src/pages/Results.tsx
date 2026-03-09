@@ -21,7 +21,7 @@ const Results = () => {
         // Fetch real FIPAV synced matches from the ERP RecentResults endpoint
         const fetchMatches = async () => {
             try {
-                const res = await fetch('/ERP/api/?module=results&action=getPublicRecentResults&limit=15');
+                const res = await fetch('https://www.fusionteamvolley.it/ERP/api/router.php?module=results&action=getPublicRecentResults&limit=15');
                 const data = await res.json();
                 if (data.status === 'success') {
                     // Extract matches from data.data.matches or data.data depending on structure

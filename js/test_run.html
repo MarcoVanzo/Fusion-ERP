@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
+</head>
+
+<body>
+    <div id="out">Starting test...</div>
+    <script>
+        const EcommerceDB = (() => {
+            let t = null;
+            function n() {
+                return (
+                    t ||
+                    ((t = new Dexie("FusionERP_Ecommerce")),
+                        t
+                            .version(1)
+                            .stores({
+                                articoli: "++id, nome, categoria, disponibile, importatoIl",
+                                statiOrdini: "ordineId, stato, aggiornatoIl",
+                                metadati: "chiave",
+                            }),
+                        t)
+                );
+            }
+            return {
+                bulkSaveArticoli: async function (t) {
+                    const db = n(),
+                        now = new Date().toISOString(),
+                        existing = await db.articoli.toArray(),
+                        nameMap = new Map();
+                    existing.forEach((item) => {
+                        if (item.nome) nameMap.set(item.nome.trim().toLowerCase(), item);
+                    });
+                    const toAdd = [],
+                        toUpdate = [];
+                    t.forEach((item) => {
+                        const itemKey = item.nome ? item.nome.trim().toLowerCase() : "";
+                        if (itemKey && nameMap.has(itemKey)) {
+                            const matched = nameMap.get(itemKey);
+                            toUpdate.push({ ...matched, ...item, id: matched.id, modificatoIl: now });
+                        } else {
+                            toAdd.push({ ...item, importatoIl: now, modificatoIl: now });
+                        }
+                    });
+                    if (toAdd.length > 0) await db.articoli.bulkAdd(toAdd);
+                    if (toUpdate.length > 0) await db.articoli.bulkPut(toUpdate);
+                    return true;
+                },
+                getAll: () => n().articoli.toArray()
+            }
+        })();
+
+        async function runTest() {
+            // Clear DB
+            let db = new Dexie("FusionERP_Ecommerce");
+            await db.delete();
+
+            let out = document.getElementById("out");
+            out.innerHTML += "<br>DB Cleared.";
+
+            // Real products with duplicates as seen in scrapeShop output
+            let products = [
+                { nome: 'ARTEMIS WMN FULL ZIP TOP BLK/DGRY' },
+                { nome: 'POSEIDON FULL ZIP TOP BLK/DGRY' },
+                { nome: 'ARTEMIS WMN FULL ZIP TOP BLK/DGRY' } // Duplicate!
+            ];
+
+            out.innerHTML += "<br>Saving " + products.length + " products... (contains a duplicate!)";
+            await EcommerceDB.bulkSaveArticoli(products);
+
+            let all = await EcommerceDB.getAll();
+            out.innerHTML += "<br>TOTAL IN DB: " + all.length;
+
+            all.forEach(a => {
+                out.innerHTML += "<br> ID=" + a.id + " NOME=" + a.nome;
+            });
+
+            // What if we do it again?
+            out.innerHTML += "<br><br>Running save again on the same array...";
+            await EcommerceDB.bulkSaveArticoli(products);
+            let all2 = await EcommerceDB.getAll();
+            out.innerHTML += "<br>TOTAL IN DB AFTER RETRY: " + all2.length;
+            all2.forEach(a => {
+                out.innerHTML += "<br> ID=" + a.id + " NOME=" + a.nome;
+            });
+        }
+        runTest();
+    </script>
+</body>
+
+</html>

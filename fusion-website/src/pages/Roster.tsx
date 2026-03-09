@@ -16,7 +16,7 @@ const Roster = () => {
     useEffect(() => {
         const fetchTeams = async () => {
             try {
-                const res = await fetch('/ERP/api/?module=athletes&action=getPublicTeams');
+                const res = await fetch('https://www.fusionteamvolley.it/ERP/api/router.php?module=athletes&action=getPublicTeams');
                 const data = await res.json();
                 if (data.status === 'success') {
                     setTeams(data.data);

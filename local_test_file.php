@@ -219,7 +219,7 @@ class EcommerceController
         foreach ($parent->childNodes as $child) {
             yield $child;
             if ($child->hasChildNodes()) {
-                yield from self::_walkNodes($child);
+                yield fromself::_walkNodes($child);
             }
         }
     }
