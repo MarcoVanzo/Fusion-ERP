@@ -322,10 +322,11 @@ class ResultsController
             Response::error('URL non valido — inserire un URL completo (https://...)', 400);
         }
         // Accept any configured portal domain
-        $urlLower = strtolower($url);
+        $host = parse_url($url, PHP_URL_HOST);
+        $hostLower = $host ? strtolower($host) : '';
         $allowed = false;
         foreach (self::ALLOWED_DOMAINS as $domain) {
-            if (str_contains($urlLower, $domain)) {
+            if (str_contains($hostLower, $domain)) {
                 $allowed = true;
                 break;
             }
@@ -384,7 +385,7 @@ class ResultsController
      */
     public function recentResults(): void
     {
-        // Auth::requireRead('results');
+        Auth::requireRead('results');
 
 
         $pdo = Database::getInstance();

@@ -28,7 +28,7 @@ const WhatsApp = (() => {
         let o = "";
         s !== e &&
           ((e = s),
-          (o = `<div class="wa-date-sep"><span>${Utils.escapeHtml(s)}</span></div>`));
+            (o = `<div class="wa-date-sep"><span>${Utils.escapeHtml(s)}</span></div>`));
         const c = n ? "wa-bubble-out" : "wa-bubble-in",
           l =
             "read" === t.status
@@ -46,7 +46,7 @@ const WhatsApp = (() => {
       d = document.getElementById("wa-main");
     if (!d) return;
     ((d.innerHTML = (function (t) {
-      const e = t?.display_name || r(t?.from_phone || n);
+      const e = t?.display_name || r(t?.from_phone || n) || "Sconosciuto";
       return `\n        <div class="wa-chat-area">\n            <div class="wa-chat-header">\n                <div class="wa-avatar sm">${e
         .split(" ")
         .map((t) => t[0])
@@ -118,36 +118,45 @@ const WhatsApp = (() => {
             const s = document.querySelector(`[data-phone="${CSS.escape(t)}"]`);
             s &&
               (s.classList.remove("has-unread"),
-              s.querySelector(".wa-unread-badge")?.remove());
+                s.querySelector(".wa-unread-badge")?.remove());
           } catch (t) {
             e.innerHTML = `<p style="text-align:center;color:var(--color-danger);">${Utils.escapeHtml(t.message)}</p>`;
           }
       })(i),
       (function (t) {
-        s = setInterval(async () => {
-          if (n === t)
-            try {
-              const e = await Store.get("getMessages", "whatsapp", {
-                  from_phone: t,
-                }),
-                n = e?.messages || [];
-              if (n.length > a.length) {
-                a = n;
-                const t = document.getElementById("wa-messages"),
-                  e = (function (t) {
-                    return (
-                      !t || t.scrollHeight - t.scrollTop - t.clientHeight < 60
-                    );
-                  })(t);
-                (o(t), e && p(t));
-              }
-            } catch {}
-          else l();
-        }, 5e3);
+        l();
+        if (n !== t) return;
+        let pRate = 5000;
+        const pFn = async () => {
+          if (n !== t) return;
+          try {
+            const getE = await Store.get("getMessages", "whatsapp", {
+              from_phone: t,
+            }),
+              msgs = getE?.messages || [];
+            if (msgs.length > a.length) {
+              a = msgs;
+              const ct = document.getElementById("wa-messages"),
+                ce = (function (el) {
+                  return (
+                    !el || el.scrollHeight - el.scrollTop - el.clientHeight < 60
+                  );
+                })(ct);
+              (o(ct), ce && p(ct));
+              pRate = 5000;
+            } else {
+              pRate = Math.min(pRate * 1.5, 60000);
+            }
+          } catch {
+            pRate = Math.min(pRate * 1.5, 60000);
+          }
+          if (n === t) s = setTimeout(pFn, pRate);
+        };
+        s = setTimeout(pFn, pRate);
       })(i));
   }
   function l() {
-    s && (clearInterval(s), (s = null));
+    s && (clearTimeout(s), (s = null));
   }
   function r(t) {
     if (!t || "me" === t) return "";
@@ -172,37 +181,36 @@ const WhatsApp = (() => {
       const p = document.getElementById("app");
       p &&
         ((p.innerHTML = UI.skeletonPage()),
-        "contacts" === i
-          ? await (async function (e) {
+          "contacts" === i
+            ? await (async function (e) {
               try {
                 const n = await Store.get("getContacts", "whatsapp");
                 !(function (e, n) {
-                  ((e.innerHTML = `\n        <div class="wa-contacts-page">\n            <div class="page-header" style="padding:var(--sp-4) var(--sp-4) 0;">\n                <div class="page-header-title">\n                    <i class="ph ph-address-book" style="color:var(--color-primary);"></i>\n                    <h2>Rubrica Contatti</h2>\n                </div>\n                <button class="btn btn-primary" id="btn-import-vcf" type="button">\n                    <i class="ph ph-upload-simple"></i> Importa da iPhone (.vcf)\n                </button>\n                <input type="file" id="vcf-file-input" accept=".vcf,.vcard" style="display:none;">\n            </div>\n            <div style="padding:var(--sp-4);">\n                ${
-                    0 === n.length
-                      ? Utils.emptyState(
-                          "Nessun contatto",
-                          "Importa i contatti dal tuo iPhone.",
-                          null,
-                          null,
-                          null,
-                        )
-                      : `<div class="wa-contacts-grid">\n                        ${n
-                          .map((t) =>
-                            (function (t) {
-                              const e = t.name
-                                  .split(" ")
-                                  .map((t) => t[0])
-                                  .slice(0, 2)
-                                  .join("")
-                                  .toUpperCase(),
-                                n = t.athlete_name
-                                  ? `<span class="wa-contact-tag"><i class="ph ph-user"></i> ${Utils.escapeHtml(t.athlete_name.trim())}</span>`
-                                  : `<button class="btn btn-ghost btn-xs btn-link-athlete" data-contact-id="${Utils.escapeHtml(t.id)}" type="button">\n                   <i class="ph ph-link"></i> Collega atleta\n               </button>`;
-                              return `\n        <div class="wa-contact-card">\n            <div class="wa-avatar md">${Utils.escapeHtml(e)}</div>\n            <div class="wa-contact-info">\n                <span class="wa-contact-name">${Utils.escapeHtml(t.name)}</span>\n                <span class="wa-contact-phone">${r(t.phone_normalized)}</span>\n                ${n}\n            </div>\n        </div>`;
-                            })(t),
-                          )
-                          .join("")}\n                       </div>`
-                  }\n            </div>\n        </div>`),
+                  ((e.innerHTML = `\n        <div class="wa-contacts-page">\n            <div class="page-header" style="padding:var(--sp-4) var(--sp-4) 0;">\n                <div class="page-header-title">\n                    <i class="ph ph-address-book" style="color:var(--color-primary);"></i>\n                    <h2>Rubrica Contatti</h2>\n                </div>\n                <button class="btn btn-primary" id="btn-import-vcf" type="button">\n                    <i class="ph ph-upload-simple"></i> Importa da iPhone (.vcf)\n                </button>\n                <input type="file" id="vcf-file-input" accept=".vcf,.vcard" style="display:none;">\n            </div>\n            <div style="padding:var(--sp-4);">\n                ${0 === n.length
+                    ? Utils.emptyState(
+                      "Nessun contatto",
+                      "Importa i contatti dal tuo iPhone.",
+                      null,
+                      null,
+                      null,
+                    )
+                    : `<div class="wa-contacts-grid">\n                        ${n
+                      .map((t) =>
+                        (function (t) {
+                          const e = t.name
+                            .split(" ")
+                            .map((t) => t[0])
+                            .slice(0, 2)
+                            .join("")
+                            .toUpperCase(),
+                            n = t.athlete_name
+                              ? `<span class="wa-contact-tag"><i class="ph ph-user"></i> ${Utils.escapeHtml(t.athlete_name.trim())}</span>`
+                              : `<button class="btn btn-ghost btn-xs btn-link-athlete" data-contact-id="${Utils.escapeHtml(t.id)}" type="button">\n                   <i class="ph ph-link"></i> Collega atleta\n               </button>`;
+                          return `\n        <div class="wa-contact-card">\n            <div class="wa-avatar md">${Utils.escapeHtml(e)}</div>\n            <div class="wa-contact-info">\n                <span class="wa-contact-name">${Utils.escapeHtml(t.name)}</span>\n                <span class="wa-contact-phone">${r(t.phone_normalized)}</span>\n                ${n}\n            </div>\n        </div>`;
+                        })(t),
+                      )
+                      .join("")}\n                       </div>`
+                    }\n            </div>\n        </div>`),
                     (function (e) {
                       (e.querySelector("#btn-import-vcf")?.addEventListener(
                         "click",
@@ -276,11 +284,11 @@ const WhatsApp = (() => {
                                                 .forEach((e) => {
                                                   a.push({
                                                     ...t[
-                                                      parseInt(e.dataset.idx)
+                                                    parseInt(e.dataset.idx)
                                                     ],
                                                   });
                                                 }),
-                                              0 === a.length)
+                                                0 === a.length)
                                             )
                                               return void UI.toast(
                                                 "Nessun contatto selezionato",
@@ -307,7 +315,7 @@ const WhatsApp = (() => {
                                             } catch (t) {
                                               (UI.toast(
                                                 t.message ||
-                                                  "Errore importazione",
+                                                "Errore importazione",
                                                 "error",
                                               ),
                                                 (i.disabled = !1),
@@ -391,44 +399,43 @@ const WhatsApp = (() => {
                 );
               }
             })(p)
-          : await (async function (a) {
+            : await (async function (a) {
               try {
                 const s = await Store.get("getConversations", "whatsapp");
                 ((e = s?.conversations || []),
                   (function (a) {
-                    ((a.innerHTML = `\n        <div class="wa-page">\n            <div class="wa-sidebar">\n                <div class="wa-sidebar-header">\n                    <div class="wa-sidebar-title">\n                        <i class="ph ph-whatsapp-logo" style="color:#25D366;font-size:22px;"></i>\n                        <h2>WhatsApp</h2>\n                    </div>\n                    <span class="wa-sidebar-sub">Inbox messaggi</span>\n                </div>\n                <div class="wa-conv-list" id="wa-conv-list">\n                    ${
-                      0 === e.length
-                        ? '<div class="wa-empty-list">\n                               <i class="ph ph-chat-circle-dots" style="font-size:36px;opacity:.2;"></i>\n                               <p>Nessun messaggio ricevuto</p>\n                           </div>'
-                        : e
-                            .map((t) =>
-                              (function (t) {
-                                const e = n === t.from_phone,
-                                  a = parseInt(t.unread_count) || 0,
-                                  s = t.display_name || r(t.from_phone),
-                                  i = t.last_body
-                                    ? t.last_body.length > 42
-                                      ? t.last_body.slice(0, 42) + "…"
-                                      : t.last_body
-                                    : "",
-                                  o = t.last_message_at
-                                    ? new Date(
-                                        t.last_message_at,
-                                      ).toLocaleTimeString("it-IT", {
-                                        hour: "2-digit",
-                                        minute: "2-digit",
-                                      })
-                                    : "",
-                                  c = s
-                                    .split(" ")
-                                    .map((t) => t[0])
-                                    .slice(0, 2)
-                                    .join("")
-                                    .toUpperCase();
-                                return `\n        <div class="wa-conv-item ${e ? "active" : ""} ${a > 0 ? "has-unread" : ""}"\n             data-phone="${Utils.escapeHtml(t.from_phone)}" role="button" tabindex="0">\n            <div class="wa-avatar">${Utils.escapeHtml(c)}</div>\n            <div class="wa-conv-info">\n                <span class="wa-conv-name">${Utils.escapeHtml(s)}</span>\n                <span class="wa-conv-preview">${Utils.escapeHtml(i)}</span>\n            </div>\n            <div class="wa-conv-meta">\n                <span class="wa-conv-time">${o}</span>\n                ${a > 0 ? `<span class="wa-unread-badge">${a}</span>` : ""}\n            </div>\n        </div>`;
-                              })(t),
-                            )
-                            .join("")
-                    }\n                </div>\n            </div>\n            <div class="wa-main" id="wa-main">\n                \n        <div class="wa-no-conv">\n            <i class="ph ph-whatsapp-logo" style="font-size:72px;opacity:.1;color:#25D366;"></i>\n            <p style="color:var(--text-muted);margin-top:16px;font-size:15px;">Seleziona una conversazione</p>\n        </div>\n            </div>\n        </div>`),
+                    ((a.innerHTML = `\n        <div class="wa-page">\n            <div class="wa-sidebar">\n                <div class="wa-sidebar-header">\n                    <div class="wa-sidebar-title">\n                        <i class="ph ph-whatsapp-logo" style="color:#25D366;font-size:22px;"></i>\n                        <h2>WhatsApp</h2>\n                    </div>\n                    <span class="wa-sidebar-sub">Inbox messaggi</span>\n                </div>\n                <div class="wa-conv-list" id="wa-conv-list">\n                    ${0 === e.length
+                      ? '<div class="wa-empty-list">\n                               <i class="ph ph-chat-circle-dots" style="font-size:36px;opacity:.2;"></i>\n                               <p>Nessun messaggio ricevuto</p>\n                           </div>'
+                      : e
+                        .map((t) =>
+                          (function (t) {
+                            const e = n === t.from_phone,
+                              a = parseInt(t.unread_count) || 0,
+                              s = t.display_name || r(t.from_phone),
+                              i = t.last_body
+                                ? t.last_body.length > 42
+                                  ? t.last_body.slice(0, 42) + "…"
+                                  : t.last_body
+                                : "",
+                              o = t.last_message_at
+                                ? new Date(
+                                  t.last_message_at,
+                                ).toLocaleTimeString("it-IT", {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })
+                                : "",
+                              c = s
+                                .split(" ")
+                                .map((t) => t[0])
+                                .slice(0, 2)
+                                .join("")
+                                .toUpperCase();
+                            return `\n        <div class="wa-conv-item ${e ? "active" : ""} ${a > 0 ? "has-unread" : ""}"\n             data-phone="${Utils.escapeHtml(t.from_phone)}" role="button" tabindex="0">\n            <div class="wa-avatar">${Utils.escapeHtml(c)}</div>\n            <div class="wa-conv-info">\n                <span class="wa-conv-name">${Utils.escapeHtml(s)}</span>\n                <span class="wa-conv-preview">${Utils.escapeHtml(i)}</span>\n            </div>\n            <div class="wa-conv-meta">\n                <span class="wa-conv-time">${o}</span>\n                ${a > 0 ? `<span class="wa-unread-badge">${a}</span>` : ""}\n            </div>\n        </div>`;
+                          })(t),
+                        )
+                        .join("")
+                      }\n                </div>\n            </div>\n            <div class="wa-main" id="wa-main">\n                \n        <div class="wa-no-conv">\n            <i class="ph ph-whatsapp-logo" style="font-size:72px;opacity:.1;color:#25D366;"></i>\n            <p style="color:var(--text-muted);margin-top:16px;font-size:15px;">Seleziona una conversazione</p>\n        </div>\n            </div>\n        </div>`),
                       (function (e) {
                         (e.querySelector("#wa-conv-list")?.addEventListener(
                           "click",

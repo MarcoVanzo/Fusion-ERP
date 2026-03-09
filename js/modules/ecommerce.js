@@ -61,10 +61,10 @@ const Ecommerce = (() => {
                 const e = await a(t.immagineBase64);
                 e !== t.immagineBase64 &&
                   ((t.immagineBase64 = e),
-                  (t.immagineMimeType = "image/png"),
-                  await EcommerceDB.saveArticolo(t),
-                  n++);
-              } catch (e) {}
+                    (t.immagineMimeType = "image/png"),
+                    await EcommerceDB.saveArticolo(t),
+                    n++);
+              } catch (e) { }
           if (n > 0) {
             console.log(`NanoBanana v2: upgraded ${n} legacy images.`);
             const e = document.getElementById("ec-panel-articles");
@@ -142,8 +142,8 @@ const Ecommerce = (() => {
   }
   function r(e) {
     const t = e.immagineBase64
-        ? `<img class="ec-card-img" src="${e.immagineBase64}" alt="${Utils.escapeHtml(e.nome)}" loading="lazy">`
-        : '<div class="ec-card-img-placeholder"><i class="ph ph-image"></i></div>',
+      ? `<img class="ec-card-img" src="${e.immagineBase64}" alt="${Utils.escapeHtml(e.nome)}" loading="lazy">`
+      : '<div class="ec-card-img-placeholder"><i class="ph ph-image"></i></div>',
       n = e.disponibile
         ? '<span class="ec-badge-disponibile">● Disponibile</span>'
         : '<span class="ec-badge-non-disponibile">● Non Disponibile</span>';
@@ -231,10 +231,10 @@ const Ecommerce = (() => {
             e
               ? ((s = e), (l = "image/jpeg"))
               : UI.toast(
-                  "Impossibile scaricare l'immagine dall'URL (CORS o URL non valido).",
-                  "warning",
-                  4e3,
-                );
+                "Impossibile scaricare l'immagine dall'URL (CORS o URL non valido).",
+                "warning",
+                4e3,
+              );
           }
           const p = document.getElementById("ec-f-save");
           ((p.disabled = !0), (p.textContent = "Salvataggio..."));
@@ -244,7 +244,7 @@ const Ecommerce = (() => {
                 id: n ? e.id : void 0,
                 nome: r,
                 prezzo:
-                  parseFloat(document.getElementById("ec-f-prezzo").value) || 0,
+                  parseFloat(document.getElementById("ec-f-prezzo")?.value.replace(",", ".")) || 0,
                 categoria: document
                   .getElementById("ec-f-categoria")
                   .value.trim(),
@@ -339,12 +339,12 @@ const Ecommerce = (() => {
                             o = null;
                           (e.immagineUrl &&
                             ((t = await EcommerceDB.urlToBase64(e.immagineUrl)),
-                            t && (t = await a(t)),
-                            (o = t
-                              ? t.startsWith("data:image/png")
-                                ? "image/png"
-                                : "image/jpeg"
-                              : null)),
+                              t && (t = await a(t)),
+                              (o = t
+                                ? t.startsWith("data:image/png")
+                                  ? "image/png"
+                                  : "image/jpeg"
+                                : null)),
                             s++);
                           const l = Math.round((s / r) * 100);
                           ((n.style.width = l + "%"),
@@ -398,26 +398,26 @@ const Ecommerce = (() => {
           (function (t, a) {
             let i = "all";
             const o = () =>
-                "all" === i
-                  ? a
-                  : a.filter(
-                      (e) =>
-                        ((e) => {
-                          const t = String(e.statoInterno || "").toLowerCase();
-                          if (t && "da definire" !== t) return t;
-                          const n = String(e.statoForms || "").toLowerCase();
-                          return "pagato" === n || "non pagato" === n
-                            ? n
-                            : "da definire";
-                        })(e) === i,
-                    ),
+              "all" === i
+                ? a
+                : a.filter(
+                  (e) =>
+                    ((e) => {
+                      const t = String(e.statoInterno || "").toLowerCase();
+                      if (t && "da definire" !== t) return t;
+                      const n = String(e.statoForms || "").toLowerCase();
+                      return "pagato" === n || "non pagato" === n
+                        ? n
+                        : "da definire";
+                    })(e) === i,
+                ),
               r = (e) =>
                 e
                   .map((e) => {
                     let t = e.statoInterno;
                     if (
                       ((t && "da definire" !== t.toLowerCase()) || (t = null),
-                      !t && e.statoForms)
+                        !t && e.statoForms)
                     ) {
                       const n = String(e.statoForms).toLowerCase();
                       ("pagato" !== n && "non pagato" !== n) || (t = n);
@@ -432,25 +432,25 @@ const Ecommerce = (() => {
                             : '<span class="ec-badge-pending">⚪ Da definire</span>';
                     var a;
                     const i = e.dataOrdine
-                        ? new Date(e.dataOrdine).toLocaleDateString("it-IT", {
-                            day: "2-digit",
-                            month: "short",
-                            year: "numeric",
-                          })
-                        : "—",
+                      ? new Date(e.dataOrdine).toLocaleDateString("it-IT", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      })
+                      : "—",
                       o =
                         e.totale > 0
                           ? e.totale.toLocaleString("it-IT", {
-                              minimumFractionDigits: 2,
-                            }) + " €"
+                            minimumFractionDigits: 2,
+                          }) + " €"
                           : "—",
                       r =
                         e.articoli ||
                         (e.orderSummary
                           ? e.orderSummary
-                              .replace(/<[^>]+>/g, " ")
-                              .replace(/\s+/g, " ")
-                              .trim()
+                            .replace(/<[^>]+>/g, " ")
+                            .replace(/\s+/g, " ")
+                            .trim()
                           : "") ||
                         "—",
                       c = Array.isArray(e._campiDisponibili)
@@ -576,11 +576,11 @@ const Ecommerce = (() => {
               { signal: e.signal },
             ),
             o &&
-              o.addEventListener(
-                "click",
-                () => Router.navigate("ecommerce-orders"),
-                { signal: e.signal },
-              ),
+            o.addEventListener(
+              "click",
+              () => Router.navigate("ecommerce-orders"),
+              { signal: e.signal },
+            ),
             "articles" === t ? i() : d());
         })());
     },

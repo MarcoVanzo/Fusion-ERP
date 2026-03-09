@@ -5,14 +5,14 @@ const EcommerceDB = (() => {
     return (
       t ||
       ((t = new Dexie("FusionERP_Ecommerce")),
-      t
-        .version(1)
-        .stores({
-          articoli: "++id, nome, categoria, disponibile, importatoIl",
-          statiOrdini: "ordineId, stato, aggiornatoIl",
-          metadati: "chiave",
-        }),
-      t)
+        t
+          .version(1)
+          .stores({
+            articoli: "++id, nome, categoria, disponibile, importatoIl",
+            statiOrdini: "ordineId, stato, aggiornatoIl",
+            metadati: "chiave",
+          }),
+        t)
     );
   }
   return {
@@ -60,7 +60,12 @@ const EcommerceDB = (() => {
       return n().metadati.put({ chiave: t, valore: r });
     },
     urlToBase64: async function (t) {
+      if (!t) return null;
       try {
+        const urlObj = new URL(t);
+        if (["localhost", "127.0.0.1", "0.0.0.0", "169.254.169.254"].includes(urlObj.hostname) || urlObj.hostname.endsWith(".local") || urlObj.hostname.endsWith(".internal")) {
+          throw new Error("Blocked internal domain.");
+        }
         const n = await fetch(t, { mode: "cors", cache: "no-store" });
         if (!n.ok) return null;
         const r = await n.blob();
