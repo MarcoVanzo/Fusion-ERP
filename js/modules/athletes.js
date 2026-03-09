@@ -1292,51 +1292,51 @@ const Athletes = (() => {
   }
   return {
     destroy: function () {
-      (e.abort(), (e = new AbortController()));
+      (moduleAbortController.abort(), (moduleAbortController = new AbortController()));
     },
     init: async function () {
-      const e = document.getElementById("app");
-      if (!e) return;
-      (UI.loading(!0), (e.innerHTML = UI.skeletonPage()));
-      const n = App.getUser(),
-        i = Router.getCurrentRoute(),
-        r = {
+      const appEl = document.getElementById("app");
+      if (!appEl) return;
+      (UI.loading(!0), (appEl.innerHTML = UI.skeletonPage()));
+      const currentUser = App.getUser(),
+        currentRoute = Router.getCurrentRoute(),
+        routeMap = {
           "athlete-profile": "anagrafica",
           "athlete-payments": "pagamenti",
           "athlete-metrics": "metrics",
           "athlete-documents": "documenti",
         };
       try {
-        if ("atleta" === n?.role && currentUser.athleteId)
+        if ("atleta" === currentUser?.role && currentUser.athleteId)
           return (
-            (a = await Store.get("teams", "athletes")),
-            (s = currentUser.athleteId),
+            (globalTeamsList = await Store.get("teams", "athletes")),
+            (globalSelectedId = currentUser.athleteId),
             void (await renderAthleteProfile(
               currentUser.athleteId,
               "anagrafica",
             ))
           );
         if (
-          (([a, t] = await Promise.all([
+          (([globalTeamsList, globalAthletesList] = await Promise.all([
             Store.get("teams", "athletes"),
             Store.get("listLight", "athletes"),
           ])),
-            r[i])
+            routeMap[currentRoute])
         )
           return (
             (globalActiveTab = routeMap[currentRoute]),
             (globalSelectedId = null),
             void renderMainLayout()
           );
-        const e = Router.getParams();
-        e.id
+        const params = Router.getParams();
+        params.id
           ? ((globalSelectedId = params.id),
             await renderAthleteProfile(params.id, "anagrafica"))
           : ((globalSelectedId = null),
             (globalActiveTab = "anagrafica"),
             renderMainLayout());
       } catch (err) {
-        ((e.innerHTML = Utils.emptyState(
+        ((appEl.innerHTML = Utils.emptyState(
           "Errore nel caricamento atleti",
           err.message + (err.stack ? ` [${err.stack.split("\n")[0]}]` : ""),
         )),
