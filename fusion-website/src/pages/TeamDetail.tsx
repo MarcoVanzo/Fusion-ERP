@@ -4,8 +4,9 @@ import { ChevronLeft } from 'lucide-react';
 
 interface Athlete {
     id: string;
-    first_name: string;
-    last_name: string;
+    full_name: string;
+    first_name?: string;
+    last_name?: string;
     role: string;
     jersey_number?: number;
     height_cm?: number;
@@ -137,7 +138,7 @@ const TeamDetail = () => {
                                         {/* Background Texture/Image */}
                                         <div className="absolute inset-0 z-0">
                                             {photoUrl ? (
-                                                <img src={photoUrl} className="w-full h-full object-cover opacity-90 group-hover:scale-110 group-hover:opacity-100 transition-all duration-500" alt={athlete.last_name} />
+                                                <img src={photoUrl} className="w-full h-full object-cover opacity-90 group-hover:scale-110 group-hover:opacity-100 transition-all duration-500" alt={athlete.full_name || athlete.last_name} />
                                             ) : (
                                                 <div className="w-full h-full flex flex-col items-center justify-center bg-zinc-950">
                                                     <span className="font-heading text-9xl text-zinc-800">F</span>
@@ -153,8 +154,18 @@ const TeamDetail = () => {
                                                 {athlete.role || 'ROLE TBD'}
                                             </div>
                                             <h3 className="font-heading text-3xl leading-none text-white uppercase group-hover:text-brand-500 group-hover:drop-shadow-[0_0_15px_rgba(214,90,134,0.8)] transition-all duration-300">
-                                                {athlete.first_name}<br />
-                                                <span className="text-4xl">{athlete.last_name}</span>
+                                                {(() => {
+                                                    const nameObj = athlete.full_name || athlete.first_name || '';
+                                                    const parts = nameObj.split(' ');
+                                                    const first = parts.shift() || '';
+                                                    const last = parts.join(' ') || athlete.last_name || '';
+                                                    return (
+                                                        <>
+                                                            {first}<br />
+                                                            <span className="text-4xl">{last}</span>
+                                                        </>
+                                                    );
+                                                })()}
                                             </h3>
 
                                             {(athlete.height_cm || athlete.weight_kg) && (
