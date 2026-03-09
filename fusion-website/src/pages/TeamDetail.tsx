@@ -33,7 +33,7 @@ const TeamDetail = () => {
                 setLoading(true);
 
                 // Fetch Teams for the header name
-                const teamRes = await fetch('/ERP/api/?module=athletes&action=teams');
+                const teamRes = await fetch('https://www.fusionteamvolley.it/ERP/api/router.php?module=athletes&action=teams');
                 const teamData = await teamRes.json();
                 if (teamData.status === 'success') {
                     const t = teamData.data.find((t: any) => t.id.toString() === id);
@@ -41,7 +41,7 @@ const TeamDetail = () => {
                 }
 
                 // Fetch Athletes
-                const rosterRes = await fetch(`/ERP/api/?module=athletes&action=getPublicTeamAthletes&teamId=${id}`);
+                const rosterRes = await fetch(`https://www.fusionteamvolley.it/ERP/api/router.php?module=athletes&action=getPublicTeamAthletes&teamId=${id}`);
                 const rosterData = await rosterRes.json();
                 if (rosterData.status === 'success') {
                     setAthletes(rosterData.data || []);
@@ -49,7 +49,7 @@ const TeamDetail = () => {
 
                 // Fetch Staff
                 // Note: we might need to filter staff by team if the API returns all
-                const staffRes = await fetch(`/ERP/api/?module=staff&action=getPublicStaff`);
+                const staffRes = await fetch(`https://www.fusionteamvolley.it/ERP/api/router.php?module=staff&action=getPublicStaff`);
                 const staffData = await staffRes.json();
                 if (staffData.status === 'success') {
                     // Assuming staff logic can map to teams. Showing all for mock if not explicitly mapped.

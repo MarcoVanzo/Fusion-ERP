@@ -12,7 +12,7 @@ import Outseason from './pages/Outseason';
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/demo">
       <div className="flex flex-col min-h-screen">
         <Navbar />
         <main className="flex-grow pt-[96px] bg-zinc-950"> {/* Adjusted padding for 24 h-24 navbar */}

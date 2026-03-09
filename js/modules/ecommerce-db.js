@@ -42,9 +42,15 @@ const EcommerceDB = (() => {
       });
       const toAdd = [],
         toUpdate = [];
+      const uniqueItems = new Map();
       t.forEach((item) => {
         const itemKey = item.nome ? item.nome.trim().toLowerCase() : "";
-        if (itemKey && nameMap.has(itemKey)) {
+        if (itemKey) {
+          uniqueItems.set(itemKey, item);
+        }
+      });
+      uniqueItems.forEach((item, itemKey) => {
+        if (nameMap.has(itemKey)) {
           const matched = nameMap.get(itemKey);
           toUpdate.push({ ...matched, ...item, id: matched.id, modificatoIl: now });
         } else {

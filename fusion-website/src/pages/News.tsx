@@ -20,7 +20,7 @@ const News = () => {
     useEffect(() => {
         const fetchNews = async () => {
             try {
-                const res = await fetch('/ERP/api/?module=website&action=getPublicNews&limit=50');
+                const res = await fetch('https://www.fusionteamvolley.it/ERP/api/router.php?module=website&action=getPublicNews&limit=50');
                 const data = await res.json();
                 if (data.status === 'success') {
                     setNews(data.data);

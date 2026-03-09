@@ -45,13 +45,13 @@ const Ecommerce = (() => {
     if (n) {
       !(async function () {
         try {
-          if (!await EcommerceDB.getMeta("dedupArticles_v1")) {
+          if (!await EcommerceDB.getMeta("dedupArticles_v2")) {
             const dedupCount = await EcommerceDB.deduplicateArticoli();
             if (dedupCount > 0) {
               const e = document.getElementById("ec-panel-articles");
               e && "articles" === t && o(e);
             }
-            await EcommerceDB.setMeta("dedupArticles_v1", !0);
+            await EcommerceDB.setMeta("dedupArticles_v2", !0);
           }
           if (await EcommerceDB.getMeta("nanoBananaUpgradeAggressivo_v2"))
             return;
