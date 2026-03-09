@@ -27,7 +27,7 @@ const ArticleDetail = () => {
                 const res = await fetch(`https://www.fusionteamvolley.it/ERP/api/router.php?module=website&action=getArticle&id_or_slug=${slug}`);
                 const data = await res.json();
 
-                if (data.status === 'success') {
+                if (data.status === 'success' || data.success === true) {
                     setArticle(data.data);
                 } else {
                     setError(data.message || 'Articolo non trovato.');

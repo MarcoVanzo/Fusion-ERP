@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Trophy, ChevronRight } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Trophy, ChevronRight, Filter } from 'lucide-react';
 
 interface Match {
     id: number;
@@ -16,6 +16,7 @@ interface Match {
 const Results = () => {
     const [matches, setMatches] = useState<Match[]>([]);
     const [loading, setLoading] = useState(true);
+    const [selectedChamp, setSelectedChamp] = useState<string>('TUTTI');
 
     useEffect(() => {
         // Fetch real FIPAV synced matches from the ERP RecentResults endpoint
@@ -23,7 +24,7 @@ const Results = () => {
             try {
                 const res = await fetch('https://www.fusionteamvolley.it/ERP/api/router.php?module=results&action=getPublicRecentResults&limit=15');
                 const data = await res.json();
-                if (data.status === 'success') {
+                if (data.status === 'success' || data.success === true) {
                     // Extract matches from data.data.matches or data.data depending on structure
                     const matchesArray = data.data.matches ? data.data.matches : data.data;
                     setMatches(matchesArray || []);
@@ -37,10 +38,22 @@ const Results = () => {
         fetchMatches();
     }, []);
 
-    // The backend `recentResults` returns played matches (past). 
-    // If we want future matches we would call a different endpoint or modify the backend.
-    // Assuming backend returns past matches for now, we'll display them under "Ultime Partite".
-    const pastMatches = matches;
+    // Extract unique championships
+    const championships = useMemo(() => {
+        const set = new Set<string>();
+        matches.forEach(m => {
+            if (m.championship_label) set.add(m.championship_label);
+        });
+        return ['TUTTI', ...Array.from(set)];
+    }, [matches]);
+
+    // Filter matches by selected championship
+    const filteredMatches = useMemo(() => {
+        if (selectedChamp === 'TUTTI') return matches;
+        return matches.filter(m => m.championship_label === selectedChamp);
+    }, [matches, selectedChamp]);
+
+    const pastMatches = filteredMatches;
 
     return (
         <div className="bg-zinc-950 min-h-screen pb-24 font-sans text-white">
@@ -66,11 +79,32 @@ const Results = () => {
                 {/* Left Column: Match Lists */}
                 <div className="lg:col-span-2 space-y-16">
 
-                    {/* Ultimi Risultati */}
+                    {/* Ultimi Risultati Header & Filter */}
                     <section>
-                        <div className="flex items-center gap-4 mb-8 border-b-2 border-zinc-800 pb-4">
-                            <Trophy className="text-brand-500" size={32} />
-                            <h2 className="text-4xl font-heading text-white tracking-tight">ULTIMI RISULTATI</h2>
+                        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 border-b-2 border-zinc-800 pb-4 gap-4">
+                            <div className="flex items-center gap-4">
+                                <Trophy className="text-brand-500" size={32} />
+                                <h2 className="text-4xl font-heading text-white tracking-tight">ULTIMI RISULTATI</h2>
+                            </div>
+
+                            {/* Filter Dropdown */}
+                            {championships.length > 1 && (
+                                <div className="flex items-center gap-3 bg-zinc-900 border border-zinc-700 px-4 py-2 clip-diagonal w-full md:w-auto">
+                                    <Filter size={20} className="text-brand-500" />
+                                    <select
+                                        value={selectedChamp}
+                                        onChange={(e) => setSelectedChamp(e.target.value)}
+                                        className="bg-transparent border-none text-white font-subheading tracking-wider focus:outline-none focus:ring-0 cursor-pointer w-full appearance-none"
+                                        aria-label="Filtra per campionato"
+                                    >
+                                        {championships.map((champ: string) => (
+                                            <option key={champ} value={champ} className="bg-zinc-900 text-white">
+                                                {champ === 'TUTTI' ? 'TUTTI I CAMPIONATI' : champ}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
                         </div>
 
                         {loading ? (
@@ -83,7 +117,7 @@ const Results = () => {
                             </div>
                         ) : (
                             <div className="space-y-6">
-                                {pastMatches.map(match => {
+                                {pastMatches.map((match: Match) => {
                                     const isFusionHome = match.home.toLowerCase().includes('fusion');
                                     const isFusionAway = match.away.toLowerCase().includes('fusion');
                                     // Determina se Fusion ha vinto

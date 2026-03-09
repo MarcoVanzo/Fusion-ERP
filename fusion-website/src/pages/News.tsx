@@ -22,7 +22,7 @@ const News = () => {
             try {
                 const res = await fetch('https://www.fusionteamvolley.it/ERP/api/router.php?module=website&action=getPublicNews&limit=50');
                 const data = await res.json();
-                if (data.status === 'success') {
+                if (data.status === 'success' || data.success === true) {
                     setNews(data.data);
                 }
             } catch (error) {

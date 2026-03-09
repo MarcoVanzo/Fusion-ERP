@@ -21,7 +21,7 @@ const Shop = () => {
             try {
                 const res = await fetch('https://www.fusionteamvolley.it/ERP/api/router.php?module=ecommerce&action=getPublicShop');
                 const data = await res.json();
-                if (data.status === 'success' && data.data.products) {
+                if ((data.status === 'success' || data.success === true) && data.data.products) {
                     const prods = data.data.products;
                     setProducts(prods);
 

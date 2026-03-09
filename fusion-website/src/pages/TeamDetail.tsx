@@ -35,7 +35,7 @@ const TeamDetail = () => {
                 // Fetch Teams for the header name
                 const teamRes = await fetch('https://www.fusionteamvolley.it/ERP/api/router.php?module=athletes&action=teams');
                 const teamData = await teamRes.json();
-                if (teamData.status === 'success') {
+                if (teamData.status === 'success' || teamData.success === true) {
                     const t = teamData.data.find((t: any) => t.id.toString() === id);
                     if (t) setTeamName(t.name);
                 }
@@ -43,7 +43,7 @@ const TeamDetail = () => {
                 // Fetch Athletes
                 const rosterRes = await fetch(`https://www.fusionteamvolley.it/ERP/api/router.php?module=athletes&action=getPublicTeamAthletes&teamId=${id}`);
                 const rosterData = await rosterRes.json();
-                if (rosterData.status === 'success') {
+                if (rosterData.status === 'success' || rosterData.success === true) {
                     setAthletes(rosterData.data || []);
                 }
 
@@ -51,7 +51,7 @@ const TeamDetail = () => {
                 // Note: we might need to filter staff by team if the API returns all
                 const staffRes = await fetch(`https://www.fusionteamvolley.it/ERP/api/router.php?module=staff&action=getPublicStaff`);
                 const staffData = await staffRes.json();
-                if (staffData.status === 'success') {
+                if (staffData.status === 'success' || staffData.success === true) {
                     // Assuming staff logic can map to teams. Showing all for mock if not explicitly mapped.
                     setStaff(staffData.data ? staffData.data.slice(0, 3) : []); // Mocking 3 staff members
                 }

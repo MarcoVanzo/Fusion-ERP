@@ -18,7 +18,7 @@ const Roster = () => {
             try {
                 const res = await fetch('https://www.fusionteamvolley.it/ERP/api/router.php?module=athletes&action=getPublicTeams');
                 const data = await res.json();
-                if (data.status === 'success') {
+                if (data.status === 'success' || data.success === true) {
                     setTeams(data.data);
                 }
             } catch (error) {
