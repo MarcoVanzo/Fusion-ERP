@@ -185,7 +185,13 @@ def deploy_files_via_ftp():
 
             # Calculate the corresponding remote path
             rel_path = os.path.relpath(root, '.')
-            remote_sub_dir = base_remote_dir if rel_path == '.' else f"{base_remote_dir}/{rel_path}".replace('\\', '/')
+            
+            # Map fusion-website/dist to the /demo folder in production
+            if rel_path == 'fusion-website/dist' or rel_path.startswith('fusion-website/dist/'):
+                sub_rel = rel_path.replace('fusion-website/dist', '').lstrip('/\\')
+                remote_sub_dir = '/demo' if not sub_rel else f"/demo/{sub_rel}".replace('\\', '/')
+            else:
+                remote_sub_dir = base_remote_dir if rel_path == '.' else f"{base_remote_dir}/{rel_path}".replace('\\', '/')
 
             # Lazy-CD: only change remote dir when we actually need to upload something
             dir_prepared: bool = False
