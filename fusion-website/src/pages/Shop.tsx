@@ -2,13 +2,21 @@ import { useState, useEffect, useMemo } from 'react';
 import { ShoppingBag, Star, ExternalLink } from 'lucide-react';
 
 const ScratchTexture = () => {
-    const lines = useMemo(() => {
-        const arr = [];
-        for (let i = 0; i < 400; i++) {
-            const cx = 10 + Math.random() * 80;
-            const cy = 10 + Math.random() * 80;
-            const length = 20 + Math.random() * 60;
-            const angle = -40 + (Math.random() * 20 - 10);
+    const scribblePath = useMemo(() => {
+        let d = "";
+        const numStrokes = 400; // very dense
+        for (let i = 0; i < numStrokes; i++) {
+            const t = 0.05 + (i / numStrokes) * 0.9;
+            const distFromCenter = Math.abs(t - 0.5) * 2;
+            const maxLength = 160;
+            let length = maxLength * (1 - Math.pow(distFromCenter, 1.8));
+            length *= (0.4 + Math.random() * 0.8);
+            if (length < 15) continue;
+
+            const cx = t * 100 + (Math.random() * 14 - 7);
+            const cy = t * 125 + (Math.random() * 16 - 8);
+
+            const angle = -45 + (Math.random() * 14 - 7);
             const rad = angle * Math.PI / 180;
 
             const startX = cx - Math.cos(rad) * (length / 2);
@@ -16,24 +24,15 @@ const ScratchTexture = () => {
             const endX = cx + Math.cos(rad) * (length / 2);
             const endY = cy + Math.sin(rad) * (length / 2);
 
-            const w = 0.5 + Math.random() * 1.5;
-            arr.push(
-                <line key={i} x1={startX} y1={startY} x2={endX} y2={endY}
-                    stroke="white" strokeWidth={w} strokeLinecap="round" />
-            );
+            d += `M ${startX.toFixed(1)},${startY.toFixed(1)} L ${endX.toFixed(1)},${endY.toFixed(1)} `;
         }
-        return arr;
+        return d;
     }, []);
 
     return (
-        <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] pointer-events-none opacity-90 group-hover:drop-shadow-[0_0_20px_rgba(255,20,147,0.7)] group-hover:scale-110 transition-all duration-700 z-0">
-            <g fill="white" opacity="0.95">
-                <path d="M 25 25 Q 50 10 75 25 Q 90 50 75 75 Q 50 90 25 75 Q 10 50 25 25 Z" />
-                <path d="M 30 30 L 70 30 L 75 70 L 30 70 Z" />
-            </g>
-            <g opacity="0.8">
-                {lines}
-            </g>
+        <svg viewBox="0 0 100 125" preserveAspectRatio="xMidYMid slice" className="absolute inset-0 w-full h-full pointer-events-none group-hover:scale-105 transition-all duration-700 z-0 py-8 px-6">
+            <path d={scribblePath} fill="none" stroke="white" strokeWidth="1.2" strokeLinecap="round" opacity="1" />
+            <path d={scribblePath} fill="none" stroke="white" strokeWidth="0.8" strokeLinecap="round" opacity="0.6" transform="translate(1, -2) rotate(1 50 62)" />
         </svg>
     )
 };

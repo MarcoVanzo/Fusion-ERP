@@ -1,19 +1,23 @@
 <?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+// Test API Staff endpoint on production
+$loginUrl = 'https://www.fusionteamvolley.it/ERP/api/?module=auth&action=login';
+$staffUrl = 'https://www.fusionteamvolley.it/ERP/api/?module=staff&action=list';
 
-// Mock Auth
-$_SESSION = ['user_id' => 'USR_admin0001', 'role' => 'admin'];
-require_once __DIR__ . '/api/Shared/Database.php';
+$ch = curl_init();
+curl_setopt($ch, CURLOPT_URL, $loginUrl);
+curl_setopt($ch, CURLOPT_POST, 1);
+curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
+    'email' => 'marcol.vanzo87@gmail.com',
+    'password' => 'xxx' // Use actual password here manually if needed or just use cookie
+]));
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_COOKIEJAR, 'cookies.txt');
+$loginRes = curl_exec($ch);
 
-// We need an access token to trigger the insights correctly
-$db = \FusionERP\Shared\Database::getInstance();
-$token = $db->query("SELECT * FROM meta_tokens LIMIT 1")->fetch(PDO::FETCH_ASSOC);
-if (!$token) {
-    echo "No token in DB.\n";
-} else {
-    echo "Token found for user: " . $token['user_id'] . "\n";
-    $_SESSION['user_id'] = $token['user_id'];
-    $_GET = ['module' => 'social', 'action' => 'insights'];
-    require_once __DIR__ . '/api/router.php';
-}
+curl_setopt($ch, CURLOPT_URL, $staffUrl);
+curl_setopt($ch, CURLOPT_POST, 0);
+$staffRes = curl_exec($ch);
+curl_close($ch);
+
+echo "Login Response: " . substr($loginRes, 0, 100) . "\n";
+echo "Staff Response: " . substr($staffRes, 0, 500) . "\n";
