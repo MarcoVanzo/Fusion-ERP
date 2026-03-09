@@ -156,4 +156,23 @@ class StaffRepository
         $stmt = $this->db->prepare("UPDATE staff_members SET is_deleted = 1 WHERE id = :id AND tenant_id = :tenant_id");
         $stmt->execute([':id' => $id, ':tenant_id' => $tenantId]);
     }
+
+    // ─── Public ───────────────────────────────────────────────────────────────
+    public function getPublicStaffByTeam(string $teamId): array
+    {
+        $tenantId = TenantContext::id();
+        $sql = "SELECT s.id, s.first_name, s.last_name,
+                       CONCAT(s.first_name, ' ', s.last_name) AS full_name,
+                       s.role
+                FROM staff_members s
+                INNER JOIN staff_teams st ON s.id = st.staff_id
+                WHERE s.tenant_id = :tenant_id 
+                  AND s.is_deleted = 0
+                  AND st.team_id = :team_id
+                ORDER BY s.last_name ASC, s.first_name ASC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':tenant_id' => $tenantId, ':team_id' => $teamId]);
+
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
 }

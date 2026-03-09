@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { ShoppingBag, Star, ExternalLink } from 'lucide-react';
+import { Helmet } from 'react-helmet-async';
 
 const ScratchTexture = () => {
     const scribblePath = useMemo(() => {
@@ -81,6 +82,10 @@ const Shop = () => {
 
     return (
         <div className="flex flex-col min-h-screen pb-24 font-sans text-white">
+            <Helmet>
+                <title>Shop Ufficiale - Fusion Team Volley</title>
+                <meta name="description" content="Acquista abbigliamento ufficiale e merchandising del Fusion Team Volley nel nostro Store online." />
+            </Helmet>
             {/* Emotional Header Hero */}
             <section className="relative h-[40vh] min-h-[300px] flex items-center justify-center overflow-hidden mb-12">
                 {/* Background Image */}

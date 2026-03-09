@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ChevronRight, Calendar } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 
 interface NewsArticle {
     id: number;
@@ -72,6 +73,10 @@ const Home = () => {
 
     return (
         <div className="flex flex-col gap-24 pb-20">
+            <Helmet>
+                <title>Home - Fusion Team Volley</title>
+                <meta name="description" content="Scopri le squadre, le news e lo shop ufficiale del Fusion Team Volley." />
+            </Helmet>
             {/* Hero Section */}
             <section className="relative h-[85vh] flex items-center justify-center overflow-hidden">
                 {/* Image Slideshow Background */}
@@ -97,17 +102,17 @@ const Home = () => {
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60vw] bg-brand-primary/40 blur-[150px] rounded-full z-0 mix-blend-screen"></div>
 
                 <div className="relative z-20 text-center px-4 max-w-6xl mx-auto flex flex-col items-center">
-                    <div className="inline-flex items-center gap-3 px-6 py-2 border border-brand-500/50 bg-zinc-950/80 mb-8 clip-diagonal uppercase text-xs font-bold text-brand-500 tracking-[0.2em] backdrop-blur-sm">
+                    <div className="inline-flex items-center gap-3 px-6 py-2 border border-brand-500/50 bg-zinc-950/80 mb-6 clip-diagonal uppercase text-xs font-bold text-brand-500 tracking-[0.2em] backdrop-blur-sm">
                         Settore Giovanile d'Eccellenza
                     </div>
 
-                    <h1 className="font-heading text-6xl md:text-8xl lg:text-[7.5rem] tracking-tighter mb-4 text-white leading-[0.85] drop-shadow-2xl">
+                    <h1 className="font-heading text-5xl md:text-8xl lg:text-[7.5rem] tracking-tighter mb-6 text-white leading-[0.85] drop-shadow-2xl">
                         FUSION TEAM
                         <br />
                         <span className="text-brand-500 drop-shadow-[0_0_25px_rgba(255,20,147,0.8)]">VOLLEY</span>
                     </h1>
 
-                    <p className="font-subheading text-2xl md:text-3xl text-zinc-200 mt-6 mb-12 max-w-3xl leading-snug drop-shadow-md">
+                    <p className="font-subheading text-lg sm:text-2xl md:text-3xl text-zinc-200 mt-2 mb-16 max-w-3xl leading-relaxed drop-shadow-md">
                         800 ATLETE. UN UNICO GRANDE SOGNO. IL VOLLEY COME NON L'HAI MAI VISTO.
                     </p>
 
@@ -158,18 +163,18 @@ const Home = () => {
 
                             return (
                                 <div key={match.id} className="group relative flex flex-col items-center justify-between p-4 bg-zinc-900 clip-diagonal border border-zinc-800 hover:border-brand-500 hover:bg-zinc-800 transition-colors">
-                                    <div className="w-full flex justify-between items-center mb-3">
+                                    <div className="w-full flex justify-between items-center mb-4">
                                         <div className="font-subheading text-brand-500 text-xs tracking-widest">{match.date}</div>
                                         <div className="text-zinc-500 font-subheading text-[10px] uppercase truncate max-w-[60%]">{match.championship_label}</div>
                                     </div>
-                                    <div className="flex items-center w-full gap-3">
-                                        <div className={`text-right font-heading leading-tight text-sm sm:text-xl w-2/5 flex-grow break-words whitespace-normal ${isFusionHome ? 'text-white' : 'text-zinc-400'}`}>
+                                    <div className="flex items-center justify-between w-full gap-4">
+                                        <div className={`text-right font-heading leading-tight text-sm sm:text-base w-1/3 truncate ${isFusionHome ? 'text-white' : 'text-zinc-400'}`} title={match.home}>
                                             {match.home}
                                         </div>
-                                        <div className="flex items-center justify-center min-w-[80px] h-10 bg-zinc-950 border border-zinc-800 clip-diagonal font-heading text-xl tracking-widest text-brand-500">
+                                        <div className="flex items-center justify-center min-w-[100px] h-12 bg-zinc-950 border border-zinc-800 clip-diagonal font-heading text-4xl sm:text-5xl tracking-widest text-brand-500 px-4">
                                             {match.sets_home} - {match.sets_away}
                                         </div>
-                                        <div className={`text-left font-heading leading-tight text-sm sm:text-xl w-2/5 flex-grow break-words whitespace-normal ${isFusionAway ? 'text-white' : 'text-zinc-400'}`}>
+                                        <div className={`text-left font-heading leading-tight text-sm sm:text-base w-1/3 truncate ${isFusionAway ? 'text-white' : 'text-zinc-400'}`} title={match.away}>
                                             {match.away}
                                         </div>
                                     </div>

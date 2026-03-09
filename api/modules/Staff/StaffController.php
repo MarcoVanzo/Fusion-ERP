@@ -145,6 +145,12 @@ class StaffController
     public function getPublicStaff(): void
     {
         // Nessun controllo auth per la vista pubblica
-        Response::success($this->repo->listStaff());
+        $teamId = filter_input(INPUT_GET, 'teamId', FILTER_SANITIZE_SPECIAL_CHARS);
+        if ($teamId) {
+            Response::success($this->repo->getPublicStaffByTeam($teamId));
+        }
+        else {
+            Response::success($this->repo->listStaff());
+        }
     }
 }

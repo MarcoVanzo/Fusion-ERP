@@ -49,12 +49,10 @@ const TeamDetail = () => {
                 }
 
                 // Fetch Staff
-                // Note: we might need to filter staff by team if the API returns all
-                const staffRes = await fetch(`https://www.fusionteamvolley.it/ERP/api/router.php?module=staff&action=getPublicStaff`);
+                const staffRes = await fetch(`https://www.fusionteamvolley.it/ERP/api/router.php?module=staff&action=getPublicStaff&teamId=${id}`);
                 const staffData = await staffRes.json();
                 if (staffData.status === 'success' || staffData.success === true) {
-                    // Assuming staff logic can map to teams. Showing all for mock if not explicitly mapped.
-                    setStaff(staffData.data ? staffData.data.slice(0, 3) : []); // Mocking 3 staff members
+                    setStaff(staffData.data || []);
                 }
             } catch (err) {
                 console.error('API Error', err);
@@ -138,7 +136,7 @@ const TeamDetail = () => {
                                         {/* Background Texture/Image */}
                                         <div className="absolute inset-0 z-0">
                                             {photoUrl ? (
-                                                <img src={photoUrl} className="w-full h-full object-cover opacity-90 group-hover:scale-110 group-hover:opacity-100 transition-all duration-500" alt={athlete.full_name || athlete.last_name} />
+                                                <img src={photoUrl} className="w-full h-full object-cover opacity-100 group-hover:scale-110 transition-all duration-500" alt={athlete.full_name || athlete.last_name} />
                                             ) : (
                                                 <div className="w-full h-full flex flex-col items-center justify-center bg-zinc-950">
                                                     <span className="font-heading text-9xl text-zinc-800">F</span>
@@ -146,7 +144,7 @@ const TeamDetail = () => {
                                             )}
                                         </div>
 
-                                        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent z-10"></div>
+                                        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent z-10"></div>
 
                                         {/* Player Info - Bottom Pinned */}
                                         <div className="absolute bottom-0 left-0 w-full p-6 z-20 flex flex-col justify-end">
