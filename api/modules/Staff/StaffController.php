@@ -136,4 +136,11 @@ class StaffController
         Audit::log('DELETE', 'staff_members', $id, $before, null);
         Response::success(['message' => 'Membro staff rimosso']);
     }
+
+    // ─── PUBLIC ENDPOINTS FOR WEBSITE ──────────────────────────────────────────────
+    public function getPublicStaff(): void
+    {
+        // Nessun controllo auth per la vista pubblica
+        Response::success($this->repo->listStaff());
+    }
 }

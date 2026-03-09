@@ -19,7 +19,7 @@ const Shop = () => {
     useEffect(() => {
         const fetchProducts = async () => {
             try {
-                const res = await fetch('/ERP/api/?module=ecommerce&action=scrapeShop');
+                const res = await fetch('/ERP/api/?module=ecommerce&action=getPublicShop');
                 const data = await res.json();
                 if (data.status === 'success' && data.data.products) {
                     const prods = data.data.products;

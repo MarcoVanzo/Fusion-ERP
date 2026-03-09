@@ -41,7 +41,7 @@ const TeamDetail = () => {
                 }
 
                 // Fetch Athletes
-                const rosterRes = await fetch(`/ERP/api/?module=athletes&action=listLight&teamId=${id}`);
+                const rosterRes = await fetch(`/ERP/api/?module=athletes&action=getPublicTeamAthletes&teamId=${id}`);
                 const rosterData = await rosterRes.json();
                 if (rosterData.status === 'success') {
                     setAthletes(rosterData.data || []);
@@ -49,7 +49,7 @@ const TeamDetail = () => {
 
                 // Fetch Staff
                 // Note: we might need to filter staff by team if the API returns all
-                const staffRes = await fetch(`/ERP/api/?module=staff&action=list`);
+                const staffRes = await fetch(`/ERP/api/?module=staff&action=getPublicStaff`);
                 const staffData = await staffRes.json();
                 if (staffData.status === 'success') {
                     // Assuming staff logic can map to teams. Showing all for mock if not explicitly mapped.

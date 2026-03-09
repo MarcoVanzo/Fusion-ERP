@@ -16,7 +16,7 @@ const Roster = () => {
     useEffect(() => {
         const fetchTeams = async () => {
             try {
-                const res = await fetch('/ERP/api/?module=athletes&action=teams');
+                const res = await fetch('/ERP/api/?module=athletes&action=getPublicTeams');
                 const data = await res.json();
                 if (data.status === 'success') {
                     setTeams(data.data);

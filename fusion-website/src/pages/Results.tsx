@@ -21,7 +21,7 @@ const Results = () => {
         // Fetch real FIPAV synced matches from the ERP RecentResults endpoint
         const fetchMatches = async () => {
             try {
-                const res = await fetch('/ERP/api/?module=results&action=recentResults&limit=15');
+                const res = await fetch('/ERP/api/?module=results&action=getPublicRecentResults&limit=15');
                 const data = await res.json();
                 if (data.status === 'success') {
                     setMatches(data.data.matches || []);
