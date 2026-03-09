@@ -81,18 +81,24 @@ const Home = () => {
             <section className="relative h-[85vh] flex items-center justify-center overflow-hidden">
                 {/* Image Slideshow Background */}
                 <div className="absolute inset-0 z-0">
-                    {[1, 2, 3].map((num, idx) => (
-                        <div
-                            key={num}
-                            className="absolute inset-0 transition-opacity duration-1000 ease-in-out"
-                            style={{
-                                backgroundImage: `url('/demo/assets/hero-${num}.jpg')`,
-                                backgroundSize: 'cover',
-                                backgroundPosition: 'center 30%', // focal point slightly higher
-                                opacity: currentSlide === idx ? 1 : 0
-                            }}
-                        />
-                    ))}
+                    {[1, 2, 3].map((num, idx) => {
+                        let bgPosition = 'center 30%';
+                        if (num === 1) bgPosition = 'center 0%';
+                        if (num === 2) bgPosition = 'center 0%';
+
+                        return (
+                            <div
+                                key={num}
+                                className="absolute inset-0 transition-opacity duration-1000 ease-in-out"
+                                style={{
+                                    backgroundImage: `url('/demo/assets/hero-${num}.jpg')`,
+                                    backgroundSize: 'cover',
+                                    backgroundPosition: bgPosition,
+                                    opacity: currentSlide === idx ? 1 : 0
+                                }}
+                            />
+                        );
+                    })}
                 </div>
 
                 {/* Dark Background Overlay & Fuchsia Glow */}
