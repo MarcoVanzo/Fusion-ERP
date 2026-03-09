@@ -253,7 +253,7 @@ const Ecommerce = (() => {
                 id: n ? e.id : void 0,
                 nome: r,
                 prezzo:
-                  parseFloat(document.getElementById("ec-f-prezzo")?.value.replace(",", ".")) || 0,
+                  parseFloat(document.getElementById("ec-f-prezzo")?.value.replace(/[^0-9,.]/g, "").replace(",", ".")) || 0,
                 categoria: document
                   .getElementById("ec-f-categoria")
                   .value.trim(),

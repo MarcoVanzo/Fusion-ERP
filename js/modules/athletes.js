@@ -77,24 +77,18 @@ const Athletes = (() => {
           .join("")}</div>`
       }
     `),
-      listContentEl.querySelectorAll("[data-team]").forEach((btn) =>
-        btn.addEventListener(
-          "click",
-          () => {
-            ((globalTeamFilter = btn.dataset.team), renderAthleteList());
-          },
-          { signal: moduleAbortController.signal },
-        ),
-      ),
-      listContentEl.querySelectorAll("[data-athlete-id]").forEach((card) =>
-        card.addEventListener(
-          "click",
-          () => {
-            showAthleteProfile(card.dataset.athleteId);
-          },
-          { signal: moduleAbortController.signal },
-        ),
-      ),
+      listContentEl.addEventListener("click", (e) => {
+        const teamBtn = e.target.closest("[data-team]");
+        if (teamBtn) {
+          globalTeamFilter = teamBtn.dataset.team;
+          renderAthleteList();
+        }
+
+        const athleteCard = e.target.closest("[data-athlete-id]");
+        if (athleteCard) {
+          showAthleteProfile(athleteCard.dataset.athleteId);
+        }
+      }, { signal: moduleAbortController.signal }),
       document.getElementById("new-athlete-btn")?.addEventListener(
         "click",
         () =>

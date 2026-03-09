@@ -117,7 +117,7 @@ const EcommerceDB = (() => {
       if (!t) return null;
       try {
         const urlObj = new URL(t);
-        if (["localhost", "127.0.0.1", "0.0.0.0", "169.254.169.254"].includes(urlObj.hostname) || urlObj.hostname.endsWith(".local") || urlObj.hostname.endsWith(".internal")) {
+        if (["localhost", "127.0.0.1", "0.0.0.0", "169.254.169.254", "::1", "::"].includes(urlObj.hostname) || urlObj.hostname.endsWith(".local") || urlObj.hostname.endsWith(".internal")) {
           throw new Error("Blocked internal domain.");
         }
         const n = await fetch(t, { mode: "cors", cache: "no-store" });

@@ -76,31 +76,22 @@ catch (Exception $e) {
 // Read and execute
 $sql = file_get_contents($path);
 
-// We rely on PDO parsing capabilities rather than naive regex replacement for comments
-$pdo->exec('SET FOREIGN_KEY_CHECKS = 0');
-
-$parts = explode(';', $sql);
+$pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, 1);
 $executed = 0;
 $skipped = 0;
 $errors = [];
 
-foreach ($parts as $stmt) {
-    $stmt = trim($stmt);
-    if (empty($stmt))
-        continue;
-
-    try {
-        $pdo->exec($stmt);
-        $executed++;
+try {
+    $pdo->exec($sql);
+    $executed = 1;
+}
+catch (PDOException $e) {
+    $msg = $e->getMessage();
+    if (str_contains($msg, 'already exists') || str_contains($msg, 'Duplicate')) {
+        $skipped = 1;
     }
-    catch (PDOException $e) {
-        $msg = $e->getMessage();
-        if (str_contains($msg, 'already exists') || str_contains($msg, 'Duplicate')) {
-            $skipped++;
-        }
-        else {
-            $errors[] = $msg;
-        }
+    else {
+        $errors[] = $msg;
     }
 }
 

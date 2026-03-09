@@ -134,7 +134,7 @@ const WhatsApp = (() => {
           try {
             const getE = await Store.get("getMessages", "whatsapp", {
               from_phone: tPhone,
-            }),
+            }, { signal: t.signal }),
               msgs = getE?.messages || [];
             if (msgs.length > a.length) {
               a = msgs;

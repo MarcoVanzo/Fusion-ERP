@@ -324,9 +324,16 @@ class ResultsController
         // Accept any configured portal domain
         $host = parse_url($url, PHP_URL_HOST);
         $hostLower = $host ? strtolower($host) : '';
+        $allowedDomains = [
+            'portalefipav.net',
+            'fipavveneto.net',
+            'federvolley.it',
+            'legavolley.it',
+            'fipavonline.it'
+        ];
         $allowed = false;
-        foreach (self::ALLOWED_DOMAINS as $domain) {
-            if (str_contains($hostLower, $domain)) {
+        foreach ($allowedDomains as $domain) {
+            if ($hostLower === $domain || str_ends_with($hostLower, '.' . $domain)) {
                 $allowed = true;
                 break;
             }
@@ -543,7 +550,14 @@ class ResultsController
         // Check if URL is an allowed domain for SSRF mitigation
         $isAllowedDomain = false;
         $parsedHost = parse_url($url, PHP_URL_HOST) ?? '';
-        foreach (self::ALLOWED_DOMAINS as $domain) {
+        $allowedDomains = [
+            'portalefipav.net',
+            'fipavveneto.net',
+            'federvolley.it',
+            'legavolley.it',
+            'fipavonline.it'
+        ];
+        foreach ($allowedDomains as $domain) {
             if ($parsedHost === $domain || str_ends_with($parsedHost, '.' . $domain)) {
                 $isAllowedDomain = true;
                 break;
