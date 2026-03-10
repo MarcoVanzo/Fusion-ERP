@@ -197,9 +197,13 @@ const Home = () => {
                                             <div className="flex items-center justify-between px-6 py-5 gap-3">
                                                 {/* Home Team */}
                                                 <div className="flex-1 flex flex-col items-center gap-2 text-center">
-                                                    <div className="w-14 h-14 bg-zinc-800 rounded-full border border-zinc-700 group-hover:border-brand-500/40 flex items-center justify-center transition-colors">
-                                                        <span className="font-heading text-xl text-zinc-300">{match.home.charAt(0)}</span>
-                                                    </div>
+                                                    {isFusionHome ? (
+                                                        <img src="/demo/assets/logo-colorato.png" alt="Fusion" className="w-14 h-14 rounded-full object-contain border-2 border-brand-500/60 shadow-[0_0_16px_rgba(217,70,239,0.5)] bg-zinc-900" />
+                                                    ) : (
+                                                        <div className="w-14 h-14 bg-zinc-800 rounded-full border border-zinc-700 group-hover:border-brand-500/40 flex items-center justify-center transition-colors">
+                                                            <span className="font-heading text-xl text-zinc-300">{match.home.charAt(0)}</span>
+                                                        </div>
+                                                    )}
                                                     <span className={`font-heading text-xs leading-snug ${isFusionHome ? 'text-white' : 'text-zinc-400'}`}>{match.home}</span>
                                                 </div>
 
@@ -214,9 +218,13 @@ const Home = () => {
 
                                                 {/* Away Team */}
                                                 <div className="flex-1 flex flex-col items-center gap-2 text-center">
-                                                    <div className="w-14 h-14 bg-zinc-800 rounded-full border border-zinc-700 group-hover:border-brand-500/40 flex items-center justify-center transition-colors">
-                                                        <span className="font-heading text-xl text-zinc-300">{match.away.charAt(0)}</span>
-                                                    </div>
+                                                    {isFusionAway ? (
+                                                        <img src="/demo/assets/logo-colorato.png" alt="Fusion" className="w-14 h-14 rounded-full object-contain border-2 border-brand-500/60 shadow-[0_0_16px_rgba(217,70,239,0.5)] bg-zinc-900" />
+                                                    ) : (
+                                                        <div className="w-14 h-14 bg-zinc-800 rounded-full border border-zinc-700 group-hover:border-brand-500/40 flex items-center justify-center transition-colors">
+                                                            <span className="font-heading text-xl text-zinc-300">{match.away.charAt(0)}</span>
+                                                        </div>
+                                                    )}
                                                     <span className={`font-heading text-xs leading-snug ${isFusionAway ? 'text-white' : 'text-zinc-400'}`}>{match.away}</span>
                                                 </div>
                                             </div>
