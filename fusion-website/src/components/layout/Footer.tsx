@@ -7,6 +7,39 @@ const Footer = () => {
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-32 bg-brand-500/5 blur-[100px] rounded-[100%] pointer-events-none"></div>
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                {/* Newsletter Section */}
+                <div className="bg-zinc-900/50 border border-zinc-800 p-8 md:p-12 mb-16 clip-diagonal backdrop-blur-sm flex flex-col md:flex-row md:items-center justify-between gap-8 relative overflow-hidden group">
+                    <div className="absolute -right-20 -top-20 w-64 h-64 bg-brand-500/10 blur-[50px] rounded-full group-hover:bg-brand-500/20 transition-colors pointer-events-none"></div>
+                    <div className="md:w-1/2 relative z-10">
+                        <h3 className="font-heading text-3xl md:text-4xl text-white mb-2 uppercase tracking-tight">
+                            RESTA <span className="text-brand-500">AGGIORNATO</span>
+                        </h3>
+                        <p className="text-zinc-400 font-subheading text-lg">
+                            Iscriviti alla newsletter per non perderti news, risultati sportivi e novità esclusive dal nostro store.
+                        </p>
+                    </div>
+                    <form 
+                        className="flex flex-col sm:flex-row w-full md:w-1/2 gap-3 relative z-10" 
+                        onSubmit={(e) => { 
+                            e.preventDefault(); 
+                            alert('Grazie per l\'interesse! Funzione di iscrizione non ancora collegata al backend nella versione demo.'); 
+                        }}
+                    >
+                        <input 
+                            type="email" 
+                            placeholder="Inserisci la tua email..." 
+                            className="bg-zinc-950 border border-zinc-700 text-white px-5 py-4 w-full focus:outline-none focus:border-brand-500 font-subheading placeholder:text-zinc-600 transition-colors shadow-inner"
+                            required
+                        />
+                        <button 
+                            type="submit" 
+                            className="bg-brand-500 text-zinc-950 font-heading text-xl tracking-widest uppercase px-8 py-4 hover:bg-white transition-all whitespace-nowrap clip-diagonal shadow-[0_0_15px_rgba(217,70,239,0.3)] hover:shadow-[0_0_25px_rgba(217,70,239,0.6)] flex items-center justify-center gap-2"
+                        >
+                            <Mail size={20} /> ISCRIVITI
+                        </button>
+                    </form>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
 
                     {/* Brand */}

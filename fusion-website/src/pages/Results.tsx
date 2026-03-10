@@ -109,7 +109,7 @@ const Results = () => {
 
                     {/* Ultimi Risultati Header & Filter */}
                     <section>
-                        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 border-b-2 border-zinc-800 pb-4 gap-4">
+                        <div className="sticky top-24 z-30 bg-zinc-950/90 backdrop-blur-md pt-4 pb-4 border-b-2 border-zinc-800 flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
                             <div className="flex items-center gap-4">
                                 <Trophy className="text-brand-500" size={32} />
                                 <h2 className="text-4xl font-heading text-white tracking-tight">ULTIMI RISULTATI</h2>
@@ -117,7 +117,7 @@ const Results = () => {
 
                             {/* Filter Dropdown */}
                             {championships.length > 1 && (
-                                <div className="flex items-center gap-3 bg-zinc-900 border border-zinc-700 px-4 py-2 clip-diagonal w-full md:w-auto">
+                                <div className="flex items-center gap-3 bg-zinc-900 border border-zinc-700 px-4 py-2 clip-diagonal w-full md:w-auto shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
                                     <Filter size={20} className="text-brand-500" />
                                     <select
                                         value={selectedChamp}
