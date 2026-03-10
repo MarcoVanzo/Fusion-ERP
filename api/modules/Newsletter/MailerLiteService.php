@@ -20,7 +20,7 @@ class MailerLiteService
     public function __construct()
     {
         $apiKey = $_ENV['MAILERLITE_API_KEY'] ?? getenv('MAILERLITE_API_KEY') ?: '';
-        if (!empty($apiKey) && str_starts_with($apiKey, 'ml.')) {
+        if (!empty($apiKey)) {
             $this->client = new MailerLite(['api_key' => $apiKey]);
             $this->configured = true;
         }

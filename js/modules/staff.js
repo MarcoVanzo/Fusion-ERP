@@ -315,7 +315,7 @@ const Staff = (() => {
                     }
                 }, { signal: e.signal });
             }
-        })();
+        })(),
         
         // Contract Generation
         document.getElementById('generate-contract-btn')?.addEventListener('click', () => {
@@ -371,7 +371,7 @@ const Staff = (() => {
                      btn.textContent = 'GENERA E INVIA';
                  }
              });
-        }, { signal: e.signal });
+        }, { signal: e.signal }),
         
         // Contract Status check
         document.getElementById('check-contract-btn')?.addEventListener('click', async (ev) => {
@@ -394,7 +394,7 @@ const Staff = (() => {
                  btn.disabled = false;
                  btn.innerHTML = '<i class="ph ph-arrows-clockwise"></i> VERIFICA STATO';
              }
-        }, { signal: e.signal });
+        }, { signal: e.signal }),
         document.getElementById("staff-back")?.addEventListener(
           "click",
           () => {
