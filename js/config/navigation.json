@@ -292,9 +292,15 @@
                 "isMobileVisible": false
             },
             {
-                "title": "Sponsor",
-                "path": "societa-sponsor",
-                "icon": "handshake",
+                "title": "Titoli",
+                "path": "societa-titoli",
+                "icon": "trophy",
+                "isMobileVisible": false
+            },
+            {
+                "title": "Newsletter",
+                "path": "societa-newsletter",
+                "icon": "envelope-simple",
                 "isMobileVisible": false
             }
         ]
