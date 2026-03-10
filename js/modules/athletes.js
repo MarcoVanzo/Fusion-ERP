@@ -5,7 +5,36 @@ const Athletes = (() => {
     globalTeamsList = [],
     globalTeamFilter = "",
     globalActiveTab = "anagrafica",
-    globalSelectedId = null;
+    globalSelectedId = null,
+    // UX#5: Bulk selection state
+    _bulkSelected = new Set(),
+    _bulkMode = false;
+
+  // UX#4: Restore persisted filter (FilterState API from app.js)
+  function _restoreFilter() {
+    if (typeof FilterState !== 'undefined') {
+      globalTeamFilter = FilterState.restore('athletes', 'team', '');
+      globalActiveTab = FilterState.restore('athletes', 'tab', 'anagrafica');
+    }
+  }
+
+  function _saveFilter() {
+    if (typeof FilterState !== 'undefined') {
+      FilterState.save('athletes', 'team', globalTeamFilter);
+      FilterState.save('athletes', 'tab', globalActiveTab);
+    }
+  }
+
+  // G#6: Generative gradient avatar class from name hash
+  function _avatarGradientClass(name) {
+    if (typeof window._getAvatarGradientClass === 'function') {
+      return window._getAvatarGradientClass(name);
+    }
+    if (!name) return 'avatar-g0';
+    let h = 0;
+    for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h);
+    return `avatar-g${Math.abs(h) % 7}`;
+  }
 
   function formatTeamLabel(category, name) {
     let cat = (category || "").toUpperCase();
@@ -97,9 +126,27 @@ const Athletes = (() => {
           renderAthleteList();
         }
 
+        // save filter on every change
+        _saveFilter();
+
         const athleteCard = e.target.closest("[data-athlete-id]");
         if (athleteCard) {
-          showAthleteProfile(athleteCard.dataset.athleteId);
+          // UX#5: In bulk mode, toggle selection instead of opening profile
+          if (_bulkMode) {
+            const id = athleteCard.dataset.athleteId;
+            if (_bulkSelected.has(id)) {
+              _bulkSelected.delete(id);
+              athleteCard.classList.remove('selected');
+            } else {
+              _bulkSelected.add(id);
+              athleteCard.classList.add('selected');
+            }
+            _updateBulkBar();
+          } else {
+            // UX#4: save active filter before navigating to detail
+            _saveFilter();
+            showAthleteProfile(athleteCard.dataset.athleteId);
+          }
         }
       }, { signal: moduleAbortController.signal }),
       document.getElementById("new-athlete-btn")?.addEventListener(
@@ -409,7 +456,9 @@ const Athletes = (() => {
     }
   }
 
+  // G#6: generative gradient for athlete avatar
   function getAthleteColor(name) {
+    // Keep original flat color logic for consistency (palette used as fallback)
     const palette = [
       "#f472b6",
       "#3b82f6",
@@ -424,6 +473,52 @@ const Athletes = (() => {
     for (let j = 0; j < name.length; j++)
       hash = name.charCodeAt(j) + ((hash << 5) - hash);
     return palette[Math.abs(hash) % palette.length];
+  }
+
+  // UX#5: Bulk Actions helpers
+  function _updateBulkBar() {
+    let bar = document.getElementById('athlete-bulk-bar');
+    if (!bar) {
+      bar = document.createElement('div');
+      bar.id = 'athlete-bulk-bar';
+      bar.className = 'bulk-action-bar';
+      bar.innerHTML = `
+        <span class="bulk-action-count" id="bulk-count-label">0 selezionati</span>
+        <div class="bulk-action-divider"></div>
+        <button class="btn btn-sm btn-ghost" id="bulk-cancel-btn" type="button">Annulla</button>
+        <button class="btn btn-sm btn-primary" id="bulk-category-btn" type="button">Cambia categoria</button>
+      `;
+      document.body.appendChild(bar);
+
+      document.getElementById('bulk-cancel-btn')?.addEventListener('click', () => {
+        _bulkSelected.clear();
+        _bulkMode = false;
+        document.querySelectorAll('[data-athlete-id].selected').forEach(c => c.classList.remove('selected'));
+        document.getElementById('athletes-grid')?.classList.remove('bulk-select-mode');
+        _updateBulkBar();
+      });
+
+      document.getElementById('bulk-category-btn')?.addEventListener('click', () => {
+        if (_bulkSelected.size === 0) return;
+        UI.toast(`${_bulkSelected.size} atleti selezionati — funzione categoria in sviluppo`, 'info', 3000);
+      });
+    }
+
+    const count = _bulkSelected.size;
+    const label = document.getElementById('bulk-count-label');
+    if (label) label.textContent = `${count} selezionati`;
+
+    if (count > 0) {
+      bar.classList.add('visible');
+      _bulkMode = true;
+      document.getElementById('athletes-grid')?.classList.add('bulk-select-mode');
+    } else {
+      bar.classList.remove('visible');
+      if (_bulkSelected.size === 0) {
+        _bulkMode = false;
+        document.getElementById('athletes-grid')?.classList.remove('bulk-select-mode');
+      }
+    }
   }
 
   function renderMainLayout() {
@@ -1364,8 +1459,15 @@ const Athletes = (() => {
   return {
     destroy: function () {
       (moduleAbortController.abort(), (moduleAbortController = new AbortController()));
+      // UX#5: Clean up bulk action bar on module destroy
+      _bulkSelected.clear();
+      _bulkMode = false;
+      const bulkBar = document.getElementById('athlete-bulk-bar');
+      if (bulkBar) bulkBar.remove();
     },
     init: async function () {
+      // UX#4: Restore persisted filter state from previous visit
+      _restoreFilter();
       const appEl = document.getElementById("app");
       if (!appEl) return;
       (UI.loading(!0), (appEl.innerHTML = UI.skeletonPage()));

@@ -34,7 +34,7 @@ const Home = () => {
     useEffect(() => {
         const slideInterval = setInterval(() => {
             setCurrentSlide((prev) => (prev + 1) % 3);
-        }, 5000); // 5 seconds per slide
+        }, 5000);
         return () => clearInterval(slideInterval);
     }, []);
 
@@ -72,11 +72,12 @@ const Home = () => {
     }, []);
 
     return (
-        <div className="flex flex-col gap-24 pb-20">
+        <div className="flex flex-col gap-0 pb-20">
             <Helmet>
                 <title>Home - Fusion Team Volley</title>
                 <meta name="description" content="Scopri le squadre, le news e lo shop ufficiale del Fusion Team Volley." />
             </Helmet>
+
             {/* Hero Section */}
             <section className="relative h-[85vh] flex items-center justify-center overflow-hidden">
                 {/* Image Slideshow Background */}
@@ -145,174 +146,172 @@ const Home = () => {
                 </div>
             </section>
 
-            {/* Recent Matches Widget */}
+            {/* Results + News — Side-by-Side Section */}
             <section className="w-full px-4 md:px-12 py-20 md:py-28 relative overflow-hidden">
-                {/* Background Glow */}
-                <div className="absolute top-1/2 left-0 -translate-y-1/2 w-[40vw] h-[40vw] bg-brand-500/10 blur-[120px] rounded-full -z-10"></div>
+                {/* Background glows */}
+                <div className="absolute top-1/2 left-0 -translate-y-1/2 w-[35vw] h-[35vw] bg-brand-500/10 blur-[120px] rounded-full -z-10 pointer-events-none"></div>
+                <div className="absolute bottom-0 right-0 w-[40vw] h-[40vw] bg-brand-500/5 blur-[150px] rounded-full -z-10 pointer-events-none"></div>
 
-                <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 relative">
-                    <div className="relative">
-                        <div className="absolute -top-8 left-0 text-brand-500/20 font-heading text-8xl select-none pointer-events-none">RESULTS</div>
-                        <h2 className="font-heading text-5xl md:text-7xl relative z-10">
-                            ULTIMI <span className="text-brand-500 drop-shadow-[0_0_15px_rgba(217,70,239,0.5)]">RISULTATI</span>
-                        </h2>
-                    </div>
-                </div>
+                <div className="flex flex-col lg:flex-row gap-12 lg:gap-16">
 
-                {loadingMatches ? (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        {[1, 2, 3, 4].map(i => (
-                            <div key={i} className="animate-pulse bg-zinc-900/50 h-32 rounded-2xl border border-zinc-800/50"></div>
-                        ))}
-                    </div>
-                ) : recentMatches.length === 0 ? (
-                    <div className="p-16 text-center border border-zinc-800/50 bg-zinc-900/20 backdrop-blur-md rounded-3xl">
-                        <p className="font-subheading text-xl text-zinc-500">Nessun risultato caricato recentemente.</p>
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        {recentMatches.slice(0, 4).map((match: Match) => {
-                            const isFusionHome = match.home.toLowerCase().includes('fusion');
-                            const isFusionAway = match.away.toLowerCase().includes('fusion');
-
-                            return (
-                                <div key={match.id} className="group relative bg-zinc-900/40 backdrop-blur-xl border border-white/5 hover:border-brand-500/50 rounded-2xl p-6 transition-all duration-500 hover:shadow-[0_0_30px_rgba(217,70,239,0.15)] flex flex-col gap-4 overflow-hidden">
-                                    {/* Glassmorphism Highlight */}
-                                    <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
-
-                                    <div className="flex justify-between items-center text-[10px] uppercase tracking-[0.2em] font-bold">
-                                        <span className="text-zinc-500 flex items-center gap-2">
-                                            <Calendar size={12} className="text-brand-500" />
-                                            {match.date}
-                                        </span>
-                                        <span className="text-brand-500/80 bg-brand-500/10 px-3 py-1 rounded-full border border-brand-500/20 max-w-[60%] truncate">
-                                            {match.championship_label}
-                                        </span>
-                                    </div>
-
-                                    <div className="flex items-center justify-between gap-4 mt-2">
-                                        <div className={`flex-1 text-center flex flex-col items-center gap-3`}>
-                                            <div className="w-12 h-12 bg-zinc-800 rounded-full flex items-center justify-center border border-white/5 group-hover:border-brand-500/30 transition-colors">
-                                                <span className="font-heading text-lg text-zinc-500">{match.home.charAt(0)}</span>
-                                            </div>
-                                            <div className={`font-heading text-sm md:text-base transition-colors duration-300 ${isFusionHome ? 'text-white' : 'text-zinc-400'}`}>
-                                                {match.home}
-                                            </div>
-                                        </div>
-
-                                        <div className="flex flex-col items-center gap-1">
-                                            <div className="font-heading text-4xl md:text-5xl text-white tracking-widest drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">
-                                                {match.sets_home}<span className="text-brand-500 mx-1">:</span>{match.sets_away}
-                                            </div>
-                                            <div className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">Final Score</div>
-                                        </div>
-
-                                        <div className={`flex-1 text-center flex flex-col items-center gap-3`}>
-                                            <div className="w-12 h-12 bg-zinc-800 rounded-full flex items-center justify-center border border-white/5 group-hover:border-brand-500/30 transition-colors">
-                                                <span className="font-heading text-lg text-zinc-500">{match.away.charAt(0)}</span>
-                                            </div>
-                                            <div className={`font-heading text-sm md:text-base transition-colors duration-300 ${isFusionAway ? 'text-white' : 'text-zinc-400'}`}>
-                                                {match.away}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                )}
-            </section>
-
-            {/* Latest News Widget */}
-            <section className="w-full px-4 md:px-12 py-20 md:py-28 relative">
-                {/* Background Glow */}
-                <div className="absolute bottom-0 right-0 w-[50vw] h-[50vw] bg-brand-500/5 blur-[150px] rounded-full -z-10"></div>
-
-                <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 border-b border-zinc-800/50 pb-8 gap-6 relative">
-                    <div className="relative">
-                        <div className="absolute -top-8 left-0 text-white/5 font-heading text-8xl select-none pointer-events-none">FUSION</div>
-                        <h2 className="font-heading text-5xl md:text-7xl relative z-10">
-                            LATEST <span className="text-brand-500">NEWS</span>
-                        </h2>
-                    </div>
-                    <Link to="/news" className="group text-zinc-400 hover:text-white font-heading text-lg flex items-center gap-3 transition-all">
-                        TUTTE LE NOTIZIE
-                        <div className="w-10 h-10 rounded-full border border-zinc-800 flex items-center justify-center group-hover:border-brand-500 group-hover:bg-brand-500/10 transition-all">
-                            <ChevronRight size={20} className="group-hover:translate-x-0.5 transition-transform" />
+                    {/* === LEFT: Ultimi Risultati === */}
+                    <div className="lg:w-[45%] flex flex-col">
+                        <div className="mb-8">
+                            <p className="text-brand-500 font-heading text-sm tracking-[0.3em] uppercase mb-1">Pallavolo</p>
+                            <h2 className="font-heading text-4xl md:text-5xl text-white">
+                                ULTIMI <span className="text-brand-500 drop-shadow-[0_0_15px_rgba(217,70,239,0.6)]">RISULTATI</span>
+                            </h2>
+                            <div className="mt-3 h-px w-24 bg-gradient-to-r from-brand-500 to-transparent"></div>
                         </div>
-                    </Link>
-                </div>
 
-                {loadingNews ? (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-                        {[1, 2, 3].map(i => (
-                            <div key={i} className="animate-pulse bg-zinc-900/50 h-[500px] rounded-3xl border border-zinc-800/50"></div>
-                        ))}
+                        {loadingMatches ? (
+                            <div className="flex flex-col gap-4">
+                                {[1, 2, 3].map(i => (
+                                    <div key={i} className="animate-pulse bg-zinc-900/50 h-44 rounded-2xl border border-zinc-800/50"></div>
+                                ))}
+                            </div>
+                        ) : recentMatches.length === 0 ? (
+                            <div className="p-10 text-center border border-zinc-800/50 bg-zinc-900/20 backdrop-blur-md rounded-2xl">
+                                <p className="font-subheading text-lg text-zinc-500">Nessun risultato recente.</p>
+                            </div>
+                        ) : (
+                            <div className="flex flex-col gap-5">
+                                {recentMatches.slice(0, 3).map((match: Match) => {
+                                    const isFusionHome = match.home.toLowerCase().includes('fusion');
+                                    const isFusionAway = match.away.toLowerCase().includes('fusion');
+                                    return (
+                                        <div key={match.id} className="group relative bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/60 hover:border-brand-500/60 rounded-2xl overflow-hidden transition-all duration-500 hover:shadow-[0_0_40px_rgba(217,70,239,0.15)]">
+                                            {/* Top bar: FINAL SCORE */}
+                                            <div className="bg-zinc-800/60 px-4 py-2 text-center">
+                                                <span className="font-heading text-[11px] tracking-[0.3em] text-zinc-400 uppercase">Final Score</span>
+                                            </div>
+
+                                            {/* Score area */}
+                                            <div className="flex items-center justify-between px-6 py-5 gap-3">
+                                                {/* Home Team */}
+                                                <div className="flex-1 flex flex-col items-center gap-2 text-center">
+                                                    <div className="w-14 h-14 bg-zinc-800 rounded-full border border-zinc-700 group-hover:border-brand-500/40 flex items-center justify-center transition-colors">
+                                                        <span className="font-heading text-xl text-zinc-300">{match.home.charAt(0)}</span>
+                                                    </div>
+                                                    <span className={`font-heading text-xs leading-snug ${isFusionHome ? 'text-white' : 'text-zinc-400'}`}>{match.home}</span>
+                                                </div>
+
+                                                {/* Score */}
+                                                <div className="flex flex-col items-center gap-1">
+                                                    <div className="flex items-center gap-1 font-heading text-5xl tracking-tight">
+                                                        <span className={`${isFusionHome ? 'text-brand-500 drop-shadow-[0_0_12px_rgba(217,70,239,0.8)]' : 'text-white'}`}>{match.sets_home}</span>
+                                                        <span className="text-zinc-600 text-3xl mx-1">—</span>
+                                                        <span className={`${isFusionAway ? 'text-brand-500 drop-shadow-[0_0_12px_rgba(217,70,239,0.8)]' : 'text-white'}`}>{match.sets_away}</span>
+                                                    </div>
+                                                </div>
+
+                                                {/* Away Team */}
+                                                <div className="flex-1 flex flex-col items-center gap-2 text-center">
+                                                    <div className="w-14 h-14 bg-zinc-800 rounded-full border border-zinc-700 group-hover:border-brand-500/40 flex items-center justify-center transition-colors">
+                                                        <span className="font-heading text-xl text-zinc-300">{match.away.charAt(0)}</span>
+                                                    </div>
+                                                    <span className={`font-heading text-xs leading-snug ${isFusionAway ? 'text-white' : 'text-zinc-400'}`}>{match.away}</span>
+                                                </div>
+                                            </div>
+
+                                            {/* Bottom: date + championship */}
+                                            <div className="border-t border-zinc-800/60 px-4 py-2 flex justify-between items-center">
+                                                <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold flex items-center gap-1.5">
+                                                    <Calendar size={10} className="text-brand-500" />{match.date}
+                                                </span>
+                                                <span className="text-[10px] text-zinc-600 uppercase tracking-widest truncate max-w-[55%]">{match.championship_label}</span>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
                     </div>
-                ) : news.length === 0 ? (
-                    <div className="p-20 text-center border border-zinc-800/50 bg-zinc-900/20 backdrop-blur-md rounded-3xl">
-                        <p className="font-subheading text-2xl text-zinc-500">Nessuna news pubblicata al momento.</p>
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-                        {news.map(article => (
-                            <Link
-                                to={`/news/${article.slug}`}
-                                key={article.id}
-                                className="group relative flex flex-col h-full overflow-hidden bg-zinc-900/20 backdrop-blur-md border border-white/5 hover:border-brand-500/50 rounded-3xl transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)]"
-                            >
-                                <div className="aspect-[4/5] relative overflow-hidden">
-                                    {article.cover_image_url ? (
-                                        <img
-                                            src={article.cover_image_url}
-                                            alt={article.title}
-                                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000 opacity-70 group-hover:opacity-100"
-                                        />
-                                    ) : (
-                                        <div className="absolute inset-0 bg-gradient-to-br from-brand-900/40 to-zinc-950 flex items-center justify-center">
-                                            <span className="font-heading text-6xl text-brand-500/20">FUSION</span>
-                                        </div>
-                                    )}
 
-                                    {/* Category Badge */}
-                                    {article.category_name && (
-                                        <div className="absolute top-6 left-6 px-4 py-1.5 bg-brand-500 text-zinc-950 font-heading text-xs uppercase tracking-widest rounded-full shadow-[0_0_20px_rgba(217,70,239,0.5)]">
-                                            {article.category_name}
-                                        </div>
-                                    )}
-
-                                    {/* Overlay Gradient */}
-                                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent opacity-80 group-hover:opacity-60 transition-opacity"></div>
-
-                                    {/* Content Info Over Image */}
-                                    <div className="absolute bottom-6 left-6 right-6">
-                                        <div className="flex items-center gap-2 text-zinc-400 text-[10px] uppercase tracking-[0.2em] font-bold mb-3">
-                                            <Calendar size={12} className="text-brand-500" />
-                                            {new Date(article.published_at).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' })}
-                                        </div>
-                                        <h3 className="font-heading text-2xl md:text-3xl text-white group-hover:text-brand-500 transition-colors leading-tight line-clamp-2">
-                                            {article.title}
-                                        </h3>
-                                    </div>
-                                </div>
-
-                                <div className="p-8 flex flex-col flex-grow">
-                                    <p className="text-zinc-400 font-sans text-sm line-clamp-3 mb-8 leading-relaxed">
-                                        {article.excerpt}
-                                    </p>
-                                    <div className="mt-auto flex items-center justify-between">
-                                        <span className="inline-flex items-center gap-2 font-heading text-xs uppercase tracking-widest text-zinc-300 group-hover:text-white transition-colors">
-                                            CONTINUA A LEGGERE
-                                        </span>
-                                        <div className="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center group-hover:border-brand-500/50 group-hover:bg-brand-500 group-hover:text-zinc-950 transition-all">
-                                            <ChevronRight size={16} />
-                                        </div>
-                                    </div>
+                    {/* === RIGHT: Latest News === */}
+                    <div className="lg:w-[55%] flex flex-col">
+                        <div className="flex items-end justify-between mb-8">
+                            <div>
+                                <p className="text-brand-500/70 font-heading text-sm tracking-[0.3em] uppercase mb-1">Dal Campo</p>
+                                <h2 className="font-heading text-4xl md:text-5xl text-white">
+                                    LATEST <span className="text-brand-500">NEWS</span>
+                                </h2>
+                                <div className="mt-3 h-px w-24 bg-gradient-to-r from-brand-500 to-transparent"></div>
+                            </div>
+                            <Link to="/news" className="group hidden md:flex items-center gap-2 text-zinc-400 hover:text-white font-heading text-sm uppercase tracking-widest transition-all">
+                                Tutte
+                                <div className="w-8 h-8 rounded-full border border-zinc-700 flex items-center justify-center group-hover:border-brand-500 group-hover:bg-brand-500/10 transition-all">
+                                    <ChevronRight size={16} />
                                 </div>
                             </Link>
-                        ))}
+                        </div>
+
+                        {loadingNews ? (
+                            <div className="flex flex-col gap-5">
+                                {[1, 2].map(i => (
+                                    <div key={i} className="animate-pulse bg-zinc-900/50 h-44 rounded-2xl border border-zinc-800/50"></div>
+                                ))}
+                            </div>
+                        ) : news.length === 0 ? (
+                            <div className="p-10 text-center border border-zinc-800/50 bg-zinc-900/20 backdrop-blur-md rounded-2xl">
+                                <p className="font-subheading text-lg text-zinc-500">Nessuna news pubblicata al momento.</p>
+                            </div>
+                        ) : (
+                            <div className="flex flex-col gap-5">
+                                {news.map(article => (
+                                    <Link
+                                        to={`/news/${article.slug}`}
+                                        key={article.id}
+                                        className="group flex flex-row overflow-hidden bg-zinc-900/40 backdrop-blur-md border border-zinc-800/60 hover:border-brand-500/50 rounded-2xl transition-all duration-500 hover:shadow-[0_10px_40px_rgba(0,0,0,0.4)] hover:-translate-y-1"
+                                    >
+                                        {/* Image */}
+                                        <div className="relative w-48 shrink-0 overflow-hidden">
+                                            {article.cover_image_url ? (
+                                                <img
+                                                    src={article.cover_image_url}
+                                                    alt={article.title}
+                                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-75 group-hover:opacity-100"
+                                                />
+                                            ) : (
+                                                <div className="w-full h-full bg-gradient-to-br from-brand-900/40 to-zinc-950 flex items-center justify-center">
+                                                    <span className="font-heading text-3xl text-brand-500/20">FTV</span>
+                                                </div>
+                                            )}
+                                            <div className="absolute inset-0 bg-gradient-to-r from-transparent to-zinc-900/30"></div>
+                                            {article.category_name && (
+                                                <div className="absolute top-3 left-3 px-2 py-0.5 bg-brand-500 text-zinc-950 font-heading text-[9px] uppercase tracking-widest rounded-full shadow-[0_0_15px_rgba(217,70,239,0.5)]">
+                                                    {article.category_name}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Content */}
+                                        <div className="flex flex-col flex-1 p-5 gap-3 justify-between">
+                                            <h3 className="font-heading text-base md:text-lg text-white group-hover:text-brand-500 transition-colors leading-snug line-clamp-3">
+                                                {article.title}
+                                            </h3>
+                                            <div className="flex items-center gap-2 text-zinc-500 text-[10px] uppercase tracking-wider">
+                                                <Calendar size={10} className="text-brand-500" />
+                                                {new Date(article.published_at).toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' })}
+                                            </div>
+                                            <div>
+                                                <span className="inline-flex items-center gap-1.5 border border-brand-500/50 text-brand-500 group-hover:bg-brand-500 group-hover:text-zinc-950 font-heading text-[10px] uppercase tracking-[0.2em] px-3 py-1.5 rounded-full transition-all">
+                                                    Leggi
+                                                    <ChevronRight size={11} />
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </Link>
+                                ))}
+                            </div>
+                        )}
+
+                        <Link to="/news" className="mt-6 flex md:hidden items-center justify-center gap-2 text-zinc-400 hover:text-white font-heading text-sm uppercase tracking-widest border border-zinc-800 hover:border-brand-500 rounded-full py-3 transition-all">
+                            Tutte le notizie <ChevronRight size={16} />
+                        </Link>
                     </div>
-                )}
+
+                </div>
             </section>
         </div>
     );

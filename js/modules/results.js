@@ -4,42 +4,74 @@ const Results = (() => {
     t = [],
     n = null,
     s = "matches";
+  function _buildDropdown() {
+    const wrapper = document.getElementById("res-champ-dropdown");
+    if (!wrapper) return;
+    wrapper.innerHTML = "";
+    if (0 === t.length) {
+      wrapper.innerHTML = `<div class="res-champ-trigger res-champ-empty">Nessun campionato configurato</div>`;
+      l("Nessun campionato configurato", "Aggiungi un campionato tramite il tasto ⚙️ in alto a destra.\nPortali supportati: venezia.portalefipav.net · fipavveneto.net · federvolley.it");
+      return;
+    }
+    const first = t[0];
+    const fusionLogo = "/demo/assets/logo-colorato.png";
+    const logoHtml = (hasFusion) => hasFusion
+      ? `<img class="res-champ-fusion-logo" src="${fusionLogo}" alt="Fusion" onerror="this.style.display='none'">`
+      : "";
+    const trigger = document.createElement("div");
+    trigger.className = "res-champ-trigger";
+    trigger.id = "res-champ-trigger";
+    trigger.innerHTML = `${logoHtml(first.has_our_team)}<span class="res-champ-label">${Utils.escapeHtml(first.label)}</span><i class="ph ph-caret-down res-champ-arrow"></i>`;
+    const list = document.createElement("div");
+    list.className = "res-champ-list";
+    list.id = "res-champ-list";
+    t.forEach((camp) => {
+      const opt = document.createElement("div");
+      opt.className = "res-champ-option" + (camp.id === first.id ? " active" : "");
+      opt.dataset.id = camp.id;
+      opt.dataset.url = camp.url || "";
+      opt.dataset.label = camp.label;
+      opt.innerHTML = `${logoHtml(camp.has_our_team)}<span>${Utils.escapeHtml(camp.label)}</span>`;
+      opt.addEventListener("click", () => {
+        n = { id: camp.id, url: camp.url || "", label: camp.label };
+        trigger.innerHTML = `${logoHtml(camp.has_our_team)}<span class="res-champ-label">${Utils.escapeHtml(camp.label)}</span><i class="ph ph-caret-down res-champ-arrow"></i>`;
+        list.querySelectorAll(".res-champ-option").forEach(o => o.classList.remove("active"));
+        opt.classList.add("active");
+        list.classList.remove("open");
+        trigger.classList.remove("open");
+        r();
+      });
+      list.appendChild(opt);
+    });
+    trigger.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const isOpen = list.classList.contains("open");
+      list.classList.toggle("open", !isOpen);
+      trigger.classList.toggle("open", !isOpen);
+    });
+    document.addEventListener("click", function closeDropdown(e) {
+      if (!wrapper.contains(e.target)) {
+        list.classList.remove("open");
+        trigger.classList.remove("open");
+      }
+    });
+    wrapper.appendChild(trigger);
+    wrapper.appendChild(list);
+    n = { id: first.id, url: first.url || "", label: first.label };
+  }
   async function o() {
     try {
       const e = await Store.get("getCampionati", "results");
       t = e.campionati || [];
-      const s = document.getElementById("res-campionato-select");
-      if (!s) return;
-      if (0 === t.length)
-        return (
-          (s.innerHTML =
-            '<option value="">Nessun campionato configurato</option>'),
-          void l(
-            "Nessun campionato configurato",
-            "Aggiungi un campionato tramite il tasto ⚙️ in alto a destra.\nPortali supportati: venezia.portalefipav.net · fipavveneto.net · federvolley.it",
-          )
-        );
-      ((s.innerHTML = t
-        .map(
-          (e) =>
-            `<option value="${Utils.escapeHtml(e.id)}" data-url="${Utils.escapeHtml(e.url || "")}">${Utils.escapeHtml(e.label)}</option>`,
-        )
-        .join("")),
-        s.removeEventListener("change", a),
-        s.addEventListener("change", a));
-      const o = s.options[0];
-      ((n = { id: o.value, url: o.dataset.url, label: o.textContent }),
-        await r());
+      _buildDropdown();
+      if (t.length > 0) await r();
     } catch (e) {
       (console.error("[Results] getCampionati error:", e),
         c("Impossibile caricare i campionati. " + (e.message || "")));
     }
   }
   function a() {
-    const e = document.getElementById("res-campionato-select");
-    if (!e) return;
-    const t = e.options[e.selectedIndex];
-    ((n = { id: t.value, url: t.dataset.url, label: t.textContent }), r());
+    // legacy — mantenuta per compatibilità
   }
   async function r() {
     "matches" === s
@@ -274,7 +306,7 @@ const Results = (() => {
               link.href = "css/results.css?v=" + Date.now();
               document.head.appendChild(link);
             })(),
-            (e.innerHTML = `\n<div class="res-container">\n  <div class="res-header">\n    <div class="res-title-block">\n      <div class="res-title">🏐 Risultati</div>\n      <div class="res-subtitle">Portale Federale Pallavolo</div>\n    </div>\n    <div class="res-toolbar">\n      <select id="res-campionato-select" class="res-select">\n        <option value="">Caricamento campionati...</option>\n      </select>\n      <div class="res-view-toggle" style="display:none;">\n        <!-- Pulsanti rimossi su richiesta -->\n      </div>\n      <button class="res-icon-btn" id="res-sync-btn" title="Sincronizza con portale" onclick="Results._sync()">\n        <i class="ph ph-cloud-arrow-down"></i>\n      </button>\n      <button class="res-icon-btn" id="res-refresh-btn" title="Aggiorna" onclick="Results._refresh()">\n        <i class="ph ph-arrows-clockwise"></i>\n      </button>\n      <button class="res-icon-btn" id="res-manage-btn" title="Gestisci campionati" onclick="Results._openManage()">\n        <i class="ph ph-gear"></i>\n      </button>\n    </div>\n  </div>\n  <div id="res-content">${d()}</div>\n</div>`));
+            (e.innerHTML = `\n<div class="res-container">\n  <div class="res-header">\n    <div class="res-title-block">\n      <div class="res-title">🏐 Risultati</div>\n      <div class="res-subtitle">Portale Federale Pallavolo</div>\n    </div>\n    <div class="res-toolbar">\n      <div id="res-champ-dropdown" class="res-champ-dropdown">\n        <div class="res-champ-trigger" id="res-champ-trigger">\n          <span class="res-champ-label">Caricamento campionati...</span>\n          <i class="ph ph-caret-down res-champ-arrow"></i>\n        </div>\n      </div>\n      <button class="res-icon-btn" id="res-sync-btn" title="Sincronizza con portale" onclick="Results._sync()">\n        <i class="ph ph-cloud-arrow-down"></i>\n      </button>\n      <button class="res-icon-btn" id="res-refresh-btn" title="Aggiorna" onclick="Results._refresh()">\n        <i class="ph ph-arrows-clockwise"></i>\n      </button>\n      <button class="res-icon-btn" id="res-manage-btn" title="Gestisci campionati" onclick="Results._openManage()">\n        <i class="ph ph-gear"></i>\n      </button>\n    </div>\n  </div>\n  <div id="res-content">${d()}</div>\n</div>`));
         })(),
         p(),
         await o());

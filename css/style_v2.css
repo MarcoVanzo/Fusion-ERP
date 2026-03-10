@@ -6391,3 +6391,610 @@ textarea:focus-visible {
     max-width: 88%;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   FUSION ERP — 20 UX & GRAPHIC IMPROVEMENTS
+   Implemented via audit 2026-03-10
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── G#1: AURORA ANIMATED BACKGROUND ───────────────────────────────────────
+   Subtle animated gradient orbs in the main content area for visual depth.
+   Uses pointer-events:none so it never interferes with clicks.            */
+.main-wrapper::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 15% -10%, rgba(0, 242, 254, 0.045) 0%, transparent 65%),
+    radial-gradient(ellipse 60% 50% at 85% 110%, rgba(255, 0, 122, 0.045) 0%, transparent 65%),
+    radial-gradient(ellipse 40% 30% at 50% 50%, rgba(123, 47, 247, 0.02) 0%, transparent 70%);
+  animation: auroraShift 14s ease-in-out infinite alternate;
+}
+
+@keyframes auroraShift {
+  from {
+    opacity: 0.6;
+    transform: scale(1) translateY(0);
+  }
+
+  50% {
+    opacity: 0.9;
+    transform: scale(1.03) translateY(-8px);
+  }
+
+  to {
+    opacity: 0.7;
+    transform: scale(1.05) translateY(-16px);
+  }
+}
+
+/* Ensure main-content is above aurora */
+.main-content {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── G#2: HOVER 3D TILT ON ATHLETE CARDS ───────────────────────────────────
+   CSS transition base. The actual tilt is applied inline via JS.          */
+.grid-3 .card,
+.athletes-grid .card {
+  transition: transform 0.15s ease, box-shadow 0.2s ease !important;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.grid-3 .card:hover,
+.athletes-grid .card:hover {
+  box-shadow: var(--glow-card-hover), var(--shadow-lg);
+}
+
+/* ── G#3: JERSEY NUMBER GIANT BACKDROP ─────────────────────────────────────
+   Applied via JS: adds data-jersey attr to the athlete header.            */
+[data-jersey-bg]::after {
+  content: attr(data-jersey-bg);
+  position: absolute;
+  right: -10px;
+  top: -20px;
+  font-family: var(--font-display);
+  font-size: clamp(6rem, 18vw, 12rem);
+  font-weight: 900;
+  color: rgba(255, 255, 255, 0.04);
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+  letter-spacing: -0.05em;
+  z-index: 0;
+}
+
+/* ── G#4: ANIMATED GRADIENT ON PRIMARY BUTTONS ─────────────────────────────
+   Cyclic gradient animation on all .btn-primary elements.                 */
+.btn-primary {
+  background: linear-gradient(135deg, #ff007a 0%, #7b2ff7 45%, #00c6ff 100%) !important;
+  background-size: 300% 300% !important;
+  animation: btnGradient 5s ease infinite;
+  border: none !important;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease !important;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 8px 24px rgba(255, 0, 122, 0.4), 0 2px 8px rgba(0, 198, 255, 0.2);
+}
+
+.btn-primary:active {
+  transform: translateY(0) scale(0.99);
+}
+
+@keyframes btnGradient {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* ── G#5: ANIMATED PULSE ON ACTIVE STATUS BADGES ───────────────────────────
+   .badge-active class adds a pulsating glow ring.                         */
+.badge-active,
+.badge.badge-success {
+  position: relative;
+}
+
+.badge-active::before,
+.badge.badge-success::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: inherit;
+  background: var(--success);
+  opacity: 0;
+  animation: badgePulseRing 2.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  z-index: -1;
+}
+
+@keyframes badgePulseRing {
+
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.35;
+    transform: scale(1.3);
+  }
+}
+
+/* ── G#6: GENERATIVE GRADIENT SYSTEM ───────────────────────────────────────
+   .avatar-gradient-[0..6] classes for unique per-athlete gradients.       */
+.avatar-g0 {
+  background: linear-gradient(135deg, hsl(320, 80%, 60%), hsl(360, 80%, 50%)) !important;
+}
+
+.avatar-g1 {
+  background: linear-gradient(135deg, hsl(200, 80%, 55%), hsl(240, 80%, 45%)) !important;
+}
+
+.avatar-g2 {
+  background: linear-gradient(135deg, hsl(150, 75%, 50%), hsl(190, 80%, 45%)) !important;
+}
+
+.avatar-g3 {
+  background: linear-gradient(135deg, hsl(40, 90%, 55%), hsl(20, 90%, 45%)) !important;
+}
+
+.avatar-g4 {
+  background: linear-gradient(135deg, hsl(280, 80%, 60%), hsl(320, 80%, 50%)) !important;
+}
+
+.avatar-g5 {
+  background: linear-gradient(135deg, hsl(340, 80%, 60%), hsl(20, 90%, 50%)) !important;
+}
+
+.avatar-g6 {
+  background: linear-gradient(135deg, hsl(190, 85%, 50%), hsl(230, 75%, 45%)) !important;
+}
+
+/* ── G#7: SPARKLINE CANVAS ANIMATION ───────────────────────────────────────
+   Dashboard stat cards get animated SVG sparklines injected via JS.      */
+.stat-card-sparkline {
+  width: 100%;
+  height: 40px;
+  margin-top: 8px;
+  opacity: 0.8;
+}
+
+.stat-card-sparkline polyline {
+  stroke-dasharray: 400;
+  stroke-dashoffset: 400;
+  animation: sparklineDraw 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes sparklineDraw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* ── G#8: GLASSMORPHISM MODALS ──────────────────────────────────────────────
+   Overrides existing modal styles with glass blur effect.                 */
+.modal-overlay {
+  background: rgba(0, 0, 0, 0.65) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+}
+
+.modal-content {
+  background: rgba(12, 12, 18, 0.78) !important;
+  backdrop-filter: blur(28px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(160%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow:
+    0 32px 80px rgba(0, 0, 0, 0.65),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+}
+
+.modal-header {
+  background: transparent !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+
+.modal-footer {
+  background: transparent !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+
+/* ── G#9: PAGE TRANSITIONS ──────────────────────────────────────────────────
+   Smooth fade+slide animation on every route change.                      */
+@keyframes pageIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pageOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+.page-enter {
+  animation: pageIn 0.28s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.page-exit {
+  animation: pageOut 0.15s ease forwards;
+  pointer-events: none;
+}
+
+/* ── G#10: OLED PURE BLACK THEME ────────────────────────────────────────────
+   Toggle via data-theme="oled" on <html> element.                        */
+[data-theme="oled"] {
+  --bg-darker: #000000;
+  --bg-dark: #000000;
+  --bg-surface: rgba(255, 255, 255, 0.025);
+  --bg-surface-hover: rgba(255, 255, 255, 0.05);
+  --border-subtle: rgba(255, 255, 255, 0.04);
+  --color-bg: #000000;
+  --color-bg-card: rgba(255, 255, 255, 0.025);
+}
+
+[data-theme="oled"] .sidebar,
+[data-theme="oled"] .topbar {
+  background: #000 !important;
+}
+
+[data-theme="oled"] .card {
+  background: rgba(255, 255, 255, 0.028) !important;
+  border-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* OLED Theme Toggle Button in sidebar footer */
+.theme-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  margin-top: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+
+.theme-toggle-row:hover {
+  background: var(--bg-surface-hover);
+}
+
+.theme-toggle-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.theme-toggle-switch {
+  width: 32px;
+  height: 18px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  position: relative;
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+}
+
+.theme-toggle-switch::after {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+[data-theme="oled"] .theme-toggle-switch {
+  background: var(--accent-secondary);
+}
+
+[data-theme="oled"] .theme-toggle-switch::after {
+  transform: translateX(14px);
+  background: #fff;
+}
+
+/* ── UX#2: BREADCRUMB STYLES ────────────────────────────────────────────── */
+.breadcrumb-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 0 0 0;
+  margin-bottom: 4px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.breadcrumb-bar a,
+.breadcrumb-bar button {
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: inherit;
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+
+.breadcrumb-bar a:hover,
+.breadcrumb-bar button:hover {
+  color: var(--accent-primary);
+}
+
+.breadcrumb-bar .bc-sep {
+  font-size: 10px;
+  opacity: 0.4;
+}
+
+.breadcrumb-bar .bc-current {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* ── UX#4: STICKY FILTER TABS ───────────────────────────────────────────── */
+.filter-bar-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--bg-darker);
+  padding: 8px 0;
+  margin: 0 0 var(--sp-2) 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+/* ── UX#5: BULK ACTION BAR ──────────────────────────────────────────────── */
+.bulk-action-bar {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(120%);
+  background: rgba(15, 15, 20, 0.92);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid rgba(255, 0, 122, 0.3);
+  border-radius: 16px;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  z-index: 999;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6), 0 0 24px rgba(255, 0, 122, 0.15);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+  white-space: nowrap;
+}
+
+.bulk-action-bar.visible {
+  transform: translateX(-50%) translateY(0);
+}
+
+.bulk-action-count {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--accent-secondary);
+  min-width: 80px;
+  font-family: var(--font-display);
+}
+
+.bulk-action-divider {
+  width: 1px;
+  height: 24px;
+  background: var(--border-subtle);
+}
+
+/* Athlete card checkbox overlay */
+.athlete-card-checkbox {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: 2px solid var(--border-subtle);
+  background: var(--bg-dark);
+  cursor: pointer;
+  transition: border-color 0.18s ease, background 0.18s ease, opacity 0.18s ease;
+  opacity: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.grid-3 .card:hover .athlete-card-checkbox,
+.grid-3 .card.selected .athlete-card-checkbox,
+.bulk-select-mode .athlete-card-checkbox {
+  opacity: 1;
+}
+
+.grid-3 .card.selected .athlete-card-checkbox {
+  background: var(--accent-secondary);
+  border-color: var(--accent-secondary);
+}
+
+.grid-3 .card.selected {
+  border-color: rgba(255, 0, 122, 0.4) !important;
+  background: rgba(255, 0, 122, 0.05) !important;
+}
+
+/* ── UX#7: EXPIRED DOC SIDEBAR BADGE ───────────────────────────────────── */
+.nav-badge-alert {
+  background: var(--danger);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  margin-left: auto;
+  animation: alertPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 0 8px rgba(255, 77, 77, 0.6);
+}
+
+@keyframes alertPop {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* ── UX#8: MOBILE OPTIMIZATIONS ─────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .grid-3 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .filter-bar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--bg-darker);
+    padding: 8px 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+    margin: 0 calc(var(--sp-4) * -1);
+    padding-left: var(--sp-4);
+    padding-right: var(--sp-4);
+    flex-wrap: nowrap !important;
+  }
+
+  .filter-bar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .filter-chip {
+    flex-shrink: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .topbar {
+    padding: 0 16px;
+  }
+
+  .search-box {
+    width: 180px;
+  }
+
+  #page-title {
+    font-size: 1.1rem !important;
+  }
+}
+
+/* ── UX#10: ERROR BOUNDARY STYLES ──────────────────────────────────────── */
+.error-boundary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--sp-8) var(--sp-4);
+  gap: var(--sp-3);
+  min-height: 300px;
+}
+
+.error-boundary-icon {
+  font-size: 4rem;
+  color: var(--warning);
+  opacity: 0.8;
+  animation: errorShake 0.5s ease;
+}
+
+@keyframes errorShake {
+
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+
+  20%,
+  60% {
+    transform: rotate(-8deg);
+  }
+
+  40%,
+  80% {
+    transform: rotate(8deg);
+  }
+}
+
+.error-boundary h3 {
+  font-size: 1.4rem;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.error-boundary p {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  max-width: 420px;
+  line-height: 1.6;
+}
+
+/* ── KEYBOARD SHORTCUT HINTS ─────────────────────────────────────────────── */
+.kbd {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 5px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+/* ── TOPBAR PAGE TITLE IMPROVED ─────────────────────────────────────────── */
+.topbar .page-title-box h1::before {
+  content: '';
+  display: inline-block;
+  width: 3px;
+  height: 1em;
+  background: var(--accent-secondary);
+  margin-right: 10px;
+  border-radius: 2px;
+  vertical-align: middle;
+  box-shadow: var(--glow-pink);
+}

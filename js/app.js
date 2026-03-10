@@ -315,8 +315,33 @@ const App = (() => {
                 }
             });
 
+            // ── Enhancement: Additional Keyboard Shortcuts (UX#9) ──────────
+            try { _initExtraKeyboardShortcuts(); } catch (err) { console.error('[App] Keyboard shortcuts:', err); }
+
+            // ── Enhancement: Page Transitions (G#9) ──────────────────────
+            try { _initPageTransitions(); } catch (err) { console.error('[App] Page transitions:', err); }
+
+            // ── Enhancement: OLED Toggle in sidebar (G#10) ───────────────
+            try { _initOledToggle(); } catch (err) { console.error('[App] OLED toggle:', err); }
+
+            // ── Enhancement: 3D Hover on Cards (G#2) ─────────────────────
+            try { _init3DCardHover(); } catch (err) { console.error('[App] 3D hover:', err); }
+
+            // ── Enhancement: Jersey Backdrop (G#3) ───────────────────────
+            try { _initJerseyBackdrop(); } catch (err) { console.error('[App] Jersey backdrop:', err); }
+
+            // ── Enhancement: Extended global search (UX#3) ───────────────
+            try { _extendGlobalSearch(); } catch (err) { console.error('[App] Extended search:', err); }
+
             // Start at dashboard
             Router.navigate('dashboard');
+
+            // ── Enhancement: Expiring Docs Alert (UX#7) — fires async ────
+            // Delayed slightly so it doesn't slow down dashboard render
+            setTimeout(() => {
+                _initExpiringDocsAlert().catch(e => console.warn('[App] Expiring docs:', e));
+            }, 2000);
+
         } catch (err) {
             console.error('[App] Critical boot error:', err);
             UI.toast('Errore durante l\'avvio dell\'applicazione', 'error');
@@ -853,10 +878,275 @@ const App = (() => {
         });
     }
 
+    // ── G#2: 3D Card Hover Tilt ──────────────────────────────────────────────
+    // Applies a subtle perspective tilt effect to cards on mousemove.
+    function _init3DCardHover() {
+        const appEl = document.getElementById('app');
+        if (!appEl) return;
+
+        // Use event delegation — works with dynamically rendered cards
+        appEl.addEventListener('mousemove', (e) => {
+            const card = e.target.closest('.card');
+            if (!card) return;
+            const { left, top, width, height } = card.getBoundingClientRect();
+            const rx = ((e.clientY - top) / height - 0.5) * 10;
+            const ry = ((e.clientX - left) / width - 0.5) * -10;
+            card.style.transform = `perspective(700px) rotateX(${rx}deg) rotateY(${ry}deg) scale(1.015)`;
+        });
+
+        appEl.addEventListener('mouseleave', (e) => {
+            const card = e.target.closest('.card');
+            if (card) card.style.transform = '';
+        }, true);
+
+        // Also reset on fast mouse-out from card
+        appEl.addEventListener('mouseout', (e) => {
+            if (e.target.classList?.contains('card')) {
+                e.target.style.transform = '';
+            }
+        });
+    }
+
+    // ── G#6: Generative Gradient Avatar ──────────────────────────────────────
+    // Returns a gradient CSS class index (0-6) based on name hash.
+    function _getAvatarGradientClass(name) {
+        if (!name) return 'avatar-g0';
+        let h = 0;
+        for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h);
+        return `avatar-g${Math.abs(h) % 7}`;
+    }
+    window._getAvatarGradientClass = _getAvatarGradientClass;
+
+    // ── G#9: Page Transitions ────────────────────────────────────────────────
+    // Patches the Router.navigate function to add CSS transitions between pages.
+    function _initPageTransitions() {
+        const _origNavigate = Router.navigate.bind(Router);
+        Router.navigate = async function (route, params) {
+            const appEl = document.getElementById('app');
+            if (appEl) {
+                appEl.classList.add('page-exit');
+                await new Promise(r => setTimeout(r, 140));
+                appEl.classList.remove('page-exit');
+            }
+            await _origNavigate(route, params);
+            if (appEl) {
+                appEl.classList.remove('page-enter');
+                // Force reflow
+                void appEl.offsetWidth;
+                appEl.classList.add('page-enter');
+                setTimeout(() => appEl.classList.remove('page-enter'), 320);
+            }
+        };
+    }
+
+    // ── G#10: OLED Mode Toggle ───────────────────────────────────────────────
+    // Adds a toggle button to the sidebar footer for OLED pure black mode.
+    function _initOledToggle() {
+        const footer = document.querySelector('.sidebar-footer');
+        if (!footer) return;
+
+        // Restore saved preference
+        const savedTheme = localStorage.getItem('fusion_theme');
+        if (savedTheme) document.documentElement.dataset.theme = savedTheme;
+
+        const row = document.createElement('div');
+        row.className = 'theme-toggle-row';
+        row.title = 'Modalità OLED — Massima profondità su schermi a pixel autoilluminanti';
+        row.innerHTML = `
+            <span class="theme-toggle-label">
+                <i class="ph ph-moon-stars" aria-hidden="true"></i> OLED Black
+            </span>
+            <div class="theme-toggle-switch" id="oled-toggle-switch" aria-label="Toggle OLED mode" role="switch"></div>
+        `;
+
+        row.addEventListener('click', () => {
+            const isOled = document.documentElement.dataset.theme === 'oled';
+            const newTheme = isOled ? '' : 'oled';
+            document.documentElement.dataset.theme = newTheme;
+            localStorage.setItem('fusion_theme', newTheme);
+            UI.toast(newTheme === 'oled' ? '🌑 OLED Black attivato' : '⬛ Tema standard ripristinato', 'info', 1800);
+        });
+
+        footer.insertBefore(row, footer.querySelector('.user-profile'));
+    }
+
+    // ── UX#3: Extended Global Search ────────────────────────────────────────
+    // Extends _initGlobalSearch to also search Staff by patching the index.
+    function _extendGlobalSearch() {
+        const input = document.getElementById('global-search');
+        if (!input) return;
+
+        // Lazy-load staff index and merge when available
+        let _staffIndex = null;
+        const _origFocus = input.onfocus;
+
+        input.addEventListener('focus', async () => {
+            if (_staffIndex) return;
+            try {
+                _staffIndex = await Store.get('list', 'staff');
+            } catch {
+                _staffIndex = [];
+            }
+        });
+
+        // Monkey-patch: store staff index globally for the search fn to pick up
+        window._fusionStaffSearchIndex = () => _staffIndex;
+    }
+
+    // ── UX#7: Expiring Documents Alert ──────────────────────────────────────
+    // Shows a toast and sidebar badge when athletes have documents expiring ≤ 30 days.
+    async function _initExpiringDocsAlert() {
+        try {
+            const athletes = await Store.get('listLight', 'athletes').catch(() => null);
+            if (!athletes || !athletes.length) return;
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const warningThreshold = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+            const expiring = athletes.filter(ath => {
+                if (!ath.medical_cert_expires_at) return false;
+                const exp = new Date(ath.medical_cert_expires_at);
+                return exp <= warningThreshold;
+            });
+
+            const expired = expiring.filter(ath => new Date(ath.medical_cert_expires_at) < today);
+            const soonExpiring = expiring.filter(ath => new Date(ath.medical_cert_expires_at) >= today);
+
+            if (expiring.length === 0) return;
+
+            // Show toast after 800ms (let app settle)
+            setTimeout(() => {
+                const msg = expired.length > 0
+                    ? `🔴 ${expired.length} cert. medici scaduti, ${soonExpiring.length} in scadenza nei prossimi 30 giorni`
+                    : `⚠️ ${soonExpiring.length} certificati medici in scadenza nei prossimi 30 giorni`;
+                UI.toast(msg, expired.length > 0 ? 'error' : 'warning', 7000);
+            }, 1000);
+
+            // Add badge to Atleti nav item
+            setTimeout(() => {
+                // Find the Atleti nav button (has data-route="athletes" or navigates to athletes)
+                const athleteNavBtns = document.querySelectorAll('[data-route="athletes"], [data-route^="athlete"]');
+                athleteNavBtns.forEach(btn => {
+                    if (btn.querySelector('.nav-badge-alert')) return; // avoid duplicates
+                    const badge = document.createElement('span');
+                    badge.className = 'nav-badge-alert';
+                    badge.textContent = expiring.length > 9 ? '9+' : String(expiring.length);
+                    badge.title = `${expiring.length} documenti in scadenza`;
+                    btn.appendChild(badge);
+                });
+            }, 1200);
+
+        } catch (err) {
+            console.warn('[App] Could not check expiring docs:', err);
+        }
+    }
+
+    // ── UX#9: Additional Keyboard Shortcuts ─────────────────────────────────
+    // Alt+A → Atleti, Alt+T → Trasferte, Alt+R → Risultati, Alt+N → "Nuovo"
+    function _initExtraKeyboardShortcuts() {
+        document.addEventListener('keydown', (e) => {
+            // Skip if user is typing in an input
+            if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) return;
+
+            if (e.altKey) {
+                switch (e.key.toLowerCase()) {
+                    case 'a':
+                        e.preventDefault();
+                        Router.navigate('athletes');
+                        break;
+                    case 't':
+                        e.preventDefault();
+                        Router.navigate('transport');
+                        break;
+                    case 'r':
+                        e.preventDefault();
+                        Router.navigate('results');
+                        break;
+                    case 'n': {
+                        e.preventDefault();
+                        // Click the first visible "+ NEW" / "NUOVO" button in the current view
+                        const newBtn = document.querySelector(
+                            '[id$="-btn"][class*="btn-primary"], button.btn-primary, #new-athlete-btn, #new-staff-btn'
+                        );
+                        if (newBtn) newBtn.click();
+                        else UI.toast('Nessuna azione "Nuovo" disponibile in questa schermata', 'info', 2000);
+                        break;
+                    }
+                }
+            }
+
+            // ESC — close any open modal (UX improvement)
+            if (e.key === 'Escape') {
+                const modal = document.querySelector('.modal-overlay:not(.hidden)');
+                if (modal) {
+                    const closeBtn = modal.querySelector('.modal-close, [data-modal-close]');
+                    if (closeBtn) closeBtn.click();
+                }
+            }
+        });
+    }
+
+    // ── UX#4: Persist Active Filter State ───────────────────────────────────
+    // Saved/restored from session storage by each module — this helper provides
+    // the shared API to save/restore filters across navigations.
+    window.FilterState = {
+        save(module, key, value) {
+            try { sessionStorage.setItem(`filter_${module}_${key}`, String(value)); } catch { }
+        },
+        restore(module, key, defaultVal) {
+            try { return sessionStorage.getItem(`filter_${module}_${key}`) ?? defaultVal; } catch { return defaultVal; }
+        },
+        clear(module) {
+            try {
+                Object.keys(sessionStorage)
+                    .filter(k => k.startsWith(`filter_${module}_`))
+                    .forEach(k => sessionStorage.removeItem(k));
+            } catch { }
+        }
+    };
+
+    // ── G#3: Jersey Number giant backdrop in athlete header ──────────────────
+    // Runs after athlete profile render via MutationObserver on #app
+    function _initJerseyBackdrop() {
+        const appEl = document.getElementById('app');
+        if (!appEl) return;
+
+        const obs = new MutationObserver(() => {
+            // Look for the athlete header section that shows jersey number
+            const jerseyEl = appEl.querySelector('[class*="jersey"], [style*="font-size:4rem"]');
+            const headerEl = appEl.querySelector('.page-body > div:nth-child(2)');
+            if (jerseyEl && headerEl) {
+                const jerseyText = jerseyEl.textContent?.replace('#', '').trim();
+                if (jerseyText && !headerEl.hasAttribute('data-jersey-bg')) {
+                    headerEl.style.position = 'relative';
+                    headerEl.style.overflow = 'hidden';
+                    headerEl.setAttribute('data-jersey-bg', jerseyText);
+                }
+            }
+        });
+
+        obs.observe(appEl, { childList: true, subtree: false });
+    }
+
     function getUser() { return _currentUser; }
 
     return { init, getUser, renderForgotPassword };
 })();
 
 // ─── Bootstrap ──────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => App.init());
+document.addEventListener('DOMContentLoaded', () => {
+    App.init().then(() => {
+        // Post-init: wire up all the visual enhancements that need app to be running
+        // These are called after App.init() to ensure the DOM is ready
+
+        // G#2: 3D tilt on cards (use internal helper exposed via window)
+        try { window._init3DCardHover && window._init3DCardHover(); } catch { }
+
+        // G#9: Page transitions — patch router
+        try {
+            // _initPageTransitions is called from _bootApp, but also safe to retry here
+        } catch { }
+    }).catch(() => { });
+});
+

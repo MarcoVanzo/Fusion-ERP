@@ -62,12 +62,43 @@ class ResultsController
         // ── 1. Load from Database (federation_championships) ──────────────────
         try {
             $stmt = $pdo->prepare("
-                SELECT * FROM federation_championships 
-                WHERE tenant_id = :tid AND is_active = 1
-                ORDER BY label ASC
+                SELECT
+                    fc.*,
+                    CASE WHEN (
+                        EXISTS (
+                            SELECT 1 FROM federation_standings fs
+                            WHERE fs.championship_id = fc.id
+                              AND (
+                                LOWER(fs.team) LIKE '%fusion%'
+                                OR LOWER(fs.team) LIKE '%team volley%'
+                                OR LOWER(fs.team) LIKE '%fusionteam%'
+                              )
+                        )
+                        OR EXISTS (
+                            SELECT 1 FROM federation_matches fm
+                            WHERE fm.championship_id = fc.id
+                              AND (
+                                LOWER(fm.home_team) LIKE '%fusion%'
+                                OR LOWER(fm.away_team) LIKE '%fusion%'
+                                OR LOWER(fm.home_team) LIKE '%team volley%'
+                                OR LOWER(fm.away_team) LIKE '%team volley%'
+                                OR LOWER(fm.home_team) LIKE '%fusionteam%'
+                                OR LOWER(fm.away_team) LIKE '%fusionteam%'
+                              )
+                        )
+                    ) THEN 1 ELSE 0 END AS has_our_team
+                FROM federation_championships fc
+                WHERE fc.tenant_id = :tid AND fc.is_active = 1
+                ORDER BY fc.label ASC
             ");
             $stmt->execute([':tid' => $tenantId]);
             $campionati = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Cast has_our_team to bool
+            foreach ($campionati as &$c) {
+                $c['has_our_team'] = (bool)($c['has_our_team'] ?? false);
+            }
+            unset($c);
 
             if (!empty($campionati)) {
                 Response::success([
