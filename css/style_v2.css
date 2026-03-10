@@ -6998,3 +6998,18 @@ textarea:focus-visible {
   vertical-align: middle;
   box-shadow: var(--glow-pink);
 }
+
+/* ── WEBSITE SECTION — stat-card override ───────────────────────────────────
+   Le stat-card nella sezione "Sito Web" non devono avere l'effetto
+   di sollevamento/rotazione hover globale.                                */
+.website-stat-card {
+  transform-style: flat !important;
+  will-change: auto !important;
+}
+
+.website-stat-card:hover {
+  transform: none !important;
+  box-shadow: var(--shadow-lg) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  background: linear-gradient(180deg, rgba(30, 30, 35, 0.5) 0%, rgba(18, 18, 20, 0.7) 100%) !important;
+}
