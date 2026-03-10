@@ -880,6 +880,7 @@ const App = (() => {
 
     // ── G#2: 3D Card Hover Tilt ──────────────────────────────────────────────
     // Applies a subtle perspective tilt effect to cards on mousemove.
+    // Cards with class .no-tilt are excluded from the effect.
     function _init3DCardHover() {
         const appEl = document.getElementById('app');
         if (!appEl) return;
@@ -887,7 +888,7 @@ const App = (() => {
         // Use event delegation — works with dynamically rendered cards
         appEl.addEventListener('mousemove', (e) => {
             const card = e.target.closest('.card');
-            if (!card) return;
+            if (!card || card.classList.contains('no-tilt')) return;
             const { left, top, width, height } = card.getBoundingClientRect();
             const rx = ((e.clientY - top) / height - 0.5) * 10;
             const ry = ((e.clientX - left) / width - 0.5) * -10;
@@ -896,12 +897,12 @@ const App = (() => {
 
         appEl.addEventListener('mouseleave', (e) => {
             const card = e.target.closest('.card');
-            if (card) card.style.transform = '';
+            if (card && !card.classList.contains('no-tilt')) card.style.transform = '';
         }, true);
 
         // Also reset on fast mouse-out from card
         appEl.addEventListener('mouseout', (e) => {
-            if (e.target.classList?.contains('card')) {
+            if (e.target.classList?.contains('card') && !e.target.classList.contains('no-tilt')) {
                 e.target.style.transform = '';
             }
         });
