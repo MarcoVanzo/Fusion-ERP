@@ -67,26 +67,10 @@ const Network = (() => {
                     <p class="page-subtitle">Collaborazioni, atleti in prova e attività di rete</p>
                 </div>
                 <div class="module-body">
-                    <aside class="module-sidebar">
-                        <nav class="net-tabs" id="net-tab-bar">
-                            ${TABS.map(t => `
-                                <button class="net-tab ${t.id === _activeTab ? 'active' : ''}" data-net-tab="${t.id}" type="button">
-                                    <i class="ph ph-${t.icon}"></i> <span>${Utils.escapeHtml(t.label)}</span>
-                                </button>`).join('')}
-                        </nav>
-                    </aside>
                     <main class="module-content" id="net-tab-content"></main>
                 </div>
             </div>`;
 
-        document.querySelectorAll('[data-net-tab]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                _activeTab = btn.dataset.netTab;
-                document.querySelectorAll('[data-net-tab]').forEach(b =>
-                    b.classList.toggle('active', b.dataset.netTab === _activeTab));
-                _renderTab();
-            }, _sig());
-        });
 
         _renderTab();
     }

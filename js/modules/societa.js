@@ -66,26 +66,10 @@ const Societa = (() => {
                     <p class="page-subtitle">Identità, organigramma e documenti societari</p>
                 </div>
                 <div class="module-body">
-                    <aside class="module-sidebar">
-                        <nav class="soc-tabs" id="soc-tab-bar">
-                            ${TABS.map(t => `
-                                <button class="soc-tab ${t.id === _activeTab ? 'active' : ''}" data-soc-tab="${t.id}" type="button">
-                                    <i class="ph ph-${t.icon}"></i> <span>${Utils.escapeHtml(t.label)}</span>
-                                </button>`).join('')}
-                        </nav>
-                    </aside>
                     <main class="module-content" id="soc-tab-content"></main>
                 </div>
             </div>`;
 
-        document.querySelectorAll('[data-soc-tab]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                _activeTab = btn.dataset.socTab;
-                document.querySelectorAll('[data-soc-tab]').forEach(b =>
-                    b.classList.toggle('active', b.dataset.socTab === _activeTab));
-                _renderTab();
-            }, _sig());
-        });
 
         _renderTab();
     }

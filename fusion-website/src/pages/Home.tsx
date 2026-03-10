@@ -146,42 +146,74 @@ const Home = () => {
             </section>
 
             {/* Recent Matches Widget */}
-            <section className="w-full px-4 md:px-12 py-20 md:py-28">
-                <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 border-b-2 border-zinc-800 pb-6 gap-4">
-                    <div>
-                        <h2 className="font-heading text-5xl md:text-7xl">ULTIMI <span className="text-brand-500">RISULTATI</span></h2>
+            <section className="w-full px-4 md:px-12 py-20 md:py-28 relative overflow-hidden">
+                {/* Background Glow */}
+                <div className="absolute top-1/2 left-0 -translate-y-1/2 w-[40vw] h-[40vw] bg-brand-500/10 blur-[120px] rounded-full -z-10"></div>
+
+                <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 relative">
+                    <div className="relative">
+                        <div className="absolute -top-8 left-0 text-brand-500/20 font-heading text-8xl select-none pointer-events-none">RESULTS</div>
+                        <h2 className="font-heading text-5xl md:text-7xl relative z-10">
+                            ULTIMI <span className="text-brand-500 drop-shadow-[0_0_15px_rgba(217,70,239,0.5)]">RISULTATI</span>
+                        </h2>
                     </div>
                 </div>
 
                 {loadingMatches ? (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                        {[1, 2, 3, 4].map(i => <div key={i} className="animate-pulse bg-zinc-900 h-24 clip-diagonal border border-zinc-800"></div>)}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        {[1, 2, 3, 4].map(i => (
+                            <div key={i} className="animate-pulse bg-zinc-900/50 h-32 rounded-2xl border border-zinc-800/50"></div>
+                        ))}
                     </div>
                 ) : recentMatches.length === 0 ? (
-                    <div className="p-8 text-center border border-zinc-800 bg-zinc-900/40 clip-diagonal">
+                    <div className="p-16 text-center border border-zinc-800/50 bg-zinc-900/20 backdrop-blur-md rounded-3xl">
                         <p className="font-subheading text-xl text-zinc-500">Nessun risultato caricato recentemente.</p>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        {recentMatches.map((match: Match) => {
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        {recentMatches.slice(0, 4).map((match: Match) => {
                             const isFusionHome = match.home.toLowerCase().includes('fusion');
                             const isFusionAway = match.away.toLowerCase().includes('fusion');
 
                             return (
-                                <div key={match.id} className="group relative flex flex-col items-center justify-between p-4 bg-zinc-900 clip-diagonal border border-zinc-800 hover:border-brand-500 hover:bg-zinc-800 transition-colors">
-                                    <div className="w-full flex justify-between items-center mb-4">
-                                        <div className="font-subheading text-brand-500 text-xs tracking-widest">{match.date}</div>
-                                        <div className="text-zinc-500 font-subheading text-[10px] uppercase truncate max-w-[60%]">{match.championship_label}</div>
+                                <div key={match.id} className="group relative bg-zinc-900/40 backdrop-blur-xl border border-white/5 hover:border-brand-500/50 rounded-2xl p-6 transition-all duration-500 hover:shadow-[0_0_30px_rgba(217,70,239,0.15)] flex flex-col gap-4 overflow-hidden">
+                                    {/* Glassmorphism Highlight */}
+                                    <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+
+                                    <div className="flex justify-between items-center text-[10px] uppercase tracking-[0.2em] font-bold">
+                                        <span className="text-zinc-500 flex items-center gap-2">
+                                            <Calendar size={12} className="text-brand-500" />
+                                            {match.date}
+                                        </span>
+                                        <span className="text-brand-500/80 bg-brand-500/10 px-3 py-1 rounded-full border border-brand-500/20 max-w-[60%] truncate">
+                                            {match.championship_label}
+                                        </span>
                                     </div>
-                                    <div className="flex items-center justify-between w-full gap-4">
-                                        <div className={`text-right font-heading leading-tight text-sm sm:text-base w-1/3 truncate ${isFusionHome ? 'text-white' : 'text-zinc-400'}`} title={match.home}>
-                                            {match.home}
+
+                                    <div className="flex items-center justify-between gap-4 mt-2">
+                                        <div className={`flex-1 text-center flex flex-col items-center gap-3`}>
+                                            <div className="w-12 h-12 bg-zinc-800 rounded-full flex items-center justify-center border border-white/5 group-hover:border-brand-500/30 transition-colors">
+                                                <span className="font-heading text-lg text-zinc-500">{match.home.charAt(0)}</span>
+                                            </div>
+                                            <div className={`font-heading text-sm md:text-base transition-colors duration-300 ${isFusionHome ? 'text-white' : 'text-zinc-400'}`}>
+                                                {match.home}
+                                            </div>
                                         </div>
-                                        <div className="flex items-center justify-center min-w-[100px] h-12 bg-zinc-950 border border-zinc-800 clip-diagonal font-heading text-4xl sm:text-5xl tracking-widest text-brand-500 px-4">
-                                            {match.sets_home} - {match.sets_away}
+
+                                        <div className="flex flex-col items-center gap-1">
+                                            <div className="font-heading text-4xl md:text-5xl text-white tracking-widest drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">
+                                                {match.sets_home}<span className="text-brand-500 mx-1">:</span>{match.sets_away}
+                                            </div>
+                                            <div className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">Final Score</div>
                                         </div>
-                                        <div className={`text-left font-heading leading-tight text-sm sm:text-base w-1/3 truncate ${isFusionAway ? 'text-white' : 'text-zinc-400'}`} title={match.away}>
-                                            {match.away}
+
+                                        <div className={`flex-1 text-center flex flex-col items-center gap-3`}>
+                                            <div className="w-12 h-12 bg-zinc-800 rounded-full flex items-center justify-center border border-white/5 group-hover:border-brand-500/30 transition-colors">
+                                                <span className="font-heading text-lg text-zinc-500">{match.away.charAt(0)}</span>
+                                            </div>
+                                            <div className={`font-heading text-sm md:text-base transition-colors duration-300 ${isFusionAway ? 'text-white' : 'text-zinc-400'}`}>
+                                                {match.away}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -192,57 +224,89 @@ const Home = () => {
             </section>
 
             {/* Latest News Widget */}
-            <section className="w-full px-4 md:px-12 py-20 md:py-28">
-                <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 border-b-2 border-zinc-800 pb-6 gap-6">
-                    <div>
-                        <h2 className="font-heading text-5xl md:text-7xl">LATEST <span className="text-brand-500">NEWS</span></h2>
+            <section className="w-full px-4 md:px-12 py-20 md:py-28 relative">
+                {/* Background Glow */}
+                <div className="absolute bottom-0 right-0 w-[50vw] h-[50vw] bg-brand-500/5 blur-[150px] rounded-full -z-10"></div>
+
+                <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 border-b border-zinc-800/50 pb-8 gap-6 relative">
+                    <div className="relative">
+                        <div className="absolute -top-8 left-0 text-white/5 font-heading text-8xl select-none pointer-events-none">FUSION</div>
+                        <h2 className="font-heading text-5xl md:text-7xl relative z-10">
+                            LATEST <span className="text-brand-500">NEWS</span>
+                        </h2>
                     </div>
-                    <Link to="/news" className="text-zinc-400 hover:text-white font-heading text-lg flex items-center gap-2 transition-colors">
-                        TUTTE LE NOTIZIE <ChevronRight size={24} />
+                    <Link to="/news" className="group text-zinc-400 hover:text-white font-heading text-lg flex items-center gap-3 transition-all">
+                        TUTTE LE NOTIZIE
+                        <div className="w-10 h-10 rounded-full border border-zinc-800 flex items-center justify-center group-hover:border-brand-500 group-hover:bg-brand-500/10 transition-all">
+                            <ChevronRight size={20} className="group-hover:translate-x-0.5 transition-transform" />
+                        </div>
                     </Link>
                 </div>
 
                 {loadingNews ? (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
                         {[1, 2, 3].map(i => (
-                            <div key={i} className="animate-pulse bg-zinc-900 h-96 clip-diagonal"></div>
+                            <div key={i} className="animate-pulse bg-zinc-900/50 h-[500px] rounded-3xl border border-zinc-800/50"></div>
                         ))}
                     </div>
                 ) : news.length === 0 ? (
-                    <div className="p-12 text-center border border-zinc-800 clip-diagonal">
+                    <div className="p-20 text-center border border-zinc-800/50 bg-zinc-900/20 backdrop-blur-md rounded-3xl">
                         <p className="font-subheading text-2xl text-zinc-500">Nessuna news pubblicata al momento.</p>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
                         {news.map(article => (
-                            <Link to={`/news/${article.slug}`} key={article.id} className="group flex flex-col h-full overflow-hidden bg-zinc-900 hover:bg-zinc-800 transition-colors clip-diagonal">
-                                <div className="h-64 relative bg-zinc-950 overflow-hidden">
+                            <Link
+                                to={`/news/${article.slug}`}
+                                key={article.id}
+                                className="group relative flex flex-col h-full overflow-hidden bg-zinc-900/20 backdrop-blur-md border border-white/5 hover:border-brand-500/50 rounded-3xl transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)]"
+                            >
+                                <div className="aspect-[4/5] relative overflow-hidden">
                                     {article.cover_image_url ? (
-                                        <img src={article.cover_image_url} alt={article.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-80 group-hover:opacity-100" />
+                                        <img
+                                            src={article.cover_image_url}
+                                            alt={article.title}
+                                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000 opacity-70 group-hover:opacity-100"
+                                        />
                                     ) : (
-                                        <div className="absolute inset-0 bg-brand-primary/20 flex items-center justify-center">
-                                            <span className="font-heading text-6xl text-brand-primary opacity-50">FUSION</span>
+                                        <div className="absolute inset-0 bg-gradient-to-br from-brand-900/40 to-zinc-950 flex items-center justify-center">
+                                            <span className="font-heading text-6xl text-brand-500/20">FUSION</span>
                                         </div>
                                     )}
+
+                                    {/* Category Badge */}
                                     {article.category_name && (
-                                        <div className="absolute top-0 right-0 px-4 py-2 bg-brand-500 font-subheading text-zinc-950 font-bold clip-diagonal">
+                                        <div className="absolute top-6 left-6 px-4 py-1.5 bg-brand-500 text-zinc-950 font-heading text-xs uppercase tracking-widest rounded-full shadow-[0_0_20px_rgba(217,70,239,0.5)]">
                                             {article.category_name}
                                         </div>
                                     )}
-                                </div>
-                                <div className="p-8 flex flex-col flex-grow">
-                                    <div className="font-subheading text-zinc-500 text-sm mb-4 flex items-center gap-2">
-                                        <Calendar size={16} />
-                                        {new Date(article.published_at).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+
+                                    {/* Overlay Gradient */}
+                                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent opacity-80 group-hover:opacity-60 transition-opacity"></div>
+
+                                    {/* Content Info Over Image */}
+                                    <div className="absolute bottom-6 left-6 right-6">
+                                        <div className="flex items-center gap-2 text-zinc-400 text-[10px] uppercase tracking-[0.2em] font-bold mb-3">
+                                            <Calendar size={12} className="text-brand-500" />
+                                            {new Date(article.published_at).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                                        </div>
+                                        <h3 className="font-heading text-2xl md:text-3xl text-white group-hover:text-brand-500 transition-colors leading-tight line-clamp-2">
+                                            {article.title}
+                                        </h3>
                                     </div>
-                                    <h3 className="font-heading text-2xl mb-4 group-hover:text-brand-500 transition-colors leading-tight">
-                                        {article.title}
-                                    </h3>
-                                    <p className="text-zinc-400 font-sans text-sm line-clamp-3 mb-8">
+                                </div>
+
+                                <div className="p-8 flex flex-col flex-grow">
+                                    <p className="text-zinc-400 font-sans text-sm line-clamp-3 mb-8 leading-relaxed">
                                         {article.excerpt}
                                     </p>
-                                    <div className="mt-auto inline-flex items-center gap-2 font-subheading text-white group-hover:text-brand-500 transition-colors">
-                                        LEGGI <ChevronRight size={20} />
+                                    <div className="mt-auto flex items-center justify-between">
+                                        <span className="inline-flex items-center gap-2 font-heading text-xs uppercase tracking-widest text-zinc-300 group-hover:text-white transition-colors">
+                                            CONTINUA A LEGGERE
+                                        </span>
+                                        <div className="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center group-hover:border-brand-500/50 group-hover:bg-brand-500 group-hover:text-zinc-950 transition-all">
+                                            <ChevronRight size={16} />
+                                        </div>
                                     </div>
                                 </div>
                             </Link>

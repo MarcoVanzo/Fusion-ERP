@@ -84,7 +84,7 @@ const Roster = () => {
 
                                     return bgImage ? (
                                         <div
-                                            className="absolute top-0 bottom-0 right-0 left-[40%] z-0 bg-cover bg-[right_-20%_top] opacity-60 group-hover:opacity-100 transition-opacity duration-700 mix-blend-screen contrast-125 saturate-150"
+                                            className="absolute top-0 bottom-0 right-0 left-[30%] z-0 bg-cover bg-[right_bottom] opacity-60 group-hover:opacity-100 transition-opacity duration-700 mix-blend-screen contrast-125 saturate-150"
                                             style={{ backgroundImage: `url('${bgImage}')` }}
                                         />
                                     ) : null;
