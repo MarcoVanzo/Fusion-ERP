@@ -269,7 +269,7 @@ const Home = () => {
                                     <Link
                                         to={`/news/${article.slug}`}
                                         key={article.id}
-                                        className="group flex flex-row overflow-hidden bg-zinc-900/40 backdrop-blur-md border border-zinc-800/60 hover:border-brand-500/50 rounded-2xl transition-all duration-500 hover:shadow-[0_10px_40px_rgba(0,0,0,0.4)] hover:-translate-y-1"
+                                        className="group flex flex-row overflow-hidden bg-zinc-900/40 backdrop-blur-md border border-zinc-800/60 hover:border-brand-500/50 rounded-2xl transition-all duration-500 hover:shadow-[0_4px_20px_rgba(0,0,0,0.3)]"
                                     >
                                         {/* Image */}
                                         <div className="relative w-48 shrink-0 overflow-hidden">
@@ -277,7 +277,7 @@ const Home = () => {
                                                 <img
                                                     src={getImgUrl(article.cover_image_url)}
                                                     alt={article.title}
-                                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-75 group-hover:opacity-100"
+                                                    className="w-full h-full object-cover transition-opacity duration-500 opacity-80 group-hover:opacity-100"
                                                 />
                                             ) : (
                                                 <div className="w-full h-full bg-gradient-to-br from-brand-900/40 to-zinc-950 flex items-center justify-center">
