@@ -65,13 +65,30 @@ class AthletesController
     {
         Auth::requireWrite('athletes');
         $body = Response::jsonBody();
-        Response::requireFields($body, ['first_name', 'last_name', 'team_id']);
+        // team_ids (array) takes priority over legacy team_id
+        if (!empty($body['team_ids']) && is_array($body['team_ids'])) {
+            $teamIds = array_values(array_filter($body['team_ids']));
+        }
+        elseif (!empty($body['team_id'])) {
+            $teamIds = [$body['team_id']];
+        }
+        else {
+            $teamIds = [];
+        }
+
+        if (empty($teamIds)) {
+            Response::error('Selezionare almeno una squadra', 400);
+        }
+
+        Response::requireFields($body, ['first_name', 'last_name']);
 
         $id = 'ATH_' . bin2hex(random_bytes(4));
+        $primaryTeamId = $teamIds[0];
+
         $data = [
             ':id' => $id,
             ':user_id' => $body['user_id'] ?? null,
-            ':team_id' => $body['team_id'],
+            ':team_id' => $primaryTeamId,
             ':first_name' => htmlspecialchars(trim($body['first_name']), ENT_QUOTES, 'UTF-8'),
             ':last_name' => htmlspecialchars(trim($body['last_name']), ENT_QUOTES, 'UTF-8'),
             ':jersey_number' => isset($body['jersey_number']) ? (int)$body['jersey_number'] : null,
@@ -97,7 +114,11 @@ class AthletesController
         ];
 
         $this->repo->createAthlete($data);
-        Audit::log('INSERT', 'athletes', $id, null, ['first_name' => $body['first_name'], 'last_name' => $body['last_name']]);
+
+        // Sync junction table with all selected teams
+        $this->repo->setAthleteTeams($id, $teamIds);
+
+        Audit::log('INSERT', 'athletes', $id, null, ['first_name' => $body['first_name'], 'last_name' => $body['last_name'], 'team_ids' => $teamIds]);
         Response::success(['id' => $id], 201);
     }
 
@@ -106,14 +127,26 @@ class AthletesController
     {
         Auth::requireWrite('athletes');
         $body = Response::jsonBody();
-        Response::requireFields($body, ['id', 'first_name', 'last_name', 'team_id']);
+        Response::requireFields($body, ['id', 'first_name', 'last_name']);
 
         $before = $this->repo->getAthleteById($body['id']);
         if (!$before) {
             Response::error('Atleta non trovato', 404);
         }
 
-        // Preserve existing values for fields not passed in the request (e.g. from partial form submissions)
+        // Support multi-team: team_ids (array) takes priority over legacy team_id
+        if (!empty($body['team_ids']) && is_array($body['team_ids'])) {
+            $teamIds = array_values(array_filter($body['team_ids']));
+        }
+        elseif (!empty($body['team_id'])) {
+            $teamIds = [$body['team_id']];
+        }
+        else {
+            $teamIds = $before['team_ids'] ?? [];
+        }
+        $primaryTeamId = $teamIds[0] ?? ($before['team_id'] ?? null);
+
+        // Preserve existing values for fields not passed in the request
         $val = fn($k) => array_key_exists($k, $body) ? $body[$k] : ($before[$k] ?? null);
 
         $this->repo->updateAthlete($body['id'], [
@@ -138,8 +171,11 @@ class AthletesController
             ':shoe_size' => $val('shoe_size'),
             ':parent_contact' => $val('parent_contact'),
             ':parent_phone' => $val('parent_phone'),
-            ':team_id' => $body['team_id'],
+            ':team_id' => $primaryTeamId,
         ]);
+
+        // Sync junction table with all selected teams
+        $this->repo->setAthleteTeams($body['id'], $teamIds);
 
         Audit::log('UPDATE', 'athletes', $body['id'], $before, $body);
         Response::success(['message' => 'Atleta aggiornato']);

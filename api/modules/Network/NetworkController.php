@@ -11,6 +11,7 @@
  *   listEvaluations            — GET evaluations for a trial
  *   convertToScouting          — converts trial to scouting profile
  *   listActivities / createActivity / updateActivity / deleteActivity
+ *   uploadColLogo              — POST upload logo for a collaboration
  */
 
 declare(strict_types=1);
@@ -87,6 +88,7 @@ class NetworkController
             ':referent_name' => $body['referent_name'] ?? null,
             ':referent_contact' => $body['referent_contact'] ?? null,
             ':notes' => $body['notes'] ?? null,
+            ':logo_path' => $body['logo_path'] ?? null,
         ];
 
         $this->repo->createCollaboration($data);
@@ -127,11 +129,65 @@ class NetworkController
             ':referent_name' => $body['referent_name'] ?? null,
             ':referent_contact' => $body['referent_contact'] ?? null,
             ':notes' => $body['notes'] ?? null,
+            ':logo_path' => $body['logo_path'] ?? $before['logo_path'] ?? null,
         ];
 
         $this->repo->updateCollaboration($body['id'], $data);
         Audit::log('UPDATE', 'network_collaborations', $body['id'], $before, $body);
         Response::success(['message' => 'Collaborazione aggiornata']);
+    }
+
+    public function uploadColLogo(): void
+    {
+        Auth::requireRole('manager');
+
+        $collabId = $_POST['collaboration_id'] ?? '';
+        if (empty($collabId)) {
+            Response::error('collaboration_id obbligatorio', 400);
+        }
+
+        $collab = $this->repo->getCollaborationById($collabId);
+        if (!$collab) {
+            Response::error('Collaborazione non trovata', 404);
+        }
+
+        if (!isset($_FILES['logo']) || $_FILES['logo']['error'] !== UPLOAD_ERR_OK) {
+            $errorCode = $_FILES['logo']['error'] ?? -1;
+            Response::error("Errore upload logo (codice: {$errorCode})", 400);
+        }
+
+        $file = $_FILES['logo'];
+
+        if ($file['size'] > self::MAX_FILE_SIZE) {
+            Response::error('File troppo grande (max 10 MB)', 400);
+        }
+
+        $finfo = new \finfo(FILEINFO_MIME_TYPE);
+        $mime = $finfo->file($file['tmp_name']);
+        if (!in_array($mime, ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/svg+xml'], true)) {
+            Response::error('Tipo file non consentito. Accettati: JPG, PNG, WEBP, SVG', 400);
+        }
+
+        $tenantId = TenantContext::id();
+        $safeId = preg_replace('/[^A-Za-z0-9_]/', '', $collabId);
+        $uploadDir = dirname(__DIR__, 3) . '/uploads/network/' . $tenantId . '/' . $safeId . '/logo';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+
+        $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
+        $fileName = 'logo_' . date('Ymd_His') . '.' . $ext;
+        $destPath = $uploadDir . '/' . $fileName;
+
+        if (!move_uploaded_file($file['tmp_name'], $destPath)) {
+            Response::error('Errore nel salvataggio del logo', 500);
+        }
+
+        $relPath = 'uploads/network/' . $tenantId . '/' . $safeId . '/logo/' . $fileName;
+        $this->repo->updateColLogo($collabId, $relPath);
+
+        Audit::log('UPLOAD_LOGO', 'network_collaborations', $collabId, null, ['logo_path' => $relPath]);
+        Response::success(['logo_path' => $relPath], 201);
     }
 
     public function deleteCollaboration(): void

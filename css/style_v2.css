@@ -1285,6 +1285,55 @@ h3 {
   cursor: pointer;
 }
 
+/* Multi-team Select Panel */
+.multi-team-panel {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.multi-team-panel::-webkit-scrollbar {
+  width: 6px;
+}
+
+.multi-team-panel::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.multi-team-option {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-input);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.multi-team-option:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.multi-team-option.selected {
+  background: rgba(255, 0, 255, 0.1);
+  border-color: var(--color-pink);
+  box-shadow: inset 0 0 0 1px var(--color-pink), var(--glow-pink);
+}
+
+.multi-team-label {
+  font-size: 13px;
+  color: var(--color-text);
+  font-weight: 500;
+  flex: 1;
+}
+
+.multi-team-option.selected .multi-team-label {
+  color: var(--color-white);
+  font-weight: 600;
+}
+
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);

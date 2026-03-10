@@ -22,9 +22,18 @@ const Athletes = (() => {
     const teamsList = Array.isArray(globalTeamsList) ? globalTeamsList : [];
 
     // Filter athletes by team if filter is active
+    // Supports multi-team association
     const filteredAthletes = globalTeamFilter
       ? globalAthletesList.filter(
-        (ath) => String(ath.team_id) === String(globalTeamFilter),
+        (ath) => {
+          if (String(ath.team_id) === String(globalTeamFilter)) return true;
+          // Also check if athlete's team name matches (if not using IDs everywhere yet)
+          // or if the back-end provided a list of teams
+          if (ath.team_ids && Array.isArray(ath.team_ids)) {
+            return ath.team_ids.some(tid => String(tid) === String(globalTeamFilter));
+          }
+          return false;
+        }
       )
       : globalAthletesList;
 
@@ -113,7 +122,18 @@ const Athletes = (() => {
         <div class="form-group"><label class="form-label" for="na-lname">Cognome *</label><input id="na-lname" class="form-input" type="text" placeholder="Rossi" required></div>
       </div>
       <div class="form-grid">
-        <div class="form-group"><label class="form-label" for="na-team">Squadra *</label><select id="na-team" class="form-select"><option value="">Seleziona...</option>${teamOptions}</select></div>
+        <div class="form-group">
+          <label class="form-label">Squadre *</label>
+          <div id="na-team-panel" class="multi-team-panel" style="max-height:140px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding:10px;background:rgba(255,255,255,0.04);border:1px solid var(--color-border);border-radius:var(--radius);">
+            ${globalTeamsList.map(tm => `
+              <label class="multi-team-option" for="na-team-${Utils.escapeHtml(tm.id)}">
+                <input type="checkbox" id="na-team-${Utils.escapeHtml(tm.id)}" class="na-team-cb" value="${Utils.escapeHtml(tm.id)}" style="display:none;">
+                <span class="multi-team-label">${Utils.escapeHtml(formatTeamLabel(tm.category, tm.name))}</span>
+              </label>
+            `).join('')}
+          </div>
+          <div style="font-size:11px;color:var(--color-text-muted);margin-top:4px;"><i class="ph ph-info"></i> Seleziona una o più squadre</div>
+        </div>
         <div class="form-group"><label class="form-label" for="na-birth">Data di Nascita</label><input id="na-birth" class="form-input" type="date"></div>
       </div>
       <div class="form-grid">
@@ -161,11 +181,18 @@ const Athletes = (() => {
               collectWizardData = () => {
                 document
                   .querySelectorAll(
-                    "#wizard-step-content input, #wizard-step-content select",
+                    "#wizard-step-content input:not([type=checkbox]), #wizard-step-content select",
                   )
                   .forEach((el) => {
                     wizardData[el.id] = el.value;
                   });
+
+                // Collect selected teams
+                const checkedTeams = Array.from(document.querySelectorAll('.na-team-cb:checked')).map(el => el.value);
+                if (checkedTeams.length > 0 || wizardData["na-teams-touched"]) {
+                  wizardData["team_ids"] = checkedTeams;
+                  wizardData["na-teams-touched"] = true;
+                }
               },
               renderWizardStep = () => {
                 const wizardBodyEl = document.getElementById("wizard-body");
@@ -187,9 +214,20 @@ const Athletes = (() => {
       </div><div id="wizard-step-content">${wizardHtmls[wizardStep - 1]}</div><div id="na-error" class="form-error hidden"></div>`),
                   requestAnimationFrame(() => {
                     Object.entries(wizardData).forEach(([key, val]) => {
+                      if (key === "team_ids" || key === "na-teams-touched") return;
                       const input = document.getElementById(key);
                       input && (input.value = val);
                     });
+
+                    if (wizardData["team_ids"]) {
+                      wizardData["team_ids"].forEach(tid => {
+                        const cb = document.getElementById(`na-team-${tid}`);
+                        if (cb) {
+                          cb.checked = true;
+                          cb.closest('.multi-team-option')?.classList.add('selected');
+                        }
+                      });
+                    }
                   }));
                 const prevWizardBtn = document.getElementById("na-prev"),
                   nextWizardBtn = document.getElementById("na-next"),
@@ -252,12 +290,12 @@ const Athletes = (() => {
                       lnameVal = document
                         .getElementById("na-lname")
                         ?.value.trim(),
-                      teamIdVal = document.getElementById("na-team")?.value,
+                      teamIds = Array.from(document.querySelectorAll('.na-team-cb:checked')),
                       errEl = document.getElementById("na-error");
-                    if (!fnameVal || !lnameVal || !teamIdVal)
+                    if (!fnameVal || !lnameVal || 0 === teamIds.length)
                       return (
                         (errEl.textContent =
-                          "Nome, cognome e squadra sono obbligatori"),
+                          "Nome, cognome e almeno una squadra sono obbligatori"),
                         void errEl.classList.remove("hidden")
                       );
                   }
@@ -278,7 +316,7 @@ const Athletes = (() => {
                     (await Store.api("create", "athletes", {
                       first_name: wizardData["na-fname"] || "",
                       last_name: wizardData["na-lname"] || "",
-                      team_id: wizardData["na-team"] || "",
+                      team_ids: wizardData["team_ids"] || [],
                       jersey_number: wizardData["na-jersey"] || null,
                       role: wizardData["na-role"] || null,
                       birth_date: wizardData["na-birth"] || null,
@@ -628,28 +666,33 @@ const Athletes = (() => {
               <span class="stat-label" style="font-size:10px;text-transform:uppercase;color:var(--color-text-muted);">${label}</span>
               <span class="stat-value" style="font-size:13px;font-weight:600;display:block;">${Utils.escapeHtml(value || "—")}</span>
             </div>`;
-        ((appContainer.innerHTML = `\n        <div class="page-body" style="display:flex;flex-direction:column;gap:var(--sp-4); background:var(--color-black); min-height:100vh; padding-top:var(--sp-3);">\n\n          \x3c!-- BREADCRUMB NAV --\x3e\n          <div style="display:flex;align-items:center;gap:var(--sp-2);padding:0 var(--sp-4);">\n            <button class="btn btn-ghost btn-sm" id="back-to-list" style="color:var(--color-text-muted);border:none;padding:0;display:flex;align-items:center;gap:6px;font-size:12px;text-transform:uppercase;letter-spacing:0.06em;" type="button">\n              <i class="ph ph-arrow-left" style="font-size:16px;"></i> Atleti\n            </button>\n            <div style="flex:1;"></div>\n            ${hasEditPerms ? '<button class="btn btn-primary btn-sm" id="edit-athlete-btn" type="button" style="margin-right:8px;"><i class="ph ph-pencil-simple"></i> MODIFICA</button>' : ""}\n            ${["admin", "manager"].includes(currentUser?.role) ? '<button class="btn btn-default btn-sm" id="ai-report-btn" type="button">⚡ REPORT AI</button>' : ""}\n          </div>\n\n          <!-- HEADER ATLETA -->\n          <div style="display:flex; align-items:center; gap:var(--sp-4); padding:0 var(--sp-4); margin-top:var(--sp-2);">\n            ${athleteData.jersey_number != null ? `<div style="font-size:4rem; font-weight:800; color:var(--color-pink); font-family:var(--font-display); line-height:1; letter-spacing:-2px;">#${Utils.escapeHtml(String(athleteData.jersey_number))}</div>` : ''}\n            <div style="display:flex; flex-direction:column;">\n              <h2 style="font-size:2.5rem; font-weight:800; margin:0; line-height:1.1; font-family:var(--font-display); text-transform:uppercase; letter-spacing:-0.5px;">${Utils.escapeHtml(athleteData.first_name || '')} <span style="font-weight:300; color:var(--color-text-muted);">${Utils.escapeHtml(athleteData.last_name || '')}</span></h2>\n              <div style="font-size:15px; color:var(--color-white); margin-top:8px; display:flex; gap:12px; align-items:center;">\n                ${athleteData.role ? `<span style="background:rgba(255,255,255,0.1); padding:4px 10px; border-radius:6px; font-weight:600; font-size:13px; letter-spacing:0.5px; text-transform:uppercase;">${Utils.escapeHtml(athleteData.role)}</span>` : ''}\n                ${athleteData.team_name ? `<span style="color:var(--color-text-muted); font-weight:500;">${Utils.escapeHtml(formatTeamLabel(athleteData.category, athleteData.team_name))}</span>` : ''}\n              </div>\n            </div>\n          </div>\n\n          <!-- TAB BAR -->\n          <div style="position:relative;margin:0 calc(var(--sp-4) * -1);padding:0 var(--sp-4);border-bottom:1px solid var(--color-border);margin-bottom:var(--sp-4);">\n            <div id="athlete-tab-bar" class="fusion-tabs-container" style="display:flex;gap:0;overflow-x:auto;scrollbar-width:none;position:relative;z-index:2;padding-bottom:1px;">\n              ${[
-          { id: "anagrafica", label: "Anagrafica" },
-          { id: "pagamenti", label: "Pagamenti" },
-          { id: "documenti", label: "Documenti" },
-        ]
-          .map(
-            (e) =>
-              `<button class="athlete-tab-btn fusion-tab" data-tab="${e.id}" type="button" style="flex-shrink:0;white-space:nowrap; ${e.pink ? "color:var(--color-pink);" : ""}">${e.label}</button>`,
-          )
-          .join(
-            "",
-          )}\n            </div>\n            \x3c!-- Shadow gradient for scroll indication --\x3e\n            <div id="tab-scroll-indicator" style="position:absolute;top:0;right:0;bottom:0;width:48px;background:linear-gradient(to left, var(--color-black) 20%, transparent 100%);pointer-events:none;z-index:3;transition:opacity 0.3s;opacity:0.8;"></div>\n          </div>\n\n          \x3c!-- ANAGRAFICA TAB --\x3e\n          <div id="tab-panel-anagrafica" class="athlete-tab-panel" style="display:flex;flex-direction:column;gap:var(--sp-4);">\n            <div style="display:flex;flex-direction:row;align-items:flex-start;gap:var(--sp-4);">\n              \x3c!-- FOTO PERSONALE --\x3e\n              <div style="width:280px;flex-shrink:0;">\n                <p class="section-label" style="text-align:center;">Foto Personale</p>\n                <div class="card" style="padding:var(--sp-3);">\n                  <div style="display:flex;flex-direction:column;align-items:center;gap:var(--sp-3);">\n                    <div id="athlete-photo-preview" style="width:240px;height:240px;border-radius:16px;overflow:hidden;flex-shrink:0;border:2px solid var(--color-border);background:${getAthleteColor(athleteData.full_name)};display:flex;align-items:center;justify-content:center;">\n                      ${athleteData.photo_path ? `<img src="${Utils.escapeHtml(athleteData.photo_path)}" alt="Foto atleta" style="width:100%;height:100%;object-fit:cover;object-position:center">` : `<span style="font-family:var(--font-display);font-size:4.5rem;font-weight:700;color:#000;">${Utils.initials(athleteData.full_name)}</span>`}\n                    </div>\n                    <div style="display:flex;flex-direction:column;align-items:center;gap:8px;width:100%;">\n                      <div style="font-size:13px;color:var(--color-text-muted);text-align:center;">\n                        ${athleteData.photo_path ? "Foto caricata" : "Nessuna foto caricata"}\n                      </div>\n                      ${hasEditPerms ? `\n                      <label for="athlete-photo-upload" class="btn btn-default btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;width:100%;justify-content:center;">\n                        <i class="ph ph-camera"></i> ${athleteData.photo_path ? "Cambia foto" : "Carica foto"}\n                      </label>\n                      <input id="athlete-photo-upload" type="file" accept="image/jpeg,image/png,image/webp" style="display:none;">\n                      <div id="athlete-photo-status" style="font-size:12px;color:var(--color-text-muted);text-align:center;"></div>` : ""}\n                    </div>\n                  </div>\n                </div>\n              </div>\n              <div style="flex:1;">\n                <p class="section-label">Dati Anagrafici e Contatti</p>\n                <div class="card" style="padding:var(--sp-3);">\n                  <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-3);">\n                    ${g("Nome", athleteData.first_name)}\n                    ${g("Cognome", athleteData.last_name)}\n                    ${g("Data di Nascita", athleteData.birth_date ? Utils.formatDate(athleteData.birth_date) : null)}\n                    ${g("Luogo di Nascita", athleteData.birth_place)}\n                    ${g("Via di Residenza", athleteData.residence_address)}\n                    ${g("Città di Residenza", athleteData.residence_city)}\n                    ${g("Cellulare", athleteData.phone)}\n                    ${g("E-Mail", athleteData.email)}\n                    ${g("Documento d'Identità", athleteData.identity_document)}\n                    ${g("Codice Fiscale", athleteData.fiscal_code)}\n                    ${g("Scadenza Cert. Medico", athleteData.medical_cert_expires_at ? Utils.formatDate(athleteData.medical_cert_expires_at) : null, athleteData.medical_cert_expires_at && new Date(athleteData.medical_cert_expires_at) < new Date() ? "var(--color-pink)" : null)}\n                    ${g("Matricola FIPAV", athleteData.federal_id)}\n                  </div>\n                </div>\n              </div>\n            </div>\n\n            \x3c!-- DOCUMENTI (in Anagrafica) --\x3e\n            <div>\n              <p class="section-label">Matricola e Documenti</p>\n              <div class="card" style="padding:var(--sp-3);">\n                <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:var(--sp-3);">\n                  ${g("Documento d'Identità", athleteData.identity_document)}\n                  ${g("Codice Fiscale", athleteData.fiscal_code)}\n                  ${g("Matricola FIPAV", athleteData.federal_id)}\n                  ${g("Scadenza Cert. Medico", athleteData.medical_cert_expires_at ? Utils.formatDate(athleteData.medical_cert_expires_at) : null, athleteData.medical_cert_expires_at && new Date(athleteData.medical_cert_expires_at) < new Date() ? "var(--color-pink)" : null)}\n                </div>\n              </div>\n            </div>\n\n            \x3c!-- PAGAMENTI (in Anagrafica) --\x3e\n            <div>\n              <p class="section-label">Recenti Pagamenti</p>\n              ${paymentsParams && paymentsParams.length > 0
-            ? `\n                <div class="table-wrapper">\n                  <table class="table">\n                    <thead><tr><th>Scadenza</th><th>Importo</th><th>Stato</th><th>Metodo</th><th>Data Pagamento</th></tr></thead>\n                    <tbody>\n                      ${paymentsParams
-              .slice(0, 5)
-              .map(
-                (e) =>
-                  `<tr>\n                        <td>${Utils.formatDate(e.due_date)}</td>\n                        <td><strong>€ ${Utils.formatNum(e.amount, 2)}</strong></td>\n                        <td>${"paid" === e.status ? '<span class="badge badge-success">Pagato</span>' : "overdue" === e.status ? '<span class="badge badge-danger">Scaduto</span>' : '<span class="badge badge-warning">In attesa</span>'}</td>\n                        <td>${Utils.escapeHtml(e.payment_method || "—")}</td>\n                        <td style="font-size:12px;color:var(--color-text-muted);">${e.paid_at ? Utils.formatDate(e.paid_at) : "—"}</td>\n                      </tr>`,
-              )
-              .join(
-                "",
-              )}\n                    </tbody>\n                  </table>\n                </div>`
-            : Utils.emptyState("Nessun pagamento registrato")
+        ((appContainer.innerHTML = `\n        <div class="page-body" style="display:flex;flex-direction:column;gap:var(--sp-4); background:var(--color-black); min-height:100vh; padding-top:var(--sp-3);">\n\n          \x3c!-- BREADCRUMB NAV --\x3e\n          <div style="display:flex;align-items:center;gap:var(--sp-2);padding:0 var(--sp-4);">\n            <button class="btn btn-ghost btn-sm" id="back-to-list" style="color:var(--color-text-muted);border:none;padding:0;display:flex;align-items:center;gap:6px;font-size:12px;text-transform:uppercase;letter-spacing:0.06em;" type="button">\n              <i class="ph ph-arrow-left" style="font-size:16px;"></i> Atleti\n            </button>\n            <div style="flex:1;"></div>\n            ${hasEditPerms ? '<button class="btn btn-primary btn-sm" id="edit-athlete-btn" type="button" style="margin-right:8px;"><i class="ph ph-pencil-simple"></i> MODIFICA</button>' : ""}\n            ${["admin", "manager"].includes(currentUser?.role) ? '<button class="btn btn-default btn-sm" id="ai-report-btn" type="button">⚡ REPORT AI</button>' : ""}\n          </div>\n\n          <!-- HEADER ATLETA -->\n          <div style="display:flex; align-items:center; gap:var(--sp-4); padding:0 var(--sp-4); margin-top:var(--sp-2);">\n            ${athleteData.jersey_number != null ? `<div style="font-size:4rem; font-weight:800; color:var(--color-pink); font-family:var(--font-display); line-height:1; letter-spacing:-2px;">#${Utils.escapeHtml(String(athleteData.jersey_number))}</div>` : ''}\n            <div style="display:flex; flex-direction:column;">\n              <h2 style="font-size:2.5rem; font-weight:800; margin:0; line-height:1.1; font-family:var(--font-display); text-transform:uppercase; letter-spacing:-0.5px;">${Utils.escapeHtml(athleteData.first_name || '')} <span style="font-weight:300; color:var(--color-text-muted);">${Utils.escapeHtml(athleteData.last_name || '')}</span></h2>\n              <div style="font-size:15px; color:var(--color-white); margin-top:8px; display:flex; gap:12px; align-items:center;">
+                ${athleteData.role ? `<span style="background:rgba(255,255,255,0.1); padding:4px 10px; border-radius:6px; font-weight:600; font-size:13px; letter-spacing:0.5px; text-transform:uppercase;">${Utils.escapeHtml(athleteData.role)}</span>` : ''}
+                ${athleteData.team_names && athleteData.team_names.length > 0
+            ? athleteData.team_names.map(t => `<span style="color:var(--color-text-muted); font-weight:500;">${Utils.escapeHtml(formatTeamLabel(t.category, t.name))}</span>`).join('<span style="color:var(--color-text-muted); opacity:0.5;">·</span>')
+            : (athleteData.team_name ? `<span style="color:var(--color-text-muted); font-weight:500;">${Utils.escapeHtml(formatTeamLabel(athleteData.category, athleteData.team_name))}</span>` : '')}
+              </div>\n            </div>\n          </div>\n\n          <!-- TAB BAR -->\n          <div style="position:relative;margin:0 calc(var(--sp-4) * -1);padding:0 var(--sp-4);border-bottom:1px solid var(--color-border);margin-bottom:var(--sp-4);">\n            <div id="athlete-tab-bar" class="fusion-tabs-container" style="display:flex;gap:0;overflow-x:auto;scrollbar-width:none;position:relative;z-index:2;padding-bottom:1px;">\n              ${[
+            { id: "anagrafica", label: "Anagrafica" },
+            { id: "pagamenti", label: "Pagamenti" },
+            { id: "documenti", label: "Documenti" },
+          ]
+            .map(
+              (e) =>
+                `<button class="athlete-tab-btn fusion-tab" data-tab="${e.id}" type="button" style="flex-shrink:0;white-space:nowrap; ${e.pink ? "color:var(--color-pink);" : ""}">${e.label}</button>`,
+            )
+            .join(
+              "",
+            )}\n            </div>\n            \x3c!-- Shadow gradient for scroll indication --\x3e\n            <div id="tab-scroll-indicator" style="position:absolute;top:0;right:0;bottom:0;width:48px;background:linear-gradient(to left, var(--color-black) 20%, transparent 100%);pointer-events:none;z-index:3;transition:opacity 0.3s;opacity:0.8;"></div>\n          </div>\n\n          \x3c!-- ANAGRAFICA TAB --\x3e\n          <div id="tab-panel-anagrafica" class="athlete-tab-panel" style="display:flex;flex-direction:column;gap:var(--sp-4);">\n            <div style="display:flex;flex-direction:row;align-items:flex-start;gap:var(--sp-4);">\n              \x3c!-- FOTO PERSONALE --\x3e\n              <div style="width:280px;flex-shrink:0;">\n                <p class="section-label" style="text-align:center;">Foto Personale</p>\n                <div class="card" style="padding:var(--sp-3);">\n                  <div style="display:flex;flex-direction:column;align-items:center;gap:var(--sp-3);">\n                    <div id="athlete-photo-preview" style="width:240px;height:240px;border-radius:16px;overflow:hidden;flex-shrink:0;border:2px solid var(--color-border);background:${getAthleteColor(athleteData.full_name)};display:flex;align-items:center;justify-content:center;">\n                      ${athleteData.photo_path ? `<img src="${Utils.escapeHtml(athleteData.photo_path)}" alt="Foto atleta" style="width:100%;height:100%;object-fit:cover;object-position:center">` : `<span style="font-family:var(--font-display);font-size:4.5rem;font-weight:700;color:#000;">${Utils.initials(athleteData.full_name)}</span>`}\n                    </div>\n                    <div style="display:flex;flex-direction:column;align-items:center;gap:8px;width:100%;">\n                      <div style="font-size:13px;color:var(--color-text-muted);text-align:center;">\n                        ${athleteData.photo_path ? "Foto caricata" : "Nessuna foto caricata"}\n                      </div>\n                      ${hasEditPerms ? `\n                      <label for="athlete-photo-upload" class="btn btn-default btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;width:100%;justify-content:center;">\n                        <i class="ph ph-camera"></i> ${athleteData.photo_path ? "Cambia foto" : "Carica foto"}\n                      </label>\n                      <input id="athlete-photo-upload" type="file" accept="image/jpeg,image/png,image/webp" style="display:none;">\n                      <div id="athlete-photo-status" style="font-size:12px;color:var(--color-text-muted);text-align:center;"></div>` : ""}\n                    </div>\n                  </div>\n                </div>\n              </div>\n              <div style="flex:1;">\n                <p class="section-label">Dati Anagrafici e Contatti</p>\n                <div class="card" style="padding:var(--sp-3);">\n                  <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-3);">\n                    ${g("Nome", athleteData.first_name)}\n                    ${g("Cognome", athleteData.last_name)}\n                    ${g("Data di Nascita", athleteData.birth_date ? Utils.formatDate(athleteData.birth_date) : null)}\n                    ${g("Luogo di Nascita", athleteData.birth_place)}\n                    ${g("Via di Residenza", athleteData.residence_address)}\n                    ${g("Città di Residenza", athleteData.residence_city)}\n                    ${g("Cellulare", athleteData.phone)}\n                    ${g("E-Mail", athleteData.email)}\n                    ${g("Documento d'Identità", athleteData.identity_document)}\n                    ${g("Codice Fiscale", athleteData.fiscal_code)}\n                    ${g("Scadenza Cert. Medico", athleteData.medical_cert_expires_at ? Utils.formatDate(athleteData.medical_cert_expires_at) : null, athleteData.medical_cert_expires_at && new Date(athleteData.medical_cert_expires_at) < new Date() ? "var(--color-pink)" : null)}\n                    ${g("Matricola FIPAV", athleteData.federal_id)}\n                  </div>\n                </div>\n              </div>\n            </div>\n\n            \x3c!-- DOCUMENTI (in Anagrafica) --\x3e\n            <div>\n              <p class="section-label">Matricola e Documenti</p>\n              <div class="card" style="padding:var(--sp-3);">\n                <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:var(--sp-3);">\n                  ${g("Documento d'Identità", athleteData.identity_document)}\n                  ${g("Codice Fiscale", athleteData.fiscal_code)}\n                  ${g("Matricola FIPAV", athleteData.federal_id)}\n                  ${g("Scadenza Cert. Medico", athleteData.medical_cert_expires_at ? Utils.formatDate(athleteData.medical_cert_expires_at) : null, athleteData.medical_cert_expires_at && new Date(athleteData.medical_cert_expires_at) < new Date() ? "var(--color-pink)" : null)}\n                </div>\n              </div>\n            </div>\n\n            \x3c!-- PAGAMENTI (in Anagrafica) --\x3e\n            <div>\n              <p class="section-label">Recenti Pagamenti</p>\n              ${paymentsParams && paymentsParams.length > 0
+              ? `\n                <div class="table-wrapper">\n                  <table class="table">\n                    <thead><tr><th>Scadenza</th><th>Importo</th><th>Stato</th><th>Metodo</th><th>Data Pagamento</th></tr></thead>\n                    <tbody>\n                      ${paymentsParams
+                .slice(0, 5)
+                .map(
+                  (e) =>
+                    `<tr>\n                        <td>${Utils.formatDate(e.due_date)}</td>\n                        <td><strong>€ ${Utils.formatNum(e.amount, 2)}</strong></td>\n                        <td>${"paid" === e.status ? '<span class="badge badge-success">Pagato</span>' : "overdue" === e.status ? '<span class="badge badge-danger">Scaduto</span>' : '<span class="badge badge-warning">In attesa</span>'}</td>\n                        <td>${Utils.escapeHtml(e.payment_method || "—")}</td>\n                        <td style="font-size:12px;color:var(--color-text-muted);">${e.paid_at ? Utils.formatDate(e.paid_at) : "—"}</td>\n                      </tr>`,
+                )
+                .join(
+                  "",
+                )}\n                    </tbody>\n                  </table>\n                </div>`
+              : Utils.emptyState("Nessun pagamento registrato")
           }\n            </div>\n          </div>\n\n          \x3c!-- METRICS TAB --\x3e\n          <div id="tab-panel-metrics" class="athlete-tab-panel" style="display:none;flex-direction:column;gap:var(--sp-4);">\n\n            \x3c!-- PARAMETRI FISICI E SALTO --\x3e\n            <div>\n              <p class="section-label">Parametri Fisici e Salto</p>\n              <div class="grid-3">\n                <div class="stat-card">\n                  <span class="stat-label">Peso Attuale</span>\n                  <span class="stat-value">${athleteData.weight_kg ? athleteData.weight_kg + ' kg' : '—'}</span>\n                </div>\n                <div class="stat-card">\n                  <span class="stat-label">Altezza Attuale</span>\n                  <span class="stat-value">${athleteData.height_cm ? athleteData.height_cm + ' cm' : '—'}</span>\n                </div>\n                <div class="stat-card">\n                  <span class="stat-label">Miglior Salto (di recente)</span>\n                  <span class="stat-value">${(function (ms) { if (!ms || !ms.length) return '—'; const jump = ms.find((m) => m.metric_type === 'VERTICAL_JUMP_CMJ' || m.metric_type === 'VERTICAL_JUMP_SJ' || m.metric_type === 'BROAD_JUMP'); return jump ? jump.value + (jump.unit ? ' ' + jump.unit : '') : '—'; })(metricsSummary)}</span>\n                </div>\n              </div>\n            </div>\n\n            \x3c!-- ACWR Section --\x3e\n            <div>\n              <p class="section-label">Athlete Load — ACWR</p>\n              <div class="grid-3">\n                ${(function (
             e,
           ) {
@@ -680,14 +723,20 @@ const Athletes = (() => {
             var btn = document.getElementById("edit-athlete-btn");
             if (btn) btn.onclick = () =>
               (function (athleteData) {
-                const teamOptions = Array.isArray(globalTeamsList)
+                const currentTeamIds = Array.isArray(athleteData.team_ids) ? athleteData.team_ids : (athleteData.team_id ? [athleteData.team_id] : []);
+                const teamCheckboxes = Array.isArray(globalTeamsList)
                   ? globalTeamsList
                     .map(
-                      (tm) =>
-                        `<option value="${Utils.escapeHtml(tm.id)}" ${athleteData.team_id === tm.id ? "selected" : ""}>${Utils.escapeHtml(formatTeamLabel(tm.category, tm.name))}</option>`,
+                      (tm) => {
+                        const checked = currentTeamIds.includes(tm.id) ? 'checked' : '';
+                        return `<label class="multi-team-option${checked ? ' selected' : ''}" for="ea-team-${Utils.escapeHtml(tm.id)}">
+                          <input type="checkbox" id="ea-team-${Utils.escapeHtml(tm.id)}" class="ea-team-cb" value="${Utils.escapeHtml(tm.id)}" ${checked} style="display:none;">
+                          <span class="multi-team-label">${Utils.escapeHtml(formatTeamLabel(tm.category, tm.name))}</span>
+                        </label>`;
+                      }
                     )
-                    .join("")
-                  : "";
+                    .join('')
+                  : '';
                 const s = UI.modal({
                   title: "Modifica Atleta",
                   body: `<div class="form-grid">
@@ -702,8 +751,9 @@ const Athletes = (() => {
         </div>
         <div class="form-grid">
           <div class="form-group">
-            <label class="form-label" for="ea-team">Squadra *</label>
-            <select id="ea-team" class="form-select">${teamOptions}</select>
+            <label class="form-label" for="ea-team-panel">Squadre</label>
+            <div id="ea-team-panel" class="multi-team-panel" style="max-height:160px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding:10px;background:rgba(255,255,255,0.04);border:1px solid var(--color-border);border-radius:var(--radius);">\n${teamCheckboxes}\n</div>
+            <div style="font-size:11px;color:var(--color-text-muted);margin-top:4px;"><i class="ph ph-info"></i> Puoi selezionare più squadre</div>
           </div>
           <div class="form-group">
             <label class="form-label" for="ea-jersey">N° Maglia</label>
@@ -802,12 +852,12 @@ const Athletes = (() => {
                         .getElementById("ea-fname")
                         .value.trim(),
                         a = document.getElementById("ea-lname").value.trim(),
-                        l = document.getElementById("ea-team").value,
+                        selectedTeams = [...document.querySelectorAll(".ea-team-cb:checked")].map(cb => cb.value),
                         i = document.getElementById("ea-error");
-                      if (!e || !a || !l)
+                      if (!e || !a || selectedTeams.length === 0)
                         return (
                           (i.textContent =
-                            "Nome, cognome e squadra sono obbligatori"),
+                            "Nome, cognome e almeno una squadra sono obbligatori"),
                           void i.classList.remove("hidden")
                         );
                       const r = document.getElementById("ea-save");
@@ -817,7 +867,8 @@ const Athletes = (() => {
                           id: athleteData.id,
                           first_name: e,
                           last_name: a,
-                          team_id: l,
+                          team_ids: selectedTeams,
+                          team_id: selectedTeams[0] || null,
                           jersey_number:
                             document.getElementById("ea-jersey").value || null,
                           role:

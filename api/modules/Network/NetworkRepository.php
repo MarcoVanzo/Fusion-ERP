@@ -53,10 +53,10 @@ class NetworkRepository
         $stmt = $this->db->prepare(
             'INSERT INTO network_collaborations
                 (id, tenant_id, partner_name, partner_type, agreement_type, start_date, end_date,
-                 status, referent_name, referent_contact, notes)
+                 status, referent_name, referent_contact, notes, logo_path)
              VALUES
                 (:id, :tenant_id, :partner_name, :partner_type, :agreement_type, :start_date, :end_date,
-                 :status, :referent_name, :referent_contact, :notes)'
+                 :status, :referent_name, :referent_contact, :notes, :logo_path)'
         );
         $stmt->execute($data);
     }
@@ -74,10 +74,19 @@ class NetworkRepository
                 status              = :status,
                 referent_name       = :referent_name,
                 referent_contact    = :referent_contact,
-                notes               = :notes
+                notes               = :notes,
+                logo_path           = :logo_path
              WHERE id = :id AND tenant_id = :tid AND is_deleted = 0'
         );
         $stmt->execute(array_merge($data, [':id' => $id, ':tid' => $tenantId]));
+    }
+
+    public function updateColLogo(string $collabId, string $logoPath): void
+    {
+        $tenantId = TenantContext::id();
+        $this->db->prepare(
+            'UPDATE network_collaborations SET logo_path = :lp WHERE id = :id AND tenant_id = :tid'
+        )->execute([':lp' => $logoPath, ':id' => $collabId, ':tid' => $tenantId]);
     }
 
     public function deleteCollaboration(string $id): void

@@ -226,6 +226,19 @@ const Network = (() => {
                     </div>
                 </div>
                 <div class="form-group">
+                    <label class="form-label">Media & Documenti</label>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-2)">
+                        <div>
+                            <label class="form-label" style="font-size:11px;color:var(--color-text-muted)">Logo Aziendale</label>
+                            <input id="cl-logo-file" class="form-input" type="file" accept="image/*">
+                        </div>
+                        <div>
+                            <label class="form-label" style="font-size:11px;color:var(--color-text-muted)">Allegato Contratto (PDF)</label>
+                            <input id="cl-contract-file" class="form-input" type="file" accept=".pdf">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
                     <label class="form-label" for="cl-notes">Note</label>
                     <textarea id="cl-notes" class="form-input" rows="2">${Utils.escapeHtml(col?.notes || '')}</textarea>
                 </div>
@@ -254,11 +267,33 @@ const Network = (() => {
                     referent_contact: document.getElementById('cl-ref-contact')?.value || null,
                     notes: document.getElementById('cl-notes')?.value || null,
                 };
+                let colId = col?.id;
                 if (isEdit) {
                     await Store.api('updateCollaboration', 'network', { id: col.id, ...payload });
                 } else {
-                    await Store.api('createCollaboration', 'network', payload);
+                    const res = await Store.api('createCollaboration', 'network', payload);
+                    colId = res.id;
                 }
+
+                // Handle logo upload
+                const logoFile = document.getElementById('cl-logo-file')?.files[0];
+                if (logoFile) {
+                    const fd = new FormData();
+                    fd.append('collaboration_id', colId);
+                    fd.append('logo', logoFile);
+                    await Store.api('uploadColLogo', 'network', fd);
+                }
+
+                // Handle contract upload
+                const contractFile = document.getElementById('cl-contract-file')?.files[0];
+                if (contractFile) {
+                    const fd = new FormData();
+                    fd.append('collaboration_id', colId);
+                    fd.append('doc_type', 'contratto');
+                    fd.append('file', contractFile);
+                    await Store.api('uploadColDocument', 'network', fd);
+                }
+
                 _collaborations = await Store.get('listCollaborations', 'network').catch(() => _collaborations);
                 m.close();
                 UI.toast(isEdit ? 'Collaborazione aggiornata' : 'Collaborazione creata', 'success');
@@ -275,17 +310,48 @@ const Network = (() => {
             title: Utils.escapeHtml(col.partner_name),
             body: `
                 <div style="display:flex;flex-direction:column;gap:var(--sp-2)">
-                    <div style="display:flex;gap:var(--sp-2);align-items:center">
-                        ${_statusBadgeHtml(col.status, 'col')}
-                        <span style="font-size:13px;color:var(--color-text-muted)">${Utils.escapeHtml(col.partner_type || '')}</span>
+                    <div style="display:flex;gap:var(--sp-2);align-items:center;justify-content:space-between">
+                        <div style="display:flex;gap:var(--sp-2);align-items:center">
+                            ${_statusBadgeHtml(col.status, 'col')}
+                            <span style="font-size:13px;color:var(--color-text-muted)">${Utils.escapeHtml(col.partner_type || '')}</span>
+                        </div>
+                        ${col.logo_path ? `<img src="${col.logo_path}" style="height:40px;object-fit:contain;border-radius:var(--radius-sm)">` : ''}
                     </div>
                     ${col.agreement_type ? `<div><span style="font-size:12px;color:var(--color-text-muted)">Accordo</span><div style="font-weight:600">${Utils.escapeHtml(col.agreement_type)}</div></div>` : ''}
                     ${col.start_date || col.end_date ? `<div><span style="font-size:12px;color:var(--color-text-muted)">Periodo</span><div>${col.start_date || '?'} → ${col.end_date || '∞'}</div></div>` : ''}
                     ${col.referent_name ? `<div><span style="font-size:12px;color:var(--color-text-muted)">Referente</span><div>${Utils.escapeHtml(col.referent_name)} ${col.referent_contact ? '· ' + Utils.escapeHtml(col.referent_contact) : ''}</div></div>` : ''}
                     ${col.notes ? `<div><span style="font-size:12px;color:var(--color-text-muted)">Note</span><div style="font-size:13px">${Utils.escapeHtml(col.notes)}</div></div>` : ''}
+                    <div id="col-docs-area" style="margin-top:var(--sp-3)">
+                        <span style="font-size:12px;color:var(--color-text-muted);display:block;margin-bottom:var(--sp-1)">Documenti Allegati</span>
+                        <div id="col-docs-list" style="font-size:13px;display:flex;flex-direction:column;gap:4px">Caricamento...</div>
+                    </div>
                 </div>`,
             footer: `<button class="btn btn-ghost btn-sm" id="cod-close" type="button">Chiudi</button>`,
         });
+
+        // Load documents
+        Store.get('listColDocuments', 'network', { collaboration_id: col.id }).then(docs => {
+            const list = document.getElementById('col-docs-list');
+            if (!list) return;
+            if (!docs.length) {
+                list.innerHTML = '<span style="color:var(--color-text-muted);font-style:italic">Nessun documento</span>';
+            } else {
+                list.innerHTML = docs.map(d => `
+                    <div style="display:flex;align-items:center;justify-content:space-between;padding:6px;background:var(--color-bg-alt);border-radius:var(--radius-sm)">
+                        <span style="display:flex;align-items:center;gap:6px">
+                            <i class="ph ph-file-text" style="color:var(--color-primary)"></i>
+                            ${Utils.escapeHtml(d.file_name)}
+                            ${d.doc_type ? `<small class="badge badge-sm">${Utils.escapeHtml(d.doc_type)}</small>` : ''}
+                        </span>
+                        <a href="api/?module=network&action=downloadColDocument&docId=${d.id}" target="_blank" class="btn btn-ghost btn-sm" style="height:24px;width:24px;padding:0"><i class="ph ph-download-simple"></i></a>
+                    </div>
+                `).join('');
+            }
+        }).catch(err => {
+            const list = document.getElementById('col-docs-list');
+            if (list) list.innerHTML = `<span style="color:var(--color-pink)">Errore: ${err.message}</span>`;
+        });
+
         document.getElementById('cod-close')?.addEventListener('click', () => m.close());
     }
 
