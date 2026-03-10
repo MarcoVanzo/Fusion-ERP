@@ -72,6 +72,7 @@ try {
             'tasks' => dispatch('Tasks', $action),
             'staff' => dispatch('Staff', $action),
             'ecommerce' => dispatch('Ecommerce', $action),
+            'newsletter' => dispatch('Newsletter', $action),
             'societa' => dispatch('Societa', $action),
             'network' => dispatch('Network', $action),
             'whatsapp' => dispatchWebhook($action),
