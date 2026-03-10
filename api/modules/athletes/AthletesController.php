@@ -135,7 +135,7 @@ class AthletesController
         }
 
         // Support multi-team: team_ids (array) takes priority over legacy team_id
-        if (!empty($body['team_ids']) && is_array($body['team_ids'])) {
+        if (isset($body['team_ids']) && is_array($body['team_ids'])) {
             $teamIds = array_values(array_filter($body['team_ids']));
         }
         elseif (!empty($body['team_id'])) {

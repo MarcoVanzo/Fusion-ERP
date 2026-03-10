@@ -228,6 +228,16 @@ const Athletes = (() => {
                         }
                       });
                     }
+
+                    // Add listeners for checkboxes
+                    document.querySelectorAll('.na-team-cb').forEach(cb => {
+                      cb.addEventListener('change', (ev) => {
+                        const label = ev.target.closest('.multi-team-option');
+                        if (ev.target.checked) label?.classList.add('selected');
+                        else label?.classList.remove('selected');
+                        collectWizardData();
+                      });
+                    });
                   }));
                 const prevWizardBtn = document.getElementById("na-prev"),
                   nextWizardBtn = document.getElementById("na-next"),
@@ -931,7 +941,15 @@ const Athletes = (() => {
                         }
                       },
                     ),
-                  ));
+                  ),
+                  // Add listeners for team checkboxes in edit modal
+                  document.querySelectorAll('.ea-team-cb').forEach(cb => {
+                    cb.addEventListener('change', (ev) => {
+                      const label = ev.target.closest('.multi-team-option');
+                      if (ev.target.checked) label?.classList.add('selected');
+                      else label?.classList.remove('selected');
+                    });
+                  }));
               })(athleteData);
           })(),
           (function () {
