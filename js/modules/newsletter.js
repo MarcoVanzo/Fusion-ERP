@@ -11,7 +11,7 @@ const Newsletter = (() => {
     let _subscribers = [];
     let _meta       = { total: 0 };
     let _nextCursor = null;
-    let _filter     = { status: '', search: '' };
+    let _filter     = { status: 'active', search: '' };
 
     // ─── RENDER SHELL ─────────────────────────────────────────────────────────
     function render() {
@@ -95,8 +95,8 @@ const Newsletter = (() => {
                         <i class="ph ph-warning-circle"></i>
                     </div>
                     <div class="stat-content">
-                        <div class="stat-label">Bounce</div>
-                        <div class="stat-value">${_stats.bounced.toLocaleString('it-IT')}</div>
+                        <div class="stat-label">Da Confermare</div>
+                        <div class="stat-value">${(_stats.unconfirmed || 0).toLocaleString('it-IT')}</div>
                     </div>
                 </div>
             </div>
@@ -106,8 +106,8 @@ const Newsletter = (() => {
                     <h2 class="card-title"><i class="ph ph-users-three"></i> Iscritti</h2>
                     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
                         <div class="filter-bar" id="nl-status-filter">
-                            <button class="filter-chip ${!_filter.status ? 'active' : ''}" data-nl-status="" type="button">Tutti</button>
                             <button class="filter-chip ${_filter.status === 'active' ? 'active' : ''}" data-nl-status="active" type="button">Attivi</button>
+                            <button class="filter-chip ${_filter.status === 'unconfirmed' ? 'active' : ''}" data-nl-status="unconfirmed" type="button">Da confermare</button>
                             <button class="filter-chip ${_filter.status === 'unsubscribed' ? 'active' : ''}" data-nl-status="unsubscribed" type="button">Disiscritti</button>
                             <button class="filter-chip ${_filter.status === 'bounced' ? 'active' : ''}" data-nl-status="bounced" type="button">Bounce</button>
                         </div>

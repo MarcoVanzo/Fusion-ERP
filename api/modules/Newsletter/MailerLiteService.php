@@ -53,6 +53,7 @@ class MailerLiteService
                 'active'       => $active,
                 'unsubscribed' => $unsubscribed,
                 'bounced'      => $bounced,
+                'unconfirmed'  => $unconfirmed,
             ];
         } catch (\Throwable $e) {
             error_log('[MailerLite] getStats error: ' . $e->getMessage());
@@ -71,7 +72,7 @@ class MailerLiteService
 
     private function emptyStats(): array
     {
-        return ['total' => 0, 'active' => 0, 'unsubscribed' => 0, 'bounced' => 0];
+        return ['total' => 0, 'active' => 0, 'unsubscribed' => 0, 'bounced' => 0, 'unconfirmed' => 0];
     }
 
     // ─── SUBSCRIBERS ─────────────────────────────────────────────────────────
