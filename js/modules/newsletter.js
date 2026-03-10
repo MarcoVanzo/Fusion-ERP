@@ -50,6 +50,9 @@ const Newsletter = (() => {
                 </div>
                 ${isAdmin ? `
                 <div class="page-actions">
+                    <a href="https://dashboard.mailerlite.com/campaigns" target="_blank" class="btn btn-default" style="text-decoration: none;">
+                        <i class="ph ph-paper-plane-right"></i> Crea Newsletter in MailerLite
+                    </a>
                     <button class="btn btn-default" id="btn-nl-groups" type="button">
                         <i class="ph ph-squares-four"></i> Gestisci Gruppi
                     </button>
