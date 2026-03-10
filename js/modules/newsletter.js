@@ -272,8 +272,7 @@ const Newsletter = (() => {
             if (_filter.status) params.status = _filter.status;
             if (_filter.search) params.search = _filter.search;
 
-            const qs = '&' + Object.entries(params).map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join('&');
-            const result = await Store.get('listSubscribers' + qs, 'newsletter');
+            const result = await Store.get('listSubscribers', 'newsletter', params);
 
             if (append) {
                 _subscribers = [..._subscribers, ...(result.data || [])];
