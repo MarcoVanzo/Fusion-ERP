@@ -64,9 +64,9 @@ class MailerLiteService
     {
         $response = $this->client->subscribers->get([
             'filter' => ['status' => $status],
-            'limit'  => 1,
+            'limit'  => 0,
         ]);
-        return (int)($response['body']['meta']['total'] ?? 0);
+        return (int)($response['body']['total'] ?? 0);
     }
 
     private function emptyStats(): array

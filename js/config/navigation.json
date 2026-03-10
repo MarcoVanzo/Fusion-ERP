@@ -49,6 +49,20 @@
             "operatore",
             "manager",
             "admin"
+        ],
+        "children": [
+            {
+                "title": "Elenco",
+                "path": "staff",
+                "icon": "users",
+                "isMobileVisible": false
+            },
+            {
+                "title": "Documenti",
+                "path": "staff-documents",
+                "icon": "file-text",
+                "isMobileVisible": false
+            }
         ]
     },
     {

@@ -524,6 +524,96 @@ const Staff = (() => {
       c.innerHTML = Utils.emptyState("Errore caricamento", e.message);
     }
   }
+  function renderDocumentsView() {
+    const c = document.getElementById("app");
+    if (!c) return;
+    const today = new Date();
+    const future60 = new Date(today.getTime() + 60 * 24 * 60 * 60 * 1000);
+    
+    const medCertStats = { expired: 0, expiring: 0, valid: 0, missing: 0 };
+    const certRows = t.map(p => {
+        let statusHtml = '';
+        let certDate = p.medical_cert_expires_at ? new Date(p.medical_cert_expires_at) : null;
+        let isExpired = certDate && certDate < today;
+        let isExpiring = certDate && !isExpired && certDate < future60;
+        
+        if (isExpired) {
+            medCertStats.expired++;
+            statusHtml = '<span class="badge badge-danger">Scaduto</span>';
+        } else if (isExpiring) {
+            medCertStats.expiring++;
+            statusHtml = '<span class="badge badge-warning">In scadenza</span>';
+        } else if (certDate) {
+            medCertStats.valid++;
+            statusHtml = '<span class="badge badge-success">Valido</span>';
+        } else {
+            medCertStats.missing++;
+            statusHtml = '<span class="badge">Mancante</span>';
+        }
+
+        let contractStatusHtml = '';
+        if (p.contract_status === 'firmato') {
+            contractStatusHtml = '<span class="badge badge-success">Firmato</span>';
+        } else if (p.contract_status === 'inviato') {
+            contractStatusHtml = '<span class="badge badge-warning">Inviato</span>';
+        } else {
+            contractStatusHtml = '<span class="badge">Nessuno</span>';
+        }
+
+        return `<tr style="cursor:pointer;" data-staff-id="${Utils.escapeHtml(p.id)}">
+            <td><strong>${Utils.escapeHtml(p.full_name)}</strong></td>
+            <td>${Utils.escapeHtml(p.role || "—")}</td>
+            <td style="color:${isExpired ? 'var(--color-pink)' : isExpiring ? 'var(--color-warning)' : 'var(--color-text)'}">
+                ${certDate ? Utils.formatDate(p.medical_cert_expires_at) : '<span style="color:var(--color-text-muted)">—</span>'}
+            </td>
+            <td>${statusHtml}</td>
+            <td>${Utils.escapeHtml(p.identity_document || "—")}</td>
+            <td>${Utils.escapeHtml(p.fiscal_code || "—")}</td>
+            <td>${contractStatusHtml}</td>
+        </tr>`;
+    }).join('');
+
+    c.innerHTML = `
+        <div class="page-header" style="border-bottom:1px solid var(--color-border);padding-bottom:var(--sp-3);margin-bottom:var(--sp-3);">
+            <div>
+                <h1 class="page-title">Documenti Staff</h1>
+                <p class="page-subtitle">Stato dei documenti e contratti dello staff</p>
+            </div>
+        </div>
+
+        <p class="section-label">Stato Certificati Medici</p>
+        <div class="grid-3" style="margin-bottom:var(--sp-4);">
+            <div class="stat-card"><span class="stat-label">Validi</span><span class="stat-value" style="color:var(--color-success)">${medCertStats.valid}</span></div>
+            <div class="stat-card"><span class="stat-label">In scadenza (60gg)</span><span class="stat-value" style="color:var(--color-warning)">${medCertStats.expiring}</span></div>
+            <div class="stat-card"><span class="stat-label">Scaduti o Mancanti</span><span class="stat-value" style="color:var(--color-pink)">${medCertStats.expired + medCertStats.missing}</span></div>
+        </div>
+
+        <div class="table-wrapper">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Membro</th>
+                        <th>Ruolo</th>
+                        <th>Scadenza Cert. Medico</th>
+                        <th>Stato Cert.</th>
+                        <th>Doc. Identità</th>
+                        <th>Cod. Fiscale</th>
+                        <th>Contratto</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${certRows.length > 0 ? certRows : `<tr><td colspan="7" style="text-align:center;color:var(--color-text-muted);padding:var(--sp-4);">Nessun membro presente</td></tr>`}
+                </tbody>
+            </table>
+        </div>
+    `;
+
+    document.querySelectorAll("[data-staff-id]").forEach((t) => {
+      t.addEventListener("click", () => d(t.dataset.staffId), {
+        signal: e.signal,
+      });
+    });
+  }
   return {
     destroy() {
       (e.abort(), (e = new AbortController()));
@@ -538,7 +628,7 @@ const Staff = (() => {
             Store.get("teams", "athletes").catch(() => []),
           ])),
             (n = null),
-            r());
+            Router.getCurrentRoute() === "staff-documents" ? renderDocumentsView() : r());
         } catch (t) {
           ((e.innerHTML = Utils.emptyState(
             "Errore caricamento staff",
