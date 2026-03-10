@@ -65,7 +65,7 @@ const Athletes = (() => {
                 : "transparent",
                 initialsColor = getAthleteColor(ath.full_name);
               return `
-      <div class="card" style="cursor:pointer;position:relative;overflow:hidden;" data-athlete-id="${Utils.escapeHtml(ath.id)}" data-name="${Utils.escapeHtml((ath.full_name || "").toLowerCase())}" data-role="${Utils.escapeHtml((ath.role || "").toLowerCase())}" data-team="${Utils.escapeHtml((ath.team_name || "").toLowerCase())}">
+      <div class="card" style="cursor:pointer;position:relative;overflow:hidden;" data-athlete-id="${Utils.escapeHtml(ath.id)}" data-name="${Utils.escapeHtml((ath.full_name || "").toLowerCase())}" data-role="${Utils.escapeHtml((ath.role || "").toLowerCase())}" data-team="${Utils.escapeHtml(((ath.team_names || []).map(t => t.name).join(' ') + ' ' + (ath.team_name || "")).toLowerCase())}">
         ${ath.acwr_risk && "moderate" !== ath.acwr_risk && "low" !== ath.acwr_risk ? `<div style="position:absolute;top:var(--sp-2);right:var(--sp-2);width:24px;height:24px;border-radius:50%;background:${riskColor};display:flex;align-items:center;justify-content:center;font-size:14px;color:#000;box-shadow:0 0 8px ${riskColor};"><i class="ph-fill ph-warning-circle"></i></div>` : ""}
         <div style="display:flex;align-items:flex-start;gap:var(--sp-2);">
           <div style="width:48px;height:48px;background:${initialsColor};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--font-display);font-weight:700;font-size:1.3rem;color:#000;border-radius:8px;">${ath.photo_path
@@ -77,7 +77,11 @@ const Athletes = (() => {
           <div style="overflow:hidden;flex:1;">
             <div style="font-family:var(--font-display);font-weight:700;font-size:1.1rem;">${Utils.escapeHtml(ath.full_name)}</div>
             <div style="font-size:12px;color:var(--color-text-muted);">${Utils.escapeHtml(ath.role || "—")}</div>
-            <div style="margin-top:4px;">${Utils.badge(formatTeamLabel(ath.category, ath.team_name), "muted")}</div>
+            <div style="margin-top:4px; display:flex; flex-wrap:wrap; gap:4px;">
+              ${ath.team_names && ath.team_names.length > 0
+                  ? ath.team_names.map(t => Utils.badge(formatTeamLabel(t.category, t.name), "muted")).join('')
+                  : Utils.badge(formatTeamLabel(ath.category, ath.team_name), "muted")}
+            </div>
           </div>
         </div>
       </div>`;
