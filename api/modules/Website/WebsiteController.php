@@ -213,4 +213,38 @@ class WebsiteController
             Response::error('Errore nel salvataggio del file.', 500);
         }
     }
+
+    // ─── POST /api/?module=website&action=subscribeNewsletter ────────────────
+    public function subscribeNewsletter(): void
+    {
+        // Public endpoint allowed (no auth required)
+        $body = Response::jsonBody();
+        Response::requireFields($body, ['email']);
+
+        $email = filter_var(trim($body['email']), FILTER_VALIDATE_EMAIL);
+        if (!$email) {
+            Response::error('Indirizzo email non valido.', 400);
+        }
+
+        require_once dirname(__DIR__) . '/Newsletter/MailerLiteService.php';
+        $mailer = new \FusionERP\Modules\Newsletter\MailerLiteService();
+
+        if (!$mailer->isConfigured()) {
+            Response::error('Il servizio newsletter non è momentaneamente disponibile.', 503);
+        }
+
+        try {
+            // Note: We leave name etc empty for public subscription, they can be updated later
+            $result = $mailer->upsertSubscriber($email);
+            
+            if ($result) {
+                Response::success(['message' => 'Iscrizione completata con successo!']);
+            } else {
+                Response::error('Si è verificato un errore durante l\'iscrizione.', 500);
+            }
+        } catch (\Throwable $e) {
+            error_log('[Newsletter Subscribe] Error: ' . $e->getMessage());
+            Response::error('Servizio temporaneamente non disponibile.', 500);
+        }
+    }
 }
