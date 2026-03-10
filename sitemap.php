@@ -45,7 +45,7 @@ try {
         [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_TIMEOUT => 3]
     );
     $stmt = $pdo->query(
-        "SELECT slug, published_at FROM news WHERE is_published = 1 ORDER BY published_at DESC LIMIT 500"
+        "SELECT slug, published_at FROM website_news WHERE is_published = 1 AND published_at <= NOW() ORDER BY published_at DESC LIMIT 500"
     );
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         $slug = htmlspecialchars($row['slug'] ?? '', ENT_XML1, 'UTF-8');
