@@ -74,6 +74,18 @@ class WebsiteController
         Response::success($article);
     }
 
+    // ─── GET /api/?module=website&action=getSitemapUrls ──────────────────────
+    // Public endpoint — used by sitemap.php to generate XML sitemap
+    public function getSitemapUrls(): void
+    {
+        $articles = $this->repo->getNews(true, 500); // all published
+        $urls = array_map(fn($a) => [
+            'slug'        => $a['slug'],
+            'published_at' => $a['published_at'],
+        ], $articles);
+        Response::success($urls);
+    }
+
     // ─── POST /api/?module=website&action=createNews ────────────────────────
     public function createNews(): void
     {

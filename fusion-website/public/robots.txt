@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://www.fusionteamvolley.it/ERP/sitemap.php
+
+# No crawling of ERP or API
+Disallow: /ERP/
+Disallow: /ERP/api/
+Disallow: /api/

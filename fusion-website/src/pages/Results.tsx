@@ -109,7 +109,7 @@ const Results = () => {
 
                     {/* Ultimi Risultati Header & Filter */}
                     <section>
-                        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 border-b-2 border-zinc-800 pb-4 gap-4">
+                        <div className="sticky top-24 z-30 bg-zinc-950/90 backdrop-blur-md pt-4 pb-4 border-b-2 border-zinc-800 flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
                             <div className="flex items-center gap-4">
                                 <Trophy className="text-brand-500" size={32} />
                                 <h2 className="text-4xl font-heading text-white tracking-tight">ULTIMI RISULTATI</h2>
@@ -117,7 +117,7 @@ const Results = () => {
 
                             {/* Filter Dropdown */}
                             {championships.length > 1 && (
-                                <div className="flex items-center gap-3 bg-zinc-900 border border-zinc-700 px-4 py-2 clip-diagonal w-full md:w-auto">
+                                <div className="flex items-center gap-3 bg-zinc-900 border border-zinc-700 px-4 py-2 clip-diagonal w-full md:w-auto shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
                                     <Filter size={20} className="text-brand-500" />
                                     <select
                                         value={selectedChamp}
@@ -164,16 +164,22 @@ const Results = () => {
                                             </div>
 
                                             <div className="flex items-center gap-4 justify-center flex-grow w-full md:w-auto mt-4 md:mt-0">
-                                                <div className={`text-right font-heading text-sm md:text-xl w-2/5 break-words whitespace-normal leading-tight ${isFusionHome ? 'text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]' : 'text-zinc-500'}`}>
-                                                    {match.home}
+                                                <div className={`flex items-center justify-end gap-2 w-2/5 ${isFusionHome ? 'text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]' : 'text-zinc-500'}`}>
+                                                    <span className="font-heading text-sm md:text-xl break-words whitespace-normal leading-tight text-right">{match.home}</span>
+                                                    {isFusionHome && (
+                                                        <img src="/demo/assets/logo-colorato.png" alt="Fusion" className="w-10 h-10 rounded-full object-contain border-2 border-brand-500/60 shadow-[0_0_12px_rgba(217,70,239,0.5)] bg-zinc-900 flex-shrink-0" />
+                                                    )}
                                                 </div>
 
                                                 <div className="flex items-center justify-center min-w-[100px] h-12 bg-zinc-950 border border-zinc-800 clip-diagonal font-heading text-2xl tracking-widest text-brand-500">
                                                     {match.sets_home} - {match.sets_away}
                                                 </div>
 
-                                                <div className={`text-left font-heading text-sm md:text-xl w-2/5 break-words whitespace-normal leading-tight ${isFusionAway ? 'text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]' : 'text-zinc-500'}`}>
-                                                    {match.away}
+                                                <div className={`flex items-center gap-2 w-2/5 ${isFusionAway ? 'text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]' : 'text-zinc-500'}`}>
+                                                    {isFusionAway && (
+                                                        <img src="/demo/assets/logo-colorato.png" alt="Fusion" className="w-10 h-10 rounded-full object-contain border-2 border-brand-500/60 shadow-[0_0_12px_rgba(217,70,239,0.5)] bg-zinc-900 flex-shrink-0" />
+                                                    )}
+                                                    <span className="font-heading text-sm md:text-xl break-words whitespace-normal leading-tight">{match.away}</span>
                                                 </div>
                                             </div>
 
@@ -211,8 +217,11 @@ const Results = () => {
                                     <div className="flex flex-col gap-1">
                                         {champ.rows.map((row) => (
                                             <div key={row.team} className={`flex items-center justify-between p-2 text-sm ${row.is_our_team ? 'bg-brand-500/20 text-white font-bold border-l-2 border-brand-500' : 'text-zinc-400 border-l-2 border-transparent hover:bg-zinc-800'}`}>
-                                                <div className="flex items-center gap-3 w-3/4">
+                                                <div className="flex items-center gap-2 w-3/4">
                                                     <span className="w-5 text-center text-zinc-600 font-heading text-xs">{row.position}</span>
+                                                    {row.is_our_team && (
+                                                        <img src="/demo/assets/logo-colorato.png" alt="Fusion" className="w-5 h-5 rounded-full object-contain border border-brand-500/60 flex-shrink-0" />
+                                                    )}
                                                     <span className="truncate uppercase text-xs tracking-wider">{row.team}</span>
                                                 </div>
                                                 <div className="w-1/4 text-right font-heading text-white">

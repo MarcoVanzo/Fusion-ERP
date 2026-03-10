@@ -62,12 +62,43 @@ class ResultsController
         // ── 1. Load from Database (federation_championships) ──────────────────
         try {
             $stmt = $pdo->prepare("
-                SELECT * FROM federation_championships 
-                WHERE tenant_id = :tid AND is_active = 1
-                ORDER BY label ASC
+                SELECT
+                    fc.*,
+                    CASE WHEN (
+                        EXISTS (
+                            SELECT 1 FROM federation_standings fs
+                            WHERE fs.championship_id = fc.id
+                              AND (
+                                LOWER(fs.team) LIKE '%fusion%'
+                                OR LOWER(fs.team) LIKE '%team volley%'
+                                OR LOWER(fs.team) LIKE '%fusionteam%'
+                              )
+                        )
+                        OR EXISTS (
+                            SELECT 1 FROM federation_matches fm
+                            WHERE fm.championship_id = fc.id
+                              AND (
+                                LOWER(fm.home_team) LIKE '%fusion%'
+                                OR LOWER(fm.away_team) LIKE '%fusion%'
+                                OR LOWER(fm.home_team) LIKE '%team volley%'
+                                OR LOWER(fm.away_team) LIKE '%team volley%'
+                                OR LOWER(fm.home_team) LIKE '%fusionteam%'
+                                OR LOWER(fm.away_team) LIKE '%fusionteam%'
+                              )
+                        )
+                    ) THEN 1 ELSE 0 END AS has_our_team
+                FROM federation_championships fc
+                WHERE fc.tenant_id = :tid AND fc.is_active = 1
+                ORDER BY fc.label ASC
             ");
             $stmt->execute([':tid' => $tenantId]);
             $campionati = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Cast has_our_team to bool
+            foreach ($campionati as &$c) {
+                $c['has_our_team'] = (bool)($c['has_our_team'] ?? false);
+            }
+            unset($c);
 
             if (!empty($campionati)) {
                 Response::success([
@@ -1950,6 +1981,8 @@ class ResultsController
                 SELECT
                     m.id, m.home_team AS home, m.away_team AS away,
                     m.home_score AS sets_home, m.away_score AS sets_away,
+                    m.home_logo  AS home_logo,
+                    m.away_logo  AS away_logo,
                     DATE_FORMAT(m.match_date, '%d/%m/%Y') AS date,
                     DATE_FORMAT(m.match_date, '%H:%i')    AS time,
                     m.match_date,
@@ -1973,6 +2006,10 @@ class ResultsController
             foreach ($matches as &$m) {
                 $m['is_our_team'] = $this->_isOurTeam($m['home'], $m['away']);
                 $m['score'] = $m['home_score'] !== null ? "{$m['home_score']} - {$m['away_score']}" : "vs";
+                // Build public-facing logo URLs
+                $m['home_logo_url'] = $m['home_logo'] ? ('/ERP/' . ltrim($m['home_logo'], '/')) : null;
+                $m['away_logo_url'] = $m['away_logo'] ? ('/ERP/' . ltrim($m['away_logo'], '/')) : null;
+                unset($m['home_logo'], $m['away_logo']);
             }
 
             $stmtStandings = $pdo->prepare("

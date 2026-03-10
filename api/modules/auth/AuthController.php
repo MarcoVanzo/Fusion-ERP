@@ -144,6 +144,90 @@ class AuthController
         Response::success(['message' => 'Password aggiornata con successo']);
     }
 
+    // ─── POST /api/?module=auth&action=requestPasswordReset ───────────────────
+    public function requestPasswordReset(): void
+    {
+        $body = Response::jsonBody();
+        $email = strtolower(trim($body['email'] ?? ''));
+
+        if (empty($email)) {
+            Response::error('L\'email è obbligatoria', 400);
+        }
+
+        // We act like everything succeeds to prevent user enumeration
+        $user = $this->repo->getUserByEmail($email);
+        if ($user) {
+            $token = bin2hex(random_bytes(32)); // 64 hex chars
+            $expiresAt = date('Y-m-d H:i:s', strtotime('+1 hour'));
+
+            $this->repo->setPasswordResetToken($user['id'], $token, $expiresAt);
+
+            // Costruisce il link di reset usando l'URL dell'app e la route frontend
+            $appUrl = rtrim(getenv('APP_URL') ?: 'https://www.fusionteamvolley.it/demo', '/');
+            $resetLink = $appUrl . "/?reset=" . $token;
+
+            $subject = "Reimposta la tua password - Fusion ERP";
+            $htmlBody = "
+                <body style=\"font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0;\">
+                    <div style=\"max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); overflow: hidden;\">
+                        <div style=\"background-color: #e5005c; color: #ffffff; padding: 20px; text-align: center;\">
+                            <h1 style=\"margin: 0; font-size: 24px;\">Reimposta Password</h1>
+                        </div>
+                        <div style=\"padding: 30px;\">
+                            <p style=\"color: #666666; font-size: 16px;\">Ciao {$user['full_name']},</p>
+                            <p style=\"color: #666666; font-size: 16px;\">Hai richiesto di reimpostare la tua password su Fusion ERP. Se non sei stato tu a farne richiesta, ignora questa email.</p>
+                            <div style=\"text-align: center; margin-top: 30px;\">
+                                <a href=\"{$resetLink}\" style=\"display: inline-block; padding: 12px 24px; background-color: #e5005c; color: #ffffff; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 16px;\">Reimposta la mia Password</a>
+                            </div>
+                            <p style=\"color: #999999; font-size: 14px; margin-top: 30px; text-align: center;\">Il link sarà valido per 1 ora.</p>
+                        </div>
+                    </div>
+                </body>";
+
+            \FusionERP\Shared\Mailer::send($user['email'], $user['full_name'], $subject, $htmlBody);
+            Audit::log('PASSWORD_RESET_REQUESTED', 'users', $user['id']);
+        }
+
+        Response::success(['message' => 'Se l\'email è registrata riceverai il link entro pochi minuti.']);
+    }
+
+    // ─── POST /api/?module=auth&action=confirmPasswordReset ───────────────────
+    public function confirmPasswordReset(): void
+    {
+        $body = Response::jsonBody();
+        $token = $body['token'] ?? '';
+        $newPwd = $body['newPassword'] ?? '';
+
+        if (empty($token) || empty($newPwd)) {
+            Response::error('Token e nuova password sono obbligatori', 400);
+        }
+
+        if (strlen($newPwd) < 10) {
+            Response::error('La password deve essere di almeno 10 caratteri', 400);
+        }
+
+        $user = $this->repo->getUserByResetToken($token);
+        if (!$user) {
+            Response::error('Il link di reset è invalido o scaduto', 400);
+        }
+
+        // Check password history
+        $recentHashes = $this->repo->getRecentPasswordHashes($user['id'], 3);
+        foreach ($recentHashes as $recentHash) {
+            if (password_verify($newPwd, $recentHash)) {
+                Response::error('La nuova password non può essere uguale a una delle tue ultime 3 password.', 400);
+            }
+        }
+
+        $hash = password_hash($newPwd, PASSWORD_BCRYPT, ['cost' => 12]);
+        $this->repo->setPasswordHash($user['id'], $hash);
+        $this->repo->insertPasswordHistory($user['id'], $hash);
+        $this->repo->clearPasswordResetToken($user['id']);
+
+        Audit::log('PASSWORD_RESET_CONFIRMED', 'users', $user['id']);
+        Response::success(['message' => 'Password aggiornata con successo! Effettua il login.']);
+    }
+
     // ─── POST /api/?module=auth&action=createUser (admin only) ───────────────
     public function createUser(): void
     {

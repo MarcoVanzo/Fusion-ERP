@@ -31,6 +31,7 @@ class StaffRepository
         $sql = "SELECT s.id, s.first_name, s.last_name,
                        CONCAT(s.first_name, ' ', s.last_name) AS full_name,
                        s.role, s.phone, s.email, s.medical_cert_expires_at,
+                       s.photo_path, s.contract_status, s.contract_valid_from, s.contract_valid_to,
                        GROUP_CONCAT(t.id SEPARATOR ',') as team_ids,
                        GROUP_CONCAT(COALESCE(CONCAT(t.category, ' — ', t.name), t.name) SEPARATOR ', ') as team_names
                 FROM staff_members s
@@ -155,5 +156,52 @@ class StaffRepository
         $tenantId = TenantContext::id();
         $stmt = $this->db->prepare("UPDATE staff_members SET is_deleted = 1 WHERE id = :id AND tenant_id = :tenant_id");
         $stmt->execute([':id' => $id, ':tenant_id' => $tenantId]);
+    }
+
+    // ─── Public ───────────────────────────────────────────────────────────────
+    public function getPublicStaffByTeam(string $teamId): array
+    {
+        $sql = "SELECT s.id, s.first_name, s.last_name,
+                       CONCAT(s.first_name, ' ', s.last_name) AS full_name,
+                       s.role, s.photo_path
+                FROM staff_members s
+                INNER JOIN staff_teams st ON s.id = st.staff_id
+                WHERE s.is_deleted = 0
+                  AND st.team_id = :team_id
+                ORDER BY s.last_name ASC, s.first_name ASC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':team_id' => $teamId]);
+
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+    
+    // ─── Photo and Contract Update Helpers ────────────────────────────────────
+    public function updatePhoto(string $id, ?string $photoPath): void
+    {
+        $tenantId = TenantContext::id();
+        $stmt = $this->db->prepare("UPDATE staff_members SET photo_path = :photo_path WHERE id = :id AND tenant_id = :tenant_id AND is_deleted = 0");
+        $stmt->execute([':photo_path' => $photoPath, ':id' => $id, ':tenant_id' => $tenantId]);
+    }
+
+    public function updateContractInfo(string $id, array $data): void
+    {
+        $tenantId = TenantContext::id();
+        $sql = "UPDATE staff_members SET 
+                contract_status = :contract_status,
+                contract_esign_document_id = :contract_esign_document_id,
+                contract_esign_signing_url = :contract_esign_signing_url,
+                contract_valid_from = :contract_valid_from,
+                contract_valid_to = :contract_valid_to,
+                contract_monthly_fee = :contract_monthly_fee,
+                contract_signed_pdf_path = :contract_signed_pdf_path
+                WHERE id = :id AND tenant_id = :tenant_id AND is_deleted = 0";
+        
+        $params = array_merge($data, [':id' => $id, ':tenant_id' => $tenantId]);
+        
+        // Handle optional values by providing default null if they aren't explicitly given in standard form
+        $params[':contract_signed_pdf_path'] = $data[':contract_signed_pdf_path'] ?? null;
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
     }
 }

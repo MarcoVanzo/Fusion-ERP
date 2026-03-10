@@ -1,0 +1,276 @@
+/* ─── Network Module — CSS ────────────────────────────────────────────────── */
+
+/* ─── Tab Bar ───────────────────────────────────────────────────────────────── */
+/* ─── Layout ───────────────────────────────────────────────────────────────── */
+.module-wrapper {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.module-body {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+.module-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--sp-5);
+    background: var(--color-bg);
+}
+
+/* ─── Collaboration Cards ───────────────────────────────────────────────────── */
+.net-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--sp-3);
+}
+
+.net-card {
+    padding: var(--sp-3);
+    border-radius: 12px;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2);
+    cursor: pointer;
+    transition: box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.net-card:hover {
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.28);
+    transform: translateY(-2px);
+}
+
+.net-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--sp-2);
+}
+
+.net-card-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+.net-card-meta {
+    font-size: 12px;
+    color: var(--color-text-muted);
+}
+
+/* ─── Status Badges ─────────────────────────────────────────────────────────── */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    flex-shrink: 0;
+}
+
+.status-badge-attivo {
+    background: rgba(0, 230, 118, 0.1);
+    color: var(--color-success);
+    border: 1px solid rgba(0, 230, 118, 0.2);
+}
+
+.status-badge-scaduto {
+    background: rgba(255, 0, 122, 0.1);
+    color: var(--color-pink);
+    border: 1px solid rgba(255, 0, 122, 0.2);
+}
+
+.status-badge-in_rinnovo {
+    background: rgba(250, 204, 21, 0.1);
+    color: goldenrod;
+    border: 1px solid rgba(250, 204, 21, 0.25);
+}
+
+.status-badge-in_valutazione {
+    background: rgba(96, 165, 250, 0.1);
+    color: #60a5fa;
+    border: 1px solid rgba(96, 165, 250, 0.2);
+}
+
+.status-badge-approvato {
+    background: rgba(0, 230, 118, 0.1);
+    color: var(--color-success);
+    border: 1px solid rgba(0, 230, 118, 0.2);
+}
+
+.status-badge-non_idoneo {
+    background: rgba(255, 0, 122, 0.1);
+    color: var(--color-pink);
+    border: 1px solid rgba(255, 0, 122, 0.2);
+}
+
+.status-badge-da_ricontattare {
+    background: rgba(250, 204, 21, 0.1);
+    color: goldenrod;
+    border: 1px solid rgba(250, 204, 21, 0.25);
+}
+
+/* ─── Evaluation Scores ─────────────────────────────────────────────────────── */
+.eval-slider-row {
+    display: grid;
+    grid-template-columns: 7rem 1fr 2.5rem;
+    align-items: center;
+    gap: var(--sp-2);
+    margin-bottom: var(--sp-1);
+}
+
+.eval-slider-label {
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.eval-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--color-border);
+    outline: none;
+    cursor: pointer;
+}
+
+.eval-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--color-pink);
+    cursor: pointer;
+    box-shadow: 0 0 4px rgba(255, 0, 122, 0.45);
+    transition: box-shadow 0.15s;
+}
+
+.eval-slider::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border: none;
+    border-radius: 50%;
+    background: var(--color-pink);
+    cursor: pointer;
+}
+
+.eval-slider:hover::-webkit-slider-thumb {
+    box-shadow: 0 0 8px rgba(255, 0, 122, 0.7);
+}
+
+.eval-slider-value {
+    font-size: 14px;
+    font-weight: 700;
+    text-align: center;
+    color: var(--color-pink);
+}
+
+/* ─── Score Circle ──────────────────────────────────────────────────────────── */
+.score-circle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    font-size: 1.1rem;
+    font-weight: 800;
+    font-family: var(--font-display);
+    background: conic-gradient(var(--color-pink) calc(var(--pct, 50) * 1%), var(--color-border) 0);
+    box-shadow: 0 0 0 3px var(--color-surface), 0 0 0 5px var(--color-border);
+    color: var(--color-white);
+}
+
+/* ─── Activities Timeline ───────────────────────────────────────────────────── */
+.net-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    position: relative;
+}
+
+.net-timeline::before {
+    content: '';
+    position: absolute;
+    left: 1.25rem;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--color-border);
+    border-radius: 1px;
+}
+
+.net-timeline-item {
+    display: flex;
+    gap: var(--sp-3);
+    padding: var(--sp-3) 0;
+    padding-left: 3.5rem;
+    position: relative;
+}
+
+.net-timeline-dot {
+    position: absolute;
+    left: 0.75rem;
+    top: 1.2rem;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--color-pink);
+    box-shadow: 0 0 0 3px var(--color-surface);
+}
+
+.net-timeline-date {
+    font-size: 11px;
+    color: var(--color-text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    padding-top: 2px;
+}
+
+.net-timeline-content {
+    flex: 1;
+}
+
+.net-timeline-title {
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 2px;
+}
+
+.net-timeline-meta {
+    font-size: 12px;
+    color: var(--color-text-muted);
+}
+
+/* ─── Filter Bar ────────────────────────────────────────────────────────────── */
+.net-filter-bar {
+    display: flex;
+    gap: var(--sp-1);
+    flex-wrap: wrap;
+    margin-bottom: var(--sp-3);
+}
+
+/* ─── Convert Button ────────────────────────────────────────────────────────── */
+.btn-convert-scouting {
+    background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+    border: none;
+    color: #fff;
+}
+
+.btn-convert-scouting:hover {
+    background: linear-gradient(135deg, #7c3aed, #5b21b6);
+    box-shadow: 0 4px 16px rgba(139, 92, 246, 0.4);
+}

@@ -84,10 +84,14 @@ const Roster = () => {
 
                                     return bgImage ? (
                                         <div
-                                            className="absolute top-0 bottom-0 right-0 left-[40%] z-0 bg-cover bg-[right_-20%_top] opacity-60 group-hover:opacity-100 transition-opacity duration-700 mix-blend-screen contrast-125 saturate-150"
+                                            className="absolute top-0 bottom-0 right-0 left-[30%] z-0 bg-cover bg-[right_bottom] opacity-60 group-hover:opacity-100 transition-opacity duration-700 mix-blend-screen contrast-125 saturate-150"
                                             style={{ backgroundImage: `url('${bgImage}')` }}
                                         />
-                                    ) : null;
+                                    ) : (
+                                        <div className="absolute top-0 bottom-0 right-0 left-[30%] z-0 bg-gradient-to-br from-zinc-900/50 to-brand-900/20 flex items-center justify-center opacity-60 group-hover:opacity-100 transition-opacity duration-700 p-8">
+                                            <img src="/demo/assets/logo-colorato.png" alt="Fusion Logo" className="max-w-full max-h-full opacity-10 drop-shadow-2xl mix-blend-lighten" />
+                                        </div>
+                                    );
                                 })()}
                                 {/* Background image placeholder / overlay */}
                                 <div className="absolute inset-0 bg-gradient-to-r from-zinc-950 via-zinc-900/95 to-transparent z-10"></div>
@@ -96,7 +100,7 @@ const Roster = () => {
                                 <div className="relative z-20 p-10 h-full flex flex-col justify-between">
                                     <div>
                                         <div className="font-subheading text-brand-500 tracking-widest text-sm mb-2 border-b border-zinc-800 pb-2 inline-block">
-                                            {team.category || 'CATEGORIA'} {team.season && `| ${team.season}`}
+                                            {(team.category || 'CATEGORIA').replace(/A$/i, '')} {team.season && `| ${team.season}`}
                                         </div>
 
                                         <h2 className="font-heading text-4xl text-white group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-brand-500 transition-all">

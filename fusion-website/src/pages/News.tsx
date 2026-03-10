@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, ChevronRight } from 'lucide-react';
+import { Helmet } from 'react-helmet-async';
 
 interface NewsArticle {
     id: number;
@@ -12,6 +13,15 @@ interface NewsArticle {
     category_name: string;
     color_hex?: string;
 }
+
+const ERP_BASE = 'https://www.fusionteamvolley.it/ERP';
+
+/** Prefix relative /uploads/... URLs with the ERP base so they resolve correctly from the demo subdomain */
+const getImgUrl = (url?: string): string | undefined => {
+    if (!url) return undefined;
+    if (url.startsWith('/')) return ERP_BASE + url;
+    return url;
+};
 
 const News = () => {
     const [news, setNews] = useState<NewsArticle[]>([]);
@@ -37,6 +47,21 @@ const News = () => {
 
     return (
         <div className="flex flex-col min-h-screen pb-24">
+            <Helmet>
+                <title>News &amp; Articoli | Fusion Team Volley</title>
+                <meta name="description" content="Tutte le ultime notizie, risultati e iniziative del Fusion Team Volley: la squadra di pallavolo con 800 atlete e un unico grande sogno." />
+                <link rel="canonical" href="https://www.fusionteamvolley.it/demo/news" />
+                <meta name="robots" content="index, follow" />
+                <meta property="og:type" content="website" />
+                <meta property="og:title" content="News &amp; Articoli | Fusion Team Volley" />
+                <meta property="og:description" content="Aggiornamenti, risultati e iniziative dal mondo Fusion Team Volley." />
+                <meta property="og:url" content="https://www.fusionteamvolley.it/demo/news" />
+                <meta property="og:site_name" content="Fusion Team Volley" />
+                <meta name="twitter:card" content="summary" />
+                <meta name="twitter:title" content="News &amp; Articoli | Fusion Team Volley" />
+                <meta name="twitter:description" content="Aggiornamenti, risultati e iniziative dal mondo Fusion Team Volley." />
+            </Helmet>
+
             {/* Emotional Header Hero */}
             <section className="relative h-[40vh] min-h-[300px] flex items-center justify-center overflow-hidden mb-12">
                 {/* Background Image */}
@@ -84,14 +109,14 @@ const News = () => {
                             <Link
                                 to={`/news/${article.slug}`}
                                 key={article.id}
-                                className="glass-panel overflow-hidden border border-white/5 group hover:border-brand-500/30 transition-all hover:-translate-y-2 hover:shadow-[0_15px_40px_-15px_rgba(234,179,8,0.2)] flex flex-col h-full"
+                                className="glass-panel overflow-hidden border border-white/5 group hover:border-brand-500/30 transition-all hover:shadow-[0_4px_24px_-8px_rgba(0,0,0,0.4)] flex flex-col h-full"
                             >
                                 <div className="h-56 overflow-hidden relative bg-zinc-900">
-                                    {article.cover_image_url ? (
+                                    {getImgUrl(article.cover_image_url) ? (
                                         <img
-                                            src={article.cover_image_url}
+                                            src={getImgUrl(article.cover_image_url)}
                                             alt={article.title}
-                                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out"
+                                            className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-500"
                                         />
                                     ) : (
                                         <div className="absolute inset-0 bg-gradient-to-br from-zinc-800 to-zinc-900 flex items-center justify-center">

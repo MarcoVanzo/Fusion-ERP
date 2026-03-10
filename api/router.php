@@ -72,6 +72,10 @@ try {
             'tasks' => dispatch('Tasks', $action),
             'staff' => dispatch('Staff', $action),
             'ecommerce' => dispatch('Ecommerce', $action),
+            'newsletter' => dispatch('Newsletter', $action),
+            'societa' => dispatch('Societa', $action),
+            'network' => dispatch('Network', $action),
+            'esignature' => dispatch('ESignature', $action),
             'whatsapp' => dispatchWebhook($action),
             default => Response::error("Modulo '{$module}' non trovato", 404),
         };

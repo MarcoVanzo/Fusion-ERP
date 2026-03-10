@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import Home from './pages/Home';
+import Club from './pages/Club';
 import Roster from './pages/Roster';
 import News from './pages/News';
 import TeamDetail from './pages/TeamDetail';
@@ -18,6 +19,7 @@ function App() {
         <main className="flex-grow pt-[96px] bg-zinc-950"> {/* Adjusted padding for 24 h-24 navbar */}
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/club" element={<Club />} />
             <Route path="/news" element={<News />} />
             <Route path="/news/:slug" element={<ArticleDetail />} />
             <Route path="/teams" element={<Roster />} />

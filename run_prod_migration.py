@@ -2,7 +2,7 @@ import sys
 import mysql.connector
 
 try:
-    with open('db/migrations/V047__staff_teams.sql', 'r') as f:
+    with open('db/migrations/V053__staff_contracts_and_photos.sql', 'r') as f:
         sql = f.read()
 except FileNotFoundError:
     print("SQL file not found")
@@ -21,7 +21,7 @@ try:
     for result in cursor.execute(sql, multi=True):
         print(f"Executed: {result.statement[:50]}...")
     conn.commit()
-    print("Migration V047 applied successfully to production DB!")
+    print("Migration V053 applied successfully to production DB!")
     cursor.close()
     conn.close()
 except Exception as e:

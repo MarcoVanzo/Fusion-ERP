@@ -21,21 +21,26 @@ class AthletesRepository
 
     public function listAthletes(string $teamId = '', bool $includeInactive = false): array
     {
-        $sql = 'SELECT a.id, a.team_id, a.full_name, a.jersey_number, a.role, a.birth_date,
+        $sql = 'SELECT DISTINCT a.id, a.team_id, a.full_name, a.jersey_number, a.role, a.birth_date,
                        a.height_cm, a.weight_kg, a.photo_path, a.is_active,
                        a.phone, a.email, a.fiscal_code, a.medical_cert_expires_at,
                        a.residence_address, a.residence_city, a.parent_contact, a.parent_phone,
                        COALESCE(t.name, a.team_id, "Nessuna squadra") AS team_name,
                        COALESCE(t.category, a.team_id, "Nessuna") AS category
                 FROM athletes a
-                LEFT JOIN teams t ON a.team_id = t.id
-                WHERE a.deleted_at IS NULL';
+                LEFT JOIN teams t ON a.team_id = t.id';
 
         $params = [];
         if ($teamId !== '') {
-            $sql .= ' AND a.team_id = :team_id';
+            $sql .= ' LEFT JOIN athlete_teams at2 ON a.id = at2.athlete_id';
+            $sql .= ' WHERE a.deleted_at IS NULL AND (a.team_id = :team_id OR at2.team_id = :team_id2)';
             $params[':team_id'] = $teamId;
+            $params[':team_id2'] = $teamId;
         }
+        else {
+            $sql .= ' WHERE a.deleted_at IS NULL';
+        }
+
         if (!$includeInactive) {
             $sql .= ' AND a.is_active = 1';
         }
@@ -53,18 +58,22 @@ class AthletesRepository
      */
     public function listAthletesLight(string $teamId = ''): array
     {
-        $sql = 'SELECT a.id, a.team_id, a.full_name, a.jersey_number, a.role, a.photo_path, a.is_active,
+        $sql = 'SELECT DISTINCT a.id, a.team_id, a.full_name, a.jersey_number, a.role, a.photo_path, a.is_active,
                        a.medical_cert_expires_at,
                        COALESCE(t.name, "Nessuna squadra") AS team_name,
                        COALESCE(t.category, "Nessuna") AS category
                 FROM athletes a
-                LEFT JOIN teams t ON a.team_id = t.id
-                WHERE a.deleted_at IS NULL AND a.is_active = 1';
+                LEFT JOIN teams t ON a.team_id = t.id';
 
         $params = [];
         if ($teamId !== '') {
-            $sql .= ' AND a.team_id = :team_id';
+            $sql .= ' LEFT JOIN athlete_teams at2 ON a.id = at2.athlete_id';
+            $sql .= ' WHERE a.deleted_at IS NULL AND a.is_active = 1 AND (a.team_id = :team_id OR at2.team_id = :team_id2)';
             $params[':team_id'] = $teamId;
+            $params[':team_id2'] = $teamId;
+        }
+        else {
+            $sql .= ' WHERE a.deleted_at IS NULL AND a.is_active = 1';
         }
         $sql .= ' ORDER BY a.full_name';
 
@@ -97,7 +106,73 @@ class AthletesRepository
         );
         $stmt->execute([':id' => $id]);
         $row = $stmt->fetch();
-        return $row ?: null;
+        if (!$row)
+            return null;
+
+        // Append all teams from athlete_teams junction table (if exists)
+        $teams = $this->getAthleteTeams($id);
+        $row['team_ids'] = array_column($teams, 'id');
+        $row['team_names'] = $teams;
+        // Fallback: if no junction rows yet, use legacy team_id
+        if (empty($row['team_ids']) && !empty($row['team_id'])) {
+            $row['team_ids'] = [$row['team_id']];
+        }
+        return $row;
+    }
+
+    /**
+     * Returns all teams associated with an athlete via athlete_teams junction.
+     * Gracefully returns empty array if the table does not yet exist.
+     */
+    public function getAthleteTeams(string $athleteId): array
+    {
+        try {
+            $stmt = $this->db->prepare(
+                'SELECT t.id, t.name, t.category
+                 FROM athlete_teams at2
+                 JOIN teams t ON t.id = at2.team_id
+                 WHERE at2.athlete_id = :id
+                   AND t.deleted_at IS NULL
+                 ORDER BY t.category, t.name'
+            );
+            $stmt->execute([':id' => $athleteId]);
+            return $stmt->fetchAll();
+        }
+        catch (\Throwable) {
+            return [];
+        }
+    }
+
+    /**
+     * Replaces all team associations for an athlete.
+     * Also keeps athletes.team_id in sync with the first team in the list.
+     *
+     * @param string   $athleteId
+     * @param string[] $teamIds     Array of team IDs to associate
+     */
+    public function setAthleteTeams(string $athleteId, array $teamIds): void
+    {
+        try {
+            // Remove existing associations
+            $del = $this->db->prepare('DELETE FROM athlete_teams WHERE athlete_id = :id');
+            $del->execute([':id' => $athleteId]);
+
+            // Insert new ones
+            if (!empty($teamIds)) {
+                $ins = $this->db->prepare(
+                    'INSERT IGNORE INTO athlete_teams (athlete_id, team_id) VALUES (:athlete_id, :team_id)'
+                );
+                foreach ($teamIds as $tid) {
+                    if (!empty($tid)) {
+                        $ins->execute([':athlete_id' => $athleteId, ':team_id' => $tid]);
+                    }
+                }
+            }
+        }
+        catch (\Throwable $e) {
+            // Table might not exist yet — silently ignore
+            error_log('[athlete_teams] setAthleteTeams failed: ' . $e->getMessage());
+        }
     }
 
     public function createAthlete(array $data): void
