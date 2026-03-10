@@ -61,18 +61,22 @@ const Network = (() => {
         if (!app) return;
 
         app.innerHTML = `
-            <div style="padding:var(--sp-4)">
-                <div class="page-header" style="border-bottom:1px solid var(--color-border);padding-bottom:var(--sp-3);margin-bottom:var(--sp-4)">
+            <div class="module-wrapper">
+                <div class="page-header" style="border-bottom:1px solid var(--color-border);padding:var(--sp-4);padding-bottom:var(--sp-3);margin-bottom:0">
                     <h1 class="page-title">Network</h1>
                     <p class="page-subtitle">Collaborazioni, atleti in prova e attività di rete</p>
                 </div>
-                <div class="net-tabs" id="net-tab-bar">
-                    ${TABS.map(t => `
-                        <button class="net-tab ${t.id === _activeTab ? 'active' : ''}" data-net-tab="${t.id}" type="button">
-                            <i class="ph ph-${t.icon}"></i> ${Utils.escapeHtml(t.label)}
-                        </button>`).join('')}
+                <div class="module-body">
+                    <aside class="module-sidebar">
+                        <nav class="net-tabs" id="net-tab-bar">
+                            ${TABS.map(t => `
+                                <button class="net-tab ${t.id === _activeTab ? 'active' : ''}" data-net-tab="${t.id}" type="button">
+                                    <i class="ph ph-${t.icon}"></i> <span>${Utils.escapeHtml(t.label)}</span>
+                                </button>`).join('')}
+                        </nav>
+                    </aside>
+                    <main class="module-content" id="net-tab-content"></main>
                 </div>
-                <div id="net-tab-content"></div>
             </div>`;
 
         document.querySelectorAll('[data-net-tab]').forEach(btn => {

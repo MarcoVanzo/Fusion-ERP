@@ -19,4 +19,8 @@ $stmt->execute([':id' => $athleteId]);
 $ath = $stmt->fetch();
 
 echo "Athlete primary team_id:\n";
+print_r($ath);([':id' => $athleteId]);
+$ath = $stmt->fetch();
+
+echo "Athlete primary team_id:\n";
 print_r($ath);

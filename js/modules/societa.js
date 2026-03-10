@@ -60,18 +60,22 @@ const Societa = (() => {
         const canWrite = ['admin', 'manager'].includes(App.getUser()?.role);
 
         app.innerHTML = `
-            <div style="padding:var(--sp-4)">
-                <div class="page-header" style="border-bottom:1px solid var(--color-border);padding-bottom:var(--sp-3);margin-bottom:var(--sp-4)">
+            <div class="module-wrapper">
+                <div class="page-header" style="border-bottom:1px solid var(--color-border);padding:var(--sp-4);padding-bottom:var(--sp-3);margin-bottom:0">
                     <h1 class="page-title">Società</h1>
                     <p class="page-subtitle">Identità, organigramma e documenti societari</p>
                 </div>
-                <div class="soc-tabs" id="soc-tab-bar">
-                    ${TABS.map(t => `
-                        <button class="soc-tab ${t.id === _activeTab ? 'active' : ''}" data-soc-tab="${t.id}" type="button">
-                            <i class="ph ph-${t.icon}"></i> ${Utils.escapeHtml(t.label)}
-                        </button>`).join('')}
+                <div class="module-body">
+                    <aside class="module-sidebar">
+                        <nav class="soc-tabs" id="soc-tab-bar">
+                            ${TABS.map(t => `
+                                <button class="soc-tab ${t.id === _activeTab ? 'active' : ''}" data-soc-tab="${t.id}" type="button">
+                                    <i class="ph ph-${t.icon}"></i> <span>${Utils.escapeHtml(t.label)}</span>
+                                </button>`).join('')}
+                        </nav>
+                    </aside>
+                    <main class="module-content" id="soc-tab-content"></main>
                 </div>
-                <div id="soc-tab-content"></div>
             </div>`;
 
         document.querySelectorAll('[data-soc-tab]').forEach(btn => {
