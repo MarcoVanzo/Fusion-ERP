@@ -173,14 +173,14 @@
   }
 
   .res-champ-fusion-logo {
-      width: 36px;
-      height: 36px;
+      width: 34px;
+      height: 34px;
       border-radius: 50%;
       object-fit: contain;
       flex-shrink: 0;
       border: 2px solid rgba(255, 0, 255, 0.5);
-      box-shadow: 0 0 12px rgba(255, 0, 255, 0.35);
-      background: white;
+      box-shadow: 0 0 14px rgba(255, 0, 255, 0.4), 0 0 4px rgba(255, 0, 255, 0.2);
+      background: rgba(255, 255, 255, 0.05);
   }
 
   .res-champ-empty {
