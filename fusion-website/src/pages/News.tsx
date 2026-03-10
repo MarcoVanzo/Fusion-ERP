@@ -13,6 +13,15 @@ interface NewsArticle {
     color_hex?: string;
 }
 
+const ERP_BASE = 'https://www.fusionteamvolley.it/ERP';
+
+/** Prefix relative /uploads/... URLs with the ERP base so they resolve correctly from the demo subdomain */
+const getImgUrl = (url?: string): string | undefined => {
+    if (!url) return undefined;
+    if (url.startsWith('/')) return ERP_BASE + url;
+    return url;
+};
+
 const News = () => {
     const [news, setNews] = useState<NewsArticle[]>([]);
     const [loading, setLoading] = useState(true);
@@ -87,9 +96,9 @@ const News = () => {
                                 className="glass-panel overflow-hidden border border-white/5 group hover:border-brand-500/30 transition-all hover:-translate-y-2 hover:shadow-[0_15px_40px_-15px_rgba(234,179,8,0.2)] flex flex-col h-full"
                             >
                                 <div className="h-56 overflow-hidden relative bg-zinc-900">
-                                    {article.cover_image_url ? (
+                                    {getImgUrl(article.cover_image_url) ? (
                                         <img
-                                            src={article.cover_image_url}
+                                            src={getImgUrl(article.cover_image_url)}
                                             alt={article.title}
                                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out"
                                         />

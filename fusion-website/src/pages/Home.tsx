@@ -24,6 +24,13 @@ interface Match {
     championship_label: string;
 }
 
+const ERP_BASE = 'https://www.fusionteamvolley.it/ERP';
+const getImgUrl = (url?: string): string | undefined => {
+    if (!url) return undefined;
+    if (url.startsWith('/')) return ERP_BASE + url;
+    return url;
+};
+
 const Home = () => {
     const [news, setNews] = useState<NewsArticle[]>([]);
     const [loadingNews, setLoadingNews] = useState(true);
@@ -266,9 +273,9 @@ const Home = () => {
                                     >
                                         {/* Image */}
                                         <div className="relative w-48 shrink-0 overflow-hidden">
-                                            {article.cover_image_url ? (
+                                            {getImgUrl(article.cover_image_url) ? (
                                                 <img
-                                                    src={article.cover_image_url}
+                                                    src={getImgUrl(article.cover_image_url)}
                                                     alt={article.title}
                                                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-75 group-hover:opacity-100"
                                                 />

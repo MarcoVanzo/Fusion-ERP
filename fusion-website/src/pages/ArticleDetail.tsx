@@ -14,6 +14,13 @@ interface ArticleDetailData {
     color_hex?: string;
 }
 
+const ERP_BASE = 'https://www.fusionteamvolley.it/ERP';
+const getImgUrl = (url?: string): string => {
+    if (!url) return '';
+    if (url.startsWith('/')) return ERP_BASE + url;
+    return url;
+};
+
 const ArticleDetail = () => {
     const { slug } = useParams<{ slug: string }>();
     const [article, setArticle] = useState<ArticleDetailData | null>(null);
@@ -81,7 +88,7 @@ const ArticleDetail = () => {
                 {/* Background Image */}
                 <div
                     className="absolute inset-0 z-0 bg-cover bg-center transition-transform duration-1000 scale-105"
-                    style={{ backgroundImage: `url('${article.cover_image_url || '/demo/assets/Gemini_Generated_Image_s2944zs2944zs294.jpeg'}')` }}
+                    style={{ backgroundImage: `url('${getImgUrl(article.cover_image_url) || '/demo/assets/Gemini_Generated_Image_s2944zs2944zs294.jpeg'}')` }}
                 />
 
                 {/* Overlays */}
