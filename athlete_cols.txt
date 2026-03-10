@@ -1,0 +1,433 @@
+Array
+(
+    [0] => Array
+        (
+            [Field] => id
+            [Type] => varchar(20)
+            [Null] => NO
+            [Key] => PRI
+            [Default] => 
+            [Extra] => 
+        )
+
+    [1] => Array
+        (
+            [Field] => tenant_id
+            [Type] => varchar(20)
+            [Null] => YES
+            [Key] => MUL
+            [Default] => 
+            [Extra] => 
+        )
+
+    [2] => Array
+        (
+            [Field] => user_id
+            [Type] => varchar(20)
+            [Null] => YES
+            [Key] => MUL
+            [Default] => 
+            [Extra] => 
+        )
+
+    [3] => Array
+        (
+            [Field] => team_id
+            [Type] => varchar(20)
+            [Null] => NO
+            [Key] => MUL
+            [Default] => 
+            [Extra] => 
+        )
+
+    [4] => Array
+        (
+            [Field] => first_name
+            [Type] => varchar(80)
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [5] => Array
+        (
+            [Field] => last_name
+            [Type] => varchar(80)
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [6] => Array
+        (
+            [Field] => full_name
+            [Type] => varchar(150)
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => STORED GENERATED
+        )
+
+    [7] => Array
+        (
+            [Field] => jersey_number
+            [Type] => tinyint
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [8] => Array
+        (
+            [Field] => role
+            [Type] => varchar(50)
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [9] => Array
+        (
+            [Field] => birth_date
+            [Type] => date
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [10] => Array
+        (
+            [Field] => birth_place
+            [Type] => varchar(150)
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [11] => Array
+        (
+            [Field] => height_cm
+            [Type] => smallint
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [12] => Array
+        (
+            [Field] => weight_kg
+            [Type] => decimal(5,1)
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [13] => Array
+        (
+            [Field] => photo_path
+            [Type] => varchar(500)
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [14] => Array
+        (
+            [Field] => parent_contact
+            [Type] => varchar(150)
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [15] => Array
+        (
+            [Field] => parent_phone
+            [Type] => varchar(30)
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [16] => Array
+        (
+            [Field] => emergency_contact_name
+            [Type] => varchar(150)
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [17] => Array
+        (
+            [Field] => emergency_contact_phone
+            [Type] => varchar(30)
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [18] => Array
+        (
+            [Field] => communication_preference
+            [Type] => enum('WHATSAPP','EMAIL','SMS','PUSH')
+            [Null] => YES
+            [Key] => 
+            [Default] => EMAIL
+            [Extra] => 
+        )
+
+    [19] => Array
+        (
+            [Field] => image_release_consent
+            [Type] => tinyint(1)
+            [Null] => NO
+            [Key] => 
+            [Default] => 0
+            [Extra] => 
+        )
+
+    [20] => Array
+        (
+            [Field] => phone
+            [Type] => varchar(30)
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [21] => Array
+        (
+            [Field] => email
+            [Type] => varchar(150)
+            [Null] => YES
+            [Key] => MUL
+            [Default] => 
+            [Extra] => 
+        )
+
+    [22] => Array
+        (
+            [Field] => residence_address
+            [Type] => varchar(255)
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [23] => Array
+        (
+            [Field] => residence_city
+            [Type] => varchar(100)
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [24] => Array
+        (
+            [Field] => nationality
+            [Type] => varchar(50)
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [25] => Array
+        (
+            [Field] => blood_group
+            [Type] => varchar(5)
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [26] => Array
+        (
+            [Field] => allergies
+            [Type] => text
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [27] => Array
+        (
+            [Field] => medications
+            [Type] => text
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [28] => Array
+        (
+            [Field] => identity_document
+            [Type] => varchar(50)
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [29] => Array
+        (
+            [Field] => fiscal_code
+            [Type] => varchar(16)
+            [Null] => YES
+            [Key] => MUL
+            [Default] => 
+            [Extra] => 
+        )
+
+    [30] => Array
+        (
+            [Field] => registration_form_signed
+            [Type] => tinyint(1)
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [31] => Array
+        (
+            [Field] => shirt_size
+            [Type] => varchar(10)
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [32] => Array
+        (
+            [Field] => shoe_size
+            [Type] => varchar(10)
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [33] => Array
+        (
+            [Field] => medical_cert_expires_at
+            [Type] => date
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [34] => Array
+        (
+            [Field] => medical_cert_file_path
+            [Type] => varchar(500)
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [35] => Array
+        (
+            [Field] => medical_cert_issued_at
+            [Type] => date
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [36] => Array
+        (
+            [Field] => medical_cert_type
+            [Type] => varchar(20)
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [37] => Array
+        (
+            [Field] => privacy_consent_signed
+            [Type] => tinyint(1)
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [38] => Array
+        (
+            [Field] => federal_id
+            [Type] => varchar(50)
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [39] => Array
+        (
+            [Field] => is_active
+            [Type] => tinyint(1)
+            [Null] => NO
+            [Key] => 
+            [Default] => 1
+            [Extra] => 
+        )
+
+    [40] => Array
+        (
+            [Field] => deleted_at
+            [Type] => datetime
+            [Null] => YES
+            [Key] => MUL
+            [Default] => 
+            [Extra] => 
+        )
+
+    [41] => Array
+        (
+            [Field] => created_at
+            [Type] => datetime
+            [Null] => NO
+            [Key] => 
+            [Default] => CURRENT_TIMESTAMP
+            [Extra] => DEFAULT_GENERATED
+        )
+
+    [42] => Array
+        (
+            [Field] => updated_at
+            [Type] => datetime
+            [Null] => NO
+            [Key] => 
+            [Default] => CURRENT_TIMESTAMP
+            [Extra] => DEFAULT_GENERATED on update CURRENT_TIMESTAMP
+        )
+
+)

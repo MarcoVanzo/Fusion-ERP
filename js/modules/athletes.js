@@ -853,6 +853,7 @@ const Athletes = (() => {
                             document.getElementById("ea-parent").value || null,
                         }),
                           s.close(),
+                          Store.clearCache(),
                           UI.toast("Atleta aggiornato", "success"),
                           Store.get("listLight", "athletes")
                             .then((e) => {

@@ -113,28 +113,31 @@ class AthletesController
             Response::error('Atleta non trovato', 404);
         }
 
+        // Preserve existing values for fields not passed in the request (e.g. from partial form submissions)
+        $val = fn($k) => array_key_exists($k, $body) ? $body[$k] : ($before[$k] ?? null);
+
         $this->repo->updateAthlete($body['id'], [
             ':first_name' => htmlspecialchars(trim($body['first_name']), ENT_QUOTES, 'UTF-8'),
             ':last_name' => htmlspecialchars(trim($body['last_name']), ENT_QUOTES, 'UTF-8'),
-            ':jersey_number' => $body['jersey_number'] ?? null,
-            ':role' => $body['role'] ?? null,
-            ':birth_date' => $body['birth_date'] ?? null,
-            ':birth_place' => $body['birth_place'] ?? null,
-            ':height_cm' => $body['height_cm'] ?? null,
-            ':weight_kg' => $body['weight_kg'] ?? null,
-            ':residence_address' => $body['residence_address'] ?? null,
-            ':residence_city' => $body['residence_city'] ?? null,
-            ':phone' => $body['phone'] ?? null,
-            ':email' => $body['email'] ?? null,
-            ':identity_document' => $body['identity_document'] ?? null,
-            ':fiscal_code' => $body['fiscal_code'] ?? null,
-            ':medical_cert_type' => $body['medical_cert_type'] ?? null,
-            ':medical_cert_expires_at' => $body['medical_cert_expires_at'] ?? null,
-            ':federal_id' => $body['federal_id'] ?? null,
-            ':shirt_size' => $body['shirt_size'] ?? null,
-            ':shoe_size' => $body['shoe_size'] ?? null,
-            ':parent_contact' => $body['parent_contact'] ?? null,
-            ':parent_phone' => $body['parent_phone'] ?? null,
+            ':jersey_number' => $val('jersey_number'),
+            ':role' => $val('role'),
+            ':birth_date' => $val('birth_date'),
+            ':birth_place' => $val('birth_place'),
+            ':height_cm' => $val('height_cm'),
+            ':weight_kg' => $val('weight_kg'),
+            ':residence_address' => $val('residence_address'),
+            ':residence_city' => $val('residence_city'),
+            ':phone' => $val('phone'),
+            ':email' => $val('email'),
+            ':identity_document' => $val('identity_document'),
+            ':fiscal_code' => $val('fiscal_code'),
+            ':medical_cert_type' => $val('medical_cert_type'),
+            ':medical_cert_expires_at' => $val('medical_cert_expires_at'),
+            ':federal_id' => $val('federal_id'),
+            ':shirt_size' => $val('shirt_size'),
+            ':shoe_size' => $val('shoe_size'),
+            ':parent_contact' => $val('parent_contact'),
+            ':parent_phone' => $val('parent_phone'),
             ':team_id' => $body['team_id'],
         ]);
 
