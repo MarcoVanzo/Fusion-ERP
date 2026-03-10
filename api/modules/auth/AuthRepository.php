@@ -170,4 +170,41 @@ class AuthRepository
             ':pwd_hash' => $hash
         ]);
     }
+
+    public function setPasswordResetToken(string $userId, string $token, string $expiresAt): void
+    {
+        $stmt = $this->db->prepare(
+            'UPDATE users SET password_reset_token = :token, password_reset_expires_at = :expires_at, updated_at = NOW()
+             WHERE id = :id AND deleted_at IS NULL'
+        );
+        $stmt->execute([
+            ':token' => $token,
+            ':expires_at' => $expiresAt,
+            ':id' => $userId
+        ]);
+    }
+
+    public function getUserByResetToken(string $token): ?array
+    {
+        // Add check to ensure the token is not expired
+        $stmt = $this->db->prepare(
+            'SELECT id, email, role, full_name, phone, is_active, last_login_at, created_at
+             FROM users
+             WHERE password_reset_token = :token
+               AND password_reset_expires_at > NOW()
+               AND deleted_at IS NULL
+             LIMIT 1'
+        );
+        $stmt->execute([':token' => $token]);
+        return $stmt->fetch() ?: null;
+    }
+
+    public function clearPasswordResetToken(string $userId): void
+    {
+        $stmt = $this->db->prepare(
+            'UPDATE users SET password_reset_token = NULL, password_reset_expires_at = NULL, updated_at = NOW()
+             WHERE id = :id'
+        );
+        $stmt->execute([':id' => $userId]);
+    }
 }

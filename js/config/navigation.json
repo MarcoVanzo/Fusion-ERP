@@ -298,9 +298,9 @@
                 "isMobileVisible": false
             },
             {
-                "title": "Newsletter",
-                "path": "societa-newsletter",
-                "icon": "envelope-simple",
+                "title": "Sponsor",
+                "path": "societa-sponsor",
+                "icon": "storefront",
                 "isMobileVisible": false
             }
         ]
