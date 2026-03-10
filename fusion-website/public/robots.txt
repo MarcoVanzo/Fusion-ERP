@@ -2,7 +2,7 @@ User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://www.fusionteamvolley.it/demo/sitemap.php
+Sitemap: https://www.fusionteamvolley.it/ERP/sitemap.php
 
 # No crawling of ERP or API
 Disallow: /ERP/
