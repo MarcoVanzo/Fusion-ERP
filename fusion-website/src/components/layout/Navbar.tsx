@@ -16,11 +16,11 @@ const Navbar = () => {
     }, []);
 
     const navLinks = [
-        { name: 'IL CLUB', path: '/' },
+        { name: 'IL CLUB', path: '/club' },
         { name: 'NEWS', path: '/news' },
         { name: 'SQUADRE', path: '/teams' },
         { name: 'STORE', path: '/shop' },
-        { name: 'MATCH CENTER', path: '/results' },
+        { name: 'MATCH CENTER', path: '/results', badge: 'LIVE' },
         { name: 'OUTSEASON', path: '/outseason' },
     ];
 
@@ -54,11 +54,16 @@ const Navbar = () => {
                                 <Link
                                     key={link.name}
                                     to={link.path}
-                                    className={`font-subheading text-lg tracking-widest uppercase transition-colors relative 
+                                    className={`font-subheading text-lg tracking-widest uppercase transition-colors relative flex items-center
                                         ${isActive ? 'text-brand-500' : 'text-zinc-400 hover:text-white'}
                                     `}
                                 >
                                     {link.name}
+                                    {link.badge && (
+                                        <span className="absolute -top-3 -right-8 bg-red-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded animate-pulse">
+                                            ● {link.badge}
+                                        </span>
+                                    )}
                                     {isActive && (
                                         <span className="absolute -bottom-2 relative left-1/2 -translate-x-1/2 w-8 h-[2px] bg-brand-500"></span>
                                     )}
@@ -102,9 +107,14 @@ const Navbar = () => {
                             key={link.name}
                             to={link.path}
                             onClick={() => setMobileMenuOpen(false)}
-                            className="font-heading text-2xl text-zinc-300 hover:text-brand-500 transition-colors uppercase tracking-widest border-b border-zinc-800 pb-4"
+                            className="font-heading text-2xl text-zinc-300 hover:text-brand-500 transition-colors uppercase tracking-widest border-b border-zinc-800 pb-4 relative flex items-center justify-between"
                         >
-                            {link.name}
+                            <span>{link.name}</span>
+                            {link.badge && (
+                                <span className="bg-red-600 text-white font-sans text-xs font-bold px-2 py-1 rounded animate-pulse tracking-normal">
+                                    {link.badge}
+                                </span>
+                            )}
                         </Link>
                     ))}
                     <a
