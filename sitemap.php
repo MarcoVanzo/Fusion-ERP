@@ -1,80 +1,78 @@
 <?php
 /**
  * Sitemap XML dinamica — Fusion Team Volley
- * Parte dell'ERP per accesso diretto al DB.
+ * Chiama l'API ERP via localhost per ottenere gli articoli.
  * URL: https://www.fusionteamvolley.it/ERP/sitemap.php
  */
-
-declare(strict_types=1);
-
-// Load .env into $_ENV / getenv() — same method used by ERP bootstrap
-$envPath = __DIR__ . '/.env';
-if (file_exists($envPath)) {
-    foreach (file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
-        $line = trim($line);
-        if ($line === '' || $line[0] === '#') continue;
-        if (!str_contains($line, '=')) continue;
-        [$k, $v] = explode('=', $line, 2);
-        $k = trim($k);
-        $v = trim($v);
-        putenv("{$k}={$v}");
-        $_ENV[$k] = $v;
-    }
-}
-
-// Bootstrap ERP shared classes (Database singleton)
-require_once __DIR__ . '/api/Shared/Database.php';
-
-use FusionERP\Shared\Database;
 
 $SITE_BASE = 'https://www.fusionteamvolley.it/demo';
 
 $staticPages = [
-    ['loc' => $SITE_BASE . '/',          'priority' => '1.0', 'changefreq' => 'daily'],
-    ['loc' => $SITE_BASE . '/news',      'priority' => '0.9', 'changefreq' => 'daily'],
-    ['loc' => $SITE_BASE . '/teams',     'priority' => '0.8', 'changefreq' => 'weekly'],
-    ['loc' => $SITE_BASE . '/results',   'priority' => '0.7', 'changefreq' => 'weekly'],
-    ['loc' => $SITE_BASE . '/shop',      'priority' => '0.6', 'changefreq' => 'weekly'],
-    ['loc' => $SITE_BASE . '/outseason', 'priority' => '0.5', 'changefreq' => 'monthly'],
+    ['loc' => $SITE_BASE . '/',          'lastmod' => date('Y-m-d'), 'priority' => '1.0', 'changefreq' => 'daily'],
+    ['loc' => $SITE_BASE . '/news',      'lastmod' => date('Y-m-d'), 'priority' => '0.9', 'changefreq' => 'daily'],
+    ['loc' => $SITE_BASE . '/teams',     'lastmod' => date('Y-m-d'), 'priority' => '0.8', 'changefreq' => 'weekly'],
+    ['loc' => $SITE_BASE . '/results',   'lastmod' => date('Y-m-d'), 'priority' => '0.7', 'changefreq' => 'weekly'],
+    ['loc' => $SITE_BASE . '/shop',      'lastmod' => date('Y-m-d'), 'priority' => '0.6', 'changefreq' => 'weekly'],
+    ['loc' => $SITE_BASE . '/outseason', 'lastmod' => date('Y-m-d'), 'priority' => '0.5', 'changefreq' => 'monthly'],
 ];
 
 $articleUrls = [];
-try {
-    $pdo  = Database::getInstance();
-    $stmt = $pdo->query(
-        "SELECT slug, published_at
-         FROM website_news
-         WHERE is_published = 1 AND published_at <= NOW()
-         ORDER BY published_at DESC
-         LIMIT 500"
-    );
-    foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
-        $slug = htmlspecialchars($row['slug'] ?? '', ENT_XML1, 'UTF-8');
-        if (!$slug) continue;
-        $articleUrls[] = [
-            'loc'        => $SITE_BASE . '/news/' . $slug,
-            'lastmod'    => date('Y-m-d', strtotime($row['published_at'])),
-            'priority'   => '0.8',
-            'changefreq' => 'monthly',
-        ];
+
+// Prova più endpoint: localhost (bypass firewall), IP dello stesso server, e URL pubblico
+$endpoints = [
+    'http://localhost/ERP/api/router.php?module=website&action=getSitemapUrls',
+    'http://127.0.0.1/ERP/api/router.php?module=website&action=getSitemapUrls',
+    'https://www.fusionteamvolley.it/ERP/api/router.php?module=website&action=getSitemapUrls',
+];
+
+$body = false;
+foreach ($endpoints as $apiUrl) {
+    if (function_exists('curl_init')) {
+        $ch = curl_init($apiUrl);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT        => 5,
+            CURLOPT_CONNECTTIMEOUT => 3,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYHOST => false,
+            CURLOPT_USERAGENT      => 'FusionSitemap/1.0',
+            CURLOPT_HTTPHEADER     => ['Host: www.fusionteamvolley.it'],
+        ]);
+        $body = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        if ($body && $httpCode === 200) break;
+        $body = false;
     }
-} catch (Throwable $e) {
-    error_log('[Sitemap] DB error: ' . $e->getMessage());
 }
 
-// Output
+if ($body) {
+    $data = json_decode($body, true);
+    if (isset($data['data']) && is_array($data['data'])) {
+        foreach ($data['data'] as $article) {
+            $slug = htmlspecialchars($article['slug'] ?? '', ENT_XML1, 'UTF-8');
+            if (!$slug) continue;
+            $articleUrls[] = [
+                'loc'        => $SITE_BASE . '/news/' . $slug,
+                'lastmod'    => date('Y-m-d', strtotime($article['published_at'] ?? 'now')),
+                'priority'   => '0.8',
+                'changefreq' => 'monthly',
+            ];
+        }
+    }
+}
+
 header('Content-Type: application/xml; charset=UTF-8');
 header('Cache-Control: public, max-age=3600');
 
-$today = date('Y-m-d');
 echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
 echo '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
 
 foreach ([...$staticPages, ...$articleUrls] as $url) {
-    $lm = $url['lastmod'] ?? $today;
     echo "  <url>\n";
     echo "    <loc>{$url['loc']}</loc>\n";
-    echo "    <lastmod>{$lm}</lastmod>\n";
+    echo "    <lastmod>{$url['lastmod']}</lastmod>\n";
     echo "    <changefreq>{$url['changefreq']}</changefreq>\n";
     echo "    <priority>{$url['priority']}</priority>\n";
     echo "  </url>\n";
