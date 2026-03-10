@@ -1,0 +1,232 @@
+/* ─── Società Module — CSS ────────────────────────────────────────────────── */
+
+/* ─── Tab Bar ───────────────────────────────────────────────────────────────── */
+.soc-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--color-border);
+    overflow-x: auto;
+    scrollbar-width: none;
+    margin-bottom: var(--sp-4);
+}
+
+.soc-tab {
+    padding: 0.75rem 1.25rem;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-muted);
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.soc-tab:hover {
+    color: var(--color-white);
+}
+
+.soc-tab.active {
+    color: var(--color-pink);
+    border-bottom-color: var(--color-pink);
+}
+
+/* ─── Color Swatch ──────────────────────────────────────────────────────────── */
+.soc-color-row {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+}
+
+.soc-color-swatch {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: 2px solid var(--color-border);
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+/* ─── Logo Upload ───────────────────────────────────────────────────────────── */
+.soc-logo-preview {
+    max-width: 180px;
+    max-height: 90px;
+    border-radius: 8px;
+    object-fit: contain;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    padding: 8px;
+}
+
+/* ─── Org Tree ──────────────────────────────────────────────────────────────── */
+.soc-tree {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2);
+    padding: var(--sp-3) 0;
+}
+
+.soc-tree-level {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-1);
+    padding-left: 2rem;
+    border-left: 2px solid var(--color-border);
+    margin-left: 1rem;
+}
+
+.soc-tree-node {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    padding: 0.625rem 1rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    cursor: grab;
+    user-select: none;
+    transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.soc-tree-node:hover {
+    background: var(--color-hover);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.soc-tree-node.dragging {
+    opacity: 0.45;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.soc-tree-node.drag-over {
+    border-color: var(--color-pink);
+    background: rgba(255, 0, 122, 0.06);
+}
+
+.soc-tree-node-name {
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.soc-tree-node-desc {
+    font-size: 12px;
+    color: var(--color-text-muted);
+}
+
+.soc-tree-drag-handle {
+    color: var(--color-text-muted);
+    font-size: 16px;
+    cursor: grab;
+}
+
+/* ─── Document Badges ───────────────────────────────────────────────────────── */
+.badge-expiring {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: rgba(255, 165, 0, 0.15);
+    color: orange;
+    border: 1px solid rgba(255, 165, 0, 0.3);
+}
+
+.badge-expired {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: rgba(255, 0, 122, 0.12);
+    color: var(--color-pink);
+    border: 1px solid rgba(255, 0, 122, 0.25);
+}
+
+.badge-ok {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: rgba(0, 230, 118, 0.1);
+    color: var(--color-success);
+    border: 1px solid rgba(0, 230, 118, 0.2);
+}
+
+/* ─── Deadline Status ───────────────────────────────────────────────────────── */
+.deadline-status-aperto {
+    color: var(--color-info, #60a5fa);
+}
+
+.deadline-status-completato {
+    color: var(--color-success);
+}
+
+.deadline-status-scaduto {
+    color: var(--color-pink);
+}
+
+.deadline-status-annullato {
+    color: var(--color-text-muted);
+    text-decoration: line-through;
+}
+
+/* ─── Document Cards ────────────────────────────────────────────────────────── */
+.soc-doc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: var(--sp-3);
+}
+
+.soc-doc-card {
+    padding: var(--sp-3);
+    border-radius: 10px;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-1);
+    transition: box-shadow 0.15s ease;
+}
+
+.soc-doc-card:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.soc-doc-icon {
+    font-size: 28px;
+    color: var(--color-pink);
+}
+
+.soc-doc-name {
+    font-weight: 600;
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.soc-doc-meta {
+    font-size: 12px;
+    color: var(--color-text-muted);
+}
+
+/* ─── Members Table ─────────────────────────────────────────────────────────── */
+.soc-member-inactive {
+    opacity: 0.5;
+}

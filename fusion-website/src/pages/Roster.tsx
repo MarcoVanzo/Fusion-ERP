@@ -96,7 +96,7 @@ const Roster = () => {
                                 <div className="relative z-20 p-10 h-full flex flex-col justify-between">
                                     <div>
                                         <div className="font-subheading text-brand-500 tracking-widest text-sm mb-2 border-b border-zinc-800 pb-2 inline-block">
-                                            {team.category || 'CATEGORIA'} {team.season && `| ${team.season}`}
+                                            {(team.category || 'CATEGORIA').replace(/A$/i, '')} {team.season && `| ${team.season}`}
                                         </div>
 
                                         <h2 className="font-heading text-4xl text-white group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-brand-500 transition-all">

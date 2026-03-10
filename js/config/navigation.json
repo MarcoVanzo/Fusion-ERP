@@ -247,6 +247,80 @@
         ]
     },
     {
+        "id": "societa",
+        "title": "Società",
+        "path": "societa",
+        "icon": "buildings",
+        "isMobileVisible": false,
+        "roles": [
+            "manager",
+            "admin"
+        ],
+        "children": [
+            {
+                "title": "Identità",
+                "path": "societa-identita",
+                "icon": "identification-card",
+                "isMobileVisible": false
+            },
+            {
+                "title": "Organigramma",
+                "path": "societa-organigramma",
+                "icon": "tree-structure",
+                "isMobileVisible": false
+            },
+            {
+                "title": "Membri",
+                "path": "societa-membri",
+                "icon": "users-three",
+                "isMobileVisible": false
+            },
+            {
+                "title": "Documenti",
+                "path": "societa-documenti",
+                "icon": "files",
+                "isMobileVisible": false
+            },
+            {
+                "title": "Scadenze",
+                "path": "societa-scadenze",
+                "icon": "calendar-check",
+                "isMobileVisible": false
+            }
+        ]
+    },
+    {
+        "id": "network",
+        "title": "Network",
+        "path": "network",
+        "icon": "graph",
+        "isMobileVisible": false,
+        "roles": [
+            "manager",
+            "admin"
+        ],
+        "children": [
+            {
+                "title": "Collaborazioni",
+                "path": "network-collaborazioni",
+                "icon": "handshake",
+                "isMobileVisible": false
+            },
+            {
+                "title": "Atleti in Prova",
+                "path": "network-prove",
+                "icon": "user-check",
+                "isMobileVisible": false
+            },
+            {
+                "title": "Attività",
+                "path": "network-attivita",
+                "icon": "activity",
+                "isMobileVisible": false
+            }
+        ]
+    },
+    {
         "id": "ecommerce",
         "title": "eCommerce",
         "path": "ecommerce",
