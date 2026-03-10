@@ -346,7 +346,7 @@ class AthletesController
             ':period_start' => $periodStart,
             ':period_end' => $periodEnd,
             ':summary_text' => $summary,
-            ':model_version' => 'gemini-2.0-flash',
+            ':model_version' => 'gemini-2.5-flash',
         ]);
 
         Audit::log('AI_REPORT', 'ai_summaries', $summaryId, null, ['athlete_id' => $athleteId]);
@@ -469,7 +469,7 @@ PROMPT;
             return 'Gemini API key non configurata. Configurare GEMINI_API_KEY nel file .env.';
         }
 
-        $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={$apiKey}";
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={$apiKey}";
         $payload = json_encode([
             'contents' => [
                 ['parts' => [['text' => $prompt]]]

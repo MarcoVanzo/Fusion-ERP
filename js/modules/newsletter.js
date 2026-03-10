@@ -165,8 +165,8 @@ const Newsletter = (() => {
                 </thead>
                 <tbody>
                     ${_subscribers.map(sub => {
-                        const fields = sub.fields || [];
-                        const getName = key => fields.find(f => f.key === key)?.value || '';
+                        const fields = sub.fields || {};
+                        const getName = key => fields[key] || '';
                         const name = [getName('name'), getName('last_name')].filter(Boolean).join(' ') || '—';
                         const groups = (sub.groups || []).map(g => `<span style="background:var(--color-primary-soft);color:var(--color-primary);font-size:11px;padding:2px 6px;border-radius:4px;font-weight:600;">${Utils.escapeHtml(g.name)}</span>`).join(' ');
                         const date = sub.created_at ? sub.created_at.substring(0, 10) : '—';

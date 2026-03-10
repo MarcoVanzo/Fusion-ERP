@@ -230,10 +230,7 @@ class MailerLiteService
 
     private function getField(array $fields, string $key): string
     {
-        foreach ($fields as $f) {
-            if (($f['key'] ?? '') === $key) return (string)($f['value'] ?? '');
-        }
-        return '';
+        return (string)($fields[$key] ?? '');
     }
 
     private function extractNextCursor(string $nextUrl): ?string
