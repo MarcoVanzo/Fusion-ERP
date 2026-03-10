@@ -289,4 +289,140 @@ class SocietaRepository
             'UPDATE societa_deadlines SET is_deleted = 1 WHERE id = :id AND tenant_id = :tid'
         )->execute([':id' => $id, ':tid' => $tenantId]);
     }
+
+    // ─── SPONSORS ─────────────────────────────────────────────────────────────
+
+    public function listSponsors(): array
+    {
+        $tenantId = TenantContext::id();
+        $stmt = $this->db->prepare(
+            'SELECT * FROM societa_sponsors
+             WHERE tenant_id = :tid AND is_deleted = 0
+             ORDER BY sort_order ASC, name ASC'
+        );
+        $stmt->execute([':tid' => $tenantId]);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function getSponsorById(string $id): ?array
+    {
+        $tenantId = TenantContext::id();
+        $stmt = $this->db->prepare(
+            'SELECT * FROM societa_sponsors
+             WHERE id = :id AND tenant_id = :tid AND is_deleted = 0'
+        );
+        $stmt->execute([':id' => $id, ':tid' => $tenantId]);
+        return $stmt->fetch(\PDO::FETCH_ASSOC) ?: null;
+    }
+
+    public function createSponsor(array $data): void
+    {
+        $stmt = $this->db->prepare(
+            'INSERT INTO societa_sponsors
+                (id, tenant_id, name, description, logo_path,
+                 website_url, instagram_url, facebook_url, linkedin_url, tiktok_url,
+                 sort_order, is_active)
+             VALUES
+                (:id, :tenant_id, :name, :description, :logo_path,
+                 :website_url, :instagram_url, :facebook_url, :linkedin_url, :tiktok_url,
+                 :sort_order, :is_active)'
+        );
+        $stmt->execute($data);
+    }
+
+    public function updateSponsor(string $id, array $data): void
+    {
+        $tenantId = TenantContext::id();
+        $stmt = $this->db->prepare(
+            'UPDATE societa_sponsors SET
+                name           = :name,
+                description    = :description,
+                logo_path      = :logo_path,
+                website_url    = :website_url,
+                instagram_url  = :instagram_url,
+                facebook_url   = :facebook_url,
+                linkedin_url   = :linkedin_url,
+                tiktok_url     = :tiktok_url,
+                sort_order     = :sort_order,
+                is_active      = :is_active
+             WHERE id = :id AND tenant_id = :tid AND is_deleted = 0'
+        );
+        $stmt->execute(array_merge($data, [':id' => $id, ':tid' => $tenantId]));
+    }
+
+    public function updateSponsorLogo(string $id, string $logoPath): void
+    {
+        $tenantId = TenantContext::id();
+        $this->db->prepare(
+            'UPDATE societa_sponsors SET logo_path = :logo_path
+             WHERE id = :id AND tenant_id = :tid AND is_deleted = 0'
+        )->execute([':logo_path' => $logoPath, ':id' => $id, ':tid' => $tenantId]);
+    }
+
+    public function deleteSponsor(string $id): void
+    {
+        $tenantId = TenantContext::id();
+        $this->db->prepare(
+            'UPDATE societa_sponsors SET is_deleted = 1 WHERE id = :id AND tenant_id = :tid'
+        )->execute([':id' => $id, ':tid' => $tenantId]);
+    }
+
+    // ─── TITOLI ───────────────────────────────────────────────────────────────
+
+    public function listTitoli(): array
+    {
+        $tenantId = TenantContext::id();
+        $stmt = $this->db->prepare(
+            'SELECT * FROM societa_titoli
+             WHERE tenant_id = :tid AND is_deleted = 0
+             ORDER BY stagione DESC, campionato ASC, piazzamento ASC'
+        );
+        $stmt->execute([':tid' => $tenantId]);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function getTitoloById(string $id): ?array
+    {
+        $tenantId = TenantContext::id();
+        $stmt = $this->db->prepare(
+            'SELECT * FROM societa_titoli WHERE id = :id AND tenant_id = :tid AND is_deleted = 0'
+        );
+        $stmt->execute([':id' => $id, ':tid' => $tenantId]);
+        return $stmt->fetch(\PDO::FETCH_ASSOC) ?: null;
+    }
+
+    public function createTitolo(array $data): void
+    {
+        $stmt = $this->db->prepare(
+            'INSERT INTO societa_titoli
+                (id, tenant_id, stagione, campionato, categoria, piazzamento, finali_nazionali, note)
+             VALUES
+                (:id, :tenant_id, :stagione, :campionato, :categoria, :piazzamento, :finali_nazionali, :note)'
+        );
+        $stmt->execute($data);
+    }
+
+    public function updateTitolo(string $id, array $data): void
+    {
+        $tenantId = TenantContext::id();
+        $stmt = $this->db->prepare(
+            'UPDATE societa_titoli SET
+                stagione          = :stagione,
+                campionato        = :campionato,
+                categoria         = :categoria,
+                piazzamento       = :piazzamento,
+                finali_nazionali  = :finali_nazionali,
+                note              = :note
+             WHERE id = :id AND tenant_id = :tid AND is_deleted = 0'
+        );
+        $stmt->execute(array_merge($data, [':id' => $id, ':tid' => $tenantId]));
+    }
+
+    public function deleteTitolo(string $id): void
+    {
+        $tenantId = TenantContext::id();
+        $this->db->prepare(
+            'UPDATE societa_titoli SET is_deleted = 1 WHERE id = :id AND tenant_id = :tid'
+        )->execute([':id' => $id, ':tid' => $tenantId]);
+    }
 }

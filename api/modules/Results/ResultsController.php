@@ -1981,6 +1981,8 @@ class ResultsController
                 SELECT
                     m.id, m.home_team AS home, m.away_team AS away,
                     m.home_score AS sets_home, m.away_score AS sets_away,
+                    m.home_logo  AS home_logo,
+                    m.away_logo  AS away_logo,
                     DATE_FORMAT(m.match_date, '%d/%m/%Y') AS date,
                     DATE_FORMAT(m.match_date, '%H:%i')    AS time,
                     m.match_date,
@@ -2004,6 +2006,10 @@ class ResultsController
             foreach ($matches as &$m) {
                 $m['is_our_team'] = $this->_isOurTeam($m['home'], $m['away']);
                 $m['score'] = $m['home_score'] !== null ? "{$m['home_score']} - {$m['away_score']}" : "vs";
+                // Build public-facing logo URLs
+                $m['home_logo_url'] = $m['home_logo'] ? ('/ERP/' . ltrim($m['home_logo'], '/')) : null;
+                $m['away_logo_url'] = $m['away_logo'] ? ('/ERP/' . ltrim($m['away_logo'], '/')) : null;
+                unset($m['home_logo'], $m['away_logo']);
             }
 
             $stmtStandings = $pdo->prepare("

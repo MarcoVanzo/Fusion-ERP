@@ -217,3 +217,106 @@
 .soc-member-inactive {
     opacity: 0.5;
 }
+
+/* ─── Sponsor Cards ──────────────────────────────────────────────────────────── */
+.soc-sponsor-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--sp-3);
+}
+
+.soc-sponsor-card {
+    padding: var(--sp-3);
+    border-radius: 12px;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2);
+    transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.soc-sponsor-card:hover {
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+    transform: translateY(-2px);
+}
+
+.soc-sponsor-card.soc-sponsor-inactive {
+    opacity: 0.45;
+}
+
+.soc-sponsor-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--sp-2);
+    min-height: 60px;
+}
+
+.soc-sponsor-logo {
+    max-width: 140px;
+    max-height: 64px;
+    object-fit: contain;
+    border-radius: 6px;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    padding: 6px;
+}
+
+.soc-sponsor-logo-placeholder {
+    width: 80px;
+    height: 56px;
+    border: 2px dashed var(--color-border);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-muted);
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.soc-sponsor-name {
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--color-text);
+}
+
+.soc-sponsor-desc {
+    font-size: 13px;
+    color: var(--color-text-muted);
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    line-clamp: 3;
+    overflow: hidden;
+}
+
+.soc-sponsor-links {
+    display: flex;
+    gap: var(--sp-1);
+    flex-wrap: wrap;
+    margin-top: auto;
+    padding-top: var(--sp-1);
+    border-top: 1px solid var(--color-border);
+}
+
+.soc-sponsor-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: var(--color-hover);
+    color: var(--color-text-muted);
+    font-size: 16px;
+    text-decoration: none;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.soc-sponsor-link:hover {
+    background: rgba(255, 0, 122, 0.12);
+    color: var(--color-pink);
+}

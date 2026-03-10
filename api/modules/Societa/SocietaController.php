@@ -9,6 +9,8 @@
  *   listMembers / createMember / updateMember / deleteMember
  *   listDocuments / uploadDocument / downloadDocument / deleteDocument
  *   listDeadlines / createDeadline / updateDeadline / deleteDeadline
+ *   listSponsors / createSponsor / updateSponsor / uploadSponsorLogo / deleteSponsor
+ *   listTitoli / createTitolo / updateTitolo / deleteTitolo
  */
 
 declare(strict_types=1);
@@ -469,5 +471,229 @@ class SocietaController
         $this->repo->deleteDeadline($id);
         Audit::log('DELETE', 'societa_deadlines', $id, $before, null);
         Response::success(['message' => 'Scadenza eliminata']);
+    }
+
+    // ─── SPONSORS ─────────────────────────────────────────────────────────────
+
+    public function listSponsors(): void
+    {
+        Auth::requireRole('operator');
+        Response::success($this->repo->listSponsors());
+    }
+
+    public function createSponsor(): void
+    {
+        Auth::requireRole('manager');
+        $body = Response::jsonBody();
+        Response::requireFields($body, ['name']);
+
+        $id = 'SSP_' . bin2hex(random_bytes(4));
+        $data = [
+            ':id'             => $id,
+            ':tenant_id'      => TenantContext::id(),
+            ':name'           => htmlspecialchars(trim($body['name']), ENT_QUOTES, 'UTF-8'),
+            ':description'    => $body['description'] ?? null,
+            ':logo_path'      => $body['logo_path'] ?? null,
+            ':website_url'    => $body['website_url'] ?? null,
+            ':instagram_url'  => $body['instagram_url'] ?? null,
+            ':facebook_url'   => $body['facebook_url'] ?? null,
+            ':linkedin_url'   => $body['linkedin_url'] ?? null,
+            ':tiktok_url'     => $body['tiktok_url'] ?? null,
+            ':sort_order'     => (int)($body['sort_order'] ?? 0),
+            ':is_active'      => isset($body['is_active']) ? (int)(bool)$body['is_active'] : 1,
+        ];
+
+        $this->repo->createSponsor($data);
+        Audit::log('INSERT', 'societa_sponsors', $id, null, $body);
+        Response::success(['id' => $id], 201);
+    }
+
+    public function updateSponsor(): void
+    {
+        Auth::requireRole('manager');
+        $body = Response::jsonBody();
+        Response::requireFields($body, ['id', 'name']);
+
+        $before = $this->repo->getSponsorById($body['id']);
+        if (!$before) {
+            Response::error('Sponsor non trovato', 404);
+        }
+
+        $data = [
+            ':name'           => htmlspecialchars(trim($body['name']), ENT_QUOTES, 'UTF-8'),
+            ':description'    => $body['description'] ?? null,
+            ':logo_path'      => $body['logo_path'] ?? null,
+            ':website_url'    => $body['website_url'] ?? null,
+            ':instagram_url'  => $body['instagram_url'] ?? null,
+            ':facebook_url'   => $body['facebook_url'] ?? null,
+            ':linkedin_url'   => $body['linkedin_url'] ?? null,
+            ':tiktok_url'     => $body['tiktok_url'] ?? null,
+            ':sort_order'     => (int)($body['sort_order'] ?? 0),
+            ':is_active'      => isset($body['is_active']) ? (int)(bool)$body['is_active'] : 1,
+        ];
+
+        $this->repo->updateSponsor($body['id'], $data);
+        Audit::log('UPDATE', 'societa_sponsors', $body['id'], $before, $body);
+        Response::success(['message' => 'Sponsor aggiornato']);
+    }
+
+    public function uploadSponsorLogo(): void
+    {
+        Auth::requireRole('manager');
+
+        $sponsorId = $_POST['sponsor_id'] ?? '';
+        if (empty($sponsorId)) {
+            Response::error('sponsor_id obbligatorio', 400);
+        }
+
+        $sponsor = $this->repo->getSponsorById($sponsorId);
+        if (!$sponsor) {
+            Response::error('Sponsor non trovato', 404);
+        }
+
+        if (!isset($_FILES['logo']) || $_FILES['logo']['error'] !== UPLOAD_ERR_OK) {
+            Response::error('Errore upload logo', 400);
+        }
+
+        $file = $_FILES['logo'];
+
+        if ($file['size'] > self::MAX_FILE_SIZE) {
+            Response::error('File troppo grande (max 10 MB)', 400);
+        }
+
+        $finfo = new \finfo(FILEINFO_MIME_TYPE);
+        $mime  = $finfo->file($file['tmp_name']);
+        if (!in_array($mime, ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/svg+xml'], true)) {
+            Response::error('Tipo file non consentito. Accettati: JPG, PNG, WEBP, SVG', 400);
+        }
+
+        $tenantId  = TenantContext::id();
+        $uploadDir = dirname(__DIR__, 3) . '/uploads/societa/' . $tenantId . '/sponsors';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+
+        $ext      = pathinfo($file['name'], PATHINFO_EXTENSION);
+        $fileName = 'sponsor_' . $sponsorId . '_' . date('Ymd_His') . '.' . $ext;
+        $destPath = $uploadDir . '/' . $fileName;
+
+        if (!move_uploaded_file($file['tmp_name'], $destPath)) {
+            Response::error('Errore nel salvataggio del logo', 500);
+        }
+
+        $relPath = 'uploads/societa/' . $tenantId . '/sponsors/' . $fileName;
+        $this->repo->updateSponsorLogo($sponsorId, $relPath);
+        Audit::log('UPDATE', 'societa_sponsors', $sponsorId, ['logo_path' => $sponsor['logo_path']], ['logo_path' => $relPath]);
+        Response::success(['logo_path' => $relPath], 200);
+    }
+
+    public function deleteSponsor(): void
+    {
+        Auth::requireRole('manager');
+        $body = Response::jsonBody();
+        $id = $body['id'] ?? '';
+        if (empty($id)) {
+            Response::error('id obbligatorio', 400);
+        }
+        $before = $this->repo->getSponsorById($id);
+        if (!$before) {
+            Response::error('Sponsor non trovato', 404);
+        }
+        $this->repo->deleteSponsor($id);
+        Audit::log('DELETE', 'societa_sponsors', $id, $before, null);
+        Response::success(['message' => 'Sponsor eliminato']);
+    }
+
+    // ─── TITOLI ───────────────────────────────────────────────────────────────
+
+    public function listTitoli(): void
+    {
+        Auth::requireRole('operator');
+        Response::success($this->repo->listTitoli());
+    }
+
+    public function createTitolo(): void
+    {
+        Auth::requireRole('manager');
+        $body = Response::jsonBody();
+        Response::requireFields($body, ['stagione', 'campionato', 'categoria', 'piazzamento']);
+
+        $validCampionati = ['provinciale', 'regionale', 'nazionale'];
+        if (!in_array($body['campionato'], $validCampionati, true)) {
+            Response::error('Campionato non valido', 400);
+        }
+
+        $piazzamento = (int)($body['piazzamento'] ?? 0);
+        if (!in_array($piazzamento, [1, 2, 3], true)) {
+            Response::error('Piazzamento non valido (1, 2 o 3)', 400);
+        }
+
+        $id = 'STT_' . bin2hex(random_bytes(4));
+        $data = [
+            ':id'               => $id,
+            ':tenant_id'        => TenantContext::id(),
+            ':stagione'         => htmlspecialchars(trim($body['stagione']), ENT_QUOTES, 'UTF-8'),
+            ':campionato'       => $body['campionato'],
+            ':categoria'        => htmlspecialchars(trim($body['categoria']), ENT_QUOTES, 'UTF-8'),
+            ':piazzamento'      => $piazzamento,
+            ':finali_nazionali' => isset($body['finali_nazionali']) ? (int)(bool)$body['finali_nazionali'] : 0,
+            ':note'             => $body['note'] ?? null,
+        ];
+
+        $this->repo->createTitolo($data);
+        Audit::log('INSERT', 'societa_titoli', $id, null, $body);
+        Response::success(['id' => $id], 201);
+    }
+
+    public function updateTitolo(): void
+    {
+        Auth::requireRole('manager');
+        $body = Response::jsonBody();
+        Response::requireFields($body, ['id', 'stagione', 'campionato', 'categoria', 'piazzamento']);
+
+        $before = $this->repo->getTitoloById($body['id']);
+        if (!$before) {
+            Response::error('Titolo non trovato', 404);
+        }
+
+        $validCampionati = ['provinciale', 'regionale', 'nazionale'];
+        if (!in_array($body['campionato'], $validCampionati, true)) {
+            Response::error('Campionato non valido', 400);
+        }
+
+        $piazzamento = (int)($body['piazzamento'] ?? 0);
+        if (!in_array($piazzamento, [1, 2, 3], true)) {
+            Response::error('Piazzamento non valido (1, 2 o 3)', 400);
+        }
+
+        $data = [
+            ':stagione'         => htmlspecialchars(trim($body['stagione']), ENT_QUOTES, 'UTF-8'),
+            ':campionato'       => $body['campionato'],
+            ':categoria'        => htmlspecialchars(trim($body['categoria']), ENT_QUOTES, 'UTF-8'),
+            ':piazzamento'      => $piazzamento,
+            ':finali_nazionali' => isset($body['finali_nazionali']) ? (int)(bool)$body['finali_nazionali'] : 0,
+            ':note'             => $body['note'] ?? null,
+        ];
+
+        $this->repo->updateTitolo($body['id'], $data);
+        Audit::log('UPDATE', 'societa_titoli', $body['id'], $before, $body);
+        Response::success(['message' => 'Titolo aggiornato']);
+    }
+
+    public function deleteTitolo(): void
+    {
+        Auth::requireRole('manager');
+        $body = Response::jsonBody();
+        $id = $body['id'] ?? '';
+        if (empty($id)) {
+            Response::error('id obbligatorio', 400);
+        }
+        $before = $this->repo->getTitoloById($id);
+        if (!$before) {
+            Response::error('Titolo non trovato', 404);
+        }
+        $this->repo->deleteTitolo($id);
+        Audit::log('DELETE', 'societa_titoli', $id, $before, null);
+        Response::success(['message' => 'Titolo eliminato']);
     }
 }

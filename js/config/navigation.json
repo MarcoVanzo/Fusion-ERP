@@ -193,6 +193,18 @@
                 "path": "social-gallery",
                 "icon": "image",
                 "isMobileVisible": false
+            },
+            {
+                "title": "Sito Web",
+                "path": "website",
+                "icon": "globe",
+                "isMobileVisible": false
+            },
+            {
+                "title": "Newsletter",
+                "path": "newsletter",
+                "icon": "envelope-simple",
+                "isMobileVisible": false
             }
         ]
     },
@@ -286,6 +298,12 @@
                 "path": "societa-scadenze",
                 "icon": "calendar-check",
                 "isMobileVisible": false
+            },
+            {
+                "title": "Sponsor",
+                "path": "societa-sponsor",
+                "icon": "handshake",
+                "isMobileVisible": false
             }
         ]
     },
@@ -377,18 +395,7 @@
             }
         ]
     },
-    {
-        "id": "website",
-        "title": "Sito Web",
-        "path": "website",
-        "icon": "globe",
-        "isMobileVisible": false,
-        "implemented": true,
-        "roles": [
-            "manager",
-            "admin"
-        ]
-    },
+
     {
         "id": "admin",
         "title": "Amministrazione",
