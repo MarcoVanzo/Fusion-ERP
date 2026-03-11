@@ -14,8 +14,8 @@ use FusionERP\Shared\TenantContext;
 
 class ValdController
 {
-    private ValdRepository $repo;
-    private ValdService $service;
+    private $repo;
+    private $service;
 
     public function __construct()
     {

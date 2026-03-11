@@ -13,7 +13,7 @@ use FusionERP\Shared\TenantContext;
 
 class ValdRepository
 {
-    private \PDO $db;
+    private $db;
 
     public function __construct()
     {
@@ -210,22 +210,24 @@ class ValdRepository
     {
         $stmt = $this->db->prepare(
             'SELECT metrics FROM vald_test_results
-             WHERE tenant_id = :tenant_id
+             WHERE tenant_id = :t1
                AND athlete_id IN (
                    SELECT id FROM athletes 
-                   WHERE tenant_id = :tenant_id 
+                   WHERE tenant_id = :t2 
                      AND vald_athlete_id = (
                          SELECT vald_athlete_id FROM athletes 
-                         WHERE id = :athlete_id AND tenant_id = :tenant_id LIMIT 1
+                         WHERE id = :athlete_id AND tenant_id = :t3 LIMIT 1
                      )
                )
              ORDER BY test_date DESC
-             LIMIT :lim OFFSET 1'
+             LIMIT 5 OFFSET 1'
         );
-        $stmt->bindValue(':athlete_id', $athleteId);
-        $stmt->bindValue(':tenant_id', TenantContext::id());
-        $stmt->bindValue(':lim', $limit, \PDO::PARAM_INT);
-        $stmt->execute();
+        $stmt->execute([
+            ':t1' => TenantContext::id(),
+            ':t2' => TenantContext::id(),
+            ':t3' => TenantContext::id(),
+            ':athlete_id' => $athleteId
+        ]);
 
         $rows = $stmt->fetchAll();
         $vals = [];
