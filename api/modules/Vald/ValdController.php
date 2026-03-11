@@ -614,6 +614,17 @@ class ValdController
                 ':test_type'  => $test['testType'] ?? 'CMJ',
                 ':metrics'    => json_encode($metrics),
             ]);
+            
+            // Auto-update ERP athlete weight using the highly accurate ForceDecks measurement
+            if (!empty($test['weight'])) {
+                $stmtW = $db->prepare('UPDATE athletes SET weight_kg = :w WHERE id = :id AND tenant_id = :tid');
+                $stmtW->execute([
+                    ':w' => round((float)$test['weight'], 1),
+                    ':id' => $athleteId,
+                    ':tid' => $tenantId
+                ]);
+            }
+            
             $stats['synced']++;
         }
 

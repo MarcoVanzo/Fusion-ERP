@@ -36,7 +36,8 @@ class StaffRepository
                        GROUP_CONCAT(COALESCE(CONCAT(t.category, ' — ', t.name), t.name) SEPARATOR ', ') as team_names
                 FROM staff_members s
                 LEFT JOIN staff_teams st ON s.id = st.staff_id
-                LEFT JOIN teams t ON st.team_id = t.id AND t.deleted_at IS NULL
+                LEFT JOIN team_seasons ts ON st.team_season_id = ts.id
+                LEFT JOIN teams t ON ts.team_id = t.id AND t.deleted_at IS NULL
                 WHERE s.tenant_id = :tenant_id AND s.is_deleted = 0
                 GROUP BY s.id
                 ORDER BY s.last_name ASC, s.first_name ASC";
@@ -59,7 +60,8 @@ class StaffRepository
                        GROUP_CONCAT(COALESCE(CONCAT(t.category, ' — ', t.name), t.name) SEPARATOR ', ') as team_names
                 FROM staff_members s
                 LEFT JOIN staff_teams st ON s.id = st.staff_id
-                LEFT JOIN teams t ON st.team_id = t.id AND t.deleted_at IS NULL
+                LEFT JOIN team_seasons ts ON st.team_season_id = ts.id
+                LEFT JOIN teams t ON ts.team_id = t.id AND t.deleted_at IS NULL
                 WHERE s.id = :id AND s.tenant_id = :tenant_id AND s.is_deleted = 0
                 GROUP BY s.id";
         $stmt = $this->db->prepare($sql);
@@ -90,10 +92,10 @@ class StaffRepository
             $stmt->execute($data);
 
             if (!empty($teamIds)) {
-                $sqlTeams = "INSERT INTO staff_teams (staff_id, team_id) VALUES (:staff_id, :team_id)";
+                $sqlTeams = "INSERT INTO staff_teams (staff_id, team_season_id) VALUES (:staff_id, :team_season_id)";
                 $stmtTeams = $this->db->prepare($sqlTeams);
                 foreach ($teamIds as $tid) {
-                    $stmtTeams->execute([':staff_id' => $data[':id'], ':team_id' => $tid]);
+                    $stmtTeams->execute([':staff_id' => $data[':id'], ':team_season_id' => $tid]);
                 }
             }
             $this->db->commit();
@@ -132,10 +134,10 @@ class StaffRepository
 
             if (!empty($teamIds)) {
                 error_log("Inserting teams for staff $id: " . json_encode($teamIds));
-                $sqlTeams = "INSERT INTO staff_teams (staff_id, team_id) VALUES (:staff_id, :team_id)";
+                $sqlTeams = "INSERT INTO staff_teams (staff_id, team_season_id) VALUES (:staff_id, :team_season_id)";
                 $stmtTeams = $this->db->prepare($sqlTeams);
                 foreach ($teamIds as $tid) {
-                    $stmtTeams->execute([':staff_id' => $id, ':team_id' => $tid]);
+                    $stmtTeams->execute([':staff_id' => $id, ':team_season_id' => $tid]);
                 }
             }
             else {
@@ -167,10 +169,10 @@ class StaffRepository
                 FROM staff_members s
                 INNER JOIN staff_teams st ON s.id = st.staff_id
                 WHERE s.is_deleted = 0
-                  AND st.team_id = :team_id
+                  AND st.team_season_id = :team_season_id
                 ORDER BY s.last_name ASC, s.first_name ASC";
         $stmt = $this->db->prepare($sql);
-        $stmt->execute([':team_id' => $teamId]);
+        $stmt->execute([':team_season_id' => $teamId]);
 
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }

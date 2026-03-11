@@ -54,8 +54,8 @@ const Staff = (() => {
                     new Date(e.medical_cert_expires_at) < l,
                   r =
                     e.team_names ||
-                    (e.team_ids && e.team_ids.length > 0
-                      ? e.team_ids
+                    (e.team_season_ids && e.team_season_ids.length > 0
+                      ? e.team_season_ids
                           .map((e) => {
                             const t = a.find((t) => String(t.id) === String(e));
                             return t ? i(t.category, t.name) : "";
@@ -219,7 +219,7 @@ const Staff = (() => {
                       identity_document: o["ns-doc"] || null,
                       medical_cert_expires_at: o["ns-medcert"] || null,
                       notes: o["ns-notes"] || null,
-                      team_ids: o["ns-teams"] || [],
+                      team_season_ids: o["ns-teams"] || [],
                     }),
                       m.close(),
                       UI.toast("Membro staff creato", "success"),
@@ -251,8 +251,8 @@ const Staff = (() => {
           p.medical_cert_expires_at && new Date(p.medical_cert_expires_at) < u,
         v =
           p.team_names ||
-          (p.team_ids && p.team_ids.length > 0
-            ? p.team_ids
+          (p.team_season_ids && p.team_season_ids.length > 0
+            ? p.team_season_ids
                 .map((e) => {
                   const t = a.find((t) => t.id === e);
                   return t ? i(t.category, t.name) : "";
@@ -604,7 +604,7 @@ const Staff = (() => {
               const n = a
                   .map(
                     (t) =>
-                      `<label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" name="es-teams" value="${Utils.escapeHtml(String(t.id))}" class="form-checkbox" ${(e.team_ids || []).map(String).includes(String(t.id)) ? "checked" : ""}> ${Utils.escapeHtml(i(t.category, t.name))}</label>`,
+                      `<label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" name="es-teams" value="${Utils.escapeHtml(String(t.id))}" class="form-checkbox" ${(e.team_season_ids || []).map(String).includes(String(t.id)) ? "checked" : ""}> ${Utils.escapeHtml(i(t.category, t.name))}</label>`,
                   )
                   .join(""),
                 l = UI.modal({
@@ -667,7 +667,7 @@ const Staff = (() => {
                           document.getElementById("es-medcert").value || null,
                         notes:
                           document.getElementById("es-notes").value || null,
-                        team_ids: o,
+                        team_season_ids: o,
                       }),
                         l.close(),
                         UI.toast("Membro staff aggiornato", "success"),

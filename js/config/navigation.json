@@ -316,6 +316,12 @@
                 "path": "societa-sponsor",
                 "icon": "storefront",
                 "isMobileVisible": false
+            },
+            {
+                "title": "Squadre",
+                "path": "squadre",
+                "icon": "users-four",
+                "isMobileVisible": false
             }
         ]
     },

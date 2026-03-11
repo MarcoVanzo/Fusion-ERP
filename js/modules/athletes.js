@@ -29,8 +29,8 @@ const Athletes = (() => {
         ? t.filter(
             (e) =>
               String(e.team_id) === String(n) ||
-              (!(!e.team_ids || !Array.isArray(e.team_ids)) &&
-                e.team_ids.some((e) => String(e) === String(n))),
+              (!(!e.team_season_ids || !Array.isArray(e.team_season_ids)) &&
+                e.team_season_ids.some((e) => String(e) === String(n))),
           )
         : t;
     ((g.innerHTML = `\n      <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2);margin-bottom:var(--sp-3);flex-wrap:wrap;">\n        <p class="page-subtitle">${y.length} atleti${n ? " in squadra selezionata" : " totali"}</p>\n        <div style="display:flex;align-items:center;gap:var(--sp-2);">\n          <div class="input-wrapper" style="position:relative;min-width:220px;">\n            <i class="ph ph-magnifying-glass" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--color-text-muted);font-size:16px;"></i>\n            <input type="text" id="athlete-search" class="form-input" placeholder="Cerca atleta..." style="padding-left:36px;height:42px;font-size:13px;">\n          </div>\n          <button class="btn btn-primary" id="new-athlete-btn" type="button">+ NUOVO ATLETA</button>\n        </div>\n      </div>\n      <div class="filter-bar" id="team-filter">\n        <button class="filter-chip ${n ? "" : "active"}" data-team="" type="button">Tutti</button>\n        ${v.map((e) => `<button class="filter-chip ${n === e.id ? "active" : ""}" data-team="${Utils.escapeHtml(e.id)}" type="button">${Utils.escapeHtml(d(e.category, e.name))}</button>`).join("")}\n      </div>\n      ${
@@ -108,7 +108,7 @@ const Athletes = (() => {
                   document.querySelectorAll(".na-team-cb:checked"),
                 ).map((e) => e.value);
                 (e.length > 0 || r["na-teams-touched"]) &&
-                  ((r.team_ids = e), (r["na-teams-touched"] = !0));
+                  ((r.team_season_ids = e), (r["na-teams-touched"] = !0));
               },
               c = () => {
                 const e = document.getElementById("wizard-body");
@@ -116,12 +116,12 @@ const Athletes = (() => {
                 ((e.innerHTML = `\n  <div style="display:flex;align-items:center;gap:0;margin-bottom:20px;">\n    ${[1, 2, 3, 4].map((e) => `\n          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;">\n            <div style="width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;\n              ${e < n ? "background:var(--color-success);color:#000;" : e === n ? "background:var(--color-pink);color:#fff;" : "background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.4);"}">${e < n ? "✓" : e}</div>\n            <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;color:${e === n ? "var(--color-white)" : "rgba(255,255,255,0.35)"};">${l[e - 1]}</div>\n          </div>\n          ${e < 4 ? `<div style="flex:0.5;height:2px;background:${e < n ? "var(--color-success)" : "rgba(255,255,255,0.1)"};margin-bottom:20px;"></div>` : ""}\n        `).join("")}\n      </div><div id="wizard-step-content">${i[n - 1]}</div><div id="na-error" class="form-error hidden"></div>`),
                   requestAnimationFrame(() => {
                     (Object.entries(r).forEach(([e, t]) => {
-                      if ("team_ids" === e || "na-teams-touched" === e) return;
+                      if ("team_season_ids" === e || "na-teams-touched" === e) return;
                       const a = document.getElementById(e);
                       a && (a.value = t);
                     }),
-                      r.team_ids &&
-                        r.team_ids.forEach((e) => {
+                      r.team_season_ids &&
+                        r.team_season_ids.forEach((e) => {
                           const t = document.getElementById(`na-team-${e}`);
                           t &&
                             ((t.checked = !0),
@@ -209,7 +209,7 @@ const Athletes = (() => {
                     (await Store.api("create", "athletes", {
                       first_name: r["na-fname"] || "",
                       last_name: r["na-lname"] || "",
-                      team_ids: r.team_ids || [],
+                      team_season_ids: r.team_season_ids || [],
                       jersey_number: r["na-jersey"] || null,
                       role: r["na-role"] || null,
                       birth_date: r["na-birth"] || null,
@@ -633,8 +633,8 @@ const Athletes = (() => {
           (i = document.getElementById("edit-athlete-btn")) &&
             (i.onclick = () =>
               (function (s) {
-                const l = Array.isArray(s.team_ids)
-                    ? s.team_ids
+                const l = Array.isArray(s.team_season_ids)
+                    ? s.team_season_ids
                     : s.team_id
                       ? [s.team_id]
                       : [],
@@ -681,7 +681,7 @@ const Athletes = (() => {
                           id: s.id,
                           first_name: e,
                           last_name: a,
-                          team_ids: l,
+                          team_season_ids: l,
                           team_id: l[0] || null,
                           jersey_number:
                             document.getElementById("ea-jersey").value || null,
