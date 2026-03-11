@@ -25,14 +25,18 @@ class ValdRepository
      */
     public function getResultsByAthlete(string $athleteId): array
     {
-        // To handle legacy duplicate athlete profiles (pre-V050), we fetch tests
-        // using the vald_athlete_id rather than the specific legacy athlete_id.
         $stmt = $this->db->prepare(
-            'SELECT vtr.* FROM vald_test_results vtr
-             JOIN athletes a ON a.id = :athlete_id AND a.tenant_id = :tenant_id
-             JOIN athletes a_all ON a_all.vald_athlete_id = a.vald_athlete_id AND a_all.tenant_id = a.tenant_id
-             WHERE vtr.athlete_id = a_all.id AND vtr.tenant_id = :tenant_id
-             ORDER BY vtr.test_date DESC'
+            'SELECT * FROM vald_test_results 
+             WHERE tenant_id = :tenant_id
+               AND athlete_id IN (
+                   SELECT id FROM athletes 
+                   WHERE tenant_id = :tenant_id 
+                     AND vald_athlete_id = (
+                         SELECT vald_athlete_id FROM athletes 
+                         WHERE id = :athlete_id AND tenant_id = :tenant_id LIMIT 1
+                     )
+               )
+             ORDER BY test_date DESC'
         );
         $stmt->execute([
             ':athlete_id' => $athleteId,
@@ -47,11 +51,17 @@ class ValdRepository
     public function getLatestResult(string $athleteId): ?array
     {
         $stmt = $this->db->prepare(
-            'SELECT vtr.* FROM vald_test_results vtr
-             JOIN athletes a ON a.id = :athlete_id AND a.tenant_id = :tenant_id
-             JOIN athletes a_all ON a_all.vald_athlete_id = a.vald_athlete_id AND a_all.tenant_id = a.tenant_id
-             WHERE vtr.athlete_id = a_all.id AND vtr.tenant_id = :tenant_id
-             ORDER BY vtr.test_date DESC LIMIT 1'
+            'SELECT * FROM vald_test_results 
+             WHERE tenant_id = :tenant_id
+               AND athlete_id IN (
+                   SELECT id FROM athletes 
+                   WHERE tenant_id = :tenant_id 
+                     AND vald_athlete_id = (
+                         SELECT vald_athlete_id FROM athletes 
+                         WHERE id = :athlete_id AND tenant_id = :tenant_id LIMIT 1
+                     )
+               )
+             ORDER BY test_date DESC LIMIT 1'
         );
         $stmt->execute([
             ':athlete_id' => $athleteId,
@@ -199,11 +209,17 @@ class ValdRepository
     public function getBaselineBrakingImpulse(string $athleteId, int $limit = 5): ?float
     {
         $stmt = $this->db->prepare(
-            'SELECT vtr.metrics FROM vald_test_results vtr
-             JOIN athletes a ON a.id = :athlete_id AND a.tenant_id = :tenant_id
-             JOIN athletes a_all ON a_all.vald_athlete_id = a.vald_athlete_id AND a_all.tenant_id = a.tenant_id
-             WHERE vtr.athlete_id = a_all.id AND vtr.tenant_id = :tenant_id
-             ORDER BY vtr.test_date DESC
+            'SELECT metrics FROM vald_test_results
+             WHERE tenant_id = :tenant_id
+               AND athlete_id IN (
+                   SELECT id FROM athletes 
+                   WHERE tenant_id = :tenant_id 
+                     AND vald_athlete_id = (
+                         SELECT vald_athlete_id FROM athletes 
+                         WHERE id = :athlete_id AND tenant_id = :tenant_id LIMIT 1
+                     )
+               )
+             ORDER BY test_date DESC
              LIMIT :lim OFFSET 1'
         );
         $stmt->bindValue(':athlete_id', $athleteId);
