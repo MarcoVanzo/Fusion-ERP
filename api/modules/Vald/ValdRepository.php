@@ -219,4 +219,20 @@ class ValdRepository
 
         return !empty($vals) ? round(array_sum($vals) / count($vals), 1) : null;
     }
+
+    /**
+     * Link (or unlink) an ERP athlete to a VALD athlete ID.
+     * Pass null $valdAthleteId to remove the link.
+     */
+    public function linkAthleteToVald(string $athleteId, ?string $valdAthleteId): void
+    {
+        $stmt = $this->db->prepare(
+            'UPDATE athletes SET vald_athlete_id = :vid WHERE id = :id AND tenant_id = :tid'
+        );
+        $stmt->execute([
+            ':vid' => $valdAthleteId,
+            ':id'  => $athleteId,
+            ':tid' => TenantContext::id(),
+        ]);
+    }
 }

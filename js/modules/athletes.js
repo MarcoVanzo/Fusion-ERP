@@ -615,7 +615,7 @@ const Athletes = (() => {
           return `\n      <div class="stat-card">\n        <span class="stat-label">ACWR Score</span>\n        <span class="stat-value" style="color:${a};">${Utils.formatNum(e.score, 2)}</span>\n        <div class="acwr-gauge" style="margin-top:8px;">\n          <div class="acwr-bar-track">\n            <div class="acwr-bar-fill" style="width:${t}%;background:${a};"></div>\n          </div>\n          <div class="acwr-zones">\n            <span>BASSO</span><span>OTTIMALE</span><span>CAUTO</span><span>PERICOLO</span>\n          </div>\n        </div>\n        <span class="stat-meta">${Utils.acwrRiskLabel(e.risk)}</span>\n      </div>`;
         })(
           r.acwr,
-        )}\n                <div class="stat-card">\n                  <span class="stat-label">Carico Acuto (7g)</span>\n                  <span class="stat-value">${Utils.formatNum(r.acwr?.acute, 0)}</span>\n                </div>\n                <div class="stat-card">\n                  <span class="stat-label">Carico Cronico (28g)</span>\n                  <span class="stat-value">${Utils.formatNum(r.acwr?.chronic, 0)}</span>\n                </div>\n              </div>\n            </div>\n\n            \x3c!-- AI Summary section --\x3e\n            <div id="ai-summary-section"></div>\n\n            \x3c!-- VALD Performance Tracking --\x3e\n            <div>\n              <p class="section-label" style="display:flex;align-items:center;gap:8px;">\n                <span style="color:var(--color-pink);">⚡</span> VALD Performance Tracking\n              </p>\n              <div id="vald-tab-content">\n                <div style="display:flex;flex-direction:column;gap:8px;">\n                  <div class="skeleton skeleton-title"></div>\n                  <div class="skeleton skeleton-text" style="width:60%;"></div>\n                </div>\n              </div>\n            </div>\n\n            \x3c!-- Metrics history --\x3e\n            <div>\n              <p class="section-label">Storico Metriche (30 giorni)</p>\n              ${
+        )}\n                <div class="stat-card">\n                  <span class="stat-label">Carico Acuto (7g)</span>\n                  <span class="stat-value">${Utils.formatNum(r.acwr?.acute, 0)}</span>\n                </div>\n                <div class="stat-card">\n                  <span class="stat-label">Carico Cronico (28g)</span>\n                  <span class="stat-value">${Utils.formatNum(r.acwr?.chronic, 0)}</span>\n                </div>\n              </div>\n            </div>\n\n            \x3c!-- AI Summary section --\x3e\n            <div id="ai-summary-section"></div>\n\n            \x3c!-- VALD Performance Tracking --\x3e\n            <div id="vald-section">\n              <p class="section-label" style="display:flex;align-items:center;gap:8px;justify-content:space-between;">\n                <span style="display:flex;align-items:center;gap:8px;"><span style="color:var(--color-pink);">⚡</span> VALD Performance Tracking</span>\n                <span style="display:flex;align-items:center;gap:6px;">\n                  <button id="vald-link-btn" type="button" class="btn btn-sm btn-ghost" style="display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:4px 10px;" title="Collega atleti VALD/ERP"><i class="ph ph-link" style="font-size:13px;"></i> Collega</button>\n                  <button id="vald-sync-btn" type="button" class="btn btn-sm btn-default" style="display:inline-flex;align-items:center;gap:6px;font-size:11px;padding:4px 12px;border-color:rgba(255,0,255,0.3);color:var(--color-pink);" title="Sincronizza dati VALD ForceDecks"><i class="ph ph-arrows-clockwise" style="font-size:13px;"></i> Sincronizza</button>\n                </span>\n              </p>\n              <div id="vald-tab-content">\n                <div style="display:flex;flex-direction:column;gap:8px;">\n                  <div class="skeleton skeleton-title"></div>\n                  <div class="skeleton skeleton-text" style="width:60%;"></div>\n                </div>\n              </div>\n            </div>\n\n            \x3c!-- Metrics history --\x3e\n            <div>\n              <p class="section-label">Storico Metriche (30 giorni)</p>\n              ${
           r.metrics?.length
             ? `\n              <div class="table-wrapper">\n                <table class="table">\n                  <thead><tr><th>Data</th><th>Durata (min)</th><th>RPE</th><th>Carico</th><th>ACWR</th><th>Note</th></tr></thead>\n                  <tbody>\n                    ${r.metrics
                 .map((e) => {
@@ -878,6 +878,112 @@ const Athletes = (() => {
               E ||
               ((E = !0),
               (async function (e) {
+                // Attach VALD sync button listener
+                const syncBtn = document.getElementById("vald-sync-btn");
+                if (syncBtn && !syncBtn._syncAttached) {
+                  syncBtn._syncAttached = true;
+                  syncBtn.addEventListener("click", async () => {
+                    const origHtml = syncBtn.innerHTML;
+                    syncBtn.disabled = true;
+                    syncBtn.innerHTML = '<i class="ph ph-spinner" style="display:inline-block;animation:spin 1s linear infinite;"></i> Sincronizzando…';
+                    try {
+                      const res = await Store.api("sync", "vald", {});
+                      const synced = res?.synced ?? 0;
+                      const found = res?.found ?? 0;
+                      if (synced > 0) {
+                        UI.toast(`✅ VALD: ${synced} nuovi test importati su ${found} trovati.`, "success", 5000);
+                        // Reload VALD analytics
+                        E = false;
+                        Store.clearCache();
+                      } else if (found > 0) {
+                        UI.toast(`ℹ️ VALD: ${found} test trovati, nessun dato nuovo da importare.`, "info", 4000);
+                      } else {
+                        UI.toast("ℹ️ VALD: Nessun nuovo test trovato.", "info", 3000);
+                      }
+                    } catch (err) {
+                      UI.toast("❌ Errore sync VALD: " + (err.message || err), "error", 5000);
+                    } finally {
+                      syncBtn.disabled = false;
+                      syncBtn.innerHTML = origHtml;
+                    }
+                  });
+                }
+
+                // Attach VALD link button listener
+                const linkBtn = document.getElementById("vald-link-btn");
+                if (linkBtn && !linkBtn._linkAttached) {
+                  linkBtn._linkAttached = true;
+                  linkBtn.addEventListener("click", async () => {
+                    linkBtn.disabled = true;
+                    linkBtn.innerHTML = '<i class="ph ph-spinner" style="display:inline-block;animation:spin 1s linear infinite;"></i>';
+                    try {
+                      const data = await Store.get("valdAthletes", "vald", {});
+                      const { valdAthletes: vList = [], erpAthletes: eList = [] } = data || {};
+
+                      // Build select options html
+                      const optionsHtml = `<option value="">— non collegare —</option>` +
+                        eList.map(a => `<option value="${Utils.escapeHtml(a.id)}">${Utils.escapeHtml(a.name)}</option>`).join("");
+
+                      const rowsHtml = vList.map((va, idx) => {
+                        const currentId = va.linked_erp_id || va.suggested_erp_id || "";
+                        const isLinked = !!va.linked_erp_id;
+                        const isSuggested = !isLinked && !!va.suggested_erp_id;
+                        const badge = isLinked ? '<span class="badge badge-success" style="font-size:9px;">Collegato</span>' :
+                          isSuggested ? '<span class="badge badge-warning" style="font-size:9px;">Auto</span>' : '';
+                        const categoryBadge = va.vald_category ? `<span style="font-size:10px;color:var(--color-text-muted);margin-left:6px;">${Utils.escapeHtml(va.vald_category)}</span>` : '';
+                        // Insert pre-selected value
+                        const opts = `<option value="">— non collegare —</option>` +
+                          eList.map(a => `<option value="${Utils.escapeHtml(a.id)}"${a.id === currentId ? ' selected' : ''}>${Utils.escapeHtml(a.name)}</option>`).join("");
+                        return `<tr>
+                          <td style="font-size:13px;font-weight:600;">${Utils.escapeHtml(va.vald_name)}${categoryBadge}</td>
+                          <td>${badge}</td>
+                          <td><select class="form-input vald-link-select" style="font-size:12px;padding:4px 8px;" data-vald-id="${Utils.escapeHtml(va.vald_id)}">${opts}</select></td>
+                        </tr>`;
+                      }).join("");
+
+                      const modal = UI.modal({
+                        title: '🔗 Collega Atleti VALD',
+                        maxWidth: '700px',
+                        body: `
+                          <p style="font-size:12px;color:var(--color-text-muted);margin-bottom:var(--sp-2);">Associa ogni atleta VALD al corrispettivo nella tua anagrafica ERP. Le corrispondenze automatiche (Auto) sono basate sulla somiglianza del nome.</p>
+                          <div class="table-wrapper" style="max-height:60vh;overflow-y:auto;">
+                            <table class="table">
+                              <thead><tr><th>Atleta VALD</th><th>Stato</th><th>Atleta ERP</th></tr></thead>
+                              <tbody>${rowsHtml}</tbody>
+                            </table>
+                          </div>`,
+                        footer: '<button class="btn btn-ghost btn-sm" id="vald-link-cancel" type="button">Annulla</button><button class="btn btn-primary btn-sm" id="vald-link-save" type="button">💾 Salva Abbinamenti</button>',
+                      });
+
+                      document.getElementById("vald-link-cancel")?.addEventListener("click", () => modal.close());
+                      document.getElementById("vald-link-save")?.addEventListener("click", async () => {
+                        const saveBtn2 = document.getElementById("vald-link-save");
+                        if (saveBtn2) { saveBtn2.disabled = true; saveBtn2.textContent = "Salvando…"; }
+                        try {
+                          const links = [];
+                          document.querySelectorAll(".vald-link-select").forEach(sel => {
+                            if (sel.value) {
+                              links.push({ athlete_id: sel.value, vald_athlete_id: sel.dataset.valdId });
+                            }
+                          });
+                          const res = await Store.api("linkAthlete", "vald", links);
+                          modal.close();
+                          UI.toast(`✅ ${res?.saved ?? links.length} atleti collegati! Ora puoi sincronizzare i dati.`, "success", 5000);
+                          Store.clearCache();
+                        } catch (err) {
+                          UI.toast("❌ Errore: " + (err.message || err), "error", 5000);
+                          if (saveBtn2) { saveBtn2.disabled = false; saveBtn2.textContent = "💾 Salva Abbinamenti"; }
+                        }
+                      });
+                    } catch (err) {
+                      UI.toast("❌ Impossibile caricare atleti VALD: " + (err.message || err), "error", 5000);
+                    } finally {
+                      linkBtn.disabled = false;
+                      linkBtn.innerHTML = '<i class="ph ph-link" style="font-size:13px;"></i> Collega';
+                    }
+                  });
+                }
+
                 const t = document.getElementById("vald-tab-content");
                 if (t) {
                   t.innerHTML =

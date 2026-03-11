@@ -366,72 +366,224 @@ class ValdController
     }
 
     /**
+     * GET /api/?module=vald&action=valdAthletes
+     * Returns VALD athletes alongside their currently matched ERP athlete (if any),
+     * plus all ERP athletes for dropdown selection.
+     */
+    public function valdAthletes(): void
+    {
+        Auth::requireRead('athletes');
+
+        $tenantId = \FusionERP\Shared\TenantContext::id();
+        $db       = \FusionERP\Shared\Database::getInstance();
+
+        // 1. Fetch VALD athletes from API — wrap in try/catch so auth failures
+        //    (missing credentials, OAuth2 errors) return a clean 502 instead of 500
+        try {
+            $valdAthletes = $this->service->getAthletes();
+        } catch (\Throwable $e) {
+            error_log('[VALD] valdAthletes(): ' . $e->getMessage());
+            $msg = str_contains($e->getMessage(), 'Access Token')
+                ? 'Autenticazione VALD fallita. Verifica VALD_CLIENT_ID e VALD_CLIENT_SECRET nel file .env.'
+                : 'Errore durante il recupero degli atleti da VALD: ' . $e->getMessage();
+            Response::error($msg, 502);
+            return;
+        }
+
+        if (!is_array($valdAthletes)) {
+            Response::error('Impossibile recuperare atleti da VALD: risposta non valida dall\'API.', 502);
+            return;
+        }
+
+        // 2. Fetch all ERP athletes for this tenant
+        $stmt = $db->prepare(
+            'SELECT id, full_name, vald_athlete_id FROM athletes WHERE tenant_id = :tid ORDER BY full_name'
+        );
+        $stmt->execute([':tid' => $tenantId]);
+        $erpAthletes = $stmt->fetchAll();
+
+        // Build a lookup: vald_athlete_id → erp athlete
+        $erpByValdId = [];
+        foreach ($erpAthletes as $a) {
+            if ($a['vald_athlete_id']) {
+                $erpByValdId[$a['vald_athlete_id']] = $a;
+            }
+        }
+
+        // 3. Auto-match VALD athletes to ERP athletes by name similarity
+        $erpByName = [];
+        foreach ($erpAthletes as $a) {
+            $normalized = $this->normalizeName($a['full_name']);
+            $erpByName[$normalized] = $a;
+        }
+
+        $result = [];
+        foreach ($valdAthletes as $va) {
+            $valdId   = $va['id'];
+            $valdName = $va['name'] ?? (($va['givenName'] ?? '') . ' ' . ($va['familyName'] ?? ''));
+
+            // Check if already linked
+            $linked = $erpByValdId[$valdId] ?? null;
+
+            // Auto-suggest by name if not already linked
+            $suggestion = null;
+            if (!$linked) {
+                $normalized = $this->normalizeName($valdName);
+                $suggestion = $erpByName[$normalized] ?? null;
+
+                // If no exact match, try partial: VALD "Adele Favaretto" → ERP "Favaretto Adele"
+                if (!$suggestion) {
+                    $parts    = explode(' ', $normalized);
+                    $reversed = implode(' ', array_reverse($parts));
+                    $suggestion = $erpByName[$reversed] ?? null;
+                }
+            }
+
+            $result[] = [
+                'vald_id'      => $valdId,
+                'vald_name'    => $valdName,
+                'vald_category' => $va['attributes'][0]['valueName'] ?? null,
+                'linked_erp_id'   => $linked['id'] ?? null,
+                'linked_erp_name' => $linked['full_name'] ?? null,
+                'suggested_erp_id'   => $suggestion['id'] ?? null,
+                'suggested_erp_name' => $suggestion['full_name'] ?? null,
+            ];
+        }
+
+        Response::success([
+            'valdAthletes' => $result,
+            'erpAthletes'  => array_values(array_map(fn($a) => ['id' => $a['id'], 'name' => $a['full_name']], $erpAthletes)),
+        ]);
+    }
+
+    /** Normalize a name for fuzzy matching (lowercase, no accents, trim extra spaces). */
+    private function normalizeName(string $name): string
+    {
+        $name = mb_strtolower(trim($name));
+        // Remove common accent characters
+        $from = ['à','á','â','ã','ä','è','é','ê','ë','ì','í','î','ï','ò','ó','ô','õ','ö','ù','ú','û','ü'];
+        $to   = ['a','a','a','a','a','e','e','e','e','i','i','i','i','o','o','o','o','o','u','u','u','u'];
+        return str_replace($from, $to, $name);
+    }
+
+    /**
+     * POST /api/?module=vald&action=linkAthlete
+     * Body JSON: [{ "athlete_id": "ERP_xxx", "vald_athlete_id": "uuid" }, ...]
+     * Pass vald_athlete_id = null to unlink.
+     */
+    public function linkAthlete(): void
+    {
+        Auth::requireWrite('athletes');
+
+        $body = json_decode(file_get_contents('php://input'), true);
+        if (!is_array($body) || empty($body)) {
+            Response::error('Body non valido', 400);
+            return;
+        }
+
+        $saved = 0;
+        foreach ($body as $link) {
+            $athleteId    = $link['athlete_id'] ?? '';
+            $valdAthleteId = $link['vald_athlete_id'] ?? null; // null = unlink
+            if (!$athleteId) continue;
+            $this->repo->linkAthleteToVald($athleteId, $valdAthleteId);
+            $saved++;
+        }
+
+        Response::success(['saved' => $saved, 'message' => 'Collegati ' . (string)$saved . ' atleti.']);
+    }
+
+    /**
      * POST /api/?module=vald&action=sync
+     * Triggered by the UI "Sincronizza Dati VALD" button.
      */
     public function sync(): void
     {
         Auth::requireWrite('athletes');
 
-        $syncedCount = $this->performSync();
-
-        Response::success(['message' => "Sincronizzazione completata: " . (string)$syncedCount . " nuovi test trovati."]);
+        try {
+            $result = $this->performSync();
+            Response::success([
+                'message'  => 'Sincronizzazione completata: ' . (string)$result['synced'] . ' nuovi test salvati su ' . (string)$result['found'] . ' trovati.',
+                'synced'   => $result['synced'],
+                'found'    => $result['found'],
+                'skipped'  => $result['skipped'],
+            ]);
+        } catch (\Throwable $e) {
+            Response::error('Errore sincronizzazione VALD: ' . $e->getMessage(), 500);
+        }
     }
 
-    private function performSync(): int
+    /**
+     * Core sync logic — shared between the HTTP endpoint and the CLI cron.
+     * Returns ['found' => int, 'synced' => int, 'skipped' => int]
+     */
+    public function performSync(): array
     {
+        $stats = ['found' => 0, 'synced' => 0, 'skipped' => 0];
+
         // Guard: skip if VALD credentials not configured
         if (empty(getenv('VALD_CLIENT_ID')) || empty(getenv('VALD_CLIENT_SECRET'))) {
             error_log('[VALD Sync] Credenziali non configurate (VALD_CLIENT_ID / VALD_CLIENT_SECRET).');
-            return 0;
+            return $stats;
         }
 
-        try {
-            // Fetch only tests modified since last sync date (incremental sync)
-            $lastDate = $this->repo->getLatestTestDate();
-            $results = $this->service->getTestResults($lastDate ?? '');
+        $tenantId = \FusionERP\Shared\TenantContext::id();
+        $db       = \FusionERP\Shared\Database::getInstance();
 
-            if (empty($results) || !is_array($results)) {
-                return 0;
+        // Incremental sync: only fetch tests newer than our latest saved one
+        $lastDate = $this->repo->getLatestTestDate();
+        $results  = $this->service->getTestResults($lastDate ?? '');
+
+        // v2019q3 returns a flat array of test objects
+        if (empty($results) || !is_array($results)) {
+            error_log('[VALD Sync] Nessun risultato restituito dalla API.');
+            return $stats;
+        }
+
+        $stats['found'] = count($results);
+
+        foreach ($results as $test) {
+            // v2019q3 field: athleteId (= hubAthleteId = VALD's UUID for the athlete)
+            $valdAthleteId = $test['athleteId'] ?? $test['hubAthleteId'] ?? null;
+            if (!$valdAthleteId) {
+                $stats['skipped']++;
+                continue;
             }
 
-            $tenantId = \FusionERP\Shared\TenantContext::id();
-            $db = \FusionERP\Shared\Database::getInstance();
-            $synced = 0;
+            // Look up athlete in our DB by their VALD athlete ID
+            $stmt = $db->prepare(
+                'SELECT id FROM athletes WHERE vald_athlete_id = :vid AND tenant_id = :tid LIMIT 1'
+            );
+            $stmt->execute([':vid' => $valdAthleteId, ':tid' => $tenantId]);
+            $athleteId = $stmt->fetchColumn();
 
-            foreach ($results as $test) {
-                // Map VALD profileId → internal athlete_id
-                $profileId = $test['profileId'] ?? null;
-                if (!$profileId)
-                    continue;
-
-                $stmt = $db->prepare(
-                    'SELECT id FROM athletes WHERE vald_profile_id = :pid AND tenant_id = :tid LIMIT 1'
-                );
-                $stmt->execute([':pid' => $profileId, ':tid' => $tenantId]);
-                $athleteId = $stmt->fetchColumn();
-                if (!$athleteId)
-                    continue;
-
-                $testId = $test['id'] ?? ('vald_' . bin2hex(random_bytes(4)));
-
-                $this->repo->saveResult([
-                    ':id' => 'VTST_' . bin2hex(random_bytes(4)),
-                    ':tenant_id' => $tenantId,
-                    ':athlete_id' => $athleteId,
-                    ':test_id' => $testId,
-                    ':test_date' => $test['testDateUtc'] ?? date('Y-m-d H:i:s'),
-                    ':test_type' => $test['testType'] ?? 'CMJ',
-                    ':metrics' => json_encode($test['metrics'] ?? []),
-                ]);
-                $synced++;
+            if (!$athleteId) {
+                // Athlete not linked yet — skip but log
+                error_log("[VALD Sync] Atleta VALD $valdAthleteId non trovato nel tenant $tenantId.");
+                $stats['skipped']++;
+                continue;
             }
 
-            return $synced;
+            // Build metrics: weight from test body, detailed metrics from trials (if available)
+            $metrics = [
+                'weight' => $test['weight'] ?? null,
+                'testType' => $test['testType'] ?? null,
+            ];
 
+            $this->repo->saveResult([
+                ':id'         => 'VTST_' . bin2hex(random_bytes(4)),
+                ':tenant_id'  => $tenantId,
+                ':athlete_id' => $athleteId,
+                ':test_id'    => $test['id'],
+                ':test_date'  => $test['recordedUTC'] ?? $test['analysedUTC'] ?? date('Y-m-d H:i:s'),
+                ':test_type'  => $test['testType'] ?? 'CMJ',
+                ':metrics'    => json_encode($metrics),
+            ]);
+            $stats['synced']++;
         }
-        catch (\Throwable $e) {
-            error_log('[VALD Sync] Errore: ' . $e->getMessage());
-            return 0;
-        }
+
+        error_log('[VALD Sync] Completata: ' . (string)$stats['synced'] . ' salvati, ' . (string)$stats['skipped'] . ' saltati su ' . (string)$stats['found'] . ' trovati.');
+        return $stats;
     }
 }
