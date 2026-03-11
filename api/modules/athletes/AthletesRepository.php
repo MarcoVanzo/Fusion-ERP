@@ -19,23 +19,22 @@ class AthletesRepository
         $this->db = Database::getInstance();
     }
 
-    public function listAthletes(string $teamId = '', bool $includeInactive = false): array
+    public function listAthletes(string $teamSeasonId = '', bool $includeInactive = false): array
     {
         $sql = 'SELECT DISTINCT a.id, a.team_id, a.full_name, a.jersey_number, a.role, a.birth_date,
                        a.height_cm, a.weight_kg, a.photo_path, a.is_active,
                        a.phone, a.email, a.fiscal_code, a.medical_cert_expires_at,
                        a.residence_address, a.residence_city, a.parent_contact, a.parent_phone,
-                       COALESCE(t.name, a.team_id, "Nessuna squadra") AS team_name,
-                       COALESCE(t.category, a.team_id, "Nessuna") AS category
+                       COALESCE(t.name, "Nessuna squadra") AS team_name,
+                       COALESCE(t.category, "Nessuna") AS category
                 FROM athletes a
                 LEFT JOIN teams t ON a.team_id = t.id';
 
         $params = [];
-        if ($teamId !== '') {
-            $sql .= ' LEFT JOIN athlete_teams at2 ON a.id = at2.athlete_id';
-            $sql .= ' WHERE a.deleted_at IS NULL AND (a.team_id = :team_id OR at2.team_id = :team_id2)';
-            $params[':team_id'] = $teamId;
-            $params[':team_id2'] = $teamId;
+        if ($teamSeasonId !== '') {
+            $sql .= ' JOIN athlete_teams at2 ON a.id = at2.athlete_id';
+            $sql .= ' WHERE a.deleted_at IS NULL AND at2.team_season_id = :team_season_id';
+            $params[':team_season_id'] = $teamSeasonId;
         }
         else {
             $sql .= ' WHERE a.deleted_at IS NULL';
@@ -56,7 +55,7 @@ class AthletesRepository
      * needed to render the athlete card (~75% less payload than listAthletes).
      * Full data is fetched on-demand when opening a single athlete profile.
      */
-    public function listAthletesLight(string $teamId = ''): array
+    public function listAthletesLight(string $teamSeasonId = ''): array
     {
         $sql = 'SELECT DISTINCT a.id, a.team_id, a.full_name, a.jersey_number, a.role, a.photo_path, a.is_active,
                        a.medical_cert_expires_at,
@@ -66,11 +65,10 @@ class AthletesRepository
                 LEFT JOIN teams t ON a.team_id = t.id';
 
         $params = [];
-        if ($teamId !== '') {
-            $sql .= ' LEFT JOIN athlete_teams at2 ON a.id = at2.athlete_id';
-            $sql .= ' WHERE a.deleted_at IS NULL AND a.is_active = 1 AND (a.team_id = :team_id OR at2.team_id = :team_id2)';
-            $params[':team_id'] = $teamId;
-            $params[':team_id2'] = $teamId;
+        if ($teamSeasonId !== '') {
+            $sql .= ' JOIN athlete_teams at2 ON a.id = at2.athlete_id';
+            $sql .= ' WHERE a.deleted_at IS NULL AND a.is_active = 1 AND at2.team_season_id = :team_season_id';
+            $params[':team_season_id'] = $teamSeasonId;
         }
         else {
             $sql .= ' WHERE a.deleted_at IS NULL AND a.is_active = 1';
@@ -121,19 +119,20 @@ class AthletesRepository
     }
 
     /**
-     * Returns all teams associated with an athlete via athlete_teams junction.
+     * Returns all team seasons associated with an athlete via athlete_teams junction.
      * Gracefully returns empty array if the table does not yet exist.
      */
     public function getAthleteTeams(string $athleteId): array
     {
         try {
             $stmt = $this->db->prepare(
-                'SELECT t.id, t.name, t.category
+                'SELECT ts.id AS team_season_id, t.id AS team_id, t.name, t.category, ts.season
                  FROM athlete_teams at2
-                 JOIN teams t ON t.id = at2.team_id
+                 JOIN team_seasons ts ON ts.id = at2.team_season_id
+                 JOIN teams t ON t.id = ts.team_id
                  WHERE at2.athlete_id = :id
                    AND t.deleted_at IS NULL
-                 ORDER BY t.category, t.name'
+                 ORDER BY ts.season DESC, t.category, t.name'
             );
             $stmt->execute([':id' => $athleteId]);
             return $stmt->fetchAll();
@@ -144,13 +143,14 @@ class AthletesRepository
     }
 
     /**
-     * Replaces all team associations for an athlete.
+     * Replaces all team season associations for an athlete.
      * Also keeps athletes.team_id in sync with the first team in the list.
      *
      * @param string   $athleteId
-     * @param string[] $teamIds     Array of team IDs to associate
+     * @param string[] $teamSeasonIds Array of team_season IDs to associate
+     * @param string|null $primaryTeamId The base team ID to set on the athlete record
      */
-    public function setAthleteTeams(string $athleteId, array $teamIds): void
+    public function setAthleteTeams(string $athleteId, array $teamSeasonIds, ?string $primaryTeamId = null): void
     {
         try {
             // Remove existing associations
@@ -158,15 +158,21 @@ class AthletesRepository
             $del->execute([':id' => $athleteId]);
 
             // Insert new ones
-            if (!empty($teamIds)) {
+            if (!empty($teamSeasonIds)) {
                 $ins = $this->db->prepare(
-                    'INSERT IGNORE INTO athlete_teams (athlete_id, team_id) VALUES (:athlete_id, :team_id)'
+                    'INSERT IGNORE INTO athlete_teams (athlete_id, team_season_id) VALUES (:athlete_id, :team_season_id)'
                 );
-                foreach ($teamIds as $tid) {
-                    if (!empty($tid)) {
-                        $ins->execute([':athlete_id' => $athleteId, ':team_id' => $tid]);
+                foreach ($teamSeasonIds as $tsid) {
+                    if (!empty($tsid)) {
+                        $ins->execute([':athlete_id' => $athleteId, ':team_season_id' => $tsid]);
                     }
                 }
+            }
+            
+            // Sync primary team_id on the athlete record if provided
+            if ($primaryTeamId !== null) {
+                $upd = $this->db->prepare('UPDATE athletes SET team_id = :team_id WHERE id = :id');
+                $upd->execute([':team_id' => $primaryTeamId, ':id' => $athleteId]);
             }
         }
         catch (\Throwable $e) {
