@@ -299,7 +299,7 @@ const Squadre = (() => {
                     </div>
                     <div class="module-body" style="padding:var(--sp-4)">
                         <div id="squadre-list-container">
-                            ${UI.skeletonBlock()}
+                            <div class="skeleton skeleton-text" style="width:100%; height:150px;"></div>
                         </div>
                     </div>
                 </div>
