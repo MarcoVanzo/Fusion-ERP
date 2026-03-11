@@ -383,7 +383,7 @@ class ValdController
             $valdAthletes = $this->service->getAthletes();
         } catch (\Throwable $e) {
             error_log('[VALD] valdAthletes(): ' . $e->getMessage());
-            $msg = str_contains($e->getMessage(), 'Access Token')
+            $msg = strpos($e->getMessage(), 'Access Token') !== false
                 ? 'Autenticazione VALD fallita. Verifica VALD_CLIENT_ID e VALD_CLIENT_SECRET nel file .env.'
                 : 'Errore durante il recupero degli atleti da VALD: ' . $e->getMessage();
             Response::error($msg, 502);
@@ -395,17 +395,26 @@ class ValdController
             return;
         }
 
-        // 2. Fetch all ERP athletes for this tenant
+        // 2. Fetch all ERP athletes for this tenant — GROUP BY a.id to deduplicate athletes
+        //    who were created before the athlete_teams junction table (V050), where each
+        //    team assignment created a separate row in athletes with the same full_name.
         $stmt = $db->prepare(
-            'SELECT id, full_name, vald_athlete_id FROM athletes WHERE tenant_id = :tid ORDER BY full_name'
+            'SELECT a.id, a.full_name, a.vald_athlete_id,
+                    COALESCE(t.name, \'\') AS team_name
+             FROM athletes a
+             LEFT JOIN teams t ON t.id = a.team_id
+             WHERE a.tenant_id = :tid
+               AND a.deleted_at IS NULL
+             GROUP BY a.id
+             ORDER BY a.full_name'
         );
         $stmt->execute([':tid' => $tenantId]);
-        $erpAthletes = $stmt->fetchAll();
+        $erpAthletes = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
-        // Build a lookup: vald_athlete_id → erp athlete
+        // Build a lookup: vald_athlete_id → erp athlete (first linked row wins)
         $erpByValdId = [];
         foreach ($erpAthletes as $a) {
-            if ($a['vald_athlete_id']) {
+            if ($a['vald_athlete_id'] && !isset($erpByValdId[$a['vald_athlete_id']])) {
                 $erpByValdId[$a['vald_athlete_id']] = $a;
             }
         }
@@ -414,7 +423,10 @@ class ValdController
         $erpByName = [];
         foreach ($erpAthletes as $a) {
             $normalized = $this->normalizeName($a['full_name']);
-            $erpByName[$normalized] = $a;
+            // Don't overwrite an already-linked athlete with an unlinked duplicate
+            if (!isset($erpByName[$normalized]) || $a['vald_athlete_id']) {
+                $erpByName[$normalized] = $a;
+            }
         }
 
         $result = [];
@@ -450,9 +462,18 @@ class ValdController
             ];
         }
 
+        // Build erpAthletes list for the dropdown — show team name to disambiguate same-name athletes
+        $erpDropdown = array_values(array_map(function ($a) {
+            $label = $a['full_name'];
+            if (!empty($a['team_name'])) {
+                $label .= ' — ' . $a['team_name'];
+            }
+            return ['id' => $a['id'], 'name' => $label];
+        }, $erpAthletes));
+
         Response::success([
             'valdAthletes' => $result,
-            'erpAthletes'  => array_values(array_map(fn($a) => ['id' => $a['id'], 'name' => $a['full_name']], $erpAthletes)),
+            'erpAthletes'  => $erpDropdown,
         ]);
     }
 
@@ -504,10 +525,11 @@ class ValdController
         try {
             $result = $this->performSync();
             Response::success([
-                'message'  => 'Sincronizzazione completata: ' . (string)$result['synced'] . ' nuovi test salvati su ' . (string)$result['found'] . ' trovati.',
-                'synced'   => $result['synced'],
-                'found'    => $result['found'],
-                'skipped'  => $result['skipped'],
+                'message'          => 'Sincronizzazione completata: ' . (string)$result['synced'] . ' nuovi test salvati su ' . (string)$result['found'] . ' trovati.',
+                'synced'           => $result['synced'],
+                'found'            => $result['found'],
+                'skipped'          => $result['skipped'],
+                'unlinkedAthletes' => $result['unlinkedAthletes'] ?? [],
             ]);
         } catch (\Throwable $e) {
             Response::error('Errore sincronizzazione VALD: ' . $e->getMessage(), 500);
@@ -520,7 +542,7 @@ class ValdController
      */
     public function performSync(): array
     {
-        $stats = ['found' => 0, 'synced' => 0, 'skipped' => 0];
+        $stats = ['found' => 0, 'synced' => 0, 'skipped' => 0, 'unlinkedAthletes' => []];
 
         // Guard: skip if VALD credentials not configured
         if (empty(getenv('VALD_CLIENT_ID')) || empty(getenv('VALD_CLIENT_SECRET'))) {
@@ -533,11 +555,14 @@ class ValdController
 
         // Incremental sync: only fetch tests newer than our latest saved one
         $lastDate = $this->repo->getLatestTestDate();
+        if ($lastDate) {
+            $lastDate = gmdate('Y-m-d\TH:i:s\Z', strtotime($lastDate));
+        }
         $results  = $this->service->getTestResults($lastDate ?? '');
 
         // v2019q3 returns a flat array of test objects
-        if (empty($results) || !is_array($results)) {
-            error_log('[VALD Sync] Nessun risultato restituito dalla API.');
+        if (empty($results) || !is_array($results) || isset($results['error'])) {
+            error_log('[VALD Sync] Risultato non valido o vuoto: ' . json_encode($results));
             return $stats;
         }
 
@@ -559,9 +584,13 @@ class ValdController
             $athleteId = $stmt->fetchColumn();
 
             if (!$athleteId) {
-                // Athlete not linked yet — skip but log
+                // Athlete not linked yet — record and skip
                 error_log("[VALD Sync] Atleta VALD $valdAthleteId non trovato nel tenant $tenantId.");
                 $stats['skipped']++;
+                // Collect unlinked VALD IDs for actionable UI feedback
+                if (!in_array($valdAthleteId, $stats['unlinkedAthletes'], true)) {
+                    $stats['unlinkedAthletes'][] = $valdAthleteId;
+                }
                 continue;
             }
 
@@ -576,7 +605,7 @@ class ValdController
                 ':tenant_id'  => $tenantId,
                 ':athlete_id' => $athleteId,
                 ':test_id'    => $test['id'],
-                ':test_date'  => $test['recordedUTC'] ?? $test['analysedUTC'] ?? date('Y-m-d H:i:s'),
+                ':test_date'  => date('Y-m-d H:i:s', strtotime($test['recordedUTC'] ?? $test['analysedUTC'] ?? 'now')),
                 ':test_type'  => $test['testType'] ?? 'CMJ',
                 ':metrics'    => json_encode($metrics),
             ]);

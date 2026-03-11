@@ -64,9 +64,7 @@ const Navbar = () => {
                                             ● {link.badge}
                                         </span>
                                     )}
-                                    {isActive && (
-                                        <span className="absolute -bottom-2 relative left-1/2 -translate-x-1/2 w-8 h-[2px] bg-brand-500"></span>
-                                    )}
+
                                 </Link>
                             );
                         })}

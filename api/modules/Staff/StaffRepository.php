@@ -183,6 +183,18 @@ class StaffRepository
         $stmt->execute([':photo_path' => $photoPath, ':id' => $id, ':tenant_id' => $tenantId]);
     }
 
+    public function updateDocumentPath(string $id, string $field, ?string $path): void
+    {
+        // Allowlist the column name to prevent SQL injection
+        $allowed = ['contract_file_path', 'id_doc_file_path', 'cf_doc_file_path'];
+        if (!in_array($field, $allowed, true)) {
+            throw new \InvalidArgumentException("Campo documento non valido: $field");
+        }
+        $tenantId = TenantContext::id();
+        $stmt = $this->db->prepare("UPDATE staff_members SET `$field` = :path WHERE id = :id AND tenant_id = :tenant_id AND is_deleted = 0");
+        $stmt->execute([':path' => $path, ':id' => $id, ':tenant_id' => $tenantId]);
+    }
+
     public function updateContractInfo(string $id, array $data): void
     {
         $tenantId = TenantContext::id();

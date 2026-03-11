@@ -21,10 +21,16 @@ export async function syncVald(btn) {
 
   try {
     const result = await Store.api('sync', 'vald', {});
-    const {synced = 0, found = 0} = result || {};
+    const {synced = 0, found = 0, unlinkedAthletes = []} = result || {};
 
     if (synced > 0) {
       UI.toast(`✅ Sincronizzazione completata: ${synced} nuovi test su ${found} trovati.`, 'success', 5000);
+    } else if (unlinkedAthletes.length > 0) {
+      UI.toast(
+        `⚠️ ${found} test trovati, ma ${unlinkedAthletes.length} atleti VALD non sono ancora collegati. ` +
+        `Usa il pulsante "Collega" per abbinarli all'anagrafica ERP, poi sincronizza di nuovo.`,
+        'error', 8000
+      );
     } else if (found > 0) {
       UI.toast(`ℹ️ ${found} test trovati, nessun nuovo dato da importare.`, 'info', 4000);
     } else {
@@ -39,6 +45,7 @@ export async function syncVald(btn) {
     }
   }
 }
+
 
 /**
  * Render the HTML for the VALD sync button.

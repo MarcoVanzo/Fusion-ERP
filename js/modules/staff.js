@@ -260,7 +260,164 @@ const Staff = (() => {
                 .filter(Boolean)
                 .join(", ")
             : "");
-      ((c.innerHTML = `\n                \x3c!-- BREADCRUMB --\x3e\n                <div style="display:flex;align-items:center;gap:var(--sp-2);padding:var(--sp-2) var(--sp-4);border-bottom:1px solid var(--color-border);background:var(--color-bg);position:sticky;top:72px;z-index:50;">\n                    <button class="btn btn-ghost btn-sm" id="staff-back" style="color:var(--color-text-muted);border:none;padding:0;display:flex;align-items:center;gap:6px;font-size:12px;text-transform:uppercase;letter-spacing:0.06em;" type="button">\n                        <i class="ph ph-arrow-left" style="font-size:16px;"></i> Staff\n                    </button>\n                    <i class="ph ph-caret-right" style="font-size:12px;color:var(--color-text-muted);opacity:0.5;"></i>\n                    <span style="font-size:12px;font-weight:600;color:var(--color-white);text-transform:uppercase;letter-spacing:0.06em;">${Utils.escapeHtml(p.full_name)}</span>\n                    <div style="flex:1;"></div>\n                    ${f ? '<button class="btn btn-primary btn-sm" id="staff-edit-btn" type="button"><i class="ph ph-pencil-simple"></i> MODIFICA</button>' : ""}\n                    ${f ? '<button class="btn btn-default btn-sm" id="staff-delete-btn" type="button" style="margin-left:8px;color:var(--color-pink);border-color:rgba(255,0,122,0.3);"><i class="ph ph-trash"></i></button>' : ""}\n                </div>\n\n                \x3c!-- TAB BAR --\x3e\n                <div style="display:flex;gap:0;border-bottom:1px solid var(--color-border);overflow-x:auto;scrollbar-width:none;" id="staff-tab-bar" class="fusion-tabs-container">\n                    <button class="athlete-tab-btn fusion-tab active" data-stab="anagrafica" type="button">\n                        <i class="ph ph-identification-card"></i> Anagrafica\n                    </button>\n                    <button class="athlete-tab-btn fusion-tab" data-stab="documenti" type="button">\n                        <i class="ph ph-file-text"></i> Documenti\n                    </button>\n                </div>\n\n                \x3c!-- TAB: ANAGRAFICA --\x3e\n                <div id="stab-panel-anagrafica" style="padding:var(--sp-4);display:flex;flex-direction:column;gap:var(--sp-4);">\n                    <div style="display:flex;align-items:flex-start;gap:var(--sp-4);">\n                        <div style="width:100px;height:100px;border-radius:12px;background:${s(p.full_name)};display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;color:#000;position:relative;overflow:hidden;flex-shrink:0;">\n                            ${p.photo_path ? `<img src="/api/${p.photo_path}" style="width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;z-index:1;">` : ''}\n                            ${Utils.initials(p.full_name)}\n                            ${f ? `\n                            <div class="staff-avatar-overlay" style="position:absolute;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.2s;cursor:pointer;z-index:2;">\n                                <i class="ph ph-camera" style="color:#fff;font-size:24px;"></i>\n                            </div>\n                            <input type="file" id="staff-photo-upload" accept="image/jpeg,image/png,image/webp" style="display:none;" data-staff-id="${p.id}">\n                            ` : ''}\n                        </div>\n                    <div style="flex:1;">\n                        <p class="section-label">Dati Anagrafici e Contatti</p>\n                        <div class="card" style="padding:var(--sp-3);">\n                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3);">\n                                ${o("Nome", p.first_name)}\n                                ${o("Cognome", p.last_name)}\n                                ${o("Ruolo / Qualifica", p.role)}\n                                ${o("Squadre", v)}\n                                ${o("Data di Nascita", p.birth_date ? Utils.formatDate(p.birth_date) : null)}\n                                ${o("Luogo di Nascita", p.birth_place)}\n                                ${o("Città di Residenza", p.residence_city)}\n                                ${o("Via di Residenza", p.residence_address)}\n                                ${o("Cellulare", p.phone)}\n                                ${o("E-Mail", p.email)}\n                            </div>\n                            ${p.notes ? `<div style="margin-top:var(--sp-2);padding-top:var(--sp-2);border-top:1px solid var(--color-border);"><span style="font-size:11px;color:var(--color-silver);text-transform:uppercase;font-weight:600;">Note</span><p style="font-size:14px;margin-top:4px;line-height:1.6;">${Utils.escapeHtml(p.notes)}</p></div>` : ""}\n                        </div>\n                    </div>\n                    </div>\n                </div>\n\n                \x3c!-- TAB: DOCUMENTI --\x3e\n                <div id="stab-panel-documenti" style="padding:var(--sp-4);display:none;flex-direction:column;gap:var(--sp-4);">\n                    <div>\n                        <p class="section-label">Documenti</p>\n                        <div class="card" style="padding:var(--sp-3);">\n                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3);">\n                                ${o("Codice Fiscale", p.fiscal_code)}\n                                ${o("Documento d'Identità", p.identity_document)}\n                                ${o("Scadenza Cert. Medico", p.medical_cert_expires_at ? Utils.formatDate(p.medical_cert_expires_at) : null, b ? "var(--color-pink)" : null)}\n                            </div>\n                        </div>\n                    </div>\n                    <div>\n                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">\n                            <p class="section-label" style="margin-bottom:0;">Contratto di Collaborazione</p>\n                            ${f && p.email ? `<button class="btn btn-primary btn-sm" id="generate-contract-btn" style="font-size:11px;padding:4px 10px;">+ NUOVO</button>` : (!p.email ? '<span style="font-size:11px;color:var(--color-pink);">Email mancante per contratto</span>' : '')}\n                        </div>\n                        <div class="card" style="padding:var(--sp-3);">\n                            ${!p.contract_status ? Utils.emptyState("Nessun contratto attivo", "Genera un nuovo contratto per questo membro.") : `\n                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">\n                                <div><span style="font-size:12px;color:var(--color-text-muted);">Stato:</span> <strong style="color:${p.contract_status === 'firmato' ? 'var(--color-success)' : p.contract_status === 'inviato' ? 'var(--color-info)' : 'var(--color-white)'};text-transform:uppercase;font-size:12px;letter-spacing:1px;">${p.contract_status}</strong></div>\n                                ${p.contract_signed_at ? `<div style="font-size:12px;color:var(--color-text-muted);">Firmato il: ${Utils.formatDateTime(p.contract_signed_at)}</div>` : ''}\n                            </div>\n                            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--sp-3);padding:var(--sp-3);background:rgba(0,0,0,0.2);border-radius:6px;">\n                                ${o("Valido dal", p.contract_valid_from ? Utils.formatDate(p.contract_valid_from) : null)}\n                                ${o("Valido al", p.contract_valid_to ? Utils.formatDate(p.contract_valid_to) : null)}\n                                ${o("Compenso mensile", p.contract_monthly_fee ? '€ ' + Number(p.contract_monthly_fee).toFixed(2) : 'A titolo gratuito')}\n                            </div>\n                            <div style="display:flex;gap:var(--sp-2);margin-top:var(--sp-3);">\n                                ${p.contract_status === 'firmato' && p.contract_signed_pdf_path ? `<a href="/api/?module=staff&action=downloadContract&id=${p.id}" target="_blank" class="btn btn-default btn-sm"><i class="ph ph-download"></i> SCARICA FIRMATO</a>` : ''}\n                                ${p.contract_status === 'inviato' && f ? `<button class="btn btn-default btn-sm" id="check-contract-btn" data-id="${p.id}"><i class="ph ph-arrows-clockwise"></i> VERIFICA STATO</button>` : ''}\n                            </div>\n                            `}\n                        </div>\n                    </div>\n                </div>\n            `),
+      ((c.innerHTML = `
+                <!-- BREADCRUMB -->
+                <div style="display:flex;align-items:center;gap:var(--sp-2);padding:var(--sp-2) var(--sp-4);border-bottom:1px solid var(--color-border);background:var(--color-bg);position:sticky;top:72px;z-index:50;">
+                    <button class="btn btn-ghost btn-sm" id="staff-back" style="color:var(--color-text-muted);border:none;padding:0;display:flex;align-items:center;gap:6px;font-size:12px;text-transform:uppercase;letter-spacing:0.06em;" type="button">
+                        <i class="ph ph-arrow-left" style="font-size:16px;"></i> Staff
+                    </button>
+                    <i class="ph ph-caret-right" style="font-size:12px;color:var(--color-text-muted);opacity:0.5;"></i>
+                    <span style="font-size:12px;font-weight:600;color:var(--color-white);text-transform:uppercase;letter-spacing:0.06em;">${Utils.escapeHtml(p.full_name)}</span>
+                    <div style="flex:1;"></div>
+                    ${f ? '<button class="btn btn-primary btn-sm" id="staff-edit-btn" type="button"><i class="ph ph-pencil-simple"></i> MODIFICA</button>' : ""}
+                    ${f ? '<button class="btn btn-default btn-sm" id="staff-delete-btn" type="button" style="margin-left:8px;color:var(--color-pink);border-color:rgba(255,0,122,0.3);"><i class="ph ph-trash"></i></button>' : ""}
+                </div>
+
+                <!-- TAB BAR -->
+                <div style="display:flex;gap:0;border-bottom:1px solid var(--color-border);overflow-x:auto;scrollbar-width:none;" id="staff-tab-bar" class="fusion-tabs-container">
+                    <button class="athlete-tab-btn fusion-tab active" data-stab="anagrafica" type="button">
+                        <i class="ph ph-identification-card"></i> Anagrafica
+                    </button>
+                    <button class="athlete-tab-btn fusion-tab" data-stab="documenti" type="button">
+                        <i class="ph ph-file-text"></i> Documenti
+                    </button>
+                </div>
+
+                <!-- TAB: ANAGRAFICA -->
+                <div id="stab-panel-anagrafica" style="padding:var(--sp-4);display:flex;flex-direction:column;gap:var(--sp-4);">
+                    <div style="display:flex;align-items:flex-start;gap:var(--sp-4);">
+                        <div style="width:100px;height:100px;border-radius:12px;background:${s(p.full_name)};display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;color:#000;position:relative;overflow:hidden;flex-shrink:0;">
+                            ${p.photo_path ? `<img src="/api/${p.photo_path}" style="width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;z-index:1;">` : ''}
+                            ${Utils.initials(p.full_name)}
+                            ${f ? `
+                            <div class="staff-avatar-overlay" style="position:absolute;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.2s;cursor:pointer;z-index:2;">
+                                <i class="ph ph-camera" style="color:#fff;font-size:24px;"></i>
+                            </div>
+                            <input type="file" id="staff-photo-upload" accept="image/jpeg,image/png,image/webp" style="display:none;" data-staff-id="${p.id}">
+                            ` : ''}
+                        </div>
+                    <div style="flex:1;">
+                        <p class="section-label">Dati Anagrafici e Contatti</p>
+                        <div class="card" style="padding:var(--sp-3);">
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3);">
+                                ${o("Nome", p.first_name)}
+                                ${o("Cognome", p.last_name)}
+                                ${o("Ruolo / Qualifica", p.role)}
+                                ${o("Squadre", v)}
+                                ${o("Data di Nascita", p.birth_date ? Utils.formatDate(p.birth_date) : null)}
+                                ${o("Luogo di Nascita", p.birth_place)}
+                                ${o("Città di Residenza", p.residence_city)}
+                                ${o("Via di Residenza", p.residence_address)}
+                                ${o("Cellulare", p.phone)}
+                                ${o("E-Mail", p.email)}
+                            </div>
+                            ${p.notes ? `<div style="margin-top:var(--sp-2);padding-top:var(--sp-2);border-top:1px solid var(--color-border);"><span style="font-size:11px;color:var(--color-silver);text-transform:uppercase;font-weight:600;">Note</span><p style="font-size:14px;margin-top:4px;line-height:1.6;">${Utils.escapeHtml(p.notes)}</p></div>` : ""}
+                        </div>
+                    </div>
+                    </div>
+                </div>
+
+                <!-- TAB: DOCUMENTI -->
+                <div id="stab-panel-documenti" style="padding:var(--sp-4);display:none;flex-direction:column;gap:var(--sp-4);">
+                    <div>
+                        <p class="section-label">Documenti</p>
+                        <div class="card" style="padding:var(--sp-3);">
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3);">
+                                ${o("Codice Fiscale", p.fiscal_code)}
+                                ${o("Documento d'Identità", p.identity_document)}
+                                ${o("Scadenza Cert. Medico", p.medical_cert_expires_at ? Utils.formatDate(p.medical_cert_expires_at) : null, b ? "var(--color-pink)" : null)}
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                            <p class="section-label" style="margin-bottom:0;">Contratto di Collaborazione</p>
+                            ${f && p.email ? `<button class="btn btn-primary btn-sm" id="generate-contract-btn" style="font-size:11px;padding:4px 10px;">+ NUOVO</button>` : (!p.email ? '<span style="font-size:11px;color:var(--color-pink);">Email mancante per contratto</span>' : '')}
+                        </div>
+                        <div class="card" style="padding:var(--sp-3);">
+                            ${!p.contract_status ? Utils.emptyState("Nessun contratto attivo", "Genera un nuovo contratto per questo membro.") : `
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                                <div><span style="font-size:12px;color:var(--color-text-muted);">Stato:</span> <strong style="color:${p.contract_status === 'firmato' ? 'var(--color-success)' : p.contract_status === 'inviato' ? 'var(--color-info)' : 'var(--color-white)'};text-transform:uppercase;font-size:12px;letter-spacing:1px;">${p.contract_status}</strong></div>
+                                ${p.contract_signed_at ? `<div style="font-size:12px;color:var(--color-text-muted);">Firmato il: ${Utils.formatDateTime(p.contract_signed_at)}</div>` : ''}
+                            </div>
+                            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--sp-3);padding:var(--sp-3);background:rgba(0,0,0,0.2);border-radius:6px;">
+                                ${o("Valido dal", p.contract_valid_from ? Utils.formatDate(p.contract_valid_from) : null)}
+                                ${o("Valido al", p.contract_valid_to ? Utils.formatDate(p.contract_valid_to) : null)}
+                                ${o("Compenso mensile", p.contract_monthly_fee ? '€ ' + Number(p.contract_monthly_fee).toFixed(2) : 'A titolo gratuito')}
+                            </div>
+                            <div style="display:flex;gap:var(--sp-2);margin-top:var(--sp-3);">
+                                ${p.contract_status === 'firmato' && p.contract_signed_pdf_path ? `<a href="/api/?module=staff&action=downloadContract&id=${p.id}" target="_blank" class="btn btn-default btn-sm"><i class="ph ph-download"></i> SCARICA FIRMATO</a>` : ''}
+                                ${p.contract_status === 'inviato' && f ? `<button class="btn btn-default btn-sm" id="check-contract-btn" data-id="${p.id}"><i class="ph ph-arrows-clockwise"></i> VERIFICA STATO</button>` : ''}
+                            </div>
+                            `}
+                        </div>
+                    </div>
+
+                    <!-- ALLEGATI -->
+                    ${f ? `
+                    <div>
+                        <p class="section-label">Allegati</p>
+                        <div style="display:flex;flex-direction:column;gap:var(--sp-3);">
+
+                            <!-- Contratto (file) -->
+                            <div class="card" style="padding:var(--sp-3);">
+                                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);">
+                                    <div style="display:flex;align-items:center;gap:10px;">
+                                        <i class="ph ph-file-pdf" style="font-size:24px;color:var(--color-pink);flex-shrink:0;"></i>
+                                        <div>
+                                            <div style="font-size:13px;font-weight:600;">Contratto (allegato)</div>
+                                            <div style="font-size:11px;color:var(--color-text-muted);">${p.contract_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(p.contract_file_path.split('/').pop()) : 'Nessun file caricato'}</div>
+                                        </div>
+                                    </div>
+                                    <div style="display:flex;gap:var(--sp-2);align-items:center;">
+                                        ${p.contract_file_path ? `<a href="/api/${p.contract_file_path}" target="_blank" class="btn btn-default btn-sm"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ''}
+                                        <button class="btn btn-primary btn-sm" id="upload-contract-file-btn" type="button"><i class="ph ph-upload-simple"></i> Carica</button>
+                                        <input type="file" id="upload-contract-file-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Documento d'Identità -->
+                            <div class="card" style="padding:var(--sp-3);">
+                                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);">
+                                    <div style="display:flex;align-items:center;gap:10px;">
+                                        <i class="ph ph-identification-badge" style="font-size:24px;color:var(--color-info);flex-shrink:0;"></i>
+                                        <div>
+                                            <div style="font-size:13px;font-weight:600;">Documento d'Identità</div>
+                                            <div style="font-size:11px;color:var(--color-text-muted);">${p.id_doc_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(p.id_doc_file_path.split('/').pop()) : 'Nessun file caricato'}</div>
+                                        </div>
+                                    </div>
+                                    <div style="display:flex;gap:var(--sp-2);align-items:center;">
+                                        ${p.id_doc_file_path ? `<a href="/api/${p.id_doc_file_path}" target="_blank" class="btn btn-default btn-sm"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ''}
+                                        <button class="btn btn-primary btn-sm" id="upload-id-doc-btn" type="button"><i class="ph ph-upload-simple"></i> Carica</button>
+                                        <input type="file" id="upload-id-doc-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Codice Fiscale -->
+                            <div class="card" style="padding:var(--sp-3);">
+                                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);">
+                                    <div style="display:flex;align-items:center;gap:10px;">
+                                        <i class="ph ph-credit-card" style="font-size:24px;color:var(--color-success);flex-shrink:0;"></i>
+                                        <div>
+                                            <div style="font-size:13px;font-weight:600;">Codice Fiscale</div>
+                                            <div style="font-size:11px;color:var(--color-text-muted);">${p.cf_doc_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(p.cf_doc_file_path.split('/').pop()) : 'Nessun file caricato'}</div>
+                                        </div>
+                                    </div>
+                                    <div style="display:flex;gap:var(--sp-2);align-items:center;">
+                                        ${p.cf_doc_file_path ? `<a href="/api/${p.cf_doc_file_path}" target="_blank" class="btn btn-default btn-sm"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ''}
+                                        <button class="btn btn-primary btn-sm" id="upload-cf-doc-btn" type="button"><i class="ph ph-upload-simple"></i> Carica</button>
+                                        <input type="file" id="upload-cf-doc-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
+            `),
         document.querySelectorAll("[data-stab]").forEach((t) => {
           t.addEventListener(
             "click",
@@ -395,6 +552,46 @@ const Staff = (() => {
                  btn.innerHTML = '<i class="ph ph-arrows-clockwise"></i> VERIFICA STATO';
              }
         }, { signal: e.signal }),
+        
+        // Document Upload Handlers
+        ["contract-file", "id-doc", "cf-doc"].forEach(type => {
+            const btn = document.getElementById(`upload-${type}-btn`);
+            const input = document.getElementById(`upload-${type}-input`);
+            if (btn && input) {
+                btn.addEventListener('click', () => input.click());
+                input.addEventListener('change', async (ev) => {
+                    const file = ev.target.files[0];
+                    if (!file) return;
+                    
+                    const formData = new FormData();
+                    formData.append('id', p.id);
+                    formData.append('file', file);
+                    
+                    let action = '';
+                    if (type === 'contract-file') action = 'uploadContractFile';
+                    else if (type === 'id-doc') action = 'uploadIdDoc';
+                    else if (type === 'cf-doc') action = 'uploadCfDoc';
+
+                    UI.toast('Caricamento documento...', 'info');
+                    try {
+                        const response = await fetch(`/api/?module=staff&action=${action}`, {
+                            method: 'POST',
+                            body: formData
+                        });
+                        const res = await response.json();
+                        if (!response.ok || !res.success) throw new Error(res.error || 'Errore di caricamento');
+                        
+                        UI.toast('Documento caricato con successo', 'success');
+                        Store.invalidate("list/staff");
+                        Store.invalidate("get/staff");
+                        d(p.id); // reload
+                    } catch (err) {
+                        UI.toast(err.message, 'error');
+                    }
+                }, { signal: e.signal });
+            }
+        }),
+
         document.getElementById("staff-back")?.addEventListener(
           "click",
           () => {

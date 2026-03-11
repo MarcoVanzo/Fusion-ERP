@@ -66,7 +66,7 @@ class ValdService
     /**
      * Generic API Request.
      */
-    private function request(string $method, string $endpoint, ?array $data = null): mixed
+    private function request(string $method, string $endpoint, ?array $data = null)
     {
         $token = $this->getAccessToken();
         $url = $this->apiBaseUrl . $endpoint;
@@ -162,7 +162,8 @@ class ValdService
             $endpoint = '/v2019q3/teams/' . $teamId . '/tests/' . $dateFrom . '/' . $dateTo . '/' . (string)$page;
         }
 
-        return $this->request('GET', $endpoint);
+        $res = $this->request('GET', $endpoint);
+        return $res['items'] ?? $res;
     }
 
     /**
@@ -177,6 +178,7 @@ class ValdService
         if ($modifiedFrom) {
             $endpoint .= '?modifiedFrom=' . urlencode($modifiedFrom);
         }
-        return $this->request('GET', $endpoint);
+        $res = $this->request('GET', $endpoint);
+        return $res['items'] ?? $res;
     }
 }
