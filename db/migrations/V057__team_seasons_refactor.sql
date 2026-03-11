@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS `team_seasons` (
 -- Generate a pseudo-random ID for team_seasons if it doesn't exist
 INSERT IGNORE INTO `team_seasons` (`id`, `team_id`, `season`)
 SELECT 
-    CONCAT('TS_', SUBSTRING(MD5(CONCAT(id, season, RAND())), 1, 15)),
+    CONCAT('TS_', SUBSTRING(REPLACE(UUID(), '-', ''), 1, 15)),
     id, 
     season
 FROM `teams`
