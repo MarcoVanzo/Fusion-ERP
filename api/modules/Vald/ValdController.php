@@ -53,12 +53,13 @@ class ValdController
      */
     public function analytics(): void
     {
-        Auth::requireRead('athletes');
-        $athleteId = filter_input(INPUT_GET, 'athleteId', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        try {
+            Auth::requireRead('athletes');
+            $athleteId = filter_input(INPUT_GET, 'athleteId', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
 
-        if (empty($athleteId)) {
-            Response::error('athleteId obbligatorio', 400);
-        }
+            if (empty($athleteId)) {
+                Response::error('athleteId obbligatorio', 400);
+            }
 
         // 1. Get latest test result
         $latest = $this->repo->getLatestResult($athleteId);
@@ -110,22 +111,25 @@ class ValdController
         // Baseline braking impulse (average of last 5 tests, if available)
         $baselineBraking = $this->repo->getBaselineBrakingImpulse($athleteId);
 
-        Response::success([
-            'hasData' => true,
-            'testDate' => $latest['test_date'],
-            'testType' => $latest['test_type'],
-            // CMJ 4 KPIs (top-level for dashboard consumption)
-            'jumpHeight' => $jumpHeight,
-            'brakingImpulse' => $brakingImpulse,
-            'asymmetryPct' => $asymmetryPct,
-            'baselineBraking' => $baselineBraking,
-            'semaphore' => $semaphore,
-            'asymmetry' => $asymmetry,
-            'profile' => $profile,
-            'ranking' => $ranking,
-            'coachMessage' => $coachMessage,
-            'results' => $allResults,
-        ]);
+            Response::success([
+                'hasData' => true,
+                'testDate' => $latest['test_date'],
+                'testType' => $latest['test_type'],
+                // CMJ 4 KPIs (top-level for dashboard consumption)
+                'jumpHeight' => $jumpHeight,
+                'brakingImpulse' => $brakingImpulse,
+                'asymmetryPct' => $asymmetryPct,
+                'baselineBraking' => $baselineBraking,
+                'semaphore' => $semaphore,
+                'asymmetry' => $asymmetry,
+                'profile' => $profile,
+                'ranking' => $ranking,
+                'coachMessage' => $coachMessage,
+                'results' => $allResults,
+            ]);
+        } catch (\Throwable $e) {
+            Response::error('Critico VALD: ' . $e->getMessage() . ' File: ' . basename($e->getFile()) . ' Line: ' . $e->getLine(), 500);
+        }
     }
 
     /**
@@ -317,9 +321,10 @@ class ValdController
             $msg .= " Suggerisco sessione di scarico o recupero completo.";
         }
         elseif ($semaphore['status'] === 'YELLOW') {
+            $variation = isset($semaphore['rsimod']['variation']) ? $semaphore['rsimod']['variation'] : 0;
             $msg .= sprintf(
                 " Ha una perdita del %.0f%% nella potenza di salto e tempi di reazione rallentati",
-                $semaphore['rsimod']['variation'] ?? 0
+                $variation
             );
             if ($asymmetry['criticalRisk']) {
                 $msg .= sprintf(
