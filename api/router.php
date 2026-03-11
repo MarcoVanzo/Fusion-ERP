@@ -82,7 +82,14 @@ try {
 }
 catch (\Throwable $e) {
     error_log('[ROUTER] Unhandled exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
-    Response::error('PHP_ERROR: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine(), 400);
+
+    // Only expose internals when DEBUG mode is explicitly enabled
+    $debug = getenv('APP_DEBUG') === 'true' || ($_ENV['APP_DEBUG'] ?? '') === 'true';
+    $clientMessage = $debug
+        ? 'PHP_ERROR: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine()
+        : 'Errore interno del server. Controlla i log per maggiori dettagli.';
+
+    Response::error($clientMessage, 500);
 }
 
 /**
@@ -95,17 +102,22 @@ function dispatchWebhook(string $action): void
     $publicActions = ['verify', 'receive'];
 
     if (in_array($action, $publicActions, true)) {
-        require_once __DIR__ . '/Modules/WhatsApp/WhatsAppWebhookController.php';
-        $controller = new \FusionERP\Modules\WhatsApp\WhatsAppWebhookController();
+        $class = "FusionERP\\Modules\\WhatsApp\\WhatsAppWebhookController";
     }
     else {
-        require_once __DIR__ . '/Modules/WhatsApp/WhatsAppController.php';
-        $controller = new \FusionERP\Modules\WhatsApp\WhatsAppController();
+        $class = "FusionERP\\Modules\\WhatsApp\\WhatsAppController";
     }
+
+    if (!class_exists($class)) {
+        \FusionERP\Shared\Response::error("Controller WhatsApp non trovato", 500);
+    }
+    
+    $controller = new $class();
 
     if (!method_exists($controller, $action)) {
         \FusionERP\Shared\Response::error("Azione WhatsApp '{$action}' non trovata", 404);
     }
+    
     $controller->$action();
 }
 
@@ -116,16 +128,9 @@ function dispatch(string $controllerName, string $action): void
 {
     $class = "FusionERP\\Modules\\{$controllerName}\\{$controllerName}Controller";
 
+    // Rely on Composer's PSR-4 autoloader to load the class implicitly
     if (!class_exists($class)) {
-        $filePath = __DIR__ . "/Modules/" . $controllerName . "/{$controllerName}Controller.php";
-        if (!file_exists($filePath)) {
-            Response::error("Controller '{$controllerName}' non trovato", 404);
-        }
-        require_once $filePath;
-    }
-
-    if (!class_exists($class)) {
-        Response::error("Controller '{$controllerName}' non valido", 500);
+        Response::error("Controller '{$controllerName}' non valido o non trovato", 404);
     }
 
     $controller = new $class();

@@ -19,11 +19,12 @@ class ValdService
 
     public function __construct()
     {
-        $this->clientId = getenv('VALD_CLIENT_ID') ?: '';
-        $this->clientSecret = getenv('VALD_CLIENT_SECRET') ?: '';
-        $this->orgId = getenv('VALD_ORG_ID') ?: '';
-        $this->identityUrl = getenv('VALD_IDENTITY_URL') ?: 'https://identity.valdperformance.com/connect/token';
-        $this->apiBaseUrl = getenv('VALD_API_BASE_URL') ?: 'https://prd-euw-api-extforcedecks.valdperformance.com';
+        $this->clientId = getenv('VALD_CLIENT_ID') ?: $_SERVER['VALD_CLIENT_ID'] ?? '';
+        $this->clientSecret = getenv('VALD_CLIENT_SECRET') ?: $_SERVER['VALD_CLIENT_SECRET'] ?? '';
+        $this->orgId = getenv('VALD_ORG_ID') ?: $_SERVER['VALD_ORG_ID'] ?? '';
+        // New VALD API authentication URL (March 2026 onwards)
+        $this->identityUrl = getenv('VALD_IDENTITY_URL') ?: $_SERVER['VALD_IDENTITY_URL'] ?? 'https://auth.prd.vald.com/oauth/token';
+        $this->apiBaseUrl = getenv('VALD_API_BASE_URL') ?: $_SERVER['VALD_API_BASE_URL'] ?? 'https://prd-euw-api-extforcedecks.valdperformance.com';
     }
 
     /**
@@ -42,7 +43,7 @@ class ValdService
             'grant_type' => 'client_credentials',
             'client_id' => $this->clientId,
             'client_secret' => $this->clientSecret,
-            'scope' => 'vald:api'
+            'audience' => 'vald-api-external'
         ]));
 
         $response = curl_exec($ch);
@@ -50,7 +51,7 @@ class ValdService
         curl_close($ch);
 
         if (!isset($data['access_token'])) {
-            throw new \Exception('Failed to obtain VALD Access Token');
+            throw new \Exception('Failed to obtain VALD Access Token: ' . ($data['error_description'] ?? $data['error'] ?? $response));
         }
 
         $this->accessToken = $data['access_token'];
@@ -97,7 +98,9 @@ class ValdService
      */
     public function getProfiles(): ?array
     {
-        // VALD External Profile API base might be different
+        // VALD External Profile API 
+        // As of 2026, old PRD domains might be deprecated or behave differently.
+        // We ensure we hit the correct externalprofile endpoint.
         $profileUrl = str_replace('extforcedecks', 'externalprofile', $this->apiBaseUrl);
         $endpoint = "/v1/profiles?organizationId=" . $this->orgId;
 
@@ -115,6 +118,7 @@ class ValdService
      */
     public function getTestResults(string $modifiedSince = ''): ?array
     {
+        // VALD external test-results endpoint requires organizationId
         $endpoint = "/v1/test-results?organizationId=" . $this->orgId;
         if ($modifiedSince) {
             $endpoint .= "&modifiedSince=" . urlencode($modifiedSince);
