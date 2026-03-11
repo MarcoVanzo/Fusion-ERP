@@ -631,6 +631,9 @@ class ValdController
                                         'RSI_MODIFIED', 
                                         'JUMP_HEIGHT_FLIGHT_TIME', 
                                         'JUMP_HEIGHT_IMPULSE',
+                                        'JUMP_HEIGHT',
+                                        'ESTIMATED_JUMP_HEIGHT',
+                                        'FLIGHT_TIME_JUMP_HEIGHT',
                                         'PEAK_FORCE',
                                         'BRAKING_IMPULSE',
                                         'CONCENTRIC_PEAK_FORCE',
@@ -642,8 +645,14 @@ class ValdController
                                         // Standardize names
                                         $key = str_replace('_', '', ucwords(strtolower($def), '_'));
                                         if ($def === 'RSI_MODIFIED') $key = 'RSIModified';
-                                        if ($def === 'JUMP_HEIGHT_FLIGHT_TIME') $key = 'JumpHeight';
-                                        if ($def === 'JUMP_HEIGHT_IMPULSE') $key = 'JumpHeightTotal';
+                                        
+                                        // Group all jump height variations into one or two standard fields
+                                        if (in_array($def, ['JUMP_HEIGHT_FLIGHT_TIME', 'FLIGHT_TIME_JUMP_HEIGHT', 'JUMP_HEIGHT', 'ESTIMATED_JUMP_HEIGHT'])) {
+                                            $key = 'JumpHeight';
+                                        }
+                                        if ($def === 'JUMP_HEIGHT_IMPULSE') {
+                                            $key = 'JumpHeightTotal';
+                                        }
                                         
                                         $metrics[$key] = ['Value' => $val];
                                     }
