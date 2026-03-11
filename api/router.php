@@ -81,7 +81,9 @@ try {
         };
 }
 catch (\Throwable $e) {
-    error_log('[ROUTER] Unhandled exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+    $errMsg = '[ROUTER] Unhandled exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine();
+    error_log($errMsg);
+    file_put_contents(__DIR__ . '/../local_debug_error.log', date('Y-m-d H:i:s') . ' ' . $errMsg . PHP_EOL, FILE_APPEND);
 
     // Only expose internals when DEBUG mode is explicitly enabled
     $debug = getenv('APP_DEBUG') === 'true' || ($_ENV['APP_DEBUG'] ?? '') === 'true';
