@@ -375,9 +375,13 @@ class TransportRepository
 
     public function listTeams(): array
     {
+        // Join with team_seasons to get the latest/active seasons for the dropdowns
         $stmt = $this->db->query(
-            'SELECT id, name, category, season FROM teams
-             WHERE is_active = 1 AND deleted_at IS NULL ORDER BY name'
+            'SELECT ts.id AS team_season_id, t.id AS team_id, t.name, t.category, ts.season 
+             FROM team_seasons ts
+             JOIN teams t ON ts.team_id = t.id
+             WHERE t.is_active = 1 AND t.deleted_at IS NULL 
+             ORDER BY ts.season DESC, t.name'
         );
         return $stmt->fetchAll();
     }

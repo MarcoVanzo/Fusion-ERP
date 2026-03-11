@@ -13,7 +13,7 @@ use FusionERP\Shared\TenantContext;
 
 class ValdRepository
 {
-    private \PDO $db;
+    private $db;
 
     public function __construct()
     {
@@ -27,12 +27,22 @@ class ValdRepository
     {
         $stmt = $this->db->prepare(
             'SELECT * FROM vald_test_results 
-             WHERE athlete_id = :athlete_id AND tenant_id = :tenant_id
+             WHERE tenant_id = :t1
+               AND athlete_id IN (
+                   SELECT id FROM athletes 
+                   WHERE tenant_id = :t2 
+                     AND vald_athlete_id = (
+                         SELECT vald_athlete_id FROM athletes 
+                         WHERE id = :athlete_id AND tenant_id = :t3 LIMIT 1
+                     )
+               )
              ORDER BY test_date DESC'
         );
         $stmt->execute([
             ':athlete_id' => $athleteId,
-            ':tenant_id' => TenantContext::id()
+            ':t1' => TenantContext::id(),
+            ':t2' => TenantContext::id(),
+            ':t3' => TenantContext::id()
         ]);
         return $stmt->fetchAll();
     }
@@ -44,12 +54,22 @@ class ValdRepository
     {
         $stmt = $this->db->prepare(
             'SELECT * FROM vald_test_results 
-             WHERE athlete_id = :athlete_id AND tenant_id = :tenant_id
+             WHERE tenant_id = :t1
+               AND athlete_id IN (
+                   SELECT id FROM athletes 
+                   WHERE tenant_id = :t2 
+                     AND vald_athlete_id = (
+                         SELECT vald_athlete_id FROM athletes 
+                         WHERE id = :athlete_id AND tenant_id = :t3 LIMIT 1
+                     )
+               )
              ORDER BY test_date DESC LIMIT 1'
         );
         $stmt->execute([
             ':athlete_id' => $athleteId,
-            ':tenant_id' => TenantContext::id()
+            ':t1' => TenantContext::id(),
+            ':t2' => TenantContext::id(),
+            ':t3' => TenantContext::id()
         ]);
         $row = $stmt->fetch();
         return $row ?: null;
@@ -63,12 +83,22 @@ class ValdRepository
     {
         $stmt = $this->db->prepare(
             'SELECT metrics FROM vald_test_results 
-             WHERE athlete_id = :athlete_id AND tenant_id = :tenant_id
+             WHERE tenant_id = :t1
+               AND athlete_id IN (
+                   SELECT id FROM athletes 
+                   WHERE tenant_id = :t2 
+                     AND vald_athlete_id = (
+                         SELECT vald_athlete_id FROM athletes 
+                         WHERE id = :athlete_id AND tenant_id = :t3 LIMIT 1
+                     )
+               )
              ORDER BY test_date DESC
              LIMIT :lim OFFSET 1'
         );
         $stmt->bindValue(':athlete_id', $athleteId);
-        $stmt->bindValue(':tenant_id', TenantContext::id());
+        $stmt->bindValue(':t1', TenantContext::id());
+        $stmt->bindValue(':t2', TenantContext::id());
+        $stmt->bindValue(':t3', TenantContext::id());
         $stmt->bindValue(':lim', $limit, \PDO::PARAM_INT);
         $stmt->execute();
 
@@ -194,14 +224,24 @@ class ValdRepository
     {
         $stmt = $this->db->prepare(
             'SELECT metrics FROM vald_test_results
-             WHERE athlete_id = :athlete_id AND tenant_id = :tenant_id
+             WHERE tenant_id = :t1
+               AND athlete_id IN (
+                   SELECT id FROM athletes 
+                   WHERE tenant_id = :t2 
+                     AND vald_athlete_id = (
+                         SELECT vald_athlete_id FROM athletes 
+                         WHERE id = :athlete_id AND tenant_id = :t3 LIMIT 1
+                     )
+               )
              ORDER BY test_date DESC
-             LIMIT :lim OFFSET 1'
+             LIMIT 5 OFFSET 1'
         );
-        $stmt->bindValue(':athlete_id', $athleteId);
-        $stmt->bindValue(':tenant_id', TenantContext::id());
-        $stmt->bindValue(':lim', $limit, \PDO::PARAM_INT);
-        $stmt->execute();
+        $stmt->execute([
+            ':t1' => TenantContext::id(),
+            ':t2' => TenantContext::id(),
+            ':t3' => TenantContext::id(),
+            ':athlete_id' => $athleteId
+        ]);
 
         $rows = $stmt->fetchAll();
         $vals = [];
@@ -218,5 +258,21 @@ class ValdRepository
         }
 
         return !empty($vals) ? round(array_sum($vals) / count($vals), 1) : null;
+    }
+
+    /**
+     * Link (or unlink) an ERP athlete to a VALD athlete ID.
+     * Pass null $valdAthleteId to remove the link.
+     */
+    public function linkAthleteToVald(string $athleteId, ?string $valdAthleteId): void
+    {
+        $stmt = $this->db->prepare(
+            'UPDATE athletes SET vald_athlete_id = :vid WHERE id = :id AND tenant_id = :tid'
+        );
+        $stmt->execute([
+            ':vid' => $valdAthleteId,
+            ':id'  => $athleteId,
+            ':tid' => TenantContext::id(),
+        ]);
     }
 }

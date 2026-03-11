@@ -2,6 +2,10 @@
 /**
  * ValdService — API Client for VALD Hub
  * Fusion ERP v1.0
+ *
+ * API version: v2019q3 (ForceDecks External API)
+ * Base URL: https://prd-euw-api-extforcedecks.valdperformance.com
+ * Auth: OAuth2 Client Credentials via auth.prd.vald.com (March 2026 onwards)
  */
 
 declare(strict_types=1);
@@ -19,11 +23,13 @@ class ValdService
 
     public function __construct()
     {
-        $this->clientId = getenv('VALD_CLIENT_ID') ?: '';
-        $this->clientSecret = getenv('VALD_CLIENT_SECRET') ?: '';
-        $this->orgId = getenv('VALD_ORG_ID') ?: '';
-        $this->identityUrl = getenv('VALD_IDENTITY_URL') ?: 'https://identity.valdperformance.com/connect/token';
-        $this->apiBaseUrl = getenv('VALD_API_BASE_URL') ?: 'https://prd-euw-api-extforcedecks.valdperformance.com';
+        $this->clientId = getenv('VALD_CLIENT_ID') ?: $_SERVER['VALD_CLIENT_ID'] ?? '';
+        $this->clientSecret = getenv('VALD_CLIENT_SECRET') ?: $_SERVER['VALD_CLIENT_SECRET'] ?? '';
+        $this->orgId = getenv('VALD_ORG_ID') ?: $_SERVER['VALD_ORG_ID'] ?? '';
+        // New VALD API authentication URL (March 2026 onwards)
+        $this->identityUrl = getenv('VALD_IDENTITY_URL') ?: $_SERVER['VALD_IDENTITY_URL'] ?? 'https://auth.prd.vald.com/oauth/token';
+        // ForceDecks External API (EUW region — confirmed by VALD Support)
+        $this->apiBaseUrl = getenv('VALD_API_BASE_URL') ?: $_SERVER['VALD_API_BASE_URL'] ?? 'https://prd-euw-api-extforcedecks.valdperformance.com';
     }
 
     /**
@@ -42,7 +48,7 @@ class ValdService
             'grant_type' => 'client_credentials',
             'client_id' => $this->clientId,
             'client_secret' => $this->clientSecret,
-            'scope' => 'vald:api'
+            'audience' => 'vald-api-external'
         ]));
 
         $response = curl_exec($ch);
@@ -50,7 +56,7 @@ class ValdService
         curl_close($ch);
 
         if (!isset($data['access_token'])) {
-            throw new \Exception('Failed to obtain VALD Access Token');
+            throw new \Exception('Failed to obtain VALD Access Token: ' . ($data['error_description'] ?? $data['error'] ?? $response));
         }
 
         $this->accessToken = $data['access_token'];
@@ -71,7 +77,8 @@ class ValdService
 
         $headers = [
             "Authorization: Bearer $token",
-            "Content-Type: application/json"
+            "Content-Type: application/json",
+            "Accept: application/json"
         ];
 
         if ($data) {
@@ -85,7 +92,7 @@ class ValdService
         curl_close($ch);
 
         if ($httpCode >= 400) {
-            error_log("[VALD API] Error $httpCode: $response");
+            error_log("[VALD API] Error $httpCode on $url: $response");
             return null;
         }
 
@@ -93,33 +100,85 @@ class ValdService
     }
 
     /**
-     * Fetch Athletes (Profiles) from VALD.
+     * Fetch the list of Teams (Organisations) for this account.
+     * Returns array of teams with their IDs and available links.
      */
-    public function getProfiles(): ?array
+    public function getTeams(): ?array
     {
-        // VALD External Profile API base might be different
-        $profileUrl = str_replace('extforcedecks', 'externalprofile', $this->apiBaseUrl);
-        $endpoint = "/v1/profiles?organizationId=" . $this->orgId;
-
-        // Temporarily override base URL for this call
-        $originalBase = $this->apiBaseUrl;
-        $this->apiBaseUrl = $profileUrl;
-        $res = $this->request('GET', $endpoint);
-        $this->apiBaseUrl = $originalBase;
-
-        return $res;
+        return $this->request('GET', '/v2019q3/teams');
     }
 
     /**
-     * Fetch ForceDecks Test Results.
+     * Fetch Athletes for a specific team.
+     * @param string $teamId The VALD team ID (same as orgId for single-org accounts)
+     * @param string $modifiedFrom Optional ISO date string to fetch only updated athletes
      */
-    public function getTestResults(string $modifiedSince = ''): ?array
+    public function getAthletes(string $teamId = '', string $modifiedFrom = ''): ?array
     {
-        $endpoint = "/v1/test-results?organizationId=" . $this->orgId;
-        if ($modifiedSince) {
-            $endpoint .= "&modifiedSince=" . urlencode($modifiedSince);
+        if (!$teamId) {
+            $teamId = $this->orgId;
+        }
+        $endpoint = "/v2019q3/teams/$teamId/athletes";
+        if ($modifiedFrom) {
+            $endpoint .= '?modifiedFrom=' . urlencode($modifiedFrom);
+        }
+        return $this->request('GET', $endpoint);
+    }
+
+    /**
+     * @deprecated Use getAthletes() instead.
+     * Kept for backward compatibility with the sync cron.
+     */
+    public function getProfiles(): ?array
+    {
+        $teams = $this->getTeams();
+        if (empty($teams)) {
+            return null;
+        }
+        $teamId = $teams[0]['id'] ?? $this->orgId;
+        return $this->getAthletes($teamId);
+    }
+
+    /**
+     * Fetch ForceDecks Test Results for a specific team.
+     * @param string $modifiedSince Optional ISO date to fetch only new results
+     * @param string $teamId Optional team ID (defaults to orgId)
+     * @param int $page Page number (1-indexed)
+     */
+    public function getTestResults(string $modifiedSince = '', string $teamId = '', int $page = 1): ?array
+    {
+        if (!$teamId) {
+            $teamId = $this->orgId;
         }
 
-        return $this->request('GET', $endpoint);
+        if ($modifiedSince) {
+            // Use the paginated endpoint with modifiedFrom filter
+            $endpoint = '/v2019q3/teams/' . $teamId . '/tests/' . (string)$page;
+            $endpoint .= '?modifiedFrom=' . urlencode($modifiedSince);
+        } else {
+            // Get tests for the last 90 days by default
+            $dateTo = date('Y-m-d');
+            $dateFrom = date('Y-m-d', strtotime('-90 days'));
+            $endpoint = '/v2019q3/teams/' . $teamId . '/tests/' . $dateFrom . '/' . $dateTo . '/' . (string)$page;
+        }
+
+        $res = $this->request('GET', $endpoint);
+        return $res['items'] ?? $res;
+    }
+
+    /**
+     * Fetch an athlete's full test history.
+     */
+    public function getAthleteTests(string $athleteId, string $teamId = '', int $page = 1, string $modifiedFrom = ''): ?array
+    {
+        if (!$teamId) {
+            $teamId = $this->orgId;
+        }
+        $endpoint = '/v2019q3/teams/' . $teamId . '/athlete/' . $athleteId . '/tests/' . (string)$page;
+        if ($modifiedFrom) {
+            $endpoint .= '?modifiedFrom=' . urlencode($modifiedFrom);
+        }
+        $res = $this->request('GET', $endpoint);
+        return $res['items'] ?? $res;
     }
 }

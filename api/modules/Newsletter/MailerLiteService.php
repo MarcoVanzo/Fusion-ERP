@@ -53,6 +53,7 @@ class MailerLiteService
                 'active'       => $active,
                 'unsubscribed' => $unsubscribed,
                 'bounced'      => $bounced,
+                'unconfirmed'  => $unconfirmed,
             ];
         } catch (\Throwable $e) {
             error_log('[MailerLite] getStats error: ' . $e->getMessage());
@@ -64,14 +65,14 @@ class MailerLiteService
     {
         $response = $this->client->subscribers->get([
             'filter' => ['status' => $status],
-            'limit'  => 1,
+            'limit'  => 0,
         ]);
-        return (int)($response['body']['meta']['total'] ?? 0);
+        return (int)($response['body']['total'] ?? 0);
     }
 
     private function emptyStats(): array
     {
-        return ['total' => 0, 'active' => 0, 'unsubscribed' => 0, 'bounced' => 0];
+        return ['total' => 0, 'active' => 0, 'unsubscribed' => 0, 'bounced' => 0, 'unconfirmed' => 0];
     }
 
     // ─── SUBSCRIBERS ─────────────────────────────────────────────────────────
@@ -230,10 +231,7 @@ class MailerLiteService
 
     private function getField(array $fields, string $key): string
     {
-        foreach ($fields as $f) {
-            if (($f['key'] ?? '') === $key) return (string)($f['value'] ?? '');
-        }
-        return '';
+        return (string)($fields[$key] ?? '');
     }
 
     private function extractNextCursor(string $nextUrl): ?string

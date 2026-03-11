@@ -11,7 +11,7 @@ const Newsletter = (() => {
     let _subscribers = [];
     let _meta       = { total: 0 };
     let _nextCursor = null;
-    let _filter     = { status: '', search: '' };
+    let _filter     = { status: 'active', search: '' };
 
     // ─── RENDER SHELL ─────────────────────────────────────────────────────────
     function render() {
@@ -50,6 +50,9 @@ const Newsletter = (() => {
                 </div>
                 ${isAdmin ? `
                 <div class="page-actions">
+                    <a href="https://dashboard.mailerlite.com/campaigns" target="_blank" class="btn btn-default" style="text-decoration: none;">
+                        <i class="ph ph-paper-plane-right"></i> Crea Newsletter in MailerLite
+                    </a>
                     <button class="btn btn-default" id="btn-nl-groups" type="button">
                         <i class="ph ph-squares-four"></i> Gestisci Gruppi
                     </button>
@@ -92,8 +95,8 @@ const Newsletter = (() => {
                         <i class="ph ph-warning-circle"></i>
                     </div>
                     <div class="stat-content">
-                        <div class="stat-label">Bounce</div>
-                        <div class="stat-value">${_stats.bounced.toLocaleString('it-IT')}</div>
+                        <div class="stat-label">Da Confermare</div>
+                        <div class="stat-value">${(_stats.unconfirmed || 0).toLocaleString('it-IT')}</div>
                     </div>
                 </div>
             </div>
@@ -103,8 +106,8 @@ const Newsletter = (() => {
                     <h2 class="card-title"><i class="ph ph-users-three"></i> Iscritti</h2>
                     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
                         <div class="filter-bar" id="nl-status-filter">
-                            <button class="filter-chip ${!_filter.status ? 'active' : ''}" data-nl-status="" type="button">Tutti</button>
                             <button class="filter-chip ${_filter.status === 'active' ? 'active' : ''}" data-nl-status="active" type="button">Attivi</button>
+                            <button class="filter-chip ${_filter.status === 'unconfirmed' ? 'active' : ''}" data-nl-status="unconfirmed" type="button">Da confermare</button>
                             <button class="filter-chip ${_filter.status === 'unsubscribed' ? 'active' : ''}" data-nl-status="unsubscribed" type="button">Disiscritti</button>
                             <button class="filter-chip ${_filter.status === 'bounced' ? 'active' : ''}" data-nl-status="bounced" type="button">Bounce</button>
                         </div>
@@ -165,8 +168,8 @@ const Newsletter = (() => {
                 </thead>
                 <tbody>
                     ${_subscribers.map(sub => {
-                        const fields = sub.fields || [];
-                        const getName = key => fields.find(f => f.key === key)?.value || '';
+                        const fields = sub.fields || {};
+                        const getName = key => fields[key] || '';
                         const name = [getName('name'), getName('last_name')].filter(Boolean).join(' ') || '—';
                         const groups = (sub.groups || []).map(g => `<span style="background:var(--color-primary-soft);color:var(--color-primary);font-size:11px;padding:2px 6px;border-radius:4px;font-weight:600;">${Utils.escapeHtml(g.name)}</span>`).join(' ');
                         const date = sub.created_at ? sub.created_at.substring(0, 10) : '—';
@@ -272,8 +275,7 @@ const Newsletter = (() => {
             if (_filter.status) params.status = _filter.status;
             if (_filter.search) params.search = _filter.search;
 
-            const qs = '&' + Object.entries(params).map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join('&');
-            const result = await Store.get('listSubscribers' + qs, 'newsletter');
+            const result = await Store.get('listSubscribers', 'newsletter', params);
 
             if (append) {
                 _subscribers = [..._subscribers, ...(result.data || [])];

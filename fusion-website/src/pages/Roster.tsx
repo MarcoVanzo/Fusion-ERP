@@ -78,24 +78,33 @@ const Roster = () => {
                                 {/* Conditional Background image  */}
                                 {(() => {
                                     const nameUpper = team.name.toUpperCase();
+                                    const isU13 = nameUpper.includes('U13') || nameUpper.includes('UNDER 13') || nameUpper.includes('UNDER13');
+                                    const isU14 = nameUpper.includes('U14') || nameUpper.includes('UNDER 14') || nameUpper.includes('UNDER14');
                                     const isU16 = nameUpper.includes('U16') || nameUpper.includes('UNDER 16') || nameUpper.includes('UNDER16');
                                     const isU18 = nameUpper.includes('U18') || nameUpper.includes('UNDER 18') || nameUpper.includes('UNDER18');
-                                    const bgImage = isU16 ? '/demo/assets/squadra-u16.jpeg' : isU18 ? '/demo/assets/squadra-u18.jpeg' : null;
+                                    const bgImage = isU13 ? '/demo/assets/squadra-u13.jpeg' : isU14 ? '/demo/assets/squadra-u14.jpeg' : isU16 ? '/demo/assets/squadra-u16.jpeg' : isU18 ? '/demo/assets/squadra-u18.jpeg' : null;
 
                                     return bgImage ? (
+                                        /* Full-card photo — visible, bright, centered on the team */
                                         <div
-                                            className="absolute top-0 bottom-0 right-0 left-[30%] z-0 bg-cover bg-[right_bottom] opacity-60 group-hover:opacity-100 transition-opacity duration-700 mix-blend-screen contrast-125 saturate-150"
-                                            style={{ backgroundImage: `url('${bgImage}')` }}
+                                            className="absolute inset-0 z-0 bg-cover bg-center opacity-80 group-hover:opacity-100 transition-opacity duration-700 scale-100 group-hover:scale-105 transition-transform"
+                                            style={{ backgroundImage: `url('${bgImage}')`, backgroundPosition: 'center 20%' }}
                                         />
                                     ) : (
-                                        <div className="absolute top-0 bottom-0 right-0 left-[30%] z-0 bg-gradient-to-br from-zinc-900/50 to-brand-900/20 flex items-center justify-center opacity-60 group-hover:opacity-100 transition-opacity duration-700 p-8">
-                                            <img src="/demo/assets/logo-colorato.png" alt="Fusion Logo" className="max-w-full max-h-full opacity-10 drop-shadow-2xl mix-blend-lighten" />
+                                        <div className="absolute inset-0 z-0 bg-gradient-to-br from-zinc-900 to-brand-900/20 flex items-center justify-end opacity-80 group-hover:opacity-100 transition-opacity duration-700 pr-8">
+                                            <img src="/demo/assets/logo-colorato.png" alt="Fusion Logo" className="max-h-40 opacity-10 drop-shadow-2xl" />
                                         </div>
                                     );
                                 })()}
-                                {/* Background image placeholder / overlay */}
-                                <div className="absolute inset-0 bg-gradient-to-r from-zinc-950 via-zinc-900/95 to-transparent z-10"></div>
-                                <div className="absolute top-0 right-0 w-1/2 h-full bg-brand-primary opacity-30 group-hover:opacity-60 transition-opacity duration-500 z-0 transform translate-x-12 -skew-x-12 blend-screen mix-blend-color-dodge"></div>
+
+                                {/* Left-side text area: dark gradient that fades to transparent on the right */}
+                                <div className="absolute inset-0 z-10 bg-gradient-to-r from-zinc-950 via-zinc-950/85 via-40% to-transparent" />
+                                {/* Bottom gradient to blend into page */}
+                                <div className="absolute bottom-0 left-0 right-0 h-12 z-10 bg-gradient-to-t from-zinc-950/60 to-transparent" />
+                                {/* Pink accent line on left border */}
+                                <div className="absolute top-0 left-0 w-[3px] h-full z-20 bg-brand-500 opacity-80 group-hover:opacity-100 transition-opacity" />
+                                {/* Hover pink shimmer on right */}
+                                <div className="absolute top-0 right-0 w-1/3 h-full z-10 opacity-0 group-hover:opacity-20 transition-opacity duration-500 bg-gradient-to-l from-brand-500 to-transparent pointer-events-none" />
 
                                 <div className="relative z-20 p-10 h-full flex flex-col justify-between">
                                     <div>

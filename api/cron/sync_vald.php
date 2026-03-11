@@ -2,6 +2,8 @@
 /**
  * sync_vald.php — VALD Performance Integration Sync Cron
  * Fusion ERP v1.0
+ *
+ * Schedulare: 0 2 * * * php /path/to/public_html/ERP/api/cron/sync_vald.php >> /tmp/vald_sync.log 2>&1
  */
 
 declare(strict_types=1);
@@ -14,66 +16,32 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 
 use FusionERP\Shared\Database;
 use FusionERP\Shared\TenantContext;
-use FusionERP\Modules\Vald\ValdService;
-use FusionERP\Modules\Vald\ValdRepository;
+use FusionERP\Modules\Vald\ValdController;
 
 $db = Database::getInstance();
-$valdService = new ValdService();
-$valdRepo = new ValdRepository();
 
-// Get all active tenants
+// Fetch all active tenants
 $tenants = $db->query('SELECT id, name FROM tenants WHERE is_active = 1')->fetchAll();
+
+if (empty($tenants)) {
+    echo "[VALD Cron] Nessun tenant attivo trovato.\n";
+    exit(0);
+}
 
 foreach ($tenants as $tenant) {
     TenantContext::setOverride($tenant['id']);
-    echo "Sincronizzazione VALD per Tenant: {$tenant['name']} ({$tenant['id']})...\n";
+    echo "[VALD Cron] Sincronizzazione per tenant: {$tenant['name']} ({$tenant['id']})...\n";
 
     try {
-        // 1. Fetch results from VALD
-        // In a real scenario, we might use the last sync date to fetch only new tests
-        $lastSync = $valdRepo->getLatestTestDate();
-        $results = $valdService->getTestResults($lastSync ?: '');
+        // Reuse the shared performSync() logic from ValdController
+        $controller = new ValdController();
+        $stats = $controller->performSync();
 
-        if (!$results || !isset($results['data'])) {
-            echo "Nessun nuovo risultato trovato.\n";
-            continue;
-        }
+        echo "[VALD Cron] ✔ Trovati: {$stats['found']}, Salvati: {$stats['synced']}, Saltati: {$stats['skipped']}\n";
 
-        $count = 0;
-        foreach ($results['data'] as $test) {
-            // VALD 'ExternalId' should match our athlete ID
-            $athleteId = $test['athleteExternalId'] ?? '';
-
-            if (!$athleteId) {
-                // Try to find athlete by VALD ID if we had a mapping (not implemented yet)
-                continue;
-            }
-
-            // Verify athlete exists in this tenant
-            $stmt = $db->prepare('SELECT id FROM athletes WHERE id = :id AND tenant_id = :tid LIMIT 1');
-            $stmt->execute([':id' => $athleteId, ':tid' => $tenant['id']]);
-            if (!$stmt->fetch()) {
-                continue;
-            }
-
-            // Save result
-            $valdRepo->saveResult([
-                ':id' => 'VTR_' . bin2hex(random_bytes(4)),
-                ':tenant_id' => $tenant['id'],
-                ':athlete_id' => $athleteId,
-                ':test_id' => $test['id'],
-                ':test_date' => $test['testDate'],
-                ':test_type' => $test['testType'],
-                ':metrics' => json_encode($test['metrics'] ?? [])
-            ]);
-            $count++;
-        }
-
-        echo "Sincronizzati " . (string)$count . " nuovi test.\n";
-    }
-    catch (\Throwable $e) {
-        echo "ERRORE per tenant {$tenant['id']}: " . $e->getMessage() . "\n";
+    } catch (\Throwable $e) {
+        echo "[VALD Cron] ✘ ERRORE per tenant {$tenant['id']}: " . $e->getMessage() . "\n";
     }
 }
 
-echo "Sincronizzazione completata.\n";
+echo "[VALD Cron] Completato alle " . date('Y-m-d H:i:s') . "\n";

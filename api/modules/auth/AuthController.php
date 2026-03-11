@@ -247,6 +247,11 @@ class AuthController
 
         $id = 'USR_' . bin2hex(random_bytes(4));
 
+        $permissionsJson = null;
+        if (isset($body['permissions_json']) && is_array($body['permissions_json'])) {
+            $permissionsJson = $body['permissions_json'];
+        }
+
         $this->repo->createUser([
             'id' => $id,
             'email' => strtolower(trim($body['email'])),
@@ -254,6 +259,7 @@ class AuthController
             'role' => $body['role'],
             'full_name' => htmlspecialchars(trim($body['full_name']), ENT_QUOTES, 'UTF-8'),
             'phone' => $body['phone'] ?? null,
+            'permissions_json' => $permissionsJson
         ]);
 
         $this->repo->insertPasswordHistory($id, $hash);
@@ -304,11 +310,15 @@ class AuthController
         }
 
         $userId = (string)$body['userId'];
+        $permissionsJson = null;
+        if (isset($body['permissions_json']) && is_array($body['permissions_json'])) {
+            $permissionsJson = $body['permissions_json'];
+        }
 
         // Validate user exists
         $this->validateUserExists($userId);
 
-        $this->repo->updateRole($userId, $body['role']);
+        $this->repo->updateRole($userId, $body['role'], $permissionsJson);
         Audit::log('UPDATE', 'users', $userId, null, ['role' => $body['role']]);
         Response::success(['message' => 'Ruolo aggiornato']);
     }

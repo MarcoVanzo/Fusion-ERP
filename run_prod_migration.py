@@ -2,7 +2,7 @@ import sys
 import mysql.connector
 
 try:
-    with open('db/migrations/V053__staff_contracts_and_photos.sql', 'r') as f:
+    with open('db/migrations/V055__staff_document_files.sql', 'r') as f:
         sql = f.read()
 except FileNotFoundError:
     print("SQL file not found")

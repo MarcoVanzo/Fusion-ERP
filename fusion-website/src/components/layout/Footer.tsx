@@ -1,6 +1,44 @@
-import { Facebook, Instagram, Youtube, MapPin, Mail, Phone } from 'lucide-react';
+import { useState } from 'react';
+import { Facebook, Instagram, Youtube, MapPin, Mail, Phone, Loader2, CheckCircle, XCircle } from 'lucide-react';
 
 const Footer = () => {
+    const [email, setEmail] = useState('');
+    const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+    const [message, setMessage] = useState('');
+
+    const handleSubscribe = async (e: React.FormEvent) => {
+        e.preventDefault();
+        
+        if (!email) return;
+        
+        setStatus('loading');
+        setMessage('');
+
+        try {
+            const response = await fetch('https://www.fusionteamvolley.it/ERP/api/?module=website&action=subscribeNewsletter', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email })
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                setStatus('success');
+                setMessage(data.data?.message || 'Iscrizione completata con successo!');
+                setEmail('');
+            } else {
+                setStatus('error');
+                setMessage(data.error || 'Errore durante l\'iscrizione. Riprova più tardi.');
+            }
+        } catch (error) {
+            setStatus('error');
+            setMessage('Errore di connessione. Riprova più tardi.');
+        }
+    };
+
     return (
         <footer className="bg-zinc-950 border-t border-white/5 pt-16 pb-8 mt-20 relative overflow-hidden">
             {/* Decorative background glow */}
@@ -18,26 +56,45 @@ const Footer = () => {
                             Iscriviti alla newsletter per non perderti news, risultati sportivi e novità esclusive dal nostro store.
                         </p>
                     </div>
-                    <form 
-                        className="flex flex-col sm:flex-row w-full md:w-1/2 gap-3 relative z-10" 
-                        onSubmit={(e) => { 
-                            e.preventDefault(); 
-                            alert('Grazie per l\'interesse! Funzione di iscrizione non ancora collegata al backend nella versione demo.'); 
-                        }}
-                    >
-                        <input 
-                            type="email" 
-                            placeholder="Inserisci la tua email..." 
-                            className="bg-zinc-950 border border-zinc-700 text-white px-5 py-4 w-full focus:outline-none focus:border-brand-500 font-subheading placeholder:text-zinc-600 transition-colors shadow-inner"
-                            required
-                        />
-                        <button 
-                            type="submit" 
-                            className="bg-brand-500 text-zinc-950 font-heading text-xl tracking-widest uppercase px-8 py-4 hover:bg-white transition-all whitespace-nowrap clip-diagonal shadow-[0_0_15px_rgba(217,70,239,0.3)] hover:shadow-[0_0_25px_rgba(217,70,239,0.6)] flex items-center justify-center gap-2"
+                    <div className="w-full md:w-1/2 relative z-10">
+                        <form 
+                            className="flex flex-col sm:flex-row gap-3 relative z-10" 
+                            onSubmit={handleSubscribe}
                         >
-                            <Mail size={20} /> ISCRIVITI
-                        </button>
-                    </form>
+                            <input 
+                                type="email" 
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                disabled={status === 'loading' || status === 'success'}
+                                placeholder="Inserisci la tua email..." 
+                                className="bg-zinc-950 border border-zinc-700 text-white px-5 py-4 w-full focus:outline-none focus:border-brand-500 font-subheading placeholder:text-zinc-600 transition-colors shadow-inner disabled:opacity-50"
+                                required
+                            />
+                            <button 
+                                type="submit" 
+                                disabled={status === 'loading' || status === 'success'}
+                                className="bg-brand-500 text-zinc-950 font-heading text-xl tracking-widest uppercase px-8 py-4 hover:bg-white transition-all whitespace-nowrap clip-diagonal shadow-[0_0_15px_rgba(217,70,239,0.3)] hover:shadow-[0_0_25px_rgba(217,70,239,0.6)] flex items-center justify-center gap-2 disabled:opacity-75 disabled:cursor-not-allowed"
+                            >
+                                {status === 'loading' ? (
+                                    <Loader2 size={20} className="animate-spin" />
+                                ) : status === 'success' ? (
+                                    <>
+                                        <CheckCircle size={20} /> FATTO
+                                    </>
+                                ) : (
+                                    <>
+                                        <Mail size={20} /> ISCRIVITI
+                                    </>
+                                )}
+                            </button>
+                        </form>
+                        {message && (
+                            <div className={`mt-3 flex items-center gap-2 text-sm font-medium ${status === 'success' ? 'text-green-500' : 'text-red-500'}`}>
+                                {status === 'success' ? <CheckCircle size={16} /> : <XCircle size={16} />}
+                                {message}
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">

@@ -49,6 +49,20 @@
             "operatore",
             "manager",
             "admin"
+        ],
+        "children": [
+            {
+                "title": "Elenco",
+                "path": "staff",
+                "icon": "users",
+                "isMobileVisible": false
+            },
+            {
+                "title": "Documenti",
+                "path": "staff-documents",
+                "icon": "file-text",
+                "isMobileVisible": false
+            }
         ]
     },
     {
@@ -301,6 +315,12 @@
                 "title": "Sponsor",
                 "path": "societa-sponsor",
                 "icon": "storefront",
+                "isMobileVisible": false
+            },
+            {
+                "title": "Squadre",
+                "path": "squadre",
+                "icon": "users-four",
                 "isMobileVisible": false
             }
         ]

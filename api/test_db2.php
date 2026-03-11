@@ -1,7 +1,12 @@
 <?php
-require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../vendor/autoload.php';
+$dotenv = Dotenv\Dotenv::createUnsafeImmutable(__DIR__ . '/../');
+$dotenv->load();
+require_once __DIR__ . '/Shared/TenantContext.php';
+require_once __DIR__ . '/Shared/Database.php';
+
 try {
-    $db = db();
+    $db = \FusionERP\Shared\Database::getInstance();
     $stmt = $db->query('DESCRIBE staff_teams');
     $cols = $stmt->fetchAll(PDO::FETCH_ASSOC);
     echo "Columns in staff_teams:\n";

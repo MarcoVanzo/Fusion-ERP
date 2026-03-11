@@ -65,25 +65,38 @@ class AthletesController
     {
         Auth::requireWrite('athletes');
         $body = Response::jsonBody();
-        // team_ids (array) takes priority over legacy team_id
-        if (!empty($body['team_ids']) && is_array($body['team_ids'])) {
-            $teamIds = array_values(array_filter($body['team_ids']));
+        // team_season_ids (array) takes priority over legacy team_id
+        if (!empty($body['team_season_ids']) && is_array($body['team_season_ids'])) {
+            $teamSeasonIds = array_values(array_filter($body['team_season_ids']));
         }
-        elseif (!empty($body['team_id'])) {
-            $teamIds = [$body['team_id']];
+        elseif (!empty($body['team_season_id'])) {
+            $teamSeasonIds = [$body['team_season_id']];
         }
         else {
-            $teamIds = [];
+            $teamSeasonIds = [];
         }
 
-        if (empty($teamIds)) {
-            Response::error('Selezionare almeno una squadra', 400);
+        if (empty($teamSeasonIds)) {
+            Response::error('Selezionare almeno una stagione/squadra', 400);
         }
 
         Response::requireFields($body, ['first_name', 'last_name']);
 
         $id = 'ATH_' . bin2hex(random_bytes(4));
-        $primaryTeamId = $teamIds[0];
+        $primaryTeamSeasonId = $teamSeasonIds[0];
+        
+        // Find the base team_id of this team season (to maintain backward compatibility in the `athletes` table)
+        // Usually, this should be sent from the frontend, but we can extract it or bypass adding team_id completely since the 
+        // repo function gets it if we supply it. I'll just supply null and not update base team_id in the table since 
+        // we'll rely on the junction table. Wait no, we have to insert something into athletes because team_id is NOT NULL in athletes table.
+        // I will temporarily extract it from the id e.g `TS_xxxx` -> wait we can't do that.
+        // Actually, let's query the repo to get the team_id.
+        // I'll leave team_id as empty or 'UNK' for now, but we'll fetch it from the DB.
+        
+        $db = \FusionERP\Shared\Database::getInstance();
+        $stmt = $db->prepare('SELECT team_id FROM team_seasons WHERE id = :id');
+        $stmt->execute([':id' => $primaryTeamSeasonId]);
+        $primaryTeamId = $stmt->fetchColumn() ?: 'UNKNOWN';
 
         $data = [
             ':id' => $id,
@@ -115,10 +128,10 @@ class AthletesController
 
         $this->repo->createAthlete($data);
 
-        // Sync junction table with all selected teams
-        $this->repo->setAthleteTeams($id, $teamIds);
+        // Sync junction table with all selected team seasons
+        $this->repo->setAthleteTeams($id, $teamSeasonIds, $primaryTeamId);
 
-        Audit::log('INSERT', 'athletes', $id, null, ['first_name' => $body['first_name'], 'last_name' => $body['last_name'], 'team_ids' => $teamIds]);
+        Audit::log('INSERT', 'athletes', $id, null, ['first_name' => $body['first_name'], 'last_name' => $body['last_name'], 'team_season_ids' => $teamSeasonIds]);
         Response::success(['id' => $id], 201);
     }
 
@@ -134,17 +147,28 @@ class AthletesController
             Response::error('Atleta non trovato', 404);
         }
 
-        // Support multi-team: team_ids (array) takes priority over legacy team_id
-        if (isset($body['team_ids']) && is_array($body['team_ids'])) {
-            $teamIds = array_values(array_filter($body['team_ids']));
+        // Support multi-team: team_season_ids (array) takes priority over legacy team_id
+        if (isset($body['team_season_ids']) && is_array($body['team_season_ids'])) {
+            $teamSeasonIds = array_values(array_filter($body['team_season_ids']));
         }
-        elseif (!empty($body['team_id'])) {
-            $teamIds = [$body['team_id']];
+        elseif (!empty($body['team_season_id'])) {
+            $teamSeasonIds = [$body['team_season_id']];
         }
         else {
-            $teamIds = $before['team_ids'] ?? [];
+            // Legacy/fallback
+            $teamSeasonIds = $before['team_season_ids'] ?? (isset($before['team_ids']) ? $before['team_ids'] : []);
         }
-        $primaryTeamId = $teamIds[0] ?? ($before['team_id'] ?? null);
+        $primaryTeamSeasonId = $teamSeasonIds[0] ?? null;
+
+        $primaryTeamId = null;
+        if ($primaryTeamSeasonId) {
+            $db = \FusionERP\Shared\Database::getInstance();
+            $stmt = $db->prepare('SELECT team_id FROM team_seasons WHERE id = :id');
+            $stmt->execute([':id' => $primaryTeamSeasonId]);
+            $primaryTeamId = $stmt->fetchColumn() ?: $before['team_id'];
+        } else {
+            $primaryTeamId = $before['team_id'] ?? null;
+        }
 
         // Preserve existing values for fields not passed in the request
         $val = fn($k) => array_key_exists($k, $body) ? $body[$k] : ($before[$k] ?? null);
@@ -174,8 +198,8 @@ class AthletesController
             ':team_id' => $primaryTeamId,
         ]);
 
-        // Sync junction table with all selected teams
-        $this->repo->setAthleteTeams($body['id'], $teamIds);
+        // Sync junction table with all selected team seasons
+        $this->repo->setAthleteTeams($body['id'], $teamSeasonIds, $primaryTeamId);
 
         Audit::log('UPDATE', 'athletes', $body['id'], $before, $body);
         Response::success(['message' => 'Atleta aggiornato']);
@@ -346,7 +370,7 @@ class AthletesController
             ':period_start' => $periodStart,
             ':period_end' => $periodEnd,
             ':summary_text' => $summary,
-            ':model_version' => 'gemini-2.0-flash',
+            ':model_version' => 'gemini-2.5-flash',
         ]);
 
         Audit::log('AI_REPORT', 'ai_summaries', $summaryId, null, ['athlete_id' => $athleteId]);
@@ -469,7 +493,7 @@ PROMPT;
             return 'Gemini API key non configurata. Configurare GEMINI_API_KEY nel file .env.';
         }
 
-        $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={$apiKey}";
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={$apiKey}";
         $payload = json_encode([
             'contents' => [
                 ['parts' => [['text' => $prompt]]]
