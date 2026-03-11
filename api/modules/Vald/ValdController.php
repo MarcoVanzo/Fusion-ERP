@@ -131,12 +131,12 @@ class ValdController
     /**
      * Compute semaphore status from RSImod and TimeToTakeoff.
      */
-    private function computeSemaphore(array $metrics, array $baseline): array
+    private function computeSemaphore(array $metrics, ?array $baseline): array
     {
         $currentRSI = (float)($metrics['RSIModified']['Value'] ?? 0);
         $currentTttO = (float)($metrics['TimeToTakeoff']['Value'] ?? 0);
-        $baselineRSI = $baseline['rsimod_avg'];
-        $baselineTttO = $baseline['ttto_avg'];
+        $baselineRSI = $baseline['rsimod_avg'] ?? null;
+        $baselineTttO = $baseline['ttto_avg'] ?? null;
 
         // Calculate variation percentages
         $rsiVariation = null;
@@ -192,7 +192,7 @@ class ValdController
                 'baseline' => $baselineTttO ? round($baselineTttO, 0) : null,
                 'variation' => $tttoVariation !== null ? round($tttoVariation, 1) : null,
             ],
-            'baselineTests' => $baseline['count'],
+            'baselineTests' => $baseline['count'] ?? 0,
         ];
     }
 

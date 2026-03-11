@@ -354,7 +354,6 @@ const Staff = (() => {
                     </div>
 
                     <!-- ALLEGATI -->
-                    ${f ? `
                     <div>
                         <p class="section-label">Allegati</p>
                         <div style="display:flex;flex-direction:column;gap:var(--sp-3);">
@@ -415,7 +414,6 @@ const Staff = (() => {
 
                         </div>
                     </div>
-                    ` : ''}
                 </div>
             `),
         document.querySelectorAll("[data-stab]").forEach((t) => {
