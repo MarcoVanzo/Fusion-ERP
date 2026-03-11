@@ -90,33 +90,59 @@ class AuthRepository
 
     public function listUsers(string $role = ''): array
     {
-        $sql = 'SELECT id, email, role, full_name, phone, is_active, last_login_at, created_at
-                FROM users WHERE deleted_at IS NULL';
+        $sql = 'SELECT u.id, u.email, u.role, u.full_name, u.phone, u.is_active, u.last_login_at, u.created_at, t.roles as tenant_roles
+                FROM users u
+                LEFT JOIN tenant_users t ON u.id = t.user_id
+                WHERE u.deleted_at IS NULL';
         if ($role !== '') {
-            $stmt = $this->db->prepare($sql . ' AND role = :role ORDER BY full_name');
+            $stmt = $this->db->prepare($sql . ' AND u.role = :role ORDER BY u.full_name');
             $stmt->execute([':role' => $role]);
         }
         else {
-            $stmt = $this->db->prepare($sql . ' ORDER BY full_name');
+            $stmt = $this->db->prepare($sql . ' ORDER BY u.full_name');
             $stmt->execute();
         }
-        return $stmt->fetchAll();
+        $rows = $stmt->fetchAll();
+        foreach ($rows as &$row) {
+            $row['permissions_json'] = $row['tenant_roles'] ? json_decode($row['tenant_roles'], true) : null;
+            unset($row['tenant_roles']);
+        }
+        return $rows;
     }
 
     public function createUser(array $data): void
     {
-        $stmt = $this->db->prepare(
-            'INSERT INTO users (id, email, pwd_hash, role, full_name, phone, is_active)
-             VALUES (:id, :email, :pwd_hash, :role, :full_name, :phone, 1)'
-        );
-        $stmt->execute([
-            ':id' => $data['id'],
-            ':email' => $data['email'],
-            ':pwd_hash' => $data['pwd_hash'],
-            ':role' => $data['role'],
-            ':full_name' => $data['full_name'],
-            ':phone' => $data['phone'] ?? null,
-        ]);
+        try {
+            $this->db->beginTransaction();
+
+            $stmt = $this->db->prepare(
+                'INSERT INTO users (id, email, pwd_hash, role, full_name, phone, is_active)
+                 VALUES (:id, :email, :pwd_hash, :role, :full_name, :phone, 1)'
+            );
+            $stmt->execute([
+                ':id' => $data['id'],
+                ':email' => $data['email'],
+                ':pwd_hash' => $data['pwd_hash'],
+                ':role' => $data['role'],
+                ':full_name' => $data['full_name'],
+                ':phone' => $data['phone'] ?? null,
+            ]);
+
+            $permissionsJson = null;
+            if (isset($data['permissions_json']) && $data['permissions_json']) {
+                $permissionsJson = json_encode($data['permissions_json']);
+            }
+            
+            $stmtInsert = $this->db->prepare(
+                'INSERT INTO tenant_users (user_id, tenant_id, roles) VALUES (:id, 1, :perms)'
+            );
+            $stmtInsert->execute([':id' => $data['id'], ':perms' => $permissionsJson]);
+
+            $this->db->commit();
+        } catch (\Exception $e) {
+            $this->db->rollBack();
+            throw $e;
+        }
     }
 
     public function deactivateUser(string $userId): void
@@ -125,10 +151,30 @@ class AuthRepository
         $stmt->execute([':id' => $userId]);
     }
 
-    public function updateRole(string $id, string $role): void
+    public function updateRole(string $id, string $role, ?array $permissions = null): void
     {
-        $stmt = $this->db->prepare('UPDATE users SET role = :role, updated_at = NOW() WHERE id = :id AND deleted_at IS NULL');
-        $stmt->execute([':role' => $role, ':id' => $id]);
+        try {
+            $this->db->beginTransaction();
+            $stmt = $this->db->prepare('UPDATE users SET role = :role, updated_at = NOW() WHERE id = :id AND deleted_at IS NULL');
+            $stmt->execute([':role' => $role, ':id' => $id]);
+            
+            if ($permissions !== null) {
+                $permsJson = json_encode($permissions);
+                $stmtCheck = $this->db->prepare('SELECT 1 FROM tenant_users WHERE user_id = :id');
+                $stmtCheck->execute([':id' => $id]);
+                if ($stmtCheck->fetchColumn()) {
+                    $stmtUpdate = $this->db->prepare('UPDATE tenant_users SET roles = :perms WHERE user_id = :id');
+                    $stmtUpdate->execute([':perms' => $permsJson, ':id' => $id]);
+                } else {
+                    $stmtInsert = $this->db->prepare('INSERT INTO tenant_users (user_id, tenant_id, roles) VALUES (:id, 1, :perms)');
+                    $stmtInsert->execute([':id' => $id, ':perms' => $permsJson]);
+                }
+            }
+            $this->db->commit();
+        } catch (\Exception $e) {
+            $this->db->rollBack();
+            throw $e;
+        }
     }
 
     public function toggleActive(string $id, bool $active): void
