@@ -599,11 +599,62 @@ class ValdController
                 continue;
             }
 
-            // Build metrics: weight from test body, detailed metrics from trials (if available)
+            // Build metrics base from test body
             $metrics = [
                 'weight' => $test['weight'] ?? null,
                 'testType' => $test['testType'] ?? null,
             ];
+
+            // In VALD v2019q3, detailed metrics are stored in the trials array.
+            // We need to fetch them if the "Trials" link is provided.
+            if (!empty($test['links']['Trials'])) {
+                try {
+                    // Exploit Reflection to use the private request() method on ValdService just for this sync
+                    $serviceClass = new \ReflectionClass($this->service);
+                    $reqMethod = $serviceClass->getMethod('request');
+                    $reqMethod->setAccessible(true);
+                    
+                    $trialsData = $reqMethod->invoke($this->service, 'GET', $test['links']['Trials']);
+                    
+                    // Parse trials and extract the most relevant aggregate results (usually repeat: 0 or Trial limb)
+                    if (is_array($trialsData)) {
+                        foreach ($trialsData as $trial) {
+                            if (!isset($trial['results']) || !is_array($trial['results'])) continue;
+                            
+                            foreach ($trial['results'] as $res) {
+                                $def = $res['definition']['result'] ?? '';
+                                $val = $res['value'] ?? null;
+                                
+                                if ($def && $val !== null) {
+                                    // Map some key ForceDecks metrics to our JSON structure
+                                    if (in_array($def, [
+                                        'RSI_MODIFIED', 
+                                        'JUMP_HEIGHT_FLIGHT_TIME', 
+                                        'JUMP_HEIGHT_IMPULSE',
+                                        'PEAK_FORCE',
+                                        'BRAKING_IMPULSE',
+                                        'CONCENTRIC_PEAK_FORCE',
+                                        'CONCENTRIC_PEAK_POWER',
+                                        'CONCENTRIC_PEAK_VELOCITY',
+                                        'PEAK_LANDING_FORCE',
+                                        'GROUND_CONTACT_TIME'
+                                    ])) {
+                                        // Standardize names
+                                        $key = str_replace('_', '', ucwords(strtolower($def), '_'));
+                                        if ($def === 'RSI_MODIFIED') $key = 'RSIModified';
+                                        if ($def === 'JUMP_HEIGHT_FLIGHT_TIME') $key = 'JumpHeight';
+                                        if ($def === 'JUMP_HEIGHT_IMPULSE') $key = 'JumpHeightTotal';
+                                        
+                                        $metrics[$key] = ['Value' => $val];
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    error_log("[VALD Sync] Errore recupero trials per test " . $test['id'] . ": " . $e->getMessage());
+                }
+            }
 
             $this->repo->saveResult([
                 ':id'         => 'VTST_' . bin2hex(random_bytes(4)),
