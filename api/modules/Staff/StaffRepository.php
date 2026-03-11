@@ -32,7 +32,7 @@ class StaffRepository
                        CONCAT(s.first_name, ' ', s.last_name) AS full_name,
                        s.role, s.phone, s.email, s.medical_cert_expires_at,
                        s.photo_path, s.contract_status, s.contract_valid_from, s.contract_valid_to,
-                       GROUP_CONCAT(t.id SEPARATOR ',') as team_ids,
+                       GROUP_CONCAT(ts.id SEPARATOR ',') as team_season_ids,
                        GROUP_CONCAT(COALESCE(CONCAT(t.category, ' — ', t.name), t.name) SEPARATOR ', ') as team_names
                 FROM staff_members s
                 LEFT JOIN staff_teams st ON s.id = st.staff_id
@@ -46,7 +46,8 @@ class StaffRepository
 
         $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
         foreach ($rows as &$row) {
-            $row['team_ids'] = $row['team_ids'] ? explode(',', $row['team_ids']) : [];
+            $row['team_season_ids'] = $row['team_season_ids'] ? explode(',', $row['team_season_ids']) : [];
+            unset($row['team_ids']); // Provide fallback or clean up
         }
         return $rows;
     }
@@ -56,7 +57,7 @@ class StaffRepository
     {
         $tenantId = TenantContext::id();
         $sql = "SELECT s.*, CONCAT(s.first_name, ' ', s.last_name) AS full_name,
-                       GROUP_CONCAT(t.id SEPARATOR ',') as team_ids,
+                       GROUP_CONCAT(ts.id SEPARATOR ',') as team_season_ids,
                        GROUP_CONCAT(COALESCE(CONCAT(t.category, ' — ', t.name), t.name) SEPARATOR ', ') as team_names
                 FROM staff_members s
                 LEFT JOIN staff_teams st ON s.id = st.staff_id
@@ -68,7 +69,8 @@ class StaffRepository
         $stmt->execute([':id' => $id, ':tenant_id' => $tenantId]);
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
         if ($row) {
-            $row['team_ids'] = $row['team_ids'] ? explode(',', $row['team_ids']) : [];
+            $row['team_season_ids'] = $row['team_season_ids'] ? explode(',', $row['team_season_ids']) : [];
+            unset($row['team_ids']);
         }
         return $row ?: null;
     }

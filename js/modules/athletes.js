@@ -545,9 +545,7 @@ const Athletes = (() => {
   }
   function v() {
     ((l = null),
-      (n = ""),
       sessionStorage.removeItem("last_athlete_id"),
-      (s = "anagrafica"),
       u());
   }
   async function f(n, s = "anagrafica") {
@@ -1167,7 +1165,80 @@ const Athletes = (() => {
                     })(
                       c,
                       k,
-                    )}\n            <div style="display:flex;justify-content:space-between;margin-top:4px;">\n              <span style="font-size:9px;color:var(--color-text-muted);">Più vecchio</span>\n              <span style="font-size:9px;color:var(--color-text-muted);">Più recente</span>\n            </div>\n          </div>\n\n          \x3c!-- Asimmetria SX / DX --\x3e\n          ${s ? `\n          <div style="background:rgba(255,255,255,0.02);border:1px solid var(--color-border);border-radius:var(--radius);padding:var(--sp-2) var(--sp-3);">\n            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--color-text-muted);margin-bottom:10px;">\n              <i class="ph ph-arrows-left-right" style="margin-right:4px;"></i>Dettaglio Asimmetria SX / DX\n            </div>\n            <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:var(--sp-1);">\n              <div style="text-align:left;">\n                <div style="font-size:9px;color:var(--color-text-muted);text-transform:uppercase;margin-bottom:2px;">SX</div>\n                <div style="font-size:1.2rem;font-family:var(--font-display);font-weight:700;">${s.landing?.left ?? "—"}<span style="font-size:11px;color:var(--color-text-muted);"> N</span></div>\n                <div style="height:8px;background:rgba(255,255,255,0.06);border-radius:4px;margin-top:4px;overflow:hidden;"><div style="height:100%;background:#00f2fe;border-radius:4px;width:${Math.round(((s.landing?.left || 0) / ((s.landing?.left || 0) + (s.landing?.right || 1))) * 100)}%;"></div></div>\n              </div>\n              <div style="text-align:center;"><div class="cmj-kpi-badge ${"ALERT" === E ? "alert" : "YELLOW" === E ? "yellow" : "green"}" style="font-size:10px;padding:4px 10px;">${null != g ? g.toFixed(1) + "%" : "—"}</div></div>\n              <div style="text-align:right;">\n                <div style="font-size:9px;color:var(--color-text-muted);text-transform:uppercase;margin-bottom:2px;">DX</div>\n                <div style="font-size:1.2rem;font-family:var(--font-display);font-weight:700;">${s.landing?.right ?? "—"}<span style="font-size:11px;color:var(--color-text-muted);"> N</span></div>\n                <div style="height:8px;background:rgba(255,255,255,0.06);border-radius:4px;margin-top:4px;overflow:hidden;"><div style="height:100%;background:#ff007a;border-radius:4px;margin-left:auto;width:${Math.round(((s.landing?.right || 0) / ((s.landing?.left || 0) + (s.landing?.right || 1))) * 100)}%;"></div></div>\n              </div>\n            </div>\n          </div>` : ""}\n\n          \x3c!-- Classifica --\x3e\n          ${i && i.length > 0 ? `\n          <div style="background:rgba(255,255,255,0.02);border:1px solid var(--color-border);border-radius:var(--radius);padding:var(--sp-2) var(--sp-3);">\n            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--color-text-muted);margin-bottom:10px;">\n              <i class="ph ph-trophy" style="margin-right:4px;"></i>Classifica Squadra (RSImod)\n            </div>\n            <div style="display:flex;flex-direction:column;gap:4px;">\n              ${i.map((t, a) => `\n                <div style="display:flex;align-items:center;gap:10px;padding:5px 8px;border-radius:6px;background:${t.athlete_id === e ? "rgba(255,0,122,0.08)" : "transparent"};">\n                  <span style="font-size:12px;font-weight:700;color:var(--color-text-muted);width:18px;">#${a + 1}</span>\n                  <span style="flex:1;font-size:12px;">${Utils.escapeHtml(t.name || t.full_name || "—")}</span>\n                  <span style="font-size:12px;font-weight:700;color:${t.athlete_id === e ? "var(--color-pink)" : "var(--color-text)"};">${t.rsimod ?? "—"}</span>\n                </div>`).join("")}\n            </div>\n          </div>` : ""}\n\n        </div>\n      `;
+                    )}
+            <div style="display:flex;justify-content:space-between;margin-top:4px;">
+              <span style="font-size:9px;color:var(--color-text-muted);">Più vecchio</span>
+              <span style="font-size:9px;color:var(--color-text-muted);">Più recente</span>
+            </div>
+          </div>
+
+          <!-- Storico VALD (Tabella Raw) -->
+          <div style="margin-top:var(--sp-2);">
+            <p class="section-label" style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+              <i class="ph ph-list-numbers"></i> Dettaglio Misurazioni VALD
+            </p>
+            ${c && c.length > 0 ? `
+            <div class="table-wrapper">
+              <table class="table" style="font-size:12px;">
+                <thead>
+                  <tr>
+                    <th>Data</th>
+                    <th>Test</th>
+                    <th style="text-align:right;">RSImod</th>
+                    <th style="text-align:right;">Jump Height</th>
+                    <th style="text-align:right;">Asimmetria</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${[...c].reverse().map(test => {
+                    const metrics = test.metrics || {};
+                    const asymmValue = metrics.AsymmetryCountPct?.Value;
+                    
+                    return `
+                    <tr>
+                      <td>${Utils.formatDate(test.test_date) || "—"}</td>
+                      <td>${Utils.escapeHtml(test.test_type || "CMJ")}</td>
+                      <td style="text-align:right;font-weight:600;">${metrics.RSIModified?.Value ? metrics.RSIModified.Value.toFixed(2) : "—"}</td>
+                      <td style="text-align:right;">${metrics.JumpHeightTotal?.Value || metrics.JumpHeight?.Value ? (metrics.JumpHeightTotal?.Value || metrics.JumpHeight?.Value).toFixed(1) + " cm" : "—"}</td>
+                      <td style="text-align:right;">
+                        ${asymmValue != null ? `
+                          <span style="display:inline-flex;align-items:center;gap:4px;">
+                            ${asymmValue.toFixed(1)}% <span style="font-size:9px;color:var(--color-text-muted);">${test.asymmetry?.landing?.dominant || ""}</span>
+                          </span>
+                        ` : "—"}
+                      </td>
+                    </tr>
+                    `;
+                  }).join("")}
+                </tbody>
+              </table>
+            </div>` : '<div style="font-size:12px;color:var(--color-text-muted);text-align:center;padding:16px;">Nessuna misurazione disponibile.</div>'}
+          </div>
+
+          <!-- Asimmetria SX / DX -->
+          ${s ? `
+          <div style="background:rgba(255,255,255,0.02);border:1px solid var(--color-border);border-radius:var(--radius);padding:var(--sp-2) var(--sp-3);">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--color-text-muted);margin-bottom:10px;">
+              <i class="ph ph-arrows-left-right" style="margin-right:4px;"></i>Dettaglio Asimmetria SX / DX
+            </div>
+            <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:var(--sp-1);">
+              <div style="text-align:left;">
+                <div style="font-size:9px;color:var(--color-text-muted);text-transform:uppercase;margin-bottom:2px;">SX</div>
+                <div style="font-size:1.2rem;font-family:var(--font-display);font-weight:700;">${s.landing?.left ?? "—"}<span style="font-size:11px;color:var(--color-text-muted);"> N</span></div>
+                <div style="height:8px;background:rgba(255,255,255,0.06);border-radius:4px;margin-top:4px;overflow:hidden;"><div style="height:100%;background:#00f2fe;border-radius:4px;width:${Math.round(((s.landing?.left || 0) / ((s.landing?.left || 0) + (s.landing?.right || 1))) * 100)}%;"></div></div>
+              </div>
+              <div style="text-align:center;"><div class="cmj-kpi-badge ${"ALERT" === E ? "alert" : "YELLOW" === E ? "yellow" : "green"}" style="font-size:10px;padding:4px 10px;">${null != g ? g.toFixed(1) + "%" : "—"}</div></div>
+              <div style="text-align:right;">
+                <div style="font-size:9px;color:var(--color-text-muted);text-transform:uppercase;margin-bottom:2px;">DX</div>
+                <div style="font-size:1.2rem;font-family:var(--font-display);font-weight:700;">${s.landing?.right ?? "—"}<span style="font-size:11px;color:var(--color-text-muted);"> N</span></div>
+                <div style="height:8px;background:rgba(255,255,255,0.06);border-radius:4px;margin-top:4px;overflow:hidden;"><div style="height:100%;background:#ff007a;border-radius:4px;margin-left:auto;width:${Math.round(((s.landing?.right || 0) / ((s.landing?.left || 0) + (s.landing?.right || 1))) * 100)}%;"></div></div>
+              </div>
+            </div>
+          </div>` : ""}
+
+          <!-- Classifica -->
+          ${i && i.length > 0 ? `
+          <div style="background:rgba(255,255,255,0.02);border:1px solid var(--color-border);border-radius:var(--radius);padding:var(--sp-2) var(--sp-3);">\n            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--color-text-muted);margin-bottom:10px;">\n              <i class="ph ph-trophy" style="margin-right:4px;"></i>Classifica Squadra (RSImod)\n            </div>\n            <div style="display:flex;flex-direction:column;gap:4px;">\n              ${i.map((t, a) => `\n                <div style="display:flex;align-items:center;gap:10px;padding:5px 8px;border-radius:6px;background:${t.athlete_id === e ? "rgba(255,0,122,0.08)" : "transparent"};">\n                  <span style="font-size:12px;font-weight:700;color:var(--color-text-muted);width:18px;">#${a + 1}</span>\n                  <span style="flex:1;font-size:12px;">${Utils.escapeHtml(t.name || t.full_name || "—")}</span>\n                  <span style="font-size:12px;font-weight:700;color:${t.athlete_id === e ? "var(--color-pink)" : "var(--color-text)"};">${t.rsimod ?? "—"}</span>\n                </div>`).join("")}\n            </div>\n          </div>` : ""}\n\n        </div>\n      `;
                   } catch (e) {
                     t.innerHTML = `\n        <div style="text-align:center;padding:var(--sp-4);background:rgba(255,59,48,0.04);border:1px solid rgba(255,59,48,0.2);border-radius:var(--radius);">\n          <i class="ph ph-warning" style="font-size:36px;color:#FF3B30;opacity:0.6;display:block;margin-bottom:8px;"></i>\n          <p style="font-size:13px;font-weight:700;color:var(--color-text);">Errore caricamento VALD</p>\n          <p style="font-size:12px;color:var(--color-text-muted);margin-top:4px;">${Utils.escapeHtml(e.message)}</p>\n        </div>`;
                   }
