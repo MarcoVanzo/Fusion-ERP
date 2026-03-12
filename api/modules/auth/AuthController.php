@@ -400,6 +400,31 @@ class AuthController
         ]);
     }
 
+    // ─── GET /api/?module=auth&action=health ──────────────────────────────────
+    public function health(): void
+    {
+        $dbOk = false;
+        try {
+            $db = \FusionERP\Shared\Database::getInstance();
+            $stmt = $db->query('SELECT 1');
+            $dbOk = $stmt !== false;
+        } catch (\Throwable $e) {
+            $dbOk = false;
+        }
+
+        $sessionOk = session_status() === PHP_SESSION_ACTIVE;
+        $envOk = isset($_ENV['APP_ENV']) || getenv('APP_ENV');
+
+        $healthy = $dbOk && $sessionOk && $envOk;
+
+        \FusionERP\Shared\Response::success([
+            'db' => $dbOk ? 'ok' : 'error',
+            'session' => $sessionOk ? 'ok' : 'error',
+            'env' => $envOk ? 'ok' : 'error',
+            'status' => $healthy ? 'healthy' : 'degraded'
+        ], $healthy ? 200 : 503);
+    }
+
     // ─── PRIVATE HELPER ───────────────────────────────────────────────────────
     private function validateUserExists(string $userId): array
     {

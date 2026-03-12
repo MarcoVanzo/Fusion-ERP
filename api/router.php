@@ -16,7 +16,33 @@ use FusionERP\Shared\Response;
 
 // Load environment variables from .env
 $dotenv = Dotenv\Dotenv::createUnsafeImmutable(dirname(__DIR__));
-$dotenv->load();
+$dotenv->safeLoad();
+
+// Global Error Handler to ensure JSON responses on fatal errors
+set_error_handler(function($severity, $message, $file, $line) {
+    if (!(error_reporting() & $severity)) return;
+    throw new \ErrorException($message, 0, $severity, $file, $line);
+});
+
+set_exception_handler(function(\Throwable $e) {
+    $errMsg = '[ROUTER FATAL] ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine();
+    error_log($errMsg);
+    if (!empty($_ENV['APP_DEBUG']) || getenv('APP_DEBUG') === 'true') {
+        file_put_contents(__DIR__ . '/../local_debug_error.log', date('Y-m-d H:i:s') . ' ' . $errMsg . PHP_EOL, FILE_APPEND);
+    }
+    
+    if (ob_get_level() > 0) ob_clean();
+    http_response_code(500);
+    header('Content-Type: application/json; charset=UTF-8');
+    
+    $debug = getenv('APP_DEBUG') === 'true' || ($_ENV['APP_DEBUG'] ?? '') === 'true';
+    $clientMessage = $debug ? $errMsg : 'Errore interno del server.';
+    echo json_encode(['success' => false, 'error' => $clientMessage]);
+    exit;
+});
+
+// Start output buffering to prevent dirty JSON responses from random echoes/warnings
+ob_start();
 
 // Initialize secure session
 Auth::startSession();
