@@ -1,15 +1,8 @@
 <?php
 require_once __DIR__ . '/vendor/autoload.php';
 
-// Carica variabili d'ambiente manualmente
-$envFile = __DIR__ . '/.env.prod';
-if (file_exists($envFile)) {
-    $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    foreach ($lines as $line) {
-        if (strpos(trim($line), '#') === 0 || empty(trim($line))) continue;
-        putenv(trim($line));
-    }
-}
+$dotenv = Dotenv\Dotenv::createUnsafeImmutable(__DIR__);
+$dotenv->safeLoad();
 
 try {
     $db = \FusionERP\Shared\Database::getInstance();
