@@ -4,6 +4,11 @@ require_once __DIR__ . '/vendor/autoload.php';
 $dotenv = Dotenv\Dotenv::createUnsafeImmutable(__DIR__);
 $dotenv->safeLoad();
 
+set_error_handler(function($severity, $message, $file, $line) {
+    if (!(error_reporting() & $severity)) return;
+    throw new \ErrorException($message, 0, $severity, $file, $line);
+});
+
 try {
     $db = \FusionERP\Shared\Database::getInstance();
     $controller = new \FusionERP\Modules\Results\ResultsController();
