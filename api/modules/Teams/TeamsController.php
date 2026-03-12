@@ -44,6 +44,15 @@ class TeamsController
         Response::success($this->repo->listActiveTeamSeasons($tenantId));
     }
 
+    // ─── GET /api/?module=teams&action=listGrouped ────────────────────────────
+    /**
+     * Alias for list() — used by the squadre.js frontend module.
+     */
+    public function listGrouped(): void
+    {
+        $this->list();
+    }
+
     // ─── POST /api/?module=teams&action=create ────────────────────────────────
     public function create(): void
     {
@@ -57,7 +66,6 @@ class TeamsController
         // 1. Create Base Team
         $this->repo->createTeam([
             ':id' => $teamId,
-            ':tenant_id' => $tenantId,
             ':name' => htmlspecialchars(trim($body['name']), ENT_QUOTES, 'UTF-8'),
             ':category' => htmlspecialchars(trim($body['category']), ENT_QUOTES, 'UTF-8'),
             ':color_hex' => $body['color_hex'] ?? '#3B82F6'
@@ -91,7 +99,6 @@ class TeamsController
 
         $this->repo->updateTeam([
             ':id' => $body['id'],
-            ':tenant_id' => $tenantId,
             ':name' => htmlspecialchars(trim($body['name']), ENT_QUOTES, 'UTF-8'),
             ':category' => htmlspecialchars(trim($body['category']), ENT_QUOTES, 'UTF-8'),
             ':color_hex' => $body['color_hex'] ?? $before['color_hex']
@@ -135,6 +142,21 @@ class TeamsController
         }
     }
     
+    // ─── POST /api/?module=teams&action=toggleSeason ───────────────────────────
+    public function toggleSeason(): void
+    {
+        Auth::requireWrite('societa');
+        $body = Response::jsonBody();
+        Response::requireFields($body, ['id', 'is_active']);
+
+        $isActive = filter_var($body['is_active'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) 
+                    ?? ($body['is_active'] === '1' || $body['is_active'] === 1);
+        $this->repo->toggleTeamSeasonActive($body['id'], $isActive);
+
+        Audit::log('UPDATE', 'team_seasons', $body['id'], null, ['is_active' => $isActive]);
+        Response::success(['message' => $isActive ? 'Stagione attivata' : 'Stagione disattivata']);
+    }
+
     // ─── POST /api/?module=teams&action=deleteSeason ──────────────────────────
     public function deleteSeason(): void
     {

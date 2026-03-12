@@ -1,5 +1,6 @@
 # Environment & Secrets
 .env
+.env.prod
 
 # Composer
 vendor/
@@ -37,3 +38,4 @@ package-lock.json
 # Temp
 tmp/
 remote.env
+prod_env.txt

@@ -44,11 +44,11 @@ class WhatsAppController
                 SUBSTRING_INDEX(GROUP_CONCAT(wm.body ORDER BY wm.created_at DESC SEPARATOR '|||'), '|||', 1)
                                                             AS last_body,
                 COUNT(CASE WHEN wm.status = 'received' THEN 1 END) AS unread_count,
-                c.name                                      AS contact_name,
-                a.id                                        AS athlete_id,
-                TRIM(CONCAT(COALESCE(a.first_name,''), ' ', COALESCE(a.last_name,'')))
+                MAX(c.name)                                 AS contact_name,
+                MAX(a.id)                                   AS athlete_id,
+                MAX(TRIM(CONCAT(COALESCE(a.first_name,''), ' ', COALESCE(a.last_name,''))))
                                                             AS athlete_name,
-                a.parent_contact                            AS parent_name
+                MAX(a.parent_contact)                       AS parent_name
             FROM whatsapp_messages wm
             LEFT JOIN contacts c
                 ON c.phone_normalized = wm.from_phone

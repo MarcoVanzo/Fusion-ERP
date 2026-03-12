@@ -358,7 +358,11 @@ class AthletesRepository
     public function listTeams(): array
     {
         $stmt = $this->db->prepare(
-            'SELECT id, name, category, color_hex FROM teams WHERE deleted_at IS NULL AND is_active = 1 ORDER BY category, name'
+            'SELECT ts.id AS id, t.name, t.category, t.color_hex, ts.season
+             FROM team_seasons ts
+             JOIN teams t ON ts.team_id = t.id
+             WHERE t.deleted_at IS NULL AND t.is_active = 1
+             ORDER BY ts.season DESC, t.category, t.name'
         );
         $stmt->execute();
         return $stmt->fetchAll();

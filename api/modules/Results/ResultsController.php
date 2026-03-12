@@ -1897,9 +1897,10 @@ class ResultsController
         return array_values(array_unique($candidates));
     }
 
-    private function _isOurTeam(string...$names): bool
+    private function _isOurTeam(?string...$names): bool
     {
         foreach ($names as $name) {
+            if ($name === null) continue;
             $lower = strtolower($name);
             if (preg_match('/a\.?\s?p\.?\s?v\.?/i', $lower))
                 continue;
@@ -2005,7 +2006,7 @@ class ResultsController
 
             foreach ($matches as &$m) {
                 $m['is_our_team'] = $this->_isOurTeam($m['home'], $m['away']);
-                $m['score'] = $m['home_score'] !== null ? "{$m['home_score']} - {$m['away_score']}" : "vs";
+                $m['score'] = isset($m['sets_home']) ? "{$m['sets_home']} - {$m['sets_away']}" : "vs";
                 // Build public-facing logo URLs
                 $m['home_logo_url'] = $m['home_logo'] ? ('/ERP/' . ltrim($m['home_logo'], '/')) : null;
                 $m['away_logo_url'] = $m['away_logo'] ? ('/ERP/' . ltrim($m['away_logo'], '/')) : null;

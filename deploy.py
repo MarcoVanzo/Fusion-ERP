@@ -9,52 +9,6 @@ import subprocess
 import time as _time
 from typing import cast
 
-# ── Production DB credentials (used only during deploy, never committed) ──────
-_PROD_DB = {
-    'DB_HOST': '31.11.39.161',
-    'DB_NAME': 'Sql1804377_2',
-    'DB_USER': 'Sql1804377',
-    'DB_PASS': 'u3z4t994$@psAPr',
-    'DB_PORT': '3306',
-}
-# ── Local dev DB credentials (restored after deploy) ─────────────────────────
-_LOCAL_DB = {
-    'DB_HOST': '127.0.0.1',
-    'DB_NAME': 'fusion_dev',
-    'DB_USER': 'fusion',
-    'DB_PASS': 'fusion123',
-    'DB_PORT': '3306',
-}
-
-def _swap_env_db(target: dict) -> dict:
-    """Rewrite .env with the given DB credentials. Returns the OLD values."""
-    env_file = '.env'
-    try:
-        with open(env_file, 'r', encoding='utf-8') as f:
-            lines = f.readlines()
-        old = {}
-        new_lines = []
-        for line in lines:
-            stripped = line.strip()
-            matched = False
-            for key, val in target.items():
-                if stripped.startswith(key + '=') or stripped.startswith(key + ' ='):
-                    # Save old value
-                    m = re.match(r'^([^=]+)=(.*)$', stripped)
-                    if m:
-                        old[key] = m.group(2).strip().strip("'\"")
-                    new_lines.append(f'{key}={val}\n')
-                    matched = True
-                    break
-            if not matched:
-                new_lines.append(line)
-        with open(env_file, 'w', encoding='utf-8') as f:
-            f.writelines(new_lines)
-        return old
-    except Exception as e:
-        print(f'⚠️  Could not swap .env DB credentials: {e}')
-        return {}
-
 CACHE_FILE = '.deploy_cache.json'
 
 def load_env():
@@ -222,12 +176,16 @@ def deploy_files_via_ftp():
             current_remote_dir: str = remote_sub_dir
 
             for file in files:
-                # Skip ignored / hidden files (allow .htaccess)
-                if file != '.htaccess' and (
+                # Skip ignored / hidden files (allow .htaccess and .env.prod)
+                if file not in ('.htaccess', '.env.prod') and (
                     file in ignore_files
                     or file.startswith('.')
                     or any(file.endswith(ext) for ext in ignore_extensions)
                 ):
+                    skip_count += 1
+                    continue
+
+                if file == '.env':
                     skip_count += 1
                     continue
 
@@ -252,8 +210,9 @@ def deploy_files_via_ftp():
                     ftp.cwd(current_remote_dir)
                     dir_prepared = True
 
-                print(f"  ⬆️ Uploading {rel_path}/{file} ...")
-                _do_upload(local_file_path, file, current_remote_dir)
+                remote_filename = '.env' if file == '.env.prod' else file
+                print(f"  ⬆️ Uploading {rel_path}/{file} as {remote_filename} ...")
+                _do_upload(local_file_path, remote_filename, current_remote_dir)
                 upload_count = cast(int, upload_count) + 1
 
                 # Incrementally persist cache to survive interruptions
@@ -341,9 +300,10 @@ def main():
     # 3. Aggiorna cache buster prima del deploy
     update_index_version()
 
-    # 4. Swap .env to production DB before upload
-    print("🔄 Switching .env to production DB...")
-    _swap_env_db(_PROD_DB)
+    # 4. Ensure .env.prod exists
+    if not os.path.exists('.env.prod'):
+        print("❌ Error: .env.prod file not found. Create it with production credentials before deploying.")
+        sys.exit(1)
 
     # 5. Deploy directly
     try:
@@ -351,10 +311,6 @@ def main():
     except KeyboardInterrupt:
         print("\n🛑 Deployment interrupted by user. Cache saved for uploaded files.")
         success = False
-    finally:
-        # 6. Always restore local .env after deploy
-        print("🔄 Restoring .env to local dev DB...")
-        _swap_env_db(_LOCAL_DB)
 
     if success:
         print("\n🎉 Auto-deployment finished successfully!")

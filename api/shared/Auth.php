@@ -146,7 +146,15 @@ class Auth
     public static function setUser(array $user): void
     {
         // Regenerate session ID to prevent session fixation
-        session_regenerate_id(true);
+        // Wrapped in try-catch to prevent 500 errors on restrictive shared hosting (Aruba)
+        try {
+            if (session_status() === PHP_SESSION_ACTIVE) {
+                session_regenerate_id(true);
+            }
+        } catch (\Throwable $e) {
+            error_log('[Auth] session_regenerate_id failed: ' . $e->getMessage());
+        }
+
         $_SESSION['user'] = [
             'id' => $user['id'],
             'email' => $user['email'],
