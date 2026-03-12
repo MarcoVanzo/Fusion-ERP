@@ -10,7 +10,7 @@ const Squadre = (() => {
 
     async function _loadData() {
         try {
-            _teams = await Store.api('listGrouped', 'teams', {}, _getSignal());
+            _teams = await Store.api('listGrouped', 'teams', {});
             _renderTeams();
         } catch (err) {
             UI.toast('Errore caricamento squadre: ' + err.message, 'error');
@@ -108,7 +108,7 @@ const Squadre = (() => {
                     const isActive = btn.dataset.action;
                     
                     try {
-                        await Store.api('toggleSeason', 'teams', { id: seasonId, is_active: isActive }, _getSignal());
+                        await Store.api('toggleSeason', 'teams', { id: seasonId, is_active: isActive });
                         UI.toast(isActive === '1' ? 'Stagione attivata' : 'Stagione disattivata', 'success');
                         await _loadData();
                     } catch (err) {
@@ -194,7 +194,7 @@ const Squadre = (() => {
                         name: name,
                         gender: gender || null,
                         category: category || null
-                    }, _getSignal());
+                    });
                     UI.toast('Squadra aggiornata', 'success');
                 } else {
                     await Store.api('create', 'teams', {
@@ -202,7 +202,7 @@ const Squadre = (() => {
                         gender: gender || null,
                         category: category || null,
                         initial_season: initialSeasonStr
-                    }, _getSignal());
+                    });
                     UI.toast('Squadra creata', 'success');
                 }
                 
@@ -261,7 +261,7 @@ const Squadre = (() => {
                     team_id: team.id,
                     season: seasonStr,
                     is_active: isActive
-                }, _getSignal());
+                });
                 
                 UI.toast('Stagione aggiunta', 'success');
                 modal.close();

@@ -181,4 +181,18 @@ class ValdService
         $res = $this->request('GET', $endpoint);
         return $res['items'] ?? $res;
     }
+
+    /**
+     * Fetch detailed trial results for a specific test.
+     * Each trial contains the actual metrics (RSI, Jump Height, Peak Force, etc.)
+     * with results broken down by limb (Trial, Left, Right).
+     */
+    public function getTrials(string $teamId, string $testId): ?array
+    {
+        if (!$teamId) {
+            $teamId = $this->orgId;
+        }
+        $endpoint = "/v2019q3/teams/$teamId/tests/$testId/trials";
+        return $this->request('GET', $endpoint);
+    }
 }

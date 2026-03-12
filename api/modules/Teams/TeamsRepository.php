@@ -29,10 +29,10 @@ class TeamsRepository
         $stmtTeams = $this->db->prepare(
             'SELECT id, name, category, color_hex, is_active 
              FROM teams 
-             WHERE tenant_id = :tenant_id AND deleted_at IS NULL 
+             WHERE deleted_at IS NULL 
              ORDER BY category, name'
         );
-        $stmtTeams->execute([':tenant_id' => $tenantId]);
+        $stmtTeams->execute();
         $teams = $stmtTeams->fetchAll(\PDO::FETCH_ASSOC);
 
         if (empty($teams)) {
@@ -44,7 +44,7 @@ class TeamsRepository
         $inQuery = implode(',', array_fill(0, count($teamIds), '?'));
         
         $stmtSeasons = $this->db->prepare(
-            "SELECT id AS team_season_id, team_id, season 
+            "SELECT id AS team_season_id, team_id, season, is_active 
              FROM team_seasons 
              WHERE team_id IN ($inQuery) 
              ORDER BY season DESC"
@@ -57,7 +57,8 @@ class TeamsRepository
         foreach ($seasons as $s) {
             $seasonsByTeam[$s['team_id']][] = [
                 'id' => $s['team_season_id'],
-                'season' => $s['season']
+                'season' => $s['season'],
+                'is_active' => (int)$s['is_active']
             ];
         }
 
@@ -78,10 +79,10 @@ class TeamsRepository
             'SELECT ts.id AS team_season_id, t.id AS team_id, t.name, t.category, ts.season 
              FROM team_seasons ts
              JOIN teams t ON ts.team_id = t.id
-             WHERE t.tenant_id = :tenant_id AND t.deleted_at IS NULL AND t.is_active = 1
+             WHERE t.deleted_at IS NULL AND t.is_active = 1
              ORDER BY ts.season DESC, t.category, t.name'
         );
-        $stmt->execute([':tenant_id' => $tenantId]);
+        $stmt->execute();
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
@@ -90,17 +91,17 @@ class TeamsRepository
         $stmt = $this->db->prepare(
             'SELECT id, name, category, color_hex, is_active 
              FROM teams 
-             WHERE id = :id AND tenant_id = :tenant_id AND deleted_at IS NULL'
+             WHERE id = :id AND deleted_at IS NULL'
         );
-        $stmt->execute([':id' => $teamId, ':tenant_id' => $tenantId]);
+        $stmt->execute([':id' => $teamId]);
         return $stmt->fetch(\PDO::FETCH_ASSOC) ?: null;
     }
 
     public function createTeam(array $data): void
     {
         $stmt = $this->db->prepare(
-            'INSERT INTO teams (id, tenant_id, name, category, color_hex) 
-             VALUES (:id, :tenant_id, :name, :category, :color_hex)'
+            'INSERT INTO teams (id, name, category, color_hex) 
+             VALUES (:id, :name, :category, :color_hex)'
         );
         $stmt->execute($data);
     }
@@ -110,7 +111,7 @@ class TeamsRepository
         $stmt = $this->db->prepare(
             'UPDATE teams 
              SET name = :name, category = :category, color_hex = :color_hex 
-             WHERE id = :id AND tenant_id = :tenant_id AND deleted_at IS NULL'
+             WHERE id = :id AND deleted_at IS NULL'
         );
         $stmt->execute($data);
     }
@@ -118,9 +119,9 @@ class TeamsRepository
     public function softDeleteTeam(string $teamId, string $tenantId): void
     {
         $stmt = $this->db->prepare(
-            'UPDATE teams SET deleted_at = NOW() WHERE id = :id AND tenant_id = :tenant_id'
+            'UPDATE teams SET deleted_at = NOW() WHERE id = :id'
         );
-        $stmt->execute([':id' => $teamId, ':tenant_id' => $tenantId]);
+        $stmt->execute([':id' => $teamId]);
     }
 
     public function addTeamSeason(array $data): void
@@ -137,5 +138,13 @@ class TeamsRepository
             'DELETE FROM team_seasons WHERE id = :id'
         );
         $stmt->execute([':id' => $teamSeasonId]);
+    }
+
+    public function toggleTeamSeasonActive(string $teamSeasonId, bool $isActive): void
+    {
+        $stmt = $this->db->prepare(
+            'UPDATE team_seasons SET is_active = :is_active WHERE id = :id'
+        );
+        $stmt->execute([':is_active' => $isActive ? 1 : 0, ':id' => $teamSeasonId]);
     }
 }

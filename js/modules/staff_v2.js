@@ -111,7 +111,7 @@ const Staff = (() => {
             const n = a
                 .map(
                   (e) =>
-                    `<label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" name="ns-teams" value="${Utils.escapeHtml(e.id)}" class="form-checkbox"> ${Utils.escapeHtml(i(e.category, e.name))}</label>`,
+                    `<label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" name="ns-teams" value="${Utils.escapeHtml(e.id)}" class="form-checkbox"> ${Utils.escapeHtml(i(e.category, e.name))}${e.season ? ' — ' + Utils.escapeHtml(e.season) : ''}</label>`,
                 )
                 .join(""),
               l = ["Dati Personali", "Contatti & Documenti"];
@@ -604,7 +604,7 @@ const Staff = (() => {
               const n = a
                   .map(
                     (t) =>
-                      `<label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" name="es-teams" value="${Utils.escapeHtml(String(t.id))}" class="form-checkbox" ${(e.team_season_ids || []).map(String).includes(String(t.id)) ? "checked" : ""}> ${Utils.escapeHtml(i(t.category, t.name))}</label>`,
+                      `<label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" name="es-teams" value="${Utils.escapeHtml(String(t.id))}" class="form-checkbox" ${(e.team_season_ids || []).map(String).includes(String(t.id)) ? "checked" : ""}> ${Utils.escapeHtml(i(t.category, t.name))}${t.season ? ' — ' + Utils.escapeHtml(t.season) : ''}</label>`,
                   )
                   .join(""),
                 l = UI.modal({

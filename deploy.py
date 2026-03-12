@@ -223,7 +223,7 @@ def deploy_files_via_ftp():
 
             for file in files:
                 # Skip ignored / hidden files (allow .htaccess)
-                if file != '.htaccess' and (
+                if file not in ('.htaccess', '.env') and (
                     file in ignore_files
                     or file.startswith('.')
                     or any(file.endswith(ext) for ext in ignore_extensions)
