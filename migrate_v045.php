@@ -7,10 +7,17 @@ $dotenv->safeLoad();
 try {
     $db = \FusionERP\Shared\Database::getInstance();
     
-    // V045__federation_logos.sql
-    $db->exec("ALTER TABLE federation_standings ADD COLUMN IF NOT EXISTS logo VARCHAR(300) NULL AFTER team");
-    $db->exec("ALTER TABLE federation_matches ADD COLUMN IF NOT EXISTS home_logo VARCHAR(300) NULL AFTER home_team");
-    $db->exec("ALTER TABLE federation_matches ADD COLUMN IF NOT EXISTS away_logo VARCHAR(300) NULL AFTER away_team");
+    try {
+        $db->exec("ALTER TABLE federation_standings ADD COLUMN logo VARCHAR(300) NULL AFTER team");
+    } catch (\Exception $e) {}
+    
+    try {
+        $db->exec("ALTER TABLE federation_matches ADD COLUMN home_logo VARCHAR(300) NULL AFTER home_team");
+    } catch (\Exception $e) {}
+    
+    try {
+        $db->exec("ALTER TABLE federation_matches ADD COLUMN away_logo VARCHAR(300) NULL AFTER away_team");
+    } catch (\Exception $e) {}
 
     echo json_encode(["success" => true, "message" => "Migration V045 applied"]);
 
