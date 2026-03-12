@@ -1,8 +1,9 @@
 [
     {
-        "title": "Atleti",
-        "path": "athletes",
-        "icon": "users",
+        "id": "area-sportiva",
+        "title": "Area Sportiva",
+        "path": "squadre",
+        "icon": "barbell",
         "isMobileVisible": true,
         "roles": [
             "atleta",
@@ -12,262 +13,90 @@
             "admin"
         ],
         "children": [
-            {
-                "title": "Anagrafica",
-                "path": "athlete-profile",
-                "icon": "identification-card",
-                "isMobileVisible": false
-            },
-            {
-                "title": "Pagamenti",
-                "path": "athlete-payments",
-                "icon": "credit-card",
-                "isMobileVisible": false
-            },
-            {
-                "title": "Documenti",
-                "path": "athlete-documents",
-                "icon": "file-text",
-                "isMobileVisible": false
-            },
-            {
-                "title": "Metrics",
-                "path": "athlete-metrics",
-                "icon": "trend-up",
-                "isMobileVisible": false
-            }
+            { "title": "Squadre", "path": "squadre", "icon": "users-four", "isMobileVisible": false, "roles": ["allenatore", "operatore", "manager", "admin"] },
+            { "title": "Anagrafica Atleti", "path": "athlete-profile", "icon": "users", "isMobileVisible": false },
+            { "title": "Documenti Atleti", "path": "athlete-documents", "icon": "file-text", "isMobileVisible": false },
+            { "title": "Metrics Atleti", "path": "athlete-metrics", "icon": "trend-up", "isMobileVisible": false },
+            { "title": "Elenco Staff", "path": "staff", "icon": "identification-badge", "isMobileVisible": false, "roles": ["allenatore", "operatore", "manager", "admin"] },
+            { "title": "Documenti Staff", "path": "staff-documents", "icon": "file-text", "isMobileVisible": false, "roles": ["allenatore", "operatore", "manager", "admin"] },
+            { "title": "Partite Risultati", "path": "results-matches", "icon": "volleyball", "isMobileVisible": false, "roles": ["allenatore", "operatore", "manager", "admin"] },
+            { "title": "Classifiche", "path": "results-standings", "icon": "list-numbers", "isMobileVisible": false, "roles": ["allenatore", "operatore", "manager", "admin"] },
+            { "title": "Database Scouting", "path": "scouting-database", "icon": "database", "isMobileVisible": false, "implemented": false, "roles": ["allenatore", "manager", "admin"] },
+            { "title": "Valutazioni Scouting", "path": "scouting-evaluations", "icon": "star", "isMobileVisible": false, "implemented": false, "roles": ["allenatore", "manager", "admin"] },
+            { "title": "Watchlist Scouting", "path": "scouting-watchlist", "icon": "eye", "isMobileVisible": false, "implemented": false, "roles": ["allenatore", "manager", "admin"] },
+            { "title": "Report Scouting", "path": "scouting-reports", "icon": "note-pencil", "isMobileVisible": false, "implemented": false, "roles": ["allenatore", "manager", "admin"] }
         ]
     },
     {
-        "id": "staff",
-        "title": "Staff",
-        "path": "staff",
-        "icon": "identification-badge",
-        "isMobileVisible": false,
-        "roles": [
-            "allenatore",
-            "operatore",
-            "manager",
-            "admin"
-        ],
-        "children": [
-            {
-                "title": "Elenco",
-                "path": "staff",
-                "icon": "users",
-                "isMobileVisible": false
-            },
-            {
-                "title": "Documenti",
-                "path": "staff-documents",
-                "icon": "file-text",
-                "isMobileVisible": false
-            }
-        ]
-    },
-    {
-        "id": "results",
-        "title": "Risultati",
-        "path": "results",
-        "icon": "trophy",
-        "isMobileVisible": true,
-        "roles": [
-            "allenatore",
-            "operatore",
-            "manager",
-            "admin"
-        ],
-        "children": [
-            {
-                "title": "Partite",
-                "path": "results-matches",
-                "icon": "volleyball",
-                "isMobileVisible": false
-            },
-            {
-                "title": "Classifica",
-                "path": "results-standings",
-                "icon": "list-numbers",
-                "isMobileVisible": false
-            }
-        ]
-    },
-    {
-        "id": "whatsapp",
-        "title": "WhatsApp",
-        "path": "whatsapp-inbox",
-        "icon": "whatsapp-logo",
-        "isMobileVisible": true,
-        "roles": [
-            "operatore",
-            "manager",
-            "admin"
-        ],
-        "children": [
-            {
-                "title": "Inbox",
-                "path": "whatsapp-inbox",
-                "icon": "chat-circle-dots",
-                "isMobileVisible": false
-            },
-            {
-                "title": "Contatti",
-                "path": "whatsapp-contacts",
-                "icon": "address-book",
-                "isMobileVisible": false
-            }
-        ]
-    },
-    {
-        "id": "transport",
-        "title": "Trasporti",
-        "path": "transport",
-        "icon": "bus",
-        "isMobileVisible": true,
-        "roles": [
-            "allenatore",
-            "operatore",
-            "manager",
-            "admin"
-        ],
-        "children": [
-            {
-                "title": "Autisti",
-                "path": "transport-drivers",
-                "icon": "steering-wheel",
-                "isMobileVisible": false
-            },
-            {
-                "title": "Gestione Mezzi",
-                "path": "transport-fleet",
-                "icon": "bus",
-                "isMobileVisible": false
-            },
-            {
-                "title": "Rimborsi",
-                "path": "transport-refunds",
-                "icon": "receipt",
-                "isMobileVisible": false
-            }
-        ]
-    },
-    {
-        "id": "outseason",
-        "title": "OutSeason",
-        "path": "outseason",
-        "icon": "sun",
-        "isMobileVisible": false,
-        "roles": [
-            "manager",
-            "admin"
-        ],
-        "children": [
-            {
-                "title": "Summer Camp",
-                "path": "outseason-camps",
-                "icon": "tent",
-                "isMobileVisible": false
-            },
-            {
-                "title": "Tornei",
-                "path": "outseason-tournaments",
-                "icon": "trophy",
-                "isMobileVisible": false
-            }
-        ]
-    },
-    {
-        "id": "social",
-        "title": "Social & Media",
-        "path": "social",
-        "icon": "share-network",
-        "isMobileVisible": false,
-        "roles": [
-            "operatore",
-            "manager",
-            "admin"
-        ],
-        "children": [
-            {
-                "title": "Analytics",
-                "path": "social-analytics",
-                "icon": "chart-line",
-                "isMobileVisible": false
-            },
-            {
-                "title": "Media Gallery",
-                "path": "social-gallery",
-                "icon": "image",
-                "isMobileVisible": false
-            },
-            {
-                "title": "Sito Web",
-                "path": "website",
-                "icon": "globe",
-                "isMobileVisible": false
-            },
-            {
-                "title": "Newsletter",
-                "path": "newsletter",
-                "icon": "envelope-simple",
-                "isMobileVisible": false
-            }
-        ]
-    },
-    {
-        "id": "tasks",
-        "title": "Task",
+        "id": "area-operativa",
+        "title": "Operatività",
         "path": "tasks",
-        "icon": "check-square",
-        "isMobileVisible": false,
-        "roles": [
-            "manager",
-            "admin"
-        ]
-    },
-    {
-        "id": "scouting",
-        "title": "Scouting",
-        "path": "scouting",
-        "icon": "binoculars",
-        "isMobileVisible": false,
-        "implemented": false,
+        "icon": "calendar-check",
+        "isMobileVisible": true,
         "roles": [
             "allenatore",
+            "operatore",
             "manager",
             "admin"
         ],
         "children": [
-            {
-                "title": "Database Atleti",
-                "path": "scouting-database",
-                "icon": "database",
-                "isMobileVisible": false
-            },
-            {
-                "title": "Valutazioni",
-                "path": "scouting-evaluations",
-                "icon": "star",
-                "isMobileVisible": false
-            },
-            {
-                "title": "Watchlist",
-                "path": "scouting-watchlist",
-                "icon": "eye",
-                "isMobileVisible": false
-            },
-            {
-                "title": "Report",
-                "path": "scouting-reports",
-                "icon": "note-pencil",
-                "isMobileVisible": false
-            }
+            { "title": "Task Operativi", "path": "tasks", "icon": "check-square", "isMobileVisible": false, "roles": ["manager", "admin"] },
+            { "title": "Scadenze Societarie", "path": "societa-scadenze", "icon": "bell-ringing", "isMobileVisible": false, "roles": ["manager", "admin"] },
+            { "title": "Trasporti Autisti", "path": "transport-drivers", "icon": "steering-wheel", "isMobileVisible": false },
+            { "title": "Gestione Mezzi", "path": "transport-fleet", "icon": "bus", "isMobileVisible": false },
+            { "title": "Trasporti Rimborsi", "path": "transport-refunds", "icon": "receipt", "isMobileVisible": false },
+            { "title": "Summer Camp", "path": "outseason-camps", "icon": "tent", "isMobileVisible": false, "roles": ["manager", "admin"] },
+            { "title": "Tornei OutSeason", "path": "outseason-tournaments", "icon": "medal", "isMobileVisible": false, "roles": ["manager", "admin"] },
+            { "title": "Network Coll.", "path": "network-collaborazioni", "icon": "handshake", "isMobileVisible": false, "roles": ["manager", "admin"] },
+            { "title": "Network Prove", "path": "network-prove", "icon": "user-check", "isMobileVisible": false, "roles": ["manager", "admin"] },
+            { "title": "Network Attività", "path": "network-attivita", "icon": "activity", "isMobileVisible": false, "roles": ["manager", "admin"] }
         ]
     },
     {
-        "id": "societa",
-        "title": "Società",
-        "path": "societa",
+        "id": "area-comunicazione",
+        "title": "Comunicazione",
+        "path": "whatsapp-inbox",
+        "icon": "megaphone",
+        "isMobileVisible": true,
+        "roles": [
+            "operatore",
+            "manager",
+            "admin"
+        ],
+        "children": [
+            { "title": "WhatsApp Inbox", "path": "whatsapp-inbox", "icon": "chat-circle-dots", "isMobileVisible": false },
+            { "title": "WhatsApp Contatti", "path": "whatsapp-contacts", "icon": "address-book", "isMobileVisible": false },
+            { "title": "Social Analytics", "path": "social-analytics", "icon": "chart-line", "isMobileVisible": false },
+            { "title": "Media Gallery", "path": "social-gallery", "icon": "image", "isMobileVisible": false },
+            { "title": "Sito Web", "path": "website", "icon": "globe", "isMobileVisible": false },
+            { "title": "Newsletter", "path": "newsletter", "icon": "envelope-simple", "isMobileVisible": false }
+        ]
+    },
+    {
+        "id": "area-amministrazione",
+        "title": "Amministrazione",
+        "path": "finance",
+        "icon": "vault",
+        "isMobileVisible": false,
+        "roles": [
+            "operatore",
+            "manager",
+            "admin"
+        ],
+        "children": [
+            { "title": "Contabilità", "path": "finance", "icon": "calculator", "isMobileVisible": false, "roles": ["manager", "admin"] },
+            { "title": "Fatturazione", "path": "finance-invoices", "icon": "receipt", "isMobileVisible": false, "roles": ["manager", "admin"] },
+            { "title": "Riepilogo 74-ter", "path": "finance-74ter", "icon": "intersect", "isMobileVisible": false, "roles": ["manager", "admin"] },
+            { "title": "Quote Atleti", "path": "athlete-payments", "icon": "credit-card", "isMobileVisible": false, "roles": ["manager", "admin"] },
+            { "title": "Articoli eCommerce", "path": "ecommerce-articles", "icon": "tag", "isMobileVisible": false },
+            { "title": "Ordini eCommerce", "path": "ecommerce-orders", "icon": "package", "isMobileVisible": false },
+            { "title": "Partner & Sponsor", "path": "societa-sponsor", "icon": "storefront", "isMobileVisible": false, "roles": ["manager", "admin"] }
+        ]
+    },
+    {
+        "id": "area-club",
+        "title": "Il Club",
+        "path": "societa-identita",
         "icon": "buildings",
         "isMobileVisible": false,
         "roles": [
@@ -275,173 +104,14 @@
             "admin"
         ],
         "children": [
-            {
-                "title": "Identità",
-                "path": "societa-identita",
-                "icon": "identification-card",
-                "isMobileVisible": false
-            },
-            {
-                "title": "Organigramma",
-                "path": "societa-organigramma",
-                "icon": "tree-structure",
-                "isMobileVisible": false
-            },
-            {
-                "title": "Membri",
-                "path": "societa-membri",
-                "icon": "users-three",
-                "isMobileVisible": false
-            },
-            {
-                "title": "Documenti",
-                "path": "societa-documenti",
-                "icon": "files",
-                "isMobileVisible": false
-            },
-            {
-                "title": "Scadenze",
-                "path": "societa-scadenze",
-                "icon": "calendar-check",
-                "isMobileVisible": false
-            },
-            {
-                "title": "Titoli",
-                "path": "societa-titoli",
-                "icon": "trophy",
-                "isMobileVisible": false
-            },
-            {
-                "title": "Sponsor",
-                "path": "societa-sponsor",
-                "icon": "storefront",
-                "isMobileVisible": false
-            },
-            {
-                "title": "Squadre",
-                "path": "squadre",
-                "icon": "users-four",
-                "isMobileVisible": false
-            }
-        ]
-    },
-    {
-        "id": "network",
-        "title": "Network",
-        "path": "network",
-        "icon": "graph",
-        "isMobileVisible": false,
-        "roles": [
-            "manager",
-            "admin"
-        ],
-        "children": [
-            {
-                "title": "Collaborazioni",
-                "path": "network-collaborazioni",
-                "icon": "handshake",
-                "isMobileVisible": false
-            },
-            {
-                "title": "Atleti in Prova",
-                "path": "network-prove",
-                "icon": "user-check",
-                "isMobileVisible": false
-            },
-            {
-                "title": "Attività",
-                "path": "network-attivita",
-                "icon": "activity",
-                "isMobileVisible": false
-            }
-        ]
-    },
-    {
-        "id": "ecommerce",
-        "title": "eCommerce",
-        "path": "ecommerce",
-        "icon": "shopping-cart",
-        "isMobileVisible": false,
-        "roles": [
-            "operatore",
-            "manager",
-            "admin"
-        ],
-        "children": [
-            {
-                "title": "Articoli",
-                "path": "ecommerce-articles",
-                "icon": "tag",
-                "isMobileVisible": false
-            },
-            {
-                "title": "Ordini",
-                "path": "ecommerce-orders",
-                "icon": "package",
-                "isMobileVisible": false
-            }
-        ]
-    },
-    {
-        "id": "finance",
-        "title": "Contabilità",
-        "path": "finance",
-        "icon": "calculator",
-        "isMobileVisible": false,
-        "roles": [
-            "manager",
-            "admin"
-        ],
-        "children": [
-            {
-                "title": "Dashboard",
-                "path": "finance",
-                "icon": "chart-pie",
-                "isMobileVisible": false
-            },
-            {
-                "title": "Fatturazione",
-                "path": "finance-invoices",
-                "icon": "receipt",
-                "isMobileVisible": false
-            },
-            {
-                "title": "74-ter",
-                "path": "finance-74ter",
-                "icon": "intersect",
-                "isMobileVisible": false
-            }
-        ]
-    },
-
-    {
-        "id": "admin",
-        "title": "Amministrazione",
-        "path": "admin",
-        "icon": "gear",
-        "isMobileVisible": false,
-        "roles": [
-            "admin"
-        ],
-        "children": [
-            {
-                "title": "Utenti",
-                "path": "utenti",
-                "icon": "users-three",
-                "isMobileVisible": false
-            },
-            {
-                "title": "Backup",
-                "path": "admin-backup",
-                "icon": "database",
-                "isMobileVisible": false
-            },
-            {
-                "title": "Log Sistema",
-                "path": "admin-logs",
-                "icon": "clipboard-text",
-                "isMobileVisible": false
-            }
+            { "title": "Identità", "path": "societa-identita", "icon": "identification-card", "isMobileVisible": false },
+            { "title": "Organigramma", "path": "societa-organigramma", "icon": "tree-structure", "isMobileVisible": false },
+            { "title": "Membri Staff", "path": "societa-membri", "icon": "users-three", "isMobileVisible": false },
+            { "title": "Documenti Societari", "path": "societa-documenti", "icon": "files", "isMobileVisible": false },
+            { "title": "Titoli & Palmares", "path": "societa-titoli", "icon": "trophy", "isMobileVisible": false },
+            { "title": "Gestione Utenti", "path": "utenti", "icon": "users", "isMobileVisible": false, "roles": ["admin"] },
+            { "title": "Backup Sistema", "path": "admin-backup", "icon": "database", "isMobileVisible": false, "roles": ["admin"] },
+            { "title": "Log Sistema", "path": "admin-logs", "icon": "clipboard-text", "isMobileVisible": false, "roles": ["admin"] }
         ]
     }
 ]
