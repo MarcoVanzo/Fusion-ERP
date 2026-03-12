@@ -1,5 +1,4 @@
-<?php
-require_once __DIR__ . '/api/vendor/autoload.php';
+require_once __DIR__ . '/vendor/autoload.php';
 
 // Carica variabili d'ambiente manualmente
 $envFile = __DIR__ . '/.env.prod';
