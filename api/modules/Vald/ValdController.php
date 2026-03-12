@@ -283,15 +283,15 @@ class ValdController
         $forceRelative = $bodyWeightN > 0 ? $peakForce / $bodyWeightN : 0;
 
         // Classification thresholds (typical for volleyball/team sports)
-        if ($forceRelative >= 2.0 && $rsimod >= 1.5) {
+        if ($forceRelative >= 2.0 && $rsimod >= 0.45) {
             $classification = 'ESPLOSIVO';
             $recommendation = 'Mantenimento e agilità. Potenza reattiva eccellente.';
         }
-        elseif ($forceRelative >= 2.0 && $rsimod < 1.5) {
+        elseif ($forceRelative >= 2.0 && $rsimod < 0.45) {
             $classification = 'LENTO';
             $recommendation = 'Power training e pliometria. Buona forza, spinta troppo lunga.';
         }
-        elseif ($forceRelative < 2.0 && $rsimod >= 1.5) {
+        elseif ($forceRelative < 2.0 && $rsimod >= 0.45) {
             $classification = 'REATTIVO';
             $recommendation = 'Forza massimale. Buona velocità, deficit di forza.';
         }
@@ -562,13 +562,39 @@ class ValdController
         $tenantId = \FusionERP\Shared\TenantContext::id();
         $db       = \FusionERP\Shared\Database::getInstance();
 
-        // Always fetch all tests from VALD (last 90 days) to ensure
-        // metrics are always up-to-date. saveResult uses ON DUPLICATE KEY UPDATE.
-        $results  = $this->service->getTestResults('');
+        // Fetch tests from VALD chunked by 3-month intervals because VALD API rejects date ranges > 6 months.
+        $results = [];
+        // Since we know the API might not like stuff from > a couple years ago, start from Jan 2023 for safety.
+        $startStamp = strtotime('2023-01-01');
+        $endStamp = time();
+        $chunkSeconds = 90 * 86400; // 90 days (~3 months)
+        
+        for ($t = $startStamp; $t < $endStamp; $t += $chunkSeconds) {
+            $dateFrom = date('Y-m-d', $t);
+            $tNext = $t + $chunkSeconds - 1;
+            $dateTo = date('Y-m-d', min($tNext, $endStamp));
+            
+            $page = 1;
 
-        // v2019q3 returns a flat array of test objects
-        if (empty($results) || !is_array($results) || isset($results['error'])) {
-            error_log('[VALD Sync] Risultato non valido o vuoto: ' . json_encode($results));
+            while (true) {
+                // Fetch paginated chunk for this specific period
+                $pageResults = $this->service->getTestResults($dateFrom, '', $page, $dateTo);
+                
+                if (empty($pageResults) || !is_array($pageResults) || isset($pageResults['error'])) {
+                    break;
+                }
+                $results = array_merge($results, $pageResults);
+                
+                if (count($pageResults) < 50) {
+                    break;
+                }
+                $page++;
+                if ($page > 50) break; // Safety limit per chunk
+            }
+        }
+
+        if (empty($results)) {
+            error_log('[VALD Sync] Risultato non valido o vuoto al primo fetch.');
             return $stats;
         }
 
@@ -620,17 +646,16 @@ class ValdController
                     
                     if (is_array($trialsData) && !empty($trialsData)) {
                         // VALD returns multiple trials (individual jumps) within a test session.
-                        // We need to pick the BEST trial and extract clean metrics from it.
-                        $bestTrialMetrics = null;
-                        $bestJumpHeight = -1;
+                        // We need to AVERAGE valid trials to extract clean metrics from it.
+                        $accumulatedMetrics = [];
+                        $validTrialCount = 0;
                         $allDiagKeys = [];
                         
                         foreach ($trialsData as $trial) {
                             if (!isset($trial['results']) || !is_array($trial['results'])) continue;
                             
                             // Parse this trial's results, separating by limb
-                            $trialMetrics = [];
-                            $trialJumpHeight = null;
+                            $trialHasData = false;
                             
                             foreach ($trial['results'] as $res) {
                                 $def = strtoupper($res['definition']['result'] ?? '');
@@ -640,85 +665,95 @@ class ValdController
                                 
                                 if (!$def || $val === null) continue;
                                 
+                                $keyToStore = null;
+
                                 // --- AGGREGATE (limb = "Trial") metrics ---
                                 if ($limb === 'Trial') {
                                     if ($def === 'RSI_MODIFIED') {
-                                        $trialMetrics['RSIModified'] = ['Value' => round((float)$val, 2)];
+                                        // VALD returns RSImod in cm/s (e.g. 43.2). We convert to m/s.
+                                        $val = ((float)$val) / 100;
+                                        $keyToStore = 'RSIModified';
                                     }
                                     if (in_array($def, ['JUMP_HEIGHT_FLIGHT_TIME', 'FLIGHT_TIME_JUMP_HEIGHT', 'JUMP_HEIGHT', 'ESTIMATED_JUMP_HEIGHT'])) {
                                         // Convert to cm if in meters (VALD sometimes sends meters)
                                         $cm = (float)$val;
                                         if ($cm < 1) $cm = $cm * 100; // convert m -> cm
-                                        $trialMetrics['JumpHeight'] = ['Value' => round($cm, 1)];
-                                        $trialJumpHeight = $cm;
+                                        $keyToStore = 'JumpHeight';
+                                        $val = $cm;
                                     }
                                     if ($def === 'JUMP_HEIGHT_IMPULSE' || $def === 'JUMP_HEIGHT_IMP_MOM') {
                                         $cm = (float)$val;
                                         if ($cm < 1) $cm = $cm * 100;
-                                        $trialMetrics['JumpHeightImpMom'] = ['Value' => round($cm, 1)];
-                                        // If we haven't found flight-time jump height, use this as primary
-                                        if (!isset($trialMetrics['JumpHeight'])) {
-                                            $trialMetrics['JumpHeight'] = ['Value' => round($cm, 1)];
-                                            $trialJumpHeight = $cm;
-                                        }
+                                        $keyToStore = 'JumpHeightImpMom';
+                                        $val = $cm;
                                     }
                                     if ($def === 'PEAK_FORCE') {
-                                        $trialMetrics['PeakForce'] = ['Value' => round((float)$val, 1)];
+                                        $keyToStore = 'PeakForce';
                                     }
                                     if ($def === 'BRAKING_IMPULSE') {
-                                        $trialMetrics['BrakingImpulse'] = ['Value' => round((float)$val, 2)];
+                                        $keyToStore = 'BrakingImpulse';
                                     }
                                     if ($def === 'CONCENTRIC_PEAK_FORCE') {
-                                        $trialMetrics['ConcentricPeakForce'] = ['Value' => round((float)$val, 1)];
+                                        $keyToStore = 'ConcentricPeakForce';
                                     }
                                     if ($def === 'CONCENTRIC_PEAK_POWER') {
-                                        $trialMetrics['ConcentricPeakPower'] = ['Value' => round((float)$val, 1)];
+                                        $keyToStore = 'ConcentricPeakPower';
                                     }
                                     if ($def === 'CONCENTRIC_PEAK_VELOCITY') {
-                                        $trialMetrics['ConcentricPeakVelocity'] = ['Value' => round((float)$val, 3)];
+                                        $keyToStore = 'ConcentricPeakVelocity';
                                     }
                                     if (in_array($def, ['PEAK_LANDING_FORCE', 'LANDING_PEAK_FORCE'])) {
-                                        $trialMetrics['PeakLandingForce'] = ['Value' => round((float)$val, 1)];
+                                        $keyToStore = 'PeakLandingForce';
                                     }
                                     if ($def === 'CONTRACTION_TIME' || $def === 'TIME_TO_TAKEOFF') {
-                                        $trialMetrics['TimeToTakeoff'] = ['Value' => round((float)$val * 1000, 1)]; // s -> ms
+                                        // s -> ms
+                                        $val = ((float)$val) * 1000;
+                                        $keyToStore = 'TimeToTakeoff';
                                     }
                                 }
                                 
                                 // --- LEFT limb metrics ---
                                 if ($limb === 'Left') {
                                     if ($def === 'PEAK_FORCE' || $def === 'PEAK_FORCE_LEFT') {
-                                        $trialMetrics['PeakForceLeft'] = ['Value' => round((float)$val, 1)];
+                                        $keyToStore = 'PeakForceLeft';
                                     }
                                     if (in_array($def, ['PEAK_LANDING_FORCE', 'LANDING_PEAK_FORCE', 'LANDING_FORCE_LEFT', 'PEAK_LANDING_FORCE_LEFT'])) {
-                                        $trialMetrics['LandingForceLeft'] = ['Value' => round((float)$val, 1)];
+                                        $keyToStore = 'LandingForceLeft';
                                     }
                                 }
                                 
                                 // --- RIGHT limb metrics ---
                                 if ($limb === 'Right') {
                                     if ($def === 'PEAK_FORCE' || $def === 'PEAK_FORCE_RIGHT') {
-                                        $trialMetrics['PeakForceRight'] = ['Value' => round((float)$val, 1)];
+                                        $keyToStore = 'PeakForceRight';
                                     }
                                     if (in_array($def, ['PEAK_LANDING_FORCE', 'LANDING_PEAK_FORCE', 'LANDING_FORCE_RIGHT', 'PEAK_LANDING_FORCE_RIGHT'])) {
-                                        $trialMetrics['LandingForceRight'] = ['Value' => round((float)$val, 1)];
+                                        $keyToStore = 'LandingForceRight';
                                     }
+                                }
+
+                                if ($keyToStore !== null) {
+                                    if (!isset($accumulatedMetrics[$keyToStore])) {
+                                        $accumulatedMetrics[$keyToStore] = 0.0;
+                                    }
+                                    $accumulatedMetrics[$keyToStore] += (float)$val;
+                                    $trialHasData = true;
                                 }
                             }
                             
-                            // Track the best trial (highest jump height)
-                            if ($trialJumpHeight !== null && $trialJumpHeight > $bestJumpHeight) {
-                                $bestJumpHeight = $trialJumpHeight;
-                                $bestTrialMetrics = $trialMetrics;
-                            } elseif ($bestTrialMetrics === null && !empty($trialMetrics)) {
-                                // If no jump height was found yet, use first trial with any data
-                                $bestTrialMetrics = $trialMetrics;
+                            if ($trialHasData) {
+                                $validTrialCount++;
                             }
                         }
                         
-                        // Merge best trial metrics into our main metrics array
-                        if ($bestTrialMetrics) {
-                            $metrics = array_merge($metrics, $bestTrialMetrics);
+                        // Merge averaged metrics into our main metrics array
+                        if ($validTrialCount > 0) {
+                            foreach ($accumulatedMetrics as $key => $sumVal) {
+                                $avgVal = $sumVal / $validTrialCount;
+                                // Add appropriate rounding logic (e.g. 2 decimals for most things)
+                                $decimals = ($key === 'TimeToTakeoff') ? 0 : (($key === 'ConcentricPeakVelocity') ? 3 : (($key === 'JumpHeight' || $key === 'JumpHeightImpMom' || $key === 'PeakForce' || $key === 'LandingForceLeft' || $key === 'LandingForceRight' || $key === 'PeakForceLeft' || $key === 'PeakForceRight') ? 1 : 2));
+                                $metrics[$key] = ['Value' => round($avgVal, $decimals)];
+                            }
                         }
                         
                         // DIAGNOSTIC: log unique keys for first few tests

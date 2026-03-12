@@ -145,25 +145,21 @@ class ValdService
      * @param string $teamId Optional team ID (defaults to orgId)
      * @param int $page Page number (1-indexed)
      */
-    public function getTestResults(string $modifiedSince = '', string $teamId = '', int $page = 1): ?array
+    public function getTestResults(string $modifiedSince = '', string $teamId = '', int $page = 1, string $dateToStr = ''): ?array
     {
         if (!$teamId) {
             $teamId = $this->orgId;
         }
 
-        if ($modifiedSince) {
-            // Use the paginated endpoint with modifiedFrom filter
-            $endpoint = '/v2019q3/teams/' . $teamId . '/tests/' . (string)$page;
-            $endpoint .= '?modifiedFrom=' . urlencode($modifiedSince);
-        } else {
-            // Get tests for the last 90 days by default
-            $dateTo = date('Y-m-d');
-            $dateFrom = date('Y-m-d', strtotime('-90 days'));
-            $endpoint = '/v2019q3/teams/' . $teamId . '/tests/' . $dateFrom . '/' . $dateTo . '/' . (string)$page;
-        }
+        // Always use the date-range endpoint format
+        $dateTo = $dateToStr ?: date('Y-m-d');
+        // If $modifiedSince is passed (e.g. '2020-01-01' or '2020-01-01T00:00:00Z'), extract just the Y-m-d part
+        $dateFrom = $modifiedSince ? substr($modifiedSince, 0, 10) : date('Y-m-d', strtotime('-90 days'));
+        
+        $endpoint = '/v2019q3/teams/' . $teamId . '/tests/' . $dateFrom . '/' . $dateTo . '/' . (string)$page;
 
         $res = $this->request('GET', $endpoint);
-        return $res['items'] ?? $res;
+        return is_array($res) ? ($res['items'] ?? $res) : null;
     }
 
     /**
