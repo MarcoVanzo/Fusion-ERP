@@ -37,3 +37,4 @@ package-lock.json
 # Temp
 tmp/
 remote.env
+prod_env.txt
