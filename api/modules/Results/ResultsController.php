@@ -1897,9 +1897,10 @@ class ResultsController
         return array_values(array_unique($candidates));
     }
 
-    private function _isOurTeam(string...$names): bool
+    private function _isOurTeam(?string...$names): bool
     {
         foreach ($names as $name) {
+            if ($name === null) continue;
             $lower = strtolower($name);
             if (preg_match('/a\.?\s?p\.?\s?v\.?/i', $lower))
                 continue;
