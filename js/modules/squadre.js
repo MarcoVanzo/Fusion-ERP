@@ -339,13 +339,23 @@ const Squadre = (() => {
                     </div>
                 </div>
                 
-                ${!isEdit ? `
+                ${!isEdit ? (() => {
+                    // Collect distinct season names from all teams
+                    const existingSeasons = [...new Set(_teams.flatMap(t => (t.seasons || []).map(s => s.season)))].sort((a, b) => b.localeCompare(a));
+                    const seasonOptions = existingSeasons.map(s => `<option value="${Utils.escapeHtml(s)}">${Utils.escapeHtml(s)}</option>`).join('');
+                    return `
                 <div class="form-group" style="padding-top:var(--sp-3);border-top:1px solid var(--color-border);margin-top:var(--sp-3)">
-                    <label class="form-label">Prima Stagione *</label>
-                    <input type="text" id="team-initial-season" class="form-input" placeholder="es. 2024/2025">
-                    <p style="font-size:12px;color:var(--color-text-muted);margin-top:4px">Verrà creata e attivata automaticamente.</p>
-                </div>
-                ` : ''}
+                    <label class="form-label">Stagione *</label>
+                    <select id="team-initial-season" class="form-select">
+                        <option value="">— Seleziona stagione —</option>
+                        ${seasonOptions}
+                        <option value="__new__">+ Nuova stagione...</option>
+                    </select>
+                    <div id="team-new-season-wrap" class="hidden" style="margin-top:var(--sp-2);">
+                        <input type="text" id="team-new-season-name" class="form-input" placeholder="es. 2025/2026">
+                    </div>
+                </div>`;
+                })() : ''}
                 
                 <div id="team-error" class="form-error hidden"></div>
             `,
@@ -356,12 +366,33 @@ const Squadre = (() => {
         });
 
         document.getElementById('team-cancel')?.addEventListener('click', () => modal.close());
+
+        // Toggle new season input when "+ Nuova stagione..." is selected
+        if (!isEdit) {
+            document.getElementById('team-initial-season')?.addEventListener('change', (e) => {
+                const wrap = document.getElementById('team-new-season-wrap');
+                if (wrap) {
+                    wrap.classList.toggle('hidden', e.target.value !== '__new__');
+                    if (e.target.value === '__new__') {
+                        document.getElementById('team-new-season-name')?.focus();
+                    }
+                }
+            });
+        }
         
         document.getElementById('team-save')?.addEventListener('click', async () => {
             const name = document.getElementById('team-name').value.trim();
             const gender = document.getElementById('team-gender').value;
             const category = document.getElementById('team-category').value.trim();
-            const initialSeasonStr = !isEdit ? document.getElementById('team-initial-season').value.trim() : null;
+            let initialSeasonStr = null;
+            if (!isEdit) {
+                const selectVal = document.getElementById('team-initial-season').value;
+                if (selectVal === '__new__') {
+                    initialSeasonStr = document.getElementById('team-new-season-name')?.value.trim() || '';
+                } else {
+                    initialSeasonStr = selectVal;
+                }
+            }
             
             const errEl = document.getElementById('team-error');
             errEl.classList.add('hidden');
@@ -373,7 +404,7 @@ const Squadre = (() => {
             }
             
             if (!isEdit && !initialSeasonStr) {
-                errEl.textContent = 'La stagione iniziale è obbligatoria per le nuove squadre.';
+                errEl.textContent = 'Seleziona una stagione o creane una nuova.';
                 errEl.classList.remove('hidden');
                 return;
             }
@@ -396,7 +427,7 @@ const Squadre = (() => {
                         name: name,
                         gender: gender || null,
                         category: category || null,
-                        initial_season: initialSeasonStr
+                        season: initialSeasonStr
                     });
                     UI.toast('Squadra creata', 'success');
                 }
