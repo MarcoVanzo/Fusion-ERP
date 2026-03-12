@@ -77,7 +77,7 @@ try {
     echo json_encode([
         'success' => true,
         'filename' => $result['filename'],
-        'table_count' => $result['table_count'],
+        'table_count' => count($result['table_names']),
         'row_count' => $result['total_rows'],
         'drive_file_id' => $driveFileId,
         'drive_error' => $driveError,
