@@ -242,38 +242,113 @@ class BiometricsRepository
         $athleteIds = array_column($athletes, 'id');
         $inList = implode(',', array_fill(0, count($athleteIds), '?'));
 
-        // 2) Get latest metric per (athlete_id, metric_type)
+        // 2) Get latest VALD test per athlete
         $metricStmt = $this->db->prepare(
-            "SELECT am.athlete_id, am.metric_type, am.value, am.unit, am.record_date
-             FROM athletic_metrics am
+            "SELECT v.athlete_id, v.metrics, v.test_type
+             FROM vald_test_results v
              INNER JOIN (
-                 SELECT athlete_id, metric_type, MAX(record_date) AS max_date
-                 FROM athletic_metrics
+                 SELECT athlete_id, MAX(test_date) as max_date
+                 FROM vald_test_results
                  WHERE athlete_id IN ($inList)
-                 GROUP BY athlete_id, metric_type
-             ) latest ON am.athlete_id = latest.athlete_id
-                      AND am.metric_type = latest.metric_type
-                      AND am.record_date = latest.max_date
-             WHERE am.athlete_id IN ($inList)"
+                 GROUP BY athlete_id
+             ) latest ON v.athlete_id = latest.athlete_id AND v.test_date = latest.max_date
+             WHERE v.athlete_id IN ($inList)"
         );
         $metricStmt->execute(array_merge($athleteIds, $athleteIds));
-        $metrics = $metricStmt->fetchAll(\PDO::FETCH_ASSOC);
+        $valdResults = $metricStmt->fetchAll(\PDO::FETCH_ASSOC);
 
-        // 3) Index metrics by athlete_id
-        $metricsByAthlete = [];
-        $allMetricTypes = [];
-        foreach ($metrics as $m) {
-            $metricsByAthlete[$m['athlete_id']][$m['metric_type']] = [
-                'value' => (float)$m['value'],
-                'unit' => $m['unit'],
-                'record_date' => $m['record_date'],
-            ];
-            $allMetricTypes[$m['metric_type']] = $m['unit'];
+        $resultsByAthlete = [];
+        foreach ($valdResults as $r) {
+            $resultsByAthlete[$r['athlete_id']] = $r;
         }
+
+        $allMetricTypes = [
+            'CMJ_JUMP_HEIGHT' => 'cm',
+            'CMJ_RSIMOD'      => '',
+            'CMJ_BRAKING'     => 'Ns',
+            'CMJ_ASYMMETRY'   => '%'
+        ];
 
         // 4) Build athlete rows
         $athleteRows = [];
+        $sums = [];
+        $counts = [];
+
         foreach ($athletes as $a) {
+            $metricsMap = [];
+            $vData = $resultsByAthlete[$a['id']] ?? null;
+
+            if ($vData) {
+                $metricsJson = json_decode($vData['metrics'], true) ?: [];
+                $asymJson = json_decode($vData['asymmetry'] ?? 'null', true) ?: null;
+
+                $jh = $metricsJson['JumpHeightTotal']['Value'] ?? $metricsJson['JumpHeight']['Value'] ?? null;
+                $rsi = $metricsJson['RSIModified']['Value'] ?? null;
+                $braking = $metricsJson['BrakingImpulse']['Value'] ?? $metricsJson['EccentricBrakingImpulse']['Value'] ?? $metricsJson['BrakingPhaseImpulse']['Value'] ?? null;
+                
+                $landingL = $metricsJson['PeakLandingForceLeft']['Value'] ?? $metricsJson['LandingForceLeft']['Value'] ?? 0;
+                $landingR = $metricsJson['PeakLandingForceRight']['Value'] ?? $metricsJson['LandingForceRight']['Value'] ?? 0;
+                
+                $asymPct = null;
+                if ($landingL + $landingR > 0) {
+                    $max = max($landingL, $landingR);
+                    $min = min($landingL, $landingR);
+                    $asymPct = (($max - $min) / $max) * 100;
+                }
+
+                if ($jh !== null) {
+                    $metricsMap['CMJ_JUMP_HEIGHT'] = [
+                        'name' => 'Jump Height',
+                        'value' => round($jh, 1),
+                        'unit' => 'cm',
+                        'icon' => 'arrow-fat-up',
+                        'color' => '#00E676'
+                    ];
+                    $sums['CMJ_JUMP_HEIGHT'] = ($sums['CMJ_JUMP_HEIGHT'] ?? 0) + $jh;
+                    $counts['CMJ_JUMP_HEIGHT'] = ($counts['CMJ_JUMP_HEIGHT'] ?? 0) + 1;
+                }
+                
+                if ($rsi !== null) {
+                    $color = ($rsi >= 0.45) ? '#00E676' : '#FFD600';
+                    $metricsMap['CMJ_RSIMOD'] = [
+                        'name' => 'RSImod',
+                        'value' => round($rsi, 3),
+                        'unit' => '',
+                        'icon' => 'lightning',
+                        'color' => $color
+                    ];
+                    $sums['CMJ_RSIMOD'] = ($sums['CMJ_RSIMOD'] ?? 0) + $rsi;
+                    $counts['CMJ_RSIMOD'] = ($counts['CMJ_RSIMOD'] ?? 0) + 1;
+                }
+
+                if ($braking !== null) {
+                    $metricsMap['CMJ_BRAKING'] = [
+                        'name' => 'Braking Impulse',
+                        'value' => round($braking, 0),
+                        'unit' => 'Ns',
+                        'icon' => 'arrows-in',
+                        'color' => '#00E676'
+                    ];
+                    $sums['CMJ_BRAKING'] = ($sums['CMJ_BRAKING'] ?? 0) + $braking;
+                    $counts['CMJ_BRAKING'] = ($counts['CMJ_BRAKING'] ?? 0) + 1;
+                }
+
+                if ($asymPct !== null) {
+                    $color = '#00E676';
+                    if ($asymPct > 10) $color = '#FFD600';
+                    if ($asymPct > 15) $color = '#FF1744';
+                    $metricsMap['CMJ_ASYMMETRY'] = [
+                        'name' => 'Asimmetria',
+                        'value' => round($asymPct, 1),
+                        'unit' => '%',
+                        'icon' => 'arrows-left-right',
+                        'color' => $color
+                    ];
+                    $sums['CMJ_ASYMMETRY'] = ($sums['CMJ_ASYMMETRY'] ?? 0) + $asymPct;
+                    $counts['CMJ_ASYMMETRY'] = ($counts['CMJ_ASYMMETRY'] ?? 0) + 1;
+                }
+            }
+
             $athleteRows[] = [
                 'id' => $a['id'],
                 'full_name' => $a['full_name'],
@@ -284,23 +359,15 @@ class BiometricsRepository
                 'team_id' => $a['team_id'],
                 'team_name' => $a['team_name'],
                 'category' => $a['category'],
-                'metrics' => $metricsByAthlete[$a['id']] ?? [],
+                'metrics' => $metricsMap,
             ];
         }
 
-        // 5) Compute group averages per metric type
-        $sums = [];
-        $counts = [];
-        foreach ($metricsByAthlete as $metricsMap) {
-            foreach ($metricsMap as $type => $data) {
-                $sums[$type] = ($sums[$type] ?? 0) + $data['value'];
-                $counts[$type] = ($counts[$type] ?? 0) + 1;
-            }
-        }
         $averages = [];
         foreach ($sums as $type => $sum) {
+            $val = $sum / $counts[$type];
             $averages[$type] = [
-                'value' => round($sum / $counts[$type], 2),
+                'value' => round($val, $type === 'CMJ_RSIMOD' ? 3 : 1),
                 'unit' => $allMetricTypes[$type] ?? '',
                 'count' => $counts[$type],
             ];

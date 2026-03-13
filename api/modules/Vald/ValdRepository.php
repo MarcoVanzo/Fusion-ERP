@@ -31,9 +31,12 @@ class ValdRepository
                AND athlete_id IN (
                    SELECT id FROM athletes 
                    WHERE tenant_id = :t2 
-                     AND vald_athlete_id = (
-                         SELECT vald_athlete_id FROM athletes 
-                         WHERE id = :athlete_id AND tenant_id = :t3 LIMIT 1
+                     AND (
+                         (vald_athlete_id IS NOT NULL AND vald_athlete_id = (
+                             SELECT vald_athlete_id FROM athletes 
+                             WHERE id = :athlete_id AND tenant_id = :t3 LIMIT 1
+                         ))
+                         OR id = :athlete_id
                      )
                )
              ORDER BY test_date DESC'
@@ -58,9 +61,12 @@ class ValdRepository
                AND athlete_id IN (
                    SELECT id FROM athletes 
                    WHERE tenant_id = :t2 
-                     AND vald_athlete_id = (
-                         SELECT vald_athlete_id FROM athletes 
-                         WHERE id = :athlete_id AND tenant_id = :t3 LIMIT 1
+                     AND (
+                         (vald_athlete_id IS NOT NULL AND vald_athlete_id = (
+                             SELECT vald_athlete_id FROM athletes 
+                             WHERE id = :athlete_id AND tenant_id = :t3 LIMIT 1
+                         ))
+                         OR id = :athlete_id
                      )
                )
              ORDER BY test_date DESC LIMIT 1'
@@ -87,9 +93,12 @@ class ValdRepository
                AND athlete_id IN (
                    SELECT id FROM athletes 
                    WHERE tenant_id = :t2 
-                     AND vald_athlete_id = (
-                         SELECT vald_athlete_id FROM athletes 
-                         WHERE id = :athlete_id AND tenant_id = :t3 LIMIT 1
+                     AND (
+                         (vald_athlete_id IS NOT NULL AND vald_athlete_id = (
+                             SELECT vald_athlete_id FROM athletes 
+                             WHERE id = :athlete_id AND tenant_id = :t3 LIMIT 1
+                         ))
+                         OR id = :athlete_id
                      )
                )
              ORDER BY test_date DESC
@@ -228,9 +237,12 @@ class ValdRepository
                AND athlete_id IN (
                    SELECT id FROM athletes 
                    WHERE tenant_id = :t2 
-                     AND vald_athlete_id = (
-                         SELECT vald_athlete_id FROM athletes 
-                         WHERE id = :athlete_id AND tenant_id = :t3 LIMIT 1
+                     AND (
+                         (vald_athlete_id IS NOT NULL AND vald_athlete_id = (
+                             SELECT vald_athlete_id FROM athletes 
+                             WHERE id = :athlete_id AND tenant_id = :t3 LIMIT 1
+                         ))
+                         OR id = :athlete_id
                      )
                )
              ORDER BY test_date DESC
