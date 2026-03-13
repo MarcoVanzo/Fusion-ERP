@@ -691,7 +691,15 @@ class ValdController
                                         $val = $cm;
                                     }
                                     if ($def === 'PEAK_FORCE')             { $keyToStore = 'PeakForce'; }
-                                    if ($def === 'BRAKING_IMPULSE')        { $keyToStore = 'BrakingImpulse'; }
+                                    // Braking Impulse: VALD API uses different definition names across firmware versions
+                                    if (in_array($def, [
+                                        'BRAKING_IMPULSE',
+                                        'ECCENTRIC_BRAKING_IMPULSE',
+                                        'BRAKING_PHASE_IMPULSE',
+                                        'BRAKING_PHASE_NET_IMPULSE',
+                                        'NET_BRAKING_IMPULSE',
+                                        'ECC_BRAKING_IMPULSE',
+                                    ])) { $keyToStore = 'BrakingImpulse'; }
                                     if ($def === 'CONCENTRIC_PEAK_FORCE')  { $keyToStore = 'ConcentricPeakForce'; }
                                     if ($def === 'CONCENTRIC_PEAK_POWER')  { $keyToStore = 'ConcentricPeakPower'; }
                                     if ($def === 'CONCENTRIC_PEAK_VELOCITY') { $keyToStore = 'ConcentricPeakVelocity'; }
