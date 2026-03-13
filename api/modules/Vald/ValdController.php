@@ -24,6 +24,32 @@ class ValdController
     }
 
     /**
+     * POST /api/?module=vald&action=adminReset
+     * Admin-only: clears all VALD test results and unlinks all athletes.
+     * Call from browser console when logged in as admin.
+     */
+    public function adminReset(): void
+    {
+        Auth::requireRole('admin');
+        $tenantId = TenantContext::id();
+        $db = \FusionERP\Shared\Database::getInstance();
+
+        $del = $db->prepare('DELETE FROM vald_test_results WHERE tenant_id = :tid');
+        $del->execute([':tid' => $tenantId]);
+        $deleted = $del->rowCount();
+
+        $unlink = $db->prepare('UPDATE athletes SET vald_athlete_id = NULL WHERE tenant_id = :tid');
+        $unlink->execute([':tid' => $tenantId]);
+        $unlinked = $unlink->rowCount();
+
+        Response::success([
+            'deleted_tests' => $deleted,
+            'unlinked_athletes' => $unlinked,
+            'message' => "Reset completato: $deleted test eliminati, $unlinked atleti sganciati.",
+        ]);
+    }
+
+    /**
      * GET /api/?module=vald&action=results&athleteId=ATH_xxx
      */
     public function results(): void
