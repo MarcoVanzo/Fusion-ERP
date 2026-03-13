@@ -395,7 +395,7 @@ PROMPT;
      */
     private function callGeminiVald(string $prompt): array
     {
-        $apiKey = getenv('GEMINI_API_KEY') ?: (\FusionERP\Shared\Database::getInstance() ? getenv('GEMINI_API_KEY') : '');
+        $apiKey = $_ENV['GEMINI_API_KEY'] ?? getenv('GEMINI_API_KEY') ?: ($_SERVER['GEMINI_API_KEY'] ?? '');
         if (empty($apiKey)) {
             return ['Configurare GEMINI_API_KEY nel file .env per abilitare l\'analisi AI.', ''];
         }
