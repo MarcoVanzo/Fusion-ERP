@@ -341,12 +341,13 @@ class ValdController
      */
     private function buildValdPrompt(array $semaphore, array $asymmetry, array $profile, array $history): string
     {
-        $rsiCurrent   = round($semaphore['rsimod']['current'] ?? 0, 3);
-        $rsiBaseline  = round($semaphore['rsimod']['baseline'] ?? 0, 3);
-        $rsiVariation = round($semaphore['rsimod']['variation'] ?? 0, 1);
+        $rsiCurrent   = round((float)($semaphore['rsimod']['current'] ?? 0), 3);
+        $rsiBaseline  = round((float)($semaphore['rsimod']['baseline'] ?? 0), 3);
+        $rsiVariation = round((float)($semaphore['rsimod']['variation'] ?? 0), 1);
         $rsiStatus    = $semaphore['status'] ?? 'UNKNOWN';
-        $jumpHeight   = round($profile['jumpHeight']['value'] ?? 0, 1);
-        $brakingImp   = round($profile['brakingImpulse']['value'] ?? 0, 1);
+        // jumpHeight is a plain float in $profile (not an array)
+        $jumpHeight   = round((float)($profile['jumpHeight'] ?? 0), 1);
+        $brakingImp   = round((float)($profile['brakingImpulse'] ?? 0), 1);
         $asymLanding  = round($asymmetry['landing']['asymmetry'] ?? 0, 1);
         $asymConcentric = round($asymmetry['concentric']['asymmetry'] ?? 0, 1);
         $weakerLimb   = $asymmetry['landing']['weaker'] ?? 'N/A';
@@ -424,15 +425,16 @@ PROMPT;
         }
 
         $data = json_decode($response, true);
-        $text = $data['candidates'][0]['content']['parts'][0]['text'] ?? '';
+        $text = trim($data['candidates'][0]['content']['parts'][0]['text'] ?? '');
 
-        // Strip markdown fences if present
-        $text = preg_replace('/^```(?:json)?\s*/m', '', $text);
-        $text = preg_replace('/```\s*$/m', '', $text);
-        $parsed = json_decode(trim($text), true);
+        // Extract the first JSON object from the response (Gemini may wrap it in markdown)
+        if (preg_match('/\{[\s\S]+\}/u', $text, $matches)) {
+            $parsed = json_decode($matches[0], true);
+        } else {
+            $parsed = null;
+        }
 
-        if (!$parsed) {
-            // Fallback: return raw text in diagnosis
+        if (!$parsed || !isset($parsed['diagnosis'])) {
             return [trim($text), ''];
         }
 
