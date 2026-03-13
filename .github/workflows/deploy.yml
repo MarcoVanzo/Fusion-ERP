@@ -106,11 +106,16 @@ jobs:
           GDRIVE_REFRESH_TOKEN=${{ secrets.GDRIVE_REFRESH_TOKEN }}
           EOF
 
-      # ── 5. Run the existing deploy.py ─────────────────────────────────────
+      # ── 5. Create .env.prod (deployed as .env on the server) ─────────────
+      # deploy.py uploads .env.prod → remote .env, so we need this file.
+      - name: 📄 Create .env.prod for server deployment
+        run: cp .env .env.prod
+
+      # ── 6. Run the existing deploy.py ─────────────────────────────────────
       - name: 🚀 Run deploy.py (FTP incremental upload)
         run: python deploy.py
 
-      # ── 6. Persist the updated deploy cache ───────────────────────────────
+      # ── 7. Persist the updated deploy cache ───────────────────────────────
       # This is already handled by actions/cache (post-step save),
       # but we make the new .deploy_cache.json available for the next run.
       - name: ✅ Deploy complete
