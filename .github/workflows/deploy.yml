@@ -13,7 +13,7 @@ jobs:
   deploy:
     name: Deploy via FTP
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 45
 
     steps:
       # ── 1. Checkout code ───────────────────────────────────────────────────
@@ -25,6 +25,8 @@ jobs:
       # ── 2. Set up PHP + Composer ────────────────────────────────────────────
       # vendor/ is in .gitignore and never committed.
       # We build it here on the runner so deploy.py can upload it via FTP.
+      # The vendor/ cache is keyed on composer.lock so Composer only runs
+      # when dependencies actually change (saves ~1-2 min per run).
       - name: 🐘 Set up PHP 8.2
         uses: shivammathur/setup-php@v2
         with:
@@ -32,7 +34,16 @@ jobs:
           tools: composer:v2
           coverage: none
 
+      - name: 💾 Cache vendor/ directory
+        id: vendor-cache
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: vendor-${{ hashFiles('composer.lock') }}
+          restore-keys: vendor-
+
       - name: 📦 Install Composer dependencies (no dev)
+        if: steps.vendor-cache.outputs.cache-hit != 'true'
         run: composer install --no-dev --optimize-autoloader --no-interaction
 
       # ── 3. Set up Python ───────────────────────────────────────────────────
