@@ -280,20 +280,29 @@ class BiometricsRepository
 
             if ($vData) {
                 $metricsJson = json_decode($vData['metrics'], true) ?: [];
-                $asymJson = json_decode($vData['asymmetry'] ?? 'null', true) ?: null;
 
-                $jh = $metricsJson['JumpHeightTotal']['Value'] ?? $metricsJson['JumpHeight']['Value'] ?? null;
+                // JumpHeight — use the key actually saved by ValdController
+                $jh = $metricsJson['JumpHeight']['Value'] ?? null;
+
                 $rsi = $metricsJson['RSIModified']['Value'] ?? null;
-                $braking = $metricsJson['BrakingImpulse']['Value'] ?? $metricsJson['EccentricBrakingImpulse']['Value'] ?? $metricsJson['BrakingPhaseImpulse']['Value'] ?? null;
-                
-                $landingL = $metricsJson['PeakLandingForceLeft']['Value'] ?? $metricsJson['LandingForceLeft']['Value'] ?? 0;
-                $landingR = $metricsJson['PeakLandingForceRight']['Value'] ?? $metricsJson['LandingForceRight']['Value'] ?? 0;
-                
+
+                // BrakingImpulse — exact key saved by ValdController
+                $braking = $metricsJson['BrakingImpulse']['Value'] ?? null;
+
+                // Asymmetry: computed from left/right landing peak force stored in metrics JSON
+                // ValdController saves these as LandingForceLeft / LandingForceRight
+                $forceL = $metricsJson['LandingForceLeft']['Value']
+                       ?? $metricsJson['PeakForceLeft']['Value']
+                       ?? 0;
+                $forceR = $metricsJson['LandingForceRight']['Value']
+                       ?? $metricsJson['PeakForceRight']['Value']
+                       ?? 0;
+
                 $asymPct = null;
-                if ($landingL + $landingR > 0) {
-                    $max = max($landingL, $landingR);
-                    $min = min($landingL, $landingR);
-                    $asymPct = (($max - $min) / $max) * 100;
+                if ($forceL + $forceR > 0) {
+                    $max = max($forceL, $forceR);
+                    $min = min($forceL, $forceR);
+                    $asymPct = round((($max - $min) / $max) * 100, 1);
                 }
 
                 if ($jh !== null) {
