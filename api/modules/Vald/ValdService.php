@@ -23,13 +23,13 @@ class ValdService
 
     public function __construct()
     {
-        $this->clientId = getenv('VALD_CLIENT_ID') ?: $_SERVER['VALD_CLIENT_ID'] ?? '';
-        $this->clientSecret = getenv('VALD_CLIENT_SECRET') ?: $_SERVER['VALD_CLIENT_SECRET'] ?? '';
-        $this->orgId = getenv('VALD_ORG_ID') ?: $_SERVER['VALD_ORG_ID'] ?? '';
-        // New VALD API authentication URL (March 2026 onwards)
-        $this->identityUrl = getenv('VALD_IDENTITY_URL') ?: $_SERVER['VALD_IDENTITY_URL'] ?? 'https://auth.prd.vald.com/oauth/token';
-        // ForceDecks External API (EUW region — confirmed by VALD Support)
-        $this->apiBaseUrl = getenv('VALD_API_BASE_URL') ?: $_SERVER['VALD_API_BASE_URL'] ?? 'https://prd-euw-api-extforcedecks.valdperformance.com';
+        // Primary: read from environment (populated by .env via Dotenv or by Apache SetEnv).
+        // Fallback: ValdCredentials constants (deployed as a PHP file, guaranteed to be present).
+        $this->clientId     = (getenv('VALD_CLIENT_ID')     ?: $_SERVER['VALD_CLIENT_ID']     ?? '') ?: ValdCredentials::CLIENT_ID;
+        $this->clientSecret = (getenv('VALD_CLIENT_SECRET') ?: $_SERVER['VALD_CLIENT_SECRET'] ?? '') ?: ValdCredentials::CLIENT_SECRET;
+        $this->orgId        = (getenv('VALD_ORG_ID')        ?: $_SERVER['VALD_ORG_ID']        ?? '') ?: ValdCredentials::ORG_ID;
+        $this->identityUrl  = (getenv('VALD_IDENTITY_URL')  ?: $_SERVER['VALD_IDENTITY_URL']  ?? '') ?: ValdCredentials::IDENTITY_URL;
+        $this->apiBaseUrl   = (getenv('VALD_API_BASE_URL')  ?: $_SERVER['VALD_API_BASE_URL']  ?? '') ?: ValdCredentials::API_BASE_URL;
     }
 
     /**
