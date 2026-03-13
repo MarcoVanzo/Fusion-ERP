@@ -22,7 +22,20 @@ jobs:
         with:
           fetch-depth: 0  # full history so the cache diff is accurate
 
-      # ── 2. Set up Python ───────────────────────────────────────────────────
+      # ── 2. Set up PHP + Composer ────────────────────────────────────────────
+      # vendor/ is in .gitignore and never committed.
+      # We build it here on the runner so deploy.py can upload it via FTP.
+      - name: 🐘 Set up PHP 8.2
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer:v2
+          coverage: none
+
+      - name: 📦 Install Composer dependencies (no dev)
+        run: composer install --no-dev --optimize-autoloader --no-interaction
+
+      # ── 3. Set up Python ───────────────────────────────────────────────────
       - name: 🐍 Set up Python 3.12
         uses: actions/setup-python@v5
         with:
@@ -68,18 +81,28 @@ jobs:
           GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
           GOOGLE_MAPS_API_KEY=${{ secrets.GOOGLE_MAPS_API_KEY }}
 
+          # GAS Proxy (FIPAV scraping)
+          GAS_PROXY_URL=${{ secrets.GAS_PROXY_URL }}
+
           # SMTP
           SMTP_HOST=${{ secrets.SMTP_HOST }}
           SMTP_PORT=${{ secrets.SMTP_PORT }}
+          SMTP_ENCRYPTION=${{ secrets.SMTP_ENCRYPTION }}
           SMTP_USER=${{ secrets.SMTP_USER }}
           SMTP_PASS=${{ secrets.SMTP_PASS }}
-          SMTP_FROM_NAME=Fusion ERP
+          SMTP_FROM_NAME="Fusion ERP"
 
           # Session / Security
           SESSION_NAME=fusion_session
-          RATE_LIMIT_MAX=5
-          RATE_LIMIT_WINDOW=900
+          RATE_LIMIT_MAX=10
+          RATE_LIMIT_WINDOW=300
+          TRUSTED_PROXY=
           IMPORT_SECRET=${{ secrets.IMPORT_SECRET }}
+
+          # Password Policy
+          PASSWORD_MIN_LENGTH=12
+          PASSWORD_HISTORY_LIMIT=5
+          PASSWORD_EXPIRY_DAYS=90
 
           # Storage paths (server-side)
           PDF_STORAGE_PATH=/var/www/fusion/storage/pdfs/
@@ -95,6 +118,10 @@ jobs:
           OUTSEASON_PRICE_FULL=${{ secrets.OUTSEASON_PRICE_FULL }}
           OUTSEASON_PRICE_PARTIAL=${{ secrets.OUTSEASON_PRICE_PARTIAL }}
 
+          # eCommerce Cognito
+          ECOMMERCE_COGNITO_API_KEY=${{ secrets.ECOMMERCE_COGNITO_API_KEY }}
+          ECOMMERCE_FORM_ID=${{ secrets.ECOMMERCE_FORM_ID }}
+
           # Meta / Social
           META_APP_ID=${{ secrets.META_APP_ID }}
           META_APP_SECRET=${{ secrets.META_APP_SECRET }}
@@ -102,8 +129,24 @@ jobs:
           META_CONFIG_ID=${{ secrets.META_CONFIG_ID }}
 
           # Google Drive backup
+          GDRIVE_FOLDER_ID=${{ secrets.GDRIVE_FOLDER_ID }}
           GDRIVE_CLIENT_ID=${{ secrets.GDRIVE_CLIENT_ID }}
+          GDRIVE_CLIENT_SECRET=${{ secrets.GDRIVE_CLIENT_SECRET }}
           GDRIVE_REFRESH_TOKEN=${{ secrets.GDRIVE_REFRESH_TOKEN }}
+
+          # WhatsApp Cloud API
+          WHATSAPP_TOKEN=${{ secrets.WHATSAPP_TOKEN }}
+          WHATSAPP_PHONE_NUMBER_ID=${{ secrets.WHATSAPP_PHONE_NUMBER_ID }}
+          WHATSAPP_BUSINESS_ACCOUNT_ID=${{ secrets.WHATSAPP_BUSINESS_ACCOUNT_ID }}
+
+          # MailerLite
+          MAILERLITE_API_KEY=${{ secrets.MAILERLITE_API_KEY }}
+
+          # VALD
+          VALD_CLIENT_ID=${{ secrets.VALD_CLIENT_ID }}
+          VALD_CLIENT_SECRET=${{ secrets.VALD_CLIENT_SECRET }}
+          VALD_USER_EMAIL=${{ secrets.VALD_USER_EMAIL }}
+          VALD_ORG_ID=${{ secrets.VALD_ORG_ID }}
           EOF
 
       # ── 5. Create .env.prod (deployed as .env on the server) ─────────────
