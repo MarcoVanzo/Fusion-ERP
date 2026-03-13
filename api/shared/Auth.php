@@ -12,10 +12,13 @@ class Auth
 {
     // Role hierarchy: higher index = more permissions
     private const ROLE_LEVELS = [
-        'readonly' => 0,
-        'operator' => 1,
-        'manager' => 2,
-        'admin' => 3,
+        'readonly'   => 0,
+        'atleta'     => 1,
+        'operatore'  => 2,
+        'operator'   => 2,
+        'allenatore' => 3,
+        'manager'    => 4,
+        'admin'      => 5,
     ];
 
     /**
