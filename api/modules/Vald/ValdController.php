@@ -115,11 +115,12 @@ class ValdController
         $athleteWeight = $this->getAthleteWeight($athleteId);
         $profile = $this->computeProfile($metrics, $athleteWeight);
 
-        // 5. Team ranking
-        $ranking = $this->repo->getTeamRanking(5);
+        // 5. Historical results (last 5) for trend context
+        $history = array_slice($this->repo->getResultsByAthlete($athleteId), 0, 5);
 
-        // 6. Coach message
-        $coachMessage = $this->generateCoachMessage($semaphore, $asymmetry, $profile);
+        // 6. AI evaluations via Gemini
+        $prompt = $this->buildValdPrompt($semaphore, $asymmetry, $profile, $history);
+        [$aiDiagnosis, $aiPlan] = $this->callGeminiVald($prompt);
 
         // 7. All results for chart
         $allResults = $this->repo->getResultsByAthlete($athleteId);
@@ -145,7 +146,6 @@ class ValdController
                 'hasData' => true,
                 'testDate' => $latest['test_date'],
                 'testType' => $latest['test_type'],
-                // CMJ 4 KPIs (top-level for dashboard consumption)
                 'jumpHeight' => $jumpHeight,
                 'brakingImpulse' => $brakingImpulse,
                 'asymmetryPct' => $asymmetryPct,
@@ -153,8 +153,8 @@ class ValdController
                 'semaphore' => $semaphore,
                 'asymmetry' => $asymmetry,
                 'profile' => $profile,
-                'ranking' => $ranking,
-                'coachMessage' => $coachMessage,
+                'aiDiagnosis' => $aiDiagnosis,
+                'aiPlan' => $aiPlan,
                 'results' => $allResults,
             ]);
         } catch (\Throwable $e) {
@@ -337,45 +337,109 @@ class ValdController
     }
 
     /**
-     * Generate coach-ready message.
+     * Build VALD-specific Gemini prompt using expert volleyball performance framework.
      */
-    private function generateCoachMessage(array $semaphore, array $asymmetry, array $profile): string
+    private function buildValdPrompt(array $semaphore, array $asymmetry, array $profile, array $history): string
     {
-        $statusLabels = ['GREEN' => 'Verde', 'YELLOW' => 'Giallo', 'RED' => 'Rosso'];
-        $statusLabel = $statusLabels[$semaphore['status']] ?? $semaphore['status'];
+        $rsiCurrent   = round($semaphore['rsimod']['current'] ?? 0, 3);
+        $rsiBaseline  = round($semaphore['rsimod']['baseline'] ?? 0, 3);
+        $rsiVariation = round($semaphore['rsimod']['variation'] ?? 0, 1);
+        $rsiStatus    = $semaphore['status'] ?? 'UNKNOWN';
+        $jumpHeight   = round($profile['jumpHeight']['value'] ?? 0, 1);
+        $brakingImp   = round($profile['brakingImpulse']['value'] ?? 0, 1);
+        $asymLanding  = round($asymmetry['landing']['asymmetry'] ?? 0, 1);
+        $asymConcentric = round($asymmetry['concentric']['asymmetry'] ?? 0, 1);
+        $weakerLimb   = $asymmetry['landing']['weaker'] ?? 'N/A';
 
-        $msg = "L'atleta è in \"{$statusLabel}\" oggi.";
-
-        if ($semaphore['status'] === 'RED') {
-            $msg .= " Ha una perdita significativa nella potenza di salto e tempi di reazione rallentati.";
-            $msg .= " Suggerisco sessione di scarico o recupero completo.";
-        }
-        elseif ($semaphore['status'] === 'YELLOW') {
-            $variation = isset($semaphore['rsimod']['variation']) ? $semaphore['rsimod']['variation'] : 0;
-            $msg .= sprintf(
-                " Ha una perdita del %.0f%% nella potenza di salto e tempi di reazione rallentati",
-                $variation
-            );
-            if ($asymmetry['criticalRisk']) {
-                $msg .= sprintf(
-                    ", oltre a un'asimmetria critica del %.0f%% in atterraggio su %s",
-                    $asymmetry['landing']['asymmetry'],
-                    $asymmetry['landing']['weaker']
-                );
-            }
-            $msg .= ". Suggerisco di evitare sprint ad alta intensità e inserire esercizi correttivi specifici per evitare infortuni ai flessori.";
-        }
-        else {
-            $msg .= " Parametri nella norma, pronto per carico completo.";
-            if ($asymmetry['landing']['asymmetry'] > 10) {
-                $msg .= sprintf(
-                    " Monitorare asimmetria del %.0f%% in atterraggio.",
-                    $asymmetry['landing']['asymmetry']
-                );
-            }
+        // Build historical trend string
+        $historyLines = '';
+        foreach (array_reverse($history) as $h) {
+            $hm = is_array($h['metrics']) ? $h['metrics'] : json_decode($h['metrics'] ?? '{}', true);
+            $hRsi = round((float)($hm['RSIModified']['Value'] ?? 0), 3);
+            $hJump = round((float)($hm['JumpHeight']['Value'] ?? $hm['ConcJumpHeight']['Value'] ?? 0), 1);
+            $historyLines .= "  - {$h['test_date']}: RSImod={$hRsi}, JumpHeight={$hJump}cm\n";
         }
 
-        return $msg;
+        return <<<PROMPT
+Sei un preparatore atletico specializzato nel volley giovanile. Analizza i dati CMJ ForceDecks di un'atleta.
+
+DATI TEST ATTUALE:
+- Semaforo stato forma: {$rsiStatus}
+- RSImod attuale: {$rsiCurrent} (baseline: {$rsiBaseline}, variazione: {$rsiVariation}%)
+- Jump Height: {$jumpHeight} cm
+- Braking Impulse: {$brakingImp} N·s/kg
+- Asimmetria atterraggio: {$asymLanding}% (arto più debole: {$weakerLimb})
+- Asimmetria spinta concentrica: {$asymConcentric}%
+
+STORICO ULTIMI TEST (dal meno recente al più recente):
+{$historyLines}
+
+FRAMEWORK DI ANALISI (da usare):
+- RSImod stabile/in crescita + Jump Height stabile → forma TOP
+- RSImod in calo ma Jump Height stabile → fatica neuromuscolare mascherata ("saltatore lento")
+- Braking Impulse in calo → perdita forza eccentrica, rischio tendinopatia ("motore senza freni")
+- Asimmetria > 15% improvvisa → compensazione attiva, rischio infortunio ("compensatore")
+- Crollo simultaneo di tutti i parametri → overtraining ("il cotto")
+
+Rispondi SOLO con un JSON valido (nessun testo extra, nessun markdown), con questa struttura esatta:
+{
+  "diagnosis": "<max 120 parole: diagnosi dello stato di forma, quale scenario (A/B/C/D), cosa indicano i numeri>",
+  "plan": "<max 150 parole: piano concreto di intervento con esercizi specifici, volumi e intensità>"
+}
+PROMPT;
+    }
+
+    /**
+     * Call Gemini API for VALD analysis. Returns [diagnosis, plan].
+     * @return array{0: string, 1: string}
+     */
+    private function callGeminiVald(string $prompt): array
+    {
+        $apiKey = getenv('GEMINI_API_KEY') ?: (\FusionERP\Shared\Database::getInstance() ? getenv('GEMINI_API_KEY') : '');
+        if (empty($apiKey)) {
+            return ['Configurare GEMINI_API_KEY nel file .env per abilitare l\'analisi AI.', ''];
+        }
+
+        $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' . $apiKey;
+        $payload = json_encode([
+            'contents' => [['parts' => [['text' => $prompt]]]],
+            'generationConfig' => ['maxOutputTokens' => 600, 'temperature' => 0.4],
+        ]);
+
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => $payload,
+            CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+            CURLOPT_TIMEOUT => 20,
+        ]);
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($httpCode !== 200 || !$response) {
+            error_log("[VALD GEMINI] HTTP {$httpCode}");
+            return ['Analisi AI temporaneamente non disponibile.', ''];
+        }
+
+        $data = json_decode($response, true);
+        $text = $data['candidates'][0]['content']['parts'][0]['text'] ?? '';
+
+        // Strip markdown fences if present
+        $text = preg_replace('/^```(?:json)?\s*/m', '', $text);
+        $text = preg_replace('/```\s*$/m', '', $text);
+        $parsed = json_decode(trim($text), true);
+
+        if (!$parsed) {
+            // Fallback: return raw text in diagnosis
+            return [trim($text), ''];
+        }
+
+        return [
+            trim($parsed['diagnosis'] ?? ''),
+            trim($parsed['plan'] ?? ''),
+        ];
     }
 
     /**
