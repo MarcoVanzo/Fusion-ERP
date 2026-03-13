@@ -404,7 +404,19 @@ PROMPT;
         $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' . $apiKey;
         $payload = json_encode([
             'contents' => [['parts' => [['text' => $prompt]]]],
-            'generationConfig' => ['maxOutputTokens' => 600, 'temperature' => 0.4],
+            'generationConfig' => [
+                'maxOutputTokens' => 600,
+                'temperature' => 0.4,
+                'responseMimeType' => 'application/json',
+                'responseSchema' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'diagnosis' => ['type' => 'STRING'],
+                        'plan'      => ['type' => 'STRING'],
+                    ],
+                    'required' => ['diagnosis', 'plan'],
+                ],
+            ],
         ]);
 
         $ch = curl_init($url);
@@ -427,11 +439,19 @@ PROMPT;
         $data = json_decode($response, true);
         $text = trim($data['candidates'][0]['content']['parts'][0]['text'] ?? '');
 
-        // Extract the first JSON object from the response (Gemini may wrap it in markdown)
-        if (preg_match('/\{[\s\S]+\}/u', $text, $matches)) {
-            $parsed = json_decode($matches[0], true);
-        } else {
-            $parsed = null;
+        // responseMimeType=application/json means $text IS the JSON — parse directly.
+        // Also sanitize literal newlines inside string values (Gemini sometimes emits them).
+        $sanitized = preg_replace_callback(
+            '/"(?:[^"\\\\]|\\\\.)*"/u',
+            fn($m) => str_replace(["\n", "\r"], ['\\n', ''], $m[0]),
+            $text
+        );
+        $parsed = json_decode($sanitized !== null ? $sanitized : $text, true);
+        if (!$parsed) {
+            // Last resort: extract between first { and last }
+            if (preg_match('/\{[\s\S]+\}/u', $text, $m)) {
+                $parsed = json_decode($m[0], true);
+            }
         }
 
         if (!$parsed || !isset($parsed['diagnosis'])) {
