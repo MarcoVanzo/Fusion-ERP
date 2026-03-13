@@ -553,8 +553,11 @@ class ValdController
     {
         $stats = ['found' => 0, 'synced' => 0, 'skipped' => 0, 'unlinkedAthletes' => []];
 
-        // Guard: skip if VALD credentials not configured
-        if (empty(getenv('VALD_CLIENT_ID')) || empty(getenv('VALD_CLIENT_SECRET'))) {
+        // Guard: skip if VALD credentials not configured.
+        // Check env vars first, then fall back to ValdCredentials constants (same logic as ValdService).
+        $guardClientId     = (getenv('VALD_CLIENT_ID')     ?: $_SERVER['VALD_CLIENT_ID']     ?? '') ?: ValdCredentials::CLIENT_ID;
+        $guardClientSecret = (getenv('VALD_CLIENT_SECRET') ?: $_SERVER['VALD_CLIENT_SECRET'] ?? '') ?: ValdCredentials::CLIENT_SECRET;
+        if (empty($guardClientId) || empty($guardClientSecret)) {
             error_log('[VALD Sync] Credenziali non configurate (VALD_CLIENT_ID / VALD_CLIENT_SECRET).');
             return $stats;
         }
