@@ -625,10 +625,15 @@ class ValdController
                         'testType' => $test['testType'] ?? null,
                     ];
 
-                    $alreadyExists = isset($existingTestIds[$testIdStr]);
                     $teamId = $test['teamId'] ?? '';
 
-                    if (!$alreadyExists && $teamId && $testIdStr) {
+                    // If this test is already in DB with metrics, skip entirely (don't overwrite good data)
+                    if (isset($existingTestIds[$testIdStr])) {
+                        $stats['skipped']++;
+                        continue;
+                    }
+
+                    if ($teamId && $testIdStr) {
                         try {
                             $trialsData = $this->service->getTrials($teamId, $testIdStr);
 
