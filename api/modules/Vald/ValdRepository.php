@@ -31,15 +31,19 @@ class ValdRepository
                AND athlete_id IN (
                    SELECT id FROM athletes 
                    WHERE tenant_id = :t2 
-                     AND vald_athlete_id = (
-                         SELECT vald_athlete_id FROM athletes 
-                         WHERE id = :athlete_id AND tenant_id = :t3 LIMIT 1
+                     AND (
+                         (vald_athlete_id IS NOT NULL AND vald_athlete_id = (
+                             SELECT vald_athlete_id FROM athletes 
+                             WHERE id = :athlete_id2 AND tenant_id = :t3 LIMIT 1
+                         ))
+                         OR id = :athlete_id3
                      )
                )
              ORDER BY test_date DESC'
         );
         $stmt->execute([
-            ':athlete_id' => $athleteId,
+            ':athlete_id2' => $athleteId,
+            ':athlete_id3' => $athleteId,
             ':t1' => TenantContext::id(),
             ':t2' => TenantContext::id(),
             ':t3' => TenantContext::id()
@@ -58,15 +62,19 @@ class ValdRepository
                AND athlete_id IN (
                    SELECT id FROM athletes 
                    WHERE tenant_id = :t2 
-                     AND vald_athlete_id = (
-                         SELECT vald_athlete_id FROM athletes 
-                         WHERE id = :athlete_id AND tenant_id = :t3 LIMIT 1
+                     AND (
+                         (vald_athlete_id IS NOT NULL AND vald_athlete_id = (
+                             SELECT vald_athlete_id FROM athletes 
+                             WHERE id = :athlete_id2 AND tenant_id = :t3 LIMIT 1
+                         ))
+                         OR id = :athlete_id3
                      )
                )
              ORDER BY test_date DESC LIMIT 1'
         );
         $stmt->execute([
-            ':athlete_id' => $athleteId,
+            ':athlete_id2' => $athleteId,
+            ':athlete_id3' => $athleteId,
             ':t1' => TenantContext::id(),
             ':t2' => TenantContext::id(),
             ':t3' => TenantContext::id()
@@ -87,15 +95,19 @@ class ValdRepository
                AND athlete_id IN (
                    SELECT id FROM athletes 
                    WHERE tenant_id = :t2 
-                     AND vald_athlete_id = (
-                         SELECT vald_athlete_id FROM athletes 
-                         WHERE id = :athlete_id AND tenant_id = :t3 LIMIT 1
+                     AND (
+                         (vald_athlete_id IS NOT NULL AND vald_athlete_id = (
+                             SELECT vald_athlete_id FROM athletes 
+                             WHERE id = :athlete_id2 AND tenant_id = :t3 LIMIT 1
+                         ))
+                         OR id = :athlete_id3
                      )
                )
              ORDER BY test_date DESC
              LIMIT :lim OFFSET 1'
         );
-        $stmt->bindValue(':athlete_id', $athleteId);
+        $stmt->bindValue(':athlete_id2', $athleteId);
+        $stmt->bindValue(':athlete_id3', $athleteId);
         $stmt->bindValue(':t1', TenantContext::id());
         $stmt->bindValue(':t2', TenantContext::id());
         $stmt->bindValue(':t3', TenantContext::id());
@@ -228,9 +240,12 @@ class ValdRepository
                AND athlete_id IN (
                    SELECT id FROM athletes 
                    WHERE tenant_id = :t2 
-                     AND vald_athlete_id = (
-                         SELECT vald_athlete_id FROM athletes 
-                         WHERE id = :athlete_id AND tenant_id = :t3 LIMIT 1
+                     AND (
+                         (vald_athlete_id IS NOT NULL AND vald_athlete_id = (
+                             SELECT vald_athlete_id FROM athletes 
+                             WHERE id = :athlete_id2 AND tenant_id = :t3 LIMIT 1
+                         ))
+                         OR id = :athlete_id3
                      )
                )
              ORDER BY test_date DESC
@@ -240,7 +255,8 @@ class ValdRepository
             ':t1' => TenantContext::id(),
             ':t2' => TenantContext::id(),
             ':t3' => TenantContext::id(),
-            ':athlete_id' => $athleteId
+            ':athlete_id2' => $athleteId,
+            ':athlete_id3' => $athleteId,
         ]);
 
         $rows = $stmt->fetchAll();

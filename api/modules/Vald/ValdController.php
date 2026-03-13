@@ -24,6 +24,32 @@ class ValdController
     }
 
     /**
+     * POST /api/?module=vald&action=adminReset
+     * Admin-only: clears all VALD test results and unlinks all athletes.
+     * Call from browser console when logged in as admin.
+     */
+    public function adminReset(): void
+    {
+        Auth::requireRole('admin');
+        $tenantId = TenantContext::id();
+        $db = \FusionERP\Shared\Database::getInstance();
+
+        $del = $db->prepare('DELETE FROM vald_test_results WHERE tenant_id = :tid');
+        $del->execute([':tid' => $tenantId]);
+        $deleted = $del->rowCount();
+
+        $unlink = $db->prepare('UPDATE athletes SET vald_athlete_id = NULL WHERE tenant_id = :tid');
+        $unlink->execute([':tid' => $tenantId]);
+        $unlinked = $unlink->rowCount();
+
+        Response::success([
+            'deleted_tests' => $deleted,
+            'unlinked_athletes' => $unlinked,
+            'message' => "Reset completato: $deleted test eliminati, $unlinked atleti sganciati.",
+        ]);
+    }
+
+    /**
      * GET /api/?module=vald&action=results&athleteId=ATH_xxx
      */
     public function results(): void
@@ -89,11 +115,12 @@ class ValdController
         $athleteWeight = $this->getAthleteWeight($athleteId);
         $profile = $this->computeProfile($metrics, $athleteWeight);
 
-        // 5. Team ranking
-        $ranking = $this->repo->getTeamRanking(5);
+        // 5. Historical results (last 5) for trend context
+        $history = array_slice($this->repo->getResultsByAthlete($athleteId), 0, 5);
 
-        // 6. Coach message
-        $coachMessage = $this->generateCoachMessage($semaphore, $asymmetry, $profile);
+        // 6. AI evaluations via Gemini
+        $prompt = $this->buildValdPrompt($semaphore, $asymmetry, $profile, $history);
+        [$aiDiagnosis, $aiPlan] = $this->callGeminiVald($prompt);
 
         // 7. All results for chart
         $allResults = $this->repo->getResultsByAthlete($athleteId);
@@ -119,7 +146,6 @@ class ValdController
                 'hasData' => true,
                 'testDate' => $latest['test_date'],
                 'testType' => $latest['test_type'],
-                // CMJ 4 KPIs (top-level for dashboard consumption)
                 'jumpHeight' => $jumpHeight,
                 'brakingImpulse' => $brakingImpulse,
                 'asymmetryPct' => $asymmetryPct,
@@ -127,8 +153,8 @@ class ValdController
                 'semaphore' => $semaphore,
                 'asymmetry' => $asymmetry,
                 'profile' => $profile,
-                'ranking' => $ranking,
-                'coachMessage' => $coachMessage,
+                'aiDiagnosis' => $aiDiagnosis,
+                'aiPlan' => $aiPlan,
                 'results' => $allResults,
             ]);
         } catch (\Throwable $e) {
@@ -311,45 +337,131 @@ class ValdController
     }
 
     /**
-     * Generate coach-ready message.
+     * Build VALD-specific Gemini prompt using expert volleyball performance framework.
      */
-    private function generateCoachMessage(array $semaphore, array $asymmetry, array $profile): string
+    private function buildValdPrompt(array $semaphore, array $asymmetry, array $profile, array $history): string
     {
-        $statusLabels = ['GREEN' => 'Verde', 'YELLOW' => 'Giallo', 'RED' => 'Rosso'];
-        $statusLabel = $statusLabels[$semaphore['status']] ?? $semaphore['status'];
+        $rsiCurrent   = round((float)($semaphore['rsimod']['current'] ?? 0), 3);
+        $rsiBaseline  = round((float)($semaphore['rsimod']['baseline'] ?? 0), 3);
+        $rsiVariation = round((float)($semaphore['rsimod']['variation'] ?? 0), 1);
+        $rsiStatus    = $semaphore['status'] ?? 'UNKNOWN';
+        // jumpHeight is a plain float in $profile (not an array)
+        $jumpHeight   = round((float)($profile['jumpHeight'] ?? 0), 1);
+        $brakingImp   = round((float)($profile['brakingImpulse'] ?? 0), 1);
+        $asymLanding  = round($asymmetry['landing']['asymmetry'] ?? 0, 1);
+        $asymConcentric = round($asymmetry['concentric']['asymmetry'] ?? 0, 1);
+        $weakerLimb   = $asymmetry['landing']['weaker'] ?? 'N/A';
 
-        $msg = "L'atleta è in \"{$statusLabel}\" oggi.";
-
-        if ($semaphore['status'] === 'RED') {
-            $msg .= " Ha una perdita significativa nella potenza di salto e tempi di reazione rallentati.";
-            $msg .= " Suggerisco sessione di scarico o recupero completo.";
+        // Build historical trend string
+        $historyLines = '';
+        foreach (array_reverse($history) as $h) {
+            $hm = is_array($h['metrics']) ? $h['metrics'] : json_decode($h['metrics'] ?? '{}', true);
+            $hRsi = round((float)($hm['RSIModified']['Value'] ?? 0), 3);
+            $hJump = round((float)($hm['JumpHeight']['Value'] ?? $hm['ConcJumpHeight']['Value'] ?? 0), 1);
+            $historyLines .= "  - {$h['test_date']}: RSImod={$hRsi}, JumpHeight={$hJump}cm\n";
         }
-        elseif ($semaphore['status'] === 'YELLOW') {
-            $variation = isset($semaphore['rsimod']['variation']) ? $semaphore['rsimod']['variation'] : 0;
-            $msg .= sprintf(
-                " Ha una perdita del %.0f%% nella potenza di salto e tempi di reazione rallentati",
-                $variation
-            );
-            if ($asymmetry['criticalRisk']) {
-                $msg .= sprintf(
-                    ", oltre a un'asimmetria critica del %.0f%% in atterraggio su %s",
-                    $asymmetry['landing']['asymmetry'],
-                    $asymmetry['landing']['weaker']
-                );
+
+        return <<<PROMPT
+Sei un preparatore atletico specializzato nel volley giovanile. Analizza i dati CMJ ForceDecks di un'atleta.
+
+DATI TEST ATTUALE:
+- Semaforo stato forma: {$rsiStatus}
+- RSImod attuale: {$rsiCurrent} (baseline: {$rsiBaseline}, variazione: {$rsiVariation}%)
+- Jump Height: {$jumpHeight} cm
+- Braking Impulse: {$brakingImp} N·s/kg
+- Asimmetria atterraggio: {$asymLanding}% (arto più debole: {$weakerLimb})
+- Asimmetria spinta concentrica: {$asymConcentric}%
+
+STORICO ULTIMI TEST (dal meno recente al più recente):
+{$historyLines}
+
+FRAMEWORK DI ANALISI (da usare):
+- RSImod stabile/in crescita + Jump Height stabile → forma TOP
+- RSImod in calo ma Jump Height stabile → fatica neuromuscolare mascherata ("saltatore lento")
+- Braking Impulse in calo → perdita forza eccentrica, rischio tendinopatia ("motore senza freni")
+- Asimmetria > 15% improvvisa → compensazione attiva, rischio infortunio ("compensatore")
+- Crollo simultaneo di tutti i parametri → overtraining ("il cotto")
+
+Rispondi SOLO con un JSON valido (nessun testo extra, nessun markdown), con questa struttura esatta:
+{
+  "diagnosis": "<max 120 parole: diagnosi dello stato di forma, quale scenario (A/B/C/D), cosa indicano i numeri>",
+  "plan": "<max 150 parole: piano concreto di intervento con esercizi specifici, volumi e intensità>"
+}
+PROMPT;
+    }
+
+    /**
+     * Call Gemini API for VALD analysis. Returns [diagnosis, plan].
+     * @return array{0: string, 1: string}
+     */
+    private function callGeminiVald(string $prompt): array
+    {
+        $apiKey = $_ENV['GEMINI_API_KEY'] ?? getenv('GEMINI_API_KEY') ?: ($_SERVER['GEMINI_API_KEY'] ?? '');
+        if (empty($apiKey)) {
+            return ['Configurare GEMINI_API_KEY nel file .env per abilitare l\'analisi AI.', ''];
+        }
+
+        $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' . $apiKey;
+        $payload = json_encode([
+            'contents' => [['parts' => [['text' => $prompt]]]],
+            'generationConfig' => [
+                'maxOutputTokens' => 600,
+                'temperature' => 0.4,
+                'responseMimeType' => 'application/json',
+                'responseSchema' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'diagnosis' => ['type' => 'STRING'],
+                        'plan'      => ['type' => 'STRING'],
+                    ],
+                    'required' => ['diagnosis', 'plan'],
+                ],
+            ],
+        ]);
+
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => $payload,
+            CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+            CURLOPT_TIMEOUT => 20,
+        ]);
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($httpCode !== 200 || !$response) {
+            error_log("[VALD GEMINI] HTTP {$httpCode}");
+            return ['Analisi AI temporaneamente non disponibile.', ''];
+        }
+
+        $data = json_decode($response, true);
+        $text = trim($data['candidates'][0]['content']['parts'][0]['text'] ?? '');
+
+        // responseMimeType=application/json means $text IS the JSON — parse directly.
+        // Also sanitize literal newlines inside string values (Gemini sometimes emits them).
+        $sanitized = preg_replace_callback(
+            '/"(?:[^"\\\\]|\\\\.)*"/u',
+            fn($m) => str_replace(["\n", "\r"], ['\\n', ''], $m[0]),
+            $text
+        );
+        $parsed = json_decode($sanitized !== null ? $sanitized : $text, true);
+        if (!$parsed) {
+            // Last resort: extract between first { and last }
+            if (preg_match('/\{[\s\S]+\}/u', $text, $m)) {
+                $parsed = json_decode($m[0], true);
             }
-            $msg .= ". Suggerisco di evitare sprint ad alta intensità e inserire esercizi correttivi specifici per evitare infortuni ai flessori.";
-        }
-        else {
-            $msg .= " Parametri nella norma, pronto per carico completo.";
-            if ($asymmetry['landing']['asymmetry'] > 10) {
-                $msg .= sprintf(
-                    " Monitorare asimmetria del %.0f%% in atterraggio.",
-                    $asymmetry['landing']['asymmetry']
-                );
-            }
         }
 
-        return $msg;
+        if (!$parsed || !isset($parsed['diagnosis'])) {
+            return [trim($text), ''];
+        }
+
+        return [
+            trim($parsed['diagnosis'] ?? ''),
+            trim($parsed['plan'] ?? ''),
+        ];
     }
 
     /**
@@ -553,8 +665,11 @@ class ValdController
     {
         $stats = ['found' => 0, 'synced' => 0, 'skipped' => 0, 'unlinkedAthletes' => []];
 
-        // Guard: skip if VALD credentials not configured
-        if (empty(getenv('VALD_CLIENT_ID')) || empty(getenv('VALD_CLIENT_SECRET'))) {
+        // Guard: skip if VALD credentials not configured.
+        // Check env vars first, then fall back to ValdCredentials constants (same logic as ValdService).
+        $guardClientId     = (getenv('VALD_CLIENT_ID')     ?: $_SERVER['VALD_CLIENT_ID']     ?? '') ?: ValdCredentials::CLIENT_ID;
+        $guardClientSecret = (getenv('VALD_CLIENT_SECRET') ?: $_SERVER['VALD_CLIENT_SECRET'] ?? '') ?: ValdCredentials::CLIENT_SECRET;
+        if (empty($guardClientId) || empty($guardClientSecret)) {
             error_log('[VALD Sync] Credenziali non configurate (VALD_CLIENT_ID / VALD_CLIENT_SECRET).');
             return $stats;
         }
@@ -562,232 +677,205 @@ class ValdController
         $tenantId = \FusionERP\Shared\TenantContext::id();
         $db       = \FusionERP\Shared\Database::getInstance();
 
-        // Fetch tests from VALD chunked by 3-month intervals because VALD API rejects date ranges > 6 months.
-        $results = [];
-        // Since we know the API might not like stuff from > a couple years ago, start from Jan 2023 for safety.
-        $startStamp = strtotime('2023-01-01');
-        $endStamp = time();
-        $chunkSeconds = 90 * 86400; // 90 days (~3 months)
-        
+        // Extend execution time — Aruba default is 30s which is too short for full sync
+        @set_time_limit(300);
+
+        // Pre-build athlete lookup map (vald_athlete_id → erp athlete id)
+        // This avoids one SELECT per test (huge speed improvement)
+        $mapStmt = $db->prepare(
+            'SELECT id, vald_athlete_id FROM athletes
+             WHERE tenant_id = :tid AND vald_athlete_id IS NOT NULL AND deleted_at IS NULL'
+        );
+        $mapStmt->execute([':tid' => $tenantId]);
+        $athleteMap = []; // vald_athlete_id → erp_athlete_id
+        foreach ($mapStmt->fetchAll(\PDO::FETCH_ASSOC) as $row) {
+            $athleteMap[$row['vald_athlete_id']] = $row['id'];
+        }
+
+        // Pre-build set of already-saved test_ids to skip getTrials() for existing ones
+        $existingStmt = $db->prepare(
+            'SELECT test_id FROM vald_test_results WHERE tenant_id = :tid'
+        );
+        $existingStmt->execute([':tid' => $tenantId]);
+        $existingTestIds = array_flip($existingStmt->fetchAll(\PDO::FETCH_COLUMN));
+
+        // Process in 90-day chunks from Jan 2023 — fetch + save each chunk immediately
+        $startStamp   = strtotime('2023-01-01');
+        $endStamp     = time();
+        $chunkSeconds = 90 * 86400;
+
         for ($t = $startStamp; $t < $endStamp; $t += $chunkSeconds) {
             $dateFrom = date('Y-m-d', $t);
-            $tNext = $t + $chunkSeconds - 1;
-            $dateTo = date('Y-m-d', min($tNext, $endStamp));
-            
-            $page = 1;
+            $dateTo   = date('Y-m-d', min($t + $chunkSeconds - 1, $endStamp));
+            $page     = 1;
 
             while (true) {
-                // Fetch paginated chunk for this specific period
                 $pageResults = $this->service->getTestResults($dateFrom, '', $page, $dateTo);
-                
-                if (empty($pageResults) || !is_array($pageResults) || isset($pageResults['error'])) {
-                    break;
-                }
-                $results = array_merge($results, $pageResults);
-                
-                if (count($pageResults) < 50) {
-                    break;
-                }
+                if (empty($pageResults) || !is_array($pageResults) || isset($pageResults['error'])) break;
+
+                $stats['found'] += count($pageResults);
+
+                foreach ($pageResults as $test) {
+                    $valdAthleteId = $test['athleteId'] ?? $test['hubAthleteId'] ?? null;
+                    if (!$valdAthleteId) { $stats['skipped']++; continue; }
+
+                    // Use pre-built map instead of per-test DB query
+                    $athleteId = $athleteMap[$valdAthleteId] ?? null;
+                    if (!$athleteId) {
+                        $stats['skipped']++;
+                        if (!in_array($valdAthleteId, $stats['unlinkedAthletes'], true)) {
+                            $stats['unlinkedAthletes'][] = $valdAthleteId;
+                        }
+                        continue;
+                    }
+
+                    $testIdStr = $test['id'] ?? '';
+
+                    // Skip getTrials() for tests already saved with metrics — only re-fetch if missing
+                    $metrics = [
+                        'weight'   => $test['weight'] ?? null,
+                        'testType' => $test['testType'] ?? null,
+                    ];
+
+                    $teamId = $test['teamId'] ?? '';
+
+                    // If this test is already in DB with metrics, skip entirely (don't overwrite good data)
+                    if (isset($existingTestIds[$testIdStr])) {
+                        $stats['skipped']++;
+                        continue;
+                    }
+
+                    if ($teamId && $testIdStr) {
+                        try {
+                            $trialsData = $this->service->getTrials($teamId, $testIdStr);
+
+                            if (is_array($trialsData) && !empty($trialsData)) {
+                                $accumulatedMetrics = [];
+                                $trialCounts        = [];
+                                $allDiagKeys = [];
+
+                                foreach ($trialsData as $trial) {
+                                    if (!isset($trial['results']) || !is_array($trial['results'])) continue;
+
+                                    foreach ($trial['results'] as $res) {
+                                        $def  = strtoupper($res['definition']['result'] ?? '');
+                                        $val  = $res['value'] ?? null;
+                                        $limb = $res['limb'] ?? 'Trial';
+                                        $allDiagKeys[] = ($res['definition']['result'] ?? '') . ' [' . $limb . ']';
+
+                                        if (!$def || $val === null) continue;
+
+                                        $keyToStore = null;
+
+                                        if ($limb === 'Trial') {
+                                            if ($def === 'RSI_MODIFIED') {
+                                                $rsi = (float)$val;
+                                                if ($rsi > 3.0) $rsi /= 100.0;
+                                                $val = round($rsi, 3);
+                                                $keyToStore = 'RSIModified';
+                                            }
+                                            if (in_array($def, [
+                                                'JUMP_HEIGHT_FLIGHT_TIME', 'FLIGHT_TIME_JUMP_HEIGHT',
+                                                'JUMP_HEIGHT', 'ESTIMATED_JUMP_HEIGHT',
+                                                'JUMP_HEIGHT_IMPULSE', 'JUMP_HEIGHT_IMP_MOM',
+                                                'JUMP_HEIGHT_IMPULSE_MOMENTUM',
+                                            ])) {
+                                                $cm = (float)$val;
+                                                if ($cm < 1.0) $cm *= 100.0;
+                                                $keyToStore = 'JumpHeight';
+                                                $val = $cm;
+                                            }
+                                            if ($def === 'PEAK_FORCE')             { $keyToStore = 'PeakForce'; }
+                                            if (in_array($def, [
+                                                'BRAKING_IMPULSE', 'ECCENTRIC_BRAKING_IMPULSE',
+                                                'BRAKING_PHASE_IMPULSE', 'BRAKING_PHASE_NET_IMPULSE',
+                                                'NET_BRAKING_IMPULSE', 'ECC_BRAKING_IMPULSE',
+                                            ])) { $keyToStore = 'BrakingImpulse'; }
+                                            if ($def === 'CONCENTRIC_PEAK_FORCE')  { $keyToStore = 'ConcentricPeakForce'; }
+                                            if ($def === 'CONCENTRIC_PEAK_POWER')  { $keyToStore = 'ConcentricPeakPower'; }
+                                            if ($def === 'CONCENTRIC_PEAK_VELOCITY') { $keyToStore = 'ConcentricPeakVelocity'; }
+                                            if (in_array($def, ['PEAK_LANDING_FORCE', 'LANDING_PEAK_FORCE'])) {
+                                                $keyToStore = 'PeakLandingForce';
+                                            }
+                                            if ($def === 'TIME_TO_TAKEOFF') {
+                                                $val = ((float)$val) * 1000;
+                                                $keyToStore = 'TimeToTakeoff';
+                                            }
+                                            if ($def === 'CONTRACTION_TIME') {
+                                                $val = ((float)$val) * 1000;
+                                                $keyToStore = 'ContractionTime';
+                                            }
+                                        }
+
+                                        if ($limb === 'Left') {
+                                            if (in_array($def, ['PEAK_FORCE', 'PEAK_FORCE_LEFT']))       { $keyToStore = 'PeakForceLeft'; }
+                                            if (in_array($def, ['PEAK_LANDING_FORCE', 'LANDING_PEAK_FORCE',
+                                                                  'LANDING_FORCE_LEFT', 'PEAK_LANDING_FORCE_LEFT'])) { $keyToStore = 'LandingForceLeft'; }
+                                        }
+
+                                        if ($limb === 'Right') {
+                                            if (in_array($def, ['PEAK_FORCE', 'PEAK_FORCE_RIGHT']))      { $keyToStore = 'PeakForceRight'; }
+                                            if (in_array($def, ['PEAK_LANDING_FORCE', 'LANDING_PEAK_FORCE',
+                                                                  'LANDING_FORCE_RIGHT', 'PEAK_LANDING_FORCE_RIGHT'])) { $keyToStore = 'LandingForceRight'; }
+                                        }
+
+                                        if ($keyToStore !== null) {
+                                            $accumulatedMetrics[$keyToStore] = ($accumulatedMetrics[$keyToStore] ?? 0.0) + (float)$val;
+                                            $trialCounts[$keyToStore]        = ($trialCounts[$keyToStore] ?? 0) + 1;
+                                        }
+                                    }
+                                }
+
+                                foreach ($accumulatedMetrics as $key => $sumVal) {
+                                    $n = $trialCounts[$key] ?? 1;
+                                    $avgVal = $sumVal / $n;
+                                    $decimals = match(true) {
+                                        $key === 'TimeToTakeoff' || $key === 'ContractionTime' => 0,
+                                        $key === 'ConcentricPeakVelocity'                      => 3,
+                                        $key === 'RSIModified'                                 => 3,
+                                        in_array($key, ['JumpHeight', 'JumpHeightImpMom', 'PeakForce',
+                                                        'LandingForceLeft', 'LandingForceRight',
+                                                        'PeakForceLeft', 'PeakForceRight'])    => 1,
+                                        default                                                => 2,
+                                    };
+                                    $metrics[$key] = ['Value' => round($avgVal, $decimals)];
+                                }
+
+                                if (!empty($allDiagKeys) && $stats['synced'] < 3) {
+                                    error_log('[VALD Sync DIAG] Test ' . $test['id'] . ' keys: ' . implode(', ', array_unique($allDiagKeys)));
+                                }
+                            }
+                        } catch (\Throwable $e) {
+                            error_log('[VALD Sync] Errore getTrials per test ' . $testIdStr . ': ' . $e->getMessage());
+                        }
+                    }
+
+                    $this->repo->saveResult([
+                        ':id'        => 'VTST_' . bin2hex(random_bytes(4)),
+                        ':tenant_id' => $tenantId,
+                        ':athlete_id'=> $athleteId,
+                        ':test_id'   => $testIdStr,
+                        ':test_date' => date('Y-m-d H:i:s', strtotime($test['recordedUTC'] ?? $test['analysedUTC'] ?? 'now')),
+                        ':test_type' => $test['testType'] ?? 'CMJ',
+                        ':metrics'   => json_encode($metrics),
+                    ]);
+
+                    // Add to existingTestIds so subsequent pages don't re-fetch trials for the same test
+                    $existingTestIds[$testIdStr] = true;
+
+                    if (!empty($test['weight'])) {
+                        $stmtW = $db->prepare('UPDATE athletes SET weight_kg = :w WHERE id = :id AND tenant_id = :tid');
+                        $stmtW->execute([':w' => round((float)$test['weight'], 1), ':id' => $athleteId, ':tid' => $tenantId]);
+                    }
+
+                    $stats['synced']++;
+                } // end foreach $pageResults
+
+                if (count($pageResults) < 50) break;
                 $page++;
-                if ($page > 50) break; // Safety limit per chunk
-            }
-        }
-
-        if (empty($results)) {
-            error_log('[VALD Sync] Risultato non valido o vuoto al primo fetch.');
-            return $stats;
-        }
-
-        $stats['found'] = count($results);
-
-        foreach ($results as $test) {
-            // v2019q3 field: athleteId (= hubAthleteId = VALD's UUID for the athlete)
-            $valdAthleteId = $test['athleteId'] ?? $test['hubAthleteId'] ?? null;
-            if (!$valdAthleteId) {
-                $stats['skipped']++;
-                continue;
-            }
-
-            // Look up athlete in our DB by their VALD athlete ID
-            $stmt = $db->prepare(
-                'SELECT id FROM athletes WHERE vald_athlete_id = :vid AND tenant_id = :tid LIMIT 1'
-            );
-            $stmt->execute([':vid' => $valdAthleteId, ':tid' => $tenantId]);
-            $athleteId = $stmt->fetchColumn();
-
-            if (!$athleteId) {
-                // Athlete not linked yet — record and skip
-                error_log("[VALD Sync] Atleta VALD $valdAthleteId non trovato nel tenant $tenantId.");
-                $stats['skipped']++;
-                // Collect unlinked VALD IDs for actionable UI feedback
-                if (!in_array($valdAthleteId, $stats['unlinkedAthletes'], true)) {
-                    $stats['unlinkedAthletes'][] = $valdAthleteId;
-                }
-                continue;
-            }
-
-            // Build metrics base from test body
-            $metrics = [
-                'weight' => $test['weight'] ?? null,
-                'testType' => $test['testType'] ?? null,
-            ];
-
-            // In VALD v2019q3, detailed metrics are stored in the trials array.
-            // Fetch them using the public getTrials() method.
-            $teamId = $test['teamId'] ?? '';
-            $testIdStr = $test['id'] ?? '';
-            if ($teamId && $testIdStr) {
-                try {
-                    $trialsData = $this->service->getTrials($teamId, $testIdStr);
-                    
-                    if (!is_array($trialsData) || empty($trialsData)) {
-                        error_log("[VALD Sync] WARN: getTrials returned empty for test $testIdStr");
-                    }
-                    
-                    if (is_array($trialsData) && !empty($trialsData)) {
-                        // VALD returns multiple trials (individual jumps) within a test session.
-                        // We need to AVERAGE valid trials to extract clean metrics from it.
-                        $accumulatedMetrics = [];
-                        $validTrialCount = 0;
-                        $allDiagKeys = [];
-                        
-                        foreach ($trialsData as $trial) {
-                            if (!isset($trial['results']) || !is_array($trial['results'])) continue;
-                            
-                            // Parse this trial's results, separating by limb
-                            $trialHasData = false;
-                            
-                            foreach ($trial['results'] as $res) {
-                                $def = strtoupper($res['definition']['result'] ?? '');
-                                $val = $res['value'] ?? null;
-                                $limb = $res['limb'] ?? 'Trial';
-                                $allDiagKeys[] = ($res['definition']['result'] ?? '') . ' [' . $limb . ']';
-                                
-                                if (!$def || $val === null) continue;
-                                
-                                $keyToStore = null;
-
-                                // --- AGGREGATE (limb = "Trial") metrics ---
-                                if ($limb === 'Trial') {
-                                    if ($def === 'RSI_MODIFIED') {
-                                        // VALD returns RSImod in cm/s (e.g. 43.2). We convert to m/s.
-                                        $val = ((float)$val) / 100;
-                                        $keyToStore = 'RSIModified';
-                                    }
-                                    if (in_array($def, ['JUMP_HEIGHT_FLIGHT_TIME', 'FLIGHT_TIME_JUMP_HEIGHT', 'JUMP_HEIGHT', 'ESTIMATED_JUMP_HEIGHT'])) {
-                                        // Convert to cm if in meters (VALD sometimes sends meters)
-                                        $cm = (float)$val;
-                                        if ($cm < 1) $cm = $cm * 100; // convert m -> cm
-                                        $keyToStore = 'JumpHeight';
-                                        $val = $cm;
-                                    }
-                                    if ($def === 'JUMP_HEIGHT_IMPULSE' || $def === 'JUMP_HEIGHT_IMP_MOM') {
-                                        $cm = (float)$val;
-                                        if ($cm < 1) $cm = $cm * 100;
-                                        $keyToStore = 'JumpHeightImpMom';
-                                        $val = $cm;
-                                    }
-                                    if ($def === 'PEAK_FORCE') {
-                                        $keyToStore = 'PeakForce';
-                                    }
-                                    if ($def === 'BRAKING_IMPULSE') {
-                                        $keyToStore = 'BrakingImpulse';
-                                    }
-                                    if ($def === 'CONCENTRIC_PEAK_FORCE') {
-                                        $keyToStore = 'ConcentricPeakForce';
-                                    }
-                                    if ($def === 'CONCENTRIC_PEAK_POWER') {
-                                        $keyToStore = 'ConcentricPeakPower';
-                                    }
-                                    if ($def === 'CONCENTRIC_PEAK_VELOCITY') {
-                                        $keyToStore = 'ConcentricPeakVelocity';
-                                    }
-                                    if (in_array($def, ['PEAK_LANDING_FORCE', 'LANDING_PEAK_FORCE'])) {
-                                        $keyToStore = 'PeakLandingForce';
-                                    }
-                                    if ($def === 'CONTRACTION_TIME' || $def === 'TIME_TO_TAKEOFF') {
-                                        // s -> ms
-                                        $val = ((float)$val) * 1000;
-                                        $keyToStore = 'TimeToTakeoff';
-                                    }
-                                }
-                                
-                                // --- LEFT limb metrics ---
-                                if ($limb === 'Left') {
-                                    if ($def === 'PEAK_FORCE' || $def === 'PEAK_FORCE_LEFT') {
-                                        $keyToStore = 'PeakForceLeft';
-                                    }
-                                    if (in_array($def, ['PEAK_LANDING_FORCE', 'LANDING_PEAK_FORCE', 'LANDING_FORCE_LEFT', 'PEAK_LANDING_FORCE_LEFT'])) {
-                                        $keyToStore = 'LandingForceLeft';
-                                    }
-                                }
-                                
-                                // --- RIGHT limb metrics ---
-                                if ($limb === 'Right') {
-                                    if ($def === 'PEAK_FORCE' || $def === 'PEAK_FORCE_RIGHT') {
-                                        $keyToStore = 'PeakForceRight';
-                                    }
-                                    if (in_array($def, ['PEAK_LANDING_FORCE', 'LANDING_PEAK_FORCE', 'LANDING_FORCE_RIGHT', 'PEAK_LANDING_FORCE_RIGHT'])) {
-                                        $keyToStore = 'LandingForceRight';
-                                    }
-                                }
-
-                                if ($keyToStore !== null) {
-                                    if (!isset($accumulatedMetrics[$keyToStore])) {
-                                        $accumulatedMetrics[$keyToStore] = 0.0;
-                                    }
-                                    $accumulatedMetrics[$keyToStore] += (float)$val;
-                                    $trialHasData = true;
-                                }
-                            }
-                            
-                            if ($trialHasData) {
-                                $validTrialCount++;
-                            }
-                        }
-                        
-                        // Merge averaged metrics into our main metrics array
-                        if ($validTrialCount > 0) {
-                            foreach ($accumulatedMetrics as $key => $sumVal) {
-                                $avgVal = $sumVal / $validTrialCount;
-                                // Add appropriate rounding logic (e.g. 2 decimals for most things)
-                                $decimals = ($key === 'TimeToTakeoff') ? 0 : (($key === 'ConcentricPeakVelocity') ? 3 : (($key === 'JumpHeight' || $key === 'JumpHeightImpMom' || $key === 'PeakForce' || $key === 'LandingForceLeft' || $key === 'LandingForceRight' || $key === 'PeakForceLeft' || $key === 'PeakForceRight') ? 1 : 2));
-                                $metrics[$key] = ['Value' => round($avgVal, $decimals)];
-                            }
-                        }
-                        
-                        // DIAGNOSTIC: log unique keys for first few tests
-                        if (!empty($allDiagKeys) && $stats['synced'] < 3) {
-                            error_log('[VALD Sync DIAG] Test ' . $test['id'] . ' keys: ' . implode(', ', array_unique($allDiagKeys)));
-                        }
-                    }
-                } catch (\Throwable $e) {
-                    error_log("[VALD Sync] Errore recupero trials per test " . $test['id'] . ": " . $e->getMessage());
-                }
-            }
-
-            $this->repo->saveResult([
-                ':id'         => 'VTST_' . bin2hex(random_bytes(4)),
-                ':tenant_id'  => $tenantId,
-                ':athlete_id' => $athleteId,
-                ':test_id'    => $test['id'],
-                ':test_date'  => date('Y-m-d H:i:s', strtotime($test['recordedUTC'] ?? $test['analysedUTC'] ?? 'now')),
-                ':test_type'  => $test['testType'] ?? 'CMJ',
-                ':metrics'    => json_encode($metrics),
-            ]);
-            
-            // Auto-update ERP athlete weight using the highly accurate ForceDecks measurement
-            if (!empty($test['weight'])) {
-                $stmtW = $db->prepare('UPDATE athletes SET weight_kg = :w WHERE id = :id AND tenant_id = :tid');
-                $stmtW->execute([
-                    ':w' => round((float)$test['weight'], 1),
-                    ':id' => $athleteId,
-                    ':tid' => $tenantId
-                ]);
-            }
-            
-            $stats['synced']++;
-        }
+                if ($page > 50) break;
+            } // end while pagination
+        } // end for chunk loop
 
         error_log('[VALD Sync] Completata: ' . (string)$stats['synced'] . ' salvati, ' . (string)$stats['skipped'] . ' saltati su ' . (string)$stats['found'] . ' trovati.');
         return $stats;

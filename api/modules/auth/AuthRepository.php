@@ -49,7 +49,9 @@ class AuthRepository
                AND success = 0
                AND created_at >= DATE_SUB(NOW(), INTERVAL :window SECOND)'
         );
-        $stmt->execute([':ip' => $ip, ':window' => $windowSeconds]);
+        $stmt->bindValue(':ip', $ip, \PDO::PARAM_STR);
+        $stmt->bindValue(':window', $windowSeconds, \PDO::PARAM_INT);
+        $stmt->execute();
         return (int)$stmt->fetchColumn();
     }
 
