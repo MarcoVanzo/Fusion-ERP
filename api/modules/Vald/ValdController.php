@@ -649,116 +649,103 @@ class ValdController
                     
                     if (is_array($trialsData) && !empty($trialsData)) {
                         // VALD returns multiple trials (individual jumps) within a test session.
-                        // We need to AVERAGE valid trials to extract clean metrics from it.
+                        // Average valid trials to extract clean metrics.
                         $accumulatedMetrics = [];
-                        $validTrialCount = 0;
+                        $trialCounts        = []; // Bug 3 fix: per-key counters (not a single global count)
                         $allDiagKeys = [];
-                        
+
                         foreach ($trialsData as $trial) {
                             if (!isset($trial['results']) || !is_array($trial['results'])) continue;
-                            
-                            // Parse this trial's results, separating by limb
-                            $trialHasData = false;
-                            
+
                             foreach ($trial['results'] as $res) {
-                                $def = strtoupper($res['definition']['result'] ?? '');
-                                $val = $res['value'] ?? null;
+                                $def  = strtoupper($res['definition']['result'] ?? '');
+                                $val  = $res['value'] ?? null;
                                 $limb = $res['limb'] ?? 'Trial';
                                 $allDiagKeys[] = ($res['definition']['result'] ?? '') . ' [' . $limb . ']';
-                                
+
                                 if (!$def || $val === null) continue;
-                                
+
                                 $keyToStore = null;
 
                                 // --- AGGREGATE (limb = "Trial") metrics ---
                                 if ($limb === 'Trial') {
+                                    // Bug 1 fix: RSI_MODIFIED is in m/s from the API.
+                                    // Some older protocol versions return it scaled ×100 (e.g. 220 = 2.20 m/s).
+                                    // Divide by 100 ONLY when the value is clearly out of the valid m/s range (> 3.0).
                                     if ($def === 'RSI_MODIFIED') {
-                                        // VALD returns RSImod in cm/s (e.g. 43.2). We convert to m/s.
-                                        $val = ((float)$val) / 100;
+                                        $rsi = (float)$val;
+                                        if ($rsi > 3.0) $rsi /= 100.0;
+                                        $val = round($rsi, 3);
                                         $keyToStore = 'RSIModified';
                                     }
-                                    if (in_array($def, ['JUMP_HEIGHT_FLIGHT_TIME', 'FLIGHT_TIME_JUMP_HEIGHT', 'JUMP_HEIGHT', 'ESTIMATED_JUMP_HEIGHT'])) {
-                                        // Convert to cm if in meters (VALD sometimes sends meters)
+                                    // Bug 2 fix: map ALL jump-height variants to JumpHeight
+                                    if (in_array($def, [
+                                        'JUMP_HEIGHT_FLIGHT_TIME', 'FLIGHT_TIME_JUMP_HEIGHT',
+                                        'JUMP_HEIGHT', 'ESTIMATED_JUMP_HEIGHT',
+                                        'JUMP_HEIGHT_IMPULSE', 'JUMP_HEIGHT_IMP_MOM',
+                                        'JUMP_HEIGHT_IMPULSE_MOMENTUM',
+                                    ])) {
                                         $cm = (float)$val;
-                                        if ($cm < 1) $cm = $cm * 100; // convert m -> cm
+                                        if ($cm < 1.0) $cm *= 100.0; // m → cm
                                         $keyToStore = 'JumpHeight';
                                         $val = $cm;
                                     }
-                                    if ($def === 'JUMP_HEIGHT_IMPULSE' || $def === 'JUMP_HEIGHT_IMP_MOM') {
-                                        $cm = (float)$val;
-                                        if ($cm < 1) $cm = $cm * 100;
-                                        $keyToStore = 'JumpHeightImpMom';
-                                        $val = $cm;
-                                    }
-                                    if ($def === 'PEAK_FORCE') {
-                                        $keyToStore = 'PeakForce';
-                                    }
-                                    if ($def === 'BRAKING_IMPULSE') {
-                                        $keyToStore = 'BrakingImpulse';
-                                    }
-                                    if ($def === 'CONCENTRIC_PEAK_FORCE') {
-                                        $keyToStore = 'ConcentricPeakForce';
-                                    }
-                                    if ($def === 'CONCENTRIC_PEAK_POWER') {
-                                        $keyToStore = 'ConcentricPeakPower';
-                                    }
-                                    if ($def === 'CONCENTRIC_PEAK_VELOCITY') {
-                                        $keyToStore = 'ConcentricPeakVelocity';
-                                    }
+                                    if ($def === 'PEAK_FORCE')             { $keyToStore = 'PeakForce'; }
+                                    if ($def === 'BRAKING_IMPULSE')        { $keyToStore = 'BrakingImpulse'; }
+                                    if ($def === 'CONCENTRIC_PEAK_FORCE')  { $keyToStore = 'ConcentricPeakForce'; }
+                                    if ($def === 'CONCENTRIC_PEAK_POWER')  { $keyToStore = 'ConcentricPeakPower'; }
+                                    if ($def === 'CONCENTRIC_PEAK_VELOCITY') { $keyToStore = 'ConcentricPeakVelocity'; }
                                     if (in_array($def, ['PEAK_LANDING_FORCE', 'LANDING_PEAK_FORCE'])) {
                                         $keyToStore = 'PeakLandingForce';
                                     }
-                                    if ($def === 'CONTRACTION_TIME' || $def === 'TIME_TO_TAKEOFF') {
-                                        // s -> ms
-                                        $val = ((float)$val) * 1000;
+                                    // Bug 4 fix: TIME_TO_TAKEOFF only (CONTRACTION_TIME is isometric, different metric)
+                                    if ($def === 'TIME_TO_TAKEOFF') {
+                                        $val = ((float)$val) * 1000; // s → ms
                                         $keyToStore = 'TimeToTakeoff';
                                     }
-                                }
-                                
-                                // --- LEFT limb metrics ---
-                                if ($limb === 'Left') {
-                                    if ($def === 'PEAK_FORCE' || $def === 'PEAK_FORCE_LEFT') {
-                                        $keyToStore = 'PeakForceLeft';
-                                    }
-                                    if (in_array($def, ['PEAK_LANDING_FORCE', 'LANDING_PEAK_FORCE', 'LANDING_FORCE_LEFT', 'PEAK_LANDING_FORCE_LEFT'])) {
-                                        $keyToStore = 'LandingForceLeft';
-                                    }
-                                }
-                                
-                                // --- RIGHT limb metrics ---
-                                if ($limb === 'Right') {
-                                    if ($def === 'PEAK_FORCE' || $def === 'PEAK_FORCE_RIGHT') {
-                                        $keyToStore = 'PeakForceRight';
-                                    }
-                                    if (in_array($def, ['PEAK_LANDING_FORCE', 'LANDING_PEAK_FORCE', 'LANDING_FORCE_RIGHT', 'PEAK_LANDING_FORCE_RIGHT'])) {
-                                        $keyToStore = 'LandingForceRight';
+                                    if ($def === 'CONTRACTION_TIME') {
+                                        $val = ((float)$val) * 1000;
+                                        $keyToStore = 'ContractionTime'; // kept separate — different metric
                                     }
                                 }
 
+                                // --- LEFT limb ---
+                                if ($limb === 'Left') {
+                                    if (in_array($def, ['PEAK_FORCE', 'PEAK_FORCE_LEFT']))        { $keyToStore = 'PeakForceLeft'; }
+                                    if (in_array($def, ['PEAK_LANDING_FORCE', 'LANDING_PEAK_FORCE',
+                                                         'LANDING_FORCE_LEFT', 'PEAK_LANDING_FORCE_LEFT'])) { $keyToStore = 'LandingForceLeft'; }
+                                }
+
+                                // --- RIGHT limb ---
+                                if ($limb === 'Right') {
+                                    if (in_array($def, ['PEAK_FORCE', 'PEAK_FORCE_RIGHT']))       { $keyToStore = 'PeakForceRight'; }
+                                    if (in_array($def, ['PEAK_LANDING_FORCE', 'LANDING_PEAK_FORCE',
+                                                         'LANDING_FORCE_RIGHT', 'PEAK_LANDING_FORCE_RIGHT'])) { $keyToStore = 'LandingForceRight'; }
+                                }
+
                                 if ($keyToStore !== null) {
-                                    if (!isset($accumulatedMetrics[$keyToStore])) {
-                                        $accumulatedMetrics[$keyToStore] = 0.0;
-                                    }
-                                    $accumulatedMetrics[$keyToStore] += (float)$val;
-                                    $trialHasData = true;
+                                    $accumulatedMetrics[$keyToStore] = ($accumulatedMetrics[$keyToStore] ?? 0.0) + (float)$val;
+                                    $trialCounts[$keyToStore]        = ($trialCounts[$keyToStore]        ?? 0)   + 1; // Bug 3 fix
                                 }
                             }
-                            
-                            if ($trialHasData) {
-                                $validTrialCount++;
-                            }
                         }
-                        
-                        // Merge averaged metrics into our main metrics array
-                        if ($validTrialCount > 0) {
-                            foreach ($accumulatedMetrics as $key => $sumVal) {
-                                $avgVal = $sumVal / $validTrialCount;
-                                // Add appropriate rounding logic (e.g. 2 decimals for most things)
-                                $decimals = ($key === 'TimeToTakeoff') ? 0 : (($key === 'ConcentricPeakVelocity') ? 3 : (($key === 'JumpHeight' || $key === 'JumpHeightImpMom' || $key === 'PeakForce' || $key === 'LandingForceLeft' || $key === 'LandingForceRight' || $key === 'PeakForceLeft' || $key === 'PeakForceRight') ? 1 : 2));
-                                $metrics[$key] = ['Value' => round($avgVal, $decimals)];
-                            }
+
+                        // Merge averaged metrics — Bug 3 fix: divide each key by ITS OWN trial count
+                        foreach ($accumulatedMetrics as $key => $sumVal) {
+                            $n = $trialCounts[$key] ?? 1;
+                            $avgVal = $sumVal / $n;
+                            $decimals = match(true) {
+                                $key === 'TimeToTakeoff' || $key === 'ContractionTime' => 0,
+                                $key === 'ConcentricPeakVelocity'                      => 3,
+                                $key === 'RSIModified'                                 => 3,
+                                in_array($key, ['JumpHeight', 'JumpHeightImpMom', 'PeakForce',
+                                                'LandingForceLeft', 'LandingForceRight',
+                                                'PeakForceLeft', 'PeakForceRight'])    => 1,
+                                default                                                => 2,
+                            };
+                            $metrics[$key] = ['Value' => round($avgVal, $decimals)];
                         }
-                        
+
                         // DIAGNOSTIC: log unique keys for first few tests
                         if (!empty($allDiagKeys) && $stats['synced'] < 3) {
                             error_log('[VALD Sync DIAG] Test ' . $test['id'] . ' keys: ' . implode(', ', array_unique($allDiagKeys)));
