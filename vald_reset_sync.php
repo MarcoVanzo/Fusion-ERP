@@ -1,48 +1,46 @@
 <?php
+/**
+ * VALD Resync — ultimi 180 giorni. ELIMINARE DOPO L'USO.
+ */
+set_time_limit(120);
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
-set_time_limit(120);
 header('Content-Type: text/plain');
 
 require_once __DIR__ . '/vendor/autoload.php';
 
+// Skip Dotenv entirely — credentials come from ValdCredentials constants + Apache SetEnv
 use FusionERP\Shared\Database;
 use FusionERP\Shared\TenantContext;
 use FusionERP\Modules\Vald\ValdService;
 use FusionERP\Modules\Vald\ValdRepository;
 
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
-$dotenv->safeLoad();
-echo "dotenv OK\n";
-
 $db = Database::getInstance();
 echo "DB OK\n";
 
 $row = $db->query('SELECT id FROM tenants LIMIT 1')->fetch(PDO::FETCH_ASSOC);
-echo "Tenant: " . ($row['id'] ?? 'none') . "\n";
 TenantContext::setOverride($row['id'] ?? 'TNT_default');
-
-$svc = new ValdService();
-echo "ValdService OK\n";
-
-$dateFrom = date('Y-m-d', strtotime('-180 days'));
-$dateTo   = date('Y-m-d');
-echo "Periodo: $dateFrom → $dateTo\n\n";
-flush(); ob_flush();
-
 $tenantId = $row['id'];
+echo "Tenant: $tenantId\n";
+
+$svc  = new ValdService();
+$repo = new ValdRepository();
+
 $stmt = $db->prepare('SELECT id, vald_athlete_id FROM athletes WHERE tenant_id = :tid AND vald_athlete_id IS NOT NULL');
 $stmt->execute([':tid' => $tenantId]);
 $linked = [];
 foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $r) {
     $linked[$r['vald_athlete_id']] = $r['id'];
 }
-echo "Atleti collegati: " . count($linked) . "\n\n";
+echo "Atleti collegati: " . count($linked) . "\n";
+
+$dateFrom = date('Y-m-d', strtotime('-180 days'));
+$dateTo   = date('Y-m-d');
+echo "Periodo: $dateFrom → $dateTo\n\n";
 flush(); ob_flush();
 
-$repo = new ValdRepository();
 $found = $synced = $skipped = 0;
-$page = 1;
+$page  = 1;
 
 while (true) {
     $results = $svc->getTestResults($dateFrom, '', $page, $dateTo);
@@ -87,10 +85,10 @@ while (true) {
                             if ($k) { $acc[$k]=($acc[$k]??0)+(float)$val; $cnt[$k]=($cnt[$k]??0)+1; }
                         }
                     }
-                    foreach ($acc as $key=>$sum) {
-                        $n=$cnt[$key]??1;
-                        $d=match(true){$key==='TimeToTakeoff'=>0,$key==='RSIModified'=>3,in_array($key,['JumpHeight','PeakForce','LandingForceLeft','LandingForceRight','PeakForceLeft','PeakForceRight'])=>1,default=>2};
-                        $metrics[$key]=['Value'=>round($sum/$n,$d)];
+                    foreach ($acc as $key => $sum) {
+                        $n = $cnt[$key] ?? 1;
+                        $d = match(true) { $key==='TimeToTakeoff'=>0,$key==='RSIModified'=>3,in_array($key,['JumpHeight','PeakForce','LandingForceLeft','LandingForceRight','PeakForceLeft','PeakForceRight'])=>1,default=>2 };
+                        $metrics[$key] = ['Value' => round($sum/$n,$d)];
                     }
                 }
             } catch (\Throwable $e) { /* skip */ }
@@ -109,19 +107,18 @@ while (true) {
     }
 
     if (count($results) < 50) break;
-    $page++;
-    if ($page > 20) break;
+    if (++$page > 20) break;
     flush(); ob_flush();
 }
 
 echo "\n=== RISULTATO ===\n";
 echo "Trovati : $found\nSalvati : $synced\nSaltati : $skipped\n\n";
 
-$ok=$bad=0;
+$ok = $bad = 0;
 foreach ($db->query('SELECT metrics FROM vald_test_results LIMIT 20')->fetchAll(PDO::FETCH_COLUMN) as $json) {
-    $m=json_decode($json,true)??[];
-    $rsi=$m['RSIModified']['Value']??null;
-    if($rsi===null)continue;
-    if($rsi>=0.05&&$rsi<=3.0)$ok++; else{$bad++;echo"RSImod anomalo: $rsi\n";}
+    $m = json_decode($json, true) ?? [];
+    $rsi = $m['RSIModified']['Value'] ?? null;
+    if ($rsi === null) continue;
+    ($rsi >= 0.05 && $rsi <= 3.0) ? $ok++ : ($bad++ && print("RSImod anomalo: $rsi\n"));
 }
 echo "RSImod [0.05–3.0]: $ok OK | $bad anomali\n";
