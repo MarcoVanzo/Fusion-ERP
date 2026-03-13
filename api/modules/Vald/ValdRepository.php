@@ -34,15 +34,16 @@ class ValdRepository
                      AND (
                          (vald_athlete_id IS NOT NULL AND vald_athlete_id = (
                              SELECT vald_athlete_id FROM athletes 
-                             WHERE id = :athlete_id AND tenant_id = :t3 LIMIT 1
+                             WHERE id = :athlete_id2 AND tenant_id = :t3 LIMIT 1
                          ))
-                         OR id = :athlete_id
+                         OR id = :athlete_id3
                      )
                )
              ORDER BY test_date DESC'
         );
         $stmt->execute([
-            ':athlete_id' => $athleteId,
+            ':athlete_id2' => $athleteId,
+            ':athlete_id3' => $athleteId,
             ':t1' => TenantContext::id(),
             ':t2' => TenantContext::id(),
             ':t3' => TenantContext::id()
@@ -64,15 +65,16 @@ class ValdRepository
                      AND (
                          (vald_athlete_id IS NOT NULL AND vald_athlete_id = (
                              SELECT vald_athlete_id FROM athletes 
-                             WHERE id = :athlete_id AND tenant_id = :t3 LIMIT 1
+                             WHERE id = :athlete_id2 AND tenant_id = :t3 LIMIT 1
                          ))
-                         OR id = :athlete_id
+                         OR id = :athlete_id3
                      )
                )
              ORDER BY test_date DESC LIMIT 1'
         );
         $stmt->execute([
-            ':athlete_id' => $athleteId,
+            ':athlete_id2' => $athleteId,
+            ':athlete_id3' => $athleteId,
             ':t1' => TenantContext::id(),
             ':t2' => TenantContext::id(),
             ':t3' => TenantContext::id()
