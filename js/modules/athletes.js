@@ -607,7 +607,7 @@ const Athletes = (() => {
           return t ? t.value + (t.unit ? " " + t.unit : "") : "—";
         })(
           c,
-        )}</span>\n                </div>\n              </div>\n            </div>\n\n            \x3c!-- AI Summary section --\x3e\n            <div id="ai-summary-section"></div>\n\n            \x3c!-- VALD Performance Tracking --\x3e\n            <div id="vald-section">\n              <p class="section-label" style="display:flex;align-items:center;gap:8px;justify-content:space-between;">\n                <span style="display:flex;align-items:center;gap:8px;"><span style="color:var(--color-pink);">⚡</span> VALD Performance Tracking</span>\n                <span style="display:flex;align-items:center;gap:6px;">\n                  <button id="vald-link-btn" type="button" class="btn btn-sm btn-ghost" style="display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:4px 10px;" title="Collega atleti VALD/ERP"><i class="ph ph-link" style="font-size:13px;"></i> Collega</button>\n                  <button id="vald-sync-btn" type="button" class="btn btn-sm btn-default" style="display:inline-flex;align-items:center;gap:6px;font-size:11px;padding:4px 12px;border-color:rgba(255,0,255,0.3);color:var(--color-pink);" title="Sincronizza dati VALD ForceDecks"><i class="ph ph-arrows-clockwise" style="font-size:13px;"></i> Sincronizza</button>\n                </span>\n              </p>\n              <div id="vald-tab-content">\n                <div style="display:flex;flex-direction:column;gap:8px;">\n                  <div class="skeleton skeleton-title"></div>\n                  <div class="skeleton skeleton-text" style="width:60%;"></div>\n                </div>\n              </div>\n            </div>\n\n            ${
+        )}</span>\n                </div>\n              </div>\n            </div>\n\n            \x3c!-- VALD Performance Tracking --\x3e\n            <div id="vald-section">\n              <p class="section-label" style="display:flex;align-items:center;gap:8px;justify-content:space-between;">\n                <span style="display:flex;align-items:center;gap:8px;"><span style="color:var(--color-pink);">⚡</span> VALD Performance Tracking</span>\n                <span style="display:flex;align-items:center;gap:6px;">\n                  <button id="vald-link-btn" type="button" class="btn btn-sm btn-ghost" style="display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:4px 10px;" title="Collega atleti VALD/ERP"><i class="ph ph-link" style="font-size:13px;"></i> Collega</button>\n                  <button id="vald-sync-btn" type="button" class="btn btn-sm btn-default" style="display:inline-flex;align-items:center;gap:6px;font-size:11px;padding:4px 12px;border-color:rgba(255,0,255,0.3);color:var(--color-pink);" title="Sincronizza dati VALD ForceDecks"><i class="ph ph-arrows-clockwise" style="font-size:13px;"></i> Sincronizza</button>\n                </span>\n              </p>\n              <div id="vald-tab-content">\n                <div style="display:flex;flex-direction:column;gap:8px;">\n                  <div class="skeleton skeleton-title"></div>\n                  <div class="skeleton skeleton-text" style="width:60%;"></div>\n                </div>\n              </div>\n            </div>\n\n            ${
           r.metrics?.length
             ? `\n              <div class="table-wrapper">\n                <table class="table">\n                  <thead><tr><th>Data</th><th>Durata (min)</th><th>RPE</th><th>Carico</th><th>Note</th></tr></thead>\n                  <tbody>\n                    ${r.metrics
                 .map((e) => {
@@ -1259,15 +1259,7 @@ const Athletes = (() => {
     } else v();
     var i;
   }
-  async function y(e) {
-    const t = document.getElementById("ai-summary-section");
-    if (t)
-      try {
-        const a = await Store.get("aiSummary", "athletes", { id: e });
-        a &&
-          (t.innerHTML = `\n          <div>\n            <p class="section-label">Report AI Prestazioni</p>\n            <div class="card" style="padding:var(--sp-3);">\n              <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:var(--sp-2);margin-bottom:var(--sp-2);">\n                <span style="font-size:12px;color:var(--color-text-muted);">Periodo: ${Utils.formatDate(a.period_start)} → ${Utils.formatDate(a.period_end)}</span>\n                <span class="badge badge-pink">AI</span>\n              </div>\n              <p style="font-size:14px;line-height:1.7;white-space:pre-line;">${Utils.escapeHtml(a.summary_text)}</p>\n            </div>\n          </div>`);
-      } catch {}
-  }
+  async function y(_e) { /* ai-summary removed */ }
   function b(e, t, a) {
     if (null == t) return "unknown";
     if ("asymmetry" === e)
