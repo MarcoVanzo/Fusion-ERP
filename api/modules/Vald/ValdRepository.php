@@ -98,15 +98,16 @@ class ValdRepository
                      AND (
                          (vald_athlete_id IS NOT NULL AND vald_athlete_id = (
                              SELECT vald_athlete_id FROM athletes 
-                             WHERE id = :athlete_id AND tenant_id = :t3 LIMIT 1
+                             WHERE id = :athlete_id2 AND tenant_id = :t3 LIMIT 1
                          ))
-                         OR id = :athlete_id
+                         OR id = :athlete_id3
                      )
                )
              ORDER BY test_date DESC
              LIMIT :lim OFFSET 1'
         );
-        $stmt->bindValue(':athlete_id', $athleteId);
+        $stmt->bindValue(':athlete_id2', $athleteId);
+        $stmt->bindValue(':athlete_id3', $athleteId);
         $stmt->bindValue(':t1', TenantContext::id());
         $stmt->bindValue(':t2', TenantContext::id());
         $stmt->bindValue(':t3', TenantContext::id());
@@ -242,9 +243,9 @@ class ValdRepository
                      AND (
                          (vald_athlete_id IS NOT NULL AND vald_athlete_id = (
                              SELECT vald_athlete_id FROM athletes 
-                             WHERE id = :athlete_id AND tenant_id = :t3 LIMIT 1
+                             WHERE id = :athlete_id2 AND tenant_id = :t3 LIMIT 1
                          ))
-                         OR id = :athlete_id
+                         OR id = :athlete_id3
                      )
                )
              ORDER BY test_date DESC
@@ -254,7 +255,8 @@ class ValdRepository
             ':t1' => TenantContext::id(),
             ':t2' => TenantContext::id(),
             ':t3' => TenantContext::id(),
-            ':athlete_id' => $athleteId
+            ':athlete_id2' => $athleteId,
+            ':athlete_id3' => $athleteId,
         ]);
 
         $rows = $stmt->fetchAll();
