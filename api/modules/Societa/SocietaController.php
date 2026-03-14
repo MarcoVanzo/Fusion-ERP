@@ -696,4 +696,233 @@ class SocietaController
         Audit::log('DELETE', 'societa_titoli', $id, $before, null);
         Response::success(['message' => 'Titolo eliminato']);
     }
+
+    // ─── FORESTERIA ────────────────────────────────────────────────────────────
+
+    /** GET  ?module=societa&action=getForesteria — tutto in uno (info + spese + media) */
+    public function getForesteria(): void
+    {
+        Auth::requireRole('operator');
+        $db  = \FusionERP\Shared\Database::getInstance();
+        $tid = TenantContext::id();
+
+        // Info singleton
+        $info = $db->prepare('SELECT * FROM foresteria_info WHERE tenant_id = ? LIMIT 1');
+        $info->execute([$tid]);
+        $infoRow = $info->fetch(\PDO::FETCH_ASSOC) ?: [
+            'description' => '',
+            'address'     => 'Via Bazzera 16, 30030 Martellago (VE)',
+            'lat'         => 45.5440000,
+            'lng'         => 12.1580000,
+        ];
+
+        // Spese (ultimi 100, più recenti prima)
+        $expenses = $db->prepare(
+            'SELECT * FROM foresteria_expenses
+             WHERE tenant_id = ? AND is_deleted = 0
+             ORDER BY expense_date DESC LIMIT 100'
+        );
+        $expenses->execute([$tid]);
+
+        // Media
+        $media = $db->prepare(
+            'SELECT * FROM foresteria_media
+             WHERE tenant_id = ? AND is_deleted = 0
+             ORDER BY uploaded_at DESC LIMIT 200'
+        );
+        $media->execute([$tid]);
+
+        Response::success([
+            'info'     => $infoRow,
+            'expenses' => $expenses->fetchAll(\PDO::FETCH_ASSOC),
+            'media'    => $media->fetchAll(\PDO::FETCH_ASSOC),
+        ]);
+    }
+
+    /** POST ?module=societa&action=saveForesteria — salva descrizione */
+    public function saveForesteria(): void
+    {
+        Auth::requireRole('manager');
+        $body = Response::jsonBody();
+        $db   = \FusionERP\Shared\Database::getInstance();
+        $tid  = TenantContext::id();
+
+        $id = 'FOR_' . bin2hex(random_bytes(4));
+        $desc = $body['description'] ?? null;
+
+        $db->prepare(
+            'INSERT INTO foresteria_info (id, tenant_id, description)
+             VALUES (?, ?, ?)
+             ON DUPLICATE KEY UPDATE description = VALUES(description)'
+        )->execute([$id, $tid, $desc]);
+
+        Audit::log('UPSERT', 'foresteria_info', $tid, null, ['description' => $desc]);
+        Response::success(['message' => 'Descrizione salvata']);
+    }
+
+    /** POST ?module=societa&action=addExpense — aggiunge spesa */
+    public function addExpense(): void
+    {
+        Auth::requireRole('manager');
+        $body = Response::jsonBody();
+        Response::requireFields($body, ['description', 'amount', 'expense_date']);
+
+        $db  = \FusionERP\Shared\Database::getInstance();
+        $tid = TenantContext::id();
+        $id  = 'FEX_' . bin2hex(random_bytes(4));
+
+        $db->prepare(
+            'INSERT INTO foresteria_expenses
+             (id, tenant_id, description, amount, category, expense_date, notes, created_by)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+        )->execute([
+            $id,
+            $tid,
+            htmlspecialchars(trim($body['description']), ENT_QUOTES, 'UTF-8'),
+            (float)$body['amount'],
+            $body['category'] ?? null,
+            $body['expense_date'],
+            $body['notes'] ?? null,
+            Auth::requireAuth()['id'] ?? null,
+        ]);
+
+        Audit::log('INSERT', 'foresteria_expenses', $id, null, $body);
+        Response::success(['id' => $id], 201);
+    }
+
+    /** POST ?module=societa&action=deleteExpense — soft-delete spesa */
+    public function deleteExpense(): void
+    {
+        Auth::requireRole('manager');
+        $body = Response::jsonBody();
+        $id   = $body['id'] ?? '';
+        if (empty($id)) Response::error('id obbligatorio', 400);
+
+        $db  = \FusionERP\Shared\Database::getInstance();
+        $tid = TenantContext::id();
+
+        $db->prepare(
+            'UPDATE foresteria_expenses SET is_deleted = 1 WHERE id = ? AND tenant_id = ?'
+        )->execute([$id, $tid]);
+
+        Audit::log('DELETE', 'foresteria_expenses', $id, null, null);
+        Response::success(['message' => 'Spesa rimossa']);
+    }
+
+    /** POST ?module=societa&action=uploadForesteriaMedia — upload foto/video */
+    public function uploadForesteriaMedia(): void
+    {
+        Auth::requireRole('manager');
+
+        if (empty($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
+            Response::error('File non caricato', 400);
+        }
+
+        $file  = $_FILES['file'];
+        $finfo = new \finfo(FILEINFO_MIME_TYPE);
+        $mime  = $finfo->file($file['tmp_name']);
+
+        $allowedImage = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+        $allowedVideo = ['video/mp4', 'video/webm', 'video/quicktime', 'video/avi'];
+        $isImage = in_array($mime, $allowedImage, true);
+        $isVideo = in_array($mime, $allowedVideo, true);
+
+        if (!$isImage && !$isVideo) {
+            Response::error('Formato non supportato. Accettati: JPG, PNG, WEBP, MP4, WEBM, MOV', 415);
+        }
+
+        $tid      = TenantContext::id();
+        $mediaDir = dirname(__DIR__, 3) . '/uploads/societa/' . $tid . '/foresteria';
+        if (!is_dir($mediaDir)) mkdir($mediaDir, 0755, true);
+
+        $ext      = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        $filename = ($isVideo ? 'video' : 'photo') . '_' . date('Ymd_His') . '_' . bin2hex(random_bytes(3)) . '.' . $ext;
+        $destPath = $mediaDir . '/' . $filename;
+
+        if (!move_uploaded_file($file['tmp_name'], $destPath)) {
+            Response::error('Errore salvataggio file', 500);
+        }
+
+        $relPath = 'uploads/societa/' . $tid . '/foresteria/' . $filename;
+        $id      = 'FMD_' . bin2hex(random_bytes(4));
+        $type    = $isVideo ? 'video' : 'photo';
+        $title   = $_POST['title'] ?? null;
+        $desc    = $_POST['description'] ?? null;
+
+        $db = \FusionERP\Shared\Database::getInstance();
+        $db->prepare(
+            'INSERT INTO foresteria_media (id, tenant_id, type, file_path, title, description)
+             VALUES (?, ?, ?, ?, ?, ?)'
+        )->execute([$id, $tid, $type, $relPath, $title, $desc]);
+
+        Audit::log('INSERT', 'foresteria_media', $id, null, ['file_path' => $relPath, 'type' => $type]);
+        Response::success(['id' => $id, 'file_path' => $relPath, 'type' => $type], 201);
+    }
+
+    /** POST ?module=societa&action=addForesteriaYoutubeLink — aggiunge link YouTube */
+    public function addForesteriaYoutubeLink(): void
+    {
+        Auth::requireRole('manager');
+        $body  = Response::jsonBody();
+        $url   = trim($body['url'] ?? '');
+        $title = trim($body['title'] ?? '');
+
+        if (empty($url)) {
+            Response::error('url obbligatorio', 400);
+        }
+
+        // Estrai l'ID video da vari formati YouTube
+        $videoId = null;
+        $patterns = [
+            '/(?:youtube\.com\/watch\?(?:.*&)?v=)([a-zA-Z0-9_-]{11})/',
+            '/(?:youtu\.be\/)([a-zA-Z0-9_-]{11})/',
+            '/(?:youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/',
+            '/(?:youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/',
+            '/(?:youtube\.com\/v\/)([a-zA-Z0-9_-]{11})/',
+        ];
+        foreach ($patterns as $pattern) {
+            if (preg_match($pattern, $url, $matches)) {
+                $videoId = $matches[1];
+                break;
+            }
+        }
+
+        if (!$videoId) {
+            Response::error('URL YouTube non valido. Incolla il link di un video dal canale YouTube di Fusion.', 400);
+        }
+
+        $db  = \FusionERP\Shared\Database::getInstance();
+        $tid = TenantContext::id();
+        $id  = 'FMD_' . bin2hex(random_bytes(4));
+
+        // Salva l'URL canonico del video
+        $canonicalUrl = 'https://www.youtube.com/watch?v=' . $videoId;
+
+        $db->prepare(
+            'INSERT INTO foresteria_media (id, tenant_id, type, file_path, title, description)
+             VALUES (?, ?, ?, ?, ?, ?)'
+        )->execute([$id, $tid, 'youtube', $canonicalUrl, $title ?: $canonicalUrl, null]);
+
+        Audit::log('INSERT', 'foresteria_media', $id, null, ['url' => $canonicalUrl, 'type' => 'youtube']);
+        Response::success(['id' => $id, 'file_path' => $canonicalUrl, 'type' => 'youtube'], 201);
+    }
+
+    /** POST ?module=societa&action=deleteForesteriaMedia — soft-delete media */
+    public function deleteForesteriaMedia(): void
+    {
+        Auth::requireRole('manager');
+        $body = Response::jsonBody();
+        $id   = $body['id'] ?? '';
+        if (empty($id)) Response::error('id obbligatorio', 400);
+
+        $db  = \FusionERP\Shared\Database::getInstance();
+        $tid = TenantContext::id();
+
+        $db->prepare(
+            'UPDATE foresteria_media SET is_deleted = 1 WHERE id = ? AND tenant_id = ?'
+        )->execute([$id, $tid]);
+
+        Audit::log('DELETE', 'foresteria_media', $id, null, null);
+        Response::success(['message' => 'Media rimosso']);
+    }
 }

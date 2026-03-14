@@ -42,14 +42,12 @@
         "children": [
             { "title": "Task Operativi", "path": "tasks", "icon": "check-square", "isMobileVisible": false, "roles": ["manager", "admin"] },
             { "title": "Scadenze Societarie", "path": "societa-scadenze", "icon": "bell-ringing", "isMobileVisible": false, "roles": ["manager", "admin"] },
+            { "title": "Viaggi & Trasferte", "path": "transport", "icon": "van", "isMobileVisible": false },
             { "title": "Trasporti Autisti", "path": "transport-drivers", "icon": "steering-wheel", "isMobileVisible": false },
             { "title": "Gestione Mezzi", "path": "transport-fleet", "icon": "bus", "isMobileVisible": false },
             { "title": "Trasporti Rimborsi", "path": "transport-refunds", "icon": "receipt", "isMobileVisible": false },
-            { "title": "Summer Camp", "path": "outseason-camps", "icon": "tent", "isMobileVisible": false, "roles": ["manager", "admin"] },
-            { "title": "Tornei OutSeason", "path": "outseason-tournaments", "icon": "medal", "isMobileVisible": false, "roles": ["manager", "admin"] },
-            { "title": "Network Coll.", "path": "network-collaborazioni", "icon": "handshake", "isMobileVisible": false, "roles": ["manager", "admin"] },
-            { "title": "Network Prove", "path": "network-prove", "icon": "user-check", "isMobileVisible": false, "roles": ["manager", "admin"] },
-            { "title": "Network Attività", "path": "network-attivita", "icon": "activity", "isMobileVisible": false, "roles": ["manager", "admin"] }
+            { "title": "OutSeason", "path": "outseason-camps", "icon": "tent", "isMobileVisible": false, "roles": ["manager", "admin"] },
+            { "title": "Gestione Tornei", "path": "outseason-tournaments", "icon": "medal", "isMobileVisible": false, "roles": ["manager", "admin"] }
         ]
     },
     {
@@ -86,7 +84,6 @@
         "children": [
             { "title": "Contabilità", "path": "finance", "icon": "calculator", "isMobileVisible": false, "roles": ["manager", "admin"] },
             { "title": "Fatturazione", "path": "finance-invoices", "icon": "receipt", "isMobileVisible": false, "roles": ["manager", "admin"] },
-            { "title": "Riepilogo 74-ter", "path": "finance-74ter", "icon": "intersect", "isMobileVisible": false, "roles": ["manager", "admin"] },
             { "title": "Quote Atleti", "path": "athlete-payments", "icon": "credit-card", "isMobileVisible": false, "roles": ["manager", "admin"] },
             { "title": "Articoli eCommerce", "path": "ecommerce-articles", "icon": "tag", "isMobileVisible": false },
             { "title": "Ordini eCommerce", "path": "ecommerce-orders", "icon": "package", "isMobileVisible": false },
@@ -106,12 +103,10 @@
         "children": [
             { "title": "Identità", "path": "societa-identita", "icon": "identification-card", "isMobileVisible": false },
             { "title": "Organigramma", "path": "societa-organigramma", "icon": "tree-structure", "isMobileVisible": false },
-            { "title": "Membri Staff", "path": "societa-membri", "icon": "users-three", "isMobileVisible": false },
-            { "title": "Documenti Societari", "path": "societa-documenti", "icon": "files", "isMobileVisible": false },
+            { "title": "Direttivo", "path": "societa-membri", "icon": "users-three", "isMobileVisible": false },
+            { "title": "Network", "path": "network-collaborazioni", "icon": "share-network", "isMobileVisible": false },
             { "title": "Titoli & Palmares", "path": "societa-titoli", "icon": "trophy", "isMobileVisible": false },
-            { "title": "Gestione Utenti", "path": "utenti", "icon": "users", "isMobileVisible": false, "roles": ["admin"] },
-            { "title": "Backup Sistema", "path": "admin-backup", "icon": "database", "isMobileVisible": false, "roles": ["admin"] },
-            { "title": "Log Sistema", "path": "admin-logs", "icon": "clipboard-text", "isMobileVisible": false, "roles": ["admin"] }
+            { "title": "La Foresteria", "path": "societa-foresteria", "icon": "house-line", "isMobileVisible": false }
         ]
     }
 ]

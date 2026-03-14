@@ -118,10 +118,6 @@ class ValdController
         // 5. Historical results (last 5) for trend context
         $history = array_slice($this->repo->getResultsByAthlete($athleteId), 0, 5);
 
-        // 6. AI evaluations via Gemini
-        $prompt = $this->buildValdPrompt($semaphore, $asymmetry, $profile, $history);
-        [$aiDiagnosis, $aiPlan] = $this->callGeminiVald($prompt);
-
         // 7. All results for chart
         $allResults = $this->repo->getResultsByAthlete($athleteId);
         foreach ($allResults as &$res) {
@@ -153,14 +149,107 @@ class ValdController
                 'semaphore' => $semaphore,
                 'asymmetry' => $asymmetry,
                 'profile' => $profile,
-                'aiDiagnosis' => $aiDiagnosis,
-                'aiPlan' => $aiPlan,
                 'results' => $allResults,
             ]);
         } catch (\Throwable $e) {
             Response::error('Critico VALD: ' . $e->getMessage() . ' File: ' . basename($e->getFile()) . ' Line: ' . $e->getLine(), 500);
         }
     }
+
+    /**
+     * GET /api/?module=vald&action=aiAnalysis&athleteId=X&part=diagnosis|plan
+     * On-demand Gemini AI analysis — called by user button click.
+     */
+    public function aiAnalysis(): void
+    {
+        try {
+            set_time_limit(120); // Gemini can take up to ~60s for 1000-word responses
+            Auth::requireRead('athletes');
+            $athleteId = filter_input(INPUT_GET, 'athleteId', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+            $part      = filter_input(INPUT_GET, 'part', FILTER_SANITIZE_SPECIAL_CHARS) ?? 'diagnosis';
+
+            if (empty($athleteId)) { Response::error('athleteId obbligatorio', 400); return; }
+
+            $latest = $this->repo->getLatestResult($athleteId);
+            if (!$latest) { Response::success(['text' => 'Nessun dato VALD disponibile.']); return; }
+
+            $metrics  = json_decode($latest['metrics'] ?? '{}', true) ?: [];
+            $baseline = $this->repo->getBaselineMetrics($athleteId);
+            $semaphore = $this->computeSemaphore($metrics, $baseline);
+            $asymmetry = $this->computeAsymmetry($metrics);
+            $weight    = $this->getAthleteWeight($athleteId);
+            $profile   = $this->computeProfile($metrics, $weight);
+            $history   = array_slice($this->repo->getResultsByAthlete($athleteId), 0, 5);
+
+            $prompt = $this->buildValdPrompt($semaphore, $asymmetry, $profile, $history, $part);
+            $text   = $this->callGeminiSingle($prompt);
+
+            Response::success(['text' => $text, 'part' => $part]);
+        } catch (\Throwable $e) {
+            Response::error('AI: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * POST /api/?module=vald&action=aiChat
+     * Free-form Q&A with Gemini as expert volleyball youth coach, VALD-contextualised.
+     */
+    public function aiChat(): void
+    {
+        try {
+            set_time_limit(120);
+            Auth::requireRead('athletes');
+            $body      = json_decode(file_get_contents('php://input'), true) ?? [];
+            $athleteId = filter_var($body['athleteId'] ?? '', FILTER_SANITIZE_SPECIAL_CHARS);
+            $question  = trim($body['question'] ?? '');
+            $context   = trim($body['context'] ?? '');   // optional: last AI result for context
+
+            if (empty($athleteId) || empty($question)) {
+                Response::error('athleteId e question obbligatori', 400);
+                return;
+            }
+
+            // Build VALD context summary for this athlete
+            $latest = $this->repo->getLatestResult($athleteId);
+            $valdCtx = '';
+            if ($latest) {
+                $metrics   = json_decode($latest['metrics'] ?? '{}', true) ?: [];
+                $baseline  = $this->repo->getBaselineMetrics($athleteId);
+                $semaphore = $this->computeSemaphore($metrics, $baseline);
+                $rsiCur    = round((float)($semaphore['rsimod']['current'] ?? 0), 3);
+                $rsiVar    = round((float)($semaphore['rsimod']['variation'] ?? 0), 1);
+                $rsiSt     = $semaphore['status'] ?? 'N/A';
+                $weight    = $this->getAthleteWeight($athleteId);
+                $profile   = $this->computeProfile($metrics, $weight);
+                $jh        = round((float)($profile['jumpHeight'] ?? 0), 1);
+                $bi        = round((float)($profile['brakingImpulse'] ?? 0), 1);
+                $valdCtx   = "DATI VALD ATLETA (test del {$latest['test_date']}): RSImod={$rsiCur} ({$rsiVar}%, stato={$rsiSt}), JumpHeight={$jh}cm, BrakingImpulse={$bi} N\u00b7s/kg.";
+            }
+
+            $contextBlock = $context ? "\n\nCONTESTO ANALISI AI PRECEDENTE:\n{$context}" : '';
+
+            $prompt = <<<PROMPT
+Sei il miglior preparatore atletico al mondo specializzato in pallavolo giovanile di club.
+Hai 25 anni di esperienza con squadre giovanili U13-U20, conosci ForceDecks/VALD, prevenzione infortuni e programmazione del carico in-season.
+Necessita' di non fermare l'atleta se non come ultima possibilita'.
+
+CONTESTO SQUADRA: giovani pallavoliste di club che si allenano 6 giorni su 7 per circa 3 ore al giorno (tecnico-tattico + preparazione atletica integrata).
+
+{$valdCtx}{$contextBlock}
+
+DOMANDA DEL COACH:
+{$question}
+
+Rispondi in italiano, in modo pratico e diretto (max 1000 parole). Consigli concreti e applicabili immediatamente. Solo testo, no JSON, no markdown, no asterischi, no grassetto.
+PROMPT;
+
+            $text = $this->callGeminiSingle($prompt);
+            Response::success(['answer' => $text]);
+        } catch (\Throwable $e) {
+            Response::error('Chat AI: ' . $e->getMessage(), 500);
+        }
+    }
+
 
     /**
      * Compute semaphore status from RSImod and TimeToTakeoff.
@@ -339,54 +428,55 @@ class ValdController
     /**
      * Build VALD-specific Gemini prompt using expert volleyball performance framework.
      */
-    private function buildValdPrompt(array $semaphore, array $asymmetry, array $profile, array $history): string
+    private function buildValdPrompt(array $semaphore, array $asymmetry, array $profile, array $history, string $part = 'diagnosis'): string
     {
         $rsiCurrent   = round((float)($semaphore['rsimod']['current'] ?? 0), 3);
         $rsiBaseline  = round((float)($semaphore['rsimod']['baseline'] ?? 0), 3);
         $rsiVariation = round((float)($semaphore['rsimod']['variation'] ?? 0), 1);
         $rsiStatus    = $semaphore['status'] ?? 'UNKNOWN';
-        // jumpHeight is a plain float in $profile (not an array)
         $jumpHeight   = round((float)($profile['jumpHeight'] ?? 0), 1);
         $brakingImp   = round((float)($profile['brakingImpulse'] ?? 0), 1);
         $asymLanding  = round($asymmetry['landing']['asymmetry'] ?? 0, 1);
         $asymConcentric = round($asymmetry['concentric']['asymmetry'] ?? 0, 1);
         $weakerLimb   = $asymmetry['landing']['weaker'] ?? 'N/A';
 
-        // Build historical trend string
         $historyLines = '';
         foreach (array_reverse($history) as $h) {
             $hm = is_array($h['metrics']) ? $h['metrics'] : json_decode($h['metrics'] ?? '{}', true);
-            $hRsi = round((float)($hm['RSIModified']['Value'] ?? 0), 3);
+            $hRsi  = round((float)($hm['RSIModified']['Value'] ?? 0), 3);
             $hJump = round((float)($hm['JumpHeight']['Value'] ?? $hm['ConcJumpHeight']['Value'] ?? 0), 1);
             $historyLines .= "  - {$h['test_date']}: RSImod={$hRsi}, JumpHeight={$hJump}cm\n";
         }
 
-        return <<<PROMPT
-Sei un preparatore atletico specializzato nel volley giovanile. Analizza i dati CMJ ForceDecks di un'atleta.
+        $context = <<<CTX
+Sei il miglior preparatore atletico al mondo specializzato in pallavolo giovanile di club.
+Hai 25 anni di esperienza con squadre giovanili U13-U20, conosci ForceDecks/VALD, prevenzione infortuni e programmazione del carico in-season.
+CONTESTO SQUADRA: giovani pallavoliste di club che si allenano 6 giorni su 7 per circa 3 ore al giorno (tecnico-tattico + preparazione atletica integrata).
 
 DATI TEST ATTUALE:
-- Semaforo stato forma: {$rsiStatus}
-- RSImod attuale: {$rsiCurrent} (baseline: {$rsiBaseline}, variazione: {$rsiVariation}%)
+- Status semaforo: {$rsiStatus}
+- RSImod: {$rsiCurrent} (baseline: {$rsiBaseline}, variazione: {$rsiVariation}%)
 - Jump Height: {$jumpHeight} cm
-- Braking Impulse: {$brakingImp} N·s/kg
-- Asimmetria atterraggio: {$asymLanding}% (arto più debole: {$weakerLimb})
-- Asimmetria spinta concentrica: {$asymConcentric}%
+- Braking Impulse: {$brakingImp} N\u00b7s/kg
+- Asimmetria atterraggio: {$asymLanding}% (arto pi\u00f9 debole: {$weakerLimb})
+- Asimmetria spinta: {$asymConcentric}%
 
-STORICO ULTIMI TEST (dal meno recente al più recente):
+STORICO ULTIMI TEST:
 {$historyLines}
+CTX;
 
-FRAMEWORK DI ANALISI (da usare):
-- RSImod stabile/in crescita + Jump Height stabile → forma TOP
-- RSImod in calo ma Jump Height stabile → fatica neuromuscolare mascherata ("saltatore lento")
-- Braking Impulse in calo → perdita forza eccentrica, rischio tendinopatia ("motore senza freni")
-- Asimmetria > 15% improvvisa → compensazione attiva, rischio infortunio ("compensatore")
-- Crollo simultaneo di tutti i parametri → overtraining ("il cotto")
+        if ($part === 'plan') {
+            return $context . "\n" . <<<PROMPT
+VAI DIRETTO: non spiegare i dati, non ripetere i numeri.
+Forma la tua conclusione sul quadro fisico dell'atleta e poi fornisci il PIANO DI INTERVENTO con esercizi concreti, serie, ripetizioni e carichi.
+Usa elenchi puntati o numerati per gli esercizi (esercizio, serie x ripetizioni, carico/intensita'). Non usare tabelle markdown. No JSON, no asterischi, no grassetto.
+PROMPT;
+        }
 
-Rispondi SOLO con un JSON valido (nessun testo extra, nessun markdown), con questa struttura esatta:
-{
-  "diagnosis": "<max 120 parole: diagnosi dello stato di forma, quale scenario (A/B/C/D), cosa indicano i numeri>",
-  "plan": "<max 150 parole: piano concreto di intervento con esercizi specifici, volumi e intensità>"
-}
+        return $context . "\n" . <<<PROMPT
+VAI DIRETTO: non spiegare i dati, non ripetere i numeri.
+Di' solo qual e' la condizione dell'atleta (2-3 righe) e cosa deve FARE il coach a breve termine (elenco concreto di azioni).
+L'obiettivo e' permettere all'atleta di allenarsi: fermarsi deve essere l'ultima possibilita'. No JSON, no asterischi, no grassetto.
 PROMPT;
     }
 
@@ -401,22 +491,10 @@ PROMPT;
             return ['Configurare GEMINI_API_KEY nel file .env per abilitare l\'analisi AI.', ''];
         }
 
-        $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' . $apiKey;
+        $url = 'https://generativelanguage.googleapis.com/v1alpha/models/gemini-2.5-flash:generateContent?key=' . $apiKey;
         $payload = json_encode([
             'contents' => [['parts' => [['text' => $prompt]]]],
-            'generationConfig' => [
-                'maxOutputTokens' => 600,
-                'temperature' => 0.4,
-                'responseMimeType' => 'application/json',
-                'responseSchema' => [
-                    'type' => 'OBJECT',
-                    'properties' => [
-                        'diagnosis' => ['type' => 'STRING'],
-                        'plan'      => ['type' => 'STRING'],
-                    ],
-                    'required' => ['diagnosis', 'plan'],
-                ],
-            ],
+            'generationConfig' => ['temperature' => 0.4, 'maxOutputTokens' => 1500, 'thinkingConfig' => ['thinkingBudget' => 0]],
         ]);
 
         $ch = curl_init($url);
@@ -425,43 +503,85 @@ PROMPT;
             CURLOPT_POST => true,
             CURLOPT_POSTFIELDS => $payload,
             CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
-            CURLOPT_TIMEOUT => 20,
+            CURLOPT_TIMEOUT => 55,
+            CURLOPT_FOLLOWLOCATION => true,
         ]);
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
 
         if ($httpCode !== 200 || !$response) {
-            error_log("[VALD GEMINI] HTTP {$httpCode}");
+            error_log("[VALD GEMINI] HTTP {$httpCode} - " . substr((string)$response, 0, 200));
             return ['Analisi AI temporaneamente non disponibile.', ''];
         }
 
         $data = json_decode($response, true);
         $text = trim($data['candidates'][0]['content']['parts'][0]['text'] ?? '');
 
-        // responseMimeType=application/json means $text IS the JSON — parse directly.
-        // Also sanitize literal newlines inside string values (Gemini sometimes emits them).
-        $sanitized = preg_replace_callback(
-            '/"(?:[^"\\\\]|\\\\.)*"/u',
-            fn($m) => str_replace(["\n", "\r"], ['\\n', ''], $m[0]),
-            $text
-        );
-        $parsed = json_decode($sanitized !== null ? $sanitized : $text, true);
-        if (!$parsed) {
-            // Last resort: extract between first { and last }
-            if (preg_match('/\{[\s\S]+\}/u', $text, $m)) {
-                $parsed = json_decode($m[0], true);
+        // Extract DIAGNOSI: and PIANO: plain-text sections
+        $dPos = stripos($text, 'DIAGNOSI:');
+        $pPos = stripos($text, 'PIANO:');
+
+        if ($dPos !== false && $pPos !== false && $pPos > $dPos) {
+            $diagnosis = trim(substr($text, $dPos + 9, $pPos - $dPos - 9));
+            $plan      = trim(substr($text, $pPos + 6));
+            return [$diagnosis, $plan];
+        }
+
+        // Fallback: if model returned JSON anyway, try to extract values
+        $start = strpos($text, '{');
+        $end   = strrpos($text, '}');
+        if ($start !== false && $end !== false && $end > $start) {
+            $jsonStr = substr($text, $start, $end - $start + 1);
+            $flat    = str_replace(["\r\n", "\r", "\n"], ' ', $jsonStr);
+            $parsed  = json_decode($flat, true);
+            if ($parsed && isset($parsed['diagnosis'])) {
+                return [trim($parsed['diagnosis']), trim($parsed['plan'] ?? '')];
             }
         }
 
-        if (!$parsed || !isset($parsed['diagnosis'])) {
-            return [trim($text), ''];
+        return [$text ?: 'Analisi non disponibile.', ''];
+    }
+
+    /**
+     * Call Gemini and return plain text response (no JSON parsing).
+     */
+    private function callGeminiSingle(string $prompt): string
+    {
+        $apiKey = $_ENV['GEMINI_API_KEY'] ?? getenv('GEMINI_API_KEY') ?: ($_SERVER['GEMINI_API_KEY'] ?? '');
+        if (empty($apiKey)) {
+            return 'Configurare GEMINI_API_KEY per abilitare l\'analisi AI.';
         }
 
-        return [
-            trim($parsed['diagnosis'] ?? ''),
-            trim($parsed['plan'] ?? ''),
-        ];
+        $url = 'https://generativelanguage.googleapis.com/v1alpha/models/gemini-2.5-flash:generateContent?key=' . $apiKey;
+        $payload = json_encode([
+            'contents' => [['parts' => [['text' => $prompt]]]],
+            'generationConfig' => ['temperature' => 0.4, 'maxOutputTokens' => 1500, 'thinkingConfig' => ['thinkingBudget' => 0]],
+        ]);
+
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => $payload,
+            CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+            CURLOPT_TIMEOUT => 55,
+            CURLOPT_FOLLOWLOCATION => true,
+        ]);
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($httpCode !== 200 || !$response) {
+            error_log("[VALD GEMINI SINGLE] HTTP {$httpCode}");
+            return 'Analisi AI temporaneamente non disponibile.';
+        }
+
+        $data = json_decode($response, true);
+        $text = trim($data['candidates'][0]['content']['parts'][0]['text'] ?? '');
+
+        // Return plain text directly — prompts always request plain text, no JSON parsing needed
+        return $text;
     }
 
     /**
