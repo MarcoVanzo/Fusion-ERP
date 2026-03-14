@@ -1405,7 +1405,9 @@ window.__valdAi = async function(athleteId, part) {
   resultEl.innerHTML = '<div style="font-size:12px;color:var(--color-text-muted);padding:8px 0;">AI in elaborazione\u2026 (15-20s)</div>';
   try {
     const data = await Store.get('aiAnalysis', 'vald', { athleteId, part });
-    const text = (data && data.text) ? data.text : 'Nessuna risposta AI.';
+    const raw  = (data && data.text) ? data.text : 'Nessuna risposta AI.';
+    // Strip any label prefix Gemini adds (e.g. "DIAGNOSI:", "PIANO DI INTERVENTO:")
+    const text = raw.replace(/^(DIAGNOSI|PIANO\s+DI\s+INTERVENTO|PIANO)\s*:\s*/i, '').trim();
     resultEl.innerHTML = '<div style="background:'+bg+';border:1px solid '+border+';border-radius:var(--radius);padding:var(--sp-2) var(--sp-3);margin-top:var(--sp-1);">'
       + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:'+color+';margin-bottom:6px;">'
       + '<i class="ph '+icon+'" style="margin-right:4px;"></i>'+label+' <span style="font-size:9px;opacity:0.7;">AI \u00b7 Gemini</span>'
