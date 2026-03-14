@@ -382,11 +382,11 @@ FRAMEWORK DI ANALISI (da usare):
 - Asimmetria > 15% improvvisa → compensazione attiva, rischio infortunio ("compensatore")
 - Crollo simultaneo di tutti i parametri → overtraining ("il cotto")
 
-Rispondi SOLO con un JSON valido (nessun testo extra, nessun markdown), con questa struttura esatta:
-{
-  "diagnosis": "<max 120 parole: diagnosi dello stato di forma, quale scenario (A/B/C/D), cosa indicano i numeri>",
-  "plan": "<max 150 parole: piano concreto di intervento con esercizi specifici, volumi e intensità>"
-}
+Scrivi la risposta esattamente in questo formato (nessun markdown, nessun JSON, solo testo):
+
+DIAGNOSI: [max 120 parole: diagnosi dello stato di forma, quale scenario A/B/C/D, cosa indicano i numeri]
+
+PIANO: [max 150 parole: piano concreto di intervento con esercizi specifici per pallavolo]
 PROMPT;
     }
 
@@ -404,19 +404,7 @@ PROMPT;
         $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' . $apiKey;
         $payload = json_encode([
             'contents' => [['parts' => [['text' => $prompt]]]],
-            'generationConfig' => [
-                'maxOutputTokens' => 600,
-                'temperature' => 0.4,
-                'responseMimeType' => 'application/json',
-                'responseSchema' => [
-                    'type' => 'OBJECT',
-                    'properties' => [
-                        'diagnosis' => ['type' => 'STRING'],
-                        'plan'      => ['type' => 'STRING'],
-                    ],
-                    'required' => ['diagnosis', 'plan'],
-                ],
-            ],
+            'generationConfig' => ['maxOutputTokens' => 800, 'temperature' => 0.4],
         ]);
 
         $ch = curl_init($url);
@@ -425,43 +413,44 @@ PROMPT;
             CURLOPT_POST => true,
             CURLOPT_POSTFIELDS => $payload,
             CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
-            CURLOPT_TIMEOUT => 20,
+            CURLOPT_TIMEOUT => 25,
+            CURLOPT_FOLLOWLOCATION => true,
         ]);
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
 
         if ($httpCode !== 200 || !$response) {
-            error_log("[VALD GEMINI] HTTP {$httpCode}");
+            error_log("[VALD GEMINI] HTTP {$httpCode} - " . substr((string)$response, 0, 200));
             return ['Analisi AI temporaneamente non disponibile.', ''];
         }
 
         $data = json_decode($response, true);
         $text = trim($data['candidates'][0]['content']['parts'][0]['text'] ?? '');
 
-        // responseMimeType=application/json means $text IS the JSON — parse directly.
-        // Also sanitize literal newlines inside string values (Gemini sometimes emits them).
-        $sanitized = preg_replace_callback(
-            '/"(?:[^"\\\\]|\\\\.)*"/u',
-            fn($m) => str_replace(["\n", "\r"], ['\\n', ''], $m[0]),
-            $text
-        );
-        $parsed = json_decode($sanitized !== null ? $sanitized : $text, true);
-        if (!$parsed) {
-            // Last resort: extract between first { and last }
-            if (preg_match('/\{[\s\S]+\}/u', $text, $m)) {
-                $parsed = json_decode($m[0], true);
+        // Extract DIAGNOSI: and PIANO: plain-text sections
+        $dPos = stripos($text, 'DIAGNOSI:');
+        $pPos = stripos($text, 'PIANO:');
+
+        if ($dPos !== false && $pPos !== false && $pPos > $dPos) {
+            $diagnosis = trim(substr($text, $dPos + 9, $pPos - $dPos - 9));
+            $plan      = trim(substr($text, $pPos + 6));
+            return [$diagnosis, $plan];
+        }
+
+        // Fallback: if model returned JSON anyway, try to extract values
+        $start = strpos($text, '{');
+        $end   = strrpos($text, '}');
+        if ($start !== false && $end !== false && $end > $start) {
+            $jsonStr = substr($text, $start, $end - $start + 1);
+            $flat    = str_replace(["\r\n", "\r", "\n"], ' ', $jsonStr);
+            $parsed  = json_decode($flat, true);
+            if ($parsed && isset($parsed['diagnosis'])) {
+                return [trim($parsed['diagnosis']), trim($parsed['plan'] ?? '')];
             }
         }
 
-        if (!$parsed || !isset($parsed['diagnosis'])) {
-            return [trim($text), ''];
-        }
-
-        return [
-            trim($parsed['diagnosis'] ?? ''),
-            trim($parsed['plan'] ?? ''),
-        ];
+        return [$text ?: 'Analisi non disponibile.', ''];
     }
 
     /**
