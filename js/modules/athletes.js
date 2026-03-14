@@ -1421,7 +1421,10 @@ window.__valdAi = async function(athleteId, part) {
   try {
     const data = await Store.get('aiAnalysis', 'vald', { athleteId, part });
     const raw  = (data && data.text) ? data.text : 'Nessuna risposta AI.';
-    const text = raw.replace(/^(DIAGNOSI|PIANO\s+DI\s+INTERVENTO|PIANO)\s*:\s*/i, '').trim();
+    const text = raw
+      .replace(/^(DIAGNOSI|PIANO\s+DI\s+INTERVENTO|PIANO)\s*:\s*/i, '')
+      .replace(/\*+/g, '')   // strip markdown asterisks (bold/italic)
+      .trim();
 
     const chatId = 'vald-chat-' + part + '-' + athleteId;
 

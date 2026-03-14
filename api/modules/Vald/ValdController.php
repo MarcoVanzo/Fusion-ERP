@@ -163,6 +163,7 @@ class ValdController
     public function aiAnalysis(): void
     {
         try {
+            set_time_limit(120); // Gemini can take up to ~60s for 1000-word responses
             Auth::requireRead('athletes');
             $athleteId = filter_input(INPUT_GET, 'athleteId', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
             $part      = filter_input(INPUT_GET, 'part', FILTER_SANITIZE_SPECIAL_CHARS) ?? 'diagnosis';
@@ -196,6 +197,7 @@ class ValdController
     public function aiChat(): void
     {
         try {
+            set_time_limit(120);
             Auth::requireRead('athletes');
             $body      = json_decode(file_get_contents('php://input'), true) ?? [];
             $athleteId = filter_var($body['athleteId'] ?? '', FILTER_SANITIZE_SPECIAL_CHARS);
@@ -238,7 +240,7 @@ CONTESTO SQUADRA: giovani pallavoliste di club che si allenano 6 giorni su 7 per
 DOMANDA DEL COACH:
 {$question}
 
-Rispondi in italiano, in modo pratico e diretto. Consigli concreti e applicabili immediatamente. Solo testo, no JSON, no markdown eccessivo.
+Rispondi in italiano, in modo pratico e diretto (max 1000 parole). Consigli concreti e applicabili immediatamente. Solo testo, no JSON, no markdown, no asterischi, no grassetto.
 PROMPT;
 
             $text = $this->callGeminiSingle($prompt);
@@ -465,28 +467,16 @@ CTX;
 
         if ($part === 'plan') {
             return $context . "\n" . <<<PROMPT
-Scenari di riferimento:
-- RSImod calo ma Jump Height stabile = \"saltatore lento\" (ha perso reattivit\u00e0)
-- Braking Impulse in calo = \"motore senza freni\" (forza eccentrica carente)
-- Asimmetria >15% = \"compensatore\" (rischio infortunio)
-- Crollo di tutti i parametri = \"cotto\" (overtraining)
-
-Fornisci un PIANO DI INTERVENTO specifico per recuperare/migliorare/ottimizzare la condizione fisica dell'atleta sulla base delle analisi dei dati forniti.
-Esercizi concreti, volumi, intensit\u00e0. Solo testo, al massimo tabelle di lavoro. No JSON.
+VAI DIRETTO: non spiegare i dati, non ripetere i numeri.
+Forma la tua conclusione sul quadro fisico dell'atleta e poi fornisci il PIANO DI INTERVENTO con esercizi concreti, serie, ripetizioni e carichi.
+Puoi usare una tabella se utile. No JSON, no asterischi, no grassetto.
 PROMPT;
         }
 
         return $context . "\n" . <<<PROMPT
-Framework di analisi:
-- RSImod stabile/crescita + Jump Height stabile = forma TOP
-- RSImod calo ma Jump Height stabile = fatica neuromuscolare mascherata
-- Braking Impulse in calo = perdita forza eccentrica
-- Asimmetria >15% improvvisa = compensazione attiva
-- Crollo simultaneo = overtraining
-
-Comprendere in modo chiaro quale e' la condizione fisica dell'atleta.
-Solo testo (no JSON, no markdown), chiaro e dettagliato.
-Tieni presente che l'obiettivo deve essere quello di permettere all'atleta di allenarsi: fermarsi dall'attivita' deve essere l'ultima possibilita'.
+VAI DIRETTO: non spiegare i dati, non ripetere i numeri.
+Di' solo qual e' la condizione dell'atleta (2-3 righe) e cosa deve FARE il coach a breve termine (elenco concreto di azioni).
+L'obiettivo e' permettere all'atleta di allenarsi: fermarsi deve essere l'ultima possibilita'. No JSON, no asterischi, no grassetto.
 PROMPT;
     }
 
@@ -501,10 +491,10 @@ PROMPT;
             return ['Configurare GEMINI_API_KEY nel file .env per abilitare l\'analisi AI.', ''];
         }
 
-        $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' . $apiKey;
+        $url = 'https://generativelanguage.googleapis.com/v1alpha/models/gemini-2.5-flash:generateContent?key=' . $apiKey;
         $payload = json_encode([
             'contents' => [['parts' => [['text' => $prompt]]]],
-            'generationConfig' => ['temperature' => 0.4],
+            'generationConfig' => ['temperature' => 0.4, 'maxOutputTokens' => 1500, 'thinkingConfig' => ['thinkingBudget' => 0]],
         ]);
 
         $ch = curl_init($url);
@@ -513,7 +503,7 @@ PROMPT;
             CURLOPT_POST => true,
             CURLOPT_POSTFIELDS => $payload,
             CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
-            CURLOPT_TIMEOUT => 25,
+            CURLOPT_TIMEOUT => 55,
             CURLOPT_FOLLOWLOCATION => true,
         ]);
         $response = curl_exec($ch);
@@ -563,10 +553,10 @@ PROMPT;
             return 'Configurare GEMINI_API_KEY per abilitare l\'analisi AI.';
         }
 
-        $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' . $apiKey;
+        $url = 'https://generativelanguage.googleapis.com/v1alpha/models/gemini-2.5-flash:generateContent?key=' . $apiKey;
         $payload = json_encode([
             'contents' => [['parts' => [['text' => $prompt]]]],
-            'generationConfig' => ['temperature' => 0.4],
+            'generationConfig' => ['temperature' => 0.4, 'maxOutputTokens' => 1500, 'thinkingConfig' => ['thinkingBudget' => 0]],
         ]);
 
         $ch = curl_init($url);
@@ -575,7 +565,7 @@ PROMPT;
             CURLOPT_POST => true,
             CURLOPT_POSTFIELDS => $payload,
             CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
-            CURLOPT_TIMEOUT => 25,
+            CURLOPT_TIMEOUT => 55,
             CURLOPT_FOLLOWLOCATION => true,
         ]);
         $response = curl_exec($ch);
@@ -590,22 +580,8 @@ PROMPT;
         $data = json_decode($response, true);
         $text = trim($data['candidates'][0]['content']['parts'][0]['text'] ?? '');
 
-        // Strip any markdown fences if present
-        $start = strpos($text, '{');
-        if ($start === false) {
-            // Plain text response — return as-is (strip leading/trailing whitespace)
-            return trim($text);
-        }
-        // If model returned JSON despite instructions, extract first text value
-        $end = strrpos($text, '}');
-        if ($end > $start) {
-            $flat   = str_replace(["\r\n", "\r", "\n"], ' ', substr($text, $start, $end - $start + 1));
-            $parsed = json_decode($flat, true);
-            if ($parsed) {
-                return trim(reset($parsed));
-            }
-        }
-        return trim($text);
+        // Return plain text directly — prompts always request plain text, no JSON parsing needed
+        return $text;
     }
 
     /**
