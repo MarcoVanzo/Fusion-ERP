@@ -320,10 +320,168 @@ class DashboardController
 
         Response::success([
             'weekly_transports' => $weeklyTransports,
-            'new_orders' => $newOrders,
-            'unread_whatsapp' => $unreadWhatsapp,
-            'new_outseason' => $newOutseason,
-            'pending_payments' => $pendingPayments
+            'new_orders'        => $newOrders,
+            'unread_whatsapp'   => $unreadWhatsapp,
+            'new_outseason'     => $newOutseason,
+            'pending_payments'  => $pendingPayments
+        ]);
+    }
+
+    // ─── GET /api/?module=dashboard&action=weeklyFull ────────────────────────
+    // Aggregato completo per la nuova dashboard: partite settimana, risultati
+    // settimana scorsa, KPI rapidi, alert urgenti (cert + contratti ≤30gg).
+    public function weeklyFull(): void
+    {
+        Auth::requireAuth();
+        $db  = Database::getInstance();
+        $tid = TenantContext::id();
+
+        // ── 1. KPI rapidi ────────────────────────────────────────────────────
+        $totalAthletes = 0;
+        $totalTeams    = 0;
+        $newOrders     = 0;
+        $newOutseason  = 0;
+
+        try {
+            $s = $db->prepare('SELECT COUNT(*) FROM athletes WHERE is_active=1 AND deleted_at IS NULL AND tenant_id=:t');
+            $s->execute([':t' => $tid]);
+            $totalAthletes = (int)$s->fetchColumn();
+        } catch (\Throwable) {}
+
+        try {
+            $s = $db->prepare('SELECT COUNT(*) FROM teams WHERE tenant_id=:t AND deleted_at IS NULL');
+            $s->execute([':t' => $tid]);
+            $totalTeams = (int)$s->fetchColumn();
+        } catch (\Throwable) {}
+
+        try {
+            $s = $db->prepare("SELECT COUNT(*) FROM ec_orders WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)");
+            $s->execute();
+            $newOrders = (int)$s->fetchColumn();
+        } catch (\Throwable) {}
+
+        try {
+            $s = $db->prepare("SELECT COUNT(*) FROM outseason_entries WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)");
+            $s->execute();
+            $newOutseason = (int)$s->fetchColumn();
+        } catch (\Throwable) {}
+
+        // ── 2. Partite questa settimana ──────────────────────────────────────
+        $upcomingMatches = [];
+        try {
+            $s = $db->prepare(
+                "SELECT fm.id, fm.match_date, fm.location,
+                        th.name AS home_team, ta.name AS away_team,
+                        fm.home_score, fm.away_score
+                 FROM federation_matches fm
+                 LEFT JOIN teams th ON th.id = fm.home_team_id
+                 LEFT JOIN teams ta ON ta.id = fm.away_team_id
+                 WHERE fm.match_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)
+                   AND fm.tenant_id = :t
+                 ORDER BY fm.match_date ASC
+                 LIMIT 10"
+            );
+            $s->execute([':t' => $tid]);
+            $upcomingMatches = $s->fetchAll(\PDO::FETCH_ASSOC);
+        } catch (\Throwable) {}
+
+        // ── 3. Risultati settimana scorsa ───────────────────────────────────
+        $lastWeekResults = [];
+        try {
+            $s = $db->prepare(
+                "SELECT fm.id, fm.match_date, fm.location,
+                        th.name AS home_team, ta.name AS away_team,
+                        fm.home_score, fm.away_score,
+                        fm.home_team_id
+                 FROM federation_matches fm
+                 LEFT JOIN teams th ON th.id = fm.home_team_id
+                 LEFT JOIN teams ta ON ta.id = fm.away_team_id
+                 WHERE fm.match_date BETWEEN DATE_SUB(CURDATE(), INTERVAL 7 DAY) AND CURDATE()
+                   AND fm.home_score IS NOT NULL
+                   AND fm.tenant_id = :t
+                 ORDER BY fm.match_date DESC
+                 LIMIT 10"
+            );
+            $s->execute([':t' => $tid]);
+            $rows = $s->fetchAll(\PDO::FETCH_ASSOC);
+
+            // Determina esito W/L/P per ogni partita (dal punto di vista della squadra di casa)
+            foreach ($rows as $row) {
+                $h = (int)$row['home_score'];
+                $a = (int)$row['away_score'];
+                $row['outcome'] = $h > $a ? 'W' : ($h < $a ? 'L' : 'P');
+                $lastWeekResults[] = $row;
+            }
+        } catch (\Throwable) {}
+
+        // ── 4. Alert urgenti (≤30 giorni) ───────────────────────────────────
+        $alerts = [];
+
+        // Certificati medici in scadenza
+        try {
+            $s = $db->prepare(
+                "SELECT full_name, medical_cert_expires_at AS expiry_date,
+                        DATEDIFF(medical_cert_expires_at, CURDATE()) AS days_left
+                 FROM athletes
+                 WHERE is_active=1 AND deleted_at IS NULL AND tenant_id=:t
+                   AND medical_cert_expires_at IS NOT NULL
+                   AND medical_cert_expires_at <= DATE_ADD(CURDATE(), INTERVAL 30 DAY)
+                 ORDER BY medical_cert_expires_at ASC
+                 LIMIT 10"
+            );
+            $s->execute([':t' => $tid]);
+            foreach ($s->fetchAll(\PDO::FETCH_ASSOC) as $r) {
+                $alerts[] = [
+                    'type'        => 'cert',
+                    'name'        => $r['full_name'],
+                    'label'       => 'Certificato Medico',
+                    'expiry_date' => $r['expiry_date'],
+                    'days_left'   => max(0, (int)$r['days_left']),
+                    'icon'        => 'first-aid-kit',
+                ];
+            }
+        } catch (\Throwable) {}
+
+        // Contratti staff in scadenza
+        try {
+            $s = $db->prepare(
+                "SELECT sm.first_name, sm.last_name,
+                        sm.contract_valid_to AS expiry_date,
+                        DATEDIFF(sm.contract_valid_to, CURDATE()) AS days_left
+                 FROM staff_members sm
+                 WHERE sm.tenant_id = :t
+                   AND sm.deleted_at IS NULL
+                   AND sm.contract_status IN ('inviato','generato','firmato')
+                   AND sm.contract_valid_to IS NOT NULL
+                   AND sm.contract_valid_to <= DATE_ADD(CURDATE(), INTERVAL 30 DAY)
+                 ORDER BY sm.contract_valid_to ASC
+                 LIMIT 10"
+            );
+            $s->execute([':t' => $tid]);
+            foreach ($s->fetchAll(\PDO::FETCH_ASSOC) as $r) {
+                $alerts[] = [
+                    'type'        => 'contract',
+                    'name'        => $r['first_name'] . ' ' . $r['last_name'],
+                    'label'       => 'Contratto Staff',
+                    'expiry_date' => $r['expiry_date'],
+                    'days_left'   => max(0, (int)$r['days_left']),
+                    'icon'        => 'file-text',
+                ];
+            }
+        } catch (\Throwable) {}
+
+        usort($alerts, fn($a, $b) => $a['days_left'] <=> $b['days_left']);
+
+        Response::success([
+            'kpi' => [
+                'total_athletes' => $totalAthletes,
+                'total_teams'    => $totalTeams,
+                'new_orders'     => $newOrders,
+                'new_outseason'  => $newOutseason,
+            ],
+            'upcoming_matches'  => $upcomingMatches,
+            'last_week_results' => $lastWeekResults,
+            'alerts'            => $alerts,
         ]);
     }
 }

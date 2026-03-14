@@ -1428,12 +1428,73 @@ window.__valdAi = async function(athleteId, part) {
 
     const chatId = 'vald-chat-' + part + '-' + athleteId;
 
+    // Mini markdown renderer: tables, headings, lists, plain text
+    function renderAiMarkdown(md) {
+      const lines  = md.split('\n');
+      let html     = '';
+      let inList   = false;
+      let i        = 0;
+      while (i < lines.length) {
+        const line = lines[i];
+        // Markdown table: detect block of lines containing |
+        if (line.trim().startsWith('|')) {
+          // close any open list
+          if (inList) { html += '</ul>'; inList = false; }
+          // collect table rows
+          const tRows = [];
+          while (i < lines.length && lines[i].trim().startsWith('|')) {
+            const row = lines[i].trim().replace(/^\||\|$/g, '').split('|').map(c => c.trim());
+            // skip separator rows (----)
+            if (!row.every(c => /^[-: ]+$/.test(c))) tRows.push(row);
+            i++;
+          }
+          if (tRows.length) {
+            html += '<table style="width:100%;border-collapse:collapse;font-size:12px;margin:6px 0;">';
+            tRows.forEach((row, ri) => {
+              const tag = ri === 0 ? 'th' : 'td';
+              html += '<tr>' + row.map(c =>
+                `<${tag} style="border:1px solid ${border};padding:4px 8px;text-align:left;${ri===0?'background:rgba(255,255,255,0.05);font-weight:600;':''}">${Utils.escapeHtml(c)}</${tag}>`
+              ).join('') + '</tr>';
+            });
+            html += '</table>';
+          }
+          continue;
+        }
+        // Heading ## or ###
+        if (/^#{1,3}\s/.test(line)) {
+          if (inList) { html += '</ul>'; inList = false; }
+          const txt = line.replace(/^#{1,3}\s/, '');
+          html += `<div style="font-weight:700;margin:8px 0 3px;font-size:13px;">${Utils.escapeHtml(txt)}</div>`;
+          i++; continue;
+        }
+        // Bullet / numbered list
+        if (/^[-•*]\s|^\d+\.\s/.test(line.trim())) {
+          if (!inList) { html += '<ul style="margin:4px 0 4px 16px;padding:0;list-style:disc;">'; inList = true; }
+          const txt = line.replace(/^[-•*]\s|^\d+\.\s/, '');
+          html += `<li style="margin:2px 0;font-size:13px;line-height:1.55;">${Utils.escapeHtml(txt)}</li>`;
+          i++; continue;
+        }
+        // Empty line
+        if (line.trim() === '') {
+          if (inList) { html += '</ul>'; inList = false; }
+          html += '<br>';
+          i++; continue;
+        }
+        // Normal paragraph line
+        if (inList) { html += '</ul>'; inList = false; }
+        html += `<span style="font-size:13px;line-height:1.65;">${Utils.escapeHtml(line)}</span><br>`;
+        i++;
+      }
+      if (inList) html += '</ul>';
+      return html;
+    }
+
     resultEl.innerHTML =
       '<div style="background:'+bg+';border:1px solid '+border+';border-radius:var(--radius);padding:var(--sp-2) var(--sp-3);margin-top:var(--sp-1);">'
       + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:'+color+';margin-bottom:6px;">'
       + '<i class="ph '+icon+'" style="margin-right:4px;"></i>'+label+' <span style="font-size:9px;opacity:0.7;">AI \u00b7 Gemini</span>'
       + '</div>'
-      + '<p id="vald-ai-'+part+'-text-'+athleteId+'" style="font-size:13px;line-height:1.65;color:var(--color-text);white-space:pre-line;margin:0 0 10px;">'+Utils.escapeHtml(text)+'</p>'
+      + '<div id="vald-ai-'+part+'-text-'+athleteId+'" style="color:var(--color-text);margin:0 0 10px;">'+renderAiMarkdown(text)+'</div>'
       // Chat section
       + '<div id="'+chatId+'" style="border-top:1px solid '+border+';padding-top:8px;margin-top:4px;">'
       + '<div id="'+chatId+'-history" style="display:flex;flex-direction:column;gap:8px;max-height:220px;overflow-y:auto;margin-bottom:8px;"></div>'

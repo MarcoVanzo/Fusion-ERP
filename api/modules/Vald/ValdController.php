@@ -469,7 +469,7 @@ CTX;
             return $context . "\n" . <<<PROMPT
 VAI DIRETTO: non spiegare i dati, non ripetere i numeri.
 Forma la tua conclusione sul quadro fisico dell'atleta e poi fornisci il PIANO DI INTERVENTO con esercizi concreti, serie, ripetizioni e carichi.
-Puoi usare una tabella se utile. No JSON, no asterischi, no grassetto.
+Usa elenchi puntati o numerati per gli esercizi (esercizio, serie x ripetizioni, carico/intensita'). Non usare tabelle markdown. No JSON, no asterischi, no grassetto.
 PROMPT;
         }
 
