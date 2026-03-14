@@ -1411,6 +1411,9 @@ window.__valdAi = async function(athleteId, part) {
   }
   if (!resultEl) return;
 
+  // Always invalidate cache before calling AI — prevents stale error responses
+  Store.invalidate('aiAnalysis/vald');
+
   if (btn) { btn.disabled = true; btn.textContent = 'Elaborazione AI\u2026'; }
   resultEl.style.display = 'block';
   resultEl.innerHTML = '<div style="font-size:12px;color:var(--color-text-muted);padding:8px 0;">AI in elaborazione\u2026 (15-25s)</div>';

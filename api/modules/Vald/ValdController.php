@@ -228,14 +228,17 @@ class ValdController
 
             $prompt = <<<PROMPT
 Sei il miglior preparatore atletico al mondo specializzato in pallavolo giovanile di club.
-Hai 25 anni di esperienza con squadre giovanili U13-U20, conosci perfettamente la metodologia ForceDecks/VALD, la prevenzione degli infortuni nei giovani pallavolisti e la programmazione del carico in-season.
+Hai 25 anni di esperienza con squadre giovanili U13-U20, conosci ForceDecks/VALD, prevenzione infortuni e programmazione del carico in-season.
+Necessita' di non fermare l'atleta se non come ultima possibilita'.
+
+CONTESTO SQUADRA: giovani pallavoliste di club che si allenano 6 giorni su 7 per circa 3 ore al giorno (tecnico-tattico + preparazione atletica integrata).
 
 {$valdCtx}{$contextBlock}
 
 DOMANDA DEL COACH:
 {$question}
 
-Rispondi in italiano, in modo pratico e diretto. Usa la tua esperienza per dare consigli concreti e applicabili immediatamente. Solo testo, no JSON, no markdown eccessivo.
+Rispondi in italiano, in modo pratico e diretto. Consigli concreti e applicabili immediatamente. Solo testo, no JSON, no markdown eccessivo.
 PROMPT;
 
             $text = $this->callGeminiSingle($prompt);
@@ -444,7 +447,9 @@ PROMPT;
         }
 
         $context = <<<CTX
-Sei un preparatore atletico specializzato nel volley giovanile.
+Sei il miglior preparatore atletico al mondo specializzato in pallavolo giovanile di club.
+Hai 25 anni di esperienza con squadre giovanili U13-U20, conosci ForceDecks/VALD, prevenzione infortuni e programmazione del carico in-season.
+CONTESTO SQUADRA: giovani pallavoliste di club che si allenano 6 giorni su 7 per circa 3 ore al giorno (tecnico-tattico + preparazione atletica integrata).
 
 DATI TEST ATTUALE:
 - Status semaforo: {$rsiStatus}
@@ -466,8 +471,8 @@ Scenari di riferimento:
 - Asimmetria >15% = \"compensatore\" (rischio infortunio)
 - Crollo di tutti i parametri = \"cotto\" (overtraining)
 
-Fornisci un PIANO DI INTERVENTO specifico per pallavolo (max 150 parole):
-Esercizi concreti, volumi, intensit\u00e0. Solo testo, no markdown, no JSON.
+Fornisci un PIANO DI INTERVENTO specifico per recuperare/migliorare/ottimizzare la condizione fisica dell'atleta sulla base delle analisi dei dati forniti.
+Esercizi concreti, volumi, intensit\u00e0. Solo testo, al massimo tabelle di lavoro. No JSON.
 PROMPT;
         }
 
@@ -479,8 +484,9 @@ Framework di analisi:
 - Asimmetria >15% improvvisa = compensazione attiva
 - Crollo simultaneo = overtraining
 
-Fornisci una DIAGNOSI dello stato di forma (max 120 parole):
-Identifica il scenario A/B/C/D, spiega cosa indicano i numeri. Solo testo, no markdown, no JSON.
+Comprendere in modo chiaro quale e' la condizione fisica dell'atleta.
+Solo testo (no JSON, no markdown), chiaro e dettagliato.
+Tieni presente che l'obiettivo deve essere quello di permettere all'atleta di allenarsi: fermarsi dall'attivita' deve essere l'ultima possibilita'.
 PROMPT;
     }
 
