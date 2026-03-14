@@ -1389,36 +1389,107 @@ const Athletes = (() => {
 })();
 window.Athletes = Athletes;
 
-// VALD On-Demand AI Analysis
+// VALD On-Demand AI Analysis — persistent results + chat per section
 window.__valdAi = async function(athleteId, part) {
-  const resultEl = document.getElementById('vald-ai-result-' + athleteId);
-  if (!resultEl) return;
   const label  = part === 'plan' ? 'Piano di Intervento' : 'Analisi Stato di Forma';
   const color  = part === 'plan' ? 'rgba(0,200,140,0.9)' : 'rgba(150,130,255,0.9)';
   const bg     = part === 'plan' ? 'rgba(0,180,120,0.07)' : 'rgba(100,80,255,0.07)';
   const border = part === 'plan' ? 'rgba(0,180,120,0.25)' : 'rgba(100,80,255,0.25)';
   const icon   = part === 'plan' ? 'ph-barbell' : 'ph-brain';
-  const btnId  = (part === 'plan' ? 'vald-ai-pl-btn-' : 'vald-ai-dx-btn-') + athleteId;
-  const btn    = document.getElementById(btnId);
+  // Each part has its own result container so both can show simultaneously
+  const resultId = 'vald-ai-' + part + '-result-' + athleteId;
+  const btnId    = (part === 'plan' ? 'vald-ai-pl-btn-' : 'vald-ai-dx-btn-') + athleteId;
+  const btn      = document.getElementById(btnId);
+  let resultEl   = document.getElementById(resultId);
+
+  // Create slot if missing
+  const section = document.getElementById('vald-ai-section-' + athleteId);
+  if (!resultEl && section) {
+    resultEl = document.createElement('div');
+    resultEl.id = resultId;
+    section.appendChild(resultEl);
+  }
+  if (!resultEl) return;
+
   if (btn) { btn.disabled = true; btn.textContent = 'Elaborazione AI\u2026'; }
   resultEl.style.display = 'block';
-  resultEl.innerHTML = '<div style="font-size:12px;color:var(--color-text-muted);padding:8px 0;">AI in elaborazione\u2026 (15-20s)</div>';
+  resultEl.innerHTML = '<div style="font-size:12px;color:var(--color-text-muted);padding:8px 0;">AI in elaborazione\u2026 (15-25s)</div>';
+
   try {
     const data = await Store.get('aiAnalysis', 'vald', { athleteId, part });
     const raw  = (data && data.text) ? data.text : 'Nessuna risposta AI.';
-    // Strip any label prefix Gemini adds (e.g. "DIAGNOSI:", "PIANO DI INTERVENTO:")
     const text = raw.replace(/^(DIAGNOSI|PIANO\s+DI\s+INTERVENTO|PIANO)\s*:\s*/i, '').trim();
-    resultEl.innerHTML = '<div style="background:'+bg+';border:1px solid '+border+';border-radius:var(--radius);padding:var(--sp-2) var(--sp-3);margin-top:var(--sp-1);">'
+
+    const chatId = 'vald-chat-' + part + '-' + athleteId;
+
+    resultEl.innerHTML =
+      '<div style="background:'+bg+';border:1px solid '+border+';border-radius:var(--radius);padding:var(--sp-2) var(--sp-3);margin-top:var(--sp-1);">'
       + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:'+color+';margin-bottom:6px;">'
       + '<i class="ph '+icon+'" style="margin-right:4px;"></i>'+label+' <span style="font-size:9px;opacity:0.7;">AI \u00b7 Gemini</span>'
-      + '</div><p style="font-size:13px;line-height:1.65;color:var(--color-text);white-space:pre-line;">'+Utils.escapeHtml(text)+'</p></div>';
+      + '</div>'
+      + '<p id="vald-ai-'+part+'-text-'+athleteId+'" style="font-size:13px;line-height:1.65;color:var(--color-text);white-space:pre-line;margin:0 0 10px;">'+Utils.escapeHtml(text)+'</p>'
+      // Chat section
+      + '<div id="'+chatId+'" style="border-top:1px solid '+border+';padding-top:8px;margin-top:4px;">'
+      + '<div id="'+chatId+'-history" style="display:flex;flex-direction:column;gap:8px;max-height:220px;overflow-y:auto;margin-bottom:8px;"></div>'
+      + '<div style="display:flex;gap:6px;align-items:center;">'
+      + '<input id="'+chatId+'-input" type="text" placeholder="Chiedi al preparatore AI\u2026" style="flex:1;font-size:12px;padding:6px 10px;border-radius:var(--radius);border:1px solid '+border+';background:rgba(255,255,255,0.04);color:var(--color-text);outline:none;" '
+      + 'onkeydown="if(event.key===\'Enter\')window.__valdChat(\''+athleteId+'\',\''+part+'\');">'
+      + '<button type="button" onclick="window.__valdChat(\''+athleteId+'\',\''+part+'\');" style="padding:6px 12px;font-size:12px;border-radius:var(--radius);border:1px solid '+border+';background:'+bg+';color:'+color+';cursor:pointer;white-space:nowrap;">'
+      + '<i class="ph ph-paper-plane-tilt"></i> Invia</button>'
+      + '</div></div>'
+      + '</div>';
   } catch (err) {
     resultEl.innerHTML = '<div style="color:var(--color-danger);font-size:12px;">Errore: ' + Utils.escapeHtml(err.message) + '</div>';
   }
+
   if (btn) {
     btn.disabled = false;
     btn.innerHTML = (part === 'plan'
       ? '<i class="ph ph-barbell"></i> Piano di Intervento (AI)'
       : '<i class="ph ph-brain"></i> Analisi Stato di Forma (AI)');
   }
+};
+
+// VALD AI Chat — ask follow-up questions
+window.__valdChat = async function(athleteId, part) {
+  const chatId  = 'vald-chat-' + part + '-' + athleteId;
+  const input   = document.getElementById(chatId + '-input');
+  const history = document.getElementById(chatId + '-history');
+  if (!input || !history) return;
+
+  const question = input.value.trim();
+  if (!question) return;
+
+  // Get last AI result as context
+  const textEl = document.getElementById('vald-ai-' + part + '-text-' + athleteId);
+  const context = textEl ? textEl.textContent.slice(0, 600) : '';
+
+  input.value = '';
+  input.disabled = true;
+
+  // User bubble
+  const userDiv = document.createElement('div');
+  userDiv.style.cssText = 'background:rgba(255,255,255,0.06);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--color-text);align-self:flex-end;max-width:85%;';
+  userDiv.textContent = question;
+  history.appendChild(userDiv);
+
+  // AI thinking bubble
+  const aiDiv = document.createElement('div');
+  aiDiv.style.cssText = 'background:rgba(100,80,255,0.08);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--color-text-muted);align-self:flex-start;max-width:90%;white-space:pre-line;';
+  aiDiv.textContent = 'Sto elaborando\u2026';
+  history.appendChild(aiDiv);
+  history.scrollTop = history.scrollHeight;
+
+  try {
+    const resp = await Store.api('aiChat', 'vald', { athleteId, question, context });
+    aiDiv.style.color = 'var(--color-text)';
+    aiDiv.textContent = (resp && resp.answer) ? resp.answer : 'Nessuna risposta.';
+  } catch (err) {
+    aiDiv.style.color = 'var(--color-danger)';
+    aiDiv.textContent = 'Errore: ' + err.message;
+  }
+
+  input.disabled = false;
+  input.focus();
+  history.scrollTop = history.scrollHeight;
 };

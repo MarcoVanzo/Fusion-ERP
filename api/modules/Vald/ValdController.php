@@ -189,6 +189,61 @@ class ValdController
         }
     }
 
+    /**
+     * POST /api/?module=vald&action=aiChat
+     * Free-form Q&A with Gemini as expert volleyball youth coach, VALD-contextualised.
+     */
+    public function aiChat(): void
+    {
+        try {
+            Auth::requireRead('athletes');
+            $body      = json_decode(file_get_contents('php://input'), true) ?? [];
+            $athleteId = filter_var($body['athleteId'] ?? '', FILTER_SANITIZE_SPECIAL_CHARS);
+            $question  = trim($body['question'] ?? '');
+            $context   = trim($body['context'] ?? '');   // optional: last AI result for context
+
+            if (empty($athleteId) || empty($question)) {
+                Response::error('athleteId e question obbligatori', 400);
+                return;
+            }
+
+            // Build VALD context summary for this athlete
+            $latest = $this->repo->getLatestResult($athleteId);
+            $valdCtx = '';
+            if ($latest) {
+                $metrics   = json_decode($latest['metrics'] ?? '{}', true) ?: [];
+                $baseline  = $this->repo->getBaselineMetrics($athleteId);
+                $semaphore = $this->computeSemaphore($metrics, $baseline);
+                $rsiCur    = round((float)($semaphore['rsimod']['current'] ?? 0), 3);
+                $rsiVar    = round((float)($semaphore['rsimod']['variation'] ?? 0), 1);
+                $rsiSt     = $semaphore['status'] ?? 'N/A';
+                $weight    = $this->getAthleteWeight($athleteId);
+                $profile   = $this->computeProfile($metrics, $weight);
+                $jh        = round((float)($profile['jumpHeight'] ?? 0), 1);
+                $bi        = round((float)($profile['brakingImpulse'] ?? 0), 1);
+                $valdCtx   = "DATI VALD ATLETA (test del {$latest['test_date']}): RSImod={$rsiCur} ({$rsiVar}%, stato={$rsiSt}), JumpHeight={$jh}cm, BrakingImpulse={$bi} N\u00b7s/kg.";
+            }
+
+            $contextBlock = $context ? "\n\nCONTESTO ANALISI AI PRECEDENTE:\n{$context}" : '';
+
+            $prompt = <<<PROMPT
+Sei il miglior preparatore atletico al mondo specializzato in pallavolo giovanile di club.
+Hai 25 anni di esperienza con squadre giovanili U13-U20, conosci perfettamente la metodologia ForceDecks/VALD, la prevenzione degli infortuni nei giovani pallavolisti e la programmazione del carico in-season.
+
+{$valdCtx}{$contextBlock}
+
+DOMANDA DEL COACH:
+{$question}
+
+Rispondi in italiano, in modo pratico e diretto. Usa la tua esperienza per dare consigli concreti e applicabili immediatamente. Solo testo, no JSON, no markdown eccessivo.
+PROMPT;
+
+            $text = $this->callGeminiSingle($prompt);
+            Response::success(['answer' => $text]);
+        } catch (\Throwable $e) {
+            Response::error('Chat AI: ' . $e->getMessage(), 500);
+        }
+    }
 
 
     /**
@@ -443,7 +498,7 @@ PROMPT;
         $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' . $apiKey;
         $payload = json_encode([
             'contents' => [['parts' => [['text' => $prompt]]]],
-            'generationConfig' => ['maxOutputTokens' => 800, 'temperature' => 0.4],
+            'generationConfig' => ['temperature' => 0.4],
         ]);
 
         $ch = curl_init($url);
@@ -505,7 +560,7 @@ PROMPT;
         $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' . $apiKey;
         $payload = json_encode([
             'contents' => [['parts' => [['text' => $prompt]]]],
-            'generationConfig' => ['maxOutputTokens' => 600, 'temperature' => 0.4],
+            'generationConfig' => ['temperature' => 0.4],
         ]);
 
         $ch = curl_init($url);
