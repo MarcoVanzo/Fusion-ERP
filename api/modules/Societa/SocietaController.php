@@ -859,6 +859,54 @@ class SocietaController
         Response::success(['id' => $id, 'file_path' => $relPath, 'type' => $type], 201);
     }
 
+    /** POST ?module=societa&action=addForesteriaYoutubeLink — aggiunge link YouTube */
+    public function addForesteriaYoutubeLink(): void
+    {
+        Auth::requireRole('manager');
+        $body  = Response::jsonBody();
+        $url   = trim($body['url'] ?? '');
+        $title = trim($body['title'] ?? '');
+
+        if (empty($url)) {
+            Response::error('url obbligatorio', 400);
+        }
+
+        // Estrai l'ID video da vari formati YouTube
+        $videoId = null;
+        $patterns = [
+            '/(?:youtube\.com\/watch\?(?:.*&)?v=)([a-zA-Z0-9_-]{11})/',
+            '/(?:youtu\.be\/)([a-zA-Z0-9_-]{11})/',
+            '/(?:youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/',
+            '/(?:youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/',
+            '/(?:youtube\.com\/v\/)([a-zA-Z0-9_-]{11})/',
+        ];
+        foreach ($patterns as $pattern) {
+            if (preg_match($pattern, $url, $matches)) {
+                $videoId = $matches[1];
+                break;
+            }
+        }
+
+        if (!$videoId) {
+            Response::error('URL YouTube non valido. Incolla il link di un video dal canale YouTube di Fusion.', 400);
+        }
+
+        $db  = \FusionERP\Shared\Database::getInstance();
+        $tid = TenantContext::id();
+        $id  = 'FMD_' . bin2hex(random_bytes(4));
+
+        // Salva l'URL canonico del video
+        $canonicalUrl = 'https://www.youtube.com/watch?v=' . $videoId;
+
+        $db->prepare(
+            'INSERT INTO foresteria_media (id, tenant_id, type, file_path, title, description)
+             VALUES (?, ?, ?, ?, ?, ?)'
+        )->execute([$id, $tid, 'youtube', $canonicalUrl, $title ?: $canonicalUrl, null]);
+
+        Audit::log('INSERT', 'foresteria_media', $id, null, ['url' => $canonicalUrl, 'type' => 'youtube']);
+        Response::success(['id' => $id, 'file_path' => $canonicalUrl, 'type' => 'youtube'], 201);
+    }
+
     /** POST ?module=societa&action=deleteForesteriaMedia — soft-delete media */
     public function deleteForesteriaMedia(): void
     {
