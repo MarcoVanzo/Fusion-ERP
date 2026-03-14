@@ -109,10 +109,7 @@
             { "title": "Membri Staff", "path": "societa-membri", "icon": "users-three", "isMobileVisible": false },
             { "title": "Documenti Societari", "path": "societa-documenti", "icon": "files", "isMobileVisible": false },
             { "title": "Titoli & Palmares", "path": "societa-titoli", "icon": "trophy", "isMobileVisible": false },
-            { "title": "La Foresteria", "path": "societa-foresteria", "icon": "house-line", "isMobileVisible": false },
-            { "title": "Gestione Utenti", "path": "utenti", "icon": "users", "isMobileVisible": false, "roles": ["admin"] },
-            { "title": "Backup Sistema", "path": "admin-backup", "icon": "database", "isMobileVisible": false, "roles": ["admin"] },
-            { "title": "Log Sistema", "path": "admin-logs", "icon": "clipboard-text", "isMobileVisible": false, "roles": ["admin"] }
+            { "title": "La Foresteria", "path": "societa-foresteria", "icon": "house-line", "isMobileVisible": false }
         ]
     }
 ]
