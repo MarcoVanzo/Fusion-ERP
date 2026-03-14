@@ -47,10 +47,7 @@
             { "title": "Gestione Mezzi", "path": "transport-fleet", "icon": "bus", "isMobileVisible": false },
             { "title": "Trasporti Rimborsi", "path": "transport-refunds", "icon": "receipt", "isMobileVisible": false },
             { "title": "OutSeason", "path": "outseason-camps", "icon": "tent", "isMobileVisible": false, "roles": ["manager", "admin"] },
-            { "title": "Gestione Tornei", "path": "outseason-tournaments", "icon": "medal", "isMobileVisible": false, "roles": ["manager", "admin"] },
-            { "title": "Network Coll.", "path": "network-collaborazioni", "icon": "handshake", "isMobileVisible": false, "roles": ["manager", "admin"] },
-            { "title": "Network Prove", "path": "network-prove", "icon": "user-check", "isMobileVisible": false, "roles": ["manager", "admin"] },
-            { "title": "Network Attività", "path": "network-attivita", "icon": "activity", "isMobileVisible": false, "roles": ["manager", "admin"] }
+            { "title": "Gestione Tornei", "path": "outseason-tournaments", "icon": "medal", "isMobileVisible": false, "roles": ["manager", "admin"] }
         ]
     },
     {
@@ -106,8 +103,8 @@
         "children": [
             { "title": "Identità", "path": "societa-identita", "icon": "identification-card", "isMobileVisible": false },
             { "title": "Organigramma", "path": "societa-organigramma", "icon": "tree-structure", "isMobileVisible": false },
-            { "title": "Membri Staff", "path": "societa-membri", "icon": "users-three", "isMobileVisible": false },
-            { "title": "Documenti Societari", "path": "societa-documenti", "icon": "files", "isMobileVisible": false },
+            { "title": "Direttivo", "path": "societa-membri", "icon": "users-three", "isMobileVisible": false },
+            { "title": "Network", "path": "network-collaborazioni", "icon": "share-network", "isMobileVisible": false },
             { "title": "Titoli & Palmares", "path": "societa-titoli", "icon": "trophy", "isMobileVisible": false },
             { "title": "La Foresteria", "path": "societa-foresteria", "icon": "house-line", "isMobileVisible": false }
         ]
