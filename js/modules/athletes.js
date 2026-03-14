@@ -1388,3 +1388,35 @@ const Athletes = (() => {
   };
 })();
 window.Athletes = Athletes;
+
+// VALD On-Demand AI Analysis
+window.__valdAi = async function(athleteId, part) {
+  const resultEl = document.getElementById('vald-ai-result-' + athleteId);
+  if (!resultEl) return;
+  const label  = part === 'plan' ? 'Piano di Intervento' : 'Analisi Stato di Forma';
+  const color  = part === 'plan' ? 'rgba(0,200,140,0.9)' : 'rgba(150,130,255,0.9)';
+  const bg     = part === 'plan' ? 'rgba(0,180,120,0.07)' : 'rgba(100,80,255,0.07)';
+  const border = part === 'plan' ? 'rgba(0,180,120,0.25)' : 'rgba(100,80,255,0.25)';
+  const icon   = part === 'plan' ? 'ph-barbell' : 'ph-brain';
+  const btnId  = (part === 'plan' ? 'vald-ai-pl-btn-' : 'vald-ai-dx-btn-') + athleteId;
+  const btn    = document.getElementById(btnId);
+  if (btn) { btn.disabled = true; btn.textContent = 'Elaborazione AI\u2026'; }
+  resultEl.style.display = 'block';
+  resultEl.innerHTML = '<div style="font-size:12px;color:var(--color-text-muted);padding:8px 0;">AI in elaborazione\u2026 (15-20s)</div>';
+  try {
+    const data = await Store.get('aiAnalysis', 'vald', { athleteId, part });
+    const text = (data && data.text) ? data.text : 'Nessuna risposta AI.';
+    resultEl.innerHTML = '<div style="background:'+bg+';border:1px solid '+border+';border-radius:var(--radius);padding:var(--sp-2) var(--sp-3);margin-top:var(--sp-1);">'
+      + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:'+color+';margin-bottom:6px;">'
+      + '<i class="ph '+icon+'" style="margin-right:4px;"></i>'+label+' <span style="font-size:9px;opacity:0.7;">AI \u00b7 Gemini</span>'
+      + '</div><p style="font-size:13px;line-height:1.65;color:var(--color-text);white-space:pre-line;">'+Utils.escapeHtml(text)+'</p></div>';
+  } catch (err) {
+    resultEl.innerHTML = '<div style="color:var(--color-danger);font-size:12px;">Errore: ' + Utils.escapeHtml(err.message) + '</div>';
+  }
+  if (btn) {
+    btn.disabled = false;
+    btn.innerHTML = (part === 'plan'
+      ? '<i class="ph ph-barbell"></i> Piano di Intervento (AI)'
+      : '<i class="ph ph-brain"></i> Analisi Stato di Forma (AI)');
+  }
+};
