@@ -532,8 +532,14 @@ const App = (() => {
     }
 
     function _showUserProfileModal(user) {
-        const isAdmin = user.role === 'admin'
-            || (user.permissions && (user.permissions['admin'] === 'write' || user.permissions['admin'] === 'read'));
+        // Fallback: usa App.getUser() nel caso l'oggetto passato non sia completo
+        const _u = user || App.getUser() || {};
+        const _role = _u.role || '';
+        // Permissions può arrivare come stringa JSON o oggetto
+        let _perms = _u.permissions || {};
+        if (typeof _perms === 'string') { try { _perms = JSON.parse(_perms); } catch { _perms = {}; } }
+        const isAdmin = _role === 'admin'
+            || (_perms && (_perms['admin'] === 'write' || _perms['admin'] === 'read'));
 
         const bodyEl = document.createElement('div');
         bodyEl.style.display = 'flex';
