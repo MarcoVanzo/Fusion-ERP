@@ -42,6 +42,7 @@
         "children": [
             { "title": "Task Operativi", "path": "tasks", "icon": "check-square", "isMobileVisible": false, "roles": ["manager", "admin"] },
             { "title": "Scadenze Societarie", "path": "societa-scadenze", "icon": "bell-ringing", "isMobileVisible": false, "roles": ["manager", "admin"] },
+            { "title": "Viaggi & Trasferte", "path": "transport", "icon": "van", "isMobileVisible": false },
             { "title": "Trasporti Autisti", "path": "transport-drivers", "icon": "steering-wheel", "isMobileVisible": false },
             { "title": "Gestione Mezzi", "path": "transport-fleet", "icon": "bus", "isMobileVisible": false },
             { "title": "Trasporti Rimborsi", "path": "transport-refunds", "icon": "receipt", "isMobileVisible": false },
