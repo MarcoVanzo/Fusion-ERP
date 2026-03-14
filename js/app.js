@@ -532,11 +532,11 @@ const App = (() => {
     }
 
     function _showUserProfileModal(user) {
-        // Fallback: usa App.getUser() nel caso l'oggetto passato non sia completo
-        const _u = user || App.getUser() || {};
-        const _role = _u.role || '';
+        // Usa _currentUser (closure) come fonte di verità per il ruolo — garantito aggiornato al login
+        const _cu = _currentUser || user || {};
+        const _role = (_cu.role || '').toLowerCase();
         // Permissions può arrivare come stringa JSON o oggetto
-        let _perms = _u.permissions || {};
+        let _perms = _cu.permissions || {};
         if (typeof _perms === 'string') { try { _perms = JSON.parse(_perms); } catch { _perms = {}; } }
         const isAdmin = _role === 'admin'
             || (_perms && (_perms['admin'] === 'write' || _perms['admin'] === 'read'));
