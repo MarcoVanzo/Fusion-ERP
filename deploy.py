@@ -9,7 +9,7 @@ import subprocess
 import time as _time
 import threading
 import concurrent.futures
-from typing import cast, Optional, Any
+from typing import Optional
 
 CACHE_FILE = '.deploy_cache.json'
 MAX_WORKERS = 8
@@ -94,6 +94,8 @@ class FtpThreadLocal(threading.local):
     ftp: ftplib.FTP_TLS
 
 thread_local = FtpThreadLocal()
+active_ftp_connections = []
+connection_lock = threading.Lock()
 
 def get_ftp_connection(host, user, password):
     if not hasattr(thread_local, "ftp"):
@@ -102,15 +104,30 @@ def get_ftp_connection(host, user, password):
         ftp.prot_p()
         ftp.set_pasv(True)
         thread_local.ftp = ftp
+        with connection_lock:
+            active_ftp_connections.append(ftp)
     return thread_local.ftp
 
 def quit_ftp_connection():
     if hasattr(thread_local, "ftp"):
+        ftp = thread_local.ftp
         try:
-            thread_local.ftp.quit()
+            ftp.quit()
         except:
             pass
+        with connection_lock:
+            if ftp in active_ftp_connections:
+                active_ftp_connections.remove(ftp)
         del thread_local.ftp
+
+def quit_all_ftp_connections():
+    with connection_lock:
+        for ftp in active_ftp_connections:
+            try:
+                ftp.quit()
+            except:
+                pass
+        active_ftp_connections.clear()
 
 def worker_upload(item: tuple[str, str, str], host: str, user: str, password: str, max_retries: int = 3) -> tuple[bool, str, Optional[str]]:
     local_path, remote_filename, remote_dir = item
@@ -184,10 +201,6 @@ def deploy_files_via_ftp():
                     skip_count += 1
                     continue
 
-                if file == '.env':
-                    skip_count += 1
-                    continue
-
                 local_file_path: str = os.path.join(root, file)
 
                 file_hash = get_file_hash(local_file_path)
@@ -226,7 +239,6 @@ def deploy_files_via_ftp():
         print(f"🚀 Uploading via {MAX_WORKERS} parallel connections...")
         upload_count: int = 0
         failed_jobs: list[str] = []
-        cache_lock = threading.Lock()
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
             future_to_job = {}
@@ -241,30 +253,23 @@ def deploy_files_via_ftp():
                 local_path, remote_filename, remote_sub_dir, f_hash = job
                 try:
                     success, completed_local_path, error_msg = future.result()
-                    with cache_lock:
-                        if success:
-                            upload_count += 1 # type: ignore
-                            new_cache[completed_local_path] = f_hash
-                            print(f"  ⬆️ [{upload_count}/{len(upload_jobs)}] Uploaded {local_path} -> {remote_filename}")
-                            if upload_count % 50 == 0:
-                                save_cache(new_cache)
-                        else:
-                            print(f"  ❌ Failed to upload {local_path}: {error_msg}")
-                            failed_jobs.append(completed_local_path)
+                    if success:
+                        upload_count += 1 # type: ignore
+                        new_cache[completed_local_path] = f_hash
+                        print(f"  ⬆️ [{upload_count}/{len(upload_jobs)}] Uploaded {local_path} -> {remote_filename}")
+                        if upload_count % 50 == 0:
+                            save_cache(new_cache)
+                    else:
+                        print(f"  ❌ Failed to upload {local_path}: {error_msg}")
+                        failed_jobs.append(completed_local_path)
                 except Exception as e:
                     print(f"  ❌ Unhandled exception for {local_path}: {e}")
-                    with cache_lock:
-                        failed_jobs.append(local_path)
+                    failed_jobs.append(local_path)
 
         # Cleanup connections in workers
-        def worker_cleanup():
-            quit_ftp_connection()
-            
-        with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-            list(executor.map(lambda _: worker_cleanup(), range(MAX_WORKERS)))
+        quit_all_ftp_connections()
 
-        with cache_lock:
-            save_cache(new_cache)
+        save_cache(new_cache)
                 
         print(f"\n✅ Upload complete! Successfully transferred {upload_count} modified files (skipped {skip_count} unchanged files).")
         
@@ -315,8 +320,7 @@ def git_commit_and_push():
 
 def update_index_version():
     """Aggiorna il parametro ?v=... in index.html per forzare il refresh della cache (CSS, JS) in produzione."""
-    import time
-    version = str(int(time.time()))
+    version = str(int(_time.time()))
     index_path = 'index.html'
     if not os.path.exists(index_path):
         return
@@ -342,11 +346,11 @@ def main():
     # 1. Load credentials
     load_env()
     
-    # 2. Salva su GitHub prima di deployare
-    git_commit_and_push()
-
-    # 3. Aggiorna cache buster prima del deploy
+    # 2. Aggiorna cache buster prima del deploy
     update_index_version()
+
+    # 3. Salva su GitHub prima di deployare
+    git_commit_and_push()
 
     # 4. Ensure .env.prod exists
     if not os.path.exists('.env.prod'):

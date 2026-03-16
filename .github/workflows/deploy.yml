@@ -93,12 +93,12 @@ jobs:
           GOOGLE_MAPS_API_KEY=${{ secrets.GOOGLE_MAPS_API_KEY }}
 
           # GAS Proxy (FIPAV scraping)
-          GAS_PROXY_URL=${{ secrets.GAS_PROXY_URL }}
+          GAS_PROXY_URL=${{ secrets['GAS_PROXY_URL'] }}
 
           # SMTP
           SMTP_HOST=${{ secrets.SMTP_HOST }}
           SMTP_PORT=${{ secrets.SMTP_PORT }}
-          SMTP_ENCRYPTION=${{ secrets.SMTP_ENCRYPTION }}
+          SMTP_ENCRYPTION=${{ secrets['SMTP_ENCRYPTION'] }}
           SMTP_USER=${{ secrets.SMTP_USER }}
           SMTP_PASS=${{ secrets.SMTP_PASS }}
           SMTP_FROM_NAME="Fusion ERP"
@@ -130,8 +130,8 @@ jobs:
           OUTSEASON_PRICE_PARTIAL=${{ secrets.OUTSEASON_PRICE_PARTIAL }}
 
           # eCommerce Cognito
-          ECOMMERCE_COGNITO_API_KEY=${{ secrets.ECOMMERCE_COGNITO_API_KEY }}
-          ECOMMERCE_FORM_ID=${{ secrets.ECOMMERCE_FORM_ID }}
+          ECOMMERCE_COGNITO_API_KEY=${{ secrets['ECOMMERCE_COGNITO_API_KEY'] }}
+          ECOMMERCE_FORM_ID=${{ secrets['ECOMMERCE_FORM_ID'] }}
 
           # Meta / Social
           META_APP_ID=${{ secrets.META_APP_ID }}
@@ -140,24 +140,24 @@ jobs:
           META_CONFIG_ID=${{ secrets.META_CONFIG_ID }}
 
           # Google Drive backup
-          GDRIVE_FOLDER_ID=${{ secrets.GDRIVE_FOLDER_ID }}
+          GDRIVE_FOLDER_ID=${{ secrets['GDRIVE_FOLDER_ID'] }}
           GDRIVE_CLIENT_ID=${{ secrets.GDRIVE_CLIENT_ID }}
-          GDRIVE_CLIENT_SECRET=${{ secrets.GDRIVE_CLIENT_SECRET }}
+          GDRIVE_CLIENT_SECRET=${{ secrets['GDRIVE_CLIENT_SECRET'] }}
           GDRIVE_REFRESH_TOKEN=${{ secrets.GDRIVE_REFRESH_TOKEN }}
 
           # WhatsApp Cloud API
-          WHATSAPP_TOKEN=${{ secrets.WHATSAPP_TOKEN }}
-          WHATSAPP_PHONE_NUMBER_ID=${{ secrets.WHATSAPP_PHONE_NUMBER_ID }}
-          WHATSAPP_BUSINESS_ACCOUNT_ID=${{ secrets.WHATSAPP_BUSINESS_ACCOUNT_ID }}
+          WHATSAPP_TOKEN=${{ secrets['WHATSAPP_TOKEN'] }}
+          WHATSAPP_PHONE_NUMBER_ID=${{ secrets['WHATSAPP_PHONE_NUMBER_ID'] }}
+          WHATSAPP_BUSINESS_ACCOUNT_ID=${{ secrets['WHATSAPP_BUSINESS_ACCOUNT_ID'] }}
 
           # MailerLite
           MAILERLITE_API_KEY=${{ secrets.MAILERLITE_API_KEY }}
 
           # VALD
-          VALD_CLIENT_ID=${{ secrets.VALD_CLIENT_ID }}
-          VALD_CLIENT_SECRET=${{ secrets.VALD_CLIENT_SECRET }}
-          VALD_USER_EMAIL=${{ secrets.VALD_USER_EMAIL }}
-          VALD_ORG_ID=${{ secrets.VALD_ORG_ID }}
+          VALD_CLIENT_ID=${{ secrets['VALD_CLIENT_ID'] }}
+          VALD_CLIENT_SECRET=${{ secrets['VALD_CLIENT_SECRET'] }}
+          VALD_USER_EMAIL=${{ secrets['VALD_USER_EMAIL'] }}
+          VALD_ORG_ID=${{ secrets['VALD_ORG_ID'] }}
           EOF
 
       # ── 5. Create .env.prod (deployed as .env on the server) ─────────────
