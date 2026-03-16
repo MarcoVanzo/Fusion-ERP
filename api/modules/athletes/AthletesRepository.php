@@ -315,10 +315,11 @@ class AthletesRepository
         // NOTE: MySQL does not support PDO named parameters inside INTERVAL expressions.
         // The integer is cast strictly and interpolated directly — safe from SQL injection.
         $daysInt = (int)$days;
+        $daysIntStr = (string)$daysInt;
         $stmt = $this->db->prepare(
             "SELECT id, log_date, duration_min, rpe, load_value, acwr_score, notes
              FROM metrics_logs
-             WHERE athlete_id = :id AND log_date >= DATE_SUB(CURDATE(), INTERVAL {$daysInt} DAY)
+             WHERE athlete_id = :id AND log_date >= DATE_SUB(CURDATE(), INTERVAL " . $daysIntStr . " DAY)
              ORDER BY log_date DESC"
         );
         $stmt->bindValue(':id', $athleteId);

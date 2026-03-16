@@ -1,6 +1,7 @@
 /* ─── Network Module — CSS ────────────────────────────────────────────────── */
 
 /* ─── Tab Bar ───────────────────────────────────────────────────────────────── */
+
 /* ─── Layout ───────────────────────────────────────────────────────────────── */
 .module-wrapper {
     display: flex;
@@ -134,7 +135,7 @@
 }
 
 .eval-slider {
-    -webkit-appearance: none;
+    appearance: none;
     appearance: none;
     width: 100%;
     height: 6px;
@@ -145,7 +146,7 @@
 }
 
 .eval-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
+    appearance: none;
     appearance: none;
     width: 18px;
     height: 18px;
