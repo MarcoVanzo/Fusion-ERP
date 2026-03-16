@@ -184,6 +184,15 @@ class SocietaRepository
         $stmt->execute(array_merge($data, [':id' => $id, ':tid' => $tenantId]));
     }
 
+    public function updateMemberPhoto(string $id, ?string $photoPath): void
+    {
+        $tenantId = TenantContext::id();
+        $this->db->prepare(
+            'UPDATE societa_members SET photo_path = :photo_path
+             WHERE id = :id AND tenant_id = :tid AND is_deleted = 0'
+        )->execute([':photo_path' => $photoPath, ':id' => $id, ':tid' => $tenantId]);
+    }
+
     public function deleteMember(string $id): void
     {
         $tenantId = TenantContext::id();

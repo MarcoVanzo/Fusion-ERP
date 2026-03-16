@@ -45,7 +45,7 @@ class ValdController
         Response::success([
             'deleted_tests' => $deleted,
             'unlinked_athletes' => $unlinked,
-            'message' => "Reset completato: $deleted test eliminati, $unlinked atleti sganciati.",
+            'message' => 'Reset completato: ' . (string)$deleted . ' test eliminati, ' . (string)$unlinked . ' atleti sganciati.',
         ]);
     }
 
@@ -223,7 +223,7 @@ class ValdController
                 $profile   = $this->computeProfile($metrics, $weight);
                 $jh        = round((float)($profile['jumpHeight'] ?? 0), 1);
                 $bi        = round((float)($profile['brakingImpulse'] ?? 0), 1);
-                $valdCtx   = "DATI VALD ATLETA (test del {$latest['test_date']}): RSImod={$rsiCur} ({$rsiVar}%, stato={$rsiSt}), JumpHeight={$jh}cm, BrakingImpulse={$bi} N\u00b7s/kg.";
+                $valdCtx   = sprintf("DATI VALD ATLETA (test del %s): RSImod=%.3f (%.1f%%, stato=%s), JumpHeight=%.1fcm, BrakingImpulse=%.1f N\u00b7s/kg.", $latest['test_date'], $rsiCur, $rsiVar, $rsiSt, $jh, $bi);
             }
 
             $contextBlock = $context ? "\n\nCONTESTO ANALISI AI PRECEDENTE:\n{$context}" : '';
@@ -440,12 +440,20 @@ PROMPT;
         $asymConcentric = round($asymmetry['concentric']['asymmetry'] ?? 0, 1);
         $weakerLimb   = $asymmetry['landing']['weaker'] ?? 'N/A';
 
+        $rsiCurrentStr   = (string)$rsiCurrent;
+        $rsiBaselineStr  = (string)$rsiBaseline;
+        $rsiVariationStr = (string)$rsiVariation;
+        $jumpHeightStr   = (string)$jumpHeight;
+        $brakingImpStr   = (string)$brakingImp;
+        $asymLandingStr  = (string)$asymLanding;
+        $asymConcentricStr = (string)$asymConcentric;
+
         $historyLines = '';
         foreach (array_reverse($history) as $h) {
             $hm = is_array($h['metrics']) ? $h['metrics'] : json_decode($h['metrics'] ?? '{}', true);
             $hRsi  = round((float)($hm['RSIModified']['Value'] ?? 0), 3);
             $hJump = round((float)($hm['JumpHeight']['Value'] ?? $hm['ConcJumpHeight']['Value'] ?? 0), 1);
-            $historyLines .= "  - {$h['test_date']}: RSImod={$hRsi}, JumpHeight={$hJump}cm\n";
+            $historyLines .= '  - ' . $h['test_date'] . ': RSImod=' . (string)$hRsi . ', JumpHeight=' . (string)$hJump . "cm\n";
         }
 
         $context = <<<CTX
@@ -455,11 +463,11 @@ CONTESTO SQUADRA: giovani pallavoliste di club che si allenano 6 giorni su 7 per
 
 DATI TEST ATTUALE:
 - Status semaforo: {$rsiStatus}
-- RSImod: {$rsiCurrent} (baseline: {$rsiBaseline}, variazione: {$rsiVariation}%)
-- Jump Height: {$jumpHeight} cm
-- Braking Impulse: {$brakingImp} N\u00b7s/kg
-- Asimmetria atterraggio: {$asymLanding}% (arto pi\u00f9 debole: {$weakerLimb})
-- Asimmetria spinta: {$asymConcentric}%
+- RSImod: {$rsiCurrentStr} (baseline: {$rsiBaselineStr}, variazione: {$rsiVariationStr}%)
+- Jump Height: {$jumpHeightStr} cm
+- Braking Impulse: {$brakingImpStr} N\u00b7s/kg
+- Asimmetria atterraggio: {$asymLandingStr}% (arto pi\u00f9 debole: {$weakerLimb})
+- Asimmetria spinta: {$asymConcentricStr}%
 
 STORICO ULTIMI TEST:
 {$historyLines}
@@ -615,7 +623,7 @@ PROMPT;
     {
         Auth::requireRead('athletes');
 
-        $tenantId = \FusionERP\Shared\TenantContext::id();
+        $tenantId = TenantContext::id();
         $db       = \FusionERP\Shared\Database::getInstance();
 
         // 1. Fetch VALD athletes from API — wrap in try/catch so auth failures
@@ -794,7 +802,7 @@ PROMPT;
             return $stats;
         }
 
-        $tenantId = \FusionERP\Shared\TenantContext::id();
+        $tenantId = TenantContext::id();
         $db       = \FusionERP\Shared\Database::getInstance();
 
         // Extend execution time — Aruba default is 30s which is too short for full sync

@@ -269,6 +269,68 @@ class SocietaController
         Response::success(['message' => 'Membro rimosso']);
     }
 
+    // ─── MEMBER PHOTO UPLOAD ──────────────────────────────────────────────────
+    
+    public function uploadMemberPhoto(): void
+    {
+        Auth::requireRole('manager');
+        
+        $id = filter_input(INPUT_POST, 'id', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        if (empty($id)) {
+            Response::error('ID membro mancante', 400);
+        }
+
+        $member = $this->repo->getMemberById($id);
+        if (!$member) {
+            Response::error('Membro non trovato', 404);
+        }
+
+        if (empty($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
+            Response::error('File non caricato o errore upload', 400);
+        }
+
+        $file = $_FILES['file'];
+        if ($file['size'] > self::MAX_FILE_SIZE) {
+            Response::error('File troppo grande (max 10 MB)', 400);
+        }
+
+        $finfo = new \finfo(FILEINFO_MIME_TYPE);
+        $mimeType = $finfo->file($file['tmp_name']);
+        
+        if (!in_array($mimeType, ['image/jpeg', 'image/png', 'image/webp'], true)) {
+            Response::error('Formato non supportato (solo JPG, PNG, WEBP)', 415);
+        }
+
+        $tenantId = TenantContext::id();
+        $uploadDir = dirname(__DIR__, 3) . '/uploads/societa/' . $tenantId . '/members';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+
+        $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
+        $safeFilename = 'member_' . $id . '_' . time() . '.' . strtolower($ext);
+        $fullPath = $uploadDir . '/' . $safeFilename;
+
+        if (!move_uploaded_file($file['tmp_name'], $fullPath)) {
+            Response::error('Errore salvataggio foto', 500);
+        }
+
+        $relPath = 'uploads/societa/' . $tenantId . '/members/' . $safeFilename;
+
+        // Delete old photo if exists
+        if (!empty($member['photo_path'])) {
+            $oldPath = dirname(__DIR__, 3) . '/' . $member['photo_path'];
+            if (file_exists($oldPath)) {
+                unlink($oldPath);
+            }
+        }
+
+        $this->repo->updateMemberPhoto($id, $relPath);
+        
+        Audit::log('UPDATE', 'societa_members', $id, ['photo_path' => $member['photo_path'] ?? null], ['photo_path' => $relPath]);
+        Response::success(['photo_path' => $relPath]);
+    }
+
     // ─── DOCUMENTS ────────────────────────────────────────────────────────────
 
     public function listDocuments(): void

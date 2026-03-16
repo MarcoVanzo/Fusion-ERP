@@ -546,31 +546,6 @@ const App = (() => {
         bodyEl.style.flexDirection = 'column';
         bodyEl.style.gap = 'var(--sp-2)';
 
-        const adminSection = isAdmin ? `
-            <div style="margin-top:var(--sp-3); padding-top:var(--sp-3); border-top:1px solid var(--color-border);">
-                <h3 style="font-size:12px; text-transform:uppercase; letter-spacing:.6px; color:var(--color-text-muted); margin:0 0 var(--sp-2) 0;">
-                    <i class="ph ph-shield-check" style="color:var(--color-pink); margin-right:4px;"></i>Strumenti Admin
-                </h3>
-                <div style="display:flex; flex-direction:column; gap:8px;">
-                    <button type="button" id="profile-goto-users" class="btn btn-ghost btn-sm" style="justify-content:flex-start; gap:10px; padding:10px 14px; border:1px solid var(--color-border); border-radius:8px;">
-                        <i class="ph ph-users" style="font-size:16px; color:#818cf8;"></i>
-                        <span>Gestione Utenti</span>
-                        <i class="ph ph-arrow-right" style="margin-left:auto; font-size:13px; opacity:.5;"></i>
-                    </button>
-                    <button type="button" id="profile-goto-backup" class="btn btn-ghost btn-sm" style="justify-content:flex-start; gap:10px; padding:10px 14px; border:1px solid var(--color-border); border-radius:8px;">
-                        <i class="ph ph-database" style="font-size:16px; color:#38bdf8;"></i>
-                        <span>Backup Sistema</span>
-                        <i class="ph ph-arrow-right" style="margin-left:auto; font-size:13px; opacity:.5;"></i>
-                    </button>
-                    <button type="button" id="profile-goto-logs" class="btn btn-ghost btn-sm" style="justify-content:flex-start; gap:10px; padding:10px 14px; border:1px solid var(--color-border); border-radius:8px;">
-                        <i class="ph ph-clipboard-text" style="font-size:16px; color:#a78bfa;"></i>
-                        <span>Log di Sistema</span>
-                        <i class="ph ph-arrow-right" style="margin-left:auto; font-size:13px; opacity:.5;"></i>
-                    </button>
-                </div>
-            </div>
-        ` : '';
-
         bodyEl.innerHTML = `
             <h3 style="font-size:14px; margin-top:0; margin-bottom:0;">Cambia Password</h3>
             <form id="profile-password-form" style="display:flex; flex-direction:column; gap:var(--sp-2); margin:0;">
@@ -585,7 +560,6 @@ const App = (() => {
                 <div id="profile-pwd-error" class="form-error hidden" style="color:var(--color-danger); font-size:13px; margin:4px 0;"></div>
                 <button type="submit" class="btn btn-primary" id="profile-pwd-btn" style="margin-top:var(--sp-1);">AGGIORNA PASSWORD</button>
             </form>
-            ${adminSection}
         `;
 
         const m = UI.modal({
@@ -623,21 +597,7 @@ const App = (() => {
             }
         });
 
-        // Admin navigation buttons
-        if (isAdmin) {
-            bodyEl.querySelector('#profile-goto-users')?.addEventListener('click', () => {
-                m.close();
-                Router.navigate('utenti');
-            });
-            bodyEl.querySelector('#profile-goto-backup')?.addEventListener('click', () => {
-                m.close();
-                Router.navigate('admin-backup');
-            });
-            bodyEl.querySelector('#profile-goto-logs')?.addEventListener('click', () => {
-                m.close();
-                Router.navigate('admin-logs');
-            });
-        }
+        // Admin navigation buttons removed as they are now in the user dropdown
     }
 
 

@@ -7,9 +7,12 @@ import hashlib
 import json
 import subprocess
 import time as _time
-from typing import cast
+import threading
+import concurrent.futures
+from typing import Optional
 
 CACHE_FILE = '.deploy_cache.json'
+MAX_WORKERS = 8
 
 def load_env():
     """Load variables from .env file into environment."""
@@ -87,9 +90,65 @@ def ensure_remote_dir(ftp, remote_dir, created_dirs):
             print(f"⚠️ Could not create directory {remote_dir}: {e}")
             return False
 
+class FtpThreadLocal(threading.local):
+    ftp: ftplib.FTP_TLS
+
+thread_local = FtpThreadLocal()
+active_ftp_connections = []
+connection_lock = threading.Lock()
+
+def get_ftp_connection(host, user, password):
+    if not hasattr(thread_local, "ftp"):
+        ftp = ftplib.FTP_TLS(host)
+        ftp.login(user, password)
+        ftp.prot_p()
+        ftp.set_pasv(True)
+        thread_local.ftp = ftp
+        with connection_lock:
+            active_ftp_connections.append(ftp)
+    return thread_local.ftp
+
+def quit_ftp_connection():
+    if hasattr(thread_local, "ftp"):
+        ftp = thread_local.ftp
+        try:
+            ftp.quit()
+        except:
+            pass
+        with connection_lock:
+            if ftp in active_ftp_connections:
+                active_ftp_connections.remove(ftp)
+        del thread_local.ftp
+
+def quit_all_ftp_connections():
+    with connection_lock:
+        for ftp in active_ftp_connections:
+            try:
+                ftp.quit()
+            except:
+                pass
+        active_ftp_connections.clear()
+
+def worker_upload(item: tuple[str, str, str], host: str, user: str, password: str, max_retries: int = 3) -> tuple[bool, str, Optional[str]]:
+    local_path, remote_filename, remote_dir = item
+    for attempt in range(1, max_retries + 1):
+        try:
+            ftp = get_ftp_connection(host, user, password)
+            ftp.cwd('/')
+            ftp.cwd(remote_dir)
+            with open(local_path, 'rb') as fbin:
+                ftp.storbinary(f'STOR {remote_filename}', fbin)
+            return True, local_path, None
+        except Exception as e:
+            quit_ftp_connection()
+            if attempt == max_retries:
+                return False, local_path, str(e)
+            _time.sleep(2)
+    return False, local_path, "Max retries exceeded"
+
 def deploy_files_via_ftp():
-    """Upload project files individually via FTP, only if changed."""
-    print("\n🚀 Starting Fast Smart Auto-Deploy...")
+    """Upload project files via FTP in parallel, only if changed."""
+    print("\n🚀 Starting Fast Smart Auto-Deploy (Parallelized)...")
     
     host = os.getenv('FTP_HOST', '')
     user = os.getenv('FTP_USER', '')
@@ -102,59 +161,20 @@ def deploy_files_via_ftp():
         return False
         
     try:
-        print(f"🔌 Connecting to {host}...")
-        ftp = ftplib.FTP_TLS(host)
-        ftp.login(user, password)
-        ftp.prot_p() 
-        ftp.set_pasv(True)
-        print("✅ Connected securely.\n")
-        
         # Load local cache
         file_cache: dict[str, str] = load_cache()
-        new_cache: dict[str, str] = {}
-        
-        # Keep track of directories we've verified or created
-        created_dirs = set()
-        
-        # Ensure base directory exists
-        ftp.cwd('/')
-        ensure_remote_dir(ftp, base_remote_dir, created_dirs)
+        new_cache: dict[str, str] = file_cache.copy() # Start with old cache
         
         ignore_dirs = ['.git', 'node_modules', 'tests', '__pycache__', '.pytest_cache', '.gemini', '.venv', 'uploads']
         ignore_extensions = ['.zip', '.log']
         ignore_files = ['deploy.py', 'deploy.mp', 'deploy_ftp.sh', CACHE_FILE]
 
-        def _do_upload(local_path: str, remote_file: str, remote_dir: str, max_retries=3) -> None:
-            """Upload a single file via the enclosing FTP connection, with retry logic."""
-            nonlocal ftp
-            for attempt in range(1, max_retries + 1):
-                try:
-                    with open(local_path, 'rb') as fbin:
-                        ftp.storbinary(f'STOR {remote_file}', fbin)
-                    return
-                except Exception as e:
-                    print(f"      ⚠️ Upload error on attempt {attempt}/{max_retries} for {remote_file}: {e}")
-                    if attempt < max_retries:
-                        print("      🔄 Reconnecting to FTP in 2 seconds...")
-                        _time.sleep(2)
-                        try:
-                            try: ftp.quit()
-                            except: pass
-                            ftp = ftplib.FTP_TLS(host)
-                            ftp.login(user, password)
-                            ftp.prot_p()
-                            ftp.set_pasv(True)
-                            ftp.cwd('/')
-                            ensure_remote_dir(ftp, remote_dir, created_dirs)
-                            ftp.cwd(remote_dir)
-                        except Exception as re_e:
-                            print(f"      ❌ Reconnection failed: {re_e}")
-                    else:
-                        raise e
-
-        upload_count: int = 0
+        upload_jobs: list[tuple[str, str, str, str]] = []
+        required_dirs: set[str] = set()
+        required_dirs.add(base_remote_dir)
         skip_count: int = 0
 
+        print("🔍 Scanning for modified files...")
         for root, dirs, files in os.walk('.'):
             # Prune ignored directories in-place
             for d in list(dirs):
@@ -171,10 +191,6 @@ def deploy_files_via_ftp():
             else:
                 remote_sub_dir = base_remote_dir if rel_path == '.' else f"{base_remote_dir}/{rel_path}".replace('\\', '/')
 
-            # Lazy-CD: only change remote dir when we actually need to upload something
-            dir_prepared: bool = False
-            current_remote_dir: str = remote_sub_dir
-
             for file in files:
                 # Skip ignored / hidden files (allow .htaccess and .env.prod)
                 if file not in ('.htaccess', '.env.prod') and (
@@ -185,17 +201,11 @@ def deploy_files_via_ftp():
                     skip_count += 1
                     continue
 
-                if file == '.env':
-                    skip_count += 1
-                    continue
-
                 local_file_path: str = os.path.join(root, file)
 
                 file_hash = get_file_hash(local_file_path)
                 if not file_hash:
                     continue
-
-                new_cache[local_file_path] = file_hash
 
                 # Skip if unchanged
                 cached_hash: str = file_cache.get(local_file_path, '')
@@ -203,27 +213,70 @@ def deploy_files_via_ftp():
                     skip_count += 1
                     continue
 
-                # Ensure remote directory exists before first upload in this dir
-                if not dir_prepared:
-                    ftp.cwd('/')
-                    ensure_remote_dir(ftp, current_remote_dir, created_dirs)
-                    ftp.cwd(current_remote_dir)
-                    dir_prepared = True
-
                 remote_filename = '.env' if file == '.env.prod' else file
-                print(f"  ⬆️ Uploading {rel_path}/{file} as {remote_filename} ...")
-                _do_upload(local_file_path, remote_filename, current_remote_dir)
-                upload_count = cast(int, upload_count) + 1
+                # Add to queue
+                upload_jobs.append((local_file_path, remote_filename, remote_sub_dir, file_hash))
+                required_dirs.add(remote_sub_dir)
 
-                # Incrementally persist cache to survive interruptions
-                if upload_count % 50 == 0:
-                    save_cache(new_cache)
+        if not upload_jobs:
+            print(f"\n✅ All files are up to date! (skipped {skip_count} unchanged files).")
+            return True
 
-        # Save the new cache so the next run skips all unchanged files
+        print(f"📦 Found {len(upload_jobs)} files to upload.")
+        
+        print(f"🔌 Single-thread connection to prepare directories...")
+        ftp = ftplib.FTP_TLS(host)
+        ftp.login(user, password)
+        ftp.prot_p() 
+        ftp.set_pasv(True)
+        created_dirs = set()
+        ftp.cwd('/')
+        for d in sorted(required_dirs, key=len): # Sort by length to create parents first
+            ensure_remote_dir(ftp, d, created_dirs)
+        ftp.quit()
+        print("✅ Directories are ready.\n")
+
+        print(f"🚀 Uploading via {MAX_WORKERS} parallel connections...")
+        upload_count: int = 0
+        failed_jobs: list[str] = []
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+            future_to_job = {}
+            for job in upload_jobs:
+                local_path, remote_filename, remote_sub_dir, f_hash = job
+                item = (local_path, remote_filename, remote_sub_dir)
+                future = executor.submit(worker_upload, item, host, user, password) # type: ignore
+                future_to_job[future] = job
+
+            for future in concurrent.futures.as_completed(future_to_job):
+                job = future_to_job[future]
+                local_path, remote_filename, remote_sub_dir, f_hash = job
+                try:
+                    success, completed_local_path, error_msg = future.result()
+                    if success:
+                        upload_count += 1 # type: ignore
+                        new_cache[completed_local_path] = f_hash
+                        print(f"  ⬆️ [{upload_count}/{len(upload_jobs)}] Uploaded {local_path} -> {remote_filename}")
+                        if upload_count % 50 == 0:
+                            save_cache(new_cache)
+                    else:
+                        print(f"  ❌ Failed to upload {local_path}: {error_msg}")
+                        failed_jobs.append(completed_local_path)
+                except Exception as e:
+                    print(f"  ❌ Unhandled exception for {local_path}: {e}")
+                    failed_jobs.append(local_path)
+
+        # Cleanup connections in workers
+        quit_all_ftp_connections()
+
         save_cache(new_cache)
                 
         print(f"\n✅ Upload complete! Successfully transferred {upload_count} modified files (skipped {skip_count} unchanged files).")
-        ftp.quit()
+        
+        if failed_jobs:
+            print(f"⚠️ Warning: {len(failed_jobs)} files failed to upload.")
+            return False
+            
         return True
         
     except Exception as e:
@@ -267,8 +320,7 @@ def git_commit_and_push():
 
 def update_index_version():
     """Aggiorna il parametro ?v=... in index.html per forzare il refresh della cache (CSS, JS) in produzione."""
-    import time
-    version = str(int(time.time()))
+    version = str(int(_time.time()))
     index_path = 'index.html'
     if not os.path.exists(index_path):
         return
@@ -294,11 +346,11 @@ def main():
     # 1. Load credentials
     load_env()
     
-    # 2. Salva su GitHub prima di deployare
-    git_commit_and_push()
-
-    # 3. Aggiorna cache buster prima del deploy
+    # 2. Aggiorna cache buster prima del deploy
     update_index_version()
+
+    # 3. Salva su GitHub prima di deployare
+    git_commit_and_push()
 
     # 4. Ensure .env.prod exists
     if not os.path.exists('.env.prod'):

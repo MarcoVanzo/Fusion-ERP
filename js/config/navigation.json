@@ -87,7 +87,8 @@
             { "title": "Quote Atleti", "path": "athlete-payments", "icon": "credit-card", "isMobileVisible": false, "roles": ["manager", "admin"] },
             { "title": "Articoli eCommerce", "path": "ecommerce-articles", "icon": "tag", "isMobileVisible": false },
             { "title": "Ordini eCommerce", "path": "ecommerce-orders", "icon": "package", "isMobileVisible": false },
-            { "title": "Partner & Sponsor", "path": "societa-sponsor", "icon": "storefront", "isMobileVisible": false, "roles": ["manager", "admin"] }
+            { "title": "Partner & Sponsor", "path": "societa-sponsor", "icon": "storefront", "isMobileVisible": false, "roles": ["manager", "admin"] },
+            { "title": "Spese Foresteria", "path": "finance-foresteria", "icon": "house-line", "isMobileVisible": false, "roles": ["manager", "admin"] }
         ]
     },
     {
@@ -109,4 +110,4 @@
             { "title": "La Foresteria", "path": "societa-foresteria", "icon": "house-line", "isMobileVisible": false }
         ]
     }
-]
+] 

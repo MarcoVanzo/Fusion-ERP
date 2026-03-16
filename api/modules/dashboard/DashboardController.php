@@ -50,9 +50,9 @@ class DashboardController
 
         // Conteggio squadre
         $stmtTeams = $db->prepare(
-            'SELECT COUNT(*) FROM teams WHERE tenant_id = :tid AND deleted_at IS NULL'
+            'SELECT COUNT(*) FROM teams WHERE deleted_at IS NULL'
         );
-        $stmtTeams->execute([':tid' => $tid]);
+        $stmtTeams->execute();
         $totalTeams = (int)$stmtTeams->fetchColumn();
 
         $pcts = [
@@ -349,8 +349,8 @@ class DashboardController
         } catch (\Throwable) {}
 
         try {
-            $s = $db->prepare('SELECT COUNT(*) FROM teams WHERE tenant_id=:t AND deleted_at IS NULL');
-            $s->execute([':t' => $tid]);
+            $s = $db->prepare('SELECT COUNT(*) FROM teams WHERE deleted_at IS NULL');
+            $s->execute();
             $totalTeams = (int)$s->fetchColumn();
         } catch (\Throwable) {}
 

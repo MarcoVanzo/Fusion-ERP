@@ -417,7 +417,7 @@ class AuthController
 
         $healthy = $dbOk && $sessionOk && $envOk;
 
-        \FusionERP\Shared\Response::success([
+        Response::success([
             'db' => $dbOk ? 'ok' : 'error',
             'session' => $sessionOk ? 'ok' : 'error',
             'env' => $envOk ? 'ok' : 'error',

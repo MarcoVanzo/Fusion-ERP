@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="it" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>ERP Redesign Components</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="design-tokens.css">
+  <link rel="stylesheet" href="components.css">
+</head>
+<body>
+
+  <div class="erp-app-container">
+    
+    <!-- Sidebar -->
+    <aside class="erp-sidebar" aria-label="Menu Principale">
+      <div style="padding: var(--erp-space-4) var(--erp-space-5); border-bottom: 1px solid var(--erp-color-border-subtle)">
+        <h2 style="margin:0; font-size: var(--erp-text-lg); font-weight: 600;">Fusion ERP</h2>
+      </div>
+      <nav style="padding: var(--erp-space-4);">
+        <p class="erp-label">Moduli</p>
+        <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:var(--erp-space-2);">
+          <li><a href="#" class="erp-btn erp-btn--ghost" style="width:100%; justify-content:flex-start;">Dashboard</a></li>
+          <li><a href="#" class="erp-btn erp-btn--ghost" style="width:100%; justify-content:flex-start; color:var(--erp-color-primary);">Atleti</a></li>
+          <li><a href="#" class="erp-btn erp-btn--ghost" style="width:100%; justify-content:flex-start;">Foresteria</a></li>
+        </ul>
+      </nav>
+    </aside>
+
+    <!-- Main Workspace -->
+    <main class="erp-main">
+      <header class="erp-header">
+        <div>
+          <h1 style="font-size: var(--erp-text-xl); font-weight:600; margin:0;">Anagrafica Atleti</h1>
+          <p style="font-size: var(--erp-text-sm); color: var(--erp-color-text-secondary); margin:0;">Gestisci le informazioni e l'inserimento dei tesserati.</p>
+        </div>
+      </header>
+
+      <div class="erp-content">
+        
+        <div class="erp-grid-12">
+          
+          <!-- Sezione Form data entry -->
+          <div class="erp-col-span-4">
+            <div class="erp-card">
+              <div class="erp-card-header">
+                <h3>Nuovo Atleta</h3>
+              </div>
+              <div class="erp-card-body">
+                <form class="erp-form-js" novalidate>
+                  <div class="erp-form-group">
+                    <label class="erp-label" for="atleta-nome">Nome Completo</label>
+                    <input type="text" id="atleta-nome" class="erp-input" required placeholder="Es. Mario Rossi">
+                    <span class="erp-error-msg">Il nome è obbligatorio per procedere.</span>
+                  </div>
+                  
+                  <div class="erp-form-group">
+                    <label class="erp-label" for="atleta-ruolo">Ruolo in campo</label>
+                    <select id="atleta-ruolo" class="erp-select" required>
+                      <option value="">Seleziona ruolo...</option>
+                      <option value="palleggiatore">Palleggiatore</option>
+                      <option value="centrale">Centrale</option>
+                      <option value="schiacciatore">Schiacciatore</option>
+                      <option value="libero">Libero</option>
+                    </select>
+                    <span class="erp-error-msg">Seleziona un ruolo valido.</span>
+                  </div>
+
+                  <div class="erp-form-group">
+                    <label class="erp-label" for="atleta-stato">Stato tesseramento</label>
+                    <select id="atleta-stato" class="erp-select">
+                      <option value="attivo">Attivo</option>
+                      <option value="sospeso">Scaduto</option>
+                    </select>
+                  </div>
+                  
+                  <div style="margin-top: var(--erp-space-6); display: flex; gap: var(--erp-space-3); justify-content:flex-end;">
+                    <button type="button" class="erp-btn erp-btn--ghost">Pulisci</button>
+                    <button type="submit" class="erp-btn erp-btn--primary">Salva Atleta</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            <!-- Esempio di alert / destrictive button -->
+            <div class="erp-card" style="margin-top: var(--erp-space-4); background-color: var(--erp-color-error-bg); border-color: var(--erp-color-error-bg);">
+              <div class="erp-card-body">
+                <h4 style="margin-bottom:var(--erp-space-2); color: var(--erp-color-destructive);">Rimuovi Atleta</h4>
+                <p style="font-size: var(--erp-text-sm); color: var(--erp-color-text-secondary); margin-bottom: var(--erp-space-4);">L'azione di archiviazione non è reversibile.</p>
+                <button type="button" class="erp-btn erp-btn--destructive" onclick="window.ERPUIInstance.showToast('info', 'Archiviazione', 'Funzione non implementata nella demo.')">Archivia Definitivamente</button>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Sezione Tabella e Visualizzazione Dati -->
+          <div class="erp-col-span-8">
+            <div class="erp-card">
+              <div class="erp-card-header">
+                <h3>Elenco Tesserati</h3>
+                <button class="erp-btn erp-btn--secondary" onclick="window.ERPUIInstance.toggleSkeletons(true); setTimeout(() => window.ERPUIInstance.toggleSkeletons(false), 2000);">Aggiorna Dati</button>
+              </div>
+              
+              <!-- Data View -->
+              <div class="erp-table-container erp-data-view" style="border:none; border-radius:0;">
+                <table class="erp-table">
+                  <thead>
+                    <tr>
+                      <th class="erp-table-sortable" role="button" tabindex="0">Nome Atleta</th>
+                      <th class="erp-table-sortable" role="button" tabindex="0">Ruolo</th>
+                      <th>Stato</th>
+                      <th class="erp-table-sortable" role="button" tabindex="0" style="text-align: right;">Valutazione</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Valentina Bianchi</td>
+                      <td>Palleggiatore</td>
+                      <td><span style="color:var(--erp-color-success); font-weight:500;">Attivo</span></td>
+                      <td style="text-align: right;">8.5</td>
+                    </tr>
+                    <tr>
+                      <td>Giulia Neri</td>
+                      <td>Centrale</td>
+                      <td><span style="color:var(--erp-color-success); font-weight:500;">Attivo</span></td>
+                      <td style="text-align: right;">7.2</td>
+                    </tr>
+                    <tr>
+                      <td>Martina Verdi</td>
+                      <td>Schiacciatore</td>
+                      <td><span style="color:var(--erp-color-warning); font-weight:500;">In scadenza</span></td>
+                      <td style="text-align: right;">9.1</td>
+                    </tr>
+                    <tr>
+                      <td>Sofia Russo</td>
+                      <td>Libero</td>
+                      <td><span style="color:var(--erp-color-error); font-weight:500;">Scaduto</span></td>
+                      <td style="text-align: right;">6.8</td>
+                    </tr>
+                    <tr>
+                      <td>Laura Colombo</td>
+                      <td>Schiacciatore</td>
+                      <td><span style="color:var(--erp-color-success); font-weight:500;">Attivo</span></td>
+                      <td style="text-align: right;">8.0</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Skeleton View (Hidden by default) -->
+              <div class="erp-table-container erp-skeleton-view erp-hidden" style="border:none; border-radius:0;">
+                <table class="erp-table">
+                  <thead>
+                    <tr>
+                      <th>Nome Atleta</th>
+                      <th>Ruolo</th>
+                      <th>Stato</th>
+                      <th style="text-align: right;">Valutazione</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="erp-skeleton-td"><div class="erp-skeleton erp-skeleton-text"></div></td>
+                      <td class="erp-skeleton-td"><div class="erp-skeleton erp-skeleton-text short"></div></td>
+                      <td class="erp-skeleton-td"><div class="erp-skeleton erp-skeleton-text short"></div></td>
+                      <td class="erp-skeleton-td"><div class="erp-skeleton erp-skeleton-text short" style="margin-left:auto;"></div></td>
+                    </tr>
+                    <tr>
+                      <td class="erp-skeleton-td"><div class="erp-skeleton erp-skeleton-text"></div></td>
+                      <td class="erp-skeleton-td"><div class="erp-skeleton erp-skeleton-text short"></div></td>
+                      <td class="erp-skeleton-td"><div class="erp-skeleton erp-skeleton-text short"></div></td>
+                      <td class="erp-skeleton-td"><div class="erp-skeleton erp-skeleton-text short" style="margin-left:auto;"></div></td>
+                    </tr>
+                    <tr>
+                      <td class="erp-skeleton-td"><div class="erp-skeleton erp-skeleton-text long"></div></td>
+                      <td class="erp-skeleton-td"><div class="erp-skeleton erp-skeleton-text short"></div></td>
+                      <td class="erp-skeleton-td"><div class="erp-skeleton erp-skeleton-text short"></div></td>
+                      <td class="erp-skeleton-td"><div class="erp-skeleton erp-skeleton-text short" style="margin-left:auto;"></div></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+            </div>
+          </div>
+          
+        </div>
+
+      </div>
+    </main>
+    
+  </div>
+
+  <!-- Script con logica base UI -->
+  <script src="components.js"></script>
+</body>
+</html>

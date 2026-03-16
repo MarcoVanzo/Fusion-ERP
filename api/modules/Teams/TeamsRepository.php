@@ -100,8 +100,8 @@ class TeamsRepository
     public function createTeam(array $data): void
     {
         $stmt = $this->db->prepare(
-            'INSERT INTO teams (id, name, category, color_hex) 
-             VALUES (:id, :name, :category, :color_hex)'
+            'INSERT INTO teams (id, name, gender, category, color_hex) 
+             VALUES (:id, :name, :gender, :category, :color_hex)'
         );
         $stmt->execute($data);
     }
@@ -110,7 +110,7 @@ class TeamsRepository
     {
         $stmt = $this->db->prepare(
             'UPDATE teams 
-             SET name = :name, category = :category, color_hex = :color_hex 
+             SET name = :name, gender = :gender, category = :category, color_hex = :color_hex 
              WHERE id = :id AND deleted_at IS NULL'
         );
         $stmt->execute($data);
