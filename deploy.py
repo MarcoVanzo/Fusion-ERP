@@ -9,7 +9,7 @@ import subprocess
 import time as _time
 import threading
 import concurrent.futures
-from typing import cast
+from typing import cast, Optional, Any
 
 CACHE_FILE = '.deploy_cache.json'
 MAX_WORKERS = 8
@@ -90,7 +90,10 @@ def ensure_remote_dir(ftp, remote_dir, created_dirs):
             print(f"⚠️ Could not create directory {remote_dir}: {e}")
             return False
 
-thread_local = threading.local()
+class FtpThreadLocal(threading.local):
+    ftp: ftplib.FTP_TLS
+
+thread_local = FtpThreadLocal()
 
 def get_ftp_connection(host, user, password):
     if not hasattr(thread_local, "ftp"):
@@ -109,7 +112,7 @@ def quit_ftp_connection():
             pass
         del thread_local.ftp
 
-def worker_upload(item, host, user, password, max_retries=3):
+def worker_upload(item: tuple[str, str, str], host: str, user: str, password: str, max_retries: int = 3) -> tuple[bool, str, Optional[str]]:
     local_path, remote_filename, remote_dir = item
     for attempt in range(1, max_retries + 1):
         try:
@@ -149,8 +152,8 @@ def deploy_files_via_ftp():
         ignore_extensions = ['.zip', '.log']
         ignore_files = ['deploy.py', 'deploy.mp', 'deploy_ftp.sh', CACHE_FILE]
 
-        upload_jobs = []
-        required_dirs = set()
+        upload_jobs: list[tuple[str, str, str, str]] = []
+        required_dirs: set[str] = set()
         required_dirs.add(base_remote_dir)
         skip_count: int = 0
 
@@ -221,8 +224,8 @@ def deploy_files_via_ftp():
         print("✅ Directories are ready.\n")
 
         print(f"🚀 Uploading via {MAX_WORKERS} parallel connections...")
-        upload_count = 0
-        failed_jobs = []
+        upload_count: int = 0
+        failed_jobs: list[str] = []
         cache_lock = threading.Lock()
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
@@ -230,7 +233,7 @@ def deploy_files_via_ftp():
             for job in upload_jobs:
                 local_path, remote_filename, remote_sub_dir, f_hash = job
                 item = (local_path, remote_filename, remote_sub_dir)
-                future = executor.submit(worker_upload, item, host, user, password)
+                future = executor.submit(worker_upload, item, host, user, password) # type: ignore
                 future_to_job[future] = job
 
             for future in concurrent.futures.as_completed(future_to_job):
@@ -240,7 +243,7 @@ def deploy_files_via_ftp():
                     success, completed_local_path, error_msg = future.result()
                     with cache_lock:
                         if success:
-                            upload_count += 1
+                            upload_count += 1 # type: ignore
                             new_cache[completed_local_path] = f_hash
                             print(f"  ⬆️ [{upload_count}/{len(upload_jobs)}] Uploaded {local_path} -> {remote_filename}")
                             if upload_count % 50 == 0:
