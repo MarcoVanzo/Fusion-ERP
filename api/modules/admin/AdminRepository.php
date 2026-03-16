@@ -193,18 +193,17 @@ class AdminRepository
      */
     public function listDatabaseTables(): array
     {
-        $dbName = getenv('DB_NAME') ?: 'fusion_erp';
         try {
             $stmt = $this->db->prepare(
                 'SELECT TABLE_NAME AS table_name,
                         IFNULL(TABLE_ROWS, 0) AS table_rows,
                         IFNULL(DATA_LENGTH + INDEX_LENGTH, 0) AS data_length
                  FROM INFORMATION_SCHEMA.TABLES
-                 WHERE TABLE_SCHEMA = :dbname
+                 WHERE TABLE_SCHEMA = DATABASE()
                    AND TABLE_TYPE = \'BASE TABLE\'
                  ORDER BY TABLE_NAME'
             );
-            $stmt->execute([':dbname' => $dbName]);
+            $stmt->execute();
             return $stmt->fetchAll();
         }
         catch (\PDOException $e) {
