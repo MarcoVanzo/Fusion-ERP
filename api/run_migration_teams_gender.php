@@ -2,7 +2,6 @@
 require_once __DIR__ . '/Shared/Database.php';
 require_once __DIR__ . '/../vendor/autoload.php';
 
-// Dotenv might be in root
 $dotenvPath = __DIR__ . '/../';
 if (file_exists($dotenvPath . '.env')) {
     $dotenv = Dotenv\Dotenv::createUnsafeImmutable($dotenvPath);
