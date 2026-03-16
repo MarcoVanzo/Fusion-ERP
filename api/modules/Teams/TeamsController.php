@@ -67,6 +67,7 @@ class TeamsController
         $this->repo->createTeam([
             ':id' => $teamId,
             ':name' => htmlspecialchars(trim($body['name']), ENT_QUOTES, 'UTF-8'),
+            ':gender' => in_array($body['gender'] ?? '', ['M', 'F']) ? $body['gender'] : null,
             ':category' => htmlspecialchars(trim($body['category']), ENT_QUOTES, 'UTF-8'),
             ':color_hex' => $body['color_hex'] ?? '#3B82F6'
         ]);
@@ -100,6 +101,7 @@ class TeamsController
         $this->repo->updateTeam([
             ':id' => $body['id'],
             ':name' => htmlspecialchars(trim($body['name']), ENT_QUOTES, 'UTF-8'),
+            ':gender' => in_array($body['gender'] ?? '', ['M', 'F']) ? $body['gender'] : null,
             ':category' => htmlspecialchars(trim($body['category']), ENT_QUOTES, 'UTF-8'),
             ':color_hex' => $body['color_hex'] ?? $before['color_hex']
         ]);
