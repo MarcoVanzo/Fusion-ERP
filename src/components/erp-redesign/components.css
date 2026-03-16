@@ -91,6 +91,9 @@ h1, h2, h3, h4, p {
   grid-template-columns: repeat(12, minmax(0, 1fr));
   gap: var(--erp-space-4);
 }
+.erp-grid-12 > * {
+  min-width: 0;
+}
 
 /* Colspan utilities */
 .erp-col-span-12 { grid-column: span 12 / span 12; }
