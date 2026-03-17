@@ -17,26 +17,49 @@ class ScoutingController
     }
 
     /* ─────────────────────────────────────────────────────────────────────
-     * Config — Cognito Form IDs from .env
+     * Config — Cognito Form IDs from .env (Bypass Dotenv caching)
      * ───────────────────────────────────────────────────────────────────── */
+    private static function getEnvVar(string $key): ?string
+    {
+        // Fallback checks
+        if (isset($_ENV[$key])) return trim($_ENV[$key]);
+        $val = getenv($key);
+        if ($val !== false && $val !== '') return trim($val);
+
+        // Manual generic parse of .env to bypass Dotenv immutability cache
+        $envFile = dirname(__DIR__, 2) . '/.env';
+        if (!file_exists($envFile)) return null;
+
+        $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if ($line === '' || $line[0] === '#') continue;
+            $parts = explode('=', $line, 2);
+            if (count($parts) === 2 && trim($parts[0]) === $key) {
+                return trim($parts[1]);
+            }
+        }
+        return null;
+    }
+
     private static function fusionFormId(): int
     {
-        return (int)(($_ENV['SCOUTING_FUSION_FORM_ID'] ?? getenv('SCOUTING_FUSION_FORM_ID')) ?: 0);
+        return (int)(self::getEnvVar('SCOUTING_FUSION_FORM_ID') ?: 0);
     }
 
     private static function fusionViewId(): int
     {
-        return (int)(($_ENV['SCOUTING_FUSION_VIEW_ID'] ?? getenv('SCOUTING_FUSION_VIEW_ID')) ?: 1);
+        return (int)(self::getEnvVar('SCOUTING_FUSION_VIEW_ID') ?: 1);
     }
 
     private static function networkFormId(): int
     {
-        return (int)(($_ENV['SCOUTING_NETWORK_FORM_ID'] ?? getenv('SCOUTING_NETWORK_FORM_ID')) ?: 0);
+        return (int)(self::getEnvVar('SCOUTING_NETWORK_FORM_ID') ?: 0);
     }
 
     private static function networkViewId(): int
     {
-        return (int)(($_ENV['SCOUTING_NETWORK_VIEW_ID'] ?? getenv('SCOUTING_NETWORK_VIEW_ID')) ?: 1);
+        return (int)(self::getEnvVar('SCOUTING_NETWORK_VIEW_ID') ?: 1);
     }
 
     /* ─────────────────────────────────────────────────────────────────────
@@ -136,7 +159,7 @@ class ScoutingController
 
         // Sync Fusion form (uses its own API key)
         if ($fusionFormId > 0) {
-            $fusionKey = ($_ENV['SCOUTING_FUSION_API_KEY'] ?? getenv('SCOUTING_FUSION_API_KEY')) ?: ($_ENV['COGNITO_API_KEY'] ?? getenv('COGNITO_API_KEY'));
+            $fusionKey = self::getEnvVar('SCOUTING_FUSION_API_KEY') ?: self::getEnvVar('COGNITO_API_KEY');
             if (empty($fusionKey)) {
                 $errors[] = 'Fusion: SCOUTING_FUSION_API_KEY non configurata.';
             } else {
@@ -151,7 +174,7 @@ class ScoutingController
 
         // Sync Network form (uses its own API key)
         if ($networkFormId > 0) {
-            $networkKey = ($_ENV['SCOUTING_NETWORK_API_KEY'] ?? getenv('SCOUTING_NETWORK_API_KEY')) ?: ($_ENV['COGNITO_API_KEY'] ?? getenv('COGNITO_API_KEY'));
+            $networkKey = self::getEnvVar('SCOUTING_NETWORK_API_KEY') ?: self::getEnvVar('COGNITO_API_KEY');
             if (empty($networkKey)) {
                 $errors[] = 'Network: SCOUTING_NETWORK_API_KEY non configurata.';
             } else {
