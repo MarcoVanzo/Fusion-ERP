@@ -2,9 +2,11 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-$_SERVER['SERVER_NAME'] = 'localhost';
+// Read raw .env file to get credentials
+$env = @file_get_contents(__DIR__ . '/.env');
+if (!$env) $env = @file_get_contents(__DIR__ . '/api/.env');
+if (!$env) die("Could not find .env file");
 
-$env = file_get_contents(__DIR__ . '/.env');
 $dbHost = ''; $dbPort = ''; $dbName = ''; $dbUser = ''; $dbPass = '';
 foreach (explode("\n", $env) as $line) {
     if (str_starts_with($line, 'DB_HOST=')) $dbHost = trim(substr($line, 8));
@@ -14,12 +16,11 @@ foreach (explode("\n", $env) as $line) {
     if (str_starts_with($line, 'DB_PASS=')) $dbPass = trim(substr($line, 8));
 }
 
-// remove quotes if any
-$dbHost = str_replace(['"', "'"], "", $dbHost);
-$dbPort = str_replace(['"', "'"], "", $dbPort);
-$dbName = str_replace(['"', "'"], "", $dbName);
-$dbUser = str_replace(['"', "'"], "", $dbUser);
-$dbPass = str_replace(['"', "'"], "", $dbPass);
+$dbHost = str_replace(['"', "'", "\r"], "", $dbHost);
+$dbPort = str_replace(['"', "'", "\r"], "", $dbPort);
+$dbName = str_replace(['"', "'", "\r"], "", $dbName);
+$dbUser = str_replace(['"', "'", "\r"], "", $dbUser);
+$dbPass = str_replace(['"', "'", "\r"], "", $dbPass);
 
 if ($dbHost === 'localhost') {
     $dbHost = '127.0.0.1'; // Fix for socket error 2002
@@ -34,7 +35,7 @@ try {
 
     $stmt = $pdo->prepare("SELECT * FROM federation_championships");
     $stmt->execute();
-    $champs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $champs = $stmt->fetchAll();
 
     header('Content-Type: text/plain');
     foreach ($champs as $c) {

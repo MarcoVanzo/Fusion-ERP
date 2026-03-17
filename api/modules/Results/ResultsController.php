@@ -1712,19 +1712,6 @@ class ResultsController
         $err = '';
         $htmlM = $this->_fetch($url, $err);
 
-        // Fallback for fipavveneto.net IP block: try venezia.portalefipav.net using the same CId
-        // Both portals share the same underlying NetSystem database IDs.
-        if (!$htmlM && str_contains($url, 'fipavveneto.net')) {
-            if (preg_match('/[?&]CId=(\d+)/i', $url, $m)) {
-                $fallbackUrl = 'https://venezia.portalefipav.net/risultati-classifiche.aspx?CId=' . $m[1];
-                error_log("[Results] fipavveneto.net fetch failed, trying fallback: $fallbackUrl");
-                $htmlM = $this->_fetch($fallbackUrl, $err);
-                if ($htmlM) {
-                    $url = $fallbackUrl; // Use Generic parser instead of FipavVeneto specific parser
-                }
-            }
-        }
-
         if ($htmlM) {
             if (str_contains($url, 'fipavveneto.net')) {
                 $matches = $this->_parseMatchesFipavVeneto($htmlM);

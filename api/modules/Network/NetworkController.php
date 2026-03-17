@@ -182,7 +182,11 @@ class NetworkController
         $destPath = $uploadDir . '/' . $fileName;
 
         if (!@move_uploaded_file($file['tmp_name'], $destPath)) {
-            Response::error('Errore nel salvataggio del logo', 500);
+            if (!@rename($file['tmp_name'], $destPath) && !@copy($file['tmp_name'], $destPath)) {
+                $err = error_get_last();
+                $msg = $err ? $err['message'] : 'Sconosciuto';
+                Response::error('Errore nel salvataggio del logo: ' . $msg, 500);
+            }
         }
 
         $relPath = 'uploads/network/' . $tenantId . '/' . $safeId . '/logo/' . $fileName;
@@ -268,7 +272,11 @@ class NetworkController
         $destPath = $uploadDir . '/' . $fileName;
 
         if (!@move_uploaded_file($file['tmp_name'], $destPath)) {
-            Response::error('Errore nel salvataggio del file', 500);
+            if (!@rename($file['tmp_name'], $destPath) && !@copy($file['tmp_name'], $destPath)) {
+                $err = error_get_last();
+                $msg = $err ? $err['message'] : 'Sconosciuto';
+                Response::error('Errore nel salvataggio del file: ' . $msg, 500);
+            }
         }
 
         $relPath = 'uploads/network/' . $tenantId . '/' . $safeId . '/' . $fileName;
