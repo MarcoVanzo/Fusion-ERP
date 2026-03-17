@@ -43,7 +43,11 @@ class ResultsController
      * The GAS proxy fetches the FIPAV page from Google's IP and returns the raw HTML.
      * Set to null to disable and use direct cURL only.
      */
-    private const GAS_PROXY_URL = 'https://script.google.com/macros/s/AKfycbzWEVIrWNDnKqP7U5lrL5pM2EMK_UuPMJoJHi5RIpnhJrx-r04MmWYixQoxV6TaAIU/exec';
+    private ?string $gasProxyUrl = null;
+
+    public function __construct() {
+        $this->gasProxyUrl = $_ENV['GAS_PROXY_URL'] ?? getenv('GAS_PROXY_URL') ?: null;
+    }
 
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -552,8 +556,8 @@ class ResultsController
     {
         // ── Try GAS Proxy first (bypasses FIPAV WAF IP block on production server) ──
         // BUT skip GAS proxy for fipavveneto.net because they block Google IPs and return 403
-        if (self::GAS_PROXY_URL !== null && !str_contains($url, 'fipavveneto.net') && !str_contains($url, 'federvolley.it')) {
-            $proxyUrl = self::GAS_PROXY_URL . '?url=' . urlencode($url);
+        if ($this->gasProxyUrl !== null) {
+            $proxyUrl = $this->gasProxyUrl . '?url=' . urlencode($url);
             $ch = curl_init($proxyUrl);
             curl_setopt_array($ch, [
                 CURLOPT_RETURNTRANSFER => true,
@@ -1708,6 +1712,19 @@ class ResultsController
         $err = '';
         $htmlM = $this->_fetch($url, $err);
 
+        // Fallback for fipavveneto.net IP block: try venezia.portalefipav.net using the same CId
+        // Both portals share the same underlying NetSystem database IDs.
+        if (!$htmlM && str_contains($url, 'fipavveneto.net')) {
+            if (preg_match('/[?&]CId=(\d+)/i', $url, $m)) {
+                $fallbackUrl = 'https://venezia.portalefipav.net/risultati-classifiche.aspx?CId=' . $m[1];
+                error_log("[Results] fipavveneto.net fetch failed, trying fallback: $fallbackUrl");
+                $htmlM = $this->_fetch($fallbackUrl, $err);
+                if ($htmlM) {
+                    $url = $fallbackUrl; // Use Generic parser instead of FipavVeneto specific parser
+                }
+            }
+        }
+
         if ($htmlM) {
             if (str_contains($url, 'fipavveneto.net')) {
                 $matches = $this->_parseMatchesFipavVeneto($htmlM);
@@ -1949,9 +1966,9 @@ class ResultsController
                 ORDER BY m.match_date DESC
                 LIMIT :lim
             ");
-            $stmt->bindValue(':lim', $limit, \PDO::PARAM_INT);
+            $stmt->bindValue(':lim', $limit, PDO::PARAM_INT);
             $stmt->execute();
-            $matches = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            $matches = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             foreach ($matches as &$m) {
                 $m['is_our_team'] = $this->_isOurTeam($m['home'], $m['away']);
@@ -2004,7 +2021,7 @@ class ResultsController
                 ORDER BY m.match_date DESC
             ");
             $stmtMatches->execute();
-            $matches = $stmtMatches->fetchAll(\PDO::FETCH_ASSOC);
+            $matches = $stmtMatches->fetchAll(PDO::FETCH_ASSOC);
 
             foreach ($matches as &$m) {
                 $m['is_our_team'] = $this->_isOurTeam($m['home'], $m['away']);
@@ -2034,7 +2051,7 @@ class ResultsController
                 ORDER BY c.label ASC, s.position ASC
             ");
             $stmtStandings->execute();
-            $standingsRaw = $stmtStandings->fetchAll(\PDO::FETCH_ASSOC);
+            $standingsRaw = $stmtStandings->fetchAll(PDO::FETCH_ASSOC);
 
             $standings = [];
             foreach ($standingsRaw as $row) {
