@@ -27,7 +27,8 @@ class ScoutingController
         if ($val !== false && $val !== '') return trim($val);
 
         // Manual generic parse of .env to bypass Dotenv immutability cache
-        $envFile = dirname(__DIR__, 2) . '/.env';
+        // __DIR__ is api/Modules/Scouting -> level 3 is root
+        $envFile = dirname(__DIR__, 3) . '/.env';
         if (!file_exists($envFile)) return null;
 
         $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
