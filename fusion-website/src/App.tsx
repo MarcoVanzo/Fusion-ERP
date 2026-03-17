@@ -11,6 +11,7 @@ import Shop from './pages/Shop';
 import Results from './pages/Results';
 import Outseason from './pages/Outseason';
 import Foresteria from './pages/Foresteria';
+import Network from './pages/Network';
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
             <Route path="/results" element={<Results />} />
             <Route path="/outseason" element={<Outseason />} />
             <Route path="/foresteria" element={<Foresteria />} />
+            <Route path="/network" element={<Network />} />
           </Routes>
         </main>
         <Footer />

@@ -23,6 +23,7 @@ const Navbar = () => {
         { name: 'STORE', path: '/shop' },
         { name: 'MATCH CENTER', path: '/results', badge: 'LIVE' },
         { name: 'OUTSEASON', path: '/outseason' },
+        { name: 'NETWORK', path: '/network' },
     ];
 
     return (
