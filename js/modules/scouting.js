@@ -70,6 +70,20 @@ const Scouting = (() => {
         document.getElementById('scouting-sync-btn')?.addEventListener('click', () => {
             doSync();
         });
+
+        const tbody = document.getElementById('scouting-tbody');
+        if (tbody) {
+            tbody.addEventListener('click', (e) => {
+                const btn = e.target.closest('.edit-athlete-btn');
+                if (btn) {
+                    const id = parseInt(btn.dataset.id, 10);
+                    const athlete = athletes.find(a => a.id === id);
+                    if (athlete) {
+                        openAddModal(athlete);
+                    }
+                }
+            });
+        }
     }
 
     function renderRows(data) {
@@ -95,7 +109,14 @@ const Scouting = (() => {
                     <td style="padding:10px 12px;border-bottom:1px solid var(--color-border)">${Utils.escapeHtml(athlete.rilevatore || '—')}</td>
                     <td style="padding:10px 12px;border-bottom:1px solid var(--color-border);font-size:12px">${athlete.data_rilevazione || '—'}</td>
                     <td style="padding:10px 12px;border-bottom:1px solid var(--color-border)">
-                        <span class="status-badge" style="background:${src.bg};color:${src.color}">${src.label}</span>
+                        <span class="status-badge" style="background:${src.bg};color:${src.color}">${src.label} ${athlete.is_locked_edit == 1 ? '<i class="ph ph-lock-key" title="Modificato manualmente" style="margin-left:4px"></i>' : ''}</span>
+                    </td>
+                    <td style="padding:10px 12px;border-bottom:1px solid var(--color-border);text-align:right">
+                        ${['admin', 'manager', 'allenatore'].includes(App.getUser()?.role) ? `
+                            <button class="btn btn-icon btn-ghost btn-sm edit-athlete-btn" data-id="${athlete.id}" title="Modifica">
+                                <i class="ph ph-pencil-simple"></i>
+                            </button>
+                        ` : ''}
                     </td>
                 </tr>
             `;
@@ -139,43 +160,46 @@ const Scouting = (() => {
         }
     }
 
-    function openAddModal() {
+    function openAddModal(athlete = null) {
+        const isEdit = athlete !== null;
+        
         const modal = UI.modal({
-            title: "Nuovo Atleta Scouting",
+            title: isEdit ? "Modifica Atleta" : "Nuovo Atleta Scouting",
             body: `
+                ${isEdit ? '<div class="banner banner-warning" style="margin-bottom:var(--sp-4);font-size:12px;display:flex;align-items:center;gap:8px"><i class="ph ph-warning-circle" style="font-size:16px"></i> Salvando le modifiche, questo record verrà bloccato e non sarà più sovrascritto dalla sincronizzazione di Cognito Forms.</div>' : ''}
                 <div class="form-grid">
                     <div class="form-group">
                         <label class="form-label" for="sc-nome">Nome *</label>
-                        <input id="sc-nome" class="form-input" type="text" required>
+                        <input id="sc-nome" class="form-input" type="text" value="${isEdit ? Utils.escapeHtml(athlete.nome || '') : ''}" required>
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="sc-cognome">Cognome *</label>
-                        <input id="sc-cognome" class="form-input" type="text" required>
+                        <input id="sc-cognome" class="form-input" type="text" value="${isEdit ? Utils.escapeHtml(athlete.cognome || '') : ''}" required>
                     </div>
                 </div>
                 <div class="form-grid">
                     <div class="form-group">
                         <label class="form-label" for="sc-societa">Società di Appartenenza</label>
-                        <input id="sc-societa" class="form-input" type="text">
+                        <input id="sc-societa" class="form-input" type="text" value="${isEdit ? Utils.escapeHtml(athlete.societa_appartenenza || '') : ''}">
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="sc-anno">Anno di Nascita</label>
-                        <input id="sc-anno" class="form-input" type="number" min="1990" max="2020">
+                        <input id="sc-anno" class="form-input" type="number" min="1990" max="2020" value="${isEdit ? (athlete.anno_nascita || '') : ''}">
                     </div>
                 </div>
                 <div class="form-grid">
                     <div class="form-group">
                         <label class="form-label" for="sc-rilevatore">Rilevatore</label>
-                        <input id="sc-rilevatore" class="form-input" type="text" placeholder="Nome di chi l'ha rilevato">
+                        <input id="sc-rilevatore" class="form-input" type="text" placeholder="Nome di chi l'ha rilevato" value="${isEdit ? Utils.escapeHtml(athlete.rilevatore || '') : ''}">
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="sc-data">Data Rilevazione</label>
-                        <input id="sc-data" class="form-input" type="date" value="${new Date().toISOString().substring(0,10)}">
+                        <input id="sc-data" class="form-input" type="date" value="${isEdit && athlete.data_rilevazione ? athlete.data_rilevazione : new Date().toISOString().substring(0,10)}">
                     </div>
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="sc-note">Note</label>
-                    <textarea id="sc-note" class="form-input" rows="3"></textarea>
+                    <textarea id="sc-note" class="form-input" rows="3">${isEdit ? Utils.escapeHtml(athlete.note || '') : ''}</textarea>
                 </div>
                 <div id="sc-error" class="form-error hidden"></div>
             `,
@@ -192,6 +216,7 @@ const Scouting = (() => {
             const saveBtn = document.getElementById('sc-save');
             
             const payload = {
+                id: isEdit ? athlete.id : undefined,
                 nome: document.getElementById('sc-nome')?.value.trim(),
                 cognome: document.getElementById('sc-cognome')?.value.trim(),
                 societa_appartenenza: document.getElementById('sc-societa')?.value.trim(),
@@ -210,9 +235,14 @@ const Scouting = (() => {
             try {
                 saveBtn.disabled = true;
                 saveBtn.textContent = 'Salvataggio...';
-                await Store.api('addManualEntry', 'scouting', payload);
+                
+                if (isEdit) {
+                    await Store.api('updateEntry', 'scouting', payload, 'PUT');
+                } else {
+                    await Store.api('addManualEntry', 'scouting', payload);
+                }
 
-                UI.toast("Atleta salvato con successo", "success");
+                UI.toast(isEdit ? "Modifiche salvate con successo" : "Atleta salvato con successo", "success");
                 modal.close();
                 await refreshData();
             } catch (err) {

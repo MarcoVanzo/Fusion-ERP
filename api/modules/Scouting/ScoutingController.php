@@ -125,6 +125,56 @@ class ScoutingController
     }
 
     /* ─────────────────────────────────────────────────────────────────────
+     * updateEntry — PUT update record (locks it against Cognito syncs)
+     * PUT /api?module=scouting&action=updateEntry
+     * ───────────────────────────────────────────────────────────────────── */
+    public function updateEntry(): void
+    {
+        Auth::requireRole('allenatore');
+
+        $data = json_decode(file_get_contents('php://input'), true);
+        if (!$data || empty($data['id']) || empty($data['nome']) || empty($data['cognome'])) {
+            Response::error('ID, Nome e cognome obbligatori', 400);
+        }
+
+        $stmt = $this->db->prepare("
+            UPDATE scouting_athletes 
+            SET
+                nome = :nome,
+                cognome = :cognome,
+                societa_appartenenza = :societa,
+                anno_nascita = :anno,
+                note = :note,
+                rilevatore = :rilevatore,
+                data_rilevazione = :data_ril,
+                is_locked_edit = 1
+            WHERE id = :id
+        ");
+        
+        $stmt->execute([
+            ':id' => (int)$data['id'],
+            ':nome' => $data['nome'],
+            ':cognome' => $data['cognome'],
+            ':societa' => $data['societa_appartenenza'] ?? null,
+            ':anno' => !empty($data['anno_nascita']) ? (int)$data['anno_nascita'] : null,
+            ':note' => $data['note'] ?? null,
+            ':rilevatore' => $data['rilevatore'] ?? null,
+            ':data_ril' => $data['data_rilevazione'] ?? date('Y-m-d')
+        ]);
+
+        if ($stmt->rowCount() === 0) {
+            // Check if ID exists
+            $check = $this->db->prepare("SELECT id FROM scouting_athletes WHERE id = ?");
+            $check->execute([(int)$data['id']]);
+            if (!$check->fetchColumn()) {
+                Response::error('Atleta non trovato', 404);
+            }
+        }
+
+        Response::success(['success' => true]);
+    }
+
+    /* ─────────────────────────────────────────────────────────────────────
      * syncFromCognito — Manual sync trigger via API
      * POST /api?module=scouting&action=syncFromCognito
      * ───────────────────────────────────────────────────────────────────── */
