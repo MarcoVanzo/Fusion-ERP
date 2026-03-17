@@ -1,15 +1,28 @@
 import os
 import ftplib
 
-from dotenv import load_dotenv
-load_dotenv('.env')
+import typing
 
-host = os.getenv('FTP_HOST')
-user = os.getenv('FTP_USER')
-password = os.getenv('FTP_PASS')
-base_dir = os.getenv('FTP_DIR', '/ERP')
+env = {}
+try:
+    with open('.env') as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith('#'):
+                k, v = line.split('=', 1)
+                env[k.strip()] = v.strip().strip("'\"")
+except FileNotFoundError:
+    pass
+
+host = typing.cast(str, env.get('FTP_HOST') or os.getenv('FTP_HOST'))
+user = typing.cast(str, env.get('FTP_USER') or os.getenv('FTP_USER'))
+password = typing.cast(str, env.get('FTP_PASS') or os.getenv('FTP_PASS'))
+base_dir = typing.cast(str, env.get('FTP_DIR') or os.getenv('FTP_DIR') or '/ERP')
 
 try:
+    if not host or not user or not password:
+        raise ValueError("Missing FTP credentials")
+    
     ftp = ftplib.FTP_TLS(host)
     ftp.login(user, password)
     ftp.prot_p()
