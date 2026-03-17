@@ -146,6 +146,7 @@ const Scouting = (() => {
             }
 
             UI.toast(`Sincronizzazione completata: ${total} atleti importati`, 'success');
+            Store.invalidate('scouting');
             await refreshData();
         } catch (err) {
             if (statusEl) {
@@ -242,6 +243,7 @@ const Scouting = (() => {
                     await Store.api('addManualEntry', 'scouting', payload);
                 }
 
+                Store.invalidate('scouting');
                 UI.toast(isEdit ? "Modifiche salvate con successo" : "Atleta salvato con successo", "success");
                 modal.close();
                 await refreshData();
