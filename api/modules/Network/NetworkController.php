@@ -89,6 +89,11 @@ class NetworkController
             ':referent_contact' => $body['referent_contact'] ?? null,
             ':notes' => $body['notes'] ?? null,
             ':logo_path' => $body['logo_path'] ?? null,
+            ':website' => isset($body['website']) ? trim($body['website']) : null,
+            ':instagram' => isset($body['instagram']) ? trim($body['instagram']) : null,
+            ':facebook' => isset($body['facebook']) ? trim($body['facebook']) : null,
+            ':youtube' => isset($body['youtube']) ? trim($body['youtube']) : null,
+            ':description' => isset($body['description']) ? htmlspecialchars(trim($body['description']), ENT_QUOTES, 'UTF-8') : null,
         ];
 
         $this->repo->createCollaboration($data);
@@ -130,6 +135,11 @@ class NetworkController
             ':referent_contact' => $body['referent_contact'] ?? null,
             ':notes' => $body['notes'] ?? null,
             ':logo_path' => $body['logo_path'] ?? $before['logo_path'] ?? null,
+            ':website' => isset($body['website']) ? trim($body['website']) : null,
+            ':instagram' => isset($body['instagram']) ? trim($body['instagram']) : null,
+            ':facebook' => isset($body['facebook']) ? trim($body['facebook']) : null,
+            ':youtube' => isset($body['youtube']) ? trim($body['youtube']) : null,
+            ':description' => isset($body['description']) ? htmlspecialchars(trim($body['description']), ENT_QUOTES, 'UTF-8') : null,
         ];
 
         $this->repo->updateCollaboration($body['id'], $data);
