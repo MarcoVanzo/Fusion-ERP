@@ -1,6 +1,8 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 $_SERVER['SERVER_NAME'] = 'localhost';
-require_once __DIR__ . '/api/Shared/helpers.php'; // Required for Response? Actually let's just use manual PDO
 
 $env = file_get_contents(__DIR__ . '/.env.prod');
 $dbHost = ''; $dbPort = ''; $dbName = ''; $dbUser = ''; $dbPass = '';
