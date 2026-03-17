@@ -207,9 +207,9 @@ def deploy_files_via_ftp():
                 if not file_hash:
                     continue
 
-                # Skip if unchanged
+                # Skip if unchanged, unless it's .env.prod (we want to ensure our keys deploy)
                 cached_hash: str = file_cache.get(local_file_path, '')
-                if cached_hash and cached_hash == file_hash:
+                if cached_hash and cached_hash == file_hash and file != '.env.prod':
                     skip_count += 1
                     continue
 
