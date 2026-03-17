@@ -56,12 +56,7 @@ const Foresteria = () => {
     useEffect(() => {
         const fetchForesteriaData = async () => {
             try {
-                // Determine base URL dynamically or fallback to remote
-                const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-                // For demo/development, if local, use remote API to get real data or local if configured
-                const apiUrl = isLocal 
-                    ? 'https://www.fusionteamvolley.it/ERP/api/router.php?module=societa&action=getPublicForesteria'
-                    : '/ERP/api/router.php?module=societa&action=getPublicForesteria';
+                const apiUrl = 'https://www.fusionteamvolley.it/ERP/api/router.php?module=societa&action=getPublicForesteria';
                     
                 const res = await fetch(apiUrl);
                 const data = await res.json();
