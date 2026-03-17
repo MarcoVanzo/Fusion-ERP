@@ -156,7 +156,7 @@ const Network = () => {
                                     </h3>
                                     
                                     {collab.description ? (
-                                        <p className="text-zinc-400 text-sm leading-relaxed mb-6 flex-grow line-clamp-4">
+                                        <p className="text-zinc-400 text-sm leading-relaxed mb-6 flex-grow">
                                             {collab.description}
                                         </p>
                                     ) : (
