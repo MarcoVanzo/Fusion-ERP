@@ -2,16 +2,13 @@
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-$logFile = __DIR__ . '/my_debug.log';
+$logFile = '/web/htdocs/www.fusionteamvolley.it/home/ERP/my_debug.log';
 if (file_exists($logFile)) {
     unlink($logFile);
-    echo "Cleared old log.\n";
 }
 ini_set('error_log', $logFile);
 
-if (function_exists('opcache_reset')) {
-    opcache_reset();
-}
+if (function_exists('opcache_reset')) opcache_reset();
 
 require_once __DIR__ . '/api/Modules/Scouting/ScoutingController.php';
 
