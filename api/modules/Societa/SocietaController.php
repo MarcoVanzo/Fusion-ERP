@@ -761,6 +761,45 @@ class SocietaController
 
     // ─── FORESTERIA ────────────────────────────────────────────────────────────
 
+    /** GET  ?module=societa&action=getPublicForesteria — info e media pubblici per il sito web */
+    public function getPublicForesteria(): void
+    {
+        // NO Auth required. Used by the external website SPA.
+        // Public endpoints often resolve to TNT_default depending on the URL.
+        // Since there is only one "Foresteria" per club (and usually only one active club 
+        // in the database), we fetch the first available configuration to avoid empty results.
+        $db  = \FusionERP\Shared\Database::getInstance();
+        
+        $info = $db->query('SELECT * FROM foresteria_info LIMIT 1');
+        $infoRow = $info->fetch(\PDO::FETCH_ASSOC);
+
+        if (!$infoRow) {
+            // Fallback structure if completely empty
+            $infoRow = [
+                'description' => '',
+                'address'     => 'Via Bazzera 16, 30030 Martellago (VE)',
+                'lat'         => 45.5440000,
+                'lng'         => 12.1580000,
+            ];
+            $realTenantId = 'TNT_default';
+        } else {
+            $realTenantId = $infoRow['tenant_id'];
+        }
+
+        // Fetch media using the actual tenant ID where the info was saved
+        $media = $db->prepare(
+            'SELECT * FROM foresteria_media
+             WHERE tenant_id = ? AND is_deleted = 0
+             ORDER BY uploaded_at DESC LIMIT 200'
+        );
+        $media->execute([$realTenantId]);
+
+        Response::success([
+            'info'  => $infoRow,
+            'media' => $media->fetchAll(\PDO::FETCH_ASSOC),
+        ]);
+    }
+
     /** GET  ?module=societa&action=getForesteria — tutto in uno (info + spese + media) */
     public function getForesteria(): void
     {

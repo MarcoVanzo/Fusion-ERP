@@ -10,6 +10,7 @@ import ArticleDetail from './pages/ArticleDetail';
 import Shop from './pages/Shop';
 import Results from './pages/Results';
 import Outseason from './pages/Outseason';
+import Foresteria from './pages/Foresteria';
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
             <Route path="/shop" element={<Shop />} />
             <Route path="/results" element={<Results />} />
             <Route path="/outseason" element={<Outseason />} />
+            <Route path="/foresteria" element={<Foresteria />} />
           </Routes>
         </main>
         <Footer />

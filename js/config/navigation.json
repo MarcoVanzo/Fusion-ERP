@@ -21,7 +21,7 @@
             { "title": "Documenti Staff", "path": "staff-documents", "icon": "file-text", "isMobileVisible": false, "roles": ["allenatore", "operatore", "manager", "admin"] },
             { "title": "Partite Risultati", "path": "results-matches", "icon": "volleyball", "isMobileVisible": false, "roles": ["allenatore", "operatore", "manager", "admin"] },
             { "title": "Classifiche", "path": "results-standings", "icon": "list-numbers", "isMobileVisible": false, "roles": ["allenatore", "operatore", "manager", "admin"] },
-            { "title": "Database Scouting", "path": "scouting-database", "icon": "database", "isMobileVisible": false, "implemented": false, "roles": ["allenatore", "manager", "admin"] },
+            { "title": "Database Scouting", "path": "scouting-database", "icon": "database", "isMobileVisible": false, "implemented": true, "roles": ["allenatore", "manager", "admin"] },
             { "title": "Valutazioni Scouting", "path": "scouting-evaluations", "icon": "star", "isMobileVisible": false, "implemented": false, "roles": ["allenatore", "manager", "admin"] },
             { "title": "Watchlist Scouting", "path": "scouting-watchlist", "icon": "eye", "isMobileVisible": false, "implemented": false, "roles": ["allenatore", "manager", "admin"] },
             { "title": "Report Scouting", "path": "scouting-reports", "icon": "note-pencil", "isMobileVisible": false, "implemented": false, "roles": ["allenatore", "manager", "admin"] }

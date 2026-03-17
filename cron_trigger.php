@@ -71,6 +71,21 @@ try {
         $log[] = "ℹ️ Drive non configurato (variabili GDRIVE_* mancanti)";
     }
 
+    // ── 3. Sync Scouting da Cognito Forms ────────────────────────────────────
+    try {
+        require_once $rootDir . '/api/Modules/Scouting/ScoutingController.php';
+        $scoutingResult = \FusionERP\Modules\Scouting\ScoutingController::_doSync();
+        if ($scoutingResult['success']) {
+            $fus = $scoutingResult['fusion_upserted'] ?? 0;
+            $net = $scoutingResult['network_upserted'] ?? 0;
+            $log[] = "🔍 Scouting Sync: Fusion={$fus}, Network={$net}";
+        } else {
+            $log[] = "⚠️ Scouting Sync: " . ($scoutingResult['error'] ?? 'errore sconosciuto');
+        }
+    } catch (\Throwable $e) {
+        $log[] = "⚠️ Scouting Sync error: " . $e->getMessage();
+    }
+
     $elapsed = round(microtime(true) - $startTime, 2);
     $log[] = "⏱ Tempo: " . $elapsed . "s";
 

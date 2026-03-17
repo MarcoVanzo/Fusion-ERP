@@ -53,10 +53,12 @@ class NetworkRepository
         $stmt = $this->db->prepare(
             'INSERT INTO network_collaborations
                 (id, tenant_id, partner_name, partner_type, agreement_type, start_date, end_date,
-                 status, referent_name, referent_contact, notes, logo_path)
+                 status, referent_name, referent_contact, notes, logo_path,
+                 website, instagram, facebook, youtube, description)
              VALUES
                 (:id, :tenant_id, :partner_name, :partner_type, :agreement_type, :start_date, :end_date,
-                 :status, :referent_name, :referent_contact, :notes, :logo_path)'
+                 :status, :referent_name, :referent_contact, :notes, :logo_path,
+                 :website, :instagram, :facebook, :youtube, :description)'
         );
         $stmt->execute($data);
     }
@@ -75,7 +77,12 @@ class NetworkRepository
                 referent_name       = :referent_name,
                 referent_contact    = :referent_contact,
                 notes               = :notes,
-                logo_path           = :logo_path
+                logo_path           = :logo_path,
+                website             = :website,
+                instagram           = :instagram,
+                facebook            = :facebook,
+                youtube             = :youtube,
+                description         = :description
              WHERE id = :id AND tenant_id = :tid AND is_deleted = 0'
         );
         $stmt->execute(array_merge($data, [':id' => $id, ':tid' => $tenantId]));

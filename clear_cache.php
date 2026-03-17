@@ -1,11 +1,7 @@
 <?php
-$cacheDir = __DIR__ . '/cache';
-$files = glob($cacheDir . '/fusion_*.json');
-$count = 0;
-foreach ($files as $f) {
-    if (is_file($f)) {
-        unlink($f);
-        $count++;
-    }
+if (function_exists('opcache_reset')) {
+    opcache_reset();
+    echo "OPcache in RAM svuotata con successo.\n";
+} else {
+    echo "OPcache non abilitato.\n";
 }
-echo "Cleared $count cache files.";

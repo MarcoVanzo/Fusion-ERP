@@ -43,7 +43,11 @@ class ResultsController
      * The GAS proxy fetches the FIPAV page from Google's IP and returns the raw HTML.
      * Set to null to disable and use direct cURL only.
      */
-    private const GAS_PROXY_URL = 'https://script.google.com/macros/s/AKfycbzWEVIrWNDnKqP7U5lrL5pM2EMK_UuPMJoJHi5RIpnhJrx-r04MmWYixQoxV6TaAIU/exec';
+    private ?string $gasProxyUrl = null;
+
+    public function __construct() {
+        $this->gasProxyUrl = $_ENV['GAS_PROXY_URL'] ?? getenv('GAS_PROXY_URL') ?: null;
+    }
 
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -552,8 +556,8 @@ class ResultsController
     {
         // ── Try GAS Proxy first (bypasses FIPAV WAF IP block on production server) ──
         // BUT skip GAS proxy for fipavveneto.net because they block Google IPs and return 403
-        if (self::GAS_PROXY_URL !== null && !str_contains($url, 'fipavveneto.net') && !str_contains($url, 'federvolley.it')) {
-            $proxyUrl = self::GAS_PROXY_URL . '?url=' . urlencode($url);
+        if ($this->gasProxyUrl !== null) {
+            $proxyUrl = $this->gasProxyUrl . '?url=' . urlencode($url);
             $ch = curl_init($proxyUrl);
             curl_setopt_array($ch, [
                 CURLOPT_RETURNTRANSFER => true,
@@ -1782,6 +1786,8 @@ class ResultsController
                         if (strlen($parts[2]) === 2) {
                             $y = (int)$parts[2] < 50 ? 2000 + (int)$parts[2] : 1900 + (int)$parts[2];
                             $dateStr = sprintf('%02d/%02d/%04d', $parts[0], $parts[1], $y);
+                        } else {
+                            $dateStr = sprintf('%02d/%02d/%04d', $parts[0], $parts[1], $parts[2]);
                         }
                     }
                     else if (count($parts) === 2) {
@@ -1947,9 +1953,9 @@ class ResultsController
                 ORDER BY m.match_date DESC
                 LIMIT :lim
             ");
-            $stmt->bindValue(':lim', $limit, \PDO::PARAM_INT);
+            $stmt->bindValue(':lim', $limit, PDO::PARAM_INT);
             $stmt->execute();
-            $matches = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            $matches = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             foreach ($matches as &$m) {
                 $m['is_our_team'] = $this->_isOurTeam($m['home'], $m['away']);
@@ -2002,7 +2008,7 @@ class ResultsController
                 ORDER BY m.match_date DESC
             ");
             $stmtMatches->execute();
-            $matches = $stmtMatches->fetchAll(\PDO::FETCH_ASSOC);
+            $matches = $stmtMatches->fetchAll(PDO::FETCH_ASSOC);
 
             foreach ($matches as &$m) {
                 $m['is_our_team'] = $this->_isOurTeam($m['home'], $m['away']);
@@ -2032,7 +2038,7 @@ class ResultsController
                 ORDER BY c.label ASC, s.position ASC
             ");
             $stmtStandings->execute();
-            $standingsRaw = $stmtStandings->fetchAll(\PDO::FETCH_ASSOC);
+            $standingsRaw = $stmtStandings->fetchAll(PDO::FETCH_ASSOC);
 
             $standings = [];
             foreach ($standingsRaw as $row) {

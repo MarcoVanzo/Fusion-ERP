@@ -363,9 +363,9 @@ const Newsletter = (() => {
                 _nextCursor = null;
                 await loadSubscribers(false);
                 [_stats] = await Promise.all([Store.get('getStats', 'newsletter').catch(() => _stats)]);
-                modal.close();
                 UI.toast('Iscritto aggiunto con successo', 'success');
                 render();
+                modal.close();
             } catch (err) {
                 errEl.textContent = err.message;
                 errEl.classList.remove('hidden');
@@ -392,9 +392,9 @@ const Newsletter = (() => {
                 _subscribers = _subscribers.filter(s => s.id !== id);
                 if (_stats.total > 0) _stats.total--;
                 if (_stats.active > 0 && (sub?.status === 'active' || !sub?.status)) _stats.active--;
-                m.close();
                 UI.toast('Iscritto eliminato', 'success');
                 render();
+                m.close();
             } catch (err) {
                 UI.toast('Errore: ' + err.message, 'error');
             }

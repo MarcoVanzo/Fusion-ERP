@@ -62,8 +62,8 @@ header('Cache-Control: no-store, no-cache, must-revalidate');
 header('Pragma: no-cache');
 header('Vary: Cookie');
 
-// Only accept POST (or OPTIONS for CORS preflight)
-if (!in_array($_SERVER['REQUEST_METHOD'], ['POST', 'GET', 'OPTIONS'])) {
+// Only accept POST (or OPTIONS for CORS preflight, GET for lists, PUT for updates)
+if (!in_array($_SERVER['REQUEST_METHOD'], ['POST', 'GET', 'PUT', 'OPTIONS'])) {
     Response::error('Metodo non consentito', 405);
 }
 
@@ -104,6 +104,7 @@ try {
             'newsletter' => dispatch('Newsletter', $action),
             'societa' => dispatch('Societa', $action),
             'network' => dispatch('Network', $action),
+            'scouting' => dispatch('Scouting', $action),
             'esignature' => dispatch('ESignature', $action),
             'whatsapp' => dispatchWebhook($action),
             default => Response::error("Modulo '{$module}' non trovato", 404),
@@ -140,13 +141,13 @@ function dispatchWebhook(string $action): void
     }
 
     if (!class_exists($class)) {
-        \FusionERP\Shared\Response::error("Controller WhatsApp non trovato", 500);
+        Response::error("Controller WhatsApp non trovato", 500);
     }
     
     $controller = new $class();
 
     if (!method_exists($controller, $action)) {
-        \FusionERP\Shared\Response::error("Azione WhatsApp '{$action}' non trovata", 404);
+        Response::error("Azione WhatsApp '{$action}' non trovata", 404);
     }
     
     $controller->$action();

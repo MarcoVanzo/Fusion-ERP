@@ -145,12 +145,18 @@ const Squadre = (() => {
                     const seasonId = btn.dataset.toggleSeason;
                     const isActive = btn.dataset.action;
                     
+                    const origHtml = btn.innerHTML;
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="ph ph-spinner" style="font-size:14px;animation:spin 1s linear infinite;"></i>';
+
                     try {
                         await Store.api('toggleSeason', 'teams', { id: seasonId, is_active: isActive });
                         UI.toast(isActive === '1' ? 'Stagione attivata' : 'Stagione disattivata', 'success');
                         await _loadData();
                     } catch (err) {
                         UI.toast('Errore: ' + err.message, 'error');
+                        btn.disabled = false;
+                        btn.innerHTML = origHtml;
                     }
                 });
             });
@@ -278,12 +284,18 @@ const Squadre = (() => {
                 btn.addEventListener('click', async () => {
                     const seasonId = btn.dataset.toggleSeason;
                     const isActive = btn.dataset.action;
+                    const origHtml = btn.innerHTML;
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="ph ph-spinner" style="font-size:14px;animation:spin 1s linear infinite;"></i>';
+
                     try {
                         await Store.api('toggleSeason', 'teams', { id: seasonId, is_active: isActive });
                         UI.toast(isActive === '1' ? 'Stagione attivata' : 'Stagione disattivata', 'success');
                         await _loadData();
                     } catch (err) {
                         UI.toast('Errore: ' + err.message, 'error');
+                        btn.disabled = false;
+                        btn.innerHTML = origHtml;
                     }
                 });
             });
@@ -293,12 +305,18 @@ const Squadre = (() => {
                     const teamName = btn.dataset.teamName;
                     const seasonName = btn.dataset.seasonName;
                     if (!confirm(`Rimuovere "${teamName}" dalla stagione "${seasonName}"?\nGli atleti e lo staff associati a questa combinazione squadra-stagione verranno scollegati.`)) return;
+                    const origHtml = btn.innerHTML;
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="ph ph-spinner" style="font-size:14px;animation:spin 1s linear infinite;"></i>';
+
                     try {
                         await Store.api('deleteSeason', 'teams', { team_season_id: btn.dataset.delSeason });
                         UI.toast('Stagione rimossa dalla squadra', 'success');
                         await _loadData();
                     } catch (err) {
                         UI.toast('Errore: ' + err.message, 'error');
+                        btn.disabled = false;
+                        btn.innerHTML = origHtml;
                     }
                 });
             });
@@ -432,8 +450,8 @@ const Squadre = (() => {
                     UI.toast('Squadra creata', 'success');
                 }
                 
-                modal.close();
                 await _loadData();
+                modal.close();
             } catch (err) {
                 errEl.textContent = err.message;
                 errEl.classList.remove('hidden');
@@ -490,8 +508,8 @@ const Squadre = (() => {
                 });
                 
                 UI.toast('Stagione aggiunta', 'success');
-                modal.close();
                 await _loadData();
+                modal.close();
             } catch (err) {
                 errEl.textContent = err.message;
                 errEl.classList.remove('hidden');
@@ -601,8 +619,8 @@ const Squadre = (() => {
                 UI.toast(`Errori: ${errors.join('; ')}`, 'error');
             }
 
-            modal.close();
             await _loadData();
+            modal.close();
         });
     }
 
@@ -676,8 +694,8 @@ const Squadre = (() => {
             }
 
             UI.toast(`${ok} squadr${ok === 1 ? 'a' : 'e'} aggiunte alla stagione "${seasonName}"`, 'success');
-            modal.close();
             await _loadData();
+            modal.close();
         });
     }
 
