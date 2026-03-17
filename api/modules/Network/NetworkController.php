@@ -172,14 +172,16 @@ class NetworkController
         $safeId = preg_replace('/[^A-Za-z0-9_]/', '', $collabId);
         $uploadDir = dirname(__DIR__, 3) . '/uploads/network/' . $tenantId . '/' . $safeId . '/logo';
         if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0755, true);
+            if (!@mkdir($uploadDir, 0755, true) && !is_dir($uploadDir)) {
+                Response::error('Impossibile creare la directory di upload per il logo', 500);
+            }
         }
 
         $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
         $fileName = 'logo_' . date('Ymd_His') . '.' . $ext;
         $destPath = $uploadDir . '/' . $fileName;
 
-        if (!move_uploaded_file($file['tmp_name'], $destPath)) {
+        if (!@move_uploaded_file($file['tmp_name'], $destPath)) {
             Response::error('Errore nel salvataggio del logo', 500);
         }
 
@@ -256,14 +258,16 @@ class NetworkController
         $safeId = preg_replace('/[^A-Za-z0-9_]/', '', $collabId);
         $uploadDir = dirname(__DIR__, 3) . '/uploads/network/' . $tenantId . '/' . $safeId;
         if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0755, true);
+            if (!@mkdir($uploadDir, 0755, true) && !is_dir($uploadDir)) {
+                Response::error('Impossibile creare la directory di upload del documento', 500);
+            }
         }
 
         $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
         $fileName = date('Ymd_His') . '_' . bin2hex(random_bytes(3)) . '.' . $ext;
         $destPath = $uploadDir . '/' . $fileName;
 
-        if (!move_uploaded_file($file['tmp_name'], $destPath)) {
+        if (!@move_uploaded_file($file['tmp_name'], $destPath)) {
             Response::error('Errore nel salvataggio del file', 500);
         }
 
