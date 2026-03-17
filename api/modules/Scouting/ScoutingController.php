@@ -43,6 +43,7 @@ class ScoutingController
             }
         }
         error_log("ScoutingController getEnvVar: Key '$key' not found in " . count($foundKeys) . " parsed keys.");
+        error_log("Found keys dump: " . implode(', ', $foundKeys));
         return null;
     }
 
