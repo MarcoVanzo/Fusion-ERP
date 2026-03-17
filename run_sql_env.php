@@ -9,7 +9,8 @@ try {
     $dotenv->safeLoad();
     
     require_once __DIR__ . '/api/Shared/Database.php';
-    $db = \FusionERP\Shared\Database::getInstance()->getConnection();
+    // getInstance() returns a PDO instance directly
+    $db = \FusionERP\Shared\Database::getInstance();
     
     $sql = "CREATE TABLE IF NOT EXISTS scouting_athletes (
     id INT AUTO_INCREMENT PRIMARY KEY,
