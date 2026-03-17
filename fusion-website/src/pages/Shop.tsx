@@ -105,7 +105,7 @@ const Shop = () => {
             </div>
 
             {/* Hero Section */}
-            <section className={`relative flex items-center justify-center overflow-hidden mb-12 transition-all duration-500 ${theme === 'street' ? 'h-[50vh] min-h-[400px]' : 'h-[40vh] min-h-[300px]'
+            <section className={`relative flex flex-col justify-center overflow-hidden mb-12 transition-all duration-500 py-24 md:py-32 ${theme === 'street' ? 'min-h-[50vh]' : 'min-h-[45vh]'
                 }`}>
                 {/* Background Image */}
                 <div
@@ -140,9 +140,9 @@ const Shop = () => {
                         {theme === 'street' && <><br /><span className="text-transparent opacity-80" style={{ WebkitTextStroke: '2px white' }}>STORE</span></>}
                     </h1>
 
-                    <p className={`font-subheading tracking-widest transition-all duration-500 ${theme === 'street' ? 'text-lg md:text-xl text-zinc-400 mt-4 max-w-md' :
+                    <p className={`font-subheading tracking-widest transition-all duration-500 mt-4 md:mt-6 z-20 relative ${theme === 'street' ? 'text-lg md:text-xl text-zinc-400 max-w-md' :
                             theme === 'glass' ? 'text-lg md:text-xl text-zinc-200 bg-white/10 backdrop-blur-md px-6 py-2 rounded-full border border-white/20' :
-                                'text-xl md:text-2xl text-zinc-300 bg-zinc-950/50 inline-block px-4 py-1 border border-white/10 rounded-none'
+                                'text-xl md:text-2xl text-zinc-300 bg-zinc-950/80 inline-block px-6 py-3 md:py-4 border border-zinc-800 rounded-none leading-relaxed shadow-xl'
                         }`}>
                         ABBIGLIAMENTO UFFICIALE E MERCHANDISING
                     </p>
