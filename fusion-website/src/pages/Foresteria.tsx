@@ -21,8 +21,9 @@ interface ForesteriaMedia {
 const ERP_BASE = 'https://www.fusionteamvolley.it/ERP';
 const getImgUrl = (url?: string): string | undefined => {
     if (!url) return undefined;
-    if (url.startsWith('/')) return ERP_BASE + url;
-    return url;
+    if (url.startsWith('http')) return url;
+    const path = url.startsWith('/') ? url : `/${url}`;
+    return ERP_BASE + path;
 };
 
 // Ensure YouTube URLs are correctly formatted for an iframe embed
@@ -129,8 +130,20 @@ const Foresteria = () => {
                                     <div className="h-4 bg-zinc-800 rounded w-3/4"></div>
                                 </div>
                             ) : info?.description ? (
-                                <div className="mt-6 whitespace-pre-wrap font-sans text-base text-zinc-400 leading-loose">
-                                    {info.description}
+                                <div className="mt-6 whitespace-pre-wrap font-sans text-lg md:text-xl text-zinc-300 leading-[1.8] font-light tracking-wide">
+                                    {info.description.split('\n').map((line, i) => {
+                                        if (line.trim().startsWith('-')) {
+                                            const parts = line.split(':');
+                                            if (parts.length > 1) {
+                                                return (
+                                                    <p key={i} className="mb-4 pl-4 border-l-2 border-brand-500/50">
+                                                        <span className="font-bold text-white">{parts[0]}</span>:{parts.slice(1).join(':')}
+                                                    </p>
+                                                );
+                                            }
+                                        }
+                                        return <p key={i} className="mb-4">{line}</p>;
+                                    })}
                                 </div>
                             ) : (
                                 <p className="mt-6 text-zinc-500 italic">Nessuna descrizione disponibile al momento.</p>
@@ -181,36 +194,39 @@ const Foresteria = () => {
                         <div className="mt-3 h-px w-24 bg-gradient-to-r from-brand-500 to-transparent"></div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        {videos.map(video => (
-                            <div key={video.id} className="bg-zinc-900/40 p-2 border border-zinc-800/60 rounded-xl overflow-hidden hover:border-brand-500/40 transition-colors">
-                                <div className="aspect-video w-full rounded-lg overflow-hidden bg-zinc-950 relative">
-                                    {video.type === 'youtube' && video.url ? (
-                                        <iframe 
-                                            src={formatYoutubeEmbedUrl(video.url)} 
-                                            title={video.title || "YouTube Video"} 
-                                            className="w-full h-full border-0 absolute inset-0" 
-                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                                            allowFullScreen
-                                        ></iframe>
-                                    ) : (
-                                        <video 
-                                            src={getImgUrl(video.file_path)} 
-                                            controls 
-                                            className="w-full h-full object-cover absolute inset-0"
-                                        ></video>
+                    <div className="grid grid-cols-1 gap-12 max-w-5xl mx-auto">
+                        {videos.map(video => {
+                            const videoUrl = video.url || video.file_path;
+                            return (
+                                <div key={video.id} className="bg-zinc-900/40 p-3 md:p-4 border border-zinc-800/60 rounded-xl overflow-hidden hover:border-brand-500/40 transition-colors shadow-2xl">
+                                    <div className="aspect-video w-full rounded-lg overflow-hidden bg-zinc-950 relative shadow-inner">
+                                        {video.type === 'youtube' && videoUrl ? (
+                                            <iframe 
+                                                src={formatYoutubeEmbedUrl(videoUrl)} 
+                                                title={video.title || "YouTube Video"} 
+                                                className="w-full h-full border-0 absolute inset-0" 
+                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                                allowFullScreen
+                                            ></iframe>
+                                        ) : (
+                                            <video 
+                                                src={getImgUrl(video.file_path)} 
+                                                controls 
+                                                className="w-full h-full object-cover absolute inset-0"
+                                            ></video>
+                                        )}
+                                    </div>
+                                    {video.title && (
+                                        <div className="p-4 pt-5">
+                                            <h4 className="font-heading text-xl md:text-2xl text-white flex items-center gap-3">
+                                                {video.type === 'youtube' && <Youtube size={28} className="text-brand-500 drop-shadow-[0_0_8px_rgba(217,70,239,0.8)]" />}
+                                                {video.title}
+                                            </h4>
+                                        </div>
                                     )}
                                 </div>
-                                {video.title && (
-                                    <div className="p-3">
-                                        <h4 className="font-heading text-sm text-zinc-300 flex items-center gap-2">
-                                            {video.type === 'youtube' && <Youtube size={16} className="text-brand-500" />}
-                                            {video.title}
-                                        </h4>
-                                    </div>
-                                )}
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </section>
             )}
