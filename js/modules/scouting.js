@@ -237,7 +237,7 @@ const Scouting = (() => {
                 saveBtn.textContent = 'Salvataggio...';
                 
                 if (isEdit) {
-                    await Store.api('updateEntry', 'scouting', payload, 'PUT');
+                    await Store.api('updateEntry', 'scouting', payload);
                 } else {
                     await Store.api('addManualEntry', 'scouting', payload);
                 }
