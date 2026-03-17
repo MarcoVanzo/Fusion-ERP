@@ -21,12 +21,7 @@ class ScoutingController
      * ───────────────────────────────────────────────────────────────────── */
     private static function getEnvVar(string $key): ?string
     {
-        // Fallback checks
-        if (isset($_ENV[$key])) return trim($_ENV[$key]);
-        $val = getenv($key);
-        if ($val !== false && $val !== '') return trim($val);
-
-        // Manual generic parse of .env to bypass Dotenv immutability cache
+        // Force manual generic parse of .env to bypass ANY caching (Dotenv immutability, OPcache, etc.)
         // __DIR__ is api/Modules/Scouting -> level 3 is root
         $envFile = dirname(__DIR__, 3) . '/.env';
         if (!file_exists($envFile)) return null;
