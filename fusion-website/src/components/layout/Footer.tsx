@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Facebook, Instagram, Youtube, MapPin, Mail, Phone, Loader2, CheckCircle, XCircle } from 'lucide-react';
 
 const Footer = () => {
@@ -129,11 +130,17 @@ const Footer = () => {
                     <div>
                         <h3 className="text-white font-bold uppercase tracking-wider mb-6 text-sm">Navigazione</h3>
                         <ul className="space-y-3">
-                            {['Home', 'News', 'Le Squadre', 'Ecommerce', 'Chi Siamo'].map((item) => (
-                                <li key={item}>
-                                    <a href="#" className="text-zinc-300 hover:text-brand-500 text-sm transition-colors flex items-center gap-2">
-                                        {item}
-                                    </a>
+                            {[
+                                { label: 'Home', path: '/' },
+                                { label: 'News', path: '/news' },
+                                { label: 'Le Squadre', path: '/teams' },
+                                { label: 'Store', path: '/shop' },
+                                { label: 'Il Club', path: '/club' },
+                            ].map((item) => (
+                                <li key={item.label}>
+                                    <Link to={item.path} className="text-zinc-300 hover:text-brand-500 text-sm transition-colors flex items-center gap-2">
+                                        {item.label}
+                                    </Link>
                                 </li>
                             ))}
                         </ul>
