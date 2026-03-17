@@ -1782,6 +1782,8 @@ class ResultsController
                         if (strlen($parts[2]) === 2) {
                             $y = (int)$parts[2] < 50 ? 2000 + (int)$parts[2] : 1900 + (int)$parts[2];
                             $dateStr = sprintf('%02d/%02d/%04d', $parts[0], $parts[1], $y);
+                        } else {
+                            $dateStr = sprintf('%02d/%02d/%04d', $parts[0], $parts[1], $parts[2]);
                         }
                     }
                     else if (count($parts) === 2) {
