@@ -1,43 +1,43 @@
 <?php
 $_SERVER['SERVER_NAME'] = 'localhost';
-if (file_exists(__DIR__ . '/.env.prod')) {
-    $lines = file(__DIR__ . '/.env.prod');
-    foreach ($lines as $line) {
-        $line = trim($line);
-        if ($line && !str_starts_with($line, '#')) {
-            list($k, $v) = explode('=', $line, 2);
-            putenv(trim($k) . '=' . trim($v));
-            $_ENV[trim($k)] = trim($v);
-        }
-    }
+require_once __DIR__ . '/api/Shared/helpers.php'; // Required for Response? Actually let's just use manual PDO
+
+$env = file_get_contents(__DIR__ . '/.env.prod');
+$dbHost = ''; $dbPort = ''; $dbName = ''; $dbUser = ''; $dbPass = '';
+foreach (explode("\n", $env) as $line) {
+    if (str_starts_with($line, 'DB_HOST=')) $dbHost = trim(substr($line, 8));
+    if (str_starts_with($line, 'DB_PORT=')) $dbPort = trim(substr($line, 8));
+    if (str_starts_with($line, 'DB_NAME=')) $dbName = trim(substr($line, 8));
+    if (str_starts_with($line, 'DB_USER=')) $dbUser = trim(substr($line, 8));
+    if (str_starts_with($line, 'DB_PASS=')) $dbPass = trim(substr($line, 8));
 }
-spl_autoload_register(function ($class) {
-    if (str_starts_with($class, 'FusionERP\\')) {
-        require_once __DIR__ . '/api/'.str_replace('\\', '/', substr($class, 10)) . '.php';
+
+try {
+    $dsn = "mysql:host=$dbHost;port=$dbPort;dbname=$dbName;charset=utf8mb4";
+    $pdo = new PDO($dsn, $dbUser, $dbPass, [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+    ]);
+
+    $stmt = $pdo->prepare("SELECT * FROM federation_championships WHERE tenant_id = 'TNT_default'");
+    $stmt->execute();
+    $champs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    header('Content-Type: text/plain');
+    foreach ($champs as $c) {
+        $stmtM = $pdo->prepare("SELECT COUNT(*) FROM federation_matches WHERE championship_id = :cid");
+        $stmtM->execute([':cid' => $c['id']]);
+        $mCount = $stmtM->fetchColumn();
+        
+        $stmtS = $pdo->prepare("SELECT COUNT(*) FROM federation_standings WHERE championship_id = :cid");
+        $stmtS->execute([':cid' => $c['id']]);
+        $sCount = $stmtS->fetchColumn();
+        
+        echo "Champ: {$c['label']} (ID: {$c['id']}) - URL: {$c['url']}\n";
+        echo "  > Matches: $mCount\n";
+        echo "  > Standings: $sCount\n";
+        echo "  > Last Synced: {$c['last_synced_at']}\n\n";
     }
-});
-class MockContext { public static function id() { return 'TNT_default'; } }
-class_alias('MockContext', 'FusionERP\Shared\TenantContext');
-
-$pdo = \FusionERP\Shared\Database::getInstance();
-$tenantId = 'TNT_default';
-
-$stmt = $pdo->prepare("SELECT * FROM federation_championships WHERE tenant_id = :tid");
-$stmt->execute([':tid' => $tenantId]);
-$champs = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-header('Content-Type: text/plain');
-foreach ($champs as $c) {
-    $stmtM = $pdo->prepare("SELECT COUNT(*) FROM federation_matches WHERE championship_id = :cid");
-    $stmtM->execute([':cid' => $c['id']]);
-    $mCount = $stmtM->fetchColumn();
-    
-    $stmtS = $pdo->prepare("SELECT COUNT(*) FROM federation_standings WHERE championship_id = :cid");
-    $stmtS->execute([':cid' => $c['id']]);
-    $sCount = $stmtS->fetchColumn();
-    
-    echo "Champ: {$c['label']} (ID: {$c['id']}) - URL: {$c['url']}\n";
-    echo "  > Matches: $mCount\n";
-    echo "  > Standings: $sCount\n";
-    echo "  > Last Synced: {$c['last_synced_at']}\n\n";
+} catch (Exception $e) {
+    echo "DB Error: " . $e->getMessage();
 }
