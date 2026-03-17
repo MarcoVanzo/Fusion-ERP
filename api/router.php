@@ -62,8 +62,8 @@ header('Cache-Control: no-store, no-cache, must-revalidate');
 header('Pragma: no-cache');
 header('Vary: Cookie');
 
-// Only accept POST (or OPTIONS for CORS preflight)
-if (!in_array($_SERVER['REQUEST_METHOD'], ['POST', 'GET', 'OPTIONS'])) {
+// Only accept POST (or OPTIONS for CORS preflight, GET for lists, PUT for updates)
+if (!in_array($_SERVER['REQUEST_METHOD'], ['POST', 'GET', 'PUT', 'OPTIONS'])) {
     Response::error('Metodo non consentito', 405);
 }
 
