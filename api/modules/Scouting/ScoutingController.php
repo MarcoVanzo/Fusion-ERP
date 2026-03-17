@@ -24,17 +24,25 @@ class ScoutingController
         // Force manual generic parse of .env to bypass ANY caching (Dotenv immutability, OPcache, etc.)
         // __DIR__ is api/Modules/Scouting -> level 3 is root
         $envFile = dirname(__DIR__, 3) . '/.env';
-        if (!file_exists($envFile)) return null;
+        if (!file_exists($envFile)) {
+            error_log("ScoutingController getEnvVar: Missing .env at: $envFile");
+            return null;
+        }
 
         $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        $foundKeys = [];
         foreach ($lines as $line) {
             $line = trim($line);
             if ($line === '' || $line[0] === '#') continue;
             $parts = explode('=', $line, 2);
-            if (count($parts) === 2 && trim($parts[0]) === $key) {
-                return trim($parts[1]);
+            if (count($parts) === 2) {
+                $foundKeys[] = trim($parts[0]);
+                if (trim($parts[0]) === $key) {
+                    return trim($parts[1]);
+                }
             }
         }
+        error_log("ScoutingController getEnvVar: Key '$key' not found in " . count($foundKeys) . " parsed keys.");
         return null;
     }
 

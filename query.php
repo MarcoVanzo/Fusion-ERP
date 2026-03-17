@@ -1,5 +1,5 @@
 <?php
-require 'api/vendor/autoload.php';
+require 'vendor/autoload.php';
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->safeLoad();
 require 'api/Shared/Database.php';
