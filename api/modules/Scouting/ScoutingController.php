@@ -22,10 +22,9 @@ class ScoutingController
     private static function getEnvVar(string $key): ?string
     {
         // Force manual generic parse of .env to bypass ANY caching (Dotenv immutability, OPcache, etc.)
-        // __DIR__ is api/Modules/Scouting -> level 3 is root
-        $envFile = dirname(__DIR__, 3) . '/.env';
-        if (!file_exists($envFile)) {
-            error_log("ScoutingController getEnvVar: Missing .env at: $envFile");
+        $envFile = realpath(__DIR__ . '/../../../.env');
+        if (!$envFile || !file_exists($envFile)) {
+            error_log("ScoutingController getEnvVar: Missing .env at expected path.");
             return null;
         }
 
