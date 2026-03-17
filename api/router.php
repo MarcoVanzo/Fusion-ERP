@@ -141,13 +141,13 @@ function dispatchWebhook(string $action): void
     }
 
     if (!class_exists($class)) {
-        \FusionERP\Shared\Response::error("Controller WhatsApp non trovato", 500);
+        Response::error("Controller WhatsApp non trovato", 500);
     }
     
     $controller = new $class();
 
     if (!method_exists($controller, $action)) {
-        \FusionERP\Shared\Response::error("Azione WhatsApp '{$action}' non trovata", 404);
+        Response::error("Azione WhatsApp '{$action}' non trovata", 404);
     }
     
     $controller->$action();
