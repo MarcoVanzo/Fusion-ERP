@@ -14,6 +14,17 @@ foreach (explode("\n", $env) as $line) {
     if (str_starts_with($line, 'DB_PASS=')) $dbPass = trim(substr($line, 8));
 }
 
+// remove quotes if any
+$dbHost = str_replace(['"', "'"], "", $dbHost);
+$dbPort = str_replace(['"', "'"], "", $dbPort);
+$dbName = str_replace(['"', "'"], "", $dbName);
+$dbUser = str_replace(['"', "'"], "", $dbUser);
+$dbPass = str_replace(['"', "'"], "", $dbPass);
+
+if ($dbHost === 'localhost') {
+    $dbHost = '127.0.0.1'; // Fix for socket error 2002
+}
+
 try {
     $dsn = "mysql:host=$dbHost;port=$dbPort;dbname=$dbName;charset=utf8mb4";
     $pdo = new PDO($dsn, $dbUser, $dbPass, [
@@ -21,7 +32,7 @@ try {
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
     ]);
 
-    $stmt = $pdo->prepare("SELECT * FROM federation_championships WHERE tenant_id = 'TNT_default'");
+    $stmt = $pdo->prepare("SELECT * FROM federation_championships");
     $stmt->execute();
     $champs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
