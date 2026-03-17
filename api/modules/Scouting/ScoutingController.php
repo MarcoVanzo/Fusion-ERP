@@ -75,7 +75,8 @@ class ScoutingController
         Auth::requireRole('allenatore');
 
         $stmt = $this->db->prepare("
-            SELECT * FROM scouting_athletes
+            SELECT id, nome, cognome, societa_appartenenza, anno_nascita, note, rilevatore, data_rilevazione, source, is_locked_edit
+            FROM scouting_athletes
             ORDER BY created_at DESC
         ");
         $stmt->execute();
@@ -258,13 +259,13 @@ class ScoutingController
                 (:cog_id, :cog_form, :nome, :cognome, :societa, :anno,
                  :note, :rilevatore, :data_ril, :source, NOW())
             ON DUPLICATE KEY UPDATE
-                nome                  = VALUES(nome),
-                cognome               = VALUES(cognome),
-                societa_appartenenza  = VALUES(societa_appartenenza),
-                anno_nascita          = VALUES(anno_nascita),
-                note                  = VALUES(note),
-                rilevatore            = VALUES(rilevatore),
-                data_rilevazione      = VALUES(data_rilevazione),
+                nome                  = IF(is_locked_edit = 1, nome, VALUES(nome)),
+                cognome               = IF(is_locked_edit = 1, cognome, VALUES(cognome)),
+                societa_appartenenza  = IF(is_locked_edit = 1, societa_appartenenza, VALUES(societa_appartenenza)),
+                anno_nascita          = IF(is_locked_edit = 1, anno_nascita, VALUES(anno_nascita)),
+                note                  = IF(is_locked_edit = 1, note, VALUES(note)),
+                rilevatore            = IF(is_locked_edit = 1, rilevatore, VALUES(rilevatore)),
+                data_rilevazione      = IF(is_locked_edit = 1, data_rilevazione, VALUES(data_rilevazione)),
                 synced_at             = NOW()
         ";
 

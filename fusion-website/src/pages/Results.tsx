@@ -209,9 +209,9 @@ const Results = () => {
                             </div>
                         ) : (
                             filteredStandings.map((champ) => (
-                                <div key={champ.championship_id} className="bg-zinc-900 border border-zinc-800 p-4 md:p-6 clip-diagonal-rev overflow-hidden">
-                                    <h3 className="font-heading text-lg md:text-xl text-white mb-4 border-b-2 border-brand-500 pb-2 uppercase break-words whitespace-normal leading-tight">
-                                        CLASSIFICA <span className="text-zinc-500 block mt-1">{champ.championship_label}</span>
+                                <div key={champ.championship_id} className="bg-zinc-900 border border-zinc-800 p-6 md:p-8 clip-diagonal-rev overflow-hidden relative z-10">
+                                    <h3 className="font-heading text-lg md:text-xl text-white mb-6 pt-4 border-b-2 border-brand-500 pb-2 uppercase break-words whitespace-normal leading-tight">
+                                        CLASSIFICA <span className="text-zinc-500 block mt-2">{champ.championship_label}</span>
                                     </h3>
 
                                     <div className="flex flex-col gap-1">

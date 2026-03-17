@@ -153,31 +153,31 @@ const Foresteria = () => {
 
                     {/* Right Column: Info & Location */}
                     <div className="lg:w-1/3 flex flex-col gap-6">
-                        <div className="bg-brand-500 text-zinc-950 p-10 md:p-12 clip-diagonal shadow-[0_0_25px_rgba(217,70,239,0.3)] relative z-10">
-                            <h3 className="font-heading text-2xl mb-4 font-bold tracking-tight">I NUMERI</h3>
-                            <div className="flex flex-col gap-4">
-                                <div className="border-b border-zinc-950/20 pb-3">
-                                    <div className="text-4xl font-heading mb-1 tracking-tighter">14</div>
-                                    <div className="text-xs uppercase tracking-widest font-bold opacity-80">Posti Letto</div>
+                        <div className="bg-brand-500 text-zinc-950 px-10 py-12 md:py-16 clip-diagonal shadow-[0_0_25px_rgba(217,70,239,0.3)] relative z-10 flex flex-col">
+                            <h3 className="font-heading text-2xl mb-6 font-bold tracking-tight">I NUMERI</h3>
+                            <div className="flex flex-col gap-6">
+                                <div className="border-b border-zinc-950/20 pb-4">
+                                    <div className="text-4xl md:text-5xl font-heading mb-1 tracking-tighter">14</div>
+                                    <div className="text-xs uppercase tracking-widest font-bold opacity-80 mt-1">Posti Letto</div>
                                 </div>
-                                <div className="border-b border-zinc-950/20 pb-3">
-                                    <div className="text-4xl font-heading mb-1 tracking-tighter">24/7</div>
-                                    <div className="text-xs uppercase tracking-widest font-bold opacity-80">Assistenza Tutor</div>
+                                <div className="border-b border-zinc-950/20 pb-4">
+                                    <div className="text-4xl md:text-5xl font-heading mb-1 tracking-tighter">24/7</div>
+                                    <div className="text-xs uppercase tracking-widest font-bold opacity-80 mt-1">Assistenza Tutor</div>
                                 </div>
-                                <div>
-                                    <div className="text-4xl font-heading mb-1 tracking-tighter">100%</div>
-                                    <div className="text-xs uppercase tracking-widest font-bold opacity-80">Volley &amp; Studio</div>
+                                <div className="pb-2">
+                                    <div className="text-4xl md:text-5xl font-heading mb-1 tracking-tighter">100%</div>
+                                    <div className="text-xs uppercase tracking-widest font-bold opacity-80 mt-1">Volley &amp; Studio</div>
                                 </div>
                             </div>
                         </div>
 
                         {info?.address && (
-                            <div className="bg-zinc-900/50 p-10 md:p-12 border border-zinc-800 clip-diagonal-rev backdrop-blur-md h-full min-h-[300px] flex flex-col relative z-10">
-                                <h3 className="font-heading text-xl text-white mb-4 flex items-center gap-2 shrink-0">
-                                    <MapPin className="text-brand-500" size={20} />
+                            <div className="bg-zinc-900/50 px-10 py-12 md:py-16 border border-zinc-800 clip-diagonal-rev backdrop-blur-md h-full min-h-[350px] flex flex-col relative z-10">
+                                <h3 className="font-heading text-xl md:text-2xl text-white mb-6 flex items-center gap-2 shrink-0">
+                                    <MapPin className="text-brand-500" size={24} />
                                     DOVE SIAMO
                                 </h3>
-                                <div className="flex-1 w-full bg-zinc-950 rounded-lg overflow-hidden border border-zinc-800/50 mt-2 relative">
+                                <div className="flex-1 w-full bg-zinc-950 rounded-lg overflow-hidden border border-zinc-800/50 relative min-h-[150px]">
                                     <iframe 
                                         src={`https://maps.google.com/maps?q=${info.lat},${info.lng}&z=15&output=embed`} 
                                         className="absolute inset-0 w-full h-full border-0" 
@@ -186,7 +186,7 @@ const Foresteria = () => {
                                         referrerPolicy="no-referrer-when-downgrade"
                                     ></iframe>
                                 </div>
-                                <p className="text-zinc-400 font-sans text-xs mt-4 shrink-0 uppercase tracking-widest">{info.address}</p>
+                                <p className="text-zinc-400 font-sans text-xs mt-6 shrink-0 uppercase tracking-widest leading-relaxed">{info.address}</p>
                             </div>
                         )}
                     </div>
