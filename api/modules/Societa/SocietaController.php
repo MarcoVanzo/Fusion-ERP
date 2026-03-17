@@ -766,10 +766,9 @@ class SocietaController
     {
         // NO Auth required. Used by the external website SPA
         $db  = \FusionERP\Shared\Database::getInstance();
-        $tid = 1; // Assuming tenant 1 for public website or fetch from somewhere else, typically 1.
+        $tid = \FusionERP\Shared\TenantContext::id();
 
-        // In Fusion ERP demo tenant check is mostly via Auth context, but we can query without it
-        // Or default to 1 as it's the main club.
+        // Query using the resolved tenant context
         $info = $db->prepare('SELECT * FROM foresteria_info WHERE tenant_id = ? LIMIT 1');
         $info->execute([$tid]);
         $infoRow = $info->fetch(\PDO::FETCH_ASSOC) ?: [
