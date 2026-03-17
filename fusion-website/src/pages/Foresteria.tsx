@@ -116,7 +116,7 @@ const Foresteria = () => {
                 <div className="flex flex-col lg:flex-row gap-12">
                     {/* Left Column: Description */}
                     <div className="lg:w-2/3">
-                        <div className="bg-zinc-900/50 p-8 md:p-12 border border-zinc-800 clip-diagonal backdrop-blur-md shadow-[0_4px_30px_rgba(0,0,0,0.5)] h-full">
+                        <div className="bg-zinc-900/50 p-10 md:p-14 border border-zinc-800 clip-diagonal backdrop-blur-md shadow-[0_4px_30px_rgba(0,0,0,0.5)] h-full relative z-10">
                             <h2 className="font-heading text-3xl md:text-4xl text-white mb-6 border-b border-zinc-800 pb-4 inline-flex items-center gap-3">
                                 IL NOSTRO <span className="text-brand-500">PROGETTO</span>
                             </h2>
@@ -153,7 +153,7 @@ const Foresteria = () => {
 
                     {/* Right Column: Info & Location */}
                     <div className="lg:w-1/3 flex flex-col gap-6">
-                        <div className="bg-brand-500 text-zinc-950 p-8 clip-diagonal shadow-[0_0_25px_rgba(217,70,239,0.3)]">
+                        <div className="bg-brand-500 text-zinc-950 p-10 md:p-12 clip-diagonal shadow-[0_0_25px_rgba(217,70,239,0.3)] relative z-10">
                             <h3 className="font-heading text-2xl mb-4 font-bold tracking-tight">I NUMERI</h3>
                             <div className="flex flex-col gap-4">
                                 <div className="border-b border-zinc-950/20 pb-3">
@@ -172,7 +172,7 @@ const Foresteria = () => {
                         </div>
 
                         {info?.address && (
-                            <div className="bg-zinc-900/50 p-8 border border-zinc-800 clip-diagonal-rev backdrop-blur-md h-full min-h-[300px] flex flex-col">
+                            <div className="bg-zinc-900/50 p-10 md:p-12 border border-zinc-800 clip-diagonal-rev backdrop-blur-md h-full min-h-[300px] flex flex-col relative z-10">
                                 <h3 className="font-heading text-xl text-white mb-4 flex items-center gap-2 shrink-0">
                                     <MapPin className="text-brand-500" size={20} />
                                     DOVE SIAMO
@@ -243,17 +243,19 @@ const Foresteria = () => {
 
             {/* Media Section: Photos Gallery */}
             {photos.length > 0 && (
-                <section className="max-w-6xl mx-auto px-4 py-16">
-                    <div className="mb-8">
-                        <h2 className="font-heading text-3xl md:text-4xl text-white">
+                <section className="w-full relative py-20 bg-zinc-950 overflow-hidden shadow-[inset_0_0_100px_rgba(0,0,0,1)] flex flex-col items-center">
+                    <div className="absolute inset-0 bg-brand-500/5 mix-blend-overlay pointer-events-none"></div>
+                    
+                    <div className="max-w-6xl mx-auto px-4 mb-12 relative z-10 text-center w-full">
+                        <h2 className="font-heading text-4xl md:text-5xl text-white">
                             LA NOSTRA <span className="text-brand-500 drop-shadow-[0_0_15px_rgba(217,70,239,0.5)]">GALLERY</span>
                         </h2>
-                        <div className="mt-3 h-px w-24 bg-gradient-to-r from-brand-500 to-transparent"></div>
+                        <div className="mt-4 h-[2px] w-32 bg-gradient-to-r from-transparent via-brand-500 to-transparent mx-auto"></div>
                     </div>
 
-                    <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4">
+                    <div className="w-full relative z-10 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-0 border-y border-zinc-800 bg-black">
                         {photos.map(photo => (
-                            <div key={photo.id} className="group relative aspect-square overflow-hidden bg-zinc-900 clip-diagonal-rev border border-zinc-800 hover:border-brand-500/50 transition-colors cursor-pointer">
+                            <div key={photo.id} className="group relative aspect-square overflow-hidden bg-zinc-900 border-[0.5px] border-zinc-800/50 hover:border-brand-500/50 transition-colors cursor-pointer">
                                 <img 
                                     src={getImgUrl(photo.file_path)} 
                                     alt={photo.title || "Foresteria"} 
@@ -261,7 +263,7 @@ const Foresteria = () => {
                                     loading="lazy"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
-                                    {photo.title && <span className="font-heading text-xs text-white">{photo.title}</span>}
+                                    {photo.title && <span className="font-heading text-sm text-white drop-shadow-md">{photo.title}</span>}
                                 </div>
                             </div>
                         ))}
