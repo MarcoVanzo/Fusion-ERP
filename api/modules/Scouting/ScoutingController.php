@@ -123,11 +123,6 @@ class ScoutingController
      * ───────────────────────────────────────────────────────────────────── */
     public static function _doSync(): array
     {
-        $apiKey = getenv('COGNITO_API_KEY');
-        if (empty($apiKey)) {
-            return ['success' => false, 'error' => 'COGNITO_API_KEY non configurata.'];
-        }
-
         $fusionFormId = self::fusionFormId();
         $networkFormId = self::networkFormId();
 
@@ -139,23 +134,33 @@ class ScoutingController
         $networkUpserted = 0;
         $errors = [];
 
-        // Sync Fusion form
+        // Sync Fusion form (uses its own API key)
         if ($fusionFormId > 0) {
-            $result = self::_syncForm($apiKey, $fusionFormId, self::fusionViewId(), 'cognito_fusion');
-            if ($result['success']) {
-                $fusionUpserted = $result['upserted'];
+            $fusionKey = getenv('SCOUTING_FUSION_API_KEY') ?: getenv('COGNITO_API_KEY');
+            if (empty($fusionKey)) {
+                $errors[] = 'Fusion: SCOUTING_FUSION_API_KEY non configurata.';
             } else {
-                $errors[] = "Fusion: " . $result['error'];
+                $result = self::_syncForm($fusionKey, $fusionFormId, self::fusionViewId(), 'cognito_fusion');
+                if ($result['success']) {
+                    $fusionUpserted = $result['upserted'];
+                } else {
+                    $errors[] = "Fusion: " . $result['error'];
+                }
             }
         }
 
-        // Sync Network form
+        // Sync Network form (uses its own API key)
         if ($networkFormId > 0) {
-            $result = self::_syncForm($apiKey, $networkFormId, self::networkViewId(), 'cognito_network');
-            if ($result['success']) {
-                $networkUpserted = $result['upserted'];
+            $networkKey = getenv('SCOUTING_NETWORK_API_KEY') ?: getenv('COGNITO_API_KEY');
+            if (empty($networkKey)) {
+                $errors[] = 'Network: SCOUTING_NETWORK_API_KEY non configurata.';
             } else {
-                $errors[] = "Network: " . $result['error'];
+                $result = self::_syncForm($networkKey, $networkFormId, self::networkViewId(), 'cognito_network');
+                if ($result['success']) {
+                    $networkUpserted = $result['upserted'];
+                } else {
+                    $errors[] = "Network: " . $result['error'];
+                }
             }
         }
 
