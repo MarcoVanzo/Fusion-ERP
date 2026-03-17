@@ -226,12 +226,12 @@ const Athletes = (() => {
                       weight_kg: r["na-weight"] || null,
                       parent_contact: r["na-parent"] || null,
                     }),
-                      p.close(),
-                      UI.toast("Atleta creato", "success"),
                       (t = await Store.get("listLight", "athletes").catch(
                         () => t,
                       )),
                       (s = "anagrafica"),
+                      p.close(),
+                      UI.toast("Atleta creato", "success"),
                       u());
                   } catch (t) {
                     ((e.textContent = t.message),
@@ -709,15 +709,15 @@ const Athletes = (() => {
                           parent_contact:
                             document.getElementById("ea-parent").value || null,
                         }),
-                          r.close(),
                           Store.clearCache(),
-                          UI.toast("Atleta aggiornato", "success"),
-                          Store.get("listLight", "athletes")
+                          await Store.get("listLight", "athletes")
                             .then((e) => {
                               t = e;
                             })
                             .catch(() => {}),
-                          f(n));
+                          f(n),
+                          r.close(),
+                          UI.toast("Atleta aggiornato", "success"));
                       } catch (e) {
                         ((i.textContent = e.message),
                           i.classList.remove("hidden"),

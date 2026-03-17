@@ -104,6 +104,7 @@ try {
             'newsletter' => dispatch('Newsletter', $action),
             'societa' => dispatch('Societa', $action),
             'network' => dispatch('Network', $action),
+            'scouting' => dispatch('Scouting', $action),
             'esignature' => dispatch('ESignature', $action),
             'whatsapp' => dispatchWebhook($action),
             default => Response::error("Modulo '{$module}' non trovato", 404),
