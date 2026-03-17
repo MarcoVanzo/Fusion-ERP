@@ -761,6 +761,38 @@ class SocietaController
 
     // ─── FORESTERIA ────────────────────────────────────────────────────────────
 
+    /** GET  ?module=societa&action=getPublicForesteria — info e media pubblici per il sito web */
+    public function getPublicForesteria(): void
+    {
+        // NO Auth required. Used by the external website SPA
+        $db  = \FusionERP\Shared\Database::getInstance();
+        $tid = 1; // Assuming tenant 1 for public website or fetch from somewhere else, typically 1.
+
+        // In Fusion ERP demo tenant check is mostly via Auth context, but we can query without it
+        // Or default to 1 as it's the main club.
+        $info = $db->prepare('SELECT * FROM foresteria_info WHERE tenant_id = ? LIMIT 1');
+        $info->execute([$tid]);
+        $infoRow = $info->fetch(\PDO::FETCH_ASSOC) ?: [
+            'description' => '',
+            'address'     => 'Via Bazzera 16, 30030 Martellago (VE)',
+            'lat'         => 45.5440000,
+            'lng'         => 12.1580000,
+        ];
+
+        // Media
+        $media = $db->prepare(
+            'SELECT * FROM foresteria_media
+             WHERE tenant_id = ? AND is_deleted = 0
+             ORDER BY uploaded_at DESC LIMIT 200'
+        );
+        $media->execute([$tid]);
+
+        Response::success([
+            'info'  => $infoRow,
+            'media' => $media->fetchAll(\PDO::FETCH_ASSOC),
+        ]);
+    }
+
     /** GET  ?module=societa&action=getForesteria — tutto in uno (info + spese + media) */
     public function getForesteria(): void
     {

@@ -17,6 +17,7 @@ const Navbar = () => {
 
     const navLinks = [
         { name: 'IL CLUB', path: '/club' },
+        { name: 'FORESTERIA', path: '/foresteria' },
         { name: 'NEWS', path: '/news' },
         { name: 'SQUADRE', path: '/teams' },
         { name: 'STORE', path: '/shop' },

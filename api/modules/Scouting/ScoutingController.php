@@ -21,22 +21,22 @@ class ScoutingController
      * ───────────────────────────────────────────────────────────────────── */
     private static function fusionFormId(): int
     {
-        return (int)(getenv('SCOUTING_FUSION_FORM_ID') ?: 0);
+        return (int)(($_ENV['SCOUTING_FUSION_FORM_ID'] ?? getenv('SCOUTING_FUSION_FORM_ID')) ?: 0);
     }
 
     private static function fusionViewId(): int
     {
-        return (int)(getenv('SCOUTING_FUSION_VIEW_ID') ?: 1);
+        return (int)(($_ENV['SCOUTING_FUSION_VIEW_ID'] ?? getenv('SCOUTING_FUSION_VIEW_ID')) ?: 1);
     }
 
     private static function networkFormId(): int
     {
-        return (int)(getenv('SCOUTING_NETWORK_FORM_ID') ?: 0);
+        return (int)(($_ENV['SCOUTING_NETWORK_FORM_ID'] ?? getenv('SCOUTING_NETWORK_FORM_ID')) ?: 0);
     }
 
     private static function networkViewId(): int
     {
-        return (int)(getenv('SCOUTING_NETWORK_VIEW_ID') ?: 1);
+        return (int)(($_ENV['SCOUTING_NETWORK_VIEW_ID'] ?? getenv('SCOUTING_NETWORK_VIEW_ID')) ?: 1);
     }
 
     /* ─────────────────────────────────────────────────────────────────────
@@ -136,7 +136,7 @@ class ScoutingController
 
         // Sync Fusion form (uses its own API key)
         if ($fusionFormId > 0) {
-            $fusionKey = getenv('SCOUTING_FUSION_API_KEY') ?: getenv('COGNITO_API_KEY');
+            $fusionKey = ($_ENV['SCOUTING_FUSION_API_KEY'] ?? getenv('SCOUTING_FUSION_API_KEY')) ?: ($_ENV['COGNITO_API_KEY'] ?? getenv('COGNITO_API_KEY'));
             if (empty($fusionKey)) {
                 $errors[] = 'Fusion: SCOUTING_FUSION_API_KEY non configurata.';
             } else {
@@ -151,7 +151,7 @@ class ScoutingController
 
         // Sync Network form (uses its own API key)
         if ($networkFormId > 0) {
-            $networkKey = getenv('SCOUTING_NETWORK_API_KEY') ?: getenv('COGNITO_API_KEY');
+            $networkKey = ($_ENV['SCOUTING_NETWORK_API_KEY'] ?? getenv('SCOUTING_NETWORK_API_KEY')) ?: ($_ENV['COGNITO_API_KEY'] ?? getenv('COGNITO_API_KEY'));
             if (empty($networkKey)) {
                 $errors[] = 'Network: SCOUTING_NETWORK_API_KEY non configurata.';
             } else {
