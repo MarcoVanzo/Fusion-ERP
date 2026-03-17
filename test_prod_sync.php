@@ -4,7 +4,7 @@ ini_set('display_errors', 1);
 
 $_SERVER['SERVER_NAME'] = 'localhost';
 
-$env = file_get_contents(__DIR__ . '/.env.prod');
+$env = file_get_contents(__DIR__ . '/.env');
 $dbHost = ''; $dbPort = ''; $dbName = ''; $dbUser = ''; $dbPass = '';
 foreach (explode("\n", $env) as $line) {
     if (str_starts_with($line, 'DB_HOST=')) $dbHost = trim(substr($line, 8));
