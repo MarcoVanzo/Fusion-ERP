@@ -130,14 +130,14 @@ const Foresteria = () => {
                                     <div className="h-4 bg-zinc-800 rounded w-3/4"></div>
                                 </div>
                             ) : info?.description ? (
-                                <div className="mt-6 whitespace-pre-wrap font-sans text-lg md:text-xl text-zinc-300 leading-[1.8] font-light tracking-wide">
+                                <div className="mt-6 whitespace-pre-wrap font-sans text-sm md:text-base text-zinc-300 leading-[1.8] font-light tracking-wide lowercase">
                                     {info.description.split('\n').map((line, i) => {
                                         if (line.trim().startsWith('-')) {
                                             const parts = line.split(':');
                                             if (parts.length > 1) {
                                                 return (
                                                     <p key={i} className="mb-4 pl-4 border-l-2 border-brand-500/50">
-                                                        <span className="font-bold text-white">{parts[0]}</span>:{parts.slice(1).join(':')}
+                                                        <span className="font-bold text-white capitalize">{parts[0]}</span>:{parts.slice(1).join(':')}
                                                     </p>
                                                 );
                                             }
@@ -172,12 +172,21 @@ const Foresteria = () => {
                         </div>
 
                         {info?.address && (
-                            <div className="bg-zinc-900/50 p-8 border border-zinc-800 clip-diagonal-rev backdrop-blur-md">
-                                <h3 className="font-heading text-xl text-white mb-4 flex items-center gap-2">
+                            <div className="bg-zinc-900/50 p-8 border border-zinc-800 clip-diagonal-rev backdrop-blur-md h-full min-h-[300px] flex flex-col">
+                                <h3 className="font-heading text-xl text-white mb-4 flex items-center gap-2 shrink-0">
                                     <MapPin className="text-brand-500" size={20} />
                                     DOVE SIAMO
                                 </h3>
-                                <p className="text-zinc-400 font-sans text-sm">{info.address}</p>
+                                <div className="flex-1 w-full bg-zinc-950 rounded-lg overflow-hidden border border-zinc-800/50 mt-2 relative">
+                                    <iframe 
+                                        src={`https://maps.google.com/maps?q=${info.lat},${info.lng}&z=15&output=embed`} 
+                                        className="absolute inset-0 w-full h-full border-0" 
+                                        allowFullScreen 
+                                        loading="lazy" 
+                                        referrerPolicy="no-referrer-when-downgrade"
+                                    ></iframe>
+                                </div>
+                                <p className="text-zinc-400 font-sans text-xs mt-4 shrink-0 uppercase tracking-widest">{info.address}</p>
                             </div>
                         )}
                     </div>
@@ -186,40 +195,41 @@ const Foresteria = () => {
 
             {/* Media Section: Videos */}
             {videos.length > 0 && (
-                <section className="max-w-6xl mx-auto px-4 py-8">
-                    <div className="mb-8">
-                        <h2 className="font-heading text-3xl md:text-4xl text-white">
+                <section className="w-full relative py-20 bg-zinc-950 overflow-hidden shadow-[inset_0_0_100px_rgba(0,0,0,1)] flex flex-col items-center">
+                    <div className="absolute inset-0 bg-brand-500/5 mix-blend-overlay pointer-events-none"></div>
+                    <div className="absolute inset-0 opacity-20 pointer-events-none mix-blend-overlay" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #a21caf 0, #a21caf 2px, transparent 2px, transparent 100px)' }}></div>
+                    
+                    <div className="max-w-6xl mx-auto px-4 mb-16 relative z-10 text-center">
+                        <h2 className="font-heading text-4xl md:text-5xl text-white">
                             VIVI LA <span className="text-brand-500 drop-shadow-[0_0_15px_rgba(217,70,239,0.5)]">FORESTERIA</span>
                         </h2>
-                        <div className="mt-3 h-px w-24 bg-gradient-to-r from-brand-500 to-transparent"></div>
+                        <div className="mt-4 h-[2px] w-32 bg-gradient-to-r from-transparent via-brand-500 to-transparent mx-auto"></div>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-12 max-w-5xl mx-auto">
+                    <div className="w-full relative z-10 flex flex-col gap-0 shadow-2xl">
                         {videos.map(video => {
                             const videoUrl = video.url || video.file_path;
                             return (
-                                <div key={video.id} className="bg-zinc-900/40 p-3 md:p-4 border border-zinc-800/60 rounded-xl overflow-hidden hover:border-brand-500/40 transition-colors shadow-2xl">
-                                    <div className="aspect-video w-full rounded-lg overflow-hidden bg-zinc-950 relative shadow-inner">
-                                        {video.type === 'youtube' && videoUrl ? (
-                                            <iframe 
-                                                src={formatYoutubeEmbedUrl(videoUrl)} 
-                                                title={video.title || "YouTube Video"} 
-                                                className="w-full h-full border-0 absolute inset-0" 
-                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                                                allowFullScreen
-                                            ></iframe>
-                                        ) : (
-                                            <video 
-                                                src={getImgUrl(video.file_path)} 
-                                                controls 
-                                                className="w-full h-full object-cover absolute inset-0"
-                                            ></video>
-                                        )}
-                                    </div>
+                                <div key={video.id} className="w-full relative bg-black aspect-video max-h-[85vh] overflow-hidden group border-y border-zinc-800">
+                                    {video.type === 'youtube' && videoUrl ? (
+                                        <iframe 
+                                            src={formatYoutubeEmbedUrl(videoUrl)} 
+                                            title={video.title || "YouTube Video"} 
+                                            className="w-full h-full border-0 absolute inset-0 max-w-[1920px] mx-auto opacity-90 group-hover:opacity-100 transition-opacity duration-500" 
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                            allowFullScreen
+                                        ></iframe>
+                                    ) : (
+                                        <video 
+                                            src={getImgUrl(video.file_path)} 
+                                            controls 
+                                            className="w-full h-full object-cover absolute inset-0 max-w-[1920px] mx-auto opacity-90 group-hover:opacity-100 transition-opacity duration-500"
+                                        ></video>
+                                    )}
                                     {video.title && (
-                                        <div className="p-4 pt-5">
-                                            <h4 className="font-heading text-xl md:text-2xl text-white flex items-center gap-3">
-                                                {video.type === 'youtube' && <Youtube size={28} className="text-brand-500 drop-shadow-[0_0_8px_rgba(217,70,239,0.8)]" />}
+                                        <div className="absolute bottom-0 left-0 right-0 p-6 md:p-12 bg-gradient-to-t from-black via-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none flex items-end justify-center">
+                                            <h4 className="font-heading text-2xl md:text-4xl text-white flex items-center gap-3 drop-shadow-xl">
+                                                {video.type === 'youtube' && <Youtube size={36} className="text-brand-500" />}
                                                 {video.title}
                                             </h4>
                                         </div>
