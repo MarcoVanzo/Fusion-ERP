@@ -764,27 +764,35 @@ class SocietaController
     /** GET  ?module=societa&action=getPublicForesteria — info e media pubblici per il sito web */
     public function getPublicForesteria(): void
     {
-        // NO Auth required. Used by the external website SPA
+        // NO Auth required. Used by the external website SPA.
+        // Public endpoints often resolve to TNT_default depending on the URL.
+        // Since there is only one "Foresteria" per club (and usually only one active club 
+        // in the database), we fetch the first available configuration to avoid empty results.
         $db  = \FusionERP\Shared\Database::getInstance();
-        $tid = \FusionERP\Shared\TenantContext::id();
+        
+        $info = $db->query('SELECT * FROM foresteria_info LIMIT 1');
+        $infoRow = $info->fetch(\PDO::FETCH_ASSOC);
 
-        // Query using the resolved tenant context
-        $info = $db->prepare('SELECT * FROM foresteria_info WHERE tenant_id = ? LIMIT 1');
-        $info->execute([$tid]);
-        $infoRow = $info->fetch(\PDO::FETCH_ASSOC) ?: [
-            'description' => '',
-            'address'     => 'Via Bazzera 16, 30030 Martellago (VE)',
-            'lat'         => 45.5440000,
-            'lng'         => 12.1580000,
-        ];
+        if (!$infoRow) {
+            // Fallback structure if completely empty
+            $infoRow = [
+                'description' => '',
+                'address'     => 'Via Bazzera 16, 30030 Martellago (VE)',
+                'lat'         => 45.5440000,
+                'lng'         => 12.1580000,
+            ];
+            $realTenantId = 'TNT_default';
+        } else {
+            $realTenantId = $infoRow['tenant_id'];
+        }
 
-        // Media
+        // Fetch media using the actual tenant ID where the info was saved
         $media = $db->prepare(
             'SELECT * FROM foresteria_media
              WHERE tenant_id = ? AND is_deleted = 0
              ORDER BY uploaded_at DESC LIMIT 200'
         );
-        $media->execute([$tid]);
+        $media->execute([$realTenantId]);
 
         Response::success([
             'info'  => $infoRow,
