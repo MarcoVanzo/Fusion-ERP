@@ -1,6 +1,7 @@
 const Scouting = (() => {
     let abortController = new AbortController();
     let athletes = [];
+    let lastSync = null;
 
     function renderTable(container) {
         const canEdit = ['admin', 'manager', 'allenatore'].includes(App.getUser()?.role);
@@ -8,11 +9,29 @@ const Scouting = (() => {
         container.innerHTML = `
             <div>
                 <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);margin-bottom:var(--sp-3)">
-                    <div class="input-wrapper" style="position:relative;min-width:220px">
-                        <i class="ph ph-magnifying-glass" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--color-text-muted);font-size:16px"></i>
-                        <input type="text" id="scouting-search" class="form-input" placeholder="Cerca per nome, cognome..." style="padding-left:36px;height:40px;font-size:13px">
+                    <div style="display:flex;align-items:center;gap:var(--sp-2);flex-wrap:wrap">
+                        <div class="input-wrapper" style="position:relative;min-width:220px">
+                            <i class="ph ph-magnifying-glass" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--color-text-muted);font-size:16px"></i>
+                            <input type="text" id="scouting-search" class="form-input" placeholder="Cerca per nome, cognome..." style="padding-left:36px;height:40px;font-size:13px">
+                        </div>
+                        <span id="scouting-count" class="status-badge" style="background:var(--color-primary-light);color:var(--color-primary);font-weight:600">${athletes.length} atleti</span>
                     </div>
-                    ${canEdit ? '<button class="btn btn-primary btn-sm" id="scouting-add-btn" type="button"><i class="ph ph-plus"></i> NUOVO INSERIMENTO</button>' : ''}
+                    <div style="display:flex;gap:var(--sp-1);align-items:center;flex-wrap:wrap">
+                        ${canEdit ? `
+                            <button class="btn btn-default btn-sm" id="scouting-sync-btn" type="button" title="Sincronizza da Cognito Forms">
+                                <i class="ph ph-arrows-clockwise"></i> Sincronizza da Cognito
+                            </button>
+                            <button class="btn btn-primary btn-sm" id="scouting-add-btn" type="button">
+                                <i class="ph ph-plus"></i> NUOVO INSERIMENTO
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+                <div id="scouting-sync-status" style="margin-bottom:var(--sp-2);display:${lastSync ? 'block' : 'none'}">
+                    ${lastSync ? `<span style="font-size:12px;color:var(--color-text-muted)">
+                        <i class="ph ph-clock" style="font-size:12px"></i>
+                        Ultimo sync Cognito: ${new Date(lastSync).toLocaleString('it-IT')}
+                    </span>` : ''}
                 </div>
                 <div class="table-wrapper" style="overflow-x:auto">
                     <table class="data-table" style="width:100%;border-collapse:collapse;font-size:14px">
@@ -40,10 +59,16 @@ const Scouting = (() => {
             if (tbody) {
                 tbody.innerHTML = renderRows(filtered);
             }
+            const countBadge = document.getElementById('scouting-count');
+            if (countBadge) countBadge.textContent = `${filtered.length} atleti`;
         });
 
         document.getElementById('scouting-add-btn')?.addEventListener('click', () => {
             openAddModal();
+        });
+
+        document.getElementById('scouting-sync-btn')?.addEventListener('click', () => {
+            doSync();
         });
     }
 
@@ -53,9 +78,12 @@ const Scouting = (() => {
         }
 
         return data.map(athlete => {
-            let sourceBadge = athlete.source === 'manual' 
-                ? '<span class="status-badge" style="background:var(--color-bg-alt);color:var(--color-text-muted)">Manuale</span>'
-                : `<span class="status-badge" style="background:var(--color-primary-light);color:var(--color-primary)">${Utils.escapeHtml(athlete.source)}</span>`;
+            const sourceMap = {
+                manual: { bg: 'var(--color-bg-alt)', color: 'var(--color-text-muted)', label: 'Manuale' },
+                cognito_fusion: { bg: 'rgba(99,102,241,0.12)', color: '#818cf8', label: 'Fusion' },
+                cognito_network: { bg: 'rgba(245,158,11,0.12)', color: '#f59e0b', label: 'Network' },
+            };
+            const src = sourceMap[athlete.source] || { bg: 'var(--color-bg-alt)', color: 'var(--color-text-muted)', label: athlete.source || '—' };
 
             return `
                 <tr>
@@ -66,10 +94,49 @@ const Scouting = (() => {
                     <td style="padding:10px 12px;border-bottom:1px solid var(--color-border);max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${Utils.escapeHtml(athlete.note || '')}">${Utils.escapeHtml(athlete.note || '—')}</td>
                     <td style="padding:10px 12px;border-bottom:1px solid var(--color-border)">${Utils.escapeHtml(athlete.rilevatore || '—')}</td>
                     <td style="padding:10px 12px;border-bottom:1px solid var(--color-border);font-size:12px">${athlete.data_rilevazione || '—'}</td>
-                    <td style="padding:10px 12px;border-bottom:1px solid var(--color-border)">${sourceBadge}</td>
+                    <td style="padding:10px 12px;border-bottom:1px solid var(--color-border)">
+                        <span class="status-badge" style="background:${src.bg};color:${src.color}">${src.label}</span>
+                    </td>
                 </tr>
             `;
         }).join('');
+    }
+
+    async function doSync() {
+        const btn = document.getElementById('scouting-sync-btn');
+        const statusEl = document.getElementById('scouting-sync-status');
+
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Sincronizzazione…';
+        }
+        if (statusEl) {
+            statusEl.style.display = 'block';
+            statusEl.innerHTML = '<span style="font-size:12px;color:var(--color-warning)"><i class="ph ph-arrows-clockwise"></i> Sincronizzazione in corso…</span>';
+        }
+
+        try {
+            const res = await Store.api('syncFromCognito', 'scouting', {});
+            const total = res.total || 0;
+            const now = new Date().toLocaleString('it-IT');
+
+            if (statusEl) {
+                statusEl.innerHTML = `<span style="font-size:12px;color:var(--color-success)">✅ Sincronizzati ${total} atleti — ${now}</span>`;
+            }
+
+            UI.toast(`Sincronizzazione completata: ${total} atleti importati`, 'success');
+            await refreshData();
+        } catch (err) {
+            if (statusEl) {
+                statusEl.innerHTML = `<span style="font-size:12px;color:var(--color-pink)">⚠️ ${err.message}</span>`;
+            }
+            UI.toast('Errore: ' + err.message, 'error');
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="ph ph-arrows-clockwise"></i> Sincronizza da Cognito';
+            }
+        }
     }
 
     function openAddModal() {
@@ -147,8 +214,6 @@ const Scouting = (() => {
 
                 UI.toast("Atleta salvato con successo", "success");
                 modal.close();
-
-                // Refresh data
                 await refreshData();
             } catch (err) {
                 errorDiv.textContent = err.message || 'Errore durante il salvataggio.';
@@ -161,7 +226,9 @@ const Scouting = (() => {
 
     async function refreshData() {
         try {
-            athletes = await Store.get('listDatabase', 'scouting');
+            const result = await Store.get('listDatabase', 'scouting');
+            athletes = result.entries || result || [];
+            lastSync = result.last_sync || null;
             const container = document.getElementById('scouting-content-area');
             if (container) {
                 renderTable(container);
@@ -180,13 +247,15 @@ const Scouting = (() => {
             container.innerHTML = UI.skeletonPage();
 
             try {
-                athletes = await Store.get('listDatabase', 'scouting');
+                const result = await Store.get('listDatabase', 'scouting');
+                athletes = result.entries || result || [];
+                lastSync = result.last_sync || null;
 
                 container.innerHTML = `
                     <div class="module-wrapper">
                         <div class="page-header" style="border-bottom:1px solid var(--color-border);padding:var(--sp-4);padding-bottom:var(--sp-3);margin-bottom:0">
                             <h1 class="page-title">Database Scouting</h1>
-                            <p class="page-subtitle">Contatti e atleti segnalati manualmente o via Form</p>
+                            <p class="page-subtitle">Contatti e atleti segnalati manualmente o via Cognito Forms</p>
                         </div>
                         <div class="module-body" style="padding:var(--sp-4)" id="scouting-content-area">
                         </div>

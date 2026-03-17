@@ -16,6 +16,33 @@ class ScoutingController
         $this->db = Database::getInstance();
     }
 
+    /* ─────────────────────────────────────────────────────────────────────
+     * Config — Cognito Form IDs from .env
+     * ───────────────────────────────────────────────────────────────────── */
+    private static function fusionFormId(): int
+    {
+        return (int)(getenv('SCOUTING_FUSION_FORM_ID') ?: 0);
+    }
+
+    private static function fusionViewId(): int
+    {
+        return (int)(getenv('SCOUTING_FUSION_VIEW_ID') ?: 1);
+    }
+
+    private static function networkFormId(): int
+    {
+        return (int)(getenv('SCOUTING_NETWORK_FORM_ID') ?: 0);
+    }
+
+    private static function networkViewId(): int
+    {
+        return (int)(getenv('SCOUTING_NETWORK_VIEW_ID') ?: 1);
+    }
+
+    /* ─────────────────────────────────────────────────────────────────────
+     * listDatabase — GET entries from local DB
+     * GET /api?module=scouting&action=listDatabase
+     * ───────────────────────────────────────────────────────────────────── */
     public function listDatabase(): void
     {
         Auth::requireRole('allenatore');
@@ -27,9 +54,21 @@ class ScoutingController
         $stmt->execute();
         $athletes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        Response::success($athletes);
+        // Last sync time
+        $syncStmt = $this->db->query("SELECT MAX(synced_at) FROM scouting_athletes WHERE cognito_id IS NOT NULL");
+        $lastSync = $syncStmt->fetchColumn();
+
+        Response::success([
+            'entries' => $athletes,
+            'last_sync' => $lastSync,
+            'count' => count($athletes),
+        ]);
     }
 
+    /* ─────────────────────────────────────────────────────────────────────
+     * addManualEntry — POST manual record
+     * POST /api?module=scouting&action=addManualEntry
+     * ───────────────────────────────────────────────────────────────────── */
     public function addManualEntry(): void
     {
         Auth::requireRole('allenatore');
@@ -57,52 +96,177 @@ class ScoutingController
         Response::success(['success' => true, 'id' => $this->db->lastInsertId()]);
     }
 
-    public function webhookCognito(): void
+    /* ─────────────────────────────────────────────────────────────────────
+     * syncFromCognito — Manual sync trigger via API
+     * POST /api?module=scouting&action=syncFromCognito
+     * ───────────────────────────────────────────────────────────────────── */
+    public function syncFromCognito(): void
     {
-        // Public endpoint for incoming webhooks
-        $rawPayload = file_get_contents('php://input');
-        $data = json_decode($rawPayload, true);
+        Auth::requireRole('allenatore');
 
-        if (!$data) {
-            http_response_code(400);
-            exit;
+        $result = self::_doSync();
+
+        if (!$result['success']) {
+            Response::error($result['error'], 502);
         }
 
-        // Determine source based on form name or payload structure. 
-        // We will fallback to a generic 'cognito' if not identifiable.
-        $source = 'cognito_fusion';
-        if (isset($data['Form']['Name']) && stripos($data['Form']['Name'], 'network') !== false) {
-            $source = 'cognito_network';
-        }
-
-        // Map Cognito fields based on standard names or likely names
-        $nome = $data['Nome'] ?? $data['Name']['First'] ?? 'Sconosciuto';
-        $cognome = $data['Cognome'] ?? $data['Name']['Last'] ?? 'Sconosciuto';
-        $societa = $data['Societa'] ?? $data['SocietaDiAppartenenza'] ?? null;
-        $anno = $data['AnnoDiNascita'] ?? $data['Anno'] ?? null;
-        $note = $data['Note'] ?? null;
-        $rilevatore = $data['Rilevatore'] ?? 'Cognito Form';
-        $dataRil = date('Y-m-d');
-
-        $stmt = $this->db->prepare("
-            INSERT INTO scouting_athletes (nome, cognome, societa_appartenenza, anno_nascita, note, rilevatore, data_rilevazione, source)
-            VALUES (:nome, :cognome, :societa, :anno, :note, :rilevatore, :data_ril, :source)
-        ");
-
-        $stmt->execute([
-            ':nome' => $nome,
-            ':cognome' => $cognome,
-            ':societa' => $societa,
-            ':anno' => $anno ? (int)$anno : null,
-            ':note' => $note,
-            ':rilevatore' => $rilevatore,
-            ':data_ril' => $dataRil,
-            ':source' => $source
+        Response::success([
+            'fusion_upserted' => $result['fusion_upserted'],
+            'network_upserted' => $result['network_upserted'],
+            'total' => $result['fusion_upserted'] + $result['network_upserted'],
+            'synced_at' => date('Y-m-d H:i:s'),
         ]);
+    }
 
-        // Cognito expects a 200 OK response
-        http_response_code(200);
-        echo json_encode(['status' => 'received']);
-        exit;
+    /* ─────────────────────────────────────────────────────────────────────
+     * _doSync — shared sync logic (used by API + cron)
+     * ───────────────────────────────────────────────────────────────────── */
+    public static function _doSync(): array
+    {
+        $apiKey = getenv('COGNITO_API_KEY');
+        if (empty($apiKey)) {
+            return ['success' => false, 'error' => 'COGNITO_API_KEY non configurata.'];
+        }
+
+        $fusionFormId = self::fusionFormId();
+        $networkFormId = self::networkFormId();
+
+        if ($fusionFormId === 0 && $networkFormId === 0) {
+            return ['success' => false, 'error' => 'Nessun Form ID configurato. Impostare SCOUTING_FUSION_FORM_ID e/o SCOUTING_NETWORK_FORM_ID in .env'];
+        }
+
+        $fusionUpserted = 0;
+        $networkUpserted = 0;
+        $errors = [];
+
+        // Sync Fusion form
+        if ($fusionFormId > 0) {
+            $result = self::_syncForm($apiKey, $fusionFormId, self::fusionViewId(), 'cognito_fusion');
+            if ($result['success']) {
+                $fusionUpserted = $result['upserted'];
+            } else {
+                $errors[] = "Fusion: " . $result['error'];
+            }
+        }
+
+        // Sync Network form
+        if ($networkFormId > 0) {
+            $result = self::_syncForm($apiKey, $networkFormId, self::networkViewId(), 'cognito_network');
+            if ($result['success']) {
+                $networkUpserted = $result['upserted'];
+            } else {
+                $errors[] = "Network: " . $result['error'];
+            }
+        }
+
+        if (!empty($errors) && $fusionUpserted === 0 && $networkUpserted === 0) {
+            return ['success' => false, 'error' => implode(' | ', $errors)];
+        }
+
+        return [
+            'success' => true,
+            'fusion_upserted' => $fusionUpserted,
+            'network_upserted' => $networkUpserted,
+            'warnings' => $errors,
+        ];
+    }
+
+    /* ─────────────────────────────────────────────────────────────────────
+     * _syncForm — fetch entries from a single Cognito form and upsert
+     * ───────────────────────────────────────────────────────────────────── */
+    private static function _syncForm(string $apiKey, int $formId, int $viewId, string $source): array
+    {
+        $url = 'https://www.cognitoforms.com/api/odata/Forms(' . $formId . ')/Views(' . $viewId . ')/Entries';
+
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => [
+                'Authorization: Bearer ' . $apiKey,
+                'Accept: application/json',
+            ],
+            CURLOPT_TIMEOUT => 30,
+        ]);
+        $response = curl_exec($ch);
+        $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
+        curl_close($ch);
+
+        if ($response === false || !empty($curlError)) {
+            return ['success' => false, 'error' => 'Errore cURL Cognito: ' . $curlError];
+        }
+
+        if ($httpCode !== 200) {
+            error_log('[Scouting Sync] Cognito API HTTP ' . $httpCode . ' for form ' . $formId . ': ' . $response);
+            $errorMsg = 'Cognito API ha risposto HTTP ' . $httpCode;
+            if ($httpCode === 401) {
+                $errorMsg = 'Token Cognito scaduto o non valido (HTTP 401). '
+                    . 'Rinnova il token su cognitoforms.com → Account → API Keys '
+                    . 'e aggiorna COGNITO_API_KEY nel file .env.';
+            } elseif ($httpCode === 404) {
+                $errorMsg = 'Form ' . $formId . ' / View ' . $viewId . ' non trovato (HTTP 404).';
+            }
+            return ['success' => false, 'error' => $errorMsg];
+        }
+
+        $decoded = json_decode((string)$response, true);
+        $entries = $decoded['value'] ?? ($decoded ?: []);
+
+        if (!is_array($entries) || empty($entries)) {
+            return ['success' => true, 'upserted' => 0]; // No entries is not an error
+        }
+
+        $pdo = Database::getInstance();
+
+        $sql = "
+            INSERT INTO scouting_athletes
+                (cognito_id, cognito_form, nome, cognome, societa_appartenenza, anno_nascita,
+                 note, rilevatore, data_rilevazione, source, synced_at)
+            VALUES
+                (:cog_id, :cog_form, :nome, :cognome, :societa, :anno,
+                 :note, :rilevatore, :data_ril, :source, NOW())
+            ON DUPLICATE KEY UPDATE
+                nome                  = VALUES(nome),
+                cognome               = VALUES(cognome),
+                societa_appartenenza  = VALUES(societa_appartenenza),
+                anno_nascita          = VALUES(anno_nascita),
+                note                  = VALUES(note),
+                rilevatore            = VALUES(rilevatore),
+                data_rilevazione      = VALUES(data_rilevazione),
+                synced_at             = NOW()
+        ";
+
+        $stmt = $pdo->prepare($sql);
+        $upserted = 0;
+
+        foreach ($entries as $e) {
+            // Map Cognito fields — support multiple naming conventions
+            $nome = $e['Nome'] ?? $e['Name']['First'] ?? $e['nome'] ?? 'Sconosciuto';
+            $cognome = $e['Cognome'] ?? $e['Name']['Last'] ?? $e['cognome'] ?? 'Sconosciuto';
+            $societa = $e['Societa'] ?? $e['SocietaDiAppartenenza'] ?? $e['societa_appartenenza'] ?? null;
+            $anno = $e['AnnoDiNascita'] ?? $e['Anno'] ?? $e['anno_nascita'] ?? null;
+            $note = $e['Note'] ?? $e['note'] ?? null;
+            $rilevatore = $e['Rilevatore'] ?? $e['rilevatore'] ?? 'Cognito Form';
+
+            // Date: use the entry submission date from Cognito
+            $rawDate = $e['Entry_DateSubmitted'] ?? $e['Entry.DateSubmitted'] ?? null;
+            $dataRil = !empty($rawDate) ? date('Y-m-d', (int)strtotime((string)$rawDate)) : date('Y-m-d');
+
+            $stmt->execute([
+                ':cog_id' => (int)$e['Id'],
+                ':cog_form' => $source,
+                ':nome' => (string)$nome,
+                ':cognome' => (string)$cognome,
+                ':societa' => $societa,
+                ':anno' => $anno ? (int)$anno : null,
+                ':note' => $note,
+                ':rilevatore' => (string)$rilevatore,
+                ':data_ril' => $dataRil,
+                ':source' => $source,
+            ]);
+            $upserted++;
+        }
+
+        return ['success' => true, 'upserted' => $upserted];
     }
 }
