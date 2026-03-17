@@ -253,9 +253,15 @@ const Foresteria = () => {
                         <div className="mt-4 h-[2px] w-32 bg-gradient-to-r from-transparent via-brand-500 to-transparent mx-auto"></div>
                     </div>
 
-                    <div className="w-full relative z-10 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-0 border-y border-zinc-800 bg-black">
+                    <div className={`w-full relative z-10 grid gap-0 border-y border-zinc-800 bg-black ${
+                        photos.length === 1 ? 'grid-cols-1' :
+                        photos.length === 2 ? 'grid-cols-1 md:grid-cols-2' :
+                        photos.length === 3 ? 'grid-cols-1 md:grid-cols-3' :
+                        photos.length === 4 ? 'grid-cols-2 lg:grid-cols-4' :
+                        'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6'
+                    }`}>
                         {photos.map(photo => (
-                            <div key={photo.id} className="group relative aspect-square overflow-hidden bg-zinc-900 border-[0.5px] border-zinc-800/50 hover:border-brand-500/50 transition-colors cursor-pointer">
+                            <div key={photo.id} className="group relative aspect-[4/3] md:aspect-square lg:aspect-[4/3] overflow-hidden bg-zinc-900 border-[0.5px] border-zinc-800/50 hover:border-brand-500/50 transition-colors cursor-pointer">
                                 <img 
                                     src={getImgUrl(photo.file_path)} 
                                     alt={photo.title || "Foresteria"} 
