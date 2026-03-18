@@ -759,6 +759,32 @@ class SocietaController
         Response::success(['message' => 'Titolo eliminato']);
     }
 
+    // ─── PUBLIC ENDPOINTS FOR WEBSITE ─────────────────────────────────────────
+
+    /** GET  ?module=societa&action=getPublicProfile — profilo pubblico per il sito web */
+    public function getPublicProfile(): void
+    {
+        // NO Auth required. Used by the external website SPA.
+        $db = \FusionERP\Shared\Database::getInstance();
+
+        $stmt = $db->query('SELECT mission, vision, `values`, founded_year, logo_path, primary_color, secondary_color FROM societa_profile LIMIT 1');
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        if (!$row) {
+            $row = [
+                'mission'         => null,
+                'vision'          => null,
+                'values'          => null,
+                'founded_year'    => null,
+                'logo_path'       => null,
+                'primary_color'   => null,
+                'secondary_color' => null,
+            ];
+        }
+
+        Response::success($row);
+    }
+
     // ─── FORESTERIA ────────────────────────────────────────────────────────────
 
     /** GET  ?module=societa&action=getPublicForesteria — info e media pubblici per il sito web */

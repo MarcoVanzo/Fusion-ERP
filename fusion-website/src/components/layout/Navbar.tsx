@@ -23,6 +23,7 @@ const Navbar = () => {
         { name: 'STORE', path: '/shop' },
         { name: 'MATCH CENTER', path: '/results', badge: 'LIVE' },
         { name: 'OUTSEASON', path: '/outseason' },
+        { name: 'NETWORK', path: '/network' },
     ];
 
     return (
@@ -33,7 +34,7 @@ const Navbar = () => {
                 }`}
         >
             <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex justify-between items-center h-24">
+                <div className="flex justify-between items-center h-16 lg:h-24">
 
                     {/* Logo */}
                     <Link to="/" className="flex items-center gap-4 group">
@@ -71,13 +72,13 @@ const Navbar = () => {
                         })}
 
                         <div className="flex gap-5 ml-4 border-l border-zinc-800 pl-6 items-center">
-                            <a href="https://instagram.com/fusionteamvolley" target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:text-brand-500 transition-colors">
+                            <a href="https://instagram.com/fusionteamvolley" target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:text-brand-500 transition-colors" aria-label="Instagram">
                                 <Instagram size={20} />
                             </a>
-                            <a href="https://facebook.com/FusionTeamVolley" target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:text-brand-500 transition-colors">
+                            <a href="https://facebook.com/FusionTeamVolley" target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:text-brand-500 transition-colors" aria-label="Facebook">
                                 <Facebook size={20} />
                             </a>
-                            <a href="https://youtube.com/@fusionteamvolley9176" target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:text-brand-500 transition-colors">
+                            <a href="https://youtube.com/@fusionteamvolley9176" target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:text-brand-500 transition-colors" aria-label="YouTube">
                                 <Youtube size={24} />
                             </a>
                         </div>
@@ -88,6 +89,8 @@ const Navbar = () => {
                         <button
                             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                             className="text-white hover:text-brand-500 transition-colors p-2"
+                            aria-expanded={mobileMenuOpen}
+                            aria-label="Apri menu di navigazione"
                         >
                             {mobileMenuOpen ? <X size={32} /> : <Menu size={32} />}
                         </button>

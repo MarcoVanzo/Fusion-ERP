@@ -185,9 +185,9 @@ const Results = () => {
 
                                             <div className="hidden md:flex min-w-[100px] justify-end">
                                                 {fusionWon ? (
-                                                    <div className="font-subheading text-brand-500 tracking-widest text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity">WIN</div>
+                                                    <div className="font-subheading text-brand-500 tracking-widest text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity">VITTORIA</div>
                                                 ) : (
-                                                    <div className="font-subheading text-zinc-600 tracking-widest text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity">LOSS</div>
+                                                    <div className="font-subheading text-zinc-600 tracking-widest text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity">SCONFITTA</div>
                                                 )}
                                             </div>
                                         </div>

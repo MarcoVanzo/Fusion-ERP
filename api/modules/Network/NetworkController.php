@@ -607,4 +607,12 @@ class NetworkController
         Audit::log('DELETE', 'network_activities', $id, $before, null);
         Response::success(['message' => 'Attività eliminata']);
     }
+
+    // ─── PUBLIC ENDPOINTS FOR WEBSITE ──────────────────────────────────────────────
+
+    public function getPublicCollaborations(): void
+    {
+        // Nessun controllo Auth, endpoint pubblico
+        Response::success($this->repo->listCollaborations());
+    }
 }

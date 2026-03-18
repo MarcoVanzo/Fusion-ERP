@@ -126,15 +126,28 @@ const Home = () => {
                         <span className="text-brand-500 drop-shadow-[0_0_25px_rgba(255,20,147,0.8)]">VOLLEY</span>
                     </h1>
 
-                    <p className="font-subheading text-lg sm:text-2xl md:text-3xl text-zinc-200 mt-2 mb-16 max-w-3xl leading-relaxed drop-shadow-md">
+                    <p className="font-subheading text-lg sm:text-2xl md:text-3xl text-zinc-200 mt-2 mb-6 max-w-3xl leading-relaxed drop-shadow-md">
                         800 ATLETE. UN UNICO GRANDE SOGNO. IL VOLLEY COME NON L'HAI MAI VISTO.
                     </p>
 
+                    {/* Trust Signals */}
+                    <div className="flex flex-wrap items-center justify-center gap-3 md:gap-4 mb-10">
+                        <div className="flex items-center gap-2 px-4 py-2 bg-zinc-900/60 backdrop-blur border border-zinc-800 rounded-full text-[10px] sm:text-xs font-bold text-zinc-300 uppercase tracking-widest">
+                            🏐 7° Settore Giovanile in Italia
+                        </div>
+                        <div className="flex items-center gap-2 px-4 py-2 bg-zinc-900/60 backdrop-blur border border-zinc-800 rounded-full text-[10px] sm:text-xs font-bold text-zinc-300 uppercase tracking-widest">
+                            🏆 Riconoscimento FIPAV
+                        </div>
+                        <div className="flex items-center gap-2 px-4 py-2 bg-zinc-900/60 backdrop-blur border border-zinc-800 rounded-full text-[10px] sm:text-xs font-bold text-zinc-300 uppercase tracking-widest">
+                            👥 800+ Atlete
+                        </div>
+                    </div>
+
                     <div className="flex flex-col sm:flex-row gap-6 justify-center w-full max-w-lg mb-16 relative z-30">
-                        <Link to="/teams" className="flex-1 py-5 bg-brand-500 text-zinc-950 font-heading text-xl hover:bg-white transition-colors flex items-center justify-center gap-2 clip-diagonal">
+                        <Link to="/teams" className="flex-1 py-5 bg-brand-500 text-zinc-950 font-heading text-xl hover:bg-white active:scale-95 transition-all flex items-center justify-center gap-2 clip-diagonal focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 outline-none">
                             I ROSTER <ChevronRight size={24} />
                         </Link>
-                        <Link to="/shop" className="flex-1 py-5 bg-zinc-950/50 backdrop-blur-md border-2 border-brand-500 text-brand-500 font-heading text-xl hover:bg-brand-500 hover:text-white transition-colors flex items-center justify-center gap-2 clip-diagonal">
+                        <Link to="/shop" className="flex-1 py-5 bg-zinc-950/50 backdrop-blur-md border-2 border-brand-500 text-brand-500 font-heading text-xl hover:bg-brand-500 hover:text-white active:scale-95 transition-all flex items-center justify-center gap-2 clip-diagonal focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 outline-none">
                             LO STORE <ChevronRight size={24} />
                         </Link>
                     </div>
@@ -145,7 +158,7 @@ const Home = () => {
                             <button
                                 key={idx}
                                 onClick={() => setCurrentSlide(idx)}
-                                className={`w-12 h-1.5 transition-all duration-300 clip-diagonal ${currentSlide === idx ? 'bg-brand-500 shadow-[0_0_10px_rgba(217,70,239,0.8)]' : 'bg-white/30 hover:bg-white/60'}`}
+                                className={`w-12 h-1.5 transition-all duration-300 clip-diagonal outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 ${currentSlide === idx ? 'bg-brand-500 shadow-[0_0_10px_rgba(217,70,239,0.8)]' : 'bg-white/30 hover:bg-white/60'}`}
                                 aria-label={`Vai alla slide ${idx + 1}`}
                             />
                         ))}
@@ -190,7 +203,7 @@ const Home = () => {
                                         <div key={match.id} className="group relative bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/60 hover:border-brand-500/60 rounded-2xl overflow-hidden transition-all duration-500 hover:shadow-[0_0_40px_rgba(217,70,239,0.15)]">
                                             {/* Top bar: FINAL SCORE */}
                                             <div className="bg-zinc-800/60 px-4 py-2 text-center">
-                                                <span className="font-heading text-[11px] tracking-[0.3em] text-zinc-400 uppercase">Final Score</span>
+                                                <span className="font-heading text-[11px] tracking-[0.3em] text-zinc-400 uppercase">Risultato Finale</span>
                                             </div>
 
                                             {/* Score area */}
@@ -249,7 +262,7 @@ const Home = () => {
                             <div>
                                 <p className="text-brand-500/70 font-heading text-sm tracking-[0.3em] uppercase mb-1">Dal Campo</p>
                                 <h2 className="font-heading text-4xl md:text-5xl text-white">
-                                    LATEST <span className="text-brand-500">NEWS</span>
+                                    ULTIME <span className="text-brand-500">NEWS</span>
                                 </h2>
                                 <div className="mt-3 h-px w-24 bg-gradient-to-r from-brand-500 to-transparent"></div>
                             </div>

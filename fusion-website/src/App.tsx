@@ -11,13 +11,14 @@ import Shop from './pages/Shop';
 import Results from './pages/Results';
 import Outseason from './pages/Outseason';
 import Foresteria from './pages/Foresteria';
+import Network from './pages/Network';
 
 function App() {
   return (
     <BrowserRouter basename="/demo">
       <div className="flex flex-col min-h-screen">
         <Navbar />
-        <main className="flex-grow pt-[96px] bg-zinc-950"> {/* Adjusted padding for 24 h-24 navbar */}
+        <main className="flex-grow pt-16 lg:pt-24 bg-zinc-950">
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/club" element={<Club />} />
@@ -29,6 +30,7 @@ function App() {
             <Route path="/results" element={<Results />} />
             <Route path="/outseason" element={<Outseason />} />
             <Route path="/foresteria" element={<Foresteria />} />
+            <Route path="/network" element={<Network />} />
           </Routes>
         </main>
         <Footer />
