@@ -80,7 +80,7 @@ class Database
                 return new PDO($dsn, $user, $pass, $opts);
             } catch (PDOException $e) {
                 $lastException = $e;
-                error_log("[DB] Connection attempt {$attempt}/" . self::$maxRetries . " failed: " . $e->getMessage());
+                error_log("[DB] Connection attempt " . (string)$attempt . "/" . (string)self::$maxRetries . " failed: " . $e->getMessage());
 
                 if ($attempt < self::$maxRetries) {
                     usleep((int)(self::$retryDelayMs * 1000)); // ms → μs
