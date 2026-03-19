@@ -75,9 +75,15 @@ const Network = () => {
     return (
         <div className="min-h-screen bg-zinc-950 pb-20">
             {/* Hero Section */}
-            <div className="relative pt-24 pb-20 bg-zinc-900 border-b-2 border-brand-500/20 overflow-hidden">
-                <div className="absolute inset-0 bg-[url('/demo/assets/pattern-dots.svg')] opacity-[0.03]" />
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+            <div className="relative pt-32 pb-24 border-b-2 border-brand-500/20 overflow-hidden">
+                <div
+                    className="absolute inset-0 z-0 bg-cover bg-center"
+                    style={{ backgroundImage: "url('/demo/assets/hero-3.jpg')", filter: "brightness(0.5)" }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/80 to-zinc-950/20 z-10"></div>
+                <div className="absolute inset-0 bg-[url('/demo/assets/pattern-dots.svg')] opacity-[0.05] z-10" />
+                
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 text-center">
                     <motion.div
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
@@ -125,19 +131,20 @@ const Network = () => {
                             <motion.div
                                 key={collab.id}
                                 variants={itemVariants}
-                                className="group bg-zinc-900/80 backdrop-blur-sm border border-zinc-800 rounded-2xl overflow-hidden hover:border-brand-500/50 transition-all duration-300 hover:shadow-[0_0_30px_rgba(217,70,239,0.15)] flex flex-col"
+                                className="group bg-zinc-900 rounded-3xl overflow-hidden shadow-2xl shadow-black/50 hover:shadow-[0_20px_40px_rgba(217,70,239,0.15)] transition-all duration-500 flex flex-col transform hover:-translate-y-2 relative border border-zinc-800 hover:border-brand-500/50"
                             >
-                                {/* Header / Logo */}
-                                <div className="p-8 pb-6 flex items-center justify-center bg-zinc-900 border-b border-zinc-800/50 h-48">
+                                {/* Header / Logo - Intentional White Backdrop for JPEGs/PNGs to look native */}
+                                <div className="p-8 flex items-center justify-center bg-zinc-100 hover:bg-white transition-colors duration-300 h-56 relative rounded-t-3xl">
+                                    <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/10 to-transparent"></div>
                                     {collab.logo_path ? (
                                         <img
-                                            src={`https://www.fusionteamvolley.it/ERP/${collab.logo_path}`}
+                                            src={collab.logo_path.startsWith('http') ? collab.logo_path : `https://www.fusionteamvolley.it/ERP/${collab.logo_path}`}
                                             alt={`Logo ${collab.partner_name}`}
-                                            className="max-h-full max-w-full object-contain filter drop-shadow-md group-hover:scale-105 transition-transform duration-500"
+                                            className="max-h-full max-w-[80%] object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-500 z-10"
                                         />
                                     ) : (
-                                        <div className="w-24 h-24 rounded-full bg-zinc-800 flex items-center justify-center group-hover:bg-brand-500/20 transition-colors duration-300 ring-2 ring-zinc-700 group-hover:ring-brand-500/50">
-                                            <span className="text-3xl font-heading text-zinc-500 group-hover:text-brand-400 transition-colors">
+                                        <div className="w-24 h-24 rounded-full bg-zinc-200 flex items-center justify-center group-hover:bg-brand-500/20 transition-colors duration-300 ring-4 ring-white shadow-inner z-10">
+                                            <span className="text-3xl font-heading text-zinc-500 group-hover:text-brand-600 transition-colors">
                                                 {collab.partner_name.substring(0, 2).toUpperCase()}
                                             </span>
                                         </div>

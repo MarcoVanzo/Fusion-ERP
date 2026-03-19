@@ -702,7 +702,11 @@ class SocietaController
             ':note'             => $body['note'] ?? null,
         ];
 
-        $this->repo->createTitolo($data);
+        try {
+            $this->repo->createTitolo($data);
+        } catch (\Exception $e) {
+            Response::error('PHP_ERROR: ' . $e->getMessage(), 500);
+        }
         Audit::log('INSERT', 'societa_titoli', $id, null, $body);
         Response::success(['id' => $id], 201);
     }

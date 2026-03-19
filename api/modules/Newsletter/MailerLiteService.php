@@ -75,6 +75,25 @@ class MailerLiteService
         return ['total' => 0, 'active' => 0, 'unsubscribed' => 0, 'bounced' => 0, 'unconfirmed' => 0];
     }
 
+    // ─── CAMPAIGNS ────────────────────────────────────────────────────────────
+
+    /**
+     * Lists recent sent campaigns.
+     * @param int $limit Items to return
+     */
+    public function listCampaigns(int $limit = 10): array
+    {
+        if (!$this->configured) return [];
+
+        try {
+            $response = $this->client->campaigns->get(['filter' => ['status' => 'sent'], 'limit' => $limit]);
+            return $response['body']['data'] ?? [];
+        } catch (\Throwable $e) {
+            error_log('[MailerLite] listCampaigns error: ' . $e->getMessage());
+            return [];
+        }
+    }
+
     // ─── SUBSCRIBERS ─────────────────────────────────────────────────────────
 
     /**

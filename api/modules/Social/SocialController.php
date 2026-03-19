@@ -73,7 +73,7 @@ class SocialController
     {
         $user = Auth::requireWrite('social');
 
-        $appId = getenv('META_APP_ID');
+        $appId = $_ENV['META_APP_ID'] ?? $_SERVER['META_APP_ID'] ?? getenv('META_APP_ID');
         if (empty($appId) || $appId === 'YOUR_META_APP_ID') {
             Response::error('Meta App non configurata. Aggiungere META_APP_ID e META_APP_SECRET nel file .env', 500);
         }
@@ -96,7 +96,7 @@ class SocialController
      */
     public function callback(): void
     {
-        $returnUrl = getenv('APP_URL') ?: 'https://www.fusionteamvolley.it/ERP';
+        $returnUrl = $_ENV['APP_URL'] ?? $_SERVER['APP_URL'] ?? getenv('APP_URL') ?: 'https://www.fusionteamvolley.it/ERP';
 
         $code = filter_input(INPUT_GET, 'code', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
         $error = filter_input(INPUT_GET, 'error', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
@@ -139,7 +139,7 @@ class SocialController
             exit;
         }
 
-        $returnUrl = $_SESSION['meta_oauth_return'] ?? (getenv('APP_URL') ?: 'https://www.fusionteamvolley.it/ERP');
+        $returnUrl = $_SESSION['meta_oauth_return'] ?? ($_ENV['APP_URL'] ?? $_SERVER['APP_URL'] ?? getenv('APP_URL') ?: 'https://www.fusionteamvolley.it/ERP');
         unset($_SESSION['meta_oauth_return']);
 
         if ($error || empty($code)) {

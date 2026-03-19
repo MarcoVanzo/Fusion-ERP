@@ -80,7 +80,7 @@ class Database
                 return new PDO($dsn, $user, $pass, $opts);
             } catch (PDOException $e) {
                 $lastException = $e;
-                error_log("[DB] Connection attempt {$attempt}/" . self::$maxRetries . " failed: " . $e->getMessage());
+                error_log("[DB] Connection attempt " . (string)$attempt . "/" . (string)self::$maxRetries . " failed: " . $e->getMessage());
 
                 if ($attempt < self::$maxRetries) {
                     usleep((int)(self::$retryDelayMs * 1000)); // ms → μs
@@ -106,7 +106,10 @@ class Database
             return false;
         }
         try {
-            self::$instance->query('SELECT 1');
+            $stmt = self::$instance->query('SELECT 1');
+            if ($stmt) {
+                $stmt->closeCursor();
+            }
             return true;
         } catch (\Throwable) {
             return false;
@@ -117,6 +120,14 @@ class Database
      * Force a reconnection on the next getInstance() call.
      */
     public static function reconnect(): void
+    {
+        self::$instance = null;
+    }
+
+    /**
+     * Explicitly close the database connection.
+     */
+    public static function disconnect(): void
     {
         self::$instance = null;
     }

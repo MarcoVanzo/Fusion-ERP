@@ -38,6 +38,8 @@ set_exception_handler(function(\Throwable $e) {
     http_response_code(500);
     header('Content-Type: application/json; charset=UTF-8');
     
+    file_put_contents('/tmp/php_crash.log', date('Y-m-d H:i:s') . ' EXCEPTION: ' . $e->getMessage() . ' at ' . $e->getFile() . ':' . $e->getLine() . PHP_EOL, FILE_APPEND);
+
     $debug = getenv('APP_DEBUG') === 'true' || ($_ENV['APP_DEBUG'] ?? '') === 'true';
     $clientMessage = $debug ? $errMsg : 'Errore interno del server.';
     echo json_encode(['success' => false, 'error' => $clientMessage]);
@@ -121,7 +123,13 @@ catch (\Throwable $e) {
         ? 'PHP_ERROR: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine()
         : 'Errore interno del server. Controlla i log per maggiori dettagli.';
 
+    file_put_contents('/tmp/php_crash.log', date('Y-m-d H:i:s') . ' ERROR: ' . $e->getMessage() . ' at ' . $e->getFile() . ':' . $e->getLine() . PHP_EOL, FILE_APPEND);
+
     Response::error($clientMessage, 500);
+} finally {
+    if (class_exists('FusionERP\\Shared\\Database')) {
+        \FusionERP\Shared\Database::disconnect();
+    }
 }
 
 /**

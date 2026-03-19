@@ -1712,6 +1712,13 @@ class ResultsController
         $err = '';
         $htmlM = $this->_fetch($url, $err);
 
+        if (empty($htmlM)) {
+            return ['success' => false, 'error' => 'Errore di connessione al portale federale (WAF/Timeout): ' . $err];
+        }
+        if (is_string($htmlM) && (str_contains($htmlM, 'Cloudflare') || str_contains($htmlM, 'Just a moment...'))) {
+            return ['success' => false, 'error' => 'Il portale ha bloccato la richiesta (Cloudflare CAPTCHA). Riprova più tardi.'];
+        }
+
         if ($htmlM) {
             if (str_contains($url, 'fipavveneto.net')) {
                 $matches = $this->_parseMatchesFipavVeneto($htmlM);
@@ -1726,6 +1733,20 @@ class ResultsController
         }
         else {
             $matches = [];
+        }
+
+        // Prevent data loss: if we parsed 0 matches, but we already have matches in the DB, 
+        // it almost certainly means the layout changed or it's a soft-block, so we abort instead of wiping data.
+        if (empty($matches)) {
+            $checkStmt = $pdo->prepare("SELECT COUNT(*) FROM federation_matches WHERE championship_id = :cid");
+            $checkStmt->execute([':cid' => $id]);
+            $existingCount = (int)$checkStmt->fetchColumn();
+            if ($existingCount > 0) {
+                return [
+                    'success' => false, 
+                    'error' => 'Il portale non ha restituito partite (possibile blocco o cambio layout). Le ' . ((string) $existingCount) . ' partite esistenti sono state mantenute per sicurezza.'
+                ];
+            }
         }
 
         // ── Standings ─────────────────────────────────────────────────────────
