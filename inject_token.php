@@ -1,23 +1,13 @@
 <?php
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
-header('Cache-Control: post-check=0, pre-check=0', false);
-header('Pragma: no-cache');
-header('Content-Type: application/json; charset=UTF-8');
-
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
-require 'api/Shared/Database.php';
-require 'vendor/autoload.php';
 
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
-$dotenv->safeLoad();
-
-$appId = $_ENV['META_APP_ID'] ?? $_SERVER['META_APP_ID'] ?? getenv('META_APP_ID');
-$appSecret = $_ENV['META_APP_SECRET'] ?? $_SERVER['META_APP_SECRET'] ?? getenv('META_APP_SECRET');
-
+$appId = '893727443280549';
+$appSecret = 'f16a98da08621d8c24c83fa787bba0b7';
 $shortLivedToken = 'EAAMs1yLIYqUBQ8Ap9yrbwTjbnAGQp7P2uTrzdgjPTA4ZAdsG9DfifqZC93wXZABNyNstbSw8mtwXp5JiYaBRD7ZBeuTtWaOLj5O7T9KNXH2qDcme7HsQtBkB8Ff2PU7MYCPSGqDrL5buKghR42i0N2306QM1Q2LK0Vl3i8DZAjZA90absNZCyf3foIy5W9DZAGIpZChRd5ge9TOnBp0DIHkL2X3TljJw8kkocHqyOww4yBkd6QodYO3IZAC9QZD';
 
-// 1. Debug Token to see if it's correct
+// 1. Debug
 $debugUrl = "https://graph.facebook.com/debug_token?" . http_build_query([
     'input_token' => $shortLivedToken,
     'access_token' => "{$appId}|{$appSecret}"
@@ -34,7 +24,7 @@ if (empty($debugData['data']['is_valid'])) {
     exit;
 }
 
-// 2. Exchange for Long Lived Token
+// 2. Exchange
 $exchangeUrl = "https://graph.facebook.com/v21.0/oauth/access_token?" . http_build_query([
     'grant_type' => 'fb_exchange_token',
     'client_id' => $appId,
@@ -50,8 +40,11 @@ curl_close($ch);
 $exchangeData = json_decode($resEx, true);
 $longLivedToken = $exchangeData['access_token'] ?? $shortLivedToken;
 
-// 3. Inject into Database
-$db = \FusionERP\Shared\Database::getInstance();
+// 3. Inject
+$dbPass = trim('u3z4t994$@psAPr', '"');
+$db = new \PDO("mysql:host=31.11.39.161;dbname=Sql1804377_2;charset=utf8", "Sql1804377", $dbPass);
+$db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
 $stmt = $db->prepare(
     'INSERT INTO meta_tokens (user_id, page_id, ig_account_id, page_name, ig_username, access_token, token_type, expires_at, created_at, updated_at) 
      VALUES (:user_id, :page_id, :ig_account_id, :page_name, :ig_username, :access_token, :token_type, :expires_at, NOW(), NOW())
@@ -73,7 +66,6 @@ $stmt->execute([
 
 echo json_encode([
     'success' => true,
-    'debug' => $debugData,
-    'exchange' => $exchangeData,
-    'token' => substr($longLivedToken, 0, 15) . '...'
+    'token' => substr($longLivedToken, 0, 15) . '...',
+    'debug' => $debugData['data']['scopes'] ?? [],
 ]);
