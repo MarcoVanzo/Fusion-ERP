@@ -1,16 +1,16 @@
 <?php
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
-require 'api/Shared/Database.php';
-require 'api/Modules/Social/SocialRepository.php';
-require 'vendor/autoload.php';
+require_once 'api/Shared/Database.php';
+require_once 'api/Modules/Social/SocialRepository.php';
+require_once 'vendor/autoload.php';
 
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->safeLoad();
 
 $repo = new \FusionERP\Modules\Social\SocialRepository();
 $days = 28;
-$token = $repo->getToken('USR_37ecc843');
+$token = $repo->getToken('USR_37ecc843'); // Live prod DB should return their token!
 
 if (!$token || !$repo->isTokenValid($token)) {
     echo json_encode(['error' => 'No token', 'mock' => $repo->getMockData($days)]);
