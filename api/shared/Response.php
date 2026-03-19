@@ -16,6 +16,9 @@ class Response
     public static function success(mixed $data = null, int $httpCode = 200): never
     {
         http_response_code($httpCode);
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        header('Cache-Control: post-check=0, pre-check=0', false);
+        header('Pragma: no-cache');
         header('Content-Type: application/json; charset=UTF-8');
         echo json_encode(['success' => true, 'data' => $data], JSON_UNESCAPED_UNICODE);
         exit;
@@ -32,6 +35,9 @@ class Response
             error_log("[API ERROR {$codeStr}] {$internalDetail}");
         }
         http_response_code($httpCode);
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        header('Cache-Control: post-check=0, pre-check=0', false);
+        header('Pragma: no-cache');
         header('Content-Type: application/json; charset=UTF-8');
         echo json_encode(['success' => false, 'error' => $message], JSON_UNESCAPED_UNICODE);
         exit;
