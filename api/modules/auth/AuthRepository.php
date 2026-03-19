@@ -32,6 +32,7 @@ class AuthRepository
         );
         $stmt->execute([':email' => $email]);
         $row = $stmt->fetch();
+        $stmt->closeCursor();
 
         if ($row) {
             // Decodifica JSON dei ruoli additivi se presente
@@ -52,7 +53,9 @@ class AuthRepository
         $stmt->bindValue(':ip', $ip, \PDO::PARAM_STR);
         $stmt->bindValue(':window', $windowSeconds, \PDO::PARAM_INT);
         $stmt->execute();
-        return (int)$stmt->fetchColumn();
+        $count = (int)$stmt->fetchColumn();
+        $stmt->closeCursor();
+        return $count;
     }
 
     public function logAttempt(string $ip, ?string $email, bool $success): void
@@ -87,7 +90,9 @@ class AuthRepository
              FROM users WHERE id = :id AND deleted_at IS NULL LIMIT 1'
         );
         $stmt->execute([':id' => $id]);
-        return $stmt->fetch() ?: null;
+        $row = $stmt->fetch() ?: null;
+        $stmt->closeCursor();
+        return $row;
     }
 
     public function listUsers(string $role = ''): array
@@ -244,7 +249,9 @@ class AuthRepository
              LIMIT 1'
         );
         $stmt->execute([':token' => $token]);
-        return $stmt->fetch() ?: null;
+        $row = $stmt->fetch() ?: null;
+        $stmt->closeCursor();
+        return $row;
     }
 
     public function clearPasswordResetToken(string $userId): void

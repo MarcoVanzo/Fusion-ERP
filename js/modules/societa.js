@@ -107,11 +107,11 @@
                         </tbody>
                     </table>
                 </div>
-            </div>`;document.getElementById("soc-add-titolo")?.addEventListener("click",()=>openTitoloModal(null),i());el.querySelectorAll("[data-edit-titolo]").forEach(btn=>btn.addEventListener("click",()=>openTitoloModal(titoli.find(r=>r.id===btn.dataset.editTitolo)),i()));el.querySelectorAll("[data-del-titolo]").forEach(btn=>btn.addEventListener("click",async()=>{try{await Store.api("deleteTitolo","societa",{id:btn.dataset.delTitolo});titoli=await Store.get("listTitoli","societa").catch(()=>titoli);UI.toast("Titolo eliminato","success");d()}catch(err){UI.toast("Errore: "+err.message,"error")}},i()))}function openTitoloModal(titolo){const isEdit=!!titolo;const modal=UI.modal({title:isEdit?"Modifica Titolo":"Nuovo Titolo",body:`
+            </div>`;document.getElementById("soc-add-titolo")?.addEventListener("click",()=>openTitoloModal(null),i());el.querySelectorAll("[data-edit-titolo]").forEach(btn=>btn.addEventListener("click",()=>openTitoloModal(titoli.find(r=>r.id===btn.dataset.editTitolo)),i()));el.querySelectorAll("[data-del-titolo]").forEach(btn=>btn.addEventListener("click",async()=>{try{await Store.api("deleteTitolo","societa",{id:btn.dataset.delTitolo});titoli=await Store.get("listTitoli","societa").catch(()=>titoli);UI.toast("Titolo eliminato","success");d()}catch(err){UI.toast("Errore: "+err.message,"error")}},i()))}function openTitoloModal(titolo){const isEdit=!!titolo;const cy=new Date().getFullYear();let sOpts='<option value="">Seleziona...</option>';for(let y=cy+1;y>=2015;y--){const s=y+'/'+(y+1);sOpts+=`<option value="${s}" ${titolo?.stagione===s?"selected":""}>${s}</option>`;}const modal=UI.modal({title:isEdit?"Modifica Titolo":"Nuovo Titolo",body:`
             <div class="form-grid">
                 <div class="form-group">
                     <label class="form-label" for="tt-stagione">Stagione *</label>
-                    <input id="tt-stagione" class="form-input" type="text" value="${Utils.escapeHtml(titolo?.stagione||"")}" placeholder="es. 2024/25">
+                    <select id="tt-stagione" class="form-select">${sOpts}</select>
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="tt-campionato">Campionato *</label>

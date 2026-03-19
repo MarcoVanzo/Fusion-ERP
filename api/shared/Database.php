@@ -106,7 +106,10 @@ class Database
             return false;
         }
         try {
-            self::$instance->query('SELECT 1');
+            $stmt = self::$instance->query('SELECT 1');
+            if ($stmt) {
+                $stmt->closeCursor();
+            }
             return true;
         } catch (\Throwable) {
             return false;
@@ -117,6 +120,14 @@ class Database
      * Force a reconnection on the next getInstance() call.
      */
     public static function reconnect(): void
+    {
+        self::$instance = null;
+    }
+
+    /**
+     * Explicitly close the database connection.
+     */
+    public static function disconnect(): void
     {
         self::$instance = null;
     }

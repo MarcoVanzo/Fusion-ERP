@@ -122,6 +122,10 @@ catch (\Throwable $e) {
         : 'Errore interno del server. Controlla i log per maggiori dettagli.';
 
     Response::error($clientMessage, 500);
+} finally {
+    if (class_exists('FusionERP\\Shared\\Database')) {
+        \FusionERP\Shared\Database::disconnect();
+    }
 }
 
 /**
