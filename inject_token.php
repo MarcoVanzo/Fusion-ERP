@@ -15,7 +15,7 @@ $dotenv->safeLoad();
 $appId = $_ENV['META_APP_ID'] ?? $_SERVER['META_APP_ID'] ?? getenv('META_APP_ID');
 $appSecret = $_ENV['META_APP_SECRET'] ?? $_SERVER['META_APP_SECRET'] ?? getenv('META_APP_SECRET');
 
-$shortLivedToken = 'EAAMs1yLIYqUBQ8Pj4NzLGkz38KROpblZAuCzwZA6yZBor3Ws4K8DDNV37bXv4Yfg66XIqnL1JDeHgU1jdg0wOPLbese7yZB02CArPOg6Mo2ZBtvcf0VAvNd0stFtv4N2gTZAhC4MuXZAWJPMn6yCbPRj6YyVCCdQxAxJQOgZAEDaUfglKnsBgZCIj3c6aPVWHOFsG4KNGA6GENUCdYpob3riZAV4NLuVeWZAz0DNCOH5IDXXvFCuQlVm4ZCwgpSQujwZD';
+$shortLivedToken = 'EAAMs1yLIYqUBQ8Ap9yrbwTjbnAGQp7P2uTrzdgjPTA4ZAdsG9DfifqZC93wXZABNyNstbSw8mtwXp5JiYaBRD7ZBeuTtWaOLj5O7T9KNXH2qDcme7HsQtBkB8Ff2PU7MYCPSGqDrL5buKghR42i0N2306QM1Q2LK0Vl3i8DZAjZA90absNZCyf3foIy5W9DZAGIpZChRd5ge9TOnBp0DIHkL2X3TljJw8kkocHqyOww4yBkd6QodYO3IZAC9QZD';
 
 // 1. Debug Token to see if it's correct
 $debugUrl = "https://graph.facebook.com/debug_token?" . http_build_query([
