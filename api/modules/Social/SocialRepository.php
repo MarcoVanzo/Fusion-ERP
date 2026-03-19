@@ -107,9 +107,9 @@ class SocialRepository
      */
     public function getOAuthUrl(string $stateToken): string
     {
-        $appId = getenv('META_APP_ID');
-        $redirectUri = getenv('META_REDIRECT_URI');
-        $configId = getenv('META_CONFIG_ID');
+        $appId = $_ENV['META_APP_ID'] ?? $_SERVER['META_APP_ID'] ?? getenv('META_APP_ID');
+        $redirectUri = $_ENV['META_REDIRECT_URI'] ?? $_SERVER['META_REDIRECT_URI'] ?? getenv('META_REDIRECT_URI');
+        $configId = $_ENV['META_CONFIG_ID'] ?? $_SERVER['META_CONFIG_ID'] ?? getenv('META_CONFIG_ID');
 
         $params = [
             'client_id' => $appId,
@@ -218,9 +218,9 @@ class SocialRepository
 
     public function exchangeCodeForToken(string $code): array
     {
-        $appId = getenv('META_APP_ID');
-        $appSecret = getenv('META_APP_SECRET');
-        $redirectUri = getenv('META_REDIRECT_URI');
+        $appId = $_ENV['META_APP_ID'] ?? $_SERVER['META_APP_ID'] ?? getenv('META_APP_ID');
+        $appSecret = $_ENV['META_APP_SECRET'] ?? $_SERVER['META_APP_SECRET'] ?? getenv('META_APP_SECRET');
+        $redirectUri = $_ENV['META_REDIRECT_URI'] ?? $_SERVER['META_REDIRECT_URI'] ?? getenv('META_REDIRECT_URI');
 
         // Step 1: Exchange code for short-lived user access token
         $url = self::GRAPH_BASE_URL . self::GRAPH_API_VERSION . '/oauth/access_token?' . http_build_query([
@@ -311,8 +311,8 @@ class SocialRepository
      */
     public function refreshToken(string $currentToken): ?array
     {
-        $appId = getenv('META_APP_ID');
-        $appSecret = getenv('META_APP_SECRET');
+        $appId = $_ENV['META_APP_ID'] ?? $_SERVER['META_APP_ID'] ?? getenv('META_APP_ID');
+        $appSecret = $_ENV['META_APP_SECRET'] ?? $_SERVER['META_APP_SECRET'] ?? getenv('META_APP_SECRET');
 
         $url = self::GRAPH_BASE_URL . self::GRAPH_API_VERSION . '/oauth/access_token?' . http_build_query([
             'grant_type' => 'fb_exchange_token',
@@ -473,18 +473,10 @@ class SocialRepository
         // Daily metrics
         $urlDaily = self::GRAPH_BASE_URL . self::GRAPH_API_VERSION . '/' . $pageId . '/insights?'
             . http_build_query([
-            'metric' => 'page_views_total,page_engaged_users,page_post_engagements',
+            'metric' => 'page_views_total,page_impressions_unique,page_post_engagements',
             'period' => 'day',
             'since' => $since,
             'until' => $until,
-            'access_token' => $accessToken,
-        ]);
-
-        // Lifetime metrics
-        $urlLifetime = self::GRAPH_BASE_URL . self::GRAPH_API_VERSION . '/' . $pageId . '/insights?'
-            . http_build_query([
-            'metric' => 'page_fans',
-            'period' => 'lifetime',
             'access_token' => $accessToken,
         ]);
 
@@ -497,7 +489,7 @@ class SocialRepository
 
         $keyMap = [
             'page_views_total' => 'page_views',
-            'page_engaged_users' => 'engaged_users',
+            'page_impressions_unique' => 'engaged_users',
             'page_post_engagements' => 'post_engagements',
             'page_fans' => 'page_fans',
         ];
@@ -506,12 +498,6 @@ class SocialRepository
             // Fetch daily
             $resDaily = $this->graphGet($urlDaily);
             $rawInsights = $resDaily['data'] ?? [];
-
-            // Fetch lifetime separately
-            $resLifetime = $this->graphGet($urlLifetime);
-            if (!empty($resLifetime['data'])) {
-                $rawInsights = array_merge($rawInsights, $resLifetime['data']);
-            }
         }
         catch (\Throwable $e) {
             error_log('[SOCIAL] getFbPageInsights error: ' . $e->getMessage());

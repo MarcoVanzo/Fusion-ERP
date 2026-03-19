@@ -41,7 +41,7 @@ const Footer = () => {
     };
 
     return (
-        <footer className="bg-zinc-950 border-t border-white/5 pt-16 pb-8 mt-20 relative overflow-hidden">
+        <footer className="bg-zinc-950 border-t border-white/5 pt-8 pb-8 mt-8 relative overflow-hidden">
             {/* Decorative background glow */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-32 bg-brand-500/5 blur-[100px] rounded-[100%] pointer-events-none"></div>
 
