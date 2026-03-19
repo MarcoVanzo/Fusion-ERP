@@ -1712,10 +1712,10 @@ class ResultsController
         $err = '';
         $htmlM = $this->_fetch($url, $err);
 
-        if ($htmlM === null) {
+        if (empty($htmlM)) {
             return ['success' => false, 'error' => 'Errore di connessione al portale federale (WAF/Timeout): ' . $err];
         }
-        if (str_contains($htmlM, 'Cloudflare') || str_contains($htmlM, 'Just a moment...')) {
+        if (is_string($htmlM) && (str_contains($htmlM, 'Cloudflare') || str_contains($htmlM, 'Just a moment...'))) {
             return ['success' => false, 'error' => 'Il portale ha bloccato la richiesta (Cloudflare CAPTCHA). Riprova più tardi.'];
         }
 
@@ -1744,7 +1744,7 @@ class ResultsController
             if ($existingCount > 0) {
                 return [
                     'success' => false, 
-                    'error' => "Il portale non ha restituito partite (possibile blocco o cambio layout). Le {$existingCount} partite esistenti sono state mantenute per sicurezza."
+                    'error' => 'Il portale non ha restituito partite (possibile blocco o cambio layout). Le ' . ((string) $existingCount) . ' partite esistenti sono state mantenute per sicurezza.'
                 ];
             }
         }
