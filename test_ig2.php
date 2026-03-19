@@ -35,7 +35,20 @@ $url = "https://graph.facebook.com/v21.0/{$token['ig_account_id']}/insights?" . 
 
 $ch = curl_init($url);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-$res = curl_exec($ch);
+$resIg = curl_exec($ch);
 curl_close($ch);
 
-echo json_encode(['raw_meta' => json_decode($res, true)]);
+$urlFb = "https://graph.facebook.com/v21.0/{$token['page_id']}/insights?" . http_build_query([
+    'metric' => 'page_views_total,page_impressions_unique,page_post_engagements',
+    'period' => 'day',
+    'since' => $since,
+    'until' => $until,
+    'access_token' => $token['access_token']
+]);
+
+$chfb = curl_init($urlFb);
+curl_setopt($chfb, CURLOPT_RETURNTRANSFER, true);
+$resFb = curl_exec($chfb);
+curl_close($chfb);
+
+echo json_encode(['ig_meta' => json_decode($resIg, true), 'fb_meta' => json_decode($resFb, true)]);
