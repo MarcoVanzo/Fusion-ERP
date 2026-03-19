@@ -9,6 +9,7 @@ const Newsletter = (() => {
     let _stats      = { total: 0, active: 0, unsubscribed: 0, bounced: 0 };
     let _groups     = [];
     let _subscribers = [];
+    let _campaigns   = [];
     let _meta       = { total: 0 };
     let _nextCursor = null;
     let _filter     = { status: 'active', search: '' };
@@ -101,6 +102,8 @@ const Newsletter = (() => {
                 </div>
             </div>
 
+            ${renderCampaignsCard()}
+
             <div class="card no-tilt">
                 <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
                     <h2 class="card-title"><i class="ph ph-users-three"></i> Iscritti</h2>
@@ -138,6 +141,58 @@ const Newsletter = (() => {
             </div>`;
 
         bindEvents(isAdmin);
+    }
+
+    function renderCampaignsCard() {
+        if (!_campaigns || _campaigns.length === 0) return '';
+
+        return `
+        <div class="card no-tilt" style="margin-bottom:var(--sp-4);">
+            <div class="card-header">
+                <h2 class="card-title"><i class="ph ph-megaphone"></i> Ultime Campagne</h2>
+            </div>
+            <div class="table-wrapper" style="overflow-x:auto;">
+                <table class="data-table" style="width:100%;border-collapse:collapse;font-size:14px;">
+                    <thead>
+                        <tr>
+                            <th style="text-align:left;padding:10px 12px;border-bottom:1px solid var(--color-border);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:var(--color-text-muted);">Data Invio</th>
+                            <th style="text-align:left;padding:10px 12px;border-bottom:1px solid var(--color-border);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:var(--color-text-muted);">Campagna</th>
+                            <th style="text-align:right;padding:10px 12px;border-bottom:1px solid var(--color-border);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:var(--color-text-muted);">Inviate</th>
+                            <th style="text-align:right;padding:10px 12px;border-bottom:1px solid var(--color-border);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:var(--color-text-muted);">Aperture</th>
+                            <th style="text-align:right;padding:10px 12px;border-bottom:1px solid var(--color-border);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:var(--color-text-muted);">Click</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${_campaigns.map(c => {
+                            const date = c.scheduled_for || c.created_at || '';
+                            const dateStr = date ? new Date(date).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+                            const stats = c.stats || {};
+                            const sent = stats.sent || 0;
+                            const opens = stats.opens_count || 0;
+                            const openRate = stats.open_rate?.float ? stats.open_rate.float * 100 : (sent > 0 ? (opens / sent) * 100 : 0);
+                            const clicks = stats.clicks_count || 0;
+                            const clickRate = stats.click_rate?.float ? stats.click_rate.float * 100 : (sent > 0 ? (clicks / sent) * 100 : 0);
+                            const name = c.name || 'Senza nome';
+                            
+                            return `
+                            <tr>
+                                <td style="padding:10px 12px;border-bottom:1px solid var(--color-border);font-size:13px;color:var(--color-text-muted);white-space:nowrap;">${dateStr}</td>
+                                <td style="padding:10px 12px;border-bottom:1px solid var(--color-border);font-weight:600;">${Utils.escapeHtml(name)}</td>
+                                <td style="padding:10px 12px;border-bottom:1px solid var(--color-border);text-align:right;font-size:13px;">${sent.toLocaleString('it-IT')}</td>
+                                <td style="padding:10px 12px;border-bottom:1px solid var(--color-border);text-align:right;">
+                                    <div style="font-weight:600;">${opens.toLocaleString('it-IT')}</div>
+                                    <div style="font-size:11px;color:var(--color-text-muted);">${openRate.toFixed(1)}%</div>
+                                </td>
+                                <td style="padding:10px 12px;border-bottom:1px solid var(--color-border);text-align:right;">
+                                    <div style="font-weight:600;">${clicks.toLocaleString('it-IT')}</div>
+                                    <div style="font-size:11px;color:var(--color-text-muted);">${clickRate.toFixed(1)}%</div>
+                                </td>
+                            </tr>`;
+                        }).join('')}
+                    </tbody>
+                </table>
+            </div>
+        </div>`;
     }
 
     function renderSubscribersTable() {
@@ -484,9 +539,10 @@ const Newsletter = (() => {
                 _configured = config.configured ?? false;
 
                 if (_configured) {
-                    [_stats, _groups] = await Promise.all([
+                    [_stats, _groups, _campaigns] = await Promise.all([
                         Store.get('getStats', 'newsletter').catch(() => _stats),
                         Store.get('listGroups', 'newsletter').catch(() => []),
+                        Store.get('listCampaigns', 'newsletter').catch(() => []),
                     ]);
                     await loadSubscribers(false);
                 }
@@ -504,6 +560,7 @@ const Newsletter = (() => {
             // Reset state
             _subscribers = [];
             _groups = [];
+            _campaigns = [];
             _stats = { total: 0, active: 0, unsubscribed: 0, bounced: 0 };
             _nextCursor = null;
             _filter = { status: '', search: '' };

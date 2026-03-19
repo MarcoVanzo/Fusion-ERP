@@ -55,6 +55,16 @@ class NewsletterController
         Response::success($this->ml->getStats());
     }
 
+    // ─── CAMPAIGNS ────────────────────────────────────────────────────────────
+
+    public function listCampaigns(): void
+    {
+        Auth::requireRole('operator');
+
+        $limit = (int)(filter_input(INPUT_GET, 'limit', FILTER_VALIDATE_INT) ?? 10);
+        Response::success($this->ml->listCampaigns($limit));
+    }
+
     // ─── SUBSCRIBERS ─────────────────────────────────────────────────────────
 
     public function listSubscribers(): void
