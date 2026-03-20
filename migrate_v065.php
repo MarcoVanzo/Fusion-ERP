@@ -8,15 +8,9 @@ $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->safeLoad();
 
 // Carica variabili d'ambiente di produzione
-$host = $_ENV['DB_HOST'] ?? '127.0.0.1';
-$db   = $_ENV['DB_NAME'] ?? 'fusion_dev';
-$user = $_ENV['DB_USER'] ?? 'fusion';
-$pass = $_ENV['DB_PASS'] ?? 'fusion123';
-$port = $_ENV['DB_PORT'] ?? '3306';
+$pdo = \FusionERP\Shared\Database::getInstance();
 
 try {
-    $dsn = "mysql:host={$host};port={$port};dbname={$db};charset=utf8mb4";
-    $pdo = new PDO($dsn, $user, $pass, [PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION]);
 
     $sql = "
     ALTER TABLE `societa_sponsors` 
