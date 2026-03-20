@@ -4,5 +4,5 @@ require_once __DIR__ . '/../vendor/autoload.php';
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../');
 $dotenv->safeLoad();
 $pdo = \FusionERP\Shared\Database::getInstance();
-$stmt = $pdo->query("SELECT id, name, tenant_id FROM societa_sponsors");
+$stmt = $pdo->query("SELECT id, name, logo_path FROM societa_sponsors");
 print_r($stmt->fetchAll());
