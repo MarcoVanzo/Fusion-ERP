@@ -18,6 +18,8 @@ import Proposal3 from './pages/Proposal3';
 import MenuProposal1 from './pages/MenuProposal1';
 import MenuProposal2 from './pages/MenuProposal2';
 import MenuProposal3 from './pages/MenuProposal3';
+import MenuProposal4 from './pages/MenuProposal4';
+import MenuProposal5 from './pages/MenuProposal5';
 
 function App() {
   return (
@@ -43,6 +45,8 @@ function App() {
             <Route path="/menu1" element={<MenuProposal1 />} />
             <Route path="/menu2" element={<MenuProposal2 />} />
             <Route path="/menu3" element={<MenuProposal3 />} />
+            <Route path="/menu4" element={<MenuProposal4 />} />
+            <Route path="/menu5" element={<MenuProposal5 />} />
           </Routes>
         </main>
         <Footer />

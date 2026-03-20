@@ -153,7 +153,7 @@ const TeamDetail = () => {
                                             <div className="font-subheading text-brand-500 tracking-widest text-sm mb-1 uppercase">
                                                 {athlete.role || 'ROLE TBD'}
                                             </div>
-                                            <h3 className="font-heading text-3xl leading-none text-white uppercase group-hover:text-brand-500 group-hover:drop-shadow-[0_0_15px_rgba(214,90,134,0.8)] transition-all duration-300">
+                                            <h3 className="w-full font-heading text-3xl leading-none text-white uppercase group-hover:text-brand-500 group-hover:drop-shadow-[0_0_15px_rgba(214,90,134,0.8)] transition-all duration-300 break-words whitespace-normal">
                                                 {(() => {
                                                     const nameObj = athlete.full_name || athlete.first_name || '';
                                                     const parts = nameObj.split(' ');
@@ -162,7 +162,7 @@ const TeamDetail = () => {
                                                     return (
                                                         <>
                                                             {first}<br />
-                                                            <span className="text-4xl">{last}</span>
+                                                            <span className="text-3xl xl:text-4xl inline-block w-full">{last}</span>
                                                         </>
                                                     );
                                                 })()}
