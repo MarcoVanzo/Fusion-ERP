@@ -554,6 +554,7 @@ class SocietaController
             ':id'             => $id,
             ':tenant_id'      => TenantContext::id(),
             ':name'           => htmlspecialchars(trim($body['name']), ENT_QUOTES, 'UTF-8'),
+            ':stagione'       => $body['stagione'] ?? null,
             ':description'    => $body['description'] ?? null,
             ':logo_path'      => $body['logo_path'] ?? null,
             ':website_url'    => $body['website_url'] ?? null,
@@ -561,6 +562,9 @@ class SocietaController
             ':facebook_url'   => $body['facebook_url'] ?? null,
             ':linkedin_url'   => $body['linkedin_url'] ?? null,
             ':tiktok_url'     => $body['tiktok_url'] ?? null,
+            ':importo'        => isset($body['importo']) && $body['importo'] !== '' ? (float)$body['importo'] : null,
+            ':rapporto'       => isset($body['rapporto']) && $body['rapporto'] !== '' ? (float)$body['rapporto'] : null,
+            ':sponsorizzazione'=> isset($body['sponsorizzazione']) && $body['sponsorizzazione'] !== '' ? (float)$body['sponsorizzazione'] : null,
             ':sort_order'     => (int)($body['sort_order'] ?? 0),
             ':is_active'      => isset($body['is_active']) ? (int)(bool)$body['is_active'] : 1,
         ];
@@ -583,6 +587,7 @@ class SocietaController
 
         $data = [
             ':name'           => htmlspecialchars(trim($body['name']), ENT_QUOTES, 'UTF-8'),
+            ':stagione'       => $body['stagione'] ?? null,
             ':description'    => $body['description'] ?? null,
             ':logo_path'      => $body['logo_path'] ?? null,
             ':website_url'    => $body['website_url'] ?? null,
@@ -590,6 +595,9 @@ class SocietaController
             ':facebook_url'   => $body['facebook_url'] ?? null,
             ':linkedin_url'   => $body['linkedin_url'] ?? null,
             ':tiktok_url'     => $body['tiktok_url'] ?? null,
+            ':importo'        => isset($body['importo']) && $body['importo'] !== '' ? (float)$body['importo'] : null,
+            ':rapporto'       => isset($body['rapporto']) && $body['rapporto'] !== '' ? (float)$body['rapporto'] : null,
+            ':sponsorizzazione'=> isset($body['sponsorizzazione']) && $body['sponsorizzazione'] !== '' ? (float)$body['sponsorizzazione'] : null,
             ':sort_order'     => (int)($body['sort_order'] ?? 0),
             ':is_active'      => isset($body['is_active']) ? (int)(bool)$body['is_active'] : 1,
         ];

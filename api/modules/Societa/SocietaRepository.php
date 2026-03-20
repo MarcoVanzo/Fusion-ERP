@@ -328,12 +328,14 @@ class SocietaRepository
     {
         $stmt = $this->db->prepare(
             'INSERT INTO societa_sponsors
-                (id, tenant_id, name, description, logo_path,
+                (id, tenant_id, name, stagione, description, logo_path,
                  website_url, instagram_url, facebook_url, linkedin_url, tiktok_url,
+                 importo, rapporto, sponsorizzazione,
                  sort_order, is_active)
              VALUES
-                (:id, :tenant_id, :name, :description, :logo_path,
+                (:id, :tenant_id, :name, :stagione, :description, :logo_path,
                  :website_url, :instagram_url, :facebook_url, :linkedin_url, :tiktok_url,
+                 :importo, :rapporto, :sponsorizzazione,
                  :sort_order, :is_active)'
         );
         $stmt->execute($data);
@@ -344,16 +346,20 @@ class SocietaRepository
         $tenantId = TenantContext::id();
         $stmt = $this->db->prepare(
             'UPDATE societa_sponsors SET
-                name           = :name,
-                description    = :description,
-                logo_path      = :logo_path,
-                website_url    = :website_url,
-                instagram_url  = :instagram_url,
-                facebook_url   = :facebook_url,
-                linkedin_url   = :linkedin_url,
-                tiktok_url     = :tiktok_url,
-                sort_order     = :sort_order,
-                is_active      = :is_active
+                name             = :name,
+                stagione         = :stagione,
+                description      = :description,
+                logo_path        = :logo_path,
+                website_url      = :website_url,
+                instagram_url    = :instagram_url,
+                facebook_url     = :facebook_url,
+                linkedin_url     = :linkedin_url,
+                tiktok_url       = :tiktok_url,
+                importo          = :importo,
+                rapporto         = :rapporto,
+                sponsorizzazione = :sponsorizzazione,
+                sort_order       = :sort_order,
+                is_active        = :is_active
              WHERE id = :id AND tenant_id = :tid AND is_deleted = 0'
         );
         $stmt->execute(array_merge($data, [':id' => $id, ':tid' => $tenantId]));
