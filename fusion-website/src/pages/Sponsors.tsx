@@ -166,23 +166,25 @@ const Sponsors = () => {
                                     whileInView="visible"
                                     viewport={{ once: true, margin: "-50px" }}
                                     className={`grid gap-8 ${
-                                        group === 'Main Sponsor' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-2' :
+                                        group === 'Main Sponsor' ? 'grid-cols-1' :
                                         group === 'Title Sponsor' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' :
                                         'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
                                     }`}
                                 >
-                                    {groupedSponsors[group].map((sponsor, idx) => (
+                                    {groupedSponsors[group].map((sponsor, idx) => {
+                                        const isMain = group === 'Main Sponsor';
+                                        return (
                                         <motion.div
                                             key={sponsor.id}
                                             variants={itemVariants}
                                             whileHover={{ y: -10, scale: 1.02 }}
-                                            className="group relative bg-zinc-900/40 rounded-[2rem] overflow-hidden backdrop-blur-sm border border-zinc-800/60 hover:border-brand-500/50 transition-all duration-500 flex flex-col shadow-2xl hover:shadow-[0_20px_40px_rgba(217,70,239,0.1)]"
+                                            className={`group relative bg-zinc-900/40 overflow-hidden backdrop-blur-sm border border-zinc-800/60 hover:border-brand-500/50 transition-all duration-500 flex shadow-2xl hover:shadow-[0_20px_40px_rgba(217,70,239,0.1)] ${isMain ? 'flex-col md:flex-row rounded-[2rem] md:rounded-[3rem]' : 'flex-col rounded-[2rem]'}`}
                                         >
                                             {/* Glow effect on hover */}
                                             <div className="absolute inset-0 bg-gradient-to-b from-brand-500/0 to-brand-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
 
                                             {/* Logo Section */}
-                                            <div className="relative p-8 md:p-12 flex items-center justify-center bg-white h-48 sm:h-64 rounded-t-[2rem]">
+                                            <div className={`relative flex items-center justify-center bg-white shrink-0 ${isMain ? 'p-12 md:p-24 md:w-1/2 min-h-[300px] md:min-h-[400px]' : 'p-8 md:p-12 h-48 sm:h-64'}`}>
                                                 {sponsor.logo_path ? (
                                                     <img
                                                         src={sponsor.logo_path.startsWith('http') ? sponsor.logo_path : `${ERP_BASE}/${sponsor.logo_path}`}
@@ -191,39 +193,44 @@ const Sponsors = () => {
                                                     />
                                                 ) : (
                                                     <div className="w-full h-full flex items-center justify-center">
-                                                        <span className="text-4xl md:text-6xl font-heading text-zinc-300 font-bold group-hover:text-brand-500 transition-colors duration-500">
+                                                        <span className={`font-heading text-zinc-300 font-bold group-hover:text-brand-500 transition-colors duration-500 ${isMain ? 'text-7xl' : 'text-4xl md:text-6xl'}`}>
                                                             {sponsor.name.substring(0, 2).toUpperCase()}
                                                         </span>
                                                     </div>
                                                 )}
                                                 
-                                                {/* Inset shadow bottom */}
-                                                <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/20 to-transparent rounded-b-[2rem]"></div>
+                                                {/* Inset shadow bottom/right depending on layout */}
+                                                <div className={`absolute inset-0 pointer-events-none ${isMain ? 'bg-gradient-to-t md:bg-gradient-to-l' : 'bg-gradient-to-t'} from-black/10 to-transparent`}></div>
                                             </div>
 
                                             {/* Info Section */}
-                                            <div className="p-8 flex flex-col flex-grow z-10">
-                                                <h3 className="text-2xl font-heading text-white uppercase tracking-wider mb-4 group-hover:text-brand-400 transition-colors">
+                                            <div className={`flex flex-col flex-grow z-10 ${isMain ? 'p-10 md:p-16 md:w-1/2 justify-center' : 'p-8'}`}>
+                                                <h3 className={`${isMain ? 'text-4xl md:text-5xl mb-6' : 'text-2xl mb-4'} font-heading text-white uppercase tracking-wider group-hover:text-brand-400 transition-colors`}>
                                                     {sponsor.name}
                                                 </h3>
                                                 
                                                 {sponsor.description && (
-                                                    <p className="text-zinc-400 text-sm leading-relaxed mb-8 flex-grow font-light">
-                                                        {sponsor.description}
-                                                    </p>
+                                                    <div className="relative mb-8 flex-grow">
+                                                        <p 
+                                                            className={`text-zinc-400 leading-relaxed font-light overflow-y-auto pr-4 ${isMain ? 'text-base md:text-lg max-h-48' : 'text-sm max-h-32'}`} 
+                                                            style={{ scrollbarWidth: 'thin', scrollbarColor: '#3f3f46 transparent' }}
+                                                        >
+                                                            {sponsor.description}
+                                                        </p>
+                                                    </div>
                                                 )}
 
                                                 {/* Socials / Links */}
-                                                <div className="flex flex-wrap items-center gap-3 mt-auto pt-6 border-t border-zinc-800/50">
+                                                <div className={`flex flex-wrap items-center gap-3 mt-auto pt-6 border-t border-zinc-800/50 ${isMain ? 'gap-4 pt-8' : ''}`}>
                                                     {sponsor.website_url && (
                                                         <a
                                                             href={sponsor.website_url.startsWith('http') ? sponsor.website_url : `https://${sponsor.website_url}`}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
-                                                            className="flex items-center justify-center w-10 h-10 bg-zinc-800/80 rounded-full text-zinc-400 hover:text-white hover:bg-brand-600 hover:scale-110 transition-all duration-300"
+                                                            className={`flex items-center justify-center bg-zinc-800/80 rounded-full text-zinc-400 hover:text-white hover:bg-brand-600 hover:scale-110 transition-all duration-300 ${isMain ? 'w-12 h-12' : 'w-10 h-10'}`}
                                                             title="Sito Web"
                                                         >
-                                                            <Globe size={18} strokeWidth={2} />
+                                                            <Globe size={isMain ? 22 : 18} strokeWidth={2} />
                                                         </a>
                                                     )}
                                                     {sponsor.facebook_url && (
@@ -231,10 +238,10 @@ const Sponsors = () => {
                                                             href={sponsor.facebook_url}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
-                                                            className="flex items-center justify-center w-10 h-10 bg-zinc-800/80 rounded-full text-zinc-400 hover:text-white hover:bg-blue-600 hover:scale-110 transition-all duration-300"
+                                                            className={`flex items-center justify-center bg-zinc-800/80 rounded-full text-zinc-400 hover:text-white hover:bg-blue-600 hover:scale-110 transition-all duration-300 ${isMain ? 'w-12 h-12' : 'w-10 h-10'}`}
                                                             title="Facebook"
                                                         >
-                                                            <Facebook size={18} strokeWidth={2} />
+                                                            <Facebook size={isMain ? 22 : 18} strokeWidth={2} />
                                                         </a>
                                                     )}
                                                     {sponsor.instagram_url && (
@@ -242,10 +249,10 @@ const Sponsors = () => {
                                                             href={sponsor.instagram_url}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
-                                                            className="flex items-center justify-center w-10 h-10 bg-zinc-800/80 rounded-full text-zinc-400 hover:text-white hover:bg-pink-600 hover:scale-110 transition-all duration-300"
+                                                            className={`flex items-center justify-center bg-zinc-800/80 rounded-full text-zinc-400 hover:text-white hover:bg-pink-600 hover:scale-110 transition-all duration-300 ${isMain ? 'w-12 h-12' : 'w-10 h-10'}`}
                                                             title="Instagram"
                                                         >
-                                                            <Instagram size={18} strokeWidth={2} />
+                                                            <Instagram size={isMain ? 22 : 18} strokeWidth={2} />
                                                         </a>
                                                     )}
                                                     {sponsor.linkedin_url && (
@@ -253,16 +260,16 @@ const Sponsors = () => {
                                                             href={sponsor.linkedin_url}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
-                                                            className="flex items-center justify-center w-10 h-10 bg-zinc-800/80 rounded-full text-zinc-400 hover:text-white hover:bg-blue-800 hover:scale-110 transition-all duration-300"
+                                                            className={`flex items-center justify-center bg-zinc-800/80 rounded-full text-zinc-400 hover:text-white hover:bg-blue-800 hover:scale-110 transition-all duration-300 ${isMain ? 'w-12 h-12' : 'w-10 h-10'}`}
                                                             title="LinkedIn"
                                                         >
-                                                            <Globe size={18} strokeWidth={2} />
+                                                            <Globe size={isMain ? 22 : 18} strokeWidth={2} />
                                                         </a>
                                                     )}
                                                 </div>
                                             </div>
                                         </motion.div>
-                                    ))}
+                                    )})}
                                 </motion.div>
                             </div>
                         ))}
