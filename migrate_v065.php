@@ -1,8 +1,13 @@
 <?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 require_once __DIR__ . '/vendor/autoload.php';
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/');
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->safeLoad();
 
+// Carica variabili d'ambiente di produzione
 $host = $_ENV['DB_HOST'] ?? '127.0.0.1';
 $db   = $_ENV['DB_NAME'] ?? 'fusion_dev';
 $user = $_ENV['DB_USER'] ?? 'fusion';
@@ -29,4 +34,6 @@ try {
     } else {
         echo "ERROR: " . $e->getMessage() . "\n";
     }
+} catch(Exception $e) {
+    echo "GENERAL_ERROR: " . $e->getMessage() . "\n";
 }
