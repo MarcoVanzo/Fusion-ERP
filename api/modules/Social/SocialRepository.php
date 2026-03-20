@@ -473,7 +473,7 @@ class SocialRepository
         // Daily metrics
         $urlDaily = self::GRAPH_BASE_URL . self::GRAPH_API_VERSION . '/' . $pageId . '/insights?'
             . http_build_query([
-            'metric' => 'page_views_total,page_impressions_unique,page_post_engagements',
+            'metric' => 'page_views_total,page_impressions_unique,page_post_engagements,page_fans',
             'period' => 'day',
             'since' => $since,
             'until' => $until,
