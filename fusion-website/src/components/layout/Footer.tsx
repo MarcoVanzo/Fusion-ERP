@@ -74,7 +74,7 @@ const Footer = () => {
                             <button 
                                 type="submit" 
                                 disabled={status === 'loading' || status === 'success'}
-                                className="bg-brand-500 text-zinc-950 font-heading text-xl tracking-widest uppercase px-8 py-4 hover:bg-white transition-all whitespace-nowrap clip-diagonal shadow-[0_0_15px_rgba(217,70,239,0.3)] hover:shadow-[0_0_25px_rgba(217,70,239,0.6)] flex items-center justify-center gap-2 disabled:opacity-75 disabled:cursor-not-allowed"
+                                className="bg-brand-500 text-zinc-950 font-heading text-xl tracking-widest uppercase px-8 py-4 hover:bg-white hover:scale-[1.02] transition-all duration-300 whitespace-nowrap clip-diagonal shadow-[0_0_15px_rgba(217,70,239,0.3)] hover:shadow-[0_0_25px_rgba(217,70,239,0.6)] flex items-center justify-center gap-2 disabled:opacity-75 disabled:cursor-not-allowed disabled:hover:scale-100"
                             >
                                 {status === 'loading' ? (
                                     <Loader2 size={20} className="animate-spin" />
@@ -171,7 +171,7 @@ const Footer = () => {
                         <p className="text-zinc-300 text-sm mb-4">
                             Accedi all'area gestionale Fusion ERP per gestire roster, risultati e calendari.
                         </p>
-                        <a href="/ERP" className="inline-flex items-center justify-center w-full px-5 py-3 rounded-none bg-zinc-800 border border-zinc-600 text-white font-bold tracking-wider hover:bg-white hover:text-zinc-950 transition-colors">
+                        <a href="/ERP" className="inline-flex items-center justify-center w-full px-5 py-3 rounded-none bg-zinc-800 border border-zinc-600 text-white font-bold tracking-wider hover:bg-white hover:text-zinc-950 hover:scale-[1.02] transition-all duration-300">
                             Accesso Gestionale
                         </a>
                     </div>

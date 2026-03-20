@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Menu, X, Instagram, Facebook, Youtube } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const Navbar = () => {
     const [isScrolled, setIsScrolled] = useState(false);
@@ -56,7 +57,7 @@ const Navbar = () => {
                                 <Link
                                     key={link.name}
                                     to={link.path}
-                                    className={`font-subheading text-lg tracking-widest uppercase transition-colors relative flex items-center
+                                    className={`font-subheading text-lg tracking-widest uppercase transition-colors relative flex items-center group
                                         ${isActive ? 'text-brand-500' : 'text-zinc-400 hover:text-white'}
                                     `}
                                 >
@@ -66,7 +67,7 @@ const Navbar = () => {
                                             ● {link.badge}
                                         </span>
                                     )}
-
+                                    <span className={`absolute -bottom-2 left-0 h-[2px] bg-brand-500 transition-all duration-300 ${isActive ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
                                 </Link>
                             );
                         })}
@@ -99,34 +100,56 @@ const Navbar = () => {
             </div>
 
             {/* Mobile Nav */}
-            <div
-                className={`lg:hidden absolute top-full left-0 w-full bg-zinc-950 border-b-4 border-brand-500 transition-all duration-300 overflow-hidden ${mobileMenuOpen ? 'max-h-[500px]' : 'max-h-0'
-                    }`}
-            >
-                <div className="flex flex-col px-6 py-8 gap-6">
-                    {navLinks.map((link) => (
-                        <Link
-                            key={link.name}
-                            to={link.path}
-                            onClick={() => setMobileMenuOpen(false)}
-                            className="font-heading text-2xl text-zinc-300 hover:text-brand-500 transition-colors uppercase tracking-widest border-b border-zinc-800 pb-4 relative flex items-center justify-between"
-                        >
-                            <span>{link.name}</span>
-                            {link.badge && (
-                                <span className="bg-red-600 text-white font-sans text-xs font-bold px-2 py-1 rounded animate-pulse tracking-normal">
-                                    {link.badge}
-                                </span>
-                            )}
-                        </Link>
-                    ))}
-                    <a
-                        href="/ERP"
-                        className="text-brand-500 font-heading text-xl uppercase tracking-widest mt-4"
+            <AnimatePresence>
+                {mobileMenuOpen && (
+                    <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.3, ease: 'easeInOut' }}
+                        className="lg:hidden absolute top-full left-0 w-full bg-zinc-950 overflow-hidden shadow-[0_20px_40px_rgba(0,0,0,0.8)]"
                     >
-                        ACCEDI ERP
-                    </a>
-                </div>
-            </div>
+                        {/* Gradient bottom edge instead of solid border */}
+                        <div className="absolute bottom-0 left-0 w-full h-[4px] bg-gradient-to-r from-transparent via-brand-500 to-transparent"></div>
+                        
+                        <div className="flex flex-col px-6 py-8 gap-6">
+                            {navLinks.map((link, index) => (
+                                <motion.div
+                                    key={link.name}
+                                    initial={{ x: -20, opacity: 0 }}
+                                    animate={{ x: 0, opacity: 1 }}
+                                    transition={{ delay: index * 0.05 + 0.1 }}
+                                >
+                                    <Link
+                                        to={link.path}
+                                        onClick={() => setMobileMenuOpen(false)}
+                                        className="font-heading text-2xl text-zinc-300 hover:text-brand-500 transition-colors uppercase tracking-widest border-b border-zinc-800/50 pb-4 relative flex items-center justify-between"
+                                    >
+                                        <span>{link.name}</span>
+                                        {link.badge && (
+                                            <span className="bg-red-600 text-white font-sans text-xs font-bold px-2 py-1 rounded animate-pulse tracking-normal">
+                                                {link.badge}
+                                            </span>
+                                        )}
+                                    </Link>
+                                </motion.div>
+                            ))}
+                            <motion.div
+                                initial={{ y: 20, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                transition={{ delay: navLinks.length * 0.05 + 0.1 }}
+                            >
+                                <a
+                                    href="/ERP"
+                                    className="text-brand-500 font-heading text-xl uppercase tracking-widest mt-4 inline-block hover:scale-105 transition-transform origin-left"
+                                >
+                                    ACCEDI ERP
+                                </a>
+                            </motion.div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </nav>
     );
 };

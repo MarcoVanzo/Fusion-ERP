@@ -342,6 +342,13 @@ class AthletesController
     public function aiReport(): void
     {
         Auth::requireWrite('athletes');
+
+        // FIX: Rate Limiting basato su sessione (massimo 1 report ogni 10 secondi)
+        if (isset($_SESSION['last_ai_report']) && (time() - $_SESSION['last_ai_report']) < 10) {
+            \FusionERP\Shared\Response::error('Troppe richieste AI in coda. Attendi qualche secondo.', 429);
+        }
+        $_SESSION['last_ai_report'] = time();
+
         $body = Response::jsonBody();
         Response::requireFields($body, ['athlete_id']);
 
