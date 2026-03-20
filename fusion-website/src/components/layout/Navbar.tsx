@@ -27,6 +27,7 @@ const Navbar = () => {
         { name: 'SQUADRE', path: '/teams' },
         { name: 'FORESTERIA', path: '/foresteria' },
         { name: 'NETWORK', path: '/network' },
+        { name: 'SPONSOR', path: '/sponsors' },
     ];
 
     const splitRightLinks: NavLink[] = [

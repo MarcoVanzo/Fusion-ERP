@@ -799,6 +799,21 @@ class SocietaController
         Response::success($row);
     }
 
+    /** GET  ?module=societa&action=getPublicSponsors — lista sponsor pubblica per il sito */
+    public function getPublicSponsors(): void
+    {
+        // NO Auth required. Used by the external website SPA.
+        $db = \FusionERP\Shared\Database::getInstance();
+        $stmt = $db->query(
+            "SELECT id, name, tipo, description, logo_path, website_url, 
+                    instagram_url, facebook_url, linkedin_url, tiktok_url 
+             FROM societa_sponsors 
+             WHERE is_active = 1 
+             ORDER BY sort_order ASC, name ASC"
+        );
+        Response::success($stmt->fetchAll(\PDO::FETCH_ASSOC));
+    }
+
     // ─── FORESTERIA ────────────────────────────────────────────────────────────
 
     /** GET  ?module=societa&action=getPublicForesteria — info e media pubblici per il sito web */

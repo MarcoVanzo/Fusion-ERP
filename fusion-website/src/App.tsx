@@ -12,6 +12,7 @@ import Results from './pages/Results';
 import Outseason from './pages/Outseason';
 import Foresteria from './pages/Foresteria';
 import Network from './pages/Network';
+import Sponsors from './pages/Sponsors';
 import Proposal1 from './pages/Proposal1';
 import Proposal2 from './pages/Proposal2';
 import Proposal3 from './pages/Proposal3';
@@ -41,6 +42,7 @@ function AppContent() {
             <Route path="/outseason" element={<Outseason />} />
             <Route path="/foresteria" element={<Foresteria />} />
             <Route path="/network" element={<Network />} />
+            <Route path="/sponsors" element={<Sponsors />} />
             <Route path="/proposal1" element={<Proposal1 />} />
             <Route path="/proposal2" element={<Proposal2 />} />
             <Route path="/proposal3" element={<Proposal3 />} />
