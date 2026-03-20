@@ -537,27 +537,6 @@ class SocietaController
 
     // ─── SPONSORS ─────────────────────────────────────────────────────────────
 
-    public function migrateV065(): void
-    {
-        $pdo = \FusionERP\Shared\Database::getInstance();
-        $cols = [
-            "ADD COLUMN `stagione` VARCHAR(50) NULL AFTER `name`",
-            "ADD COLUMN `importo` DECIMAL(10,2) NULL AFTER `tiktok_url`",
-            "ADD COLUMN `rapporto` DECIMAL(10,2) NULL AFTER `importo`",
-            "ADD COLUMN `sponsorizzazione` DECIMAL(10,2) NULL AFTER `rapporto`"
-        ];
-        foreach ($cols as $col) {
-            try {
-                $pdo->exec("ALTER TABLE `societa_sponsors` " . $col);
-                echo "Added $col\n";
-            } catch (\Exception $e) {
-                echo "Skipped $col: " . $e->getMessage() . "\n";
-            }
-        }
-        echo "MIGRATION COMPLETE";
-        exit;
-    }
-
     public function listSponsors(): void
     {
         Auth::requireRole('operator');
