@@ -129,5 +129,5 @@ foreach ($articles as $a) {
     }
 }
 echo "══════════════════════════════════════\n";
-echo "✅ OK: {$ok}   ❌ Errori: {$fail}\n";
+echo "✅ OK: " . (string)$ok . "   ❌ Errori: " . (string)$fail . "\n";
 echo "\n⚠️ RICORDA: elimina questo file dopo aver verificato l'importazione!\n";
