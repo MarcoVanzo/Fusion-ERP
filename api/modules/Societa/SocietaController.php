@@ -539,20 +539,22 @@ class SocietaController
 
     public function migrateV065(): void
     {
-        $sql = "
-        ALTER TABLE `societa_sponsors` 
-        ADD COLUMN `stagione` VARCHAR(50) NULL AFTER `name`,
-        ADD COLUMN `importo` DECIMAL(10,2) NULL AFTER `tiktok_url`,
-        ADD COLUMN `rapporto` DECIMAL(10,2) NULL AFTER `importo`,
-        ADD COLUMN `sponsorizzazione` DECIMAL(10,2) NULL AFTER `rapporto`;
-        ";
-        try {
-            $pdo = \FusionERP\Shared\Database::getInstance();
-            $pdo->exec($sql);
-            echo "MIGRATION SUCCESSFUL";
-        } catch (\Exception $e) {
-            echo "MIGRATION ERROR: " . $e->getMessage();
+        $pdo = \FusionERP\Shared\Database::getInstance();
+        $cols = [
+            "ADD COLUMN `stagione` VARCHAR(50) NULL AFTER `name`",
+            "ADD COLUMN `importo` DECIMAL(10,2) NULL AFTER `tiktok_url`",
+            "ADD COLUMN `rapporto` DECIMAL(10,2) NULL AFTER `importo`",
+            "ADD COLUMN `sponsorizzazione` DECIMAL(10,2) NULL AFTER `rapporto`"
+        ];
+        foreach ($cols as $col) {
+            try {
+                $pdo->exec("ALTER TABLE `societa_sponsors` " . $col);
+                echo "Added $col\n";
+            } catch (\Exception $e) {
+                echo "Skipped $col: " . $e->getMessage() . "\n";
+            }
         }
+        echo "MIGRATION COMPLETE";
         exit;
     }
 
