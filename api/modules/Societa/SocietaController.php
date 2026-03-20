@@ -554,6 +554,8 @@ class SocietaController
             ':id'             => $id,
             ':tenant_id'      => TenantContext::id(),
             ':name'           => htmlspecialchars(trim($body['name']), ENT_QUOTES, 'UTF-8'),
+            ':tipo'           => htmlspecialchars(trim($body['tipo'] ?? 'Sponsor'), ENT_QUOTES, 'UTF-8'),
+            ':stagione'       => $body['stagione'] ?? null,
             ':description'    => $body['description'] ?? null,
             ':logo_path'      => $body['logo_path'] ?? null,
             ':website_url'    => $body['website_url'] ?? null,
@@ -561,6 +563,9 @@ class SocietaController
             ':facebook_url'   => $body['facebook_url'] ?? null,
             ':linkedin_url'   => $body['linkedin_url'] ?? null,
             ':tiktok_url'     => $body['tiktok_url'] ?? null,
+            ':importo'        => isset($body['importo']) && $body['importo'] !== '' ? (float)$body['importo'] : null,
+            ':rapporto'       => isset($body['rapporto']) && $body['rapporto'] !== '' ? (float)$body['rapporto'] : null,
+            ':sponsorizzazione'=> isset($body['sponsorizzazione']) && $body['sponsorizzazione'] !== '' ? (float)$body['sponsorizzazione'] : null,
             ':sort_order'     => (int)($body['sort_order'] ?? 0),
             ':is_active'      => isset($body['is_active']) ? (int)(bool)$body['is_active'] : 1,
         ];
@@ -583,13 +588,18 @@ class SocietaController
 
         $data = [
             ':name'           => htmlspecialchars(trim($body['name']), ENT_QUOTES, 'UTF-8'),
+            ':tipo'           => htmlspecialchars(trim($body['tipo'] ?? 'Sponsor'), ENT_QUOTES, 'UTF-8'),
+            ':stagione'       => $body['stagione'] ?? null,
             ':description'    => $body['description'] ?? null,
-            ':logo_path'      => $body['logo_path'] ?? null,
+            ':logo_path'      => array_key_exists('logo_path', $body) ? $body['logo_path'] : $before['logo_path'],
             ':website_url'    => $body['website_url'] ?? null,
             ':instagram_url'  => $body['instagram_url'] ?? null,
             ':facebook_url'   => $body['facebook_url'] ?? null,
             ':linkedin_url'   => $body['linkedin_url'] ?? null,
             ':tiktok_url'     => $body['tiktok_url'] ?? null,
+            ':importo'        => isset($body['importo']) && $body['importo'] !== '' ? (float)$body['importo'] : null,
+            ':rapporto'       => isset($body['rapporto']) && $body['rapporto'] !== '' ? (float)$body['rapporto'] : null,
+            ':sponsorizzazione'=> isset($body['sponsorizzazione']) && $body['sponsorizzazione'] !== '' ? (float)$body['sponsorizzazione'] : null,
             ':sort_order'     => (int)($body['sort_order'] ?? 0),
             ':is_active'      => isset($body['is_active']) ? (int)(bool)$body['is_active'] : 1,
         ];
@@ -787,6 +797,21 @@ class SocietaController
         }
 
         Response::success($row);
+    }
+
+    /** GET  ?module=societa&action=getPublicSponsors — lista sponsor pubblica per il sito */
+    public function getPublicSponsors(): void
+    {
+        // NO Auth required. Used by the external website SPA.
+        $db = \FusionERP\Shared\Database::getInstance();
+        $stmt = $db->query(
+            "SELECT id, name, tipo, description, logo_path, website_url, 
+                    instagram_url, facebook_url, linkedin_url, tiktok_url 
+             FROM societa_sponsors 
+             WHERE is_active = 1 
+             ORDER BY sort_order ASC, name ASC"
+        );
+        Response::success($stmt->fetchAll(\PDO::FETCH_ASSOC));
     }
 
     // ─── FORESTERIA ────────────────────────────────────────────────────────────

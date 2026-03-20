@@ -473,7 +473,7 @@ class SocialRepository
         // Daily metrics
         $urlDaily = self::GRAPH_BASE_URL . self::GRAPH_API_VERSION . '/' . $pageId . '/insights?'
             . http_build_query([
-            'metric' => 'page_views_total,page_impressions_unique,page_post_engagements',
+            'metric' => 'page_views_total,page_impressions_unique,page_post_engagements,page_fans',
             'period' => 'day',
             'since' => $since,
             'until' => $until,
@@ -491,21 +491,13 @@ class SocialRepository
             'page_views_total' => 'page_views',
             'page_impressions_unique' => 'engaged_users',
             'page_post_engagements' => 'post_engagements',
+            'page_fans' => 'page_fans',
         ];
 
         try {
             // Fetch daily
             $resDaily = $this->graphGet($urlDaily);
             $rawInsights = $resDaily['data'] ?? [];
-            
-            // Separate query for total lifetime fans to avoid Code 100
-            $urlPage = self::GRAPH_BASE_URL . self::GRAPH_API_VERSION . '/' . $pageId . '?'
-                . http_build_query([
-                'fields' => 'fan_count',
-                'access_token' => $accessToken,
-            ]);
-            $resPage = $this->graphGet($urlPage);
-            $result['page_fans'] = (int)($resPage['fan_count'] ?? 0);
         }
         catch (\Throwable $e) {
             error_log('[SOCIAL] getFbPageInsights error: ' . $e->getMessage());
@@ -519,6 +511,11 @@ class SocialRepository
                 $total = 0;
                 foreach ($values as $v) {
                     $total += (int)($v['value'] ?? 0);
+                }
+                // For page_fans, take the last value (it's a lifetime metric)
+                if ($name === 'page_fans' && !empty($values)) {
+                    $lastVal = end($values);
+                    $total = (int)($lastVal['value'] ?? 0);
                 }
                 $result[$keyMap[$name]] = $total;
             }

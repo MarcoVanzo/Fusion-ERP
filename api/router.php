@@ -40,7 +40,7 @@ set_exception_handler(function(\Throwable $e) {
     
     file_put_contents('/tmp/php_crash.log', date('Y-m-d H:i:s') . ' EXCEPTION: ' . $e->getMessage() . ' at ' . $e->getFile() . ':' . $e->getLine() . PHP_EOL, FILE_APPEND);
 
-    $debug = getenv('APP_DEBUG') === 'true' || ($_ENV['APP_DEBUG'] ?? '') === 'true';
+    $debug = filter_var(getenv('APP_DEBUG') ?: ($_ENV['APP_DEBUG'] ?? false), FILTER_VALIDATE_BOOLEAN);
     $clientMessage = $debug ? $errMsg : 'Errore interno del server.';
     echo json_encode(['success' => false, 'error' => $clientMessage]);
     exit;
@@ -118,7 +118,7 @@ catch (\Throwable $e) {
     file_put_contents(__DIR__ . '/../local_debug_error.log', date('Y-m-d H:i:s') . ' ' . $errMsg . PHP_EOL, FILE_APPEND);
 
     // Only expose internals when DEBUG mode is explicitly enabled
-    $debug = getenv('APP_DEBUG') === 'true' || ($_ENV['APP_DEBUG'] ?? '') === 'true';
+    $debug = filter_var(getenv('APP_DEBUG') ?: ($_ENV['APP_DEBUG'] ?? false), FILTER_VALIDATE_BOOLEAN);
     $clientMessage = $debug
         ? 'PHP_ERROR: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine()
         : 'Errore interno del server. Controlla i log per maggiori dettagli.';
@@ -166,6 +166,12 @@ function dispatchWebhook(string $action): void
  */
 function dispatch(string $controllerName, string $action): void
 {
+    // FIX: Auth middleware globale. Richiede login per TUTTE le action tranne quelle esplicitamente pubbliche.
+    $publicActions = ['login', 'forgotPassword', 'resetPassword', 'getPublicTeams', 'getPublicTeamAthletes', 'getPublicSponsors', 'getPublicProfile', 'getPublicForesteria', 'getPublicCollaborations'];
+    if (!in_array($action, $publicActions, true)) {
+        Auth::requireAuth();
+    }
+
     $class = "FusionERP\\Modules\\{$controllerName}\\{$controllerName}Controller";
 
     // Rely on Composer's PSR-4 autoloader to load the class implicitly
