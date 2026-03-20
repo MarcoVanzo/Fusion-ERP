@@ -192,8 +192,8 @@ def deploy_files_via_ftp():
                 remote_sub_dir = base_remote_dir if rel_path == '.' else f"{base_remote_dir}/{rel_path}".replace('\\', '/')
 
             for file in files:
-                # Skip ignored / hidden files (allow .htaccess, .env.prod, and .env)
-                if file not in ('.htaccess', '.env.prod', '.env') and (
+                # Skip ignored / hidden files (allow .htaccess and .env.prod)
+                if file not in ('.htaccess', '.env.prod') and (
                     file in ignore_files
                     or file.startswith('.')
                     or any(file.endswith(ext) for ext in ignore_extensions)
@@ -209,7 +209,7 @@ def deploy_files_via_ftp():
 
                 # Skip if unchanged, unless it's an environment file (we want to ensure our keys deploy)
                 cached_hash: str = file_cache.get(local_file_path, '')
-                if cached_hash and cached_hash == file_hash and file not in ('.env.prod', '.env'):
+                if cached_hash and cached_hash == file_hash and file != '.env.prod':
                     skip_count += 1
                     continue
 
