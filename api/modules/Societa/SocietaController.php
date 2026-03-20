@@ -589,7 +589,7 @@ class SocietaController
             ':name'           => htmlspecialchars(trim($body['name']), ENT_QUOTES, 'UTF-8'),
             ':stagione'       => $body['stagione'] ?? null,
             ':description'    => $body['description'] ?? null,
-            ':logo_path'      => $body['logo_path'] ?? null,
+            ':logo_path'      => array_key_exists('logo_path', $body) ? $body['logo_path'] : $before['logo_path'],
             ':website_url'    => $body['website_url'] ?? null,
             ':instagram_url'  => $body['instagram_url'] ?? null,
             ':facebook_url'   => $body['facebook_url'] ?? null,
