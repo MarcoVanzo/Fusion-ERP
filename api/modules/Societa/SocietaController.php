@@ -554,6 +554,7 @@ class SocietaController
             ':id'             => $id,
             ':tenant_id'      => TenantContext::id(),
             ':name'           => htmlspecialchars(trim($body['name']), ENT_QUOTES, 'UTF-8'),
+            ':tipo'           => htmlspecialchars(trim($body['tipo'] ?? 'Sponsor'), ENT_QUOTES, 'UTF-8'),
             ':stagione'       => $body['stagione'] ?? null,
             ':description'    => $body['description'] ?? null,
             ':logo_path'      => $body['logo_path'] ?? null,
@@ -587,6 +588,7 @@ class SocietaController
 
         $data = [
             ':name'           => htmlspecialchars(trim($body['name']), ENT_QUOTES, 'UTF-8'),
+            ':tipo'           => htmlspecialchars(trim($body['tipo'] ?? 'Sponsor'), ENT_QUOTES, 'UTF-8'),
             ':stagione'       => $body['stagione'] ?? null,
             ':description'    => $body['description'] ?? null,
             ':logo_path'      => array_key_exists('logo_path', $body) ? $body['logo_path'] : $before['logo_path'],

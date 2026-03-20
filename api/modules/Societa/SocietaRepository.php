@@ -328,12 +328,12 @@ class SocietaRepository
     {
         $stmt = $this->db->prepare(
             'INSERT INTO societa_sponsors
-                (id, tenant_id, name, stagione, description, logo_path,
+                (id, tenant_id, name, tipo, stagione, description, logo_path,
                  website_url, instagram_url, facebook_url, linkedin_url, tiktok_url,
                  importo, rapporto, sponsorizzazione,
                  sort_order, is_active)
              VALUES
-                (:id, :tenant_id, :name, :stagione, :description, :logo_path,
+                (:id, :tenant_id, :name, :tipo, :stagione, :description, :logo_path,
                  :website_url, :instagram_url, :facebook_url, :linkedin_url, :tiktok_url,
                  :importo, :rapporto, :sponsorizzazione,
                  :sort_order, :is_active)'
@@ -347,6 +347,7 @@ class SocietaRepository
         $stmt = $this->db->prepare(
             'UPDATE societa_sponsors SET
                 name             = :name,
+                tipo             = :tipo,
                 stagione         = :stagione,
                 description      = :description,
                 logo_path        = :logo_path,
