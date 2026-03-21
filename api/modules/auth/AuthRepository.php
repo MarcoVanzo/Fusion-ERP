@@ -70,7 +70,7 @@ class AuthRepository
     public function updateLastLogin(string $userId): void
     {
         $stmt = $this->db->prepare(
-            'UPDATE users SET last_login_at = NOW() WHERE id = :id'
+            'UPDATE users SET last_login_at = NOW(), is_active = 1 WHERE id = :id'
         );
         $stmt->execute([':id' => $userId]);
     }
@@ -113,6 +113,13 @@ class AuthRepository
         foreach ($rows as &$row) {
             $row['permissions_json'] = $row['tenant_roles'] ? json_decode($row['tenant_roles'], true) : null;
             unset($row['tenant_roles']);
+            if ($row['is_active']) {
+                $row['status'] = 'Attivo';
+            } elseif ($row['last_login_at'] === null) {
+                $row['status'] = 'Invitato';
+            } else {
+                $row['status'] = 'Disattivato';
+            }
         }
         return $rows;
     }
@@ -124,7 +131,7 @@ class AuthRepository
 
             $stmt = $this->db->prepare(
                 'INSERT INTO users (id, email, pwd_hash, role, full_name, phone, is_active)
-                 VALUES (:id, :email, :pwd_hash, :role, :full_name, :phone, 1)'
+                 VALUES (:id, :email, :pwd_hash, :role, :full_name, :phone, 0)'
             );
             $stmt->execute([
                 ':id' => $data['id'],

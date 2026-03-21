@@ -57,8 +57,10 @@ class AuthController
         }
 
         if (!(bool)$dbUser['is_active']) {
-            $this->repo->logAttempt($ip, $email, false);
-            Response::error('Il tuo account è stato disattivato. Contatta l\'amministratore.', 403);
+            if ($dbUser['last_login_at'] !== null) {
+                $this->repo->logAttempt($ip, $email, false);
+                Response::error('Il tuo account è stato disattivato. Contatta l\'amministratore.', 403);
+            }
         }
 
         // Successo
@@ -244,6 +246,11 @@ class AuthController
         // Auto-generate a secure temporary password — it will be communicated to the user
         $tempPassword = bin2hex(random_bytes(10)); // 20 hex chars
         $hash = password_hash($tempPassword, PASSWORD_BCRYPT, ['cost' => 12]);
+        $email = strtolower(trim($body['email']));
+
+        if ($this->repo->getUserByEmail($email) !== null) {
+            Response::error('Impossibile creare l\'utente: questa email è già in uso nel sistema.', 400);
+        }
 
         $id = 'USR_' . bin2hex(random_bytes(4));
 
@@ -254,7 +261,7 @@ class AuthController
 
         $this->repo->createUser([
             'id' => $id,
-            'email' => strtolower(trim($body['email'])),
+            'email' => $email,
             'pwd_hash' => $hash,
             'role' => $body['role'],
             'full_name' => htmlspecialchars(trim($body['full_name']), ENT_QUOTES, 'UTF-8'),
