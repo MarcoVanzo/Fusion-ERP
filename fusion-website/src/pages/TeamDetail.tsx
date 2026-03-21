@@ -153,17 +153,27 @@ const TeamDetail = () => {
                                             <div className="font-subheading text-brand-500 tracking-widest text-sm mb-1 uppercase">
                                                 {athlete.role || 'ROLE TBD'}
                                             </div>
-                                            <h3 className="w-full font-heading text-3xl leading-none text-white uppercase group-hover:text-brand-500 group-hover:drop-shadow-[0_0_15px_rgba(214,90,134,0.8)] transition-all duration-300 break-words whitespace-normal">
+                                            <h3 className="@container w-full font-heading leading-none text-white uppercase group-hover:text-brand-500 group-hover:drop-shadow-[0_0_15px_rgba(214,90,134,0.8)] transition-all duration-300">
                                                 {(() => {
                                                     const nameObj = athlete.full_name || athlete.first_name || '';
                                                     const parts = nameObj.split(' ');
                                                     const first = parts.shift() || '';
                                                     const last = parts.join(' ') || athlete.last_name || '';
                                                     return (
-                                                        <>
-                                                            {first}<br />
-                                                            <span className="text-3xl xl:text-4xl inline-block w-full">{last}</span>
-                                                        </>
+                                                        <div className="flex flex-col w-full">
+                                                            <span 
+                                                                className="whitespace-nowrap overflow-visible"
+                                                                style={{ fontSize: `min(1.875rem, calc(100cqi / (${Math.max(1, first.length)} * 1.2)))` }}
+                                                            >
+                                                                {first}
+                                                            </span>
+                                                            <span 
+                                                                className="whitespace-nowrap overflow-visible"
+                                                                style={{ fontSize: `min(2.25rem, calc(100cqi / (${Math.max(1, last.length)} * 1.2)))` }}
+                                                            >
+                                                                {last}
+                                                            </span>
+                                                        </div>
                                                     );
                                                 })()}
                                             </h3>

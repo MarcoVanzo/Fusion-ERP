@@ -5,6 +5,7 @@ const Network = (() => {
     a = [],
     n = [],
     l = [],
+    hz = { text: "", logo_path: "" },
     o = "",
     i = "";
   const s = ["club", "agenzia", "istituzione", "sponsor", "altro"],
@@ -34,7 +35,19 @@ const Network = (() => {
   function b(t) {
     const e = ["admin", "manager"].includes(App.getUser()?.role),
       n = o ? a.filter((t) => t.status === o) : a;
-    ((t.innerHTML = `\n            <div>\n                <div class="net-filter-bar" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);margin-bottom:var(--sp-3)">\n                    <div style="display:flex;gap:var(--sp-1);flex-wrap:wrap">\n                        <button class="filter-chip ${o ? "" : "active"}" data-col-status="" type="button">Tutte</button>\n                        ${r.map((t) => `\n                            <button class="filter-chip ${o === t ? "active" : ""}" data-col-status="${Utils.escapeHtml(t)}" type="button">\n                                ${Utils.escapeHtml(p[t] || t)}\n                            </button>`).join("")}\n                    </div>\n                    ${e ? '<button class="btn btn-primary btn-sm" id="net-add-col" type="button"><i class="ph ph-plus"></i> NUOVA COLLABORAZIONE</button>' : ""}\n                </div>\n                <div class="net-card-grid">\n                    ${0 === n.length ? Utils.emptyState("Nessuna collaborazione", "Aggiungi la prima collaborazione con il pulsante in alto.") : n.map((t) => `\n                            <div class="net-card" data-open-col="${Utils.escapeHtml(t.id)}">\n                                <div class="net-card-header">
+    const hubBanner = `
+        <div style="background:var(--color-bg-alt);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:var(--sp-3);margin-bottom:var(--sp-3);display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3)">
+            <div style="display:flex;align-items:center;gap:var(--sp-3)">
+                ${hz.logo_path ? `<img src="${Utils.escapeHtml(hz.logo_path)}" style="height:60px;width:60px;object-fit:contain;border-radius:var(--radius-sm);background:#fff;padding:4px;flex-shrink:0;">` : `<div style="height:60px;width:60px;border-radius:var(--radius-sm);background:var(--color-border);display:flex;align-items:center;justify-content:center;color:var(--color-text-muted)"><i class="ph ph-image"></i></div>`}
+                <div>
+                    <h3 style="margin:0;font-size:16px;font-weight:600">Savino del bene volley HUB</h3>
+                    <p style="margin:4px 0 0 0;font-size:13px;color:var(--color-text-muted);max-width:600px;line-height:1.4">${hz.text ? Utils.escapeHtml(hz.text).replace(/\n/g, '<br>') : "Nessun testo inserito."}</p>
+                </div>
+            </div>
+            ${e ? `<button class="btn btn-default btn-sm" id="net-edit-hub" type="button"><i class="ph ph-pencil-simple"></i> Modifica</button>` : ""}
+        </div>`;
+    ((t.innerHTML = `\n            <div>
+                ${hubBanner}\n                <div class="net-filter-bar" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);margin-bottom:var(--sp-3)">\n                    <div style="display:flex;gap:var(--sp-1);flex-wrap:wrap">\n                        <button class="filter-chip ${o ? "" : "active"}" data-col-status="" type="button">Tutte</button>\n                        ${r.map((t) => `\n                            <button class="filter-chip ${o === t ? "active" : ""}" data-col-status="${Utils.escapeHtml(t)}" type="button">\n                                ${Utils.escapeHtml(p[t] || t)}\n                            </button>`).join("")}\n                    </div>\n                    ${e ? '<button class="btn btn-primary btn-sm" id="net-add-col" type="button"><i class="ph ph-plus"></i> NUOVA COLLABORAZIONE</button>' : ""}\n                </div>\n                <div class="net-card-grid">\n                    ${0 === n.length ? Utils.emptyState("Nessuna collaborazione", "Aggiungi la prima collaborazione con il pulsante in alto.") : n.map((t) => `\n                            <div class="net-card" data-open-col="${Utils.escapeHtml(t.id)}">\n                                <div class="net-card-header">
                                     <div style="display:flex; align-items:center; gap:12px;">
                                         ${
                                           t.logo_path
@@ -47,6 +60,49 @@ const Network = (() => {
                                     </div>
                                     ${u(t.status, "col")}
                                 </div>\n                                <div class="net-card-meta">\n                                    <i class="ph ph-tag" style="margin-right:4px"></i>${Utils.escapeHtml(t.partner_type || "—")}\n                                    ${t.agreement_type ? ` · <em>${Utils.escapeHtml(t.agreement_type)}</em>` : ""}\n                                </div>\n                                ${t.referent_name ? `<div class="net-card-meta"><i class="ph ph-user" style="margin-right:4px"></i>${Utils.escapeHtml(t.referent_name)}</div>` : ""}\n                                ${t.start_date || t.end_date ? `\n                                    <div class="net-card-meta">\n                                        <i class="ph ph-calendar" style="margin-right:4px"></i>\n                                        ${t.start_date || ""} → ${t.end_date || "∞"}\n                                    </div>` : ""}\n                                ${e ? `<div style="display:flex;gap:4px;margin-top:var(--sp-1)">\n                                    <button class="btn btn-default btn-sm" data-edit-col="${Utils.escapeHtml(t.id)}" type="button" onclick="event.stopPropagation()"><i class="ph ph-pencil-simple"></i></button>\n                                    <button class="btn btn-default btn-sm" data-del-col="${Utils.escapeHtml(t.id)}" type="button" style="color:var(--color-pink)" onclick="event.stopPropagation()"><i class="ph ph-trash"></i></button>\n                                </div>` : ""}\n                            </div>`).join("")}\n                </div>\n            </div>`),
+      document.getElementById("net-edit-hub")?.addEventListener("click", () => {
+          const mModal = UI.modal({
+              title: "Modifica Savino del bene volley HUB",
+              body: `
+                  <div class="form-group">
+                      <label class="form-label" for="hub-text">Testo</label>
+                      <textarea id="hub-text" class="form-input" rows="4" placeholder="Testo descrittivo...">${Utils.escapeHtml(hz.text || "")}</textarea>
+                  </div>
+                  <div class="form-group">
+                      <label class="form-label" for="hub-logo">Logo HUB</label>
+                      <input id="hub-logo" class="form-input" type="file" accept="image/*">
+                  </div>
+              `,
+              footer: `
+                  <button class="btn btn-ghost btn-sm" id="hub-cancel" type="button">Annulla</button>
+                  <button class="btn btn-primary btn-sm" id="hub-save" type="button">SALVA</button>
+              `
+          });
+          document.getElementById("hub-cancel")?.addEventListener("click", () => mModal.close());
+          document.getElementById("hub-save")?.addEventListener("click", async () => {
+              const saveBtn = document.getElementById("hub-save");
+              saveBtn.disabled = true;
+              saveBtn.textContent = "Salvataggio...";
+              try {
+                  const text = document.getElementById("hub-text").value;
+                  await Store.api("updateHubText", "network", { text });
+                  const logoFile = document.getElementById("hub-logo").files[0];
+                  if (logoFile) {
+                      const fd = new FormData();
+                      fd.append("logo", logoFile);
+                      await Store.api("uploadHubLogo", "network", fd);
+                  }
+                  hz = await Store.get("getHubConfig", "network").catch(() => hz);
+                  UI.toast("HUB aggiornato", "success");
+                  v();
+                  mModal.close();
+              } catch (err) {
+                  UI.toast("Errore: " + err.message, "error");
+                  saveBtn.disabled = false;
+                  saveBtn.textContent = "SALVA";
+              }
+          });
+      }, m()),
       t.querySelectorAll("[data-col-status]").forEach((e) => {
         e.addEventListener(
           "click",
@@ -620,10 +676,11 @@ const Network = (() => {
       if (t) {
         (UI.loading(!0), (t.innerHTML = UI.skeletonPage()));
         try {
-          [a, n, l] = await Promise.all([
+          [a, n, l, hz] = await Promise.all([
             Store.get("listCollaborations", "network").catch(() => []),
             Store.get("listTrials", "network").catch(() => []),
             Store.get("listActivities", "network").catch(() => []),
+            Store.get("getHubConfig", "network").catch(() => ({ text: "", logo_path: "" })),
           ]);
           const t = Router.getCurrentRoute();
           ((e =

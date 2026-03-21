@@ -85,13 +85,7 @@ const Navbar = () => {
                         )
                     })}
                     
-                    {/* Utility Icons */}
-                    <div className="flex items-center gap-4 ml-4 border-l border-zinc-700 pl-6">
-                        <Link to="/ERP" className="flex items-center gap-2 text-zinc-300 hover:text-brand-500 transition-colors text-[10px] font-bold uppercase tracking-widest bg-white/5 px-3 py-2 rounded-full border border-white/10 hover:border-brand-500 relative group">
-                           <User size={14} /> ERP
-                           <div className="absolute inset-0 bg-brand-500/10 rounded-full scale-0 group-hover:scale-100 transition-transform"></div>
-                        </Link>
-                    </div>
+
                 </div>
 
                 {/* Mobile Menu Toggle */}
@@ -144,16 +138,7 @@ const Navbar = () => {
                                 );
                             })}
                         </div>
-                        <motion.div 
-                            initial={{ y: 20, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            transition={{ delay: allLinks.length * 0.05 + 0.1 }}
-                            className="mt-8 flex justify-start pt-4"
-                        >
-                            <Link to="/ERP" onClick={() => setIsMobileMenuOpen(false)} className="text-brand-500 font-heading text-xl uppercase tracking-widest hover:scale-105 transition-transform origin-left block">
-                                ACCEDI ERP
-                            </Link>
-                        </motion.div>
+
                     </motion.div>
                 )}
             </AnimatePresence>

@@ -178,13 +178,13 @@ const Sponsors = () => {
                                             key={sponsor.id}
                                             variants={itemVariants}
                                             whileHover={{ y: -10, scale: 1.02 }}
-                                            className={`group relative bg-zinc-900/40 overflow-hidden backdrop-blur-sm border border-zinc-800/60 hover:border-brand-500/50 transition-all duration-500 flex shadow-2xl hover:shadow-[0_20px_40px_rgba(217,70,239,0.1)] ${isMain ? 'flex-col md:flex-row rounded-[2rem] md:rounded-[3rem]' : 'flex-col rounded-[2rem]'}`}
+                                            className={`group relative bg-zinc-900/40 overflow-hidden backdrop-blur-sm border border-zinc-800/60 hover:border-brand-500/50 transition-all duration-500 flex shadow-2xl hover:shadow-[0_20px_40px_rgba(217,70,239,0.1)] ${isMain ? 'flex-col md:flex-row rounded-[2rem] md:rounded-[3rem] md:h-[400px]' : 'flex-col rounded-[2rem] h-[450px]'}`}
                                         >
                                             {/* Glow effect on hover */}
                                             <div className="absolute inset-0 bg-gradient-to-b from-brand-500/0 to-brand-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
 
                                             {/* Logo Section */}
-                                            <div className={`relative flex items-center justify-center bg-white shrink-0 ${isMain ? 'p-12 md:p-24 md:w-1/2 min-h-[300px] md:min-h-[400px]' : 'p-8 md:p-12 h-48 sm:h-64'}`}>
+                                            <div className={`relative flex items-center justify-center bg-white shrink-0 ${isMain ? 'p-8 md:p-12 md:w-1/2 min-h-[200px] md:min-h-0' : 'p-6 h-40 sm:h-48'}`}>
                                                 {sponsor.logo_path ? (
                                                     <img
                                                         src={sponsor.logo_path.startsWith('http') ? sponsor.logo_path : `${ERP_BASE}/${sponsor.logo_path}`}
@@ -204,24 +204,24 @@ const Sponsors = () => {
                                             </div>
 
                                             {/* Info Section */}
-                                            <div className={`flex flex-col flex-grow z-10 ${isMain ? 'p-10 md:p-16 md:w-1/2 justify-center' : 'p-8'}`}>
-                                                <h3 className={`${isMain ? 'text-4xl md:text-5xl mb-6' : 'text-2xl mb-4'} font-heading text-white uppercase tracking-wider group-hover:text-brand-400 transition-colors`}>
+                                            <div className={`flex flex-col flex-grow min-h-0 overflow-hidden z-10 ${isMain ? 'p-8 md:p-10 md:w-1/2' : 'p-6'}`}>
+                                                <h3 className={`${isMain ? 'text-3xl md:text-4xl mb-4' : 'text-2xl mb-4'} font-heading text-white uppercase tracking-wider group-hover:text-brand-400 transition-colors shrink-0`}>
                                                     {sponsor.name}
                                                 </h3>
                                                 
                                                 {sponsor.description && (
-                                                    <div className="relative mb-8 flex-grow">
-                                                        <p 
-                                                            className={`text-zinc-400 leading-relaxed font-light overflow-y-auto pr-4 ${isMain ? 'text-base md:text-lg max-h-48' : 'text-sm max-h-32'}`} 
-                                                            style={{ scrollbarWidth: 'thin', scrollbarColor: '#3f3f46 transparent' }}
-                                                        >
+                                                    <div 
+                                                        className="relative mb-4 flex-grow min-h-0 overflow-y-auto pr-4" 
+                                                        style={{ scrollbarWidth: 'thin', scrollbarColor: '#3f3f46 transparent' }}
+                                                    >
+                                                        <p className={`text-zinc-400 leading-relaxed font-light ${isMain ? 'text-base' : 'text-sm'}`}>
                                                             {sponsor.description}
                                                         </p>
                                                     </div>
                                                 )}
 
                                                 {/* Socials / Links */}
-                                                <div className={`flex flex-wrap items-center gap-3 mt-auto pt-6 border-t border-zinc-800/50 ${isMain ? 'gap-4 pt-8' : ''}`}>
+                                                <div className={`flex flex-wrap items-center gap-3 mt-auto pt-4 border-t border-zinc-800/50 shrink-0`}>
                                                     {sponsor.website_url && (
                                                         <a
                                                             href={sponsor.website_url.startsWith('http') ? sponsor.website_url : `https://${sponsor.website_url}`}

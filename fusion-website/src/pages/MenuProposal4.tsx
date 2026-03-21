@@ -59,7 +59,6 @@ const MenuProposal4 = () => {
                         {/* Utility Icons */}
                         <div className="flex items-center gap-4 ml-8 border-l border-zinc-700 pl-8">
                             <button className="text-zinc-300 hover:text-brand-500 transition-colors"><Search size={18} /></button>
-                            <Link to="/ERP" className="text-zinc-300 hover:text-brand-500 transition-colors"><User size={18} /></Link>
                         </div>
                     </div>
 
@@ -97,9 +96,7 @@ const MenuProposal4 = () => {
                                 </Link>
                             ))}
                         </div>
-                        <div className="mt-auto flex justify-center gap-8 border-t border-zinc-800 pt-8">
-                            <Link to="/ERP" className="text-sm uppercase tracking-widest text-brand-500 font-bold">Area ERP</Link>
-                        </div>
+
                     </motion.div>
                 )}
             </AnimatePresence>

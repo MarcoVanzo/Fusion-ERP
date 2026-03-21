@@ -104,6 +104,56 @@ class NetworkRepository
         )->execute([':id' => $id, ':tid' => $tenantId]);
     }
 
+    // ─── HUB CONFIG ──────────────────────────────────────────────────────────
+
+    public function getHubConfig(): array
+    {
+        $tenantId = TenantContext::id();
+        $stmt = $this->db->prepare(
+            'SELECT setting_key, setting_value FROM tenant_settings 
+             WHERE tenant_id = :tid AND setting_key IN (:key_text, :key_logo)'
+        );
+        $stmt->execute([
+            ':tid' => $tenantId, 
+            ':key_text' => 'network_hub_text', 
+            ':key_logo' => 'network_hub_logo'
+        ]);
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $config = ['text' => '', 'logo_path' => ''];
+        foreach ($rows as $row) {
+            if ($row['setting_key'] === 'network_hub_text') {
+                $config['text'] = $row['setting_value'];
+            }
+            if ($row['setting_key'] === 'network_hub_logo') {
+                $config['logo_path'] = $row['setting_value'];
+            }
+        }
+        return $config;
+    }
+
+    public function updateHubText(string $text): void
+    {
+        $tenantId = TenantContext::id();
+        $stmt = $this->db->prepare(
+            'INSERT INTO tenant_settings (tenant_id, setting_key, setting_value) 
+             VALUES (:tid, :key, :val) 
+             ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value), updated_at = NOW()'
+        );
+        $stmt->execute([':tid' => $tenantId, ':key' => 'network_hub_text', ':val' => $text]);
+    }
+
+    public function updateHubLogo(string $logoPath): void
+    {
+        $tenantId = TenantContext::id();
+        $stmt = $this->db->prepare(
+            'INSERT INTO tenant_settings (tenant_id, setting_key, setting_value) 
+             VALUES (:tid, :key, :val) 
+             ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value), updated_at = NOW()'
+        );
+        $stmt->execute([':tid' => $tenantId, ':key' => 'network_hub_logo', ':val' => $logoPath]);
+    }
+
     // ─── COLLABORATION DOCUMENTS ───────────────────────────────────────────────
 
     public function listColDocuments(string $collaborationId): array
