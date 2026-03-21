@@ -195,7 +195,7 @@ const Network = () => {
                                     key={collab.id}
                                     variants={itemVariants}
                                     whileHover={{ y: -10, scale: 1.02 }}
-                                    className="group relative bg-zinc-900/40 overflow-hidden backdrop-blur-sm border border-zinc-800/60 hover:border-brand-500/50 transition-all duration-500 flex flex-col shadow-2xl hover:shadow-[0_20px_40px_rgba(217,70,239,0.1)] rounded-[2rem] h-[450px]"
+                                    className="group relative bg-zinc-900/40 overflow-hidden backdrop-blur-sm border border-zinc-800/60 hover:border-brand-500/50 transition-all duration-500 flex flex-col shadow-2xl hover:shadow-[0_20px_40px_rgba(217,70,239,0.1)] rounded-[2rem] h-[500px]"
                                 >
                                     {/* Glow effect on hover */}
                                     <div className="absolute inset-0 bg-gradient-to-b from-brand-500/0 to-brand-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
@@ -231,7 +231,7 @@ const Network = () => {
                                         
                                         {collab.description ? (
                                             <div 
-                                                className="relative mb-4 flex-grow min-h-0 overflow-y-auto pr-2 max-h-[92px]" 
+                                                className="relative mb-6 h-[92px] shrink-0 overflow-y-auto pr-2" 
                                                 style={{ scrollbarWidth: 'thin', scrollbarColor: '#3f3f46 transparent' }}
                                             >
                                                 <p className="text-zinc-400 leading-relaxed font-light text-sm" title={collab.description}>
