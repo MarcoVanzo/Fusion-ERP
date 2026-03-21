@@ -189,11 +189,11 @@ const Sponsors = () => {
                                                     <img
                                                         src={sponsor.logo_path.startsWith('http') ? sponsor.logo_path : `${ERP_BASE}/${sponsor.logo_path}`}
                                                         alt={`Logo ${sponsor.name}`}
-                                                        className="max-h-full max-w-full object-contain filter grayscale-0 md:grayscale md:group-hover:grayscale-0 transition-all duration-700 hover:scale-105 drop-shadow-[0_0_8px_rgba(0,0,0,0.4)]"
+                                                        className="max-h-full max-w-full object-contain filter grayscale-0 md:grayscale md:group-hover:grayscale-0 transition-all duration-700 hover:scale-105 drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]"
                                                     />
                                                 ) : (
                                                     <div className="w-full h-full flex items-center justify-center">
-                                                        <span className={`font-heading text-zinc-300 font-bold group-hover:text-brand-500 transition-colors duration-500 ${isMain ? 'text-7xl' : 'text-4xl md:text-6xl'}`}>
+                                                        <span className={`font-heading text-zinc-800 font-bold group-hover:text-brand-500 transition-colors duration-500 ${isMain ? 'text-7xl' : 'text-4xl md:text-6xl'}`}>
                                                             {sponsor.name.substring(0, 2).toUpperCase()}
                                                         </span>
                                                     </div>

@@ -252,26 +252,42 @@ class AuthController
             Response::error('Impossibile creare l\'utente: questa email è già in uso nel sistema.', 400);
         }
 
-        $id = 'USR_' . bin2hex(random_bytes(4));
-
         $permissionsJson = null;
         if (isset($body['permissions_json']) && is_array($body['permissions_json'])) {
             $permissionsJson = $body['permissions_json'];
         }
 
-        $this->repo->createUser([
-            'id' => $id,
-            'email' => $email,
-            'pwd_hash' => $hash,
-            'role' => $body['role'],
-            'full_name' => htmlspecialchars(trim($body['full_name']), ENT_QUOTES, 'UTF-8'),
-            'phone' => $body['phone'] ?? null,
-            'permissions_json' => $permissionsJson
-        ]);
+        $deletedUser = $this->repo->getDeletedUserByEmail($email);
+        
+        if ($deletedUser) {
+            $id = $deletedUser['id']; // Rieusa l'ID esistente
+            
+            $this->repo->restoreAndRewriteUser($id, [
+                'email' => $email,
+                'pwd_hash' => $hash,
+                'role' => $body['role'],
+                'full_name' => htmlspecialchars(trim($body['full_name']), ENT_QUOTES, 'UTF-8'),
+                'phone' => $body['phone'] ?? null,
+                'permissions_json' => $permissionsJson
+            ]);
+            
+            Audit::log('RESTORE', 'users', $id, null, ['email' => $body['email'], 'role' => $body['role'], 'action' => 'auto-restored during registration']);
+        } else {
+            $id = 'USR_' . bin2hex(random_bytes(4));
+            
+            $this->repo->createUser([
+                'id' => $id,
+                'email' => $email,
+                'pwd_hash' => $hash,
+                'role' => $body['role'],
+                'full_name' => htmlspecialchars(trim($body['full_name']), ENT_QUOTES, 'UTF-8'),
+                'phone' => $body['phone'] ?? null,
+                'permissions_json' => $permissionsJson
+            ]);
+            
+            Audit::log('INSERT', 'users', $id, null, ['email' => $body['email'], 'role' => $body['role']]);
+        }
 
-        $this->repo->insertPasswordHistory($id, $hash);
-
-        Audit::log('INSERT', 'users', $id, null, ['email' => $body['email'], 'role' => $body['role']]);
 
         // Invia l'email con le credenziali temporanee
         $appUrl = rtrim(getenv('APP_URL') ?: 'https://www.fusionteamvolley.it/ERP', '/');
@@ -303,7 +319,7 @@ class AuthController
         try {
             \FusionERP\Shared\Mailer::send($body['email'], $body['full_name'], $subject, $htmlBody);
             $emailSent = true;
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             error_log("Failed to send welcome email to {$body['email']}: " . $e->getMessage());
         }
 

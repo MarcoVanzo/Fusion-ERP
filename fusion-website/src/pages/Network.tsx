@@ -143,11 +143,11 @@ const Network = () => {
                                 <img 
                                     src={hubConfig.logo_path.startsWith('http') ? hubConfig.logo_path : `${ERP_BASE}/${hubConfig.logo_path}`} 
                                     alt="Savino del bene volley HUB" 
-                                    className="max-h-full max-w-full object-contain filter grayscale-0 md:grayscale md:group-hover:grayscale-0 transition-all duration-700 hover:scale-105"
+                                    className="max-h-full max-w-full object-contain filter grayscale-0 md:grayscale md:group-hover:grayscale-0 transition-all duration-700 hover:scale-105 drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]"
                                 />
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center">
-                                    <span className="font-heading text-zinc-300 font-bold group-hover:text-brand-500 transition-colors duration-500 text-6xl">
+                                    <span className="font-heading text-zinc-800 font-bold group-hover:text-brand-500 transition-colors duration-500 text-6xl">
                                         HUB
                                     </span>
                                 </div>
@@ -206,11 +206,11 @@ const Network = () => {
                                             <img
                                                 src={collab.logo_path.startsWith('http') ? collab.logo_path : `${ERP_BASE}/${collab.logo_path}`}
                                                 alt={`Logo ${collab.partner_name}`}
-                                                className="max-h-full max-w-full object-contain filter grayscale-0 md:grayscale md:group-hover:grayscale-0 transition-all duration-700 hover:scale-105"
+                                                className="max-h-full max-w-full object-contain filter grayscale-0 md:grayscale md:group-hover:grayscale-0 transition-all duration-700 hover:scale-105 drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]"
                                             />
                                         ) : (
                                             <div className="w-full h-full flex items-center justify-center">
-                                                <span className="font-heading text-zinc-300 font-bold group-hover:text-brand-500 transition-colors duration-500 text-4xl md:text-5xl">
+                                                <span className="font-heading text-zinc-800 font-bold group-hover:text-brand-500 transition-colors duration-500 text-4xl md:text-5xl">
                                                     {collab.partner_name.substring(0, 2).toUpperCase()}
                                                 </span>
                                             </div>
