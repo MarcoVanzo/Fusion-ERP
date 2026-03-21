@@ -20,7 +20,7 @@ const Shop = () => {
     useEffect(() => {
         const fetchProducts = async () => {
             try {
-                const res = await fetch('https://www.fusionteamvolley.it/ERP/api/router.php?module=ecommerce&action=getPublicShop');
+                const res = await fetch('/ERP/api/router.php?module=ecommerce&action=getPublicShop');
                 const data = await res.json();
                 if ((data.status === 'success' || data.success === true) && data.data.products) {
                     const prods = data.data.products;
@@ -118,12 +118,12 @@ const Shop = () => {
             {/* Content Section */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-20">
                 {/* Category Filters */}
-                <div className="flex flex-wrap items-center justify-center gap-3 mb-12">
+                <div className="flex overflow-x-auto sm:flex-wrap items-center justify-start sm:justify-center gap-4 sm:gap-3 mb-12 pb-4 snap-x pr-4" style={{ scrollbarWidth: 'none' }}>
                     {categories.map(category => (
                         <button
                             key={category}
                             onClick={() => setActiveCategory(category)}
-                            className={`px-5 py-2 rounded-full text-sm font-bold uppercase tracking-wider transition-all duration-300 border ${
+                            className={`snap-start whitespace-nowrap px-6 py-3 rounded-full text-sm md:text-base font-bold uppercase tracking-wider transition-all duration-300 border min-h-[44px] ${
                                 activeCategory === category 
                                     ? 'bg-brand-500 text-white border-brand-500 shadow-[0_0_15px_rgba(217,70,239,0.4)] md:hover:scale-105' 
                                     : 'bg-zinc-900/80 text-zinc-400 border-zinc-800 hover:text-white hover:border-zinc-600 md:hover:scale-105 backdrop-blur-sm'

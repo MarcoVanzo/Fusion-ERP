@@ -39,7 +39,7 @@ const Results = () => {
         // Fetch real FIPAV synced matches and standings from the ERP MatchCenter endpoint
         const fetchMatches = async () => {
             try {
-                const res = await fetch('https://www.fusionteamvolley.it/ERP/api/router.php?module=results&action=getPublicMatchCenter');
+                const res = await fetch('/ERP/api/router.php?module=results&action=getPublicMatchCenter');
                 const data = await res.json();
                 if (data.status === 'success' || data.success === true) {
                     setMatches(data.data.matches || []);

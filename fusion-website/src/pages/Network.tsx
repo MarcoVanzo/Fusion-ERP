@@ -132,10 +132,10 @@ const Network = () => {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6 }}
-                        className="group relative bg-zinc-900/40 overflow-hidden backdrop-blur-sm border border-zinc-800/60 hover:border-brand-500/50 transition-all duration-500 flex shadow-2xl hover:shadow-[0_20px_40px_rgba(217,70,239,0.1)] flex-col md:flex-row rounded-[2rem] md:rounded-[3rem] md:h-[400px]"
+                        className="group relative bg-zinc-900/40 overflow-hidden backdrop-blur-sm border border-zinc-800/60 hover:border-brand-500 transition-all duration-500 flex shadow-2xl hover:shadow-[0_0_30px_rgba(217,70,239,0.3)] flex-col md:flex-row rounded-[2rem] md:rounded-[3rem] md:h-[400px]"
                     >
                         {/* Glow effect on hover */}
-                        <div className="absolute inset-0 bg-gradient-to-b from-brand-500/0 to-brand-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+                        <div className="absolute inset-0 bg-gradient-to-br from-brand-500/0 via-brand-500/5 to-brand-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
 
                         {/* Logo Section */}
                         <div className="relative flex items-center justify-center bg-white shrink-0 p-8 md:p-12 md:w-2/5 min-h-[200px] md:min-h-0">
@@ -162,7 +162,7 @@ const Network = () => {
                                 Savino del bene volley HUB
                             </h2>
                             <div 
-                                className="relative mb-4 flex-grow min-h-0 overflow-y-auto pr-4" 
+                                className="relative mb-4 flex-grow min-h-0 overflow-visible md:overflow-y-auto pr-0 md:pr-4" 
                                 style={{ scrollbarWidth: 'thin', scrollbarColor: '#3f3f46 transparent' }}
                             >
                                 <div 
@@ -195,10 +195,10 @@ const Network = () => {
                                     key={collab.id}
                                     variants={itemVariants}
                                     whileHover={{ y: -10, scale: 1.02 }}
-                                    className="group relative bg-zinc-900/40 overflow-hidden backdrop-blur-sm border border-zinc-800/60 hover:border-brand-500/50 transition-all duration-500 flex flex-col shadow-2xl hover:shadow-[0_20px_40px_rgba(217,70,239,0.1)] rounded-[2rem] h-[500px]"
+                                    className="group relative bg-zinc-900/40 overflow-hidden backdrop-blur-sm border border-zinc-800/60 hover:border-brand-500 transition-all duration-500 flex flex-col shadow-2xl hover:shadow-[0_0_30px_rgba(217,70,239,0.3)] rounded-[2rem] min-h-[500px] md:h-[500px]"
                                 >
                                     {/* Glow effect on hover */}
-                                    <div className="absolute inset-0 bg-gradient-to-b from-brand-500/0 to-brand-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+                                    <div className="absolute inset-0 bg-gradient-to-br from-brand-500/0 via-brand-500/5 to-brand-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
 
                                     {/* Header / Logo */}
                                     <div className="relative flex items-center justify-center bg-white shrink-0 p-6 h-40 sm:h-48">
@@ -231,7 +231,7 @@ const Network = () => {
                                         
                                         {collab.description ? (
                                             <div 
-                                                className="relative mb-6 h-[92px] shrink-0 overflow-y-auto pr-2" 
+                                                className="relative mb-6 h-auto md:h-[92px] shrink-0 overflow-visible md:overflow-y-auto pr-0 md:pr-2" 
                                                 style={{ scrollbarWidth: 'thin', scrollbarColor: '#3f3f46 transparent' }}
                                             >
                                                 <p className="text-zinc-400 leading-relaxed font-light text-sm" title={collab.description}>

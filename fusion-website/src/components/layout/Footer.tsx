@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Facebook, Instagram, Youtube, MapPin, Mail, Phone, Loader2, CheckCircle, XCircle } from 'lucide-react';
+import { Facebook, Instagram, Youtube, MapPin, Mail, Phone, Loader2, CheckCircle, XCircle, ChevronRight } from 'lucide-react';
 
 const Footer = () => {
     const [email, setEmail] = useState('');
     const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
     const [message, setMessage] = useState('');
+    const [openSection, setOpenSection] = useState<string | null>(null);
 
     const handleSubscribe = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -16,7 +17,7 @@ const Footer = () => {
         setMessage('');
 
         try {
-            const response = await fetch('https://www.fusionteamvolley.it/ERP/api/?module=website&action=subscribeNewsletter', {
+            const response = await fetch('/ERP/api/?module=website&action=subscribeNewsletter', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -98,10 +99,10 @@ const Footer = () => {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-12 mb-12">
 
                     {/* Brand */}
-                    <div className="space-y-4">
+                    <div className="space-y-4 pb-6 md:pb-0">
                         <div className="flex items-center gap-3">
                             <div className="w-8 h-8 rounded-full bg-brand-500 flex items-center justify-center text-zinc-950 font-bold text-lg">
                                 F
@@ -127,9 +128,15 @@ const Footer = () => {
                     </div>
 
                     {/* Quick Links */}
-                    <div>
-                        <h3 className="text-white font-bold uppercase tracking-wider mb-6 text-sm">Navigazione</h3>
-                        <ul className="space-y-3">
+                    <div className="pb-4 border-b border-zinc-800/50 md:border-none md:pb-0">
+                        <h3 
+                            className="text-white font-bold uppercase tracking-wider md:mb-6 text-sm flex justify-between items-center cursor-pointer md:cursor-default"
+                            onClick={() => setOpenSection(openSection === 'nav' ? null : 'nav')}
+                        >
+                            Navigazione
+                            <ChevronRight size={16} className={`md:hidden transition-transform duration-300 ${openSection === 'nav' ? 'rotate-90 text-brand-500' : 'text-zinc-500'}`} />
+                        </h3>
+                        <ul className={`space-y-3 overflow-hidden transition-all duration-300 ${openSection === 'nav' ? 'max-h-96 opacity-100 mt-6' : 'max-h-0 opacity-0 md:max-h-full md:opacity-100 md:mt-0'}`}>
                             {[
                                 { label: 'Home', path: '/' },
                                 { label: 'News', path: '/news' },
@@ -147,9 +154,15 @@ const Footer = () => {
                     </div>
 
                     {/* Contacts */}
-                    <div>
-                        <h3 className="text-white font-bold uppercase tracking-wider mb-6 text-sm">Contatti</h3>
-                        <ul className="space-y-4">
+                    <div className="pb-4 border-b border-zinc-800/50 md:border-none md:pb-0">
+                        <h3 
+                            className="text-white font-bold uppercase tracking-wider md:mb-6 text-sm flex justify-between items-center cursor-pointer md:cursor-default"
+                            onClick={() => setOpenSection(openSection === 'contacts' ? null : 'contacts')}
+                        >
+                            Contatti
+                            <ChevronRight size={16} className={`md:hidden transition-transform duration-300 ${openSection === 'contacts' ? 'rotate-90 text-brand-500' : 'text-zinc-500'}`} />
+                        </h3>
+                        <ul className={`space-y-4 overflow-hidden transition-all duration-300 ${openSection === 'contacts' ? 'max-h-96 opacity-100 mt-6' : 'max-h-0 opacity-0 md:max-h-full md:opacity-100 md:mt-0'}`}>
                             <li className="flex items-start gap-3">
                                 <MapPin size={18} className="text-brand-500 shrink-0 mt-0.5" />
                                 <span className="text-zinc-300 text-sm">Via Vicentino 1<br />Trivignano (VE)</span>
@@ -166,14 +179,22 @@ const Footer = () => {
                     </div>
 
                     {/* ERP Access */}
-                    <div>
-                        <h3 className="text-white font-bold uppercase tracking-wider mb-6 text-sm">Staff & Atleti</h3>
+                    <div className="pb-4 border-b border-zinc-800/50 md:border-none md:pb-0">
+                        <h3 
+                            className="text-white font-bold uppercase tracking-wider md:mb-6 text-sm flex justify-between items-center cursor-pointer md:cursor-default"
+                            onClick={() => setOpenSection(openSection === 'erp' ? null : 'erp')}
+                        >
+                            Staff & Atleti
+                            <ChevronRight size={16} className={`md:hidden transition-transform duration-300 ${openSection === 'erp' ? 'rotate-90 text-brand-500' : 'text-zinc-500'}`} />
+                        </h3>
+                        <div className={`overflow-hidden transition-all duration-300 ${openSection === 'erp' ? 'max-h-96 opacity-100 mt-6' : 'max-h-0 opacity-0 md:max-h-full md:opacity-100 md:mt-0'}`}>
                         <p className="text-zinc-300 text-sm mb-4">
                             Accedi all'area gestionale Fusion ERP per gestire roster, risultati e calendari.
                         </p>
                         <a href="/ERP" className="inline-flex items-center justify-center w-full px-5 py-3 rounded-none bg-zinc-800 border border-zinc-600 text-white font-bold tracking-wider hover:bg-white hover:text-zinc-950 hover:scale-[1.02] transition-all duration-300">
                             Accesso Gestionale
                         </a>
+                        </div>
                     </div>
 
                 </div>

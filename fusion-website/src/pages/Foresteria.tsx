@@ -96,7 +96,7 @@ const Foresteria = () => {
                 <div className="absolute inset-0 z-10 opacity-30 pointer-events-none mix-blend-overlay" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #a21caf 0, #a21caf 2px, transparent 2px, transparent 100px)' }}></div>
                 
                 <div className="relative z-20 text-center px-4 max-w-4xl mx-auto flex flex-col items-center">
-                    <div className="inline-flex items-center gap-3 px-6 py-2 border border-brand-500/50 bg-zinc-950/80 mb-6 clip-diagonal uppercase text-xs font-bold text-brand-500 tracking-[0.2em] backdrop-blur-sm">
+                    <div className="inline-flex flex-wrap items-center justify-center gap-2 px-4 md:px-6 py-2 border border-brand-500/50 bg-zinc-950/80 mb-6 clip-diagonal uppercase text-[10px] md:text-xs font-bold text-brand-500 tracking-[0.2em] backdrop-blur-sm">
                         La Nostra Casa
                     </div>
                     <h1 className="font-heading text-5xl md:text-7xl tracking-tighter text-white mb-6 uppercase drop-shadow-xl leading-none">
@@ -116,8 +116,11 @@ const Foresteria = () => {
                 <div className="flex flex-col lg:flex-row gap-12">
                     {/* Left Column: Description */}
                     <div className="lg:w-2/3">
-                        <div className="bg-zinc-900/50 p-10 md:p-14 border border-zinc-800 clip-diagonal backdrop-blur-md shadow-[0_4px_30px_rgba(0,0,0,0.5)] h-full relative z-10">
-                            <h2 className="font-heading text-3xl md:text-4xl text-white mb-6 border-b border-zinc-800 pb-4 inline-flex items-center gap-3">
+                        <div 
+                            className="bg-zinc-900/50 p-6 md:p-10 lg:p-14 pb-20 md:pb-24 lg:pb-28 border border-zinc-800 backdrop-blur-md shadow-[0_4px_30px_rgba(0,0,0,0.5)] h-full relative z-10 w-full"
+                            style={{ clipPath: 'polygon(0 0, 100% 0, 100% calc(100% - 40px), 0 100%)' }}
+                        >
+                            <h2 className="font-heading text-3xl md:text-4xl text-white mb-6 border-b border-zinc-800 pb-4 flex flex-wrap items-center gap-x-3 gap-y-1">
                                 IL NOSTRO <span className="text-brand-500">PROGETTO</span>
                             </h2>
                             
@@ -130,7 +133,7 @@ const Foresteria = () => {
                                     <div className="h-4 bg-zinc-800 rounded w-3/4"></div>
                                 </div>
                             ) : info?.description ? (
-                                <div className="mt-6 whitespace-pre-wrap font-sans text-sm md:text-base text-zinc-300 leading-[1.8] font-light tracking-wide lowercase">
+                                <div className="mt-6 whitespace-pre-wrap break-words font-sans text-sm md:text-base text-zinc-300 leading-[1.8] font-light tracking-wide lowercase">
                                     {info.description.split('\n').map((line, i) => {
                                         if (line.trim().startsWith('-')) {
                                             const parts = line.split(':');
@@ -152,8 +155,8 @@ const Foresteria = () => {
                     </div>
 
                     {/* Right Column: Info & Location */}
-                    <div className="lg:w-1/3 flex flex-col gap-6">
-                        <div className="bg-brand-500 text-zinc-950 px-10 py-12 md:py-16 clip-diagonal shadow-[0_0_25px_rgba(217,70,239,0.3)] relative z-10 flex flex-col">
+                    <div className="lg:w-1/3 flex flex-col gap-6 w-full">
+                        <div className="bg-brand-500 text-zinc-950 p-8 md:px-10 py-12 md:py-16 clip-diagonal shadow-[0_0_25px_rgba(217,70,239,0.3)] relative z-10 flex flex-col w-full">
                             <h3 className="font-heading text-2xl mb-6 font-bold tracking-tight">I NUMERI</h3>
                             <div className="flex flex-col gap-6">
                                 <div className="border-b border-zinc-950/20 pb-4">
@@ -172,7 +175,10 @@ const Foresteria = () => {
                         </div>
 
                         {info?.address && (
-                            <div className="bg-zinc-900/50 px-10 py-12 md:py-16 border border-zinc-800 clip-diagonal-rev backdrop-blur-md h-full min-h-[350px] flex flex-col relative z-10">
+                            <div 
+                                className="bg-zinc-900/50 p-8 md:px-10 py-12 md:py-16 pt-20 border border-zinc-800 backdrop-blur-md h-full min-h-[350px] flex flex-col relative z-10 w-full"
+                                style={{ clipPath: 'polygon(0 40px, 100% 0, 100% 100%, 0 100%)' }}
+                            >
                                 <h3 className="font-heading text-xl md:text-2xl text-white mb-6 flex items-center gap-2 shrink-0">
                                     <MapPin className="text-brand-500" size={24} />
                                     DOVE SIAMO

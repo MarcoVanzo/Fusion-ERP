@@ -60,7 +60,7 @@ const Navbar = () => {
 
     return (
         <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-zinc-950/95 backdrop-blur-md border-b-2 border-brand-500 shadow-[0_10px_30px_rgba(0,0,0,0.8)] py-4' : 'bg-gradient-to-b from-zinc-950 via-zinc-950/80 to-transparent py-8'}`}>
-            <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 h-12 flex items-center justify-between">
+            <div className="max-w-[1400px] mx-auto px-6 lg:px-8 h-12 relative flex items-center justify-between">
                 
                 {/* Left Links */}
                 <div className="hidden lg:flex flex-1 items-center justify-end gap-6 pr-10">
@@ -80,10 +80,12 @@ const Navbar = () => {
                 </div>
 
                 {/* Center Logo */}
-                <Link to="/" className="flex-shrink-0 relative group z-50 flex items-center justify-center -mt-2">
-                    <div className="absolute inset-0 bg-brand-500/20 blur-xl rounded-full scale-150 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                    <img src="/demo/assets/logo-colorato.png" alt="Logo" className="w-[72px] h-[72px] object-contain drop-shadow-2xl relative z-10 group-hover:scale-105 transition-transform duration-300" />
-                </Link>
+                <div className="absolute left-1/2 -translate-x-1/2 lg:static lg:translate-x-0 flex lg:flex-none justify-center">
+                    <Link to="/" className="flex-shrink-0 relative group z-50 flex items-center justify-center -mt-2">
+                        <div className="absolute inset-0 bg-brand-500/20 blur-xl rounded-full scale-150 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                        <img src="/demo/assets/logo-colorato.png" alt="Logo" className="w-[56px] h-[56px] md:w-[72px] md:h-[72px] object-contain drop-shadow-2xl relative z-10 group-hover:scale-105 transition-transform duration-300" />
+                    </Link>
+                </div>
 
                 {/* Right Links */}
                 <div className="hidden lg:flex flex-1 items-center justify-start pl-10">
@@ -98,7 +100,7 @@ const Navbar = () => {
                                 >
                                     {link.name}
                                     {link.badge && (
-                                        <span className="absolute -top-3 -right-6 text-[8px] bg-red-600 text-white px-1.5 py-0.5 rounded animate-pulse">{link.badge}</span>
+                                        <span className="absolute -top-3 -right-6 text-[8px] bg-red-600/90 text-white px-1.5 py-0.5 rounded animate-pulse shadow-[0_0_8px_rgba(220,38,38,0.6)]">{link.badge}</span>
                                     )}
                                     <span className={`absolute -bottom-2 left-0 h-[2px] bg-brand-500 transition-all duration-300 ${isActive ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
                                 </Link>
@@ -109,8 +111,8 @@ const Navbar = () => {
                     {/* Hub Logo */}
                     {hubLogo && (
                         <a 
-                            href="/network" 
-                            className="ml-auto block w-[72px] h-[72px] -mt-2 bg-white rounded-full p-2.5 shadow-lg hover:scale-105 transition-transform duration-300 group ring-1 ring-zinc-800/50 hover:ring-brand-500/50 relative z-50 pointer-events-auto"
+                            href="https://www.fusionteamvolley.it/demo/network" 
+                            className="ml-auto block w-[60px] h-[60px] -mt-1 bg-white rounded-full p-1.5 shadow-lg hover:scale-105 transition-transform duration-300 group ring-1 ring-zinc-800/50 hover:ring-brand-500/50 relative z-50 pointer-events-auto"
                             title="Savino del bene volley HUB"
                         >
                             <img src={hubLogo} alt="HUB" className="w-full h-full object-contain mix-blend-multiply filter grayscale group-hover:grayscale-0 transition-all duration-300" />
@@ -119,7 +121,7 @@ const Navbar = () => {
                 </div>
 
                 {/* Mobile Menu Toggle */}
-                <div className="lg:hidden flex flex-[0.5] justify-end">
+                <div className="absolute right-6 top-1/2 -translate-y-1/2 lg:static lg:translate-y-0 lg:hidden flex items-center justify-end z-50">
                     <button 
                         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                         className="text-white hover:text-brand-500 transition-colors p-2"
@@ -159,7 +161,7 @@ const Navbar = () => {
                                         >
                                             {link.name}
                                             {link.badge && (
-                                                <span className="bg-red-600 text-white font-sans text-xs font-bold px-2 py-1 rounded animate-pulse tracking-normal">
+                                                <span className="bg-red-600/90 shadow-[0_0_12px_rgba(220,38,38,0.8)] text-white font-sans text-xs font-bold px-3 py-1.5 rounded animate-pulse tracking-normal">
                                                     {link.badge}
                                                 </span>
                                             )}
@@ -177,8 +179,8 @@ const Navbar = () => {
                                 transition={{ delay: allLinks.length * 0.05 + 0.2 }}
                                 className="mt-8 flex justify-center w-full"
                             >
-                                <Link 
-                                    to="/network" 
+                                <a 
+                                    href="https://www.fusionteamvolley.it/demo/network" 
                                     onClick={() => setIsMobileMenuOpen(false)}
                                     className="flex items-center gap-4 bg-white/5 hover:bg-white/10 transition-colors rounded-2xl p-4 border border-zinc-800 w-full max-w-[280px]"
                                 >
@@ -186,7 +188,7 @@ const Navbar = () => {
                                         <img src={hubLogo} alt="HUB" className="w-full h-full object-contain mix-blend-multiply filter grayscale" />
                                     </div>
                                     <span className="font-heading text-white tracking-widest text-lg ml-2">NETWORK <span className="text-brand-500">HUB</span></span>
-                                </Link>
+                                </a>
                             </motion.div>
                         )}
 
