@@ -230,11 +230,8 @@ const Network = () => {
                                         </h3>
                                         
                                         {collab.description ? (
-                                            <div 
-                                                className="relative mb-4 flex-grow min-h-0 overflow-y-auto pr-4" 
-                                                style={{ scrollbarWidth: 'thin', scrollbarColor: '#3f3f46 transparent' }}
-                                            >
-                                                <p className="text-zinc-400 leading-relaxed font-light text-sm">
+                                            <div className="relative mb-4 flex-grow min-h-0 pr-2">
+                                                <p className="text-zinc-400 leading-relaxed font-light text-sm line-clamp-4" title={collab.description}>
                                                     {collab.description}
                                                 </p>
                                             </div>
