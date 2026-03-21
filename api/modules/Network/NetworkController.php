@@ -686,4 +686,10 @@ class NetworkController
         // Nessun controllo Auth, endpoint pubblico
         Response::success($this->repo->listCollaborations());
     }
+
+    public function getPublicHubConfig(): void
+    {
+        // Nessun controllo Auth, endpoint pubblico
+        Response::success($this->repo->getHubConfig());
+    }
 }

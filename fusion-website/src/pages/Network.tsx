@@ -24,28 +24,41 @@ interface Collaboration {
     description: string | null;
 }
 
+interface HubConfig {
+    text: string | null;
+    logo_path: string | null;
+}
+
 const Network = () => {
     const [collaborations, setCollaborations] = useState<Collaboration[]>([]);
+    const [hubConfig, setHubConfig] = useState<HubConfig | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const fetchCollaborations = async () => {
+        const fetchData = async () => {
             try {
-                // Modifica URL se occorre usare environment variable
-                const res = await fetch(`${API_URL}?module=network&action=getPublicCollaborations`);
-                const data = await res.json();
-                if (data.success) {
-                    // Filtriamo per status 'attivo' se necessario, oppure lasciamo tutto.
-                    setCollaborations(data.data.filter((c: Collaboration) => c.status === 'attivo'));
+                const [colsRes, hubRes] = await Promise.all([
+                    fetch(`${API_URL}?module=network&action=getPublicCollaborations`),
+                    fetch(`${API_URL}?module=network&action=getPublicHubConfig`)
+                ]);
+                
+                const colsData = await colsRes.json();
+                if (colsData.success) {
+                    setCollaborations(colsData.data.filter((c: Collaboration) => c.status === 'attivo'));
+                }
+                
+                const hubData = await hubRes.json();
+                if (hubData.success && (hubData.data.text || hubData.data.logo_path)) {
+                    setHubConfig(hubData.data);
                 }
             } catch (error) {
-                console.error('Failed to fetch collaborations:', error);
+                console.error('Failed to fetch network data:', error);
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchCollaborations();
+        fetchData();
     }, []);
 
     const containerVariants = {
@@ -112,8 +125,39 @@ const Network = () => {
                 </div>
             </div>
 
+            {/* Hub Banner */}
+            {hubConfig && (
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 mb-12 -mt-8">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6 }}
+                        className="bg-zinc-900 rounded-3xl p-8 md:p-10 border border-zinc-800 shadow-[0_20px_40px_rgba(0,0,0,0.5)] flex flex-col md:flex-row items-start gap-8 relative overflow-hidden group hover:border-brand-500/50 transition-colors"
+                    >
+                        {hubConfig.logo_path && (
+                            <div className="flex-shrink-0 bg-white p-4 rounded-2xl w-32 h-32 flex items-center justify-center shadow-inner">
+                                <img 
+                                    src={hubConfig.logo_path.startsWith('http') ? hubConfig.logo_path : `${ERP_BASE}/${hubConfig.logo_path}`} 
+                                    alt="Savino del bene volley HUB" 
+                                    className="max-w-full max-h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-500"
+                                />
+                            </div>
+                        )}
+                        <div className="flex-1">
+                            <h2 className="text-2xl md:text-3xl font-heading text-white tracking-tight uppercase mb-4 flex items-center gap-3">
+                                Savino del bene volley <span className="text-brand-500">HUB</span>
+                            </h2>
+                            <div 
+                                className="text-zinc-400 leading-relaxed text-[15px] space-y-4 font-sans"
+                                dangerouslySetInnerHTML={{ __html: hubConfig.text?.replace(/\n/g, '<br />') || '' }}
+                            />
+                        </div>
+                    </motion.div>
+                </div>
+            )}
+
             {/* Collaborations Grid */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-20">
+            <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 ${!hubConfig ? '-mt-8' : ''}`}>
                 {collaborations.length === 0 ? (
                     <div className="text-center py-20 bg-zinc-900/50 rounded-2xl border border-zinc-800 backdrop-blur-sm">
                         <Users className="mx-auto text-zinc-600 mb-4" size={48} />
