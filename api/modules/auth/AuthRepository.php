@@ -135,13 +135,13 @@ class AuthRepository
                 ':phone' => $data['phone'] ?? null,
             ]);
 
-            $permissionsJson = null;
-            if (isset($data['permissions_json']) && $data['permissions_json']) {
+            $permissionsJson = '[]';
+            if (isset($data['permissions_json']) && is_array($data['permissions_json']) && !empty($data['permissions_json'])) {
                 $permissionsJson = json_encode($data['permissions_json']);
             }
             
             $stmtInsert = $this->db->prepare(
-                'INSERT INTO tenant_users (user_id, tenant_id, roles) VALUES (:id, 1, :perms)'
+                'INSERT INTO tenant_users (user_id, tenant_id, roles) VALUES (:id, \'TNT_default\', :perms)'
             );
             $stmtInsert->execute([':id' => $data['id'], ':perms' => $permissionsJson]);
 
@@ -173,7 +173,7 @@ class AuthRepository
                     $stmtUpdate = $this->db->prepare('UPDATE tenant_users SET roles = :perms WHERE user_id = :id');
                     $stmtUpdate->execute([':perms' => $permsJson, ':id' => $id]);
                 } else {
-                    $stmtInsert = $this->db->prepare('INSERT INTO tenant_users (user_id, tenant_id, roles) VALUES (:id, 1, :perms)');
+                    $stmtInsert = $this->db->prepare('INSERT INTO tenant_users (user_id, tenant_id, roles) VALUES (:id, \'TNT_default\', :perms)');
                     $stmtInsert->execute([':id' => $id, ':perms' => $permsJson]);
                 }
             }

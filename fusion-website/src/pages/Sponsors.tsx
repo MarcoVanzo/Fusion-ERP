@@ -189,7 +189,7 @@ const Sponsors = () => {
                                                     <img
                                                         src={sponsor.logo_path.startsWith('http') ? sponsor.logo_path : `${ERP_BASE}/${sponsor.logo_path}`}
                                                         alt={`Logo ${sponsor.name}`}
-                                                        className="max-h-full max-w-full object-contain filter grayscale-0 md:grayscale md:group-hover:grayscale-0 transition-all duration-700 hover:scale-105"
+                                                        className="max-h-full max-w-full object-contain filter grayscale-0 md:grayscale md:group-hover:grayscale-0 transition-all duration-700 hover:scale-105 drop-shadow-[0_0_8px_rgba(0,0,0,0.4)]"
                                                     />
                                                 ) : (
                                                     <div className="w-full h-full flex items-center justify-center">
