@@ -36,15 +36,17 @@ const Network = (() => {
     const e = ["admin", "manager"].includes(App.getUser()?.role),
       n = o ? a.filter((t) => t.status === o) : a;
     const hubBanner = `
-        <div style="background:var(--color-bg-alt);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:var(--sp-3);margin-bottom:var(--sp-3);display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3)">
-            <div style="display:flex;align-items:center;gap:var(--sp-3)">
-                ${hz.logo_path ? `<img src="${Utils.escapeHtml(hz.logo_path)}" style="height:60px;width:60px;object-fit:contain;border-radius:var(--radius-sm);background:#fff;padding:4px;flex-shrink:0;">` : `<div style="height:60px;width:60px;border-radius:var(--radius-sm);background:var(--color-border);display:flex;align-items:center;justify-content:center;color:var(--color-text-muted)"><i class="ph ph-image"></i></div>`}
-                <div>
-                    <h3 style="margin:0;font-size:16px;font-weight:600">Savino del bene volley HUB</h3>
-                    <p style="margin:4px 0 0 0;font-size:13px;color:var(--color-text-muted);max-width:600px;line-height:1.4">${hz.text ? Utils.escapeHtml(hz.text).replace(/\n/g, '<br>') : "Nessun testo inserito."}</p>
+        <div style="background:var(--color-bg-alt);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:var(--sp-4);margin-bottom:var(--sp-3);">
+            <div style="display:flex;align-items:flex-start;gap:var(--sp-4)">
+                ${hz.logo_path ? `<img src="${Utils.escapeHtml(hz.logo_path)}" style="height:100px;width:100px;object-fit:contain;border-radius:var(--radius-sm);background:#fff;padding:8px;flex-shrink:0;box-shadow:0 2px 4px rgba(0,0,0,0.05);">` : `<div style="height:100px;width:100px;border-radius:var(--radius-sm);background:var(--color-border);display:flex;align-items:center;justify-content:center;color:var(--color-text-muted)"><i class="ph ph-image" style="font-size:32px;"></i></div>`}
+                <div style="flex:1;min-width:0;">
+                    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;">
+                        <h3 style="margin:0;font-size:20px;font-weight:600;">Savino del bene volley HUB</h3>
+                        ${e ? `<button class="btn btn-default btn-sm" id="net-edit-hub" type="button"><i class="ph ph-pencil-simple"></i> Modifica</button>` : ""}
+                    </div>
+                    <div style="margin:0;font-size:14px;color:var(--color-text-muted);line-height:1.6;">${hz.text ? Utils.escapeHtml(hz.text).replace(/\\n/g, '<br>') : "Nessun testo inserito."}</div>
                 </div>
             </div>
-            ${e ? `<button class="btn btn-default btn-sm" id="net-edit-hub" type="button"><i class="ph ph-pencil-simple"></i> Modifica</button>` : ""}
         </div>`;
     ((t.innerHTML = `\n            <div>
                 ${hubBanner}\n                <div class="net-filter-bar" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);margin-bottom:var(--sp-3)">\n                    <div style="display:flex;gap:var(--sp-1);flex-wrap:wrap">\n                        <button class="filter-chip ${o ? "" : "active"}" data-col-status="" type="button">Tutte</button>\n                        ${r.map((t) => `\n                            <button class="filter-chip ${o === t ? "active" : ""}" data-col-status="${Utils.escapeHtml(t)}" type="button">\n                                ${Utils.escapeHtml(p[t] || t)}\n                            </button>`).join("")}\n                    </div>\n                    ${e ? '<button class="btn btn-primary btn-sm" id="net-add-col" type="button"><i class="ph ph-plus"></i> NUOVA COLLABORAZIONE</button>' : ""}\n                </div>\n                <div class="net-card-grid">\n                    ${0 === n.length ? Utils.emptyState("Nessuna collaborazione", "Aggiungi la prima collaborazione con il pulsante in alto.") : n.map((t) => `\n                            <div class="net-card" data-open-col="${Utils.escapeHtml(t.id)}">\n                                <div class="net-card-header">
