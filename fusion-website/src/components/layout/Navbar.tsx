@@ -3,9 +3,13 @@ import { Menu, X, User } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
+const ERP_BASE = 'https://www.fusionteamvolley.it/ERP';
+const API_URL = `${ERP_BASE}/api/router.php`;
+
 const Navbar = () => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
+    const [hubLogo, setHubLogo] = useState<string | null>(null);
     const location = useLocation();
 
     useEffect(() => {
@@ -13,6 +17,21 @@ const Navbar = () => {
             setIsScrolled(window.scrollY > 20);
         };
         window.addEventListener('scroll', handleScroll);
+
+        const fetchHubLogo = async () => {
+            try {
+                const res = await fetch(`${API_URL}?module=network&action=getPublicHubConfig`);
+                const data = await res.json();
+                if (data.success && data.data.logo_path) {
+                    const path = data.data.logo_path;
+                    setHubLogo(path.startsWith('http') ? path : `${ERP_BASE}/${path}`);
+                }
+            } catch (err) {
+                console.error("Failed to fetch Hub logo", err);
+            }
+        };
+        fetchHubLogo();
+
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
@@ -67,25 +86,36 @@ const Navbar = () => {
                 </Link>
 
                 {/* Right Links */}
-                <div className="hidden lg:flex flex-1 items-center justify-start gap-6 pl-10">
-                    {splitRightLinks.map(link => {
-                        const isActive = location.pathname === link.path || (link.path !== '/' && location.pathname.startsWith(link.path));
-                        return (
-                            <Link 
-                                key={link.name} 
-                                to={link.path} 
-                                className={`text-sm font-semibold tracking-widest transition-colors uppercase relative group flex items-center ${isActive ? 'text-brand-500' : 'text-zinc-300 hover:text-white'}`}
-                            >
-                                {link.name}
-                                {link.badge && (
-                                    <span className="absolute -top-3 -right-6 text-[8px] bg-red-600 text-white px-1.5 py-0.5 rounded animate-pulse">{link.badge}</span>
-                                )}
-                                <span className={`absolute -bottom-2 left-0 h-[2px] bg-brand-500 transition-all duration-300 ${isActive ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
-                            </Link>
-                        )
-                    })}
+                <div className="hidden lg:flex flex-1 items-center justify-start pl-10">
+                    <div className="flex items-center gap-6">
+                        {splitRightLinks.map(link => {
+                            const isActive = location.pathname === link.path || (link.path !== '/' && location.pathname.startsWith(link.path));
+                            return (
+                                <Link 
+                                    key={link.name} 
+                                    to={link.path} 
+                                    className={`text-sm font-semibold tracking-widest transition-colors uppercase relative group flex items-center ${isActive ? 'text-brand-500' : 'text-zinc-300 hover:text-white'}`}
+                                >
+                                    {link.name}
+                                    {link.badge && (
+                                        <span className="absolute -top-3 -right-6 text-[8px] bg-red-600 text-white px-1.5 py-0.5 rounded animate-pulse">{link.badge}</span>
+                                    )}
+                                    <span className={`absolute -bottom-2 left-0 h-[2px] bg-brand-500 transition-all duration-300 ${isActive ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
+                                </Link>
+                            )
+                        })}
+                    </div>
                     
-
+                    {/* Hub Logo */}
+                    {hubLogo && (
+                        <Link 
+                            to="/network" 
+                            className="ml-auto block w-10 h-10 bg-white rounded-full p-1.5 shadow-lg hover:scale-110 transition-transform duration-300 group ring-1 ring-zinc-800/50 hover:ring-brand-500/50"
+                            title="Savino del bene volley HUB"
+                        >
+                            <img src={hubLogo} alt="HUB" className="w-full h-full object-contain mix-blend-multiply filter grayscale group-hover:grayscale-0 transition-all duration-300" />
+                        </Link>
+                    )}
                 </div>
 
                 {/* Mobile Menu Toggle */}
@@ -138,6 +168,27 @@ const Navbar = () => {
                                 );
                             })}
                         </div>
+                        
+                        {/* Mobile Hub Logo */}
+                        {hubLogo && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: allLinks.length * 0.05 + 0.2 }}
+                                className="mt-8 flex justify-center w-full"
+                            >
+                                <Link 
+                                    to="/network" 
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                    className="flex items-center gap-4 bg-white/5 hover:bg-white/10 transition-colors rounded-2xl p-4 border border-zinc-800 w-full max-w-[280px]"
+                                >
+                                    <div className="w-12 h-12 bg-white rounded-xl p-2 shrink-0 shadow-inner">
+                                        <img src={hubLogo} alt="HUB" className="w-full h-full object-contain mix-blend-multiply filter grayscale" />
+                                    </div>
+                                    <span className="font-heading text-white tracking-widest text-lg ml-2">NETWORK <span className="text-brand-500">HUB</span></span>
+                                </Link>
+                            </motion.div>
+                        )}
 
                     </motion.div>
                 )}
