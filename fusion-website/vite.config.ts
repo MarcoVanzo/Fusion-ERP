@@ -9,9 +9,8 @@ export default defineConfig({
   server: {
     proxy: {
       '/ERP/api': {
-        target: 'http://localhost:8000',
+        target: 'https://www.fusionteamvolley.it',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/ERP\/api/, '/api/router.php'), // Bypass .htaccess for local PHP server
       }
     }
   }

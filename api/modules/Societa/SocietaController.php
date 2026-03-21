@@ -808,7 +808,7 @@ class SocietaController
             "SELECT id, name, tipo, description, logo_path, website_url, 
                     instagram_url, facebook_url, linkedin_url, tiktok_url 
              FROM societa_sponsors 
-             WHERE is_active = 1 
+             WHERE is_active = 1 AND is_deleted = 0
              ORDER BY sort_order ASC, name ASC"
         );
         Response::success($stmt->fetchAll(\PDO::FETCH_ASSOC));

@@ -30,7 +30,7 @@ const News = () => {
     useEffect(() => {
         const fetchNews = async () => {
             try {
-                const res = await fetch('https://www.fusionteamvolley.it/ERP/api/router.php?module=website&action=getPublicNews&limit=50');
+                const res = await fetch('/ERP/api/router.php?module=website&action=getPublicNews&limit=50');
                 const data = await res.json();
                 if (data.status === 'success' || data.success === true) {
                     setNews(data.data);
@@ -140,7 +140,7 @@ const News = () => {
                                         <Calendar size={14} className="text-brand-500/70" />
                                         {new Date(article.published_at).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' })}
                                     </div>
-                                    <h3 className="text-2xl font-bold text-white mb-4 group-hover:text-brand-500 transition-colors line-clamp-2 leading-tight">
+                                    <h3 className="text-2xl font-bold text-white mb-4 group-hover:text-brand-500 transition-colors line-clamp-2 leading-tight min-h-[60px] md:min-h-[64px]">
                                         {article.title}
                                     </h3>
                                     <p className="text-zinc-400 text-sm leading-relaxed line-clamp-3 mb-6 flex-grow">

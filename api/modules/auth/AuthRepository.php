@@ -42,6 +42,70 @@ class AuthRepository
         return $row ?: null;
     }
 
+    public function emailExistsInTrash(string $email): bool
+    {
+        $stmt = $this->db->prepare(
+            'SELECT 1 FROM users WHERE email = :email AND deleted_at IS NOT NULL LIMIT 1'
+        );
+        $stmt->execute([':email' => $email]);
+        $exists = (bool)$stmt->fetchColumn();
+        $stmt->closeCursor();
+        return $exists;
+    }
+
+    public function getDeletedUserByEmail(string $email): ?array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT id, email, role, full_name, is_active FROM users WHERE email = :email AND deleted_at IS NOT NULL LIMIT 1'
+        );
+        $stmt->execute([':email' => $email]);
+        $row = $stmt->fetch();
+        $stmt->closeCursor();
+        return $row ?: null;
+    }
+
+    public function restoreAndRewriteUser(string $id, array $data): void
+    {
+        try {
+            $this->db->beginTransaction();
+
+            $stmt = $this->db->prepare(
+                'UPDATE users 
+                 SET deleted_at = NULL, pwd_hash = :pwd_hash, role = :role, 
+                     full_name = :full_name, phone = :phone, is_active = 0, 
+                     updated_at = NOW() 
+                 WHERE id = :id'
+            );
+            $stmt->execute([
+                ':id' => $id,
+                ':pwd_hash' => $data['pwd_hash'],
+                ':role' => $data['role'],
+                ':full_name' => $data['full_name'],
+                ':phone' => $data['phone'] ?? null,
+            ]);
+
+            $permissionsJson = '[]';
+            if (isset($data['permissions_json']) && is_array($data['permissions_json']) && !empty($data['permissions_json'])) {
+                $permissionsJson = json_encode($data['permissions_json']);
+            }
+            
+            $stmtCheck = $this->db->prepare('SELECT 1 FROM tenant_users WHERE user_id = :id');
+            $stmtCheck->execute([':id' => $id]);
+            if ($stmtCheck->fetchColumn()) {
+                $stmtUpdate = $this->db->prepare('UPDATE tenant_users SET roles = :perms WHERE user_id = :id');
+                $stmtUpdate->execute([':perms' => $permissionsJson, ':id' => $id]);
+            } else {
+                $stmtInsert = $this->db->prepare('INSERT INTO tenant_users (user_id, tenant_id, roles) VALUES (:id, \'TNT_default\', :perms)');
+                $stmtInsert->execute([':id' => $id, ':perms' => $permissionsJson]);
+            }
+
+            $this->db->commit();
+        } catch (\Exception $e) {
+            $this->db->rollBack();
+            throw $e;
+        }
+    }
+
     public function countRecentAttempts(string $ip, int $windowSeconds): int
     {
         $stmt = $this->db->prepare(
@@ -70,7 +134,7 @@ class AuthRepository
     public function updateLastLogin(string $userId): void
     {
         $stmt = $this->db->prepare(
-            'UPDATE users SET last_login_at = NOW() WHERE id = :id'
+            'UPDATE users SET last_login_at = NOW(), is_active = 1 WHERE id = :id'
         );
         $stmt->execute([':id' => $userId]);
     }
@@ -113,6 +177,13 @@ class AuthRepository
         foreach ($rows as &$row) {
             $row['permissions_json'] = $row['tenant_roles'] ? json_decode($row['tenant_roles'], true) : null;
             unset($row['tenant_roles']);
+            if ($row['is_active']) {
+                $row['status'] = 'Attivo';
+            } elseif ($row['last_login_at'] === null) {
+                $row['status'] = 'Invitato';
+            } else {
+                $row['status'] = 'Disattivato';
+            }
         }
         return $rows;
     }
@@ -124,7 +195,7 @@ class AuthRepository
 
             $stmt = $this->db->prepare(
                 'INSERT INTO users (id, email, pwd_hash, role, full_name, phone, is_active)
-                 VALUES (:id, :email, :pwd_hash, :role, :full_name, :phone, 1)'
+                 VALUES (:id, :email, :pwd_hash, :role, :full_name, :phone, 0)'
             );
             $stmt->execute([
                 ':id' => $data['id'],
@@ -135,13 +206,13 @@ class AuthRepository
                 ':phone' => $data['phone'] ?? null,
             ]);
 
-            $permissionsJson = null;
-            if (isset($data['permissions_json']) && $data['permissions_json']) {
+            $permissionsJson = '[]';
+            if (isset($data['permissions_json']) && is_array($data['permissions_json']) && !empty($data['permissions_json'])) {
                 $permissionsJson = json_encode($data['permissions_json']);
             }
             
             $stmtInsert = $this->db->prepare(
-                'INSERT INTO tenant_users (user_id, tenant_id, roles) VALUES (:id, 1, :perms)'
+                'INSERT INTO tenant_users (user_id, tenant_id, roles) VALUES (:id, \'TNT_default\', :perms)'
             );
             $stmtInsert->execute([':id' => $data['id'], ':perms' => $permissionsJson]);
 
@@ -173,7 +244,7 @@ class AuthRepository
                     $stmtUpdate = $this->db->prepare('UPDATE tenant_users SET roles = :perms WHERE user_id = :id');
                     $stmtUpdate->execute([':perms' => $permsJson, ':id' => $id]);
                 } else {
-                    $stmtInsert = $this->db->prepare('INSERT INTO tenant_users (user_id, tenant_id, roles) VALUES (:id, 1, :perms)');
+                    $stmtInsert = $this->db->prepare('INSERT INTO tenant_users (user_id, tenant_id, roles) VALUES (:id, \'TNT_default\', :perms)');
                     $stmtInsert->execute([':id' => $id, ':perms' => $permsJson]);
                 }
             }

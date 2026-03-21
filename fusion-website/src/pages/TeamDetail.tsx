@@ -34,7 +34,7 @@ const TeamDetail = () => {
                 setLoading(true);
 
                 // Fetch Teams for the header name
-                const teamRes = await fetch('https://www.fusionteamvolley.it/ERP/api/router.php?module=athletes&action=teams');
+                const teamRes = await fetch('/ERP/api/router.php?module=athletes&action=teams');
                 const teamData = await teamRes.json();
                 if (teamData.status === 'success' || teamData.success === true) {
                     const t = teamData.data.find((t: any) => t.id.toString() === id);
@@ -42,14 +42,14 @@ const TeamDetail = () => {
                 }
 
                 // Fetch Athletes
-                const rosterRes = await fetch(`https://www.fusionteamvolley.it/ERP/api/router.php?module=athletes&action=getPublicTeamAthletes&teamId=${id}`);
+                const rosterRes = await fetch(`/ERP/api/router.php?module=athletes&action=getPublicTeamAthletes&teamId=${id}`);
                 const rosterData = await rosterRes.json();
                 if (rosterData.status === 'success' || rosterData.success === true) {
                     setAthletes(rosterData.data || []);
                 }
 
                 // Fetch Staff
-                const staffRes = await fetch(`https://www.fusionteamvolley.it/ERP/api/router.php?module=staff&action=getPublicStaff&teamId=${id}`);
+                const staffRes = await fetch(`/ERP/api/router.php?module=staff&action=getPublicStaff&teamId=${id}`);
                 const staffData = await staffRes.json();
                 if (staffData.status === 'success' || staffData.success === true) {
                     setStaff(staffData.data || []);
@@ -105,7 +105,7 @@ const TeamDetail = () => {
                 <div className="absolute bottom-0 left-0 w-full h-2 bg-brand-500 z-20 shadow-[0_0_20px_rgba(214,90,134,0.8)]"></div>
             </section>
 
-            <div className="max-w-[1400px] mx-auto px-4 -mt-16 relative z-20">
+            <div className="max-w-[1400px] mx-auto px-4 mt-8 pt-16 md:mt-16 md:pt-24 relative z-20">
 
                 {/* Atlete Grid - "Heroic" Card Style */}
                 <div className="mb-24">
@@ -153,17 +153,27 @@ const TeamDetail = () => {
                                             <div className="font-subheading text-brand-500 tracking-widest text-sm mb-1 uppercase">
                                                 {athlete.role || 'ROLE TBD'}
                                             </div>
-                                            <h3 className="w-full font-heading text-3xl leading-none text-white uppercase group-hover:text-brand-500 group-hover:drop-shadow-[0_0_15px_rgba(214,90,134,0.8)] transition-all duration-300 break-words whitespace-normal">
+                                            <h3 className="@container w-full font-heading leading-none text-white uppercase group-hover:text-brand-500 group-hover:drop-shadow-[0_0_15px_rgba(214,90,134,0.8)] transition-all duration-300">
                                                 {(() => {
                                                     const nameObj = athlete.full_name || athlete.first_name || '';
                                                     const parts = nameObj.split(' ');
                                                     const first = parts.shift() || '';
                                                     const last = parts.join(' ') || athlete.last_name || '';
                                                     return (
-                                                        <>
-                                                            {first}<br />
-                                                            <span className="text-3xl xl:text-4xl inline-block w-full">{last}</span>
-                                                        </>
+                                                        <div className="flex flex-col w-full">
+                                                            <span 
+                                                                className="whitespace-nowrap overflow-visible"
+                                                                style={{ fontSize: `min(1.875rem, calc(100cqi / (${Math.max(1, first.length)} * 1.2)))` }}
+                                                            >
+                                                                {first}
+                                                            </span>
+                                                            <span 
+                                                                className="whitespace-nowrap overflow-visible"
+                                                                style={{ fontSize: `min(2.25rem, calc(100cqi / (${Math.max(1, last.length)} * 1.2)))` }}
+                                                            >
+                                                                {last}
+                                                            </span>
+                                                        </div>
                                                     );
                                                 })()}
                                             </h3>

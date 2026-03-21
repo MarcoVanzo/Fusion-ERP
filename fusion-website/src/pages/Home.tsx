@@ -48,7 +48,7 @@ const Home = () => {
     useEffect(() => {
         const fetchRecentMatches = async () => {
             try {
-                const res = await fetch('https://www.fusionteamvolley.it/ERP/api/router.php?module=results&action=getPublicRecentResults&limit=50');
+                const res = await fetch('/ERP/api/router.php?module=results&action=getPublicRecentResults&limit=50');
                 const data = await res.json();
                 if (data.status === 'success' || data.success === true) {
                     setRecentMatches(data.data?.matches || []);
@@ -62,7 +62,7 @@ const Home = () => {
 
         const fetchNews = async () => {
             try {
-                const res = await fetch('https://www.fusionteamvolley.it/ERP/api/router.php?module=website&action=getPublicNews&limit=3');
+                const res = await fetch('/ERP/api/router.php?module=website&action=getPublicNews&limit=3');
                 const data = await res.json();
                 if (data.status === 'success' || data.success === true) {
                     setNews(data.data);
@@ -120,7 +120,7 @@ const Home = () => {
                         Settore Giovanile d'Eccellenza
                     </div>
 
-                    <h1 className="font-heading text-5xl md:text-8xl lg:text-[7.5rem] tracking-tighter mb-6 text-white leading-[0.85] drop-shadow-2xl">
+                    <h1 className="font-heading text-4xl sm:text-6xl md:text-8xl lg:text-[7.5rem] tracking-tight md:tracking-tighter mb-4 md:mb-6 text-white leading-[0.85] drop-shadow-2xl">
                         FUSION TEAM
                         <br />
                         <span className="text-brand-500 drop-shadow-[0_0_25px_rgba(255,20,147,0.8)]">VOLLEY</span>
@@ -143,7 +143,7 @@ const Home = () => {
                         </div>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row gap-6 justify-center w-full max-w-lg mb-16 relative z-30">
+                    <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center w-full max-w-lg mb-12 sm:mb-16 relative z-30 px-2 sm:px-0">
                         <Link to="/teams" className="flex-1 py-5 bg-brand-500 text-zinc-950 font-heading text-xl hover:bg-white active:scale-95 transition-all flex items-center justify-center gap-2 clip-diagonal focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 outline-none">
                             I ROSTER <ChevronRight size={24} />
                         </Link>
@@ -290,10 +290,10 @@ const Home = () => {
                                     <Link
                                         to={`/news/${article.slug}`}
                                         key={article.id}
-                                        className="group flex flex-row overflow-hidden bg-zinc-900/40 backdrop-blur-md border border-zinc-800/60 hover:border-brand-500/50 rounded-2xl transition-all duration-500 hover:shadow-[0_4px_20px_rgba(0,0,0,0.3)]"
+                                        className="group flex flex-col md:flex-row overflow-hidden bg-zinc-900/40 backdrop-blur-md border border-zinc-800/60 hover:border-brand-500/50 rounded-2xl transition-all duration-500 hover:shadow-[0_4px_20px_rgba(0,0,0,0.3)]"
                                     >
                                         {/* Image */}
-                                        <div className="relative w-48 shrink-0 overflow-hidden">
+                                        <div className="relative w-full h-48 md:w-48 md:h-auto shrink-0 overflow-hidden">
                                             {getImgUrl(article.cover_image_url) ? (
                                                 <img
                                                     src={getImgUrl(article.cover_image_url)}
@@ -315,7 +315,7 @@ const Home = () => {
 
                                         {/* Content */}
                                         <div className="flex flex-col flex-1 p-5 gap-3 justify-between">
-                                            <h3 className="font-heading text-base md:text-lg text-white group-hover:text-brand-500 transition-colors leading-snug line-clamp-3">
+                                            <h3 className="font-heading text-lg md:text-lg text-white group-hover:text-brand-500 transition-colors leading-snug line-clamp-2 md:line-clamp-3">
                                                 {article.title}
                                             </h3>
                                             <div className="flex items-center gap-2 text-zinc-500 text-[10px] uppercase tracking-wider">

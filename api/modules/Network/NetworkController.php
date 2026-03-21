@@ -608,11 +608,88 @@ class NetworkController
         Response::success(['message' => 'Attività eliminata']);
     }
 
+    // ─── HUB CONFIG ──────────────────────────────────────────────────────────
+
+    public function getHubConfig(): void
+    {
+        Auth::requireRole('operator'); // basic access
+        Response::success($this->repo->getHubConfig());
+    }
+
+    public function updateHubText(): void
+    {
+        Auth::requireRole('manager');
+        $body = Response::jsonBody();
+        // text can be empty, but should exist in payload
+        if (!array_key_exists('text', $body)) {
+            Response::error('text field is required', 400);
+        }
+        
+        $text = trim($body['text']);
+        $this->repo->updateHubText($text);
+        Audit::log('UPDATE_HUB_TEXT', 'tenant_settings', 'network_hub_text', null, ['text' => $text]);
+        Response::success(['message' => 'HUB text updated']);
+    }
+
+    public function uploadHubLogo(): void
+    {
+        Auth::requireRole('manager');
+
+        if (!isset($_FILES['logo']) || $_FILES['logo']['error'] !== UPLOAD_ERR_OK) {
+            $errorCode = $_FILES['logo']['error'] ?? -1;
+            Response::error("Errore upload logo (codice: {$errorCode})", 400);
+        }
+
+        $file = $_FILES['logo'];
+
+        if ($file['size'] > self::MAX_FILE_SIZE) {
+            Response::error('File troppo grande (max 10 MB)', 400);
+        }
+
+        $finfo = new \finfo(FILEINFO_MIME_TYPE);
+        $mime = $finfo->file($file['tmp_name']);
+        if (!in_array($mime, ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/svg+xml'], true)) {
+            Response::error('Tipo file non consentito. Accettati: JPG, PNG, WEBP, SVG', 400);
+        }
+
+        $tenantId = TenantContext::id();
+        $uploadDir = dirname(__DIR__, 3) . '/uploads/network/' . $tenantId . '/hub';
+        if (!is_dir($uploadDir)) {
+            if (!@mkdir($uploadDir, 0755, true) && !is_dir($uploadDir)) {
+                Response::error('Impossibile creare la directory di upload', 500);
+            }
+        }
+
+        $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
+        $fileName = 'hub_logo_' . date('Ymd_His') . '.' . $ext;
+        $destPath = $uploadDir . '/' . $fileName;
+
+        if (!@move_uploaded_file($file['tmp_name'], $destPath)) {
+            if (!@rename($file['tmp_name'], $destPath) && !@copy($file['tmp_name'], $destPath)) {
+                $err = error_get_last();
+                $msg = $err ? $err['message'] : 'Sconosciuto';
+                Response::error('Errore nel salvataggio del logo: ' . $msg, 500);
+            }
+        }
+
+        $relPath = 'uploads/network/' . $tenantId . '/hub/' . $fileName;
+        $this->repo->updateHubLogo($relPath);
+
+        Audit::log('UPLOAD_HUB_LOGO', 'tenant_settings', 'network_hub_logo', null, ['logo_path' => $relPath]);
+        Response::success(['logo_path' => $relPath], 201);
+    }
+
     // ─── PUBLIC ENDPOINTS FOR WEBSITE ──────────────────────────────────────────────
 
     public function getPublicCollaborations(): void
     {
         // Nessun controllo Auth, endpoint pubblico
         Response::success($this->repo->listCollaborations());
+    }
+
+    public function getPublicHubConfig(): void
+    {
+        // Nessun controllo Auth, endpoint pubblico
+        Response::success($this->repo->getHubConfig());
     }
 }

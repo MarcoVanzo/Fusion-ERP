@@ -1,42 +1,7 @@
-import { useState, useEffect, useMemo } from 'react';
-import { ShoppingBag, Star, ExternalLink, Palette, Layout, Droplets } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { ShoppingBag, ExternalLink } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
-
-const ScratchTexture = () => {
-    const scribblePath = useMemo(() => {
-        let d = "";
-        const numStrokes = 400; // very dense
-        for (let i = 0; i < numStrokes; i++) {
-            const t = 0.05 + (i / numStrokes) * 0.9;
-            const distFromCenter = Math.abs(t - 0.5) * 2;
-            const maxLength = 160;
-            let length = maxLength * (1 - Math.pow(distFromCenter, 1.8));
-            length *= (0.4 + Math.random() * 0.8);
-            if (length < 15) continue;
-
-            const cx = t * 100 + (Math.random() * 14 - 7);
-            const cy = t * 125 + (Math.random() * 16 - 8);
-
-            const angle = -45 + (Math.random() * 14 - 7);
-            const rad = angle * Math.PI / 180;
-
-            const startX = cx - Math.cos(rad) * (length / 2);
-            const startY = cy - Math.sin(rad) * (length / 2);
-            const endX = cx + Math.cos(rad) * (length / 2);
-            const endY = cy + Math.sin(rad) * (length / 2);
-
-            d += `M ${startX.toFixed(1)},${startY.toFixed(1)} L ${endX.toFixed(1)},${endY.toFixed(1)} `;
-        }
-        return d;
-    }, []);
-
-    return (
-        <svg viewBox="0 0 100 125" preserveAspectRatio="xMidYMid slice" className="absolute inset-0 w-full h-full pointer-events-none group-hover:scale-105 transition-all duration-700 z-0 py-8 px-6 opacity-30 mix-blend-overlay">
-            <path d={scribblePath} fill="none" stroke="white" strokeWidth="1.2" strokeLinecap="round" opacity="1" />
-            <path d={scribblePath} fill="none" stroke="white" strokeWidth="0.8" strokeLinecap="round" opacity="0.6" transform="translate(1, -2) rotate(1 50 62)" />
-        </svg>
-    )
-};
 
 interface Product {
     nome: string;
@@ -51,13 +16,11 @@ const Shop = () => {
     const [loading, setLoading] = useState(true);
     const [activeCategory, setActiveCategory] = useState<string>('TUTTI');
     const [categories, setCategories] = useState<string[]>(['TUTTI']);
-    const [theme, setTheme] = useState<'brutalist' | 'glass' | 'street'>('brutalist');
 
-    // We connect to the ERP proxy that bypasses CORS and fetches the real items.
     useEffect(() => {
         const fetchProducts = async () => {
             try {
-                const res = await fetch('https://www.fusionteamvolley.it/ERP/api/router.php?module=ecommerce&action=getPublicShop');
+                const res = await fetch('/ERP/api/router.php?module=ecommerce&action=getPublicShop');
                 const data = await res.json();
                 if ((data.status === 'success' || data.success === true) && data.data.products) {
                     const prods = data.data.products;
@@ -81,157 +44,148 @@ const Shop = () => {
         ? products
         : products.filter(p => p.categoria === activeCategory);
 
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: { staggerChildren: 0.1 }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
+    };
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="w-16 h-16 border-4 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
+                    <p className="text-zinc-500 font-heading tracking-widest uppercase">Caricamento Store...</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
-        <div className={`flex flex-col min-h-screen pb-24 font-sans text-white transition-colors duration-500 ${theme === 'brutalist' ? 'bg-zinc-950' :
-                theme === 'glass' ? 'bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900' :
-                    'bg-zinc-900'
-            }`}>
+        <div className="min-h-screen bg-zinc-950 pb-20">
             <Helmet>
-                <title>Shop Ufficiale - Fusion Team Volley</title>
+                <title>Store Ufficiale - Fusion Team Volley</title>
                 <meta name="description" content="Acquista abbigliamento ufficiale e merchandising del Fusion Team Volley nel nostro Store online." />
             </Helmet>
 
-            {/* Theme Switcher */}
-            <div className="fixed bottom-6 right-6 z-50 flex gap-2 p-2 bg-black/60 backdrop-blur-md rounded-full border border-white/20 shadow-2xl">
-                <button onClick={() => setTheme('brutalist')} className={`p-3 rounded-full transition-all ${theme === 'brutalist' ? 'bg-brand-500 text-black' : 'text-white hover:bg-white/20'}`} title="Cyber Brutalismo">
-                    <Layout size={20} />
-                </button>
-                <button onClick={() => setTheme('glass')} className={`p-3 rounded-full transition-all ${theme === 'glass' ? 'bg-indigo-500 text-white shadow-[0_0_15px_rgba(99,102,241,0.5)]' : 'text-white hover:bg-white/20'}`} title="Eleganza Glass">
-                    <Droplets size={20} />
-                </button>
-                <button onClick={() => setTheme('street')} className={`p-3 rounded-full transition-all ${theme === 'street' ? 'bg-zinc-200 text-zinc-900' : 'text-white hover:bg-white/20'}`} title="Streetwear Minimal">
-                    <Palette size={20} />
-                </button>
-            </div>
-
             {/* Hero Section */}
-            <section className={`relative flex flex-col justify-center overflow-hidden mb-12 transition-all duration-500 py-24 md:py-32 ${theme === 'street' ? 'min-h-[50vh]' : 'min-h-[45vh]'
-                }`}>
-                {/* Background Image */}
+            <div className="relative pt-32 pb-24 border-b-2 border-brand-500/20 overflow-hidden">
                 <div
                     className="absolute inset-0 z-0 bg-cover bg-center"
-                    style={{ backgroundImage: "url('/demo/assets/Gemini_Generated_Image_4wijvu4wijvu4wij.jpeg')", filter: theme === 'street' ? "brightness(0.35) grayscale(100%)" : "brightness(0.5)" }}
+                    style={{ backgroundImage: "url('/demo/assets/Gemini_Generated_Image_4wijvu4wijvu4wij.jpeg')", filter: "brightness(0.3) saturate(1.2)" }}
                 />
-
-                {theme === 'brutalist' && (
-                    <>
-                        <div className="absolute inset-0 bg-zinc-950/70 z-10 transition-colors"></div>
-                        <div className="absolute inset-0 z-10 opacity-30 pointer-events-none mix-blend-overlay" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #d65a86 0, #d65a86 2px, transparent 2px, transparent 100px)' }}></div>
-                        <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-zinc-950 to-transparent z-10"></div>
-                    </>
-                )}
-
-                {theme === 'glass' && (
-                    <div className="absolute inset-0 bg-indigo-950/50 mix-blend-multiply z-10 transition-colors"></div>
-                )}
-
-                {/* Content */}
-                <div className={`relative z-20 px-4 max-w-4xl mx-auto flex flex-col pt-8 transition-all duration-500 ${theme === 'street' ? 'items-start text-left w-full pl-8 md:pl-16' : 'items-center text-center'
-                    }`}>
-                    {theme === 'brutalist' && (
-                        <div className="inline-flex items-center justify-center w-20 h-20 bg-brand-500 text-zinc-950 mb-6 clip-diagonal-rev transform rotate-12 shadow-[0_0_30px_rgba(214,90,134,0.6)]">
-                            <ShoppingBag size={40} className="-rotate-12" />
-                        </div>
-                    )}
-
-                    <h1 className={`font-heading tracking-tighter mb-4 text-white uppercase drop-shadow-xl transition-all duration-500 ${theme === 'street' ? 'text-7xl md:text-9xl leading-none' : 'text-6xl md:text-8xl leading-none'
-                        }`}>
-                        FUSION {theme !== 'street' && <span className={theme === 'brutalist' ? "text-brand-500 drop-shadow-[0_0_15px_rgba(214,90,134,0.5)]" : "text-indigo-400"}>STORE</span>}
-                        {theme === 'street' && <><br /><span className="text-transparent opacity-80" style={{ WebkitTextStroke: '2px white' }}>STORE</span></>}
-                    </h1>
-
-                    <p className={`font-subheading tracking-widest transition-all duration-500 mt-4 md:mt-6 z-20 relative ${theme === 'street' ? 'text-lg md:text-xl text-zinc-400 max-w-md' :
-                            theme === 'glass' ? 'text-lg md:text-xl text-zinc-200 bg-white/10 backdrop-blur-md px-6 py-2 rounded-full border border-white/20' :
-                                'text-xl md:text-2xl text-zinc-300 bg-zinc-950/80 inline-block px-6 py-3 md:py-4 border border-zinc-800 rounded-none leading-relaxed shadow-xl'
-                        }`}>
-                        ABBIGLIAMENTO UFFICIALE E MERCHANDISING
-                    </p>
+                <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/80 to-zinc-950/20 z-10"></div>
+                <div className="absolute inset-0 bg-[url('/demo/assets/pattern-dots.svg')] opacity-[0.05] z-10" />
+                
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 text-center">
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.7 }}
+                        className="inline-flex items-center justify-center p-4 bg-brand-500/10 rounded-full mb-6 ring-1 ring-brand-500/30 backdrop-blur-md"
+                    >
+                        <ShoppingBag className="text-brand-500" size={32} />
+                    </motion.div>
+                    
+                    <motion.h1
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.1 }}
+                        className="text-5xl md:text-7xl font-heading text-white uppercase tracking-tighter drop-shadow-xl"
+                    >
+                        FUSION <span className="text-brand-500">STORE</span>
+                    </motion.h1>
+                    
+                    <motion.p
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.2 }}
+                        className="mt-6 text-xl text-zinc-400 max-w-3xl mx-auto font-sans leading-relaxed"
+                    >
+                        Abbigliamento ufficiale e merchandising del Fusion Team Volley.
+                        Scopri i nostri prodotti e vesti i nostri colori.
+                    </motion.p>
                 </div>
-            </section>
+            </div>
 
-            <div className="max-w-7xl mx-auto px-4 w-full">
+            {/* Content Section */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-20">
                 {/* Category Filters */}
-                <div className={`flex flex-wrap items-center gap-4 mb-16 transition-all duration-500 ${theme === 'street' ? 'justify-start' : 'justify-center'}`}>
+                <div className="flex overflow-x-auto sm:flex-wrap items-center justify-start sm:justify-center gap-4 sm:gap-3 mb-12 pb-4 snap-x pr-4" style={{ scrollbarWidth: 'none' }}>
                     {categories.map(category => (
                         <button
                             key={category}
                             onClick={() => setActiveCategory(category)}
-                            className={`font-subheading text-lg tracking-wider px-8 py-3 transition-all ${theme === 'brutalist'
-                                    ? `clip-diagonal ${activeCategory === category ? 'bg-white text-zinc-950 shadow-[0_0_20px_rgba(255,255,255,0.3)]' : 'bg-zinc-900 text-zinc-400 hover:bg-zinc-800 hover:text-white'}`
-                                    : theme === 'glass'
-                                        ? `rounded-full backdrop-blur-md border ${activeCategory === category ? 'bg-indigo-500 border-indigo-400 text-white shadow-[0_0_15px_rgba(99,102,241,0.4)]' : 'bg-white/5 border-white/10 text-zinc-300 hover:bg-white/10'}`
-                                        : `border-b-2 px-2 py-1 ${activeCategory === category ? 'border-zinc-200 text-zinc-100' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`
-                                }`}
+                            className={`snap-start whitespace-nowrap px-6 py-3 rounded-full text-sm md:text-base font-bold uppercase tracking-wider transition-all duration-300 border min-h-[44px] ${
+                                activeCategory === category 
+                                    ? 'bg-brand-500 text-white border-brand-500 shadow-[0_0_15px_rgba(217,70,239,0.4)] md:hover:scale-105' 
+                                    : 'bg-zinc-900/80 text-zinc-400 border-zinc-800 hover:text-white hover:border-zinc-600 md:hover:scale-105 backdrop-blur-sm'
+                            }`}
                         >
                             {category}
                         </button>
                     ))}
                 </div>
 
-                {loading ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {[1, 2, 3, 4, 5, 6].map(i => <div key={i} className={`animate-pulse h-[500px] ${theme === 'glass' ? 'bg-white/5 rounded-2xl' : 'bg-zinc-900 clip-diagonal-rev'}`}></div>)}
-                    </div>
-                ) : filteredProducts.length === 0 ? (
-                    <div className="p-20 text-center border border-zinc-800 bg-zinc-900/30 clip-diagonal">
-                        <p className="font-subheading text-2xl text-zinc-500">Nessun prodotto disponibile.</p>
+                {filteredProducts.length === 0 ? (
+                    <div className="text-center py-20 bg-zinc-900/50 rounded-2xl border border-zinc-800 backdrop-blur-sm">
+                        <ShoppingBag className="mx-auto text-zinc-600 mb-4" size={48} />
+                        <h3 className="text-xl text-zinc-300 font-heading">Nessun prodotto disponibile</h3>
+                        <p className="text-zinc-500 mt-2">Torna a trovarci o seleziona un'altra categoria.</p>
                     </div>
                 ) : (
-                    <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 transition-all duration-500 ${theme === 'street' ? 'gap-y-24' : 'gap-y-16'}`}>
+                    <motion.div
+                        variants={containerVariants}
+                        initial="hidden"
+                        animate="visible"
+                        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+                    >
                         {filteredProducts.map((product, idx) => (
-                            <div key={idx} className={`group flex flex-col relative transition-all duration-500 ${theme === 'street' ? 'items-start hover:-translate-y-1' : 'items-center hover:-translate-y-2 hover:scale-[1.02]'} ${theme === 'glass' ? 'bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-5 hover:bg-white/10 hover:shadow-[0_8px_30px_rgb(0,0,0,0.5)]' : ''
-                                }`}>
+                            <motion.div
+                                key={idx}
+                                variants={itemVariants}
+                                className="group relative bg-zinc-900 rounded-[2rem] overflow-hidden shadow-2xl hover:shadow-[0_20px_40px_rgba(217,70,239,0.15)] transition-all duration-500 flex flex-col border border-zinc-800 hover:border-brand-500/50 h-[500px]"
+                            >
+                                {/* Glow effect on hover */}
+                                <div className="absolute inset-0 bg-gradient-to-b from-brand-500/0 to-brand-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
 
-                                {/* Product Image Container */}
-                                <div className={`relative w-full aspect-[4/5] mb-8 overflow-hidden transition-all duration-500 flex items-center justify-center ${theme === 'brutalist' ? 'bg-black border border-zinc-800 group-hover:border-brand-500 clip-diagonal' :
-                                        theme === 'glass' ? 'bg-white/5 rounded-xl inner-shadow' :
-                                            'bg-transparent'
-                                    }`}>
-
-                                    {theme === 'brutalist' && <ScratchTexture />}
-
+                                {/* Logo / Image Section */}
+                                <div className="relative flex items-center justify-center bg-zinc-100 shrink-0 h-56 group-hover:bg-white transition-colors duration-500">
+                                    <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/5 to-transparent z-10"></div>
                                     {product.immagineUrl ? (
                                         <img
                                             src={product.immagineUrl}
                                             alt={product.nome}
-                                            className={`w-full h-full object-contain relative z-10 transition-transform duration-700 ${theme === 'street' ? 'p-0 scale-100 group-hover:scale-110 sepia-[.2] group-hover:sepia-0' : 'p-6 group-hover:scale-110'
-                                                }`}
+                                            className="h-48 w-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-700 z-20 p-4"
                                         />
                                     ) : (
-                                        <div className="w-full h-full flex items-center justify-center z-10 relative">
+                                        <div className="w-full h-full flex items-center justify-center opacity-30 z-20">
                                             <ShoppingBag size={64} className="text-zinc-800" />
-                                        </div>
-                                    )}
-
-                                    {/* Floating Elements */}
-                                    {theme !== 'street' && (
-                                        <div className={`absolute top-4 left-4 z-20 font-subheading text-xs font-bold px-3 py-1 ${theme === 'brutalist' ? 'bg-brand-500 text-zinc-950 clip-diagonal' : 'bg-indigo-500 text-white rounded-full'
-                                            }`}>
-                                            OFFICIAL
                                         </div>
                                     )}
                                 </div>
 
-                                {/* Product Details */}
-                                <div className={`w-full flex-grow flex flex-col justify-between ${theme === 'brutalist' ? 'text-center px-4' : theme === 'glass' ? 'text-left px-2' : 'text-left'}`}>
-                                    <div>
-                                        {theme !== 'street' && (
-                                            <div className={`flex items-center gap-1 mb-3 ${theme === 'brutalist' ? 'justify-center text-brand-500' : 'justify-start text-indigo-400'}`}>
-                                                {[1, 2, 3, 4, 5].map((s) => <Star key={s} size={14} className={s <= 5 ? (theme === 'brutalist' ? "fill-brand-500" : "fill-indigo-400") : ""} />)}
-                                            </div>
-                                        )}
-
-                                        <h3 className={`font-heading text-white mb-2 line-clamp-2 leading-tight ${theme === 'street' ? 'text-3xl uppercase tracking-wider' : 'text-2xl'}`}>
-                                            {product.nome}
-                                        </h3>
-
-                                        <p className={`font-subheading text-sm mb-6 ${theme === 'street' ? 'text-zinc-400 uppercase tracking-widest' : 'text-zinc-500'}`}>
-                                            {theme === 'street' ? `[ ${product.categoria} ]` : product.categoria}
-                                        </p>
+                                {/* Info Section */}
+                                <div className="flex flex-col flex-grow p-6 z-10">
+                                    <div className="mb-3">
+                                        <span className="inline-block px-3 py-1 bg-zinc-800 text-brand-400 text-xs font-bold uppercase tracking-wider rounded-full border border-zinc-700">
+                                            {product.categoria}
+                                        </span>
                                     </div>
-
-                                    <div className={`mt-auto ${theme === 'street' ? 'flex items-center justify-between border-t border-zinc-800 pt-4 mt-4 w-full' : ''}`}>
-                                        <div className={`font-heading text-white ${theme === 'street' ? 'text-3xl' : 'text-4xl mb-6'}`}>
+                                    
+                                    <h3 className="text-2xl font-heading text-white uppercase tracking-tight group-hover:text-brand-400 transition-colors shrink-0 mb-4 line-clamp-2">
+                                        {product.nome}
+                                    </h3>
+                                    
+                                    <div className="mt-auto flex items-center justify-between pt-4 border-t border-zinc-800/80">
+                                        <div className="font-heading text-3xl text-white">
                                             €{product.prezzo.toFixed(2)}
                                         </div>
 
@@ -239,18 +193,17 @@ const Shop = () => {
                                             href="https://www.cognitoforms.com/MVConsulting2/OrdineEcommerce"
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className={`${theme === 'brutalist' ? 'w-full py-4 bg-white text-zinc-950 font-heading text-xl hover:bg-brand-500 transition-colors flex items-center justify-center gap-2 clip-diagonal' :
-                                                    theme === 'glass' ? 'w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-heading text-lg rounded-xl transition-colors flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/30' :
-                                                        'py-2 px-8 border border-zinc-700 text-zinc-300 font-subheading text-sm hover:bg-white hover:text-black hover:border-white transition-all duration-300 flex items-center gap-2 rounded-full uppercase tracking-wider'
-                                                }`}
+                                            className="flex items-center justify-center gap-2 bg-zinc-800 hover:bg-brand-600 text-white px-5 py-2.5 rounded-full transition-all duration-300 font-bold text-sm tracking-wider uppercase group/btn"
+                                            title="Acquista"
                                         >
-                                            {theme === 'street' ? 'Acquista' : 'ACQUISTA ORA'} {theme !== 'street' && <ExternalLink size={20} />}
+                                            Acquista
+                                            <ExternalLink size={16} className="group-hover/btn:translate-x-1 transition-transform" />
                                         </a>
                                     </div>
                                 </div>
-                            </div>
+                            </motion.div>
                         ))}
-                    </div>
+                    </motion.div>
                 )}
             </div>
         </div>

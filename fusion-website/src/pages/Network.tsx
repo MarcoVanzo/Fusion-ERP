@@ -24,28 +24,41 @@ interface Collaboration {
     description: string | null;
 }
 
+interface HubConfig {
+    text: string | null;
+    logo_path: string | null;
+}
+
 const Network = () => {
     const [collaborations, setCollaborations] = useState<Collaboration[]>([]);
+    const [hubConfig, setHubConfig] = useState<HubConfig | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const fetchCollaborations = async () => {
+        const fetchData = async () => {
             try {
-                // Modifica URL se occorre usare environment variable
-                const res = await fetch(`${API_URL}?module=network&action=getPublicCollaborations`);
-                const data = await res.json();
-                if (data.success) {
-                    // Filtriamo per status 'attivo' se necessario, oppure lasciamo tutto.
-                    setCollaborations(data.data.filter((c: Collaboration) => c.status === 'attivo'));
+                const [colsRes, hubRes] = await Promise.all([
+                    fetch(`${API_URL}?module=network&action=getPublicCollaborations`),
+                    fetch(`${API_URL}?module=network&action=getPublicHubConfig`)
+                ]);
+                
+                const colsData = await colsRes.json();
+                if (colsData.success) {
+                    setCollaborations(colsData.data.filter((c: Collaboration) => c.status === 'attivo'));
+                }
+                
+                const hubData = await hubRes.json();
+                if (hubData.success && (hubData.data.text || hubData.data.logo_path)) {
+                    setHubConfig(hubData.data);
                 }
             } catch (error) {
-                console.error('Failed to fetch collaborations:', error);
+                console.error('Failed to fetch network data:', error);
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchCollaborations();
+        fetchData();
     }, []);
 
     const containerVariants = {
@@ -112,8 +125,58 @@ const Network = () => {
                 </div>
             </div>
 
+            {/* Hub Banner */}
+            {hubConfig && (
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 mb-12 -mt-8">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6 }}
+                        className="group relative bg-zinc-900/40 overflow-hidden backdrop-blur-sm border border-zinc-800/60 hover:border-brand-500 transition-all duration-500 flex shadow-2xl hover:shadow-[0_0_30px_rgba(217,70,239,0.3)] flex-col md:flex-row rounded-[2rem] md:rounded-[3rem] md:h-[400px]"
+                    >
+                        {/* Glow effect on hover */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-brand-500/0 via-brand-500/5 to-brand-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+
+                        {/* Logo Section */}
+                        <div className="relative flex items-center justify-center bg-white shrink-0 p-8 md:p-12 md:w-2/5 min-h-[200px] md:min-h-0">
+                            {hubConfig.logo_path ? (
+                                <img 
+                                    src={hubConfig.logo_path.startsWith('http') ? hubConfig.logo_path : `${ERP_BASE}/${hubConfig.logo_path}`} 
+                                    alt="Savino del bene volley HUB" 
+                                    className="max-h-full max-w-full object-contain filter grayscale-0 md:grayscale md:group-hover:grayscale-0 transition-all duration-700 hover:scale-105 drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]"
+                                />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                    <span className="font-heading text-zinc-800 font-bold group-hover:text-brand-500 transition-colors duration-500 text-6xl">
+                                        HUB
+                                    </span>
+                                </div>
+                            )}
+                            {/* Inset shadow bottom/right depending on layout */}
+                            <div className="absolute inset-0 pointer-events-none bg-gradient-to-t md:bg-gradient-to-l from-black/10 to-transparent"></div>
+                        </div>
+
+                        {/* Info Section */}
+                        <div className="flex flex-col flex-grow min-h-0 overflow-hidden z-10 p-8 md:p-10 md:w-3/5">
+                            <h2 className="text-3xl md:text-4xl font-heading text-white tracking-tight uppercase mb-4 flex items-center gap-3 shrink-0 group-hover:text-brand-400 transition-colors">
+                                Savino del bene volley HUB
+                            </h2>
+                            <div 
+                                className="relative mb-4 flex-grow min-h-0 overflow-visible md:overflow-y-auto pr-0 md:pr-4" 
+                                style={{ scrollbarWidth: 'thin', scrollbarColor: '#3f3f46 transparent' }}
+                            >
+                                <div 
+                                    className="text-zinc-400 leading-relaxed font-light text-base"
+                                    dangerouslySetInnerHTML={{ __html: hubConfig.text?.replace(/\n/g, '<br />') || '' }}
+                                />
+                            </div>
+                        </div>
+                    </motion.div>
+                </div>
+            )}
+
             {/* Collaborations Grid */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-20">
+            <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 ${!hubConfig ? '-mt-8' : ''}`}>
                 {collaborations.length === 0 ? (
                     <div className="text-center py-20 bg-zinc-900/50 rounded-2xl border border-zinc-800 backdrop-blur-sm">
                         <Users className="mx-auto text-zinc-600 mb-4" size={48} />
@@ -128,103 +191,112 @@ const Network = () => {
                         className="grid grid-cols-1 lg:grid-cols-2 gap-10"
                     >
                         {collaborations.map((collab) => (
-                            <motion.div
-                                key={collab.id}
-                                variants={itemVariants}
-                                className="group bg-zinc-900 rounded-3xl overflow-hidden shadow-2xl shadow-black/50 hover:shadow-[0_20px_40px_rgba(217,70,239,0.15)] transition-all duration-500 flex flex-col transform hover:-translate-y-2 relative border border-zinc-800 hover:border-brand-500/50"
-                            >
-                                {/* Header / Logo - Intentional White Backdrop for JPEGs/PNGs to look native */}
-                                <div className="p-8 flex items-center justify-center bg-zinc-100 hover:bg-white transition-colors duration-300 h-56 relative rounded-t-3xl">
-                                    <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/10 to-transparent"></div>
-                                    {collab.logo_path ? (
-                                        <img
-                                            src={collab.logo_path.startsWith('http') ? collab.logo_path : `https://www.fusionteamvolley.it/ERP/${collab.logo_path}`}
-                                            alt={`Logo ${collab.partner_name}`}
-                                            className="max-h-full max-w-[80%] object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-500 z-10"
-                                        />
-                                    ) : (
-                                        <div className="w-24 h-24 rounded-full bg-zinc-200 flex items-center justify-center group-hover:bg-brand-500/20 transition-colors duration-300 ring-4 ring-white shadow-inner z-10">
-                                            <span className="text-3xl font-heading text-zinc-500 group-hover:text-brand-600 transition-colors">
-                                                {collab.partner_name.substring(0, 2).toUpperCase()}
+                                <motion.div
+                                    key={collab.id}
+                                    variants={itemVariants}
+                                    whileHover={{ y: -10, scale: 1.02 }}
+                                    className="group relative bg-zinc-900/40 overflow-hidden backdrop-blur-sm border border-zinc-800/60 hover:border-brand-500 transition-all duration-500 flex flex-col shadow-2xl hover:shadow-[0_0_30px_rgba(217,70,239,0.3)] rounded-[2rem] min-h-[500px] md:h-[500px]"
+                                >
+                                    {/* Glow effect on hover */}
+                                    <div className="absolute inset-0 bg-gradient-to-br from-brand-500/0 via-brand-500/5 to-brand-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+
+                                    {/* Header / Logo */}
+                                    <div className="relative flex items-center justify-center bg-white shrink-0 p-6 h-40 sm:h-48">
+                                        {collab.logo_path ? (
+                                            <img
+                                                src={collab.logo_path.startsWith('http') ? collab.logo_path : `${ERP_BASE}/${collab.logo_path}`}
+                                                alt={`Logo ${collab.partner_name}`}
+                                                className="max-h-full max-w-full object-contain filter grayscale-0 md:grayscale md:group-hover:grayscale-0 transition-all duration-700 hover:scale-105 drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]"
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center">
+                                                <span className="font-heading text-zinc-800 font-bold group-hover:text-brand-500 transition-colors duration-500 text-4xl md:text-5xl">
+                                                    {collab.partner_name.substring(0, 2).toUpperCase()}
+                                                </span>
+                                            </div>
+                                        )}
+                                        <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/10 to-transparent"></div>
+                                    </div>
+
+                                    {/* Content */}
+                                    <div className="flex flex-col flex-grow min-h-0 overflow-hidden z-10 p-6 md:p-8">
+                                        <div className="mb-2 shrink-0">
+                                            <span className="inline-block px-3 py-1 bg-zinc-800/80 text-brand-400 text-xs font-bold uppercase tracking-wider rounded-full border border-zinc-700">
+                                                {collab.partner_type}
                                             </span>
                                         </div>
-                                    )}
-                                </div>
-
-                                {/* Content */}
-                                <div className="p-8 pt-6 flex flex-col flex-grow">
-                                    <div className="mb-2">
-                                        <span className="inline-block px-3 py-1 bg-zinc-800/80 text-brand-400 text-xs font-bold uppercase tracking-wider rounded-full mb-4 border border-zinc-700">
-                                            {collab.partner_type}
-                                        </span>
-                                    </div>
-                                    <h3 className="text-2xl font-heading text-white uppercase tracking-tight group-hover:text-brand-300 transition-colors mb-3">
-                                        {collab.partner_name}
-                                    </h3>
-                                    
-                                    {collab.description ? (
-                                        <p className="text-zinc-400 text-sm leading-relaxed mb-6 flex-grow">
-                                            {collab.description}
-                                        </p>
-                                    ) : (
-                                        <div className="flex-grow flex items-center mb-6">
-                                            <div className="text-zinc-600 text-sm italic">Nessuna descrizione disponibile.</div>
-                                        </div>
-                                    )}
-
-                                    {/* Social Links */}
-                                    <div className="flex items-center gap-3 pt-4 border-t border-zinc-800">
-                                        {collab.website && (
-                                            <a
-                                                href={collab.website.startsWith('http') ? collab.website : `https://${collab.website}`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="p-2 bg-zinc-800 rounded-full text-zinc-400 hover:text-white hover:bg-brand-600 transition-all duration-300 hover:scale-110"
-                                                title="Sito Web"
-                                            >
-                                                <Globe size={18} />
-                                            </a>
-                                        )}
-                                        {collab.facebook && (
-                                            <a
-                                                href={collab.facebook}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="p-2 bg-zinc-800 rounded-full text-zinc-400 hover:text-white hover:bg-blue-600 transition-all duration-300 hover:scale-110"
-                                                title="Facebook"
-                                            >
-                                                <Facebook size={18} />
-                                            </a>
-                                        )}
-                                        {collab.instagram && (
-                                            <a
-                                                href={collab.instagram}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="p-2 bg-zinc-800 rounded-full text-zinc-400 hover:text-white hover:bg-pink-600 transition-all duration-300 hover:scale-110"
-                                                title="Instagram"
-                                            >
-                                                <Instagram size={18} />
-                                            </a>
-                                        )}
-                                        {collab.youtube && (
-                                            <a
-                                                href={collab.youtube}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="p-2 bg-zinc-800 rounded-full text-zinc-400 hover:text-white hover:bg-red-600 transition-all duration-300 hover:scale-110"
-                                                title="YouTube"
-                                            >
-                                                <Youtube size={18} />
-                                            </a>
-                                        )}
+                                        <h3 className="text-2xl font-heading text-white uppercase tracking-wider group-hover:text-brand-400 transition-colors mb-3 shrink-0">
+                                            {collab.partner_name}
+                                        </h3>
                                         
-                                        {!collab.website && !collab.facebook && !collab.instagram && !collab.youtube && (
-                                            <span className="text-xs text-zinc-600 italic">Nessun link social</span>
+                                        {collab.description ? (
+                                            <div 
+                                                className="relative mb-6 h-auto md:h-[92px] shrink-0 overflow-visible md:overflow-y-auto pr-0 md:pr-2" 
+                                                style={{ scrollbarWidth: 'thin', scrollbarColor: '#3f3f46 transparent' }}
+                                            >
+                                                <p className="text-zinc-400 leading-relaxed font-light text-sm" title={collab.description}>
+                                                    {collab.description}
+                                                </p>
+                                            </div>
+                                        ) : (
+                                            <div className="flex-grow flex items-center mb-6 min-h-0">
+                                                <div className="text-zinc-600 text-sm italic">Nessuna descrizione disponibile.</div>
+                                            </div>
                                         )}
+
+                                        {/* Social Links */}
+                                        <div className="flex flex-wrap items-center gap-3 mt-auto pt-4 border-t border-zinc-800/50 shrink-0">
+                                            {collab.website && (
+                                                <a
+                                                    href={collab.website.startsWith('http') ? collab.website : `https://${collab.website}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="flex items-center justify-center w-10 h-10 bg-zinc-800/80 rounded-full text-zinc-400 hover:text-white hover:bg-brand-600 transition-all duration-300 hover:scale-110"
+                                                    title="Sito Web"
+                                                >
+                                                    <Globe size={18} strokeWidth={2} />
+                                                </a>
+                                            )}
+                                            {collab.facebook && (
+                                                <a
+                                                    href={collab.facebook}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="flex items-center justify-center w-10 h-10 bg-zinc-800/80 rounded-full text-zinc-400 hover:text-white hover:bg-blue-600 transition-all duration-300 hover:scale-110"
+                                                    title="Facebook"
+                                                >
+                                                    <Facebook size={18} strokeWidth={2} />
+                                                </a>
+                                            )}
+                                            {collab.instagram && (
+                                                <a
+                                                    href={collab.instagram}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="flex items-center justify-center w-10 h-10 bg-zinc-800/80 rounded-full text-zinc-400 hover:text-white hover:bg-pink-600 transition-all duration-300 hover:scale-110"
+                                                    title="Instagram"
+                                                >
+                                                    <Instagram size={18} strokeWidth={2} />
+                                                </a>
+                                            )}
+                                            {collab.youtube && (
+                                                <a
+                                                    href={collab.youtube}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="flex items-center justify-center w-10 h-10 bg-zinc-800/80 rounded-full text-zinc-400 hover:text-white hover:bg-red-600 transition-all duration-300 hover:scale-110"
+                                                    title="YouTube"
+                                                >
+                                                    <Youtube size={18} strokeWidth={2} />
+                                                </a>
+                                            )}
+                                            
+                                            {!collab.website && !collab.facebook && !collab.instagram && !collab.youtube && (
+                                                <span className="text-xs text-zinc-600 italic">Nessun link social</span>
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
-                            </motion.div>
+                                </motion.div>
                         ))}
                     </motion.div>
                 )}
