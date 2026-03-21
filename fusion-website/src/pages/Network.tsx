@@ -143,7 +143,7 @@ const Network = () => {
                                 <img 
                                     src={hubConfig.logo_path.startsWith('http') ? hubConfig.logo_path : `${ERP_BASE}/${hubConfig.logo_path}`} 
                                     alt="Savino del bene volley HUB" 
-                                    className="max-h-full max-w-full object-contain filter grayscale group-hover:grayscale-0 transition-all duration-700 hover:scale-105"
+                                    className="max-h-full max-w-full object-contain filter grayscale-0 md:grayscale md:group-hover:grayscale-0 transition-all duration-700 hover:scale-105"
                                 />
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center">
@@ -206,7 +206,7 @@ const Network = () => {
                                             <img
                                                 src={collab.logo_path.startsWith('http') ? collab.logo_path : `${ERP_BASE}/${collab.logo_path}`}
                                                 alt={`Logo ${collab.partner_name}`}
-                                                className="max-h-full max-w-full object-contain filter grayscale group-hover:grayscale-0 transition-all duration-700 hover:scale-105"
+                                                className="max-h-full max-w-full object-contain filter grayscale-0 md:grayscale md:group-hover:grayscale-0 transition-all duration-700 hover:scale-105"
                                             />
                                         ) : (
                                             <div className="w-full h-full flex items-center justify-center">

@@ -63,7 +63,7 @@ const Staff = (() => {
                           .filter(Boolean)
                           .join(", ")
                       : "");
-                return `\n        <div class="card" style="cursor:pointer;position:relative;overflow:hidden;"\n             data-staff-id="${Utils.escapeHtml(e.id)}"\n             data-name="${Utils.escapeHtml((e.full_name || "").toLowerCase())}"\n             data-role="${Utils.escapeHtml((e.role || "").toLowerCase())}">\n            ${o ? '<div style="position:absolute;top:var(--sp-2);right:var(--sp-2);width:8px;height:8px;border-radius:50%;background:var(--color-pink);box-shadow:0 0 6px var(--color-pink);"></div>' : ""}\n            <div style="display:flex;align-items:flex-start;gap:var(--sp-2);">\n                <div style="width:48px;height:48px;background:${t};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--font-display);font-weight:700;font-size:1.3rem;color:#000;border-radius:8px;position:relative;overflow:hidden;">\n                    ${e.photo_path ? `<img src="api/${e.photo_path}" style="width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;z-index:1;">` : ''}\n                    ${Utils.escapeHtml(n)}\n                </div>\n                <div style="overflow:hidden;flex:1;">\n                    <div style="font-family:var(--font-display);font-weight:700;font-size:1.1rem;">${Utils.escapeHtml(e.full_name)}</div>\n                    <div style="font-size:12px;color:var(--color-text-muted);">${Utils.escapeHtml(e.role || "—")}</div>\n                    <div style="font-size:12px;color:var(--color-text-muted);">${Utils.escapeHtml(r)}</div>\n                    ${e.phone ? `<div style="font-size:12px;color:var(--color-text-muted);margin-top:2px;"><i class="ph ph-phone" style="font-size:11px;"></i> ${Utils.escapeHtml(e.phone)}</div>` : ""}\n                </div>\n            </div>\n        </div>`;
+                return `\n        <div class="card" style="cursor:pointer;position:relative;overflow:hidden;"\n             data-staff-id="${Utils.escapeHtml(e.id)}"\n             data-name="${Utils.escapeHtml((e.full_name || "").toLowerCase())}"\n             data-role="${Utils.escapeHtml((e.role || "").toLowerCase())}">\n            ${o ? '<div style="position:absolute;top:var(--sp-2);right:var(--sp-2);width:8px;height:8px;border-radius:50%;background:var(--color-pink);box-shadow:0 0 6px var(--color-pink);"></div>' : ""}\n            <div style="display:flex;align-items:flex-start;gap:var(--sp-2);">\n                <div style="width:48px;height:48px;background:${t};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--font-display);font-weight:700;font-size:1.3rem;color:#000;border-radius:8px;position:relative;overflow:hidden;">\n                    ${e.photo_path ? `<img src="${e.photo_path}" style="width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;z-index:1;">` : ''}\n                    ${Utils.escapeHtml(n)}\n                </div>\n                <div style="overflow:hidden;flex:1;">\n                    <div style="font-family:var(--font-display);font-weight:700;font-size:1.1rem;">${Utils.escapeHtml(e.full_name)}</div>\n                    <div style="font-size:12px;color:var(--color-text-muted);">${Utils.escapeHtml(e.role || "—")}</div>\n                    <div style="font-size:12px;color:var(--color-text-muted);">${Utils.escapeHtml(r)}</div>\n                    ${e.phone ? `<div style="font-size:12px;color:var(--color-text-muted);margin-top:2px;"><i class="ph ph-phone" style="font-size:11px;"></i> ${Utils.escapeHtml(e.phone)}</div>` : ""}\n                </div>\n            </div>\n        </div>`;
               })(e),
             )
             .join("")
@@ -287,7 +287,7 @@ const Staff = (() => {
                 <div id="stab-panel-anagrafica" style="padding:var(--sp-4);display:flex;flex-direction:column;gap:var(--sp-4);">
                     <div style="display:flex;align-items:flex-start;gap:var(--sp-4);">
                         <div style="width:100px;height:100px;border-radius:12px;background:${s(p.full_name)};display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;color:#000;position:relative;overflow:hidden;flex-shrink:0;">
-                            ${p.photo_path ? `<img src="api/${p.photo_path}" style="width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;z-index:1;">` : ''}
+                            ${p.photo_path ? `<img src="${p.photo_path}" style="width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;z-index:1;">` : ''}
                             ${Utils.initials(p.full_name)}
                             ${f ? `
                             <div class="staff-avatar-overlay" style="position:absolute;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.2s;cursor:pointer;z-index:2;">
@@ -369,7 +369,7 @@ const Staff = (() => {
                                         </div>
                                     </div>
                                     <div style="display:flex;gap:var(--sp-2);align-items:center;">
-                                        ${p.contract_file_path ? `<a href="api/${p.contract_file_path}" target="_blank" class="btn btn-default btn-sm"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ''}
+                                        ${p.contract_file_path ? `<a href="api/router.php?module=staff&action=downloadDoc&field=contract_file_path&id=${p.id}" target="_blank" class="btn btn-default btn-sm"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ''}
                                         <button class="btn btn-primary btn-sm" id="upload-contract-file-btn" type="button"><i class="ph ph-upload-simple"></i> Carica</button>
                                         <input type="file" id="upload-contract-file-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">
                                     </div>
@@ -387,7 +387,7 @@ const Staff = (() => {
                                         </div>
                                     </div>
                                     <div style="display:flex;gap:var(--sp-2);align-items:center;">
-                                        ${p.id_doc_file_path ? `<a href="api/${p.id_doc_file_path}" target="_blank" class="btn btn-default btn-sm"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ''}
+                                        ${p.id_doc_file_path ? `<a href="api/router.php?module=staff&action=downloadDoc&field=id_doc_file_path&id=${p.id}" target="_blank" class="btn btn-default btn-sm"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ''}
                                         <button class="btn btn-primary btn-sm" id="upload-id-doc-btn" type="button"><i class="ph ph-upload-simple"></i> Carica</button>
                                         <input type="file" id="upload-id-doc-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">
                                     </div>
@@ -405,7 +405,7 @@ const Staff = (() => {
                                         </div>
                                     </div>
                                     <div style="display:flex;gap:var(--sp-2);align-items:center;">
-                                        ${p.cf_doc_file_path ? `<a href="api/${p.cf_doc_file_path}" target="_blank" class="btn btn-default btn-sm"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ''}
+                                        ${p.cf_doc_file_path ? `<a href="api/router.php?module=staff&action=downloadDoc&field=cf_doc_file_path&id=${p.id}" target="_blank" class="btn btn-default btn-sm"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ''}
                                         <button class="btn btn-primary btn-sm" id="upload-cf-doc-btn" type="button"><i class="ph ph-upload-simple"></i> Carica</button>
                                         <input type="file" id="upload-cf-doc-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">
                                     </div>
