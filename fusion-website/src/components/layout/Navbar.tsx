@@ -108,13 +108,13 @@ const Navbar = () => {
                     
                     {/* Hub Logo */}
                     {hubLogo && (
-                        <Link 
-                            to="/network" 
-                            className="ml-auto block w-[72px] h-[72px] -mt-2 bg-white rounded-full p-2.5 shadow-lg hover:scale-105 transition-transform duration-300 group ring-1 ring-zinc-800/50 hover:ring-brand-500/50"
+                        <a 
+                            href="/network" 
+                            className="ml-auto block w-[72px] h-[72px] -mt-2 bg-white rounded-full p-2.5 shadow-lg hover:scale-105 transition-transform duration-300 group ring-1 ring-zinc-800/50 hover:ring-brand-500/50 relative z-50 pointer-events-auto"
                             title="Savino del bene volley HUB"
                         >
                             <img src={hubLogo} alt="HUB" className="w-full h-full object-contain mix-blend-multiply filter grayscale group-hover:grayscale-0 transition-all duration-300" />
-                        </Link>
+                        </a>
                     )}
                 </div>
 
