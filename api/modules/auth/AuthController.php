@@ -265,10 +265,49 @@ class AuthController
         $this->repo->insertPasswordHistory($id, $hash);
 
         Audit::log('INSERT', 'users', $id, null, ['email' => $body['email'], 'role' => $body['role']]);
+
+        // Invia l'email con le credenziali temporanee
+        $appUrl = rtrim(getenv('APP_URL') ?: 'https://www.fusionteamvolley.it/ERP', '/');
+        $loginLink = $appUrl . "/";
+
+        $subject = "Benvenuto in Fusion ERP - Le tue credenziali di accesso";
+        $htmlBody = "
+            <body style=\"font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0;\">
+                <div style=\"max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); overflow: hidden;\">
+                    <div style=\"background-color: #e5005c; color: #ffffff; padding: 20px; text-align: center;\">
+                        <h1 style=\"margin: 0; font-size: 24px;\">Benvenuto in Fusion ERP</h1>
+                    </div>
+                    <div style=\"padding: 30px;\">
+                        <p style=\"color: #666666; font-size: 16px;\">Ciao " . htmlspecialchars(trim($body['full_name']), ENT_QUOTES, 'UTF-8') . ",</p>
+                        <p style=\"color: #666666; font-size: 16px;\">Il tuo account su Fusion ERP è stato creato con successo. Di seguito trovi le tue credenziali di accesso provvisorie:</p>
+                        <div style=\"background-color: #f9f9f9; padding: 15px; border-left: 4px solid #e5005c; margin-top: 20px;\">
+                            <p style=\"margin: 5px 0;\"><strong>Email:</strong> " . htmlspecialchars(trim($body['email']), ENT_QUOTES, 'UTF-8') . "</p>
+                            <p style=\"margin: 5px 0;\"><strong>Password temporanea:</strong> {$tempPassword}</p>
+                        </div>
+                        <p style=\"color: #666666; font-size: 16px; margin-top: 20px;\">Al primo accesso ti verrà richiesto o raccomandato di cambiare la password.</p>
+                        <div style=\"text-align: center; margin-top: 30px;\">
+                            <a href=\"{$loginLink}\" style=\"display: inline-block; padding: 12px 24px; background-color: #e5005c; color: #ffffff; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 16px;\">Accedi a Fusion ERP</a>
+                        </div>
+                    </div>
+                </div>
+            </body>";
+
+        $emailSent = false;
+        try {
+            \FusionERP\Shared\Mailer::send($body['email'], $body['full_name'], $subject, $htmlBody);
+            $emailSent = true;
+        } catch (\Exception $e) {
+            error_log("Failed to send welcome email to {$body['email']}: " . $e->getMessage());
+        }
+
+        $msg = $emailSent 
+            ? 'Utente creato con successo. La password temporanea è stata inviata via email all\'utente.'
+            : 'Utente creato con successo, ma si è verificato un errore nell\'invio dell\'email. Comunica la password temporanea manualmente.';
+
         Response::success([
             'id' => $id,
-            'tempPassword' => $tempPassword,
-            'message' => 'Utente creato con successo. Comunica la password temporanea all\'utente.',
+            'tempPassword' => $tempPassword, // Ritorniamo anche qui in caso serva copiarla (es. errore invio)
+            'message' => $msg,
         ], 201);
     }
 
