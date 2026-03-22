@@ -678,18 +678,24 @@ class EcommerceController
     public function getPublicShop(): void
     {
         $db = Database::getInstance();
-        $stmt = $db->query("SELECT * FROM ec_products WHERE disponibile = 1 ORDER BY categoria ASC, nome ASC");
+        $stmt = $db->query("SELECT id, nome, prezzo, categoria, descrizione, immagineUrl, CASE WHEN immagineBase64 IS NOT NULL AND immagineBase64 != '' THEN 1 ELSE 0 END as hasBase64, disponibile FROM ec_products WHERE disponibile = 1 ORDER BY categoria ASC, nome ASC");
         $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         $formattedProducts = [];
         foreach ($products as $p) {
+            $imageUrl = $p['immagineUrl'];
+            if (!empty($p['hasBase64'])) {
+                // Return a dynamic route that streams the image without bloating the JSON payload
+                $imageUrl = '/ERP/api/router.php?module=ecommerce&action=getProductImage&id=' . (int)$p['id'];
+            }
+
             $formattedProducts[] = [
                 'id' => (int)$p['id'],
                 'nome' => $p['nome'],
                 'prezzo' => (float)$p['prezzo'],
                 'categoria' => $p['categoria'],
                 'descrizione' => $p['descrizione'],
-                'immagineUrl' => $p['immagineBase64'] ?: $p['immagineUrl'], // Use base64 if present, else URL
+                'immagineUrl' => $imageUrl,
                 'disponibile' => (bool)$p['disponibile']
             ];
         }
@@ -700,5 +706,49 @@ class EcommerceController
             'source' => 'db',
             'scraped_at' => date('Y-m-d H:i:s'),
         ]);
+    }
+
+    public function getProductImage(): void
+    {
+        $id = (int)($_GET['id'] ?? 0);
+        if (!$id) {
+            http_response_code(400);
+            echo "Missing ID";
+            exit;
+        }
+
+        $db = Database::getInstance();
+        $stmt = $db->prepare("SELECT immagineBase64, immagineMimeType FROM ec_products WHERE id = ? AND immagineBase64 IS NOT NULL AND immagineBase64 != ''");
+        $stmt->execute([$id]);
+        $product = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$product || empty($product['immagineBase64'])) {
+            http_response_code(404);
+            echo "Image not found";
+            exit;
+        }
+
+        $base64 = $product['immagineBase64'];
+        
+        // Strip data:image/*;base64, prefix if present
+        if (strpos($base64, ',') !== false) {
+            [, $base64] = explode(',', $base64, 2);
+        }
+
+        $imageData = base64_decode($base64);
+        if ($imageData === false) {
+            http_response_code(500);
+            echo "Invalid image data";
+            exit;
+        }
+
+        $mimeType = $product['immagineMimeType'] ?: 'image/jpeg';
+        
+        // Output image with cache headers
+        header("Content-Type: " . $mimeType);
+        header("Cache-Control: public, max-age=86400, immutable"); // Cache for 24 hours
+        header("Content-Length: " . strlen($imageData));
+        echo $imageData;
+        exit;
     }
 }
