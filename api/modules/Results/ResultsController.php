@@ -1965,7 +1965,6 @@ class ResultsController
                 WHERE m.status = 'played'
                   AND m.home_score IS NOT NULL
                   AND m.away_score IS NOT NULL
-                  AND m.match_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
                   AND m.match_date <= NOW()
                   AND (
                     LOWER(m.home_team) LIKE '%fusion%'
