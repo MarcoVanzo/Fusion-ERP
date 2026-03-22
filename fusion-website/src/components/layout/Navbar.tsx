@@ -83,7 +83,7 @@ const Navbar = () => {
                 <div className="absolute left-1/2 -translate-x-1/2 lg:static lg:translate-x-0 flex lg:flex-none justify-center">
                     <Link to="/" className="flex-shrink-0 relative group z-50 flex items-center justify-center -mt-2">
                         <div className="absolute inset-0 bg-brand-500/20 blur-xl rounded-full scale-150 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                        <img src="/demo/assets/logo-colorato.png" alt="Logo" className="w-[56px] h-[56px] md:w-[72px] md:h-[72px] object-contain drop-shadow-2xl relative z-10 group-hover:scale-105 transition-transform duration-300" />
+                        <img src="/assets/logo-colorato.png" alt="Logo" className="w-[56px] h-[56px] md:w-[72px] md:h-[72px] object-contain drop-shadow-2xl relative z-10 group-hover:scale-105 transition-transform duration-300" />
                     </Link>
                 </div>
 
@@ -111,7 +111,7 @@ const Navbar = () => {
                     {/* Hub Logo */}
                     {hubLogo && (
                         <a 
-                            href="https://www.fusionteamvolley.it/demo/network" 
+                            href="https://www.fusionteamvolley.it/network" 
                             className="ml-auto block w-[60px] h-[60px] -mt-1 bg-white rounded-full p-1.5 shadow-lg hover:scale-105 transition-transform duration-300 group ring-1 ring-zinc-800/50 hover:ring-brand-500/50 relative z-50 pointer-events-auto"
                             title="Savino del bene volley HUB"
                         >
@@ -180,7 +180,7 @@ const Navbar = () => {
                                 className="mt-8 flex justify-center w-full"
                             >
                                 <a 
-                                    href="https://www.fusionteamvolley.it/demo/network" 
+                                    href="https://www.fusionteamvolley.it/network" 
                                     onClick={() => setIsMobileMenuOpen(false)}
                                     className="flex items-center gap-4 bg-white/5 hover:bg-white/10 transition-colors rounded-2xl p-4 border border-zinc-800 w-full max-w-[280px]"
                                 >

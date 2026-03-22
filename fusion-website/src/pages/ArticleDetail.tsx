@@ -136,7 +136,7 @@ const ArticleDetail = () => {
             {
                 '@type': 'BreadcrumbList',
                 'itemListElement': [
-                    { '@type': 'ListItem', 'position': 1, 'name': 'Home', 'item': 'https://www.fusionteamvolley.it/demo/' },
+                    { '@type': 'ListItem', 'position': 1, 'name': 'Home', 'item': 'https://www.fusionteamvolley.it/' },
                     { '@type': 'ListItem', 'position': 2, 'name': 'News', 'item': `${SITE_BASE}/news` },
                     { '@type': 'ListItem', 'position': 3, 'name': article.title, 'item': canonicalUrl }
                 ]

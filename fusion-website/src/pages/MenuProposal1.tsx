@@ -34,7 +34,7 @@ const MenuProposal1 = () => {
             <nav className="fixed top-0 w-full z-50 flex items-center justify-between px-8 py-6 mix-blend-difference">
                 <Link to="/" className="flex items-center gap-4 group">
                     <img
-                        src="/demo/assets/logo-colorato.png"
+                        src="/assets/logo-colorato.png"
                         alt="Fusion Team Volley"
                         className="h-12 w-auto grayscale group-hover:grayscale-0 transition-all duration-300"
                     />
@@ -111,7 +111,7 @@ const MenuProposal1 = () => {
                                 className="flex-1 rounded-2xl overflow-hidden mb-8 relative group"
                             >
                                 <div className="absolute inset-0 bg-brand-500/20 group-hover:bg-transparent transition-all z-10" />
-                                <img src="/demo/assets/hero-1.jpg" alt="Featured" className="w-full h-full object-cover filter grayscale group-hover:grayscale-0 transition-all duration-700" />
+                                <img src="/assets/hero-1.jpg" alt="Featured" className="w-full h-full object-cover filter grayscale group-hover:grayscale-0 transition-all duration-700" />
                                 <div className="absolute bottom-6 left-6 z-20">
                                     <div className="text-xs font-bold text-white bg-brand-500 px-3 py-1 uppercase tracking-widest mb-2 inline-block">Novità</div>
                                     <h3 className="text-3xl font-heading text-white uppercase">Nuove divise<br/>2026/27</h3>
@@ -139,7 +139,7 @@ const MenuProposal1 = () => {
             </AnimatePresence>
 
             {/* Dummy Content for visually previewing the top bar */}
-            <div className="h-screen flex items-center justify-center bg-[url('/demo/assets/squadra-u14.jpeg')] bg-cover bg-center">
+            <div className="h-screen flex items-center justify-center bg-[url('/assets/squadra-u14.jpeg')] bg-cover bg-center">
                 <div className="absolute inset-0 bg-black/60"></div>
                 <h1 className="relative z-10 text-white font-heading text-5xl md:text-8xl opacity-30 uppercase tracking-widest text-center">
                     Proposal 1<br/><span className="text-brand-500">Menu</span>

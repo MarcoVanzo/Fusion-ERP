@@ -50,12 +50,12 @@ const News = () => {
             <Helmet>
                 <title>News &amp; Articoli | Fusion Team Volley</title>
                 <meta name="description" content="Tutte le ultime notizie, risultati e iniziative del Fusion Team Volley: la squadra di pallavolo con 800 atlete e un unico grande sogno." />
-                <link rel="canonical" href="https://www.fusionteamvolley.it/demo/news" />
+                <link rel="canonical" href="https://www.fusionteamvolley.it/news" />
                 <meta name="robots" content="index, follow" />
                 <meta property="og:type" content="website" />
                 <meta property="og:title" content="News &amp; Articoli | Fusion Team Volley" />
                 <meta property="og:description" content="Aggiornamenti, risultati e iniziative dal mondo Fusion Team Volley." />
-                <meta property="og:url" content="https://www.fusionteamvolley.it/demo/news" />
+                <meta property="og:url" content="https://www.fusionteamvolley.it/news" />
                 <meta property="og:site_name" content="Fusion Team Volley" />
                 <meta name="twitter:card" content="summary" />
                 <meta name="twitter:title" content="News &amp; Articoli | Fusion Team Volley" />
@@ -67,7 +67,7 @@ const News = () => {
                 {/* Background Image */}
                 <div
                     className="absolute inset-0 z-0 bg-cover bg-center"
-                    style={{ backgroundImage: "url('/demo/assets/Gemini_Generated_Image_8ikilj8ikilj8iki.jpeg')" }}
+                    style={{ backgroundImage: "url('/assets/Gemini_Generated_Image_8ikilj8ikilj8iki.jpeg')" }}
                 />
                 {/* Overlays */}
                 <div className="absolute inset-0 bg-zinc-950/70 z-10 transition-colors"></div>

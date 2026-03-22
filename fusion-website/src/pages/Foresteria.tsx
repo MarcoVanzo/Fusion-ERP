@@ -90,7 +90,7 @@ const Foresteria = () => {
             <section className="relative h-[60vh] flex items-center justify-center overflow-hidden">
                 <div
                     className="absolute inset-0 z-0 bg-cover bg-center"
-                    style={{ backgroundImage: "url('/demo/assets/hero-3.jpg')", filter: "brightness(0.6) saturate(1.2)" }}
+                    style={{ backgroundImage: "url('/assets/hero-3.jpg')", filter: "brightness(0.6) saturate(1.2)" }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#09090B] via-[#09090B]/60 to-transparent z-10"></div>
                 <div className="absolute inset-0 z-10 opacity-30 pointer-events-none mix-blend-overlay" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #a21caf 0, #a21caf 2px, transparent 2px, transparent 100px)' }}></div>

@@ -30,7 +30,7 @@ const MenuProposal5 = () => {
                             <span className="text-brand-500 text-sm font-bold flex items-center gap-2 group-hover:translate-x-2 transition-transform">Scopri <ArrowRight size={16}/></span>
                          </div>
                          <div className="group relative overflow-hidden rounded-xl h-48">
-                            <img src="/demo/assets/squadra-u14.jpeg" alt="Foresteria" className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-500" />
+                            <img src="/assets/squadra-u14.jpeg" alt="Foresteria" className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-500" />
                             <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black to-transparent p-6">
                                 <h5 className="font-heading text-xl uppercase text-white">Foresteria Venezia</h5>
                             </div>
@@ -86,7 +86,7 @@ const MenuProposal5 = () => {
                         
                         {/* Logo */}
                         <Link to="/" className="flex items-center gap-3">
-                            <img src="/demo/assets/logo-colorato.png" alt="Logo" className="w-12 h-12 object-contain" />
+                            <img src="/assets/logo-colorato.png" alt="Logo" className="w-12 h-12 object-contain" />
                             <div className="flex flex-col">
                                 <span className="font-heading text-lg uppercase tracking-widest leading-none mt-1">Fusion Team</span>
                                 <span className="text-[9px] text-brand-500 tracking-[0.2em] font-bold uppercase -mt-0.5">Volley Club</span>
@@ -147,7 +147,7 @@ const MenuProposal5 = () => {
 
             {/* Dummy Content */}
             <div className="relative h-[calc(100vh-80px)] overflow-hidden bg-black">
-                <div className="absolute inset-0 bg-[url('/demo/assets/squadra-u16.jpeg')] bg-cover bg-center grayscale opacity-80"></div>
+                <div className="absolute inset-0 bg-[url('/assets/squadra-u16.jpeg')] bg-cover bg-center grayscale opacity-80"></div>
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4 relative z-10">
                     <div className="bg-brand-500 text-white shadow-[0_0_20px_rgba(232,67,130,0.4)] px-6 py-2 rounded-full text-xs font-bold uppercase tracking-widest mb-6 animate-pulse">
                         Passa col mouse su "IL CLUB" e "SQUADRE"

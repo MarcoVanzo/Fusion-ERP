@@ -99,7 +99,7 @@ const Home = () => {
                                 key={num}
                                 className="absolute inset-0 transition-opacity duration-1000 ease-in-out saturate-[1.2] contrast-125 brightness-110"
                                 style={{
-                                    backgroundImage: `url('/demo/assets/hero-${num}.jpg')`,
+                                    backgroundImage: `url('/assets/hero-${num}.jpg')`,
                                     backgroundSize: 'cover',
                                     backgroundPosition: bgPosition,
                                     opacity: currentSlide === idx ? 1 : 0
@@ -211,7 +211,7 @@ const Home = () => {
                                                 {/* Home Team */}
                                                 <div className="flex-1 flex flex-col items-center gap-2 text-center">
                                                     {isFusionHome ? (
-                                                        <img src="/demo/assets/logo-colorato.png" alt="Fusion" className="w-14 h-14 rounded-full object-contain border-2 border-brand-500/60 shadow-[0_0_16px_rgba(217,70,239,0.5)] bg-zinc-900" />
+                                                        <img src="/assets/logo-colorato.png" alt="Fusion" className="w-14 h-14 rounded-full object-contain border-2 border-brand-500/60 shadow-[0_0_16px_rgba(217,70,239,0.5)] bg-zinc-900" />
                                                     ) : (
                                                         <div className="w-14 h-14 bg-zinc-800 rounded-full border border-zinc-700 group-hover:border-brand-500/40 flex items-center justify-center transition-colors">
                                                             <span className="font-heading text-xl text-zinc-300">{match.home.charAt(0)}</span>
@@ -232,7 +232,7 @@ const Home = () => {
                                                 {/* Away Team */}
                                                 <div className="flex-1 flex flex-col items-center gap-2 text-center">
                                                     {isFusionAway ? (
-                                                        <img src="/demo/assets/logo-colorato.png" alt="Fusion" className="w-14 h-14 rounded-full object-contain border-2 border-brand-500/60 shadow-[0_0_16px_rgba(217,70,239,0.5)] bg-zinc-900" />
+                                                        <img src="/assets/logo-colorato.png" alt="Fusion" className="w-14 h-14 rounded-full object-contain border-2 border-brand-500/60 shadow-[0_0_16px_rgba(217,70,239,0.5)] bg-zinc-900" />
                                                     ) : (
                                                         <div className="w-14 h-14 bg-zinc-800 rounded-full border border-zinc-700 group-hover:border-brand-500/40 flex items-center justify-center transition-colors">
                                                             <span className="font-heading text-xl text-zinc-300">{match.away.charAt(0)}</span>

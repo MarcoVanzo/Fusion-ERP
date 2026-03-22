@@ -38,7 +38,7 @@ const Roster = () => {
                 {/* Background Image */}
                 <div
                     className="absolute inset-0 z-0 bg-cover bg-center"
-                    style={{ backgroundImage: "url('/demo/assets/Gemini_Generated_Image_5v1qm15v1qm15v1q.jpeg')" }}
+                    style={{ backgroundImage: "url('/assets/Gemini_Generated_Image_5v1qm15v1qm15v1q.jpeg')" }}
                 />
                 {/* Overlays */}
                 <div className="absolute inset-0 bg-zinc-950/70 z-10"></div>
@@ -82,7 +82,7 @@ const Roster = () => {
                                     const isU14 = nameUpper.includes('U14') || nameUpper.includes('UNDER 14') || nameUpper.includes('UNDER14');
                                     const isU16 = nameUpper.includes('U16') || nameUpper.includes('UNDER 16') || nameUpper.includes('UNDER16');
                                     const isU18 = nameUpper.includes('U18') || nameUpper.includes('UNDER 18') || nameUpper.includes('UNDER18');
-                                    const bgImage = isU13 ? '/demo/assets/squadra-u13.jpeg' : isU14 ? '/demo/assets/squadra-u14.jpeg' : isU16 ? '/demo/assets/squadra-u16.jpeg' : isU18 ? '/demo/assets/squadra-u18.jpeg' : null;
+                                    const bgImage = isU13 ? '/assets/squadra-u13.jpeg' : isU14 ? '/assets/squadra-u14.jpeg' : isU16 ? '/assets/squadra-u16.jpeg' : isU18 ? '/assets/squadra-u18.jpeg' : null;
 
                                     return bgImage ? (
                                         /* Full-card photo — visible, bright, centered on the team */
@@ -92,7 +92,7 @@ const Roster = () => {
                                         />
                                     ) : (
                                         <div className="absolute inset-0 z-0 bg-gradient-to-br from-zinc-900 to-brand-900/20 flex items-center justify-end opacity-80 group-hover:opacity-100 transition-opacity duration-700 pr-8">
-                                            <img src="/demo/assets/logo-colorato.png" alt="Fusion Logo" className="max-h-40 opacity-10 drop-shadow-2xl" />
+                                            <img src="/assets/logo-colorato.png" alt="Fusion Logo" className="max-h-40 opacity-10 drop-shadow-2xl" />
                                         </div>
                                     );
                                 })()}

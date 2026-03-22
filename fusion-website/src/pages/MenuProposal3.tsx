@@ -32,7 +32,7 @@ const MenuProposal3 = () => {
             {/* Top Bar */}
             <nav className="fixed top-0 w-full z-40 bg-zinc-950/80 backdrop-blur-md border-b border-white/5 flex items-center justify-between px-6 py-4">
                 <Link to="/" className="flex items-center gap-3">
-                    <img src="/demo/assets/logo-colorato.png" alt="Logo" className="w-12 h-12 object-contain" />
+                    <img src="/assets/logo-colorato.png" alt="Logo" className="w-12 h-12 object-contain" />
                 </Link>
 
                 <div className="flex items-center gap-6">

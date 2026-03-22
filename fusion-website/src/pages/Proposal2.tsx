@@ -53,7 +53,7 @@ const Proposal2 = () => {
                 </div>
 
                 <div className="flex-1 relative aspect-[4/5] w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl">
-                    <div className="absolute inset-0 bg-[url('/demo/assets/hero-2.jpg')] bg-cover bg-center grayscale hover:grayscale-0 transition-all duration-700 blur-[2px] transform scale-105"></div>
+                    <div className="absolute inset-0 bg-[url('/assets/hero-2.jpg')] bg-cover bg-center grayscale hover:grayscale-0 transition-all duration-700 blur-[2px] transform scale-105"></div>
                     <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] via-transparent to-transparent"></div>
                     <div className="absolute inset-0 ring-1 ring-inset ring-white/10 rounded-2xl"></div>
                 </div>

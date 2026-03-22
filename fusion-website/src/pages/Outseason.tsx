@@ -7,7 +7,7 @@ const Outseason = () => {
                 {/* Background Image */}
                 <div
                     className="absolute inset-0 z-0 bg-cover bg-center transition-transform duration-1000 scale-105"
-                    style={{ backgroundImage: "url('/demo/assets/Gemini_Generated_Image_x8wipzx8wipzx8wi.jpeg')", filter: "brightness(0.5)" }}
+                    style={{ backgroundImage: "url('/assets/Gemini_Generated_Image_x8wipzx8wipzx8wi.jpeg')", filter: "brightness(0.5)" }}
                 />
 
                 {/* Overlays */}

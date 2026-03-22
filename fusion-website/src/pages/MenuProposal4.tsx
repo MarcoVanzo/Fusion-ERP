@@ -45,7 +45,7 @@ const MenuProposal4 = () => {
                     {/* Center Logo */}
                     <Link to="/" className="flex-shrink-0 relative group z-50">
                         <div className="absolute inset-0 bg-brand-500/20 blur-xl rounded-full scale-150 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                        <img src="/demo/assets/logo-colorato.png" alt="Logo" className="w-16 h-16 object-contain drop-shadow-2xl relative z-10" />
+                        <img src="/assets/logo-colorato.png" alt="Logo" className="w-16 h-16 object-contain drop-shadow-2xl relative z-10" />
                     </Link>
 
                     {/* Right Links */}
@@ -102,7 +102,7 @@ const MenuProposal4 = () => {
             </AnimatePresence>
 
             {/* Dummy Content */}
-            <div className="h-screen flex items-center justify-center bg-[url('/demo/assets/hero-1.jpg')] bg-cover bg-center grayscale">
+            <div className="h-screen flex items-center justify-center bg-[url('/assets/hero-1.jpg')] bg-cover bg-center grayscale">
                 <div className="absolute inset-0 bg-black/50"></div>
                 <div className="relative z-10 text-center">
                     <h1 className="text-5xl md:text-8xl font-heading uppercase text-white tracking-widest mb-4">

@@ -84,7 +84,7 @@ const Results = () => {
                 {/* Background Image */}
                 <div
                     className="absolute inset-0 z-0 bg-cover bg-center"
-                    style={{ backgroundImage: "url('/demo/assets/Gemini_Generated_Image_g2wpx2g2wpx2g2wp.jpeg')", filter: "brightness(0.8)" }}
+                    style={{ backgroundImage: "url('/assets/Gemini_Generated_Image_g2wpx2g2wpx2g2wp.jpeg')", filter: "brightness(0.8)" }}
                 />
                 {/* Overlays */}
                 <div className="absolute inset-0 bg-zinc-950/70 z-10 transition-colors"></div>
@@ -167,7 +167,7 @@ const Results = () => {
                                                 <div className={`flex items-center justify-end gap-2 w-2/5 ${isFusionHome ? 'text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]' : 'text-zinc-500'}`}>
                                                     <span className="font-heading text-sm md:text-xl break-words whitespace-normal leading-tight text-right">{match.home}</span>
                                                     {isFusionHome && (
-                                                        <img src="/demo/assets/logo-colorato.png" alt="Fusion" className="w-10 h-10 rounded-full object-contain border-2 border-brand-500/60 shadow-[0_0_12px_rgba(217,70,239,0.5)] bg-zinc-900 flex-shrink-0" />
+                                                        <img src="/assets/logo-colorato.png" alt="Fusion" className="w-10 h-10 rounded-full object-contain border-2 border-brand-500/60 shadow-[0_0_12px_rgba(217,70,239,0.5)] bg-zinc-900 flex-shrink-0" />
                                                     )}
                                                 </div>
 
@@ -177,7 +177,7 @@ const Results = () => {
 
                                                 <div className={`flex items-center gap-2 w-2/5 ${isFusionAway ? 'text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]' : 'text-zinc-500'}`}>
                                                     {isFusionAway && (
-                                                        <img src="/demo/assets/logo-colorato.png" alt="Fusion" className="w-10 h-10 rounded-full object-contain border-2 border-brand-500/60 shadow-[0_0_12px_rgba(217,70,239,0.5)] bg-zinc-900 flex-shrink-0" />
+                                                        <img src="/assets/logo-colorato.png" alt="Fusion" className="w-10 h-10 rounded-full object-contain border-2 border-brand-500/60 shadow-[0_0_12px_rgba(217,70,239,0.5)] bg-zinc-900 flex-shrink-0" />
                                                     )}
                                                     <span className="font-heading text-sm md:text-xl break-words whitespace-normal leading-tight">{match.away}</span>
                                                 </div>
@@ -220,7 +220,7 @@ const Results = () => {
                                                 <div className="flex items-center gap-2 w-3/4">
                                                     <span className="w-5 text-center text-zinc-600 font-heading text-xs">{row.position}</span>
                                                     {row.is_our_team && (
-                                                        <img src="/demo/assets/logo-colorato.png" alt="Fusion" className="w-5 h-5 rounded-full object-contain border border-brand-500/60 flex-shrink-0" />
+                                                        <img src="/assets/logo-colorato.png" alt="Fusion" className="w-5 h-5 rounded-full object-contain border border-brand-500/60 flex-shrink-0" />
                                                     )}
                                                     <span className="truncate uppercase text-xs tracking-wider">{row.team}</span>
                                                 </div>
