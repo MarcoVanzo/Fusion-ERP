@@ -19,7 +19,7 @@ window.WebAnalytics = (() => {
                 id: 'site2',
                 name: 'OutSeason',
                 // Sostituisci questo URL con l'Embed URL generato da Looker Studio
-                url: 'https://lookerstudio.google.com/embed/reporting/be3181ca-4765-44fa-8552-26a21257ea8c/page/i2usF'
+                url: 'https://lookerstudio.google.com/embed/reporting/a0244411-6043-4111-84c2-e90d12eafd83/page/v3usF'
             }
         }
     };
