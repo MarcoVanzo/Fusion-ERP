@@ -13,7 +13,7 @@ window.WebAnalytics = (() => {
                 id: 'site1',
                 name: 'Fusion Team Volley',
                 // Sostituisci questo URL con l'Embed URL generato da Looker Studio
-                url: 'https://lookerstudio.google.com/embed/reporting/138879d2-8174-485c-b92c-e3f634cc1af5/page/7uusF' 
+                url: 'https://lookerstudio.google.com/embed/reporting/60af0b7f-f543-46ac-ba17-9c66c1c40cc2/page/B0usF' 
             },
             site2: {
                 id: 'site2',
