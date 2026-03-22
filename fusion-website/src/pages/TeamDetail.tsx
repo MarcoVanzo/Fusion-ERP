@@ -242,10 +242,14 @@ const TeamDetail = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-black/60 z-10"></div>
                 <div className="absolute inset-0 z-10 opacity-30 pointer-events-none mix-blend-overlay" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #d65a86 0, #d65a86 2px, transparent 2px, transparent 100px)' }}></div>
 
-                {/* Back Button */}
-                <Link to="/teams" className="absolute top-8 left-8 md:top-12 md:left-12 font-heading text-zinc-300 hover:text-white flex items-center gap-2 z-20 transition-colors text-sm tracking-widest uppercase bg-black/40 px-4 py-2 rounded-full backdrop-blur-md border border-white/10">
-                    <ChevronLeft size={16} /> Torna alle Squadre
-                </Link>
+                {/* Breadcrumbs */}
+                <div className="absolute top-28 left-4 md:top-32 md:left-12 z-20 flex items-center gap-2 text-[10px] md:text-xs tracking-widest uppercase font-heading bg-zinc-950/60 px-4 py-2 clip-diagonal backdrop-blur-md border border-zinc-800/50">
+                    <Link to="/" className="text-zinc-400 hover:text-white transition-colors">Home</Link>
+                    <span className="text-zinc-600">/</span>
+                    <Link to="/teams" className="text-zinc-400 hover:text-white transition-colors">Squadre</Link>
+                    <span className="text-zinc-600">/</span>
+                    <span className="text-brand-500">{teamName}</span>
+                </div>
 
                 {/* Content */}
                 <div className="relative z-20 px-4 flex flex-col items-center w-full mt-8">
