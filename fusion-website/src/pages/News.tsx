@@ -112,7 +112,7 @@ const News = () => {
                             <Link
                                 to={`/news/${article.slug}`}
                                 key={article.id}
-                                className="glass-panel overflow-hidden border border-white/5 group hover:border-brand-500/30 transition-all hover:shadow-[0_4px_24px_-8px_rgba(0,0,0,0.4)] flex flex-col h-full"
+                                className="glass-panel overflow-hidden border border-white/10 group hover:border-brand-500/50 transition-all duration-300 hover:shadow-[0_4px_24px_-8px_rgba(0,0,0,0.4)] flex flex-col h-full active:scale-[0.98]"
                             >
                                 <div className="h-56 overflow-hidden relative bg-zinc-900 animate-shimmer">
                                     {getImgUrl(article.cover_image_url) ? (
@@ -145,7 +145,7 @@ const News = () => {
                                     )}
                                 </div>
                                 <div className="p-8 flex flex-col flex-grow relative">
-                                    <div className="flex items-center gap-2 text-zinc-500 text-xs mb-4 font-bold uppercase tracking-wider">
+                                    <div className="flex items-center gap-2 text-zinc-400 text-sm mb-4 font-bold uppercase tracking-wider">
                                         <Calendar size={14} strokeWidth={2.5} className="text-brand-500/70" />
                                         {new Date(article.published_at).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' })}
                                     </div>

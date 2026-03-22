@@ -29,15 +29,20 @@ const AthleteCard = ({ athlete }: { athlete: Athlete }) => {
     const photoUrl = athlete.photo_path && athlete.photo_path.trim() !== '' ? `/ERP/${athlete.photo_path}` : null;
 
     return (
-        <div className="group relative aspect-[2/3] min-h-[400px] w-full bg-zinc-900 overflow-hidden clip-diagonal-rev transition-all duration-500 hover:-translate-y-2 hover:z-10 hover:scale-[1.02] border border-transparent hover:border-brand-500">
+        <div className="group relative aspect-[2/3] min-h-[400px] w-full bg-zinc-900 overflow-hidden clip-diagonal-rev transition-all duration-500 hover:-translate-y-2 hover:z-10 hover:scale-[1.02] border border-transparent hover:border-brand-500 animate-shimmer">
             {/* Background Texture/Image */}
             <div className="absolute inset-0 z-0 bg-zinc-950">
                 {photoUrl && !imgError ? (
                     <img 
                         loading="lazy"
                         src={photoUrl} 
-                        className="w-full h-full object-cover opacity-100 group-hover:scale-110 transition-all duration-500" 
+                        className="w-full h-full object-cover opacity-0 transition-opacity duration-1000 group-hover:scale-110" 
                         alt={athlete.full_name || athlete.last_name} 
+                        onLoad={(e) => {
+                            e.currentTarget.classList.remove('opacity-0');
+                            e.currentTarget.classList.add('opacity-100');
+                            e.currentTarget.parentElement?.parentElement?.classList.remove('animate-shimmer');
+                        }}
                         onError={() => setImgError(true)}
                     />
                 ) : (

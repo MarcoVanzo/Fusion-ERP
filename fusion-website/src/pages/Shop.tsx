@@ -115,20 +115,24 @@ const Shop = () => {
             {/* Content Section */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-20">
                 {/* Category Filters */}
-                <div className="flex overflow-x-auto sm:flex-wrap items-center justify-start sm:justify-center gap-4 sm:gap-3 mb-12 pb-4 snap-x pr-4" style={{ scrollbarWidth: 'none' }}>
-                    {categories.map(category => (
-                        <button
-                            key={category}
-                            onClick={() => setActiveCategory(category)}
-                            className={`snap-start whitespace-nowrap px-6 py-3 rounded-full text-sm md:text-base font-bold uppercase tracking-wider transition-all duration-300 border min-h-[44px] ${
-                                activeCategory === category 
-                                    ? 'bg-brand-500 text-white border-brand-500 shadow-[0_0_15px_rgba(217,70,239,0.4)] md:hover:scale-105' 
-                                    : 'bg-zinc-900/80 text-zinc-400 border-zinc-800 hover:text-white hover:border-zinc-600 md:hover:scale-105 backdrop-blur-sm'
-                            }`}
-                        >
-                            {category}
-                        </button>
-                    ))}
+                <div className="relative mb-12">
+                    <div className="flex overflow-x-auto sm:flex-wrap items-center justify-start sm:justify-center gap-4 sm:gap-3 pb-4 snap-x pr-12 sm:pr-0" style={{ scrollbarWidth: 'none' }}>
+                        {categories.map(category => (
+                            <button
+                                key={category}
+                                onClick={() => setActiveCategory(category)}
+                                className={`snap-start whitespace-nowrap px-6 py-3 rounded-full text-sm md:text-base font-bold uppercase tracking-wider transition-all duration-300 border min-h-[44px] ${
+                                    activeCategory === category 
+                                        ? 'bg-brand-500 text-white border-brand-500 shadow-[0_0_15px_rgba(217,70,239,0.4)] md:hover:scale-105' 
+                                        : 'bg-zinc-900/80 text-zinc-400 border-zinc-800 hover:text-white hover:border-zinc-600 md:hover:scale-105 backdrop-blur-sm'
+                                }`}
+                            >
+                                {category}
+                            </button>
+                        ))}
+                    </div>
+                    {/* Mobile swipe hint shadow */}
+                    <div className="absolute top-0 right-0 bottom-4 w-16 bg-gradient-to-l from-zinc-950 to-transparent pointer-events-none sm:hidden z-10"></div>
                 </div>
 
                 {filteredProducts.length === 0 ? (

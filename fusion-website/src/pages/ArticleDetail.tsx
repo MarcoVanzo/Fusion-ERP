@@ -179,9 +179,13 @@ const ArticleDetail = () => {
 
                     {/* Content */}
                     <div className="relative z-20 max-w-5xl mx-auto px-4 w-full pb-20 md:pb-28">
-                        <Link to="/news" className="inline-flex items-center gap-2 text-zinc-300 hover:text-white transition-colors mb-6 font-heading text-sm tracking-widest uppercase bg-zinc-950/50 px-4 py-2 rounded-full backdrop-blur-md border border-white/10">
-                            <ChevronLeft size={16} /> Tutte le news
-                        </Link>
+                        <div className="flex flex-wrap items-center gap-2 text-[10px] md:text-xs tracking-widest uppercase font-heading bg-zinc-950/60 px-4 py-2 rounded-full backdrop-blur-md border border-white/10 mb-6 inline-flex shadow-lg shadow-black/50">
+                            <Link to="/" className="text-zinc-400 hover:text-white transition-colors">Home</Link>
+                            <span className="text-zinc-600">/</span>
+                            <Link to="/news" className="text-zinc-400 hover:text-white transition-colors">News</Link>
+                            <span className="text-zinc-600">/</span>
+                            <span className="text-brand-500 truncate max-w-[150px] sm:max-w-xs">{article.title}</span>
+                        </div>
 
                         {article.category_name && (
                             <div

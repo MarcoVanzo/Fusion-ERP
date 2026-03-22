@@ -1,12 +1,25 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Facebook, Instagram, Youtube, MapPin, Mail, Phone, Loader2, CheckCircle, XCircle, ChevronRight } from 'lucide-react';
+import { Facebook, Instagram, Youtube, MapPin, Mail, Phone, Loader2, CheckCircle, XCircle, ChevronRight, ArrowUp } from 'lucide-react';
 
 const Footer = () => {
     const [email, setEmail] = useState('');
     const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
     const [message, setMessage] = useState('');
     const [openSection, setOpenSection] = useState<string | null>(null);
+    const [showBackToTop, setShowBackToTop] = useState(false);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            setShowBackToTop(window.scrollY > 500);
+        };
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
+    const scrollToTop = () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
 
     const handleSubscribe = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -115,13 +128,13 @@ const Footer = () => {
                             Il settimo settore giovanile d'Italia. 800 giovani atlete, 800 famiglie, 800 sogni. Cresciamo insieme attraverso la passione per la pallavolo.
                         </p>
                         <div className="flex gap-4 pt-2">
-                            <a href="https://instagram.com/fusionteamvolley" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-300 hover:bg-brand-500 hover:text-zinc-950 transition-all">
+                            <a href="https://instagram.com/fusionteamvolley" target="_blank" rel="noopener noreferrer" className="w-11 h-11 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-300 hover:bg-brand-500 hover:text-zinc-950 transition-all">
                                 <Instagram size={20} />
                             </a>
-                            <a href="https://facebook.com/FusionTeamVolley" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-300 hover:bg-brand-500 hover:text-zinc-950 transition-all">
+                            <a href="https://facebook.com/FusionTeamVolley" target="_blank" rel="noopener noreferrer" className="w-11 h-11 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-300 hover:bg-brand-500 hover:text-zinc-950 transition-all">
                                 <Facebook size={20} />
                             </a>
-                            <a href="https://youtube.com/@fusionteamvolley9176" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-300 hover:bg-brand-500 hover:text-zinc-950 transition-all">
+                            <a href="https://youtube.com/@fusionteamvolley9176" target="_blank" rel="noopener noreferrer" className="w-11 h-11 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-300 hover:bg-brand-500 hover:text-zinc-950 transition-all">
                                 <Youtube size={20} />
                             </a>
                         </div>
@@ -147,11 +160,11 @@ const Footer = () => {
                             ].map((item) => (
                                 <li key={item.label}>
                                     {item.isExternal ? (
-                                        <a href={item.path} target="_blank" rel="noopener noreferrer" className="text-zinc-300 py-1.5 hover:text-brand-500 text-sm transition-colors flex items-center gap-2">
+                                        <a href={item.path} target="_blank" rel="noopener noreferrer" className="text-zinc-300 py-2.5 px-2 -mx-2 hover:bg-white/5 hover:text-brand-500 text-sm transition-colors rounded flex items-center gap-2">
                                             {item.label}
                                         </a>
                                     ) : (
-                                        <Link to={item.path} className="text-zinc-300 py-1.5 hover:text-brand-500 text-sm transition-colors flex items-center gap-2">
+                                        <Link to={item.path} className="text-zinc-300 py-2.5 px-2 -mx-2 hover:bg-white/5 hover:text-brand-500 text-sm transition-colors rounded flex items-center gap-2">
                                             {item.label}
                                         </Link>
                                     )}
@@ -172,15 +185,15 @@ const Footer = () => {
                         <ul className={`space-y-4 overflow-hidden transition-all duration-300 ${openSection === 'contacts' ? 'max-h-96 opacity-100 mt-6' : 'max-h-0 opacity-0 md:max-h-full md:opacity-100 md:mt-0'}`}>
                             <li className="flex items-start gap-3">
                                 <MapPin size={18} className="text-brand-500 shrink-0 mt-0.5" />
-                                <span className="text-zinc-300 text-sm">Via Vicentino 1<br />Trivignano (VE)</span>
+                                <span className="text-zinc-300 text-sm py-2 block">Via Vicentino 1<br />Trivignano (VE)</span>
                             </li>
-                            <li className="flex items-center gap-3 py-1.5">
+                            <li className="flex items-center gap-3">
                                 <Mail size={18} className="text-brand-500 shrink-0" />
-                                <a href="mailto:info@fusionteamvolley.it" className="text-zinc-300 hover:text-white text-sm transition-colors">info@fusionteamvolley.it</a>
+                                <a href="mailto:info@fusionteamvolley.it" className="text-zinc-300 hover:text-white text-sm transition-colors py-3 block">info@fusionteamvolley.it</a>
                             </li>
-                            <li className="flex items-center gap-3 py-1.5">
+                            <li className="flex items-center gap-3">
                                 <Phone size={18} className="text-brand-500 shrink-0" />
-                                <span className="text-zinc-300 text-sm">0422/485757</span>
+                                <span className="text-zinc-300 text-sm py-3 block">0422/485757</span>
                             </li>
                         </ul>
                     </div>
@@ -206,16 +219,25 @@ const Footer = () => {
 
                 </div>
 
-                <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
+                <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 relative z-10">
                     <p className="text-zinc-600 text-xs">
                         © {new Date().getFullYear()} Fusion Team Volley. Tutti i diritti riservati.
                     </p>
                     <div className="flex gap-4 text-xs">
-                        <a href="/privacy-policy.pdf" target="_blank" rel="noopener noreferrer" className="text-zinc-600 hover:text-zinc-300 transition-colors">Privacy Policy</a>
-                        <a href="#" className="text-zinc-600 hover:text-zinc-300 transition-colors">Cookie Policy</a>
+                        <a href="/privacy-policy.pdf" target="_blank" rel="noopener noreferrer" className="text-zinc-600 hover:text-zinc-300 transition-colors py-2">Privacy Policy</a>
+                        <a href="#" className="text-zinc-600 hover:text-zinc-300 transition-colors py-2">Cookie Policy</a>
                     </div>
                 </div>
             </div>
+
+            {/* Back to Top FAB */}
+            <button
+                onClick={scrollToTop}
+                className={`fixed bottom-6 right-6 z-[60] w-12 h-12 bg-brand-500 text-zinc-950 rounded-full flex items-center justify-center shadow-[0_4px_15px_rgba(217,70,239,0.5)] transition-all duration-300 hover:scale-110 active:scale-90 ${showBackToTop ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'}`}
+                aria-label="Torna in cima"
+            >
+                <ArrowUp size={24} />
+            </button>
         </footer>
     );
 };

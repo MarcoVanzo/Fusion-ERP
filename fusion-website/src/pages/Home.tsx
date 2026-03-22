@@ -145,10 +145,10 @@ const Home = () => {
                     </div>
 
                     <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center w-full max-w-lg mb-12 sm:mb-16 relative z-30 px-2 sm:px-0">
-                        <Link to="/teams" className="flex-1 py-5 bg-brand-500 text-zinc-950 font-heading text-xl hover:bg-white active:scale-90 transition-all duration-300 ease-out flex items-center justify-center gap-2 clip-diagonal focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 outline-none hover-sweep">
+                        <Link to="/teams" className="flex-1 py-5 bg-brand-500 text-zinc-950 font-heading text-xl hover:bg-white active:scale-95 transition-all duration-300 ease-out flex items-center justify-center gap-2 clip-diagonal focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 outline-none hover-sweep">
                             I ROSTER <ChevronRight size={24} />
                         </Link>
-                        <Link to="/shop" className="flex-1 py-5 bg-zinc-950/50 backdrop-blur-md border-2 border-brand-500 text-brand-500 font-heading text-xl hover:bg-brand-500 hover:text-white active:scale-90 transition-all duration-300 ease-out flex items-center justify-center gap-2 clip-diagonal focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 outline-none hover-sweep">
+                        <Link to="/shop" className="flex-1 py-5 bg-zinc-950/50 backdrop-blur-md border-2 border-brand-500 text-brand-500 font-heading text-xl hover:bg-brand-500 hover:text-white active:scale-95 transition-all duration-300 ease-out flex items-center justify-center gap-2 clip-diagonal focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 outline-none hover-sweep">
                             LO STORE <ChevronRight size={24} />
                         </Link>
                     </div>
@@ -257,13 +257,13 @@ const Home = () => {
                                             </div>
 
                                             {/* Bottom: date + championship */}
-                                            <div className="border-t border-zinc-800/60 px-4 py-2 flex justify-between items-center group-hover:bg-brand-500/5 transition-colors">
-                                                <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold flex items-center gap-1.5">
-                                                    <Calendar size={10} className="text-brand-500" />{match.date}
+                                            <div className="border-t border-zinc-800/60 px-4 py-3 flex justify-between items-center group-hover:bg-brand-500/5 transition-colors">
+                                                <span className="text-[11px] md:text-xs text-zinc-500 uppercase tracking-widest font-bold flex items-center gap-1.5">
+                                                    <Calendar size={12} className="text-brand-500" />{match.date}
                                                 </span>
-                                                <span className="text-[10px] text-zinc-600 uppercase tracking-widest truncate max-w-[55%] flex items-center gap-1">
+                                                <span className="text-[11px] md:text-xs text-zinc-400 uppercase tracking-widest truncate max-w-[50%] flex items-center gap-1">
                                                     {match.championship_label}
-                                                    <ChevronRight size={10} className="text-zinc-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                    <ChevronRight size={12} className="text-zinc-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                                                 </span>
                                             </div>
                                         </Link>
@@ -340,7 +340,7 @@ const Home = () => {
                                             )}
                                             <div className="absolute inset-0 bg-gradient-to-r from-transparent to-zinc-900/30"></div>
                                             {article.category_name && (
-                                                <div className="absolute top-3 left-3 px-2 py-0.5 bg-brand-500 text-zinc-950 font-heading text-[9px] uppercase tracking-widest rounded-full shadow-[0_0_15px_rgba(217,70,239,0.5)]">
+                                                <div className="absolute top-3 left-3 px-3 py-1 bg-brand-500 text-zinc-950 font-heading text-[10px] md:text-xs uppercase tracking-widest rounded-full shadow-[0_0_15px_rgba(217,70,239,0.5)]">
                                                     {article.category_name}
                                                 </div>
                                             )}
@@ -351,14 +351,14 @@ const Home = () => {
                                             <h3 className="font-heading text-lg md:text-lg text-white group-hover:text-brand-500 transition-colors leading-snug line-clamp-2 md:line-clamp-3">
                                                 {article.title}
                                             </h3>
-                                            <div className="flex items-center gap-2 text-zinc-500 text-[10px] uppercase tracking-wider">
-                                                <Calendar size={10} className="text-brand-500" />
+                                            <div className="flex items-center gap-2 text-zinc-400 text-xs font-bold uppercase tracking-wider">
+                                                <Calendar size={12} className="text-brand-500/80" />
                                                 {new Date(article.published_at).toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' })}
                                             </div>
                                             <div>
-                                                <span className="inline-flex items-center gap-1.5 border border-brand-500/50 text-brand-500 group-hover:bg-brand-500 group-hover:text-zinc-950 font-heading text-[10px] uppercase tracking-[0.2em] px-3 py-1.5 rounded-full transition-all">
+                                                <span className="inline-flex items-center gap-1.5 border border-brand-500/50 text-brand-500 group-hover:bg-brand-500 group-hover:text-zinc-950 font-heading text-[11px] md:text-xs uppercase tracking-[0.2em] px-4 py-2 rounded-full transition-all active:scale-95">
                                                     Leggi
-                                                    <ChevronRight size={11} />
+                                                    <ChevronRight size={12} />
                                                 </span>
                                             </div>
                                         </div>

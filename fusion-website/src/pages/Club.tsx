@@ -138,9 +138,11 @@ const Club = () => {
                                             LA NOSTRA <span className="text-brand-500">MISSION</span>
                                         </h2>
                                     </div>
-                                    <p className="text-zinc-300 text-lg leading-relaxed font-sans whitespace-pre-line">
-                                        {profile.mission}
-                                    </p>
+                                    <div className="text-zinc-300 text-lg leading-relaxed font-sans space-y-4">
+                                        {profile.mission.split('\n').filter(p => p.trim() !== '').map((paragraph, i) => (
+                                            <p key={i}>{paragraph}</p>
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
                         </motion.div>
@@ -159,9 +161,11 @@ const Club = () => {
                                             LA NOSTRA <span className="text-brand-500">VISION</span>
                                         </h2>
                                     </div>
-                                    <p className="text-zinc-300 text-lg leading-relaxed font-sans whitespace-pre-line">
-                                        {profile.vision}
-                                    </p>
+                                    <div className="text-zinc-300 text-lg leading-relaxed font-sans space-y-4">
+                                        {profile.vision.split('\n').filter(p => p.trim() !== '').map((paragraph, i) => (
+                                            <p key={i}>{paragraph}</p>
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
                         </motion.div>
