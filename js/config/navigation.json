@@ -65,7 +65,6 @@
             { "title": "WhatsApp Inbox", "path": "whatsapp-inbox", "icon": "chat-circle-dots", "isMobileVisible": false },
             { "title": "WhatsApp Contatti", "path": "whatsapp-contacts", "icon": "address-book", "isMobileVisible": false },
             { "title": "Social Analytics", "path": "social-analytics", "icon": "chart-line", "isMobileVisible": false },
-            { "title": "Media Gallery", "path": "social-gallery", "icon": "image", "isMobileVisible": false },
             { "title": "Sito Web", "path": "website", "icon": "globe", "isMobileVisible": false },
             { "title": "Web Analytics", "path": "website-analytics", "icon": "chart-bar", "isMobileVisible": false },
             { "title": "Newsletter", "path": "newsletter", "icon": "envelope-simple", "isMobileVisible": false }
