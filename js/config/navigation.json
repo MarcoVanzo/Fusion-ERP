@@ -67,6 +67,7 @@
             { "title": "Social Analytics", "path": "social-analytics", "icon": "chart-line", "isMobileVisible": false },
             { "title": "Media Gallery", "path": "social-gallery", "icon": "image", "isMobileVisible": false },
             { "title": "Sito Web", "path": "website", "icon": "globe", "isMobileVisible": false },
+            { "title": "Web Analytics", "path": "website-analytics", "icon": "chart-bar", "isMobileVisible": false },
             { "title": "Newsletter", "path": "newsletter", "icon": "envelope-simple", "isMobileVisible": false }
         ]
     },
