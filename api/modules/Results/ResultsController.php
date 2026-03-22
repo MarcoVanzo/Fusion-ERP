@@ -556,7 +556,7 @@ class ResultsController
     {
         // ── Try GAS Proxy first (bypasses FIPAV WAF IP block on production server) ──
         // BUT skip GAS proxy for fipavveneto.net because they block Google IPs and return 403
-        if ($this->gasProxyUrl !== null) {
+        if ($this->gasProxyUrl !== null && !str_contains($url, 'fipavveneto.net')) {
             $proxyUrl = $this->gasProxyUrl . '?url=' . urlencode($url);
             $ch = curl_init($proxyUrl);
             curl_setopt_array($ch, [
@@ -677,11 +677,11 @@ class ResultsController
                 error_log("[Results] Direct connection timed out (cURL #{$ce}), skipping AllOrigins fallback for: {$url}");
             }
             else {
-                error_log("[Results] Direct fetch failed (HTTP " . (string)$httpCode . ", cURL #" . (string)$curlErrNo . "), trying AllOrigins fallback...");
+                error_log("[Results] Direct fetch failed (HTTP " . (string)$httpCode . ", cURL #" . (string)$curlErrNo . "), trying CorsProxy fallback...");
 
-                // Try AllOrigins public proxy as a fallback if direct connection is blocked by WAF
-                $allOriginsUrl = 'https://api.allorigins.win/get?url=' . urlencode($url);
-                $chProxy = curl_init($allOriginsUrl);
+                // Try CorsProxy public proxy as a fallback if direct connection is blocked by WAF
+                $fallbackUrl = 'https://corsproxy.io/?' . urlencode($url);
+                $chProxy = curl_init($fallbackUrl);
                 curl_setopt_array($chProxy, [
                     CURLOPT_RETURNTRANSFER => true,
                     CURLOPT_FOLLOWLOCATION => true,
@@ -695,10 +695,9 @@ class ResultsController
                 curl_close($chProxy);
 
                 if ($proxyErr === 0 && $proxyCode >= 200 && $proxyCode < 300 && is_string($proxyRes)) {
-                    $jsonData = json_decode($proxyRes, true);
-                    if (isset($jsonData['contents']) && is_string($jsonData['contents']) && strlen($jsonData['contents']) > 500) {
-                        error_log("[Results] AllOrigins fallback OK for: {$url}");
-                        return $jsonData['contents'];
+                    if (strlen($proxyRes) > 500) {
+                        error_log("[Results] CorsProxy fallback OK for: {$url}");
+                        return $proxyRes;
                     }
                 }
             }
