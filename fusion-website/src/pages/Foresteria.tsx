@@ -109,7 +109,7 @@ const Foresteria = () => {
             </section>
 
             {/* Content Section */}
-            <section className="max-w-6xl mx-auto px-4 py-16 text-zinc-300 font-subheading text-lg leading-relaxed relative">
+            <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-zinc-300 font-subheading text-lg leading-relaxed relative">
                 {/* Background glow */}
                 <div className="absolute top-0 right-0 w-[40vw] h-[40vw] bg-brand-500/5 blur-[150px] rounded-full -z-10 pointer-events-none"></div>
 
@@ -205,7 +205,7 @@ const Foresteria = () => {
                     <div className="absolute inset-0 bg-brand-500/5 mix-blend-overlay pointer-events-none"></div>
                     <div className="absolute inset-0 opacity-20 pointer-events-none mix-blend-overlay" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #a21caf 0, #a21caf 2px, transparent 2px, transparent 100px)' }}></div>
                     
-                    <div className="max-w-6xl mx-auto px-4 mb-16 relative z-10 text-center">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-16 relative z-10 text-center">
                         <h2 className="font-heading text-4xl md:text-5xl text-white">
                             VIVI LA <span className="text-brand-500 drop-shadow-[0_0_15px_rgba(217,70,239,0.5)]">FORESTERIA</span>
                         </h2>
@@ -252,7 +252,7 @@ const Foresteria = () => {
                 <section className="w-full relative py-20 bg-zinc-950 overflow-hidden shadow-[inset_0_0_100px_rgba(0,0,0,1)] flex flex-col items-center">
                     <div className="absolute inset-0 bg-brand-500/5 mix-blend-overlay pointer-events-none"></div>
                     
-                    <div className="max-w-6xl mx-auto px-4 mb-12 relative z-10 text-center w-full">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12 relative z-10 text-center w-full">
                         <h2 className="font-heading text-4xl md:text-5xl text-white">
                             LA NOSTRA <span className="text-brand-500 drop-shadow-[0_0_15px_rgba(217,70,239,0.5)]">GALLERY</span>
                         </h2>

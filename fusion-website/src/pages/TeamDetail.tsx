@@ -28,7 +28,7 @@ const AthleteCard = ({ athlete }: { athlete: Athlete }) => {
     const photoUrl = athlete.photo_path && athlete.photo_path.trim() !== '' ? `/ERP/${athlete.photo_path}` : null;
 
     return (
-        <div className="group relative h-[480px] bg-zinc-900 overflow-hidden clip-diagonal-rev transition-all duration-500 hover:-translate-y-2 hover:z-10 hover:scale-[1.02] border border-transparent hover:border-brand-500">
+        <div className="group relative aspect-[2/3] min-h-[400px] w-full bg-zinc-900 overflow-hidden clip-diagonal-rev transition-all duration-500 hover:-translate-y-2 hover:z-10 hover:scale-[1.02] border border-transparent hover:border-brand-500">
             {/* Background Texture/Image */}
             <div className="absolute inset-0 z-0 bg-zinc-950">
                 {photoUrl && !imgError ? (
@@ -99,7 +99,7 @@ const StaffCard = ({ member }: { member: Staff }) => {
     const shadowImg = member.gender === 'F' ? import.meta.env.BASE_URL + 'assets/ombra_donna.png' : import.meta.env.BASE_URL + 'assets/ombra_uomo.png';
 
     return (
-        <div className="group relative h-[400px] bg-zinc-900 overflow-hidden clip-diagonal-rev transition-all duration-500 hover:-translate-y-2 hover:z-10 hover:scale-[1.02] border border-transparent hover:border-brand-500">
+        <div className="group relative aspect-[3/4] min-h-[350px] w-full bg-zinc-900 overflow-hidden clip-diagonal-rev transition-all duration-500 hover:-translate-y-2 hover:z-10 hover:scale-[1.02] border border-transparent hover:border-brand-500">
             <div className="absolute inset-0 z-0 bg-zinc-950">
                 {photoUrl && !imgError ? (
                     <img 
@@ -240,7 +240,7 @@ const TeamDetail = () => {
                 <div className="absolute bottom-0 left-0 w-full h-2 bg-brand-500 z-20 shadow-[0_0_20px_rgba(214,90,134,0.8)]"></div>
             </section>
 
-            <div className="max-w-[1400px] mx-auto px-4 mt-8 pt-16 md:mt-16 md:pt-24 relative z-20">
+            <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 pt-16 md:mt-16 md:pt-24 relative z-20">
 
                 {/* Atlete Grid - "Heroic" Card Style */}
                 <div className="mb-24">
@@ -264,7 +264,7 @@ const TeamDetail = () => {
                     {athletes.length === 0 ? (
                         <div className="p-12 border border-zinc-800 bg-zinc-900/30 font-subheading text-xl text-zinc-500 text-center clip-diagonal">Nessuna atleta in rosa.</div>
                     ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-4 md:gap-6 lg:gap-8">
                             {athletes.map(athlete => <AthleteCard key={athlete.id} athlete={athlete} />)}
                         </div>
                     )}
@@ -274,7 +274,7 @@ const TeamDetail = () => {
                 {staff.length > 0 && (
                     <div className="mb-24">
                         <h2 className="font-heading text-4xl text-zinc-500 mb-8 border-l-4 border-brand-500 pl-4">STAFF TECNICO</h2>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-4 md:gap-6 lg:gap-8">
                             {staff.map(member => <StaffCard key={member.id} member={member} />)}
                         </div>
                     </div>

@@ -118,7 +118,7 @@ const Club = () => {
             </section>
 
             {/* Content Cards */}
-            <div className="max-w-5xl mx-auto px-4 -mt-12 relative z-30">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-12 relative z-30">
                 <motion.div
                     variants={containerVariants}
                     initial="hidden"

@@ -46,7 +46,7 @@ const Roster = () => {
                 <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-zinc-950 to-transparent z-10"></div>
 
                 {/* Content */}
-                <div className="max-w-7xl mx-auto px-4 relative z-20 flex flex-col items-center border-b-4 border-brand-500 pb-6 w-full text-center">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 flex flex-col items-center border-b-4 border-brand-500 pb-6 w-full text-center">
                     <h1 className="font-heading text-6xl md:text-8xl tracking-tighter text-white mb-2 uppercase drop-shadow-xl">
                         LE <span className="text-brand-500 drop-shadow-[0_0_15px_rgba(214,90,134,0.5)]">SQUADRE</span>
                     </h1>
@@ -56,7 +56,7 @@ const Roster = () => {
                 </div>
             </section>
 
-            <div className="max-w-7xl mx-auto px-4 w-full flex-grow">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex-grow">
                 {loading ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         {[1, 2, 3, 4].map(i => (
