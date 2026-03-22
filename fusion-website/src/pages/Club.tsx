@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Helmet } from 'react-helmet-async';
+import { Seo } from '../components/Seo';
 import { motion } from 'framer-motion';
 import { Shield, Eye, Heart, Calendar } from 'lucide-react';
 
@@ -72,10 +72,10 @@ const Club = () => {
 
     return (
         <div className="min-h-screen bg-zinc-950 pb-20">
-            <Helmet>
-                <title>Il Club - Fusion Team Volley</title>
-                <meta name="description" content="La storia e i valori del Fusion Team Volley." />
-            </Helmet>
+            <Seo 
+                title="Il Club" 
+                description="Scopri la storia, i valori e la dirigenza del Fusion Team Volley." 
+            />
 
             {/* Hero Section */}
             <section className="relative h-[60vh] flex items-center justify-center overflow-hidden">

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
+import { Seo } from '../components/Seo';
 
 interface Athlete {
     id: string;
@@ -228,6 +229,7 @@ const TeamDetail = () => {
 
     return (
         <div className="flex flex-col min-h-screen pb-24 bg-zinc-950">
+            <Seo title={teamName !== 'ROSTER UFFICIALE' ? `Roster ${teamName}` : 'Dettaglio Squadra'} description={`Scopri il roster ufficiale, le atlete e lo staff tecnico della squadra ${teamName} del Fusion Team Volley.`} />
             {/* Emotional Header Hero */}
             <section className="relative h-[40vh] min-h-[350px] flex items-center justify-center overflow-hidden mb-12">
                 {/* Background Image */}

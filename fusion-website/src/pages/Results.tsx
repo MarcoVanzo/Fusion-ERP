@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Trophy, Filter } from 'lucide-react';
+import { Seo } from '../components/Seo';
 
 interface Match {
     id: number;
@@ -79,6 +80,7 @@ const Results = () => {
 
     return (
         <div className="flex flex-col min-h-screen pb-24 font-sans text-white">
+            <Seo title="Match Center - Risultati e Classifiche" description="Scopri i risultati ufficiali e le classifiche di tutte le squadre del Fusion Team Volley." />
             {/* Emotional Header Hero */}
             <section className="relative h-[40vh] min-h-[300px] flex items-center justify-center overflow-hidden mb-12">
                 {/* Background Image */}

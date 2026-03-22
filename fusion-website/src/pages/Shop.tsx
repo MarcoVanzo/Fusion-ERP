@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ShoppingBag, ExternalLink } from 'lucide-react';
-import { Helmet } from 'react-helmet-async';
+import { Seo } from '../components/Seo';
 
 interface Product {
     nome: string;
@@ -70,10 +70,7 @@ const Shop = () => {
 
     return (
         <div className="min-h-screen bg-zinc-950 pb-20">
-            <Helmet>
-                <title>Store Ufficiale - Fusion Team Volley</title>
-                <meta name="description" content="Acquista abbigliamento ufficiale e merchandising del Fusion Team Volley nel nostro Store online." />
-            </Helmet>
+            <Seo title="Store Ufficiale" description="Acquista abbigliamento ufficiale e merchandising del Fusion Team Volley nel nostro Store online." />
 
             {/* Hero Section */}
             <div className="relative pt-32 pb-24 border-b-2 border-brand-500/20 overflow-hidden">

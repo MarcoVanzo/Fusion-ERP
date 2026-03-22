@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
+import { Seo } from '../components/Seo';
 
 interface Team {
     id: number;
@@ -33,6 +34,7 @@ const Roster = () => {
 
     return (
         <div className="flex flex-col min-h-screen pb-24">
+            <Seo title="Le Squadre" description="I roster ufficiali di tutte le squadre giovanili e prime squadre del Fusion Team Volley." />
             {/* Emotional Header Hero */}
             <section className="relative h-[40vh] min-h-[300px] flex items-center justify-center overflow-hidden mb-12">
                 {/* Background Image */}

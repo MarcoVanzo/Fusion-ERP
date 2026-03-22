@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Helmet } from 'react-helmet-async';
+import { Seo } from '../components/Seo';
 import { Youtube, MapPin } from 'lucide-react';
 
 interface ForesteriaInfo {
@@ -81,10 +81,10 @@ const Foresteria = () => {
 
     return (
         <div className="flex flex-col gap-0 pb-20">
-            <Helmet>
-                <title>La Foresteria - Fusion Team Volley</title>
-                <meta name="description" content="Scopri la Foresteria del Fusion Team Volley: l'ambiente ideale per la crescita delle nostre atlete." />
-            </Helmet>
+            <Seo 
+                title="La Foresteria" 
+                description="Scopri la Foresteria del Fusion Team Volley: l'ambiente ideale per la crescita delle nostre atlete." 
+            />
 
             {/* Hero Section */}
             <section className="relative h-[60vh] flex items-center justify-center overflow-hidden">
