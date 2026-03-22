@@ -19,6 +19,8 @@ interface Staff {
     first_name: string;
     last_name: string;
     role: string;
+    photo_path?: string;
+    gender?: string;
 }
 
 const TeamDetail = () => {
@@ -52,7 +54,28 @@ const TeamDetail = () => {
                 const staffRes = await fetch(`/ERP/api/router.php?module=staff&action=getPublicStaff&teamId=${id}`);
                 const staffData = await staffRes.json();
                 if (staffData.status === 'success' || staffData.success === true) {
-                    setStaff(staffData.data || []);
+                    const sortedStaff = (staffData.data || []).sort((a: any, b: any) => {
+                        const roleOrder = [
+                            'primo allenatore',
+                            'secondo allenatore',
+                            'dirigente',
+                            'preparatore atletico',
+                            'fisioterapista',
+                            'social media manager',
+                            'direttore tecnico'
+                        ];
+                        const roleA = (a.role || '').toLowerCase().trim();
+                        const roleB = (b.role || '').toLowerCase().trim();
+                        
+                        let indexA = roleOrder.indexOf(roleA);
+                        let indexB = roleOrder.indexOf(roleB);
+                        
+                        if (indexA === -1) indexA = 999;
+                        if (indexB === -1) indexB = 999;
+                        
+                        return indexA - indexB;
+                    });
+                    setStaff(sortedStaff);
                 }
             } catch (err) {
                 console.error('API Error', err);
@@ -200,17 +223,36 @@ const TeamDetail = () => {
 
                 {/* Staff Grid */}
                 {staff.length > 0 && (
-                    <div>
-                        <h2 className="font-heading text-4xl text-zinc-500 mb-8 border-l-4 border-brand-primary pl-4">STAFF TECNICO</h2>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            {staff.map(member => (
-                                <div key={member.id} className="bg-zinc-900 p-8 border border-zinc-800 clip-diagonal flex flex-col justify-between h-48 hover:bg-zinc-800 transition-colors">
-                                    <div>
-                                        <div className="font-subheading text-brand-primary tracking-widest text-sm mb-2">{member.role || 'ALLENATORE'}</div>
-                                        <div className="font-heading text-3xl text-white">{member.first_name} {member.last_name}</div>
+                    <div className="mb-24">
+                        <h2 className="font-heading text-4xl text-zinc-500 mb-8 border-l-4 border-brand-500 pl-4">STAFF TECNICO</h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                            {staff.map(member => {
+                                const photoUrl = member.photo_path ? `/ERP/${member.photo_path}` : null;
+                                const shadowImg = member.gender === 'F' ? '/assets/ombra_donna.png' : '/assets/ombra_uomo.png';
+                                
+                                return (
+                                    <div key={member.id} className="group relative h-[400px] bg-zinc-900 overflow-hidden clip-diagonal-rev transition-all duration-500 hover:-translate-y-2 hover:z-10 hover:scale-[1.02] border border-transparent hover:border-brand-500">
+                                        <div className="absolute inset-0 z-0">
+                                            {photoUrl ? (
+                                                <img src={photoUrl} className="w-full h-full object-cover opacity-100 group-hover:scale-110 transition-all duration-500" alt={`${member.first_name} ${member.last_name}`} />
+                                            ) : (
+                                                <img src={shadowImg} className="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-all duration-500" alt="Silhouette" />
+                                            )}
+                                        </div>
+                                        
+                                        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent z-10"></div>
+                                        
+                                        <div className="absolute bottom-0 left-0 w-full p-6 z-20 flex flex-col justify-end">
+                                            <div className="font-subheading text-brand-500 tracking-widest text-sm mb-1 uppercase">
+                                                {member.role || 'ALLENATORE'}
+                                            </div>
+                                            <h3 className="font-heading text-3xl leading-none text-white uppercase group-hover:text-brand-500 group-hover:drop-shadow-[0_0_15px_rgba(214,90,134,0.8)] transition-all duration-300">
+                                                {member.first_name}<br/>{member.last_name}
+                                            </h3>
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
                 )}
