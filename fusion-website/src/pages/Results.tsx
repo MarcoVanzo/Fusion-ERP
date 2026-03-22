@@ -86,12 +86,11 @@ const Results = () => {
                 {/* Background Image */}
                 <div
                     className="absolute inset-0 z-0 bg-cover bg-center"
-                    style={{ backgroundImage: `url('${import.meta.env.BASE_URL}assets/Gemini_Generated_Image_g2wpx2g2wpx2g2wp.jpeg')`, filter: "brightness(0.8)" }}
+                    style={{ backgroundImage: `url('${import.meta.env.BASE_URL}assets/Gemini_Generated_Image_g2wpx2g2wpx2g2wp.jpeg')`, filter: "brightness(0.55) saturate(1.2)" }}
                 />
                 {/* Overlays */}
-                <div className="absolute inset-0 bg-zinc-950/70 z-10 transition-colors"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent z-10 transition-colors"></div>
                 <div className="absolute inset-0 z-10 opacity-30 pointer-events-none mix-blend-overlay" style={{ backgroundImage: 'repeating-linear-gradient(-45deg, #d65a86 0, #d65a86 2px, transparent 2px, transparent 100px)' }}></div>
-                <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-zinc-950 to-transparent z-10"></div>
 
                 {/* Content */}
                 <div className="relative z-20 text-center px-4 max-w-4xl mx-auto flex flex-col items-center pt-8">

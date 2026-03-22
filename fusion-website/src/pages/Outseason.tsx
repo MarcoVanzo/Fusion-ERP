@@ -7,11 +7,11 @@ const Outseason = () => {
                 {/* Background Image */}
                 <div
                     className="absolute inset-0 z-0 bg-cover bg-center transition-transform duration-1000 scale-105"
-                    style={{ backgroundImage: `url('${import.meta.env.BASE_URL}assets/Gemini_Generated_Image_x8wipzx8wipzx8wi.jpeg')`, filter: "brightness(0.5)" }}
+                    style={{ backgroundImage: `url('${import.meta.env.BASE_URL}assets/Gemini_Generated_Image_x8wipzx8wipzx8wi.jpeg')`, filter: "brightness(0.55) saturate(1.2)" }}
                 />
 
                 {/* Overlays */}
-                <div className="absolute inset-0 bg-zinc-950/60 z-10"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent z-10 transition-colors"></div>
                 <div className="absolute inset-0 z-10 opacity-40 pointer-events-none mix-blend-overlay" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #d65a86 0, #d65a86 2px, transparent 2px, transparent 100px)' }}></div>
 
                 <div className="relative z-20 max-w-4xl w-full p-12 md:p-24 text-center">
