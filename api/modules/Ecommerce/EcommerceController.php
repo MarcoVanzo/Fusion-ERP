@@ -539,38 +539,216 @@ class EcommerceController
         ];
     }
 
+    // ─── ADMIN PRODUCT ENDPOINTS ───────────────────────────────────────────────
+    public function getProdotti(): void
+    {
+        Auth::requireRead('ecommerce');
+
+        $db = Database::getInstance();
+        $stmt = $db->query("SELECT * FROM ec_products ORDER BY nome ASC");
+        $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        foreach ($products as &$p) {
+            $p['id'] = (int)$p['id'];
+            $p['prezzo'] = (float)$p['prezzo'];
+            $p['disponibile'] = (bool)$p['disponibile'];
+        }
+
+        Response::success([
+            'prodotti' => $products,
+            'count' => count($products)
+        ]);
+    }
+
+    public function saveProdotto(): void
+    {
+        Auth::requireWrite('ecommerce');
+
+        $data = json_decode(file_get_contents('php://input'), true);
+        if (!$data || empty($data['nome'])) {
+            Response::error('Dati prodotto non validi o nome mancante.', 400);
+        }
+
+        $id = !empty($data['id']) ? (int)$data['id'] : null;
+        $nome = trim($data['nome'] ?? '');
+        $prezzo = (float)($data['prezzo'] ?? 0);
+        $categoria = trim($data['categoria'] ?? '');
+        $descrizione = trim($data['descrizione'] ?? '');
+        $immagineBase64 = $data['immagineBase64'] ?? null;
+        $immagineMimeType = $data['immagineMimeType'] ?? null;
+        $immagineUrl = $data['immagineUrl'] ?? null;
+        $disponibile = isset($data['disponibile']) ? (int)$data['disponibile'] : 1;
+
+        $db = Database::getInstance();
+
+        if ($id) {
+            $stmt = $db->prepare("
+                UPDATE ec_products 
+                SET nome = ?, prezzo = ?, categoria = ?, descrizione = ?, 
+                    immagineBase64 = ?, immagineMimeType = ?, immagineUrl = ?, 
+                    disponibile = ?, modificatoIl = NOW()
+                WHERE id = ?
+            ");
+            $stmt->execute([
+                $nome, $prezzo, $categoria, $descrizione,
+                $immagineBase64, $immagineMimeType, $immagineUrl,
+                $disponibile, $id
+            ]);
+            $insertedId = $id;
+        } else {
+            $stmt = $db->prepare("
+                INSERT INTO ec_products 
+                (nome, prezzo, categoria, descrizione, immagineBase64, immagineMimeType, immagineUrl, disponibile, importatoIl, modificatoIl)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+            ");
+            $stmt->execute([
+                $nome, $prezzo, $categoria, $descrizione,
+                $immagineBase64, $immagineMimeType, $immagineUrl, $disponibile
+            ]);
+            $insertedId = (int)$db->lastInsertId();
+        }
+
+        Response::success(['message' => 'Prodotto salvato con successo', 'id' => $insertedId]);
+    }
+
+    public function deleteProdotto(): void
+    {
+        Auth::requireWrite('ecommerce');
+
+        $data = json_decode(file_get_contents('php://input'), true);
+        $id = !empty($data['id']) ? (int)$data['id'] : null;
+
+        if (!$id) {
+            Response::error('ID prodotto mancante', 400);
+        }
+
+        $db = Database::getInstance();
+        $stmt = $db->prepare("DELETE FROM ec_products WHERE id = ?");
+        $stmt->execute([$id]);
+
+        Response::success(['message' => 'Prodotto eliminato con successo.']);
+    }
+
+    public function bulkSaveProdotti(): void
+    {
+        Auth::requireWrite('ecommerce');
+
+        $data = json_decode(file_get_contents('php://input'), true);
+        $prodotti = $data['prodotti'] ?? [];
+
+        if (!is_array($prodotti) || empty($prodotti)) {
+            Response::error('Nessun prodotto da salvare.', 400);
+        }
+
+        $db = Database::getInstance();
+        $db->beginTransaction();
+
+        try {
+            $stmt = $db->prepare("
+                INSERT INTO ec_products 
+                (nome, prezzo, categoria, descrizione, immagineBase64, immagineMimeType, immagineUrl, disponibile, importatoIl, modificatoIl)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+            ");
+
+            $count = 0;
+            foreach ($prodotti as $p) {
+                if (empty($p['nome'])) continue;
+                $stmt->execute([
+                    trim($p['nome'] ?? ''),
+                    (float)($p['prezzo'] ?? 0),
+                    trim($p['categoria'] ?? ''),
+                    trim($p['descrizione'] ?? ''),
+                    $p['immagineBase64'] ?? null,
+                    $p['immagineMimeType'] ?? null,
+                    $p['immagineUrl'] ?? null,
+                    isset($p['disponibile']) ? (int)$p['disponibile'] : 1
+                ]);
+                $count++;
+            }
+
+            $db->commit();
+            Response::success(['message' => "$count prodotti sincronizzati con successo.", 'count' => $count]);
+        } catch (\Exception $ex) {
+            $db->rollBack();
+            Response::error('Errore durante il salvataggio dei prodotti: ' . $ex->getMessage(), 500);
+        }
+    }
+
     // ─── PUBLIC ENDPOINTS FOR WEBSITE ──────────────────────────────────────────────
     public function getPublicShop(): void
     {
-        $ch = curl_init(self::SHOP_URL);
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_TIMEOUT => 20,
-            CURLOPT_USERAGENT => 'Mozilla/5.0 (compatible; FusionERP/1.0)',
-            CURLOPT_SSL_VERIFYPEER => true,
-        ]);
+        $db = Database::getInstance();
+        $stmt = $db->query("SELECT id, nome, prezzo, categoria, descrizione, immagineUrl, CASE WHEN immagineBase64 IS NOT NULL AND immagineBase64 != '' THEN 1 ELSE 0 END as hasBase64, disponibile FROM ec_products WHERE disponibile = 1 ORDER BY categoria ASC, nome ASC");
+        $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        $html = curl_exec($ch);
-        $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $curlErr = curl_error($ch);
-        curl_close($ch);
+        $formattedProducts = [];
+        foreach ($products as $p) {
+            $imageUrl = $p['immagineUrl'];
+            if (!empty($p['hasBase64'])) {
+                // Return a dynamic route that streams the image without bloating the JSON payload
+                $imageUrl = '/ERP/api/router.php?module=ecommerce&action=getProductImage&id=' . (int)$p['id'];
+            }
 
-        if ($html === false || !empty($curlErr)) {
-            Response::error('Impossibile raggiungere il negozio online: ' . $curlErr, 502);
+            $formattedProducts[] = [
+                'id' => (int)$p['id'],
+                'nome' => $p['nome'],
+                'prezzo' => (float)$p['prezzo'],
+                'categoria' => $p['categoria'],
+                'descrizione' => $p['descrizione'],
+                'immagineUrl' => $imageUrl,
+                'disponibile' => (bool)$p['disponibile']
+            ];
         }
-
-        if ($httpCode !== 200) {
-            Response::error('Il negozio ha risposto HTTP ' . $httpCode . '. Potrebbe essere offline.', 502);
-        }
-
-        $products = self::_parseShopHtml((string)$html);
 
         Response::success([
-            'products' => $products,
-            'count' => count($products),
-            'source' => self::SHOP_URL,
+            'products' => $formattedProducts,
+            'count' => count($formattedProducts),
+            'source' => 'db',
             'scraped_at' => date('Y-m-d H:i:s'),
         ]);
+    }
+
+    public function getProductImage(): void
+    {
+        $id = (int)($_GET['id'] ?? 0);
+        if (!$id) {
+            http_response_code(400);
+            echo "Missing ID";
+            exit;
+        }
+
+        $db = Database::getInstance();
+        $stmt = $db->prepare("SELECT immagineBase64, immagineMimeType FROM ec_products WHERE id = ? AND immagineBase64 IS NOT NULL AND immagineBase64 != ''");
+        $stmt->execute([$id]);
+        $product = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$product || empty($product['immagineBase64'])) {
+            http_response_code(404);
+            echo "Image not found";
+            exit;
+        }
+
+        $base64 = $product['immagineBase64'];
+        
+        // Strip data:image/*;base64, prefix if present
+        if (strpos($base64, ',') !== false) {
+            [, $base64] = explode(',', $base64, 2);
+        }
+
+        $imageData = base64_decode($base64);
+        if ($imageData === false) {
+            http_response_code(500);
+            echo "Invalid image data";
+            exit;
+        }
+
+        $mimeType = $product['immagineMimeType'] ?: 'image/jpeg';
+        
+        // Output image with cache headers
+        header("Content-Type: " . $mimeType);
+        header("Cache-Control: public, max-age=86400, immutable"); // Cache for 24 hours
+        header("Content-Length: " . strlen($imageData));
+        echo $imageData;
+        exit;
     }
 }

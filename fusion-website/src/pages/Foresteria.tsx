@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Helmet } from 'react-helmet-async';
+import { Seo } from '../components/Seo';
 import { Youtube, MapPin } from 'lucide-react';
 
 interface ForesteriaInfo {
@@ -81,18 +81,18 @@ const Foresteria = () => {
 
     return (
         <div className="flex flex-col gap-0 pb-20">
-            <Helmet>
-                <title>La Foresteria - Fusion Team Volley</title>
-                <meta name="description" content="Scopri la Foresteria del Fusion Team Volley: l'ambiente ideale per la crescita delle nostre atlete." />
-            </Helmet>
+            <Seo 
+                title="La Foresteria" 
+                description="Scopri la Foresteria del Fusion Team Volley: l'ambiente ideale per la crescita delle nostre atlete." 
+            />
 
             {/* Hero Section */}
             <section className="relative h-[60vh] flex items-center justify-center overflow-hidden">
                 <div
                     className="absolute inset-0 z-0 bg-cover bg-center"
-                    style={{ backgroundImage: "url('/demo/assets/hero-3.jpg')", filter: "brightness(0.6) saturate(1.2)" }}
+                    style={{ backgroundImage: `url('${import.meta.env.BASE_URL}assets/hero-3.jpg')`, filter: "brightness(0.55) saturate(1.2)" }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#09090B] via-[#09090B]/60 to-transparent z-10"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-[#09090B] via-[#09090B]/40 to-transparent z-10"></div>
                 <div className="absolute inset-0 z-10 opacity-30 pointer-events-none mix-blend-overlay" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #a21caf 0, #a21caf 2px, transparent 2px, transparent 100px)' }}></div>
                 
                 <div className="relative z-20 text-center px-4 max-w-4xl mx-auto flex flex-col items-center">
@@ -109,7 +109,7 @@ const Foresteria = () => {
             </section>
 
             {/* Content Section */}
-            <section className="max-w-6xl mx-auto px-4 py-16 text-zinc-300 font-subheading text-lg leading-relaxed relative">
+            <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-zinc-300 font-subheading text-lg leading-relaxed relative">
                 {/* Background glow */}
                 <div className="absolute top-0 right-0 w-[40vw] h-[40vw] bg-brand-500/5 blur-[150px] rounded-full -z-10 pointer-events-none"></div>
 
@@ -205,7 +205,7 @@ const Foresteria = () => {
                     <div className="absolute inset-0 bg-brand-500/5 mix-blend-overlay pointer-events-none"></div>
                     <div className="absolute inset-0 opacity-20 pointer-events-none mix-blend-overlay" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #a21caf 0, #a21caf 2px, transparent 2px, transparent 100px)' }}></div>
                     
-                    <div className="max-w-6xl mx-auto px-4 mb-16 relative z-10 text-center">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-16 relative z-10 text-center">
                         <h2 className="font-heading text-4xl md:text-5xl text-white">
                             VIVI LA <span className="text-brand-500 drop-shadow-[0_0_15px_rgba(217,70,239,0.5)]">FORESTERIA</span>
                         </h2>
@@ -233,7 +233,7 @@ const Foresteria = () => {
                                         ></video>
                                     )}
                                     {video.title && (
-                                        <div className="absolute bottom-0 left-0 right-0 p-6 md:p-12 bg-gradient-to-t from-black via-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none flex items-end justify-center">
+                                        <div className="absolute bottom-0 left-0 right-0 p-6 md:p-12 bg-gradient-to-t from-black via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none flex items-end justify-center">
                                             <h4 className="font-heading text-2xl md:text-4xl text-white flex items-center gap-3 drop-shadow-xl">
                                                 {video.type === 'youtube' && <Youtube size={36} className="text-brand-500" />}
                                                 {video.title}
@@ -252,7 +252,7 @@ const Foresteria = () => {
                 <section className="w-full relative py-20 bg-zinc-950 overflow-hidden shadow-[inset_0_0_100px_rgba(0,0,0,1)] flex flex-col items-center">
                     <div className="absolute inset-0 bg-brand-500/5 mix-blend-overlay pointer-events-none"></div>
                     
-                    <div className="max-w-6xl mx-auto px-4 mb-12 relative z-10 text-center w-full">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12 relative z-10 text-center w-full">
                         <h2 className="font-heading text-4xl md:text-5xl text-white">
                             LA NOSTRA <span className="text-brand-500 drop-shadow-[0_0_15px_rgba(217,70,239,0.5)]">GALLERY</span>
                         </h2>

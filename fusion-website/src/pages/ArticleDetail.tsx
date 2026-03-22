@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Calendar, ChevronLeft, ArrowLeft } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
+import { Seo } from '../components/Seo';
 
 interface ArticleDetailData {
     id: number;
@@ -59,9 +60,7 @@ const ArticleDetail = () => {
     if (loading) {
         return (
             <>
-                <Helmet>
-                    <title>Caricamento... | {SITE_NAME}</title>
-                </Helmet>
+                <Seo title="Caricamento..." description="Caricamento articolo..." />
                 <div className="max-w-4xl mx-auto px-4 py-20 md:py-28 animate-pulse">
                     <div className="h-8 w-24 bg-white/10 rounded mb-8"></div>
                     <div className="h-64 md:h-96 w-full bg-white/5 rounded-none mb-8"></div>
@@ -80,8 +79,8 @@ const ArticleDetail = () => {
     if (error || !article) {
         return (
             <>
+                <Seo title="Articolo non trovato" description="Articolo non trovato." />
                 <Helmet>
-                    <title>Articolo non trovato | {SITE_NAME}</title>
                     <meta name="robots" content="noindex" />
                 </Helmet>
                 <div className="max-w-4xl mx-auto px-4 py-20 md:py-28 text-center">
@@ -136,7 +135,7 @@ const ArticleDetail = () => {
             {
                 '@type': 'BreadcrumbList',
                 'itemListElement': [
-                    { '@type': 'ListItem', 'position': 1, 'name': 'Home', 'item': 'https://www.fusionteamvolley.it/demo/' },
+                    { '@type': 'ListItem', 'position': 1, 'name': 'Home', 'item': 'https://www.fusionteamvolley.it/' },
                     { '@type': 'ListItem', 'position': 2, 'name': 'News', 'item': `${SITE_BASE}/news` },
                     { '@type': 'ListItem', 'position': 3, 'name': article.title, 'item': canonicalUrl }
                 ]
@@ -146,27 +145,17 @@ const ArticleDetail = () => {
 
     return (
         <>
+            <Seo 
+                title={article.title} 
+                description={description} 
+                image={ogImage}
+                type="article"
+                pathname={`/news/${article.slug}`}
+            />
             <Helmet>
-                <title>{article.title} | {SITE_NAME}</title>
-                <meta name="description" content={description} />
-                <link rel="canonical" href={canonicalUrl} />
                 <meta name="robots" content="index, follow" />
-
-                {/* Open Graph */}
-                <meta property="og:type" content="article" />
-                <meta property="og:title" content={`${article.title} | ${SITE_NAME}`} />
-                <meta property="og:description" content={description} />
-                <meta property="og:image" content={ogImage} />
-                <meta property="og:url" content={canonicalUrl} />
-                <meta property="og:site_name" content={SITE_NAME} />
                 <meta property="article:published_time" content={dateIso} />
                 <meta property="article:section" content={article.category_name} />
-
-                {/* Twitter Card */}
-                <meta name="twitter:card" content="summary_large_image" />
-                <meta name="twitter:title" content={article.title} />
-                <meta name="twitter:description" content={description} />
-                <meta name="twitter:image" content={ogImage} />
 
                 {/* JSON-LD */}
                 <script type="application/ld+json">
@@ -190,9 +179,13 @@ const ArticleDetail = () => {
 
                     {/* Content */}
                     <div className="relative z-20 max-w-5xl mx-auto px-4 w-full pb-20 md:pb-28">
-                        <Link to="/news" className="inline-flex items-center gap-2 text-zinc-300 hover:text-white transition-colors mb-6 font-heading text-sm tracking-widest uppercase bg-zinc-950/50 px-4 py-2 rounded-full backdrop-blur-md border border-white/10">
-                            <ChevronLeft size={16} /> Tutte le news
-                        </Link>
+                        <div className="flex flex-wrap items-center gap-2 text-[10px] md:text-xs tracking-widest uppercase font-heading bg-zinc-950/60 px-4 py-2 rounded-full backdrop-blur-md border border-white/10 mb-6 inline-flex shadow-lg shadow-black/50">
+                            <Link to="/" className="text-zinc-400 hover:text-white transition-colors">Home</Link>
+                            <span className="text-zinc-600">/</span>
+                            <Link to="/news" className="text-zinc-400 hover:text-white transition-colors">News</Link>
+                            <span className="text-zinc-600">/</span>
+                            <span className="text-brand-500 truncate max-w-[150px] sm:max-w-xs">{article.title}</span>
+                        </div>
 
                         {article.category_name && (
                             <div

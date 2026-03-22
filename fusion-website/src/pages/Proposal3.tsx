@@ -46,7 +46,7 @@ const Proposal3 = () => {
 
                     <div className="relative hidden lg:block">
                         <img 
-                            src="/demo/assets/squadra-u18.jpeg" 
+                            src="/assets/squadra-u18.jpeg" 
                             alt="Team" 
                             className="absolute right-0 top-1/2 -translate-y-1/2 w-[120%] h-auto max-w-[800px] object-cover filter grayscale contrast-150 border-8 border-brand-500 shadow-[-20px_20px_0px_#ffffff]"
                         />

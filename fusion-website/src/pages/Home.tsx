@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { ChevronRight, Calendar } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import { Seo } from '../components/Seo';
+import { motion } from 'framer-motion';
 
 interface NewsArticle {
     id: number;
@@ -80,10 +81,11 @@ const Home = () => {
 
     return (
         <div className="flex flex-col gap-0 pb-20">
-            <Helmet>
-                <title>Home - Fusion Team Volley</title>
-                <meta name="description" content="Scopri le squadre, le news e lo shop ufficiale del Fusion Team Volley." />
-            </Helmet>
+            <Seo 
+                title="Home" 
+                description="Scopri le squadre, le news e lo shop ufficiale del Fusion Team Volley." 
+                pathname="/"
+            />
 
             {/* Hero Section */}
             <section className="relative h-[85vh] flex items-center justify-center overflow-hidden">
@@ -97,12 +99,11 @@ const Home = () => {
                         return (
                             <div
                                 key={num}
-                                className="absolute inset-0 transition-opacity duration-1000 ease-in-out saturate-[1.2] contrast-125 brightness-110"
+                                className={`absolute inset-0 saturate-[1.2] contrast-125 brightness-[0.55] transition-all ease-out ${currentSlide === idx ? 'opacity-100 scale-[1.05] duration-[15000ms]' : 'opacity-0 scale-100 duration-1000'}`}
                                 style={{
-                                    backgroundImage: `url('/demo/assets/hero-${num}.jpg')`,
+                                    backgroundImage: `url('${import.meta.env.BASE_URL}assets/hero-${num}.jpg')`,
                                     backgroundSize: 'cover',
-                                    backgroundPosition: bgPosition,
-                                    opacity: currentSlide === idx ? 1 : 0
+                                    backgroundPosition: bgPosition
                                 }}
                             />
                         );
@@ -110,7 +111,7 @@ const Home = () => {
                 </div>
 
                 {/* Dark Background Overlay & Fuchsia Glow */}
-                <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/70 to-[#09090B] z-10 transition-colors duration-500"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-[#09090B] via-[#09090B]/40 to-transparent z-10 transition-colors duration-500"></div>
                 <div className="absolute inset-0 z-10 opacity-40 pointer-events-none mix-blend-overlay" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #a21caf 0, #a21caf 2px, transparent 2px, transparent 100px)' }}></div>
 
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60vw] bg-brand-primary/40 blur-[150px] rounded-full z-0 mix-blend-screen"></div>
@@ -144,10 +145,10 @@ const Home = () => {
                     </div>
 
                     <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center w-full max-w-lg mb-12 sm:mb-16 relative z-30 px-2 sm:px-0">
-                        <Link to="/teams" className="flex-1 py-5 bg-brand-500 text-zinc-950 font-heading text-xl hover:bg-white active:scale-95 transition-all flex items-center justify-center gap-2 clip-diagonal focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 outline-none">
+                        <Link to="/teams" className="flex-1 py-5 bg-brand-500 text-zinc-950 font-heading text-xl hover:bg-white active:scale-95 transition-all duration-300 ease-out flex items-center justify-center gap-2 clip-diagonal focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 outline-none hover-sweep">
                             I ROSTER <ChevronRight size={24} />
                         </Link>
-                        <Link to="/shop" className="flex-1 py-5 bg-zinc-950/50 backdrop-blur-md border-2 border-brand-500 text-brand-500 font-heading text-xl hover:bg-brand-500 hover:text-white active:scale-95 transition-all flex items-center justify-center gap-2 clip-diagonal focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 outline-none">
+                        <Link to="/shop" className="flex-1 py-5 bg-zinc-950/50 backdrop-blur-md border-2 border-brand-500 text-brand-500 font-heading text-xl hover:bg-brand-500 hover:text-white active:scale-95 transition-all duration-300 ease-out flex items-center justify-center gap-2 clip-diagonal focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 outline-none hover-sweep">
                             LO STORE <ChevronRight size={24} />
                         </Link>
                     </div>
@@ -175,7 +176,13 @@ const Home = () => {
                 <div className="flex flex-col lg:flex-row gap-12 lg:gap-16">
 
                     {/* === LEFT: Ultimi Risultati === */}
-                    <div className="lg:w-[45%] flex flex-col">
+                    <motion.div 
+                        initial={{ opacity: 0, y: 40 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true, margin: "-100px" }}
+                        transition={{ duration: 0.8 }}
+                        className="lg:w-[45%] flex flex-col"
+                    >
                         <div className="mb-8">
                             <p className="text-brand-500 font-heading text-sm tracking-[0.3em] uppercase mb-1">Pallavolo</p>
                             <h2 className="font-heading text-4xl md:text-5xl text-white">
@@ -187,7 +194,14 @@ const Home = () => {
                         {loadingMatches ? (
                             <div className="flex flex-col gap-4">
                                 {[1, 2, 3].map(i => (
-                                    <div key={i} className="animate-pulse bg-zinc-900/50 h-44 rounded-2xl border border-zinc-800/50"></div>
+                                    <div key={i} className="animate-shimmer h-[166px] rounded-2xl border border-zinc-800/50 flex flex-col justify-between overflow-hidden">
+                                        <div className="bg-zinc-800/40 h-8 w-full"></div>
+                                        <div className="px-6 py-5 flex items-center justify-between">
+                                            <div className="w-14 h-14 rounded-full bg-zinc-800/50"></div>
+                                            <div className="w-20 h-10 bg-zinc-800/50 rounded-md"></div>
+                                            <div className="w-14 h-14 rounded-full bg-zinc-800/50"></div>
+                                        </div>
+                                    </div>
                                 ))}
                             </div>
                         ) : recentMatches.length === 0 ? (
@@ -200,7 +214,7 @@ const Home = () => {
                                     const isFusionHome = match.home.toLowerCase().includes('fusion');
                                     const isFusionAway = match.away.toLowerCase().includes('fusion');
                                     return (
-                                        <div key={match.id} className="group relative bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/60 hover:border-brand-500/60 rounded-2xl overflow-hidden transition-all duration-500 hover:shadow-[0_0_40px_rgba(217,70,239,0.15)]">
+                                        <Link to="/results" key={match.id} className="group relative block bg-zinc-900/50 backdrop-blur-xl border border-zinc-800/60 border-t-white/5 border-l-white/5 hover:border-brand-500/60 rounded-2xl overflow-hidden transition-all duration-500 hover:shadow-[0_0_40px_rgba(217,70,239,0.15)] hover:-translate-y-1">
                                             {/* Top bar: FINAL SCORE */}
                                             <div className="bg-zinc-800/60 px-4 py-2 text-center">
                                                 <span className="font-heading text-[11px] tracking-[0.3em] text-zinc-400 uppercase">Risultato Finale</span>
@@ -211,7 +225,7 @@ const Home = () => {
                                                 {/* Home Team */}
                                                 <div className="flex-1 flex flex-col items-center gap-2 text-center">
                                                     {isFusionHome ? (
-                                                        <img src="/demo/assets/logo-colorato.png" alt="Fusion" className="w-14 h-14 rounded-full object-contain border-2 border-brand-500/60 shadow-[0_0_16px_rgba(217,70,239,0.5)] bg-zinc-900" />
+                                                        <img src="/assets/logo-colorato.png" alt="Fusion" loading="lazy" className="w-14 h-14 rounded-full object-contain border-2 border-brand-500/60 shadow-[0_0_16px_rgba(217,70,239,0.5)] bg-zinc-900" />
                                                     ) : (
                                                         <div className="w-14 h-14 bg-zinc-800 rounded-full border border-zinc-700 group-hover:border-brand-500/40 flex items-center justify-center transition-colors">
                                                             <span className="font-heading text-xl text-zinc-300">{match.home.charAt(0)}</span>
@@ -232,7 +246,7 @@ const Home = () => {
                                                 {/* Away Team */}
                                                 <div className="flex-1 flex flex-col items-center gap-2 text-center">
                                                     {isFusionAway ? (
-                                                        <img src="/demo/assets/logo-colorato.png" alt="Fusion" className="w-14 h-14 rounded-full object-contain border-2 border-brand-500/60 shadow-[0_0_16px_rgba(217,70,239,0.5)] bg-zinc-900" />
+                                                        <img src="/assets/logo-colorato.png" alt="Fusion" loading="lazy" className="w-14 h-14 rounded-full object-contain border-2 border-brand-500/60 shadow-[0_0_16px_rgba(217,70,239,0.5)] bg-zinc-900" />
                                                     ) : (
                                                         <div className="w-14 h-14 bg-zinc-800 rounded-full border border-zinc-700 group-hover:border-brand-500/40 flex items-center justify-center transition-colors">
                                                             <span className="font-heading text-xl text-zinc-300">{match.away.charAt(0)}</span>
@@ -243,21 +257,30 @@ const Home = () => {
                                             </div>
 
                                             {/* Bottom: date + championship */}
-                                            <div className="border-t border-zinc-800/60 px-4 py-2 flex justify-between items-center">
-                                                <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold flex items-center gap-1.5">
-                                                    <Calendar size={10} className="text-brand-500" />{match.date}
+                                            <div className="border-t border-zinc-800/60 px-4 py-3 flex justify-between items-center group-hover:bg-brand-500/5 transition-colors">
+                                                <span className="text-[11px] md:text-xs text-zinc-500 uppercase tracking-widest font-bold flex items-center gap-1.5">
+                                                    <Calendar size={12} className="text-brand-500" />{match.date}
                                                 </span>
-                                                <span className="text-[10px] text-zinc-600 uppercase tracking-widest truncate max-w-[55%]">{match.championship_label}</span>
+                                                <span className="text-[11px] md:text-xs text-zinc-400 uppercase tracking-widest truncate max-w-[50%] flex items-center gap-1">
+                                                    {match.championship_label}
+                                                    <ChevronRight size={12} className="text-zinc-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                </span>
                                             </div>
-                                        </div>
+                                        </Link>
                                     );
                                 })}
                             </div>
                         )}
-                    </div>
+                    </motion.div>
 
                     {/* === RIGHT: Latest News === */}
-                    <div className="lg:w-[55%] flex flex-col">
+                    <motion.div 
+                        initial={{ opacity: 0, y: 40 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true, margin: "-100px" }}
+                        transition={{ duration: 0.8, delay: 0.2 }}
+                        className="lg:w-[55%] flex flex-col"
+                    >
                         <div className="flex items-end justify-between mb-8">
                             <div>
                                 <p className="text-brand-500/70 font-heading text-sm tracking-[0.3em] uppercase mb-1">Dal Campo</p>
@@ -277,7 +300,16 @@ const Home = () => {
                         {loadingNews ? (
                             <div className="flex flex-col gap-5">
                                 {[1, 2].map(i => (
-                                    <div key={i} className="animate-pulse bg-zinc-900/50 h-44 rounded-2xl border border-zinc-800/50"></div>
+                                    <div key={i} className="animate-shimmer h-[192px] rounded-2xl border border-zinc-800/50 flex flex-col md:flex-row overflow-hidden">
+                                        <div className="w-full md:w-48 h-48 bg-zinc-800/40 shrink-0"></div>
+                                        <div className="flex-1 p-5 flex flex-col justify-between">
+                                            <div className="space-y-3">
+                                                <div className="h-4 w-3/4 bg-zinc-800/50 rounded"></div>
+                                                <div className="h-4 w-1/2 bg-zinc-800/50 rounded"></div>
+                                            </div>
+                                            <div className="h-3 w-24 bg-zinc-800/50 rounded mt-4"></div>
+                                        </div>
+                                    </div>
                                 ))}
                             </div>
                         ) : news.length === 0 ? (
@@ -290,7 +322,7 @@ const Home = () => {
                                     <Link
                                         to={`/news/${article.slug}`}
                                         key={article.id}
-                                        className="group flex flex-col md:flex-row overflow-hidden bg-zinc-900/40 backdrop-blur-md border border-zinc-800/60 hover:border-brand-500/50 rounded-2xl transition-all duration-500 hover:shadow-[0_4px_20px_rgba(0,0,0,0.3)]"
+                                        className="group flex flex-col md:flex-row overflow-hidden bg-zinc-900/40 backdrop-blur-md border border-zinc-800/60 border-t-white/5 border-l-white/5 hover:border-brand-500/50 rounded-2xl transition-all duration-500 hover:shadow-[0_4px_20px_rgba(0,0,0,0.3)] hover:-translate-y-1 block"
                                     >
                                         {/* Image */}
                                         <div className="relative w-full h-48 md:w-48 md:h-auto shrink-0 overflow-hidden">
@@ -298,6 +330,7 @@ const Home = () => {
                                                 <img
                                                     src={getImgUrl(article.cover_image_url)}
                                                     alt={article.title}
+                                                    loading="lazy"
                                                     className="w-full h-full object-cover transition-opacity duration-500 opacity-80 group-hover:opacity-100"
                                                 />
                                             ) : (
@@ -307,7 +340,7 @@ const Home = () => {
                                             )}
                                             <div className="absolute inset-0 bg-gradient-to-r from-transparent to-zinc-900/30"></div>
                                             {article.category_name && (
-                                                <div className="absolute top-3 left-3 px-2 py-0.5 bg-brand-500 text-zinc-950 font-heading text-[9px] uppercase tracking-widest rounded-full shadow-[0_0_15px_rgba(217,70,239,0.5)]">
+                                                <div className="absolute top-3 left-3 px-3 py-1 bg-brand-500 text-zinc-950 font-heading text-[10px] md:text-xs uppercase tracking-widest rounded-full shadow-[0_0_15px_rgba(217,70,239,0.5)]">
                                                     {article.category_name}
                                                 </div>
                                             )}
@@ -318,14 +351,14 @@ const Home = () => {
                                             <h3 className="font-heading text-lg md:text-lg text-white group-hover:text-brand-500 transition-colors leading-snug line-clamp-2 md:line-clamp-3">
                                                 {article.title}
                                             </h3>
-                                            <div className="flex items-center gap-2 text-zinc-500 text-[10px] uppercase tracking-wider">
-                                                <Calendar size={10} className="text-brand-500" />
+                                            <div className="flex items-center gap-2 text-zinc-400 text-xs font-bold uppercase tracking-wider">
+                                                <Calendar size={12} className="text-brand-500/80" />
                                                 {new Date(article.published_at).toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' })}
                                             </div>
                                             <div>
-                                                <span className="inline-flex items-center gap-1.5 border border-brand-500/50 text-brand-500 group-hover:bg-brand-500 group-hover:text-zinc-950 font-heading text-[10px] uppercase tracking-[0.2em] px-3 py-1.5 rounded-full transition-all">
+                                                <span className="inline-flex items-center gap-1.5 border border-brand-500/50 text-brand-500 group-hover:bg-brand-500 group-hover:text-zinc-950 font-heading text-[11px] md:text-xs uppercase tracking-[0.2em] px-4 py-2 rounded-full transition-all active:scale-95">
                                                     Leggi
-                                                    <ChevronRight size={11} />
+                                                    <ChevronRight size={12} />
                                                 </span>
                                             </div>
                                         </div>
@@ -337,7 +370,7 @@ const Home = () => {
                         <Link to="/news" className="mt-6 flex md:hidden items-center justify-center gap-2 text-zinc-400 hover:text-white font-heading text-sm uppercase tracking-widest border border-zinc-800 hover:border-brand-500 rounded-full py-3 transition-all">
                             Tutte le notizie <ChevronRight size={16} />
                         </Link>
-                    </div>
+                    </motion.div>
 
                 </div>
             </section>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Globe, Instagram, Facebook, Youtube, Diamond } from 'lucide-react';
+import { Seo } from '../components/Seo';
 
 const ERP_BASE = 'https://www.fusionteamvolley.it/ERP';
 const API_URL = `${ERP_BASE}/api/router.php`;
@@ -89,15 +90,16 @@ const Sponsors = () => {
 
     return (
         <div className="min-h-screen bg-zinc-950 pb-20 overflow-hidden">
+            <Seo title="I Nostri Sponsor" description="Partner d'eccellenza che sostengono la visione del Fusion Team Volley." />
             {/* Hero Section */}
             <div className="relative pt-32 pb-32 border-b border-brand-500/10">
                 <div
                     className="absolute inset-0 z-0 bg-cover bg-center"
-                    style={{ backgroundImage: "url('/demo/assets/hero-1.jpg')", filter: "brightness(0.3) saturate(1.2)" }}
+                    style={{ backgroundImage: `url('${import.meta.env.BASE_URL}assets/hero-1.jpg')`, filter: "brightness(0.55) saturate(1.2)" }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-b from-zinc-950 via-zinc-950/60 to-zinc-950 z-10"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent z-10"></div>
                 <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-zinc-950 to-transparent z-10"></div>
-                <div className="absolute inset-0 bg-[url('/demo/assets/pattern-dots.svg')] opacity-[0.03] z-10" />
+                <div className="absolute inset-0 bg-[url('/assets/pattern-dots.svg')] opacity-[0.03] z-10" />
                 
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 text-center">
                     <motion.div
@@ -187,6 +189,7 @@ const Sponsors = () => {
                                             <div className={`relative flex items-center justify-center bg-white shrink-0 ${isMain ? 'p-8 md:p-12 md:w-1/2 min-h-[200px] md:min-h-0' : 'p-6 h-40 sm:h-48'}`}>
                                                 {sponsor.logo_path ? (
                                                     <img
+                                                        loading="lazy"
                                                         src={sponsor.logo_path.startsWith('http') ? sponsor.logo_path : `${ERP_BASE}/${sponsor.logo_path}`}
                                                         alt={`Logo ${sponsor.name}`}
                                                         className="max-h-full max-w-full object-contain filter grayscale-0 md:grayscale md:group-hover:grayscale-0 transition-all duration-700 hover:scale-105 drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]"

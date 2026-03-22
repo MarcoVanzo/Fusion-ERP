@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Trophy, Filter } from 'lucide-react';
+import { Seo } from '../components/Seo';
 
 interface Match {
     id: number;
@@ -79,17 +80,17 @@ const Results = () => {
 
     return (
         <div className="flex flex-col min-h-screen pb-24 font-sans text-white">
+            <Seo title="Match Center - Risultati e Classifiche" description="Scopri i risultati ufficiali e le classifiche di tutte le squadre del Fusion Team Volley." />
             {/* Emotional Header Hero */}
             <section className="relative h-[40vh] min-h-[300px] flex items-center justify-center overflow-hidden mb-12">
                 {/* Background Image */}
                 <div
                     className="absolute inset-0 z-0 bg-cover bg-center"
-                    style={{ backgroundImage: "url('/demo/assets/Gemini_Generated_Image_g2wpx2g2wpx2g2wp.jpeg')", filter: "brightness(0.8)" }}
+                    style={{ backgroundImage: `url('${import.meta.env.BASE_URL}assets/Gemini_Generated_Image_g2wpx2g2wpx2g2wp.jpeg')`, filter: "brightness(0.55) saturate(1.2)" }}
                 />
                 {/* Overlays */}
-                <div className="absolute inset-0 bg-zinc-950/70 z-10 transition-colors"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent z-10 transition-colors"></div>
                 <div className="absolute inset-0 z-10 opacity-30 pointer-events-none mix-blend-overlay" style={{ backgroundImage: 'repeating-linear-gradient(-45deg, #d65a86 0, #d65a86 2px, transparent 2px, transparent 100px)' }}></div>
-                <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-zinc-950 to-transparent z-10"></div>
 
                 {/* Content */}
                 <div className="relative z-20 text-center px-4 max-w-4xl mx-auto flex flex-col items-center pt-8">
@@ -167,7 +168,7 @@ const Results = () => {
                                                 <div className={`flex items-center justify-end gap-2 w-2/5 ${isFusionHome ? 'text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]' : 'text-zinc-500'}`}>
                                                     <span className="font-heading text-sm md:text-xl break-words whitespace-normal leading-tight text-right">{match.home}</span>
                                                     {isFusionHome && (
-                                                        <img src="/demo/assets/logo-colorato.png" alt="Fusion" className="w-10 h-10 rounded-full object-contain border-2 border-brand-500/60 shadow-[0_0_12px_rgba(217,70,239,0.5)] bg-zinc-900 flex-shrink-0" />
+                                                        <img src="/assets/logo-colorato.png" alt="Fusion" className="w-10 h-10 rounded-full object-contain border-2 border-brand-500/60 shadow-[0_0_12px_rgba(217,70,239,0.5)] bg-zinc-900 flex-shrink-0" />
                                                     )}
                                                 </div>
 
@@ -177,7 +178,7 @@ const Results = () => {
 
                                                 <div className={`flex items-center gap-2 w-2/5 ${isFusionAway ? 'text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]' : 'text-zinc-500'}`}>
                                                     {isFusionAway && (
-                                                        <img src="/demo/assets/logo-colorato.png" alt="Fusion" className="w-10 h-10 rounded-full object-contain border-2 border-brand-500/60 shadow-[0_0_12px_rgba(217,70,239,0.5)] bg-zinc-900 flex-shrink-0" />
+                                                        <img src="/assets/logo-colorato.png" alt="Fusion" className="w-10 h-10 rounded-full object-contain border-2 border-brand-500/60 shadow-[0_0_12px_rgba(217,70,239,0.5)] bg-zinc-900 flex-shrink-0" />
                                                     )}
                                                     <span className="font-heading text-sm md:text-xl break-words whitespace-normal leading-tight">{match.away}</span>
                                                 </div>
@@ -220,7 +221,7 @@ const Results = () => {
                                                 <div className="flex items-center gap-2 w-3/4">
                                                     <span className="w-5 text-center text-zinc-600 font-heading text-xs">{row.position}</span>
                                                     {row.is_our_team && (
-                                                        <img src="/demo/assets/logo-colorato.png" alt="Fusion" className="w-5 h-5 rounded-full object-contain border border-brand-500/60 flex-shrink-0" />
+                                                        <img src="/assets/logo-colorato.png" alt="Fusion" className="w-5 h-5 rounded-full object-contain border border-brand-500/60 flex-shrink-0" />
                                                     )}
                                                     <span className="truncate uppercase text-xs tracking-wider">{row.team}</span>
                                                 </div>

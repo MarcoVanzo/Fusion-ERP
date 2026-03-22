@@ -165,7 +165,7 @@ def deploy_files_via_ftp():
         file_cache: dict[str, str] = load_cache()
         new_cache: dict[str, str] = file_cache.copy() # Start with old cache
         
-        ignore_dirs = ['.git', 'node_modules', 'tests', '__pycache__', '.pytest_cache', '.gemini', '.venv', 'uploads']
+        ignore_dirs = ['.git', 'node_modules', 'tests', '__pycache__', '.pytest_cache', '.gemini', '.venv', 'venv_video', 'uploads']
         ignore_extensions = ['.zip', '.log']
         ignore_files = ['deploy.py', 'deploy.mp', 'deploy_ftp.sh', CACHE_FILE]
 
@@ -184,10 +184,10 @@ def deploy_files_via_ftp():
             # Calculate the corresponding remote path
             rel_path = os.path.relpath(root, '.')
             
-            # Map fusion-website/dist to the /demo folder in production
+            # Map fusion-website/dist to the root folder in production
             if rel_path == 'fusion-website/dist' or rel_path.startswith('fusion-website/dist/'):
                 sub_rel = rel_path.replace('fusion-website/dist', '').lstrip('/\\')
-                remote_sub_dir = '/www.fusionteamvolley.it/demo' if not sub_rel else f"/www.fusionteamvolley.it/demo/{sub_rel}".replace('\\', '/')
+                remote_sub_dir = '/www.fusionteamvolley.it' if not sub_rel else f"/www.fusionteamvolley.it/{sub_rel}".replace('\\', '/')
             else:
                 remote_sub_dir = base_remote_dir if rel_path == '.' else f"{base_remote_dir}/{rel_path}".replace('\\', '/')
 

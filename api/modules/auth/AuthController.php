@@ -327,11 +327,16 @@ class AuthController
             ? 'Utente creato con successo. La password temporanea è stata inviata via email all\'utente.'
             : 'Utente creato con successo, ma si è verificato un errore nell\'invio dell\'email. Comunica la password temporanea manualmente.';
 
-        Response::success([
+        $responseData = [
             'id' => $id,
-            'tempPassword' => $tempPassword, // Ritorniamo anche qui in caso serva copiarla (es. errore invio)
             'message' => $msg,
-        ], 201);
+        ];
+        
+        if (!$emailSent) {
+            $responseData['tempPassword'] = $tempPassword;
+        }
+
+        Response::success($responseData, 201);
     }
 
     // ─── POST /api/?module=auth&action=listUsers (admin only) ────────────────

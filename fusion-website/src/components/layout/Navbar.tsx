@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Menu, X, User } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -9,14 +9,26 @@ const API_URL = `${ERP_BASE}/api/router.php`;
 const Navbar = () => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
+    const [isVisible, setIsVisible] = useState(true);
+    const lastScrollY = useRef(0);
     const [hubLogo, setHubLogo] = useState<string | null>(null);
     const location = useLocation();
 
     useEffect(() => {
         const handleScroll = () => {
-            setIsScrolled(window.scrollY > 20);
+            const currentScrollY = window.scrollY;
+            setIsScrolled(currentScrollY > 20);
+            
+            if (currentScrollY > lastScrollY.current && currentScrollY > 100 && !isMobileMenuOpen) {
+                // Scrolling giù: nascondo navbar
+                setIsVisible(false);
+            } else {
+                // Scrolling su: mostro navbar
+                setIsVisible(true);
+            }
+            lastScrollY.current = currentScrollY;
         };
-        window.addEventListener('scroll', handleScroll);
+        window.addEventListener('scroll', handleScroll, { passive: true });
 
         const fetchHubLogo = async () => {
             try {
@@ -59,7 +71,7 @@ const Navbar = () => {
     const allLinks = [...splitLeftLinks, ...splitRightLinks];
 
     return (
-        <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-zinc-950/95 backdrop-blur-md border-b-2 border-brand-500 shadow-[0_10px_30px_rgba(0,0,0,0.8)] py-4' : 'bg-gradient-to-b from-zinc-950 via-zinc-950/80 to-transparent py-8'}`}>
+        <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'} ${isScrolled ? 'bg-zinc-950/95 backdrop-blur-md border-b-2 border-brand-500 shadow-[0_10px_30px_rgba(0,0,0,0.8)] py-2' : 'bg-gradient-to-b from-zinc-950 via-zinc-950/80 to-transparent py-6'}`}>
             <div className="max-w-[1400px] mx-auto px-6 lg:px-8 h-12 relative flex items-center justify-between">
                 
                 {/* Left Links */}
@@ -83,7 +95,7 @@ const Navbar = () => {
                 <div className="absolute left-1/2 -translate-x-1/2 lg:static lg:translate-x-0 flex lg:flex-none justify-center">
                     <Link to="/" className="flex-shrink-0 relative group z-50 flex items-center justify-center -mt-2">
                         <div className="absolute inset-0 bg-brand-500/20 blur-xl rounded-full scale-150 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                        <img src="/demo/assets/logo-colorato.png" alt="Logo" className="w-[56px] h-[56px] md:w-[72px] md:h-[72px] object-contain drop-shadow-2xl relative z-10 group-hover:scale-105 transition-transform duration-300" />
+                        <img src="/assets/logo-colorato.png" alt="Logo" className={`w-[56px] h-[56px] md:w-[72px] md:h-[72px] object-contain drop-shadow-2xl relative z-10 transition-transform duration-300 ${isScrolled ? 'scale-90 group-hover:scale-100' : 'scale-100 group-hover:scale-105'}`} />
                     </Link>
                 </div>
 
@@ -111,7 +123,7 @@ const Navbar = () => {
                     {/* Hub Logo */}
                     {hubLogo && (
                         <a 
-                            href="https://www.fusionteamvolley.it/demo/network" 
+                            href="https://www.fusionteamvolley.it/network" 
                             className="ml-auto block w-[60px] h-[60px] -mt-1 bg-white rounded-full p-1.5 shadow-lg hover:scale-105 transition-transform duration-300 group ring-1 ring-zinc-800/50 hover:ring-brand-500/50 relative z-50 pointer-events-auto"
                             title="Savino del bene volley HUB"
                         >
@@ -124,7 +136,7 @@ const Navbar = () => {
                 <div className="absolute right-6 top-1/2 -translate-y-1/2 lg:static lg:translate-y-0 lg:hidden flex items-center justify-end z-50">
                     <button 
                         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                        className="text-white hover:text-brand-500 transition-colors p-2"
+                        className="text-white hover:text-brand-500 transition-colors p-2 rounded-full bg-black/20 md:bg-transparent backdrop-blur-sm drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]"
                         aria-label="Toggle Menu"
                     >
                         {isMobileMenuOpen ? <X size={32} /> : <Menu size={32} />}
@@ -157,7 +169,7 @@ const Navbar = () => {
                                         <Link 
                                             to={link.path} 
                                             onClick={() => setIsMobileMenuOpen(false)}
-                                            className={`font-heading text-2xl uppercase tracking-widest border-b border-zinc-800/50 py-4 flex items-center justify-between transition-colors ${isActive ? 'text-brand-500' : 'text-zinc-300 hover:text-white'}`}
+                                            className={`font-heading text-2xl uppercase tracking-widest border-b border-zinc-800/50 py-5 px-4 min-h-[56px] flex items-center justify-between transition-all ${isActive ? 'text-brand-500 bg-brand-500/10 border-l-4 border-l-brand-500' : 'text-zinc-300 hover:text-white hover:bg-white/5'}`}
                                         >
                                             {link.name}
                                             {link.badge && (
@@ -180,7 +192,7 @@ const Navbar = () => {
                                 className="mt-8 flex justify-center w-full"
                             >
                                 <a 
-                                    href="https://www.fusionteamvolley.it/demo/network" 
+                                    href="https://www.fusionteamvolley.it/network" 
                                     onClick={() => setIsMobileMenuOpen(false)}
                                     className="flex items-center gap-4 bg-white/5 hover:bg-white/10 transition-colors rounded-2xl p-4 border border-zinc-800 w-full max-w-[280px]"
                                 >

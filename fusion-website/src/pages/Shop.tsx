@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ShoppingBag, ExternalLink } from 'lucide-react';
-import { Helmet } from 'react-helmet-async';
+import { Seo } from '../components/Seo';
 
 interface Product {
     nome: string;
@@ -70,19 +70,16 @@ const Shop = () => {
 
     return (
         <div className="min-h-screen bg-zinc-950 pb-20">
-            <Helmet>
-                <title>Store Ufficiale - Fusion Team Volley</title>
-                <meta name="description" content="Acquista abbigliamento ufficiale e merchandising del Fusion Team Volley nel nostro Store online." />
-            </Helmet>
+            <Seo title="Store Ufficiale" description="Acquista abbigliamento ufficiale e merchandising del Fusion Team Volley nel nostro Store online." />
 
             {/* Hero Section */}
             <div className="relative pt-32 pb-24 border-b-2 border-brand-500/20 overflow-hidden">
                 <div
                     className="absolute inset-0 z-0 bg-cover bg-center"
-                    style={{ backgroundImage: "url('/demo/assets/Gemini_Generated_Image_4wijvu4wijvu4wij.jpeg')", filter: "brightness(0.3) saturate(1.2)" }}
+                    style={{ backgroundImage: `url('${import.meta.env.BASE_URL}assets/Gemini_Generated_Image_4wijvu4wijvu4wij.jpeg')`, filter: "brightness(0.55) saturate(1.2)" }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/80 to-zinc-950/20 z-10"></div>
-                <div className="absolute inset-0 bg-[url('/demo/assets/pattern-dots.svg')] opacity-[0.05] z-10" />
+                <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent z-10"></div>
+                <div className="absolute inset-0 bg-[url('/assets/pattern-dots.svg')] opacity-[0.05] z-10" />
                 
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 text-center">
                     <motion.div
@@ -118,20 +115,24 @@ const Shop = () => {
             {/* Content Section */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-20">
                 {/* Category Filters */}
-                <div className="flex overflow-x-auto sm:flex-wrap items-center justify-start sm:justify-center gap-4 sm:gap-3 mb-12 pb-4 snap-x pr-4" style={{ scrollbarWidth: 'none' }}>
-                    {categories.map(category => (
-                        <button
-                            key={category}
-                            onClick={() => setActiveCategory(category)}
-                            className={`snap-start whitespace-nowrap px-6 py-3 rounded-full text-sm md:text-base font-bold uppercase tracking-wider transition-all duration-300 border min-h-[44px] ${
-                                activeCategory === category 
-                                    ? 'bg-brand-500 text-white border-brand-500 shadow-[0_0_15px_rgba(217,70,239,0.4)] md:hover:scale-105' 
-                                    : 'bg-zinc-900/80 text-zinc-400 border-zinc-800 hover:text-white hover:border-zinc-600 md:hover:scale-105 backdrop-blur-sm'
-                            }`}
-                        >
-                            {category}
-                        </button>
-                    ))}
+                <div className="relative mb-12">
+                    <div className="flex overflow-x-auto sm:flex-wrap items-center justify-start sm:justify-center gap-4 sm:gap-3 pb-4 snap-x pr-12 sm:pr-0" style={{ scrollbarWidth: 'none' }}>
+                        {categories.map(category => (
+                            <button
+                                key={category}
+                                onClick={() => setActiveCategory(category)}
+                                className={`snap-start whitespace-nowrap px-6 py-3 rounded-full text-sm md:text-base font-bold uppercase tracking-wider transition-all duration-300 border min-h-[44px] ${
+                                    activeCategory === category 
+                                        ? 'bg-brand-500 text-white border-brand-500 shadow-[0_0_15px_rgba(217,70,239,0.4)] md:hover:scale-105' 
+                                        : 'bg-zinc-900/80 text-zinc-400 border-zinc-800 hover:text-white hover:border-zinc-600 md:hover:scale-105 backdrop-blur-sm'
+                                }`}
+                            >
+                                {category}
+                            </button>
+                        ))}
+                    </div>
+                    {/* Mobile swipe hint shadow */}
+                    <div className="absolute top-0 right-0 bottom-4 w-16 bg-gradient-to-l from-zinc-950 to-transparent pointer-events-none sm:hidden z-10"></div>
                 </div>
 
                 {filteredProducts.length === 0 ? (
@@ -161,6 +162,7 @@ const Shop = () => {
                                     <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/5 to-transparent z-10"></div>
                                     {product.immagineUrl ? (
                                         <img
+                                            loading="lazy"
                                             src={product.immagineUrl}
                                             alt={product.nome}
                                             className="h-48 w-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-700 z-20 p-4"

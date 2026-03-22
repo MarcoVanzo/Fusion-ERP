@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <link rel="icon" type="image/png" href="/assets/logo-colorato.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- SEO di Base -->
@@ -17,7 +17,7 @@
   <meta property="og:title" content="Fusion Team Volley" />
   <meta property="og:description"
     content="Sito ufficiale del Fusion Team Volley. Scopri le squadre, risultati e news." />
-  <meta property="og:image" content="https://www.fusionteamvolley.it/assets/logo.png" />
+  <meta property="og:image" content="https://www.fusionteamvolley.it/assets/logo-colorato.png" />
 
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image" />
@@ -25,10 +25,21 @@
   <meta name="twitter:title" content="Fusion Team Volley" />
   <meta name="twitter:description"
     content="Sito ufficiale del Fusion Team Volley. Scopri le squadre, risultati e news." />
-  <meta name="twitter:image" content="https://www.fusionteamvolley.it/assets/logo.png" />
+  <meta name="twitter:image" content="https://www.fusionteamvolley.it/assets/logo-colorato.png" />
+
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-517030067"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-517030067');
+  </script>
 </head>
 
 <body>
+
   <div id="root"></div>
   <script type="module" src="/src/main.tsx"></script>
 </body>

@@ -167,7 +167,7 @@ class StaffRepository
     {
         $sql = "SELECT s.id, s.first_name, s.last_name,
                        CONCAT(s.first_name, ' ', s.last_name) AS full_name,
-                       s.role, s.photo_path
+                       s.role, s.photo_path, s.fiscal_code
                 FROM staff_members s
                 INNER JOIN staff_teams st ON s.id = st.staff_id
                 WHERE s.is_deleted = 0
@@ -176,7 +176,21 @@ class StaffRepository
         $stmt = $this->db->prepare($sql);
         $stmt->execute([':team_season_id' => $teamId]);
 
-        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        foreach ($rows as &$row) {
+            $row['gender'] = 'M'; // Default to Male if unknown
+            if (!empty($row['fiscal_code']) && strlen($row['fiscal_code']) >= 11) {
+                $dayStr = substr($row['fiscal_code'], 9, 2);
+                if (is_numeric($dayStr)) {
+                    $day = (int)$dayStr;
+                    if ($day > 40) {
+                        $row['gender'] = 'F';
+                    }
+                }
+            }
+            unset($row['fiscal_code']); // Security: do not expose fiscal code publicly
+        }
+        return $rows;
     }
     
     // ─── Photo and Contract Update Helpers ────────────────────────────────────

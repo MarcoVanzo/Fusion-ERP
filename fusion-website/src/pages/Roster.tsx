@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
+import { Seo } from '../components/Seo';
 
 interface Team {
     id: number;
@@ -33,20 +34,20 @@ const Roster = () => {
 
     return (
         <div className="flex flex-col min-h-screen pb-24">
+            <Seo title="Le Squadre" description="I roster ufficiali di tutte le squadre giovanili e prime squadre del Fusion Team Volley." />
             {/* Emotional Header Hero */}
             <section className="relative h-[40vh] min-h-[300px] flex items-center justify-center overflow-hidden mb-12">
                 {/* Background Image */}
                 <div
                     className="absolute inset-0 z-0 bg-cover bg-center"
-                    style={{ backgroundImage: "url('/demo/assets/Gemini_Generated_Image_5v1qm15v1qm15v1q.jpeg')" }}
+                    style={{ backgroundImage: `url('${import.meta.env.BASE_URL}assets/Gemini_Generated_Image_5v1qm15v1qm15v1q.jpeg')`, filter: "brightness(0.55) saturate(1.2)" }}
                 />
                 {/* Overlays */}
-                <div className="absolute inset-0 bg-zinc-950/70 z-10"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent z-10 transition-colors"></div>
                 <div className="absolute inset-0 z-10 opacity-30 pointer-events-none mix-blend-overlay" style={{ backgroundImage: 'repeating-linear-gradient(-45deg, #d65a86 0, #d65a86 2px, transparent 2px, transparent 100px)' }}></div>
-                <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-zinc-950 to-transparent z-10"></div>
 
                 {/* Content */}
-                <div className="max-w-7xl mx-auto px-4 relative z-20 flex flex-col items-center border-b-4 border-brand-500 pb-6 w-full text-center">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 flex flex-col items-center border-b-4 border-brand-500 pb-6 w-full text-center">
                     <h1 className="font-heading text-6xl md:text-8xl tracking-tighter text-white mb-2 uppercase drop-shadow-xl">
                         LE <span className="text-brand-500 drop-shadow-[0_0_15px_rgba(214,90,134,0.5)]">SQUADRE</span>
                     </h1>
@@ -56,7 +57,7 @@ const Roster = () => {
                 </div>
             </section>
 
-            <div className="max-w-7xl mx-auto px-4 w-full flex-grow">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex-grow">
                 {loading ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         {[1, 2, 3, 4].map(i => (
@@ -82,7 +83,7 @@ const Roster = () => {
                                     const isU14 = nameUpper.includes('U14') || nameUpper.includes('UNDER 14') || nameUpper.includes('UNDER14');
                                     const isU16 = nameUpper.includes('U16') || nameUpper.includes('UNDER 16') || nameUpper.includes('UNDER16');
                                     const isU18 = nameUpper.includes('U18') || nameUpper.includes('UNDER 18') || nameUpper.includes('UNDER18');
-                                    const bgImage = isU13 ? '/demo/assets/squadra-u13.jpeg' : isU14 ? '/demo/assets/squadra-u14.jpeg' : isU16 ? '/demo/assets/squadra-u16.jpeg' : isU18 ? '/demo/assets/squadra-u18.jpeg' : null;
+                                    const bgImage = isU13 ? '/assets/squadra-u13.jpeg' : isU14 ? '/assets/squadra-u14.jpeg' : isU16 ? '/assets/squadra-u16.jpeg' : isU18 ? '/assets/squadra-u18.jpeg' : null;
 
                                     return bgImage ? (
                                         /* Full-card photo — visible, bright, centered on the team */
@@ -92,7 +93,7 @@ const Roster = () => {
                                         />
                                     ) : (
                                         <div className="absolute inset-0 z-0 bg-gradient-to-br from-zinc-900 to-brand-900/20 flex items-center justify-end opacity-80 group-hover:opacity-100 transition-opacity duration-700 pr-8">
-                                            <img src="/demo/assets/logo-colorato.png" alt="Fusion Logo" className="max-h-40 opacity-10 drop-shadow-2xl" />
+                                            <img src="/assets/logo-colorato.png" alt="Fusion Logo" className="max-h-40 opacity-10 drop-shadow-2xl" />
                                         </div>
                                     );
                                 })()}

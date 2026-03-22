@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, ChevronRight } from 'lucide-react';
-import { Helmet } from 'react-helmet-async';
+import { Calendar, ChevronRight, Newspaper, Instagram } from 'lucide-react';
+import { Seo } from '../components/Seo';
 
 interface NewsArticle {
     id: number;
@@ -47,33 +47,23 @@ const News = () => {
 
     return (
         <div className="flex flex-col min-h-screen pb-24">
-            <Helmet>
-                <title>News &amp; Articoli | Fusion Team Volley</title>
-                <meta name="description" content="Tutte le ultime notizie, risultati e iniziative del Fusion Team Volley: la squadra di pallavolo con 800 atlete e un unico grande sogno." />
-                <link rel="canonical" href="https://www.fusionteamvolley.it/demo/news" />
-                <meta name="robots" content="index, follow" />
-                <meta property="og:type" content="website" />
-                <meta property="og:title" content="News &amp; Articoli | Fusion Team Volley" />
-                <meta property="og:description" content="Aggiornamenti, risultati e iniziative dal mondo Fusion Team Volley." />
-                <meta property="og:url" content="https://www.fusionteamvolley.it/demo/news" />
-                <meta property="og:site_name" content="Fusion Team Volley" />
-                <meta name="twitter:card" content="summary" />
-                <meta name="twitter:title" content="News &amp; Articoli | Fusion Team Volley" />
-                <meta name="twitter:description" content="Aggiornamenti, risultati e iniziative dal mondo Fusion Team Volley." />
-            </Helmet>
+            <Seo 
+                title="News & Articoli" 
+                description="Tutte le ultime notizie, risultati e iniziative dal mondo Fusion Team Volley." 
+                pathname="/news"
+            />
 
             {/* Emotional Header Hero */}
             <section className="relative h-[40vh] min-h-[300px] flex items-center justify-center overflow-hidden mb-12">
                 {/* Background Image */}
                 <div
                     className="absolute inset-0 z-0 bg-cover bg-center"
-                    style={{ backgroundImage: "url('/demo/assets/Gemini_Generated_Image_8ikilj8ikilj8iki.jpeg')" }}
+                    style={{ backgroundImage: `url('${import.meta.env.BASE_URL}assets/Gemini_Generated_Image_8ikilj8ikilj8iki.jpeg')`, filter: "brightness(0.55) saturate(1.2)" }}
                 />
                 {/* Overlays */}
-                <div className="absolute inset-0 bg-zinc-950/70 z-10 transition-colors"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent z-10 transition-colors"></div>
                 <div className="absolute inset-0 z-10 opacity-30 pointer-events-none mix-blend-overlay" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #d65a86 0, #d65a86 2px, transparent 2px, transparent 100px)' }}></div>
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60vw] bg-brand-primary/40 blur-[150px] rounded-full z-0 mix-blend-screen opacity-50"></div>
-                <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-zinc-950 to-transparent z-10"></div>
 
                 {/* Content */}
                 <div className="relative z-20 text-center px-4 max-w-4xl mx-auto flex flex-col items-center pt-8">
@@ -100,8 +90,20 @@ const News = () => {
                         ))}
                     </div>
                 ) : news.length === 0 ? (
-                    <div className="glass-panel p-16 text-center">
-                        <p className="text-zinc-400 text-lg">Non ci sono news disponibili al momento.</p>
+                    <div className="glass-panel p-16 text-center flex flex-col items-center justify-center border-t border-l border-white/10 rounded-2xl shadow-2xl">
+                        <Newspaper size={64} strokeWidth={1.5} className="text-zinc-600 mb-6" />
+                        <h3 className="text-2xl font-heading text-white mb-3">Nessuna news disponibile</h3>
+                        <p className="text-zinc-400 text-lg mb-8 max-w-md">
+                            Non ci sono notizie pubblicate al momento. Segui i nostri canali social per restare sempre aggiornato!
+                        </p>
+                        <a 
+                            href="https://instagram.com/fusionteamvolley" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="bg-brand-500 text-zinc-950 font-heading text-sm tracking-widest uppercase px-6 py-3 clip-diagonal hover:bg-white transition-colors flex items-center gap-2"
+                        >
+                            <Instagram size={18} strokeWidth={2} /> Seguici su Instagram
+                        </a>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -109,14 +111,20 @@ const News = () => {
                             <Link
                                 to={`/news/${article.slug}`}
                                 key={article.id}
-                                className="glass-panel overflow-hidden border border-white/5 group hover:border-brand-500/30 transition-all hover:shadow-[0_4px_24px_-8px_rgba(0,0,0,0.4)] flex flex-col h-full"
+                                className="glass-panel overflow-hidden border border-white/10 group hover:border-brand-500/50 transition-all duration-300 hover:shadow-[0_4px_24px_-8px_rgba(0,0,0,0.4)] flex flex-col h-full active:scale-[0.98]"
                             >
-                                <div className="h-56 overflow-hidden relative bg-zinc-900">
+                                <div className="h-56 overflow-hidden relative bg-zinc-900 animate-shimmer">
                                     {getImgUrl(article.cover_image_url) ? (
                                         <img
                                             src={getImgUrl(article.cover_image_url)}
                                             alt={article.title}
-                                            className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-500"
+                                            loading="lazy"
+                                            className="w-full h-full object-cover opacity-0 transition-opacity duration-1000 group-hover:scale-105"
+                                            onLoad={(e) => {
+                                                e.currentTarget.classList.remove('opacity-0');
+                                                e.currentTarget.classList.add('opacity-80', 'group-hover:opacity-100');
+                                                e.currentTarget.parentElement?.classList.remove('animate-shimmer');
+                                            }}
                                         />
                                     ) : (
                                         <div className="absolute inset-0 bg-gradient-to-br from-zinc-800 to-zinc-900 flex items-center justify-center">
@@ -136,8 +144,8 @@ const News = () => {
                                     )}
                                 </div>
                                 <div className="p-8 flex flex-col flex-grow relative">
-                                    <div className="flex items-center gap-2 text-zinc-500 text-xs mb-4 font-bold uppercase tracking-wider">
-                                        <Calendar size={14} className="text-brand-500/70" />
+                                    <div className="flex items-center gap-2 text-zinc-400 text-sm mb-4 font-bold uppercase tracking-wider">
+                                        <Calendar size={14} strokeWidth={2.5} className="text-brand-500/70" />
                                         {new Date(article.published_at).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' })}
                                     </div>
                                     <h3 className="text-2xl font-bold text-white mb-4 group-hover:text-brand-500 transition-colors line-clamp-2 leading-tight min-h-[60px] md:min-h-[64px]">
@@ -149,7 +157,7 @@ const News = () => {
                                     <div className="pt-6 border-t border-white/5 text-brand-500 text-sm font-bold flex items-center justify-between group-hover:text-white transition-colors mt-auto uppercase tracking-wider">
                                         <span>Leggi Articolo</span>
                                         <div className="w-8 h-8 rounded-full bg-brand-500/10 flex items-center justify-center group-hover:bg-brand-500 group-hover:text-zinc-950 transition-all">
-                                            <ChevronRight size={16} />
+                                            <ChevronRight size={16} strokeWidth={2.5} />
                                         </div>
                                     </div>
                                 </div>

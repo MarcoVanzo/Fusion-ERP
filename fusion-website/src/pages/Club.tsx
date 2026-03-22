@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Helmet } from 'react-helmet-async';
+import { Seo } from '../components/Seo';
 import { motion } from 'framer-motion';
 import { Shield, Eye, Heart, Calendar } from 'lucide-react';
 
@@ -72,18 +72,17 @@ const Club = () => {
 
     return (
         <div className="min-h-screen bg-zinc-950 pb-20">
-            <Helmet>
-                <title>Il Club - Fusion Team Volley</title>
-                <meta name="description" content="La storia e i valori del Fusion Team Volley." />
-            </Helmet>
+            <Seo 
+                title="Il Club" 
+                description="Scopri la storia, i valori e la dirigenza del Fusion Team Volley." 
+            />
 
             {/* Hero Section */}
             <section className="relative h-[60vh] flex items-center justify-center overflow-hidden">
                 <div
-                    className="absolute inset-0 z-0 bg-cover bg-center"
-                    style={{ backgroundImage: "url('/demo/assets/hero-2.jpg')", filter: "brightness(0.7)" }}
+                    style={{ backgroundImage: `url('${import.meta.env.BASE_URL}assets/hero-2.jpg')`, filter: "brightness(0.55) saturate(1.2)" }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#09090B] via-[#09090B]/60 to-transparent z-10"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-[#09090B] via-[#09090B]/40 to-transparent z-10"></div>
 
                 <motion.div
                     initial={{ opacity: 0, y: 30 }}
@@ -118,7 +117,7 @@ const Club = () => {
             </section>
 
             {/* Content Cards */}
-            <div className="max-w-5xl mx-auto px-4 -mt-12 relative z-30">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-12 relative z-30">
                 <motion.div
                     variants={containerVariants}
                     initial="hidden"
@@ -138,9 +137,11 @@ const Club = () => {
                                             LA NOSTRA <span className="text-brand-500">MISSION</span>
                                         </h2>
                                     </div>
-                                    <p className="text-zinc-300 text-lg leading-relaxed font-sans whitespace-pre-line">
-                                        {profile.mission}
-                                    </p>
+                                    <div className="text-zinc-300 text-lg leading-relaxed font-sans space-y-4">
+                                        {profile.mission.split('\n').filter(p => p.trim() !== '').map((paragraph, i) => (
+                                            <p key={i}>{paragraph}</p>
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
                         </motion.div>
@@ -159,9 +160,11 @@ const Club = () => {
                                             LA NOSTRA <span className="text-brand-500">VISION</span>
                                         </h2>
                                     </div>
-                                    <p className="text-zinc-300 text-lg leading-relaxed font-sans whitespace-pre-line">
-                                        {profile.vision}
-                                    </p>
+                                    <div className="text-zinc-300 text-lg leading-relaxed font-sans space-y-4">
+                                        {profile.vision.split('\n').filter(p => p.trim() !== '').map((paragraph, i) => (
+                                            <p key={i}>{paragraph}</p>
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
                         </motion.div>

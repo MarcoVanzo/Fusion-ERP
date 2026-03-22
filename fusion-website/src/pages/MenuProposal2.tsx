@@ -49,7 +49,7 @@ const MenuProposal2 = () => {
                     <div className="flex items-center justify-between px-6 py-4">
                         {/* Logo Area */}
                         <Link to="/" className="flex items-center gap-3">
-                            <img src="/demo/assets/logo-colorato.png" alt="Logo" className="w-10 h-10 object-contain drop-shadow-[0_0_8px_rgba(255,20,147,0.5)]" />
+                            <img src="/assets/logo-colorato.png" alt="Logo" className="w-10 h-10 object-contain drop-shadow-[0_0_8px_rgba(255,20,147,0.5)]" />
                             <span className="hidden lg:block font-heading text-xl uppercase tracking-tighter">
                                 FUSION <span className="text-brand-500">VOLLEY</span>
                             </span>
@@ -133,7 +133,7 @@ const MenuProposal2 = () => {
                                     {/* Highlight Card */}
                                     <div className="hidden md:block rounded-2xl overflow-hidden relative group">
                                         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent z-10" />
-                                        <img src="/demo/assets/squadra-u16.jpeg" alt="Highlight" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                                        <img src="/assets/squadra-u16.jpeg" alt="Highlight" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                                         <div className="absolute bottom-4 left-4 z-20">
                                             <p className="text-[10px] font-bold text-brand-500 uppercase tracking-widest mb-1">In Evidenza</p>
                                             <p className="font-heading text-xl uppercase">Finale Regionale</p>
@@ -147,7 +147,7 @@ const MenuProposal2 = () => {
             </div>
 
             {/* Dummy Content */}
-            <div className="h-screen flex items-center justify-center bg-[url('/demo/assets/hero-2.jpg')] bg-cover bg-center grayscale brightness-50">
+            <div className="h-screen flex items-center justify-center bg-[url('/assets/hero-2.jpg')] bg-cover bg-center grayscale brightness-50">
                 <h1 className="relative z-10 text-white font-sans font-light text-5xl md:text-8xl tracking-tight text-center">
                     Proposal 2 Menu<br/><span className="text-brand-500 italic block mt-4">Floating Pill</span>
                 </h1>

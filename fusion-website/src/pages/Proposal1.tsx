@@ -24,7 +24,7 @@ const Proposal1 = () => {
 
             {/* Hero Section */}
             <section className="relative h-screen flex items-center justify-center overflow-hidden">
-                <div className="absolute inset-0 bg-[url('/demo/assets/hero-1.jpg')] bg-cover bg-center opacity-40 mix-blend-luminosity"></div>
+                <div className="absolute inset-0 bg-[url('/assets/hero-1.jpg')] bg-cover bg-center opacity-40 mix-blend-luminosity"></div>
                 <div className="absolute inset-0 bg-gradient-to-br from-brand-500/30 to-black z-10"></div>
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vw] bg-brand-500/20 blur-[120px] rounded-full z-0 mix-blend-screen pointer-events-none"></div>
 
