@@ -4,6 +4,7 @@ import { CookieBanner } from './components/CookieBanner';
 import { trackPageView } from './utils/analytics';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Lazy loading components
 const Home = React.lazy(() => import('./pages/Home'));
@@ -48,8 +49,9 @@ function AppContent() {
     <div className="flex flex-col min-h-screen">
       {!isProposal && <Navbar />}
       <main className={`flex-grow ${!isProposal ? 'pt-16 lg:pt-24' : ''} bg-zinc-950`}>
-        <Suspense fallback={<PageLoader />}>
-          <Routes>
+        <ErrorBoundary>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/club" element={<Club />} />
               <Route path="/news" element={<News />} />
@@ -72,7 +74,8 @@ function AppContent() {
               <Route path="/menu5" element={<MenuProposal5 />} />
             </Routes>
           </Suspense>
-        </main>
+        </ErrorBoundary>
+      </main>
         {!isProposal && <Footer />}
         <CookieBanner />
       </div>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, ChevronRight } from 'lucide-react';
+import { Calendar, ChevronRight, Newspaper, Instagram } from 'lucide-react';
 import { Seo } from '../components/Seo';
 
 interface NewsArticle {
@@ -91,8 +91,20 @@ const News = () => {
                         ))}
                     </div>
                 ) : news.length === 0 ? (
-                    <div className="glass-panel p-16 text-center">
-                        <p className="text-zinc-400 text-lg">Non ci sono news disponibili al momento.</p>
+                    <div className="glass-panel p-16 text-center flex flex-col items-center justify-center border-t border-l border-white/10 rounded-2xl shadow-2xl">
+                        <Newspaper size={64} strokeWidth={1.5} className="text-zinc-600 mb-6" />
+                        <h3 className="text-2xl font-heading text-white mb-3">Nessuna news disponibile</h3>
+                        <p className="text-zinc-400 text-lg mb-8 max-w-md">
+                            Non ci sono notizie pubblicate al momento. Segui i nostri canali social per restare sempre aggiornato!
+                        </p>
+                        <a 
+                            href="https://instagram.com/fusionteamvolley" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="bg-brand-500 text-zinc-950 font-heading text-sm tracking-widest uppercase px-6 py-3 clip-diagonal hover:bg-white transition-colors flex items-center gap-2"
+                        >
+                            <Instagram size={18} strokeWidth={2} /> Seguici su Instagram
+                        </a>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -102,13 +114,18 @@ const News = () => {
                                 key={article.id}
                                 className="glass-panel overflow-hidden border border-white/5 group hover:border-brand-500/30 transition-all hover:shadow-[0_4px_24px_-8px_rgba(0,0,0,0.4)] flex flex-col h-full"
                             >
-                                <div className="h-56 overflow-hidden relative bg-zinc-900">
+                                <div className="h-56 overflow-hidden relative bg-zinc-900 animate-shimmer">
                                     {getImgUrl(article.cover_image_url) ? (
                                         <img
                                             src={getImgUrl(article.cover_image_url)}
                                             alt={article.title}
                                             loading="lazy"
-                                            className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-500"
+                                            className="w-full h-full object-cover opacity-0 transition-opacity duration-1000 group-hover:scale-105"
+                                            onLoad={(e) => {
+                                                e.currentTarget.classList.remove('opacity-0');
+                                                e.currentTarget.classList.add('opacity-80', 'group-hover:opacity-100');
+                                                e.currentTarget.parentElement?.classList.remove('animate-shimmer');
+                                            }}
                                         />
                                     ) : (
                                         <div className="absolute inset-0 bg-gradient-to-br from-zinc-800 to-zinc-900 flex items-center justify-center">
@@ -129,7 +146,7 @@ const News = () => {
                                 </div>
                                 <div className="p-8 flex flex-col flex-grow relative">
                                     <div className="flex items-center gap-2 text-zinc-500 text-xs mb-4 font-bold uppercase tracking-wider">
-                                        <Calendar size={14} className="text-brand-500/70" />
+                                        <Calendar size={14} strokeWidth={2.5} className="text-brand-500/70" />
                                         {new Date(article.published_at).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' })}
                                     </div>
                                     <h3 className="text-2xl font-bold text-white mb-4 group-hover:text-brand-500 transition-colors line-clamp-2 leading-tight min-h-[60px] md:min-h-[64px]">
@@ -141,7 +158,7 @@ const News = () => {
                                     <div className="pt-6 border-t border-white/5 text-brand-500 text-sm font-bold flex items-center justify-between group-hover:text-white transition-colors mt-auto uppercase tracking-wider">
                                         <span>Leggi Articolo</span>
                                         <div className="w-8 h-8 rounded-full bg-brand-500/10 flex items-center justify-center group-hover:bg-brand-500 group-hover:text-zinc-950 transition-all">
-                                            <ChevronRight size={16} />
+                                            <ChevronRight size={16} strokeWidth={2.5} />
                                         </div>
                                     </div>
                                 </div>
