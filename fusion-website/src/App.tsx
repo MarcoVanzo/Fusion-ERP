@@ -60,7 +60,7 @@ function AppContent() {
 
 function App() {
   return (
-    <BrowserRouter basename="/demo">
+    <BrowserRouter>
       <AppContent />
     </BrowserRouter>
   );
