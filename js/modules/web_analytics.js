@@ -46,7 +46,7 @@ window.WebAnalytics = (() => {
             </div>
             
             <div class="page-content" style="padding:0; margin-top:1rem; height:calc(100vh - 180px); display:flex; flex-direction:column;">
-                <div class="card" style="flex:1; padding:0; border-radius:12px; overflow:hidden; border:1px solid var(--color-border); background:var(--color-surface); display:flex; flex-direction:column; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);">
+                <div style="flex:1; padding:0; border-radius:12px; overflow:hidden; border:1px solid var(--color-border); background:var(--color-surface); display:flex; flex-direction:column; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);">
                     <div id="analytics-iframe-container" style="flex:1; width:100%; height:100%; position:relative;">
                         <!-- iFrame will be injected here -->
                     </div>
