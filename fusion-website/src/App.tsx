@@ -1,4 +1,7 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { CookieBanner } from './components/CookieBanner';
+import { trackPageView } from './utils/analytics';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import Home from './pages/Home';
@@ -25,6 +28,11 @@ import MenuProposal5 from './pages/MenuProposal5';
 function AppContent() {
   const location = useLocation();
   const isProposal = location.pathname.startsWith('/proposal') || location.pathname.startsWith('/menu');
+
+  // Tracciamento Page View Virtuale
+  useEffect(() => {
+    trackPageView(location.pathname + location.search);
+  }, [location.pathname, location.search]);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -54,6 +62,7 @@ function AppContent() {
           </Routes>
         </main>
         {!isProposal && <Footer />}
+        <CookieBanner />
       </div>
   );
 }

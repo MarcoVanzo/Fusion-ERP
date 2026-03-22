@@ -38,7 +38,7 @@ const Roster = () => {
                 {/* Background Image */}
                 <div
                     className="absolute inset-0 z-0 bg-cover bg-center"
-                    style={{ backgroundImage: "url('/assets/Gemini_Generated_Image_5v1qm15v1qm15v1q.jpeg')" }}
+                    style={{ backgroundImage: `url('${import.meta.env.BASE_URL}assets/Gemini_Generated_Image_5v1qm15v1qm15v1q.jpeg')` }}
                 />
                 {/* Overlays */}
                 <div className="absolute inset-0 bg-zinc-950/70 z-10"></div>

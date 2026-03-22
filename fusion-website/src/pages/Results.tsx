@@ -84,7 +84,7 @@ const Results = () => {
                 {/* Background Image */}
                 <div
                     className="absolute inset-0 z-0 bg-cover bg-center"
-                    style={{ backgroundImage: "url('/assets/Gemini_Generated_Image_g2wpx2g2wpx2g2wp.jpeg')", filter: "brightness(0.8)" }}
+                    style={{ backgroundImage: `url('${import.meta.env.BASE_URL}assets/Gemini_Generated_Image_g2wpx2g2wpx2g2wp.jpeg')`, filter: "brightness(0.8)" }}
                 />
                 {/* Overlays */}
                 <div className="absolute inset-0 bg-zinc-950/70 z-10 transition-colors"></div>

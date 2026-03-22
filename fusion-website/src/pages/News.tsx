@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, ChevronRight } from 'lucide-react';
-import { Helmet } from 'react-helmet-async';
+import { Seo } from '../components/Seo';
 
 interface NewsArticle {
     id: number;
@@ -47,27 +47,18 @@ const News = () => {
 
     return (
         <div className="flex flex-col min-h-screen pb-24">
-            <Helmet>
-                <title>News &amp; Articoli | Fusion Team Volley</title>
-                <meta name="description" content="Tutte le ultime notizie, risultati e iniziative del Fusion Team Volley: la squadra di pallavolo con 800 atlete e un unico grande sogno." />
-                <link rel="canonical" href="https://www.fusionteamvolley.it/news" />
-                <meta name="robots" content="index, follow" />
-                <meta property="og:type" content="website" />
-                <meta property="og:title" content="News &amp; Articoli | Fusion Team Volley" />
-                <meta property="og:description" content="Aggiornamenti, risultati e iniziative dal mondo Fusion Team Volley." />
-                <meta property="og:url" content="https://www.fusionteamvolley.it/news" />
-                <meta property="og:site_name" content="Fusion Team Volley" />
-                <meta name="twitter:card" content="summary" />
-                <meta name="twitter:title" content="News &amp; Articoli | Fusion Team Volley" />
-                <meta name="twitter:description" content="Aggiornamenti, risultati e iniziative dal mondo Fusion Team Volley." />
-            </Helmet>
+            <Seo 
+                title="News & Articoli" 
+                description="Tutte le ultime notizie, risultati e iniziative dal mondo Fusion Team Volley." 
+                pathname="/news"
+            />
 
             {/* Emotional Header Hero */}
             <section className="relative h-[40vh] min-h-[300px] flex items-center justify-center overflow-hidden mb-12">
                 {/* Background Image */}
                 <div
                     className="absolute inset-0 z-0 bg-cover bg-center"
-                    style={{ backgroundImage: "url('/assets/Gemini_Generated_Image_8ikilj8ikilj8iki.jpeg')" }}
+                    style={{ backgroundImage: `url('${import.meta.env.BASE_URL}assets/Gemini_Generated_Image_8ikilj8ikilj8iki.jpeg')` }}
                 />
                 {/* Overlays */}
                 <div className="absolute inset-0 bg-zinc-950/70 z-10 transition-colors"></div>
@@ -116,6 +107,7 @@ const News = () => {
                                         <img
                                             src={getImgUrl(article.cover_image_url)}
                                             alt={article.title}
+                                            loading="lazy"
                                             className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-500"
                                         />
                                     ) : (

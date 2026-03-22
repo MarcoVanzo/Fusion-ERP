@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ChevronRight, Calendar } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import { Seo } from '../components/Seo';
 
 interface NewsArticle {
     id: number;
@@ -80,10 +80,11 @@ const Home = () => {
 
     return (
         <div className="flex flex-col gap-0 pb-20">
-            <Helmet>
-                <title>Home - Fusion Team Volley</title>
-                <meta name="description" content="Scopri le squadre, le news e lo shop ufficiale del Fusion Team Volley." />
-            </Helmet>
+            <Seo 
+                title="Home" 
+                description="Scopri le squadre, le news e lo shop ufficiale del Fusion Team Volley." 
+                pathname="/"
+            />
 
             {/* Hero Section */}
             <section className="relative h-[85vh] flex items-center justify-center overflow-hidden">
@@ -99,7 +100,7 @@ const Home = () => {
                                 key={num}
                                 className="absolute inset-0 transition-opacity duration-1000 ease-in-out saturate-[1.2] contrast-125 brightness-110"
                                 style={{
-                                    backgroundImage: `url('/assets/hero-${num}.jpg')`,
+                                    backgroundImage: `url('${import.meta.env.BASE_URL}assets/hero-${num}.jpg')`,
                                     backgroundSize: 'cover',
                                     backgroundPosition: bgPosition,
                                     opacity: currentSlide === idx ? 1 : 0
@@ -211,7 +212,7 @@ const Home = () => {
                                                 {/* Home Team */}
                                                 <div className="flex-1 flex flex-col items-center gap-2 text-center">
                                                     {isFusionHome ? (
-                                                        <img src="/assets/logo-colorato.png" alt="Fusion" className="w-14 h-14 rounded-full object-contain border-2 border-brand-500/60 shadow-[0_0_16px_rgba(217,70,239,0.5)] bg-zinc-900" />
+                                                        <img src="/assets/logo-colorato.png" alt="Fusion" loading="lazy" className="w-14 h-14 rounded-full object-contain border-2 border-brand-500/60 shadow-[0_0_16px_rgba(217,70,239,0.5)] bg-zinc-900" />
                                                     ) : (
                                                         <div className="w-14 h-14 bg-zinc-800 rounded-full border border-zinc-700 group-hover:border-brand-500/40 flex items-center justify-center transition-colors">
                                                             <span className="font-heading text-xl text-zinc-300">{match.home.charAt(0)}</span>
@@ -232,7 +233,7 @@ const Home = () => {
                                                 {/* Away Team */}
                                                 <div className="flex-1 flex flex-col items-center gap-2 text-center">
                                                     {isFusionAway ? (
-                                                        <img src="/assets/logo-colorato.png" alt="Fusion" className="w-14 h-14 rounded-full object-contain border-2 border-brand-500/60 shadow-[0_0_16px_rgba(217,70,239,0.5)] bg-zinc-900" />
+                                                        <img src="/assets/logo-colorato.png" alt="Fusion" loading="lazy" className="w-14 h-14 rounded-full object-contain border-2 border-brand-500/60 shadow-[0_0_16px_rgba(217,70,239,0.5)] bg-zinc-900" />
                                                     ) : (
                                                         <div className="w-14 h-14 bg-zinc-800 rounded-full border border-zinc-700 group-hover:border-brand-500/40 flex items-center justify-center transition-colors">
                                                             <span className="font-heading text-xl text-zinc-300">{match.away.charAt(0)}</span>
@@ -298,6 +299,7 @@ const Home = () => {
                                                 <img
                                                     src={getImgUrl(article.cover_image_url)}
                                                     alt={article.title}
+                                                    loading="lazy"
                                                     className="w-full h-full object-cover transition-opacity duration-500 opacity-80 group-hover:opacity-100"
                                                 />
                                             ) : (

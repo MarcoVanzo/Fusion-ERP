@@ -81,7 +81,7 @@ const Club = () => {
             <section className="relative h-[60vh] flex items-center justify-center overflow-hidden">
                 <div
                     className="absolute inset-0 z-0 bg-cover bg-center"
-                    style={{ backgroundImage: "url('/assets/hero-2.jpg')", filter: "brightness(0.7)" }}
+                    style={{ backgroundImage: `url('${import.meta.env.BASE_URL}assets/hero-2.jpg')`, filter: "brightness(0.7)" }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#09090B] via-[#09090B]/60 to-transparent z-10"></div>
 

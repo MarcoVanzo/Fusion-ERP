@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Calendar, ChevronLeft, ArrowLeft } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
+import { Seo } from '../components/Seo';
 
 interface ArticleDetailData {
     id: number;
@@ -59,9 +60,7 @@ const ArticleDetail = () => {
     if (loading) {
         return (
             <>
-                <Helmet>
-                    <title>Caricamento... | {SITE_NAME}</title>
-                </Helmet>
+                <Seo title="Caricamento..." description="Caricamento articolo..." />
                 <div className="max-w-4xl mx-auto px-4 py-20 md:py-28 animate-pulse">
                     <div className="h-8 w-24 bg-white/10 rounded mb-8"></div>
                     <div className="h-64 md:h-96 w-full bg-white/5 rounded-none mb-8"></div>
@@ -80,8 +79,8 @@ const ArticleDetail = () => {
     if (error || !article) {
         return (
             <>
+                <Seo title="Articolo non trovato" description="Articolo non trovato." />
                 <Helmet>
-                    <title>Articolo non trovato | {SITE_NAME}</title>
                     <meta name="robots" content="noindex" />
                 </Helmet>
                 <div className="max-w-4xl mx-auto px-4 py-20 md:py-28 text-center">
@@ -146,27 +145,17 @@ const ArticleDetail = () => {
 
     return (
         <>
+            <Seo 
+                title={article.title} 
+                description={description} 
+                image={ogImage}
+                type="article"
+                pathname={`/news/${article.slug}`}
+            />
             <Helmet>
-                <title>{article.title} | {SITE_NAME}</title>
-                <meta name="description" content={description} />
-                <link rel="canonical" href={canonicalUrl} />
                 <meta name="robots" content="index, follow" />
-
-                {/* Open Graph */}
-                <meta property="og:type" content="article" />
-                <meta property="og:title" content={`${article.title} | ${SITE_NAME}`} />
-                <meta property="og:description" content={description} />
-                <meta property="og:image" content={ogImage} />
-                <meta property="og:url" content={canonicalUrl} />
-                <meta property="og:site_name" content={SITE_NAME} />
                 <meta property="article:published_time" content={dateIso} />
                 <meta property="article:section" content={article.category_name} />
-
-                {/* Twitter Card */}
-                <meta name="twitter:card" content="summary_large_image" />
-                <meta name="twitter:title" content={article.title} />
-                <meta name="twitter:description" content={description} />
-                <meta name="twitter:image" content={ogImage} />
 
                 {/* JSON-LD */}
                 <script type="application/ld+json">

@@ -91,7 +91,7 @@ const Network = () => {
             <div className="relative pt-32 pb-24 border-b-2 border-brand-500/20 overflow-hidden">
                 <div
                     className="absolute inset-0 z-0 bg-cover bg-center"
-                    style={{ backgroundImage: "url('/assets/hero-3.jpg')", filter: "brightness(0.5)" }}
+                    style={{ backgroundImage: `url('${import.meta.env.BASE_URL}assets/hero-3.jpg')`, filter: "brightness(0.5)" }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/80 to-zinc-950/20 z-10"></div>
                 <div className="absolute inset-0 bg-[url('/assets/pattern-dots.svg')] opacity-[0.05] z-10" />
