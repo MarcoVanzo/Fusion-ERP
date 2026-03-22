@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Globe, Instagram, Facebook, Youtube, Diamond } from 'lucide-react';
+import { Seo } from '../components/Seo';
 
 const ERP_BASE = 'https://www.fusionteamvolley.it/ERP';
 const API_URL = `${ERP_BASE}/api/router.php`;
@@ -89,6 +90,7 @@ const Sponsors = () => {
 
     return (
         <div className="min-h-screen bg-zinc-950 pb-20 overflow-hidden">
+            <Seo title="I Nostri Sponsor" description="Partner d'eccellenza che sostengono la visione del Fusion Team Volley." />
             {/* Hero Section */}
             <div className="relative pt-32 pb-32 border-b border-brand-500/10">
                 <div

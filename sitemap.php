@@ -5,7 +5,7 @@
  * URL: https://www.fusionteamvolley.it/ERP/sitemap.php
  */
 
-$SITE_BASE = 'https://www.fusionteamvolley.it/demo';
+$SITE_BASE = 'https://www.fusionteamvolley.it';
 
 $staticPages = [
     ['loc' => $SITE_BASE . '/',          'lastmod' => date('Y-m-d'), 'priority' => '1.0', 'changefreq' => 'daily'],
