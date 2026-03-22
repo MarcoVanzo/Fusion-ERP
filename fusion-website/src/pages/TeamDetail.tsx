@@ -252,7 +252,7 @@ const TeamDetail = () => {
                         const isU14 = nameUpper.includes('U14') || nameUpper.includes('UNDER 14') || nameUpper.includes('UNDER14');
                         const isU16 = nameUpper.includes('U16') || nameUpper.includes('UNDER 16') || nameUpper.includes('UNDER16');
                         const isU18 = nameUpper.includes('U18') || nameUpper.includes('UNDER 18') || nameUpper.includes('UNDER18');
-                        const teamPhoto = isU13 ? '/ERP/uploads/Foto%20Sito/Squadra%20U13.jpeg' : isU14 ? '/ERP/uploads/Foto%20Sito/Squadra%20U14.jpeg' : isU16 ? '/ERP/uploads/Foto%20Sito/Squadra%20U16.jpeg' : isU18 ? '/ERP/uploads/Foto%20Sito/Squadra%20U18.jpeg' : null;
+                        const teamPhoto = isU13 ? import.meta.env.BASE_URL + 'assets/squadra-u13.jpeg' : isU14 ? import.meta.env.BASE_URL + 'assets/squadra-u14.jpeg' : isU16 ? import.meta.env.BASE_URL + 'assets/squadra-u16.jpeg' : isU18 ? import.meta.env.BASE_URL + 'assets/squadra-u18.jpeg' : null;
 
                         return teamPhoto ? (
                             <div className="w-full mb-16 border border-zinc-800 bg-zinc-900 clip-diagonal overflow-hidden shadow-2xl">
