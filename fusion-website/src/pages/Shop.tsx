@@ -76,9 +76,9 @@ const Shop = () => {
             <div className="relative pt-32 pb-24 border-b-2 border-brand-500/20 overflow-hidden">
                 <div
                     className="absolute inset-0 z-0 bg-cover bg-center"
-                    style={{ backgroundImage: `url('${import.meta.env.BASE_URL}assets/Gemini_Generated_Image_4wijvu4wijvu4wij.jpeg')`, filter: "brightness(0.3) saturate(1.2)" }}
+                    style={{ backgroundImage: `url('${import.meta.env.BASE_URL}assets/Gemini_Generated_Image_4wijvu4wijvu4wij.jpeg')`, filter: "brightness(0.6) saturate(1.2)" }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/80 to-zinc-950/20 z-10"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-zinc-950/20 z-10"></div>
                 <div className="absolute inset-0 bg-[url('/assets/pattern-dots.svg')] opacity-[0.05] z-10" />
                 
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 text-center">
