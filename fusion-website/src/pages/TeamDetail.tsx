@@ -154,19 +154,28 @@ const TeamDetail = () => {
                     ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                             {athletes.map(athlete => {
-                                const photoUrl = athlete.photo_path ? `/ERP/${athlete.photo_path}` : null;
+                                const photoUrl = athlete.photo_path && athlete.photo_path.trim() !== '' ? `/ERP/${athlete.photo_path}` : null;
                                 return (
                                     <div key={athlete.id} className="group relative h-[480px] bg-zinc-900 overflow-hidden clip-diagonal-rev transition-all duration-500 hover:-translate-y-2 hover:z-10 hover:scale-[1.02] border border-transparent hover:border-brand-500">
 
                                         {/* Background Texture/Image */}
                                         <div className="absolute inset-0 z-0">
                                             {photoUrl ? (
-                                                <img src={photoUrl} className="w-full h-full object-cover opacity-100 group-hover:scale-110 transition-all duration-500" alt={athlete.full_name || athlete.last_name} />
-                                            ) : (
-                                                <div className="w-full h-full flex flex-col items-center justify-center bg-zinc-950">
-                                                    <span className="font-heading text-9xl text-zinc-800">F</span>
-                                                </div>
-                                            )}
+                                                <img 
+                                                    src={photoUrl} 
+                                                    className="w-full h-full object-cover opacity-100 group-hover:scale-110 transition-all duration-500" 
+                                                    alt={athlete.full_name || athlete.last_name} 
+                                                    onError={(e) => {
+                                                        (e.target as HTMLImageElement).style.display = 'none';
+                                                        (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                                                    }}
+                                                />
+                                            ) : null}
+                                            
+                                            {/* Fallback "F" - visible if no photoUrl or if photoUrl fails to load */}
+                                            <div className={`w-full h-full flex flex-col items-center justify-center bg-zinc-950 ${photoUrl ? 'hidden' : ''}`}>
+                                                <span className="font-heading text-9xl text-zinc-800">F</span>
+                                            </div>
                                         </div>
 
                                         <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent z-10"></div>
@@ -227,17 +236,30 @@ const TeamDetail = () => {
                         <h2 className="font-heading text-4xl text-zinc-500 mb-8 border-l-4 border-brand-500 pl-4">STAFF TECNICO</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                             {staff.map(member => {
-                                const photoUrl = member.photo_path ? `/ERP/${member.photo_path}` : null;
-                                const shadowImg = member.gender === 'F' ? '/assets/ombra_donna.png' : '/assets/ombra_uomo.png';
+                                const photoUrl = member.photo_path && member.photo_path.trim() !== '' ? `/ERP/${member.photo_path}` : null;
+                                const shadowImg = member.gender === 'F' ? import.meta.env.BASE_URL + 'assets/ombra_donna.png' : import.meta.env.BASE_URL + 'assets/ombra_uomo.png';
                                 
                                 return (
                                     <div key={member.id} className="group relative h-[400px] bg-zinc-900 overflow-hidden clip-diagonal-rev transition-all duration-500 hover:-translate-y-2 hover:z-10 hover:scale-[1.02] border border-transparent hover:border-brand-500">
                                         <div className="absolute inset-0 z-0">
                                             {photoUrl ? (
-                                                <img src={photoUrl} className="w-full h-full object-cover opacity-100 group-hover:scale-110 transition-all duration-500" alt={`${member.first_name} ${member.last_name}`} />
-                                            ) : (
-                                                <img src={shadowImg} className="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-all duration-500" alt="Silhouette" />
-                                            )}
+                                                <img 
+                                                    src={photoUrl} 
+                                                    className="w-full h-full object-cover opacity-100 group-hover:scale-110 transition-all duration-500" 
+                                                    alt={`${member.first_name} ${member.last_name}`} 
+                                                    onError={(e) => {
+                                                        (e.target as HTMLImageElement).style.display = 'none';
+                                                        (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                                                    }}
+                                                />
+                                            ) : null}
+                                            
+                                            {/* Fallback Shadow - visible if no photoUrl or if photoUrl fails to load */}
+                                            <img 
+                                                src={shadowImg} 
+                                                className={`w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-all duration-500 ${photoUrl ? 'hidden' : ''}`} 
+                                                alt="Silhouette" 
+                                            />
                                         </div>
                                         
                                         <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent z-10"></div>
