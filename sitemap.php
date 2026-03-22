@@ -46,7 +46,6 @@ foreach ($endpoints as $apiUrl) {
         ]);
         $body = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
         if ($body && $httpCode === 200) break;
         $body = false;
     }
@@ -91,7 +90,6 @@ foreach ($teamEndpoints as $apiUrl) {
         ]);
         $teamBody = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
         if ($teamBody && $httpCode === 200) break;
         $teamBody = false;
     }
