@@ -33,6 +33,7 @@ const AthleteCard = ({ athlete }: { athlete: Athlete }) => {
             <div className="absolute inset-0 z-0 bg-zinc-950">
                 {photoUrl && !imgError ? (
                     <img 
+                        loading="lazy"
                         src={photoUrl} 
                         className="w-full h-full object-cover opacity-100 group-hover:scale-110 transition-all duration-500" 
                         alt={athlete.full_name || athlete.last_name} 
@@ -103,6 +104,7 @@ const StaffCard = ({ member }: { member: Staff }) => {
             <div className="absolute inset-0 z-0 bg-zinc-950">
                 {photoUrl && !imgError ? (
                     <img 
+                        loading="lazy"
                         src={photoUrl} 
                         className="w-full h-full object-cover opacity-100 group-hover:scale-110 transition-all duration-500" 
                         alt={`${member.first_name} ${member.last_name}`} 
@@ -110,6 +112,7 @@ const StaffCard = ({ member }: { member: Staff }) => {
                     />
                 ) : (
                     <img 
+                        loading="lazy"
                         src={shadowImg} 
                         className="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-all duration-500" 
                         alt="Silhouette" 
@@ -127,8 +130,21 @@ const StaffCard = ({ member }: { member: Staff }) => {
                 <div className="font-subheading text-brand-500 tracking-widest text-sm mb-1 uppercase">
                     {member.role || 'ALLENATORE'}
                 </div>
-                <h3 className="font-heading text-3xl leading-none text-white uppercase group-hover:text-brand-500 group-hover:drop-shadow-[0_0_15px_rgba(214,90,134,0.8)] transition-all duration-300">
-                    {member.first_name}<br/>{member.last_name}
+                <h3 className="@container w-full font-heading leading-none text-white uppercase group-hover:text-brand-500 group-hover:drop-shadow-[0_0_15px_rgba(214,90,134,0.8)] transition-all duration-300">
+                    <div className="flex flex-col w-full">
+                        <span 
+                            className="whitespace-nowrap overflow-visible"
+                            style={{ fontSize: `min(1.875rem, calc(100cqi / (${Math.max(1, (member.first_name || '').length)} * 1.2)))` }}
+                        >
+                            {member.first_name}
+                        </span>
+                        <span 
+                            className="whitespace-nowrap overflow-visible"
+                            style={{ fontSize: `min(2.25rem, calc(100cqi / (${Math.max(1, (member.last_name || '').length)} * 1.2)))` }}
+                        >
+                            {member.last_name}
+                        </span>
+                    </div>
                 </h3>
             </div>
         </div>
@@ -256,7 +272,7 @@ const TeamDetail = () => {
 
                         return teamPhoto ? (
                             <div className="w-full mb-16 border border-zinc-800 bg-zinc-900 clip-diagonal overflow-hidden shadow-2xl">
-                                <img src={teamPhoto} alt={`Foto Ufficiale ${teamName}`} className="w-full h-auto object-cover max-h-[600px] hover:scale-105 transition-transform duration-700" />
+                                <img loading="lazy" src={teamPhoto} alt={`Foto Ufficiale ${teamName}`} className="w-full h-auto object-cover max-h-[600px] hover:scale-105 transition-transform duration-700" />
                             </div>
                         ) : null;
                     })()}

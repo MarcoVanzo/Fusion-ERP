@@ -161,6 +161,7 @@ const Shop = () => {
                                     <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/5 to-transparent z-10"></div>
                                     {product.immagineUrl ? (
                                         <img
+                                            loading="lazy"
                                             src={product.immagineUrl}
                                             alt={product.nome}
                                             className="h-48 w-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-700 z-20 p-4"

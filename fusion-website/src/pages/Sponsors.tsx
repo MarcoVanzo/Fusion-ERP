@@ -187,6 +187,7 @@ const Sponsors = () => {
                                             <div className={`relative flex items-center justify-center bg-white shrink-0 ${isMain ? 'p-8 md:p-12 md:w-1/2 min-h-[200px] md:min-h-0' : 'p-6 h-40 sm:h-48'}`}>
                                                 {sponsor.logo_path ? (
                                                     <img
+                                                        loading="lazy"
                                                         src={sponsor.logo_path.startsWith('http') ? sponsor.logo_path : `${ERP_BASE}/${sponsor.logo_path}`}
                                                         alt={`Logo ${sponsor.name}`}
                                                         className="max-h-full max-w-full object-contain filter grayscale-0 md:grayscale md:group-hover:grayscale-0 transition-all duration-700 hover:scale-105 drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]"
