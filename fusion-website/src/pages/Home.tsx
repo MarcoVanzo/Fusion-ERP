@@ -111,7 +111,7 @@ const Home = () => {
                 </div>
 
                 {/* Dark Background Overlay & Fuchsia Glow */}
-                <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-black/40 to-[#09090B]/90 z-10 transition-colors duration-500"></div>
+                <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/20 to-[#09090B]/80 z-10 transition-colors duration-500"></div>
                 <div className="absolute inset-0 z-10 opacity-40 pointer-events-none mix-blend-overlay" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #a21caf 0, #a21caf 2px, transparent 2px, transparent 100px)' }}></div>
 
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60vw] bg-brand-primary/40 blur-[150px] rounded-full z-0 mix-blend-screen"></div>

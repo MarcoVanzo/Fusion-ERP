@@ -80,10 +80,9 @@ const Club = () => {
             {/* Hero Section */}
             <section className="relative h-[60vh] flex items-center justify-center overflow-hidden">
                 <div
-                    className="absolute inset-0 z-0 bg-cover bg-center"
-                    style={{ backgroundImage: `url('${import.meta.env.BASE_URL}assets/hero-2.jpg')`, filter: "brightness(0.85)" }}
+                    style={{ backgroundImage: `url('${import.meta.env.BASE_URL}assets/hero-2.jpg')`, filter: "brightness(1)" }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#09090B] via-[#09090B]/30 to-transparent z-10"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-[#09090B] via-[#09090B]/10 to-transparent z-10"></div>
 
                 <motion.div
                     initial={{ opacity: 0, y: 30 }}

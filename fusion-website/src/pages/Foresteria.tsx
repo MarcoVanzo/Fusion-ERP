@@ -90,9 +90,9 @@ const Foresteria = () => {
             <section className="relative h-[60vh] flex items-center justify-center overflow-hidden">
                 <div
                     className="absolute inset-0 z-0 bg-cover bg-center"
-                    style={{ backgroundImage: `url('${import.meta.env.BASE_URL}assets/hero-3.jpg')`, filter: "brightness(0.6) saturate(1.2)" }}
+                    style={{ backgroundImage: `url('${import.meta.env.BASE_URL}assets/hero-3.jpg')`, filter: "brightness(0.85) saturate(1.2)" }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#09090B] via-[#09090B]/30 to-transparent z-10"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-[#09090B] via-[#09090B]/10 to-transparent z-10"></div>
                 <div className="absolute inset-0 z-10 opacity-30 pointer-events-none mix-blend-overlay" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #a21caf 0, #a21caf 2px, transparent 2px, transparent 100px)' }}></div>
                 
                 <div className="relative z-20 text-center px-4 max-w-4xl mx-auto flex flex-col items-center">
@@ -233,7 +233,7 @@ const Foresteria = () => {
                                         ></video>
                                     )}
                                     {video.title && (
-                                        <div className="absolute bottom-0 left-0 right-0 p-6 md:p-12 bg-gradient-to-t from-black via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none flex items-end justify-center">
+                                        <div className="absolute bottom-0 left-0 right-0 p-6 md:p-12 bg-gradient-to-t from-black via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none flex items-end justify-center">
                                             <h4 className="font-heading text-2xl md:text-4xl text-white flex items-center gap-3 drop-shadow-xl">
                                                 {video.type === 'youtube' && <Youtube size={36} className="text-brand-500" />}
                                                 {video.title}
