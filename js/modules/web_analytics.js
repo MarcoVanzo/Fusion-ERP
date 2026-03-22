@@ -17,9 +17,9 @@ window.WebAnalytics = (() => {
             },
             site2: {
                 id: 'site2',
-                name: 'Sito Secondario',
+                name: 'OutSeason',
                 // Sostituisci questo URL con l'Embed URL generato da Looker Studio
-                url: ''
+                url: 'https://lookerstudio.google.com/embed/reporting/be3181ca-4765-44fa-8552-26a21257ea8c/page/i2usF'
             }
         }
     };
