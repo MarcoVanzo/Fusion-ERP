@@ -97,7 +97,7 @@ const Sponsors = () => {
                     className="absolute inset-0 z-0 bg-cover bg-center"
                     style={{ backgroundImage: `url('${import.meta.env.BASE_URL}assets/hero-1.jpg')`, filter: "brightness(0.85) saturate(1.2)" }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-b from-zinc-950 via-zinc-950/15 to-zinc-950/50 z-10"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent z-10"></div>
                 <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-zinc-950 to-transparent z-10"></div>
                 <div className="absolute inset-0 bg-[url('/assets/pattern-dots.svg')] opacity-[0.03] z-10" />
                 
