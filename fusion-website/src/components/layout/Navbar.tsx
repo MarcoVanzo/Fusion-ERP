@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Menu, X, User } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -9,14 +9,26 @@ const API_URL = `${ERP_BASE}/api/router.php`;
 const Navbar = () => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
+    const [isVisible, setIsVisible] = useState(true);
+    const lastScrollY = useRef(0);
     const [hubLogo, setHubLogo] = useState<string | null>(null);
     const location = useLocation();
 
     useEffect(() => {
         const handleScroll = () => {
-            setIsScrolled(window.scrollY > 20);
+            const currentScrollY = window.scrollY;
+            setIsScrolled(currentScrollY > 20);
+            
+            if (currentScrollY > lastScrollY.current && currentScrollY > 100 && !isMobileMenuOpen) {
+                // Scrolling giù: nascondo navbar
+                setIsVisible(false);
+            } else {
+                // Scrolling su: mostro navbar
+                setIsVisible(true);
+            }
+            lastScrollY.current = currentScrollY;
         };
-        window.addEventListener('scroll', handleScroll);
+        window.addEventListener('scroll', handleScroll, { passive: true });
 
         const fetchHubLogo = async () => {
             try {
@@ -59,7 +71,7 @@ const Navbar = () => {
     const allLinks = [...splitLeftLinks, ...splitRightLinks];
 
     return (
-        <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-zinc-950/95 backdrop-blur-md border-b-2 border-brand-500 shadow-[0_10px_30px_rgba(0,0,0,0.8)] py-4' : 'bg-gradient-to-b from-zinc-950 via-zinc-950/80 to-transparent py-8'}`}>
+        <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'} ${isScrolled ? 'bg-zinc-950/95 backdrop-blur-md border-b-2 border-brand-500 shadow-[0_10px_30px_rgba(0,0,0,0.8)] py-4' : 'bg-gradient-to-b from-zinc-950 via-zinc-950/80 to-transparent py-8'}`}>
             <div className="max-w-[1400px] mx-auto px-6 lg:px-8 h-12 relative flex items-center justify-between">
                 
                 {/* Left Links */}
@@ -157,7 +169,7 @@ const Navbar = () => {
                                         <Link 
                                             to={link.path} 
                                             onClick={() => setIsMobileMenuOpen(false)}
-                                            className={`font-heading text-2xl uppercase tracking-widest border-b border-zinc-800/50 py-4 flex items-center justify-between transition-colors ${isActive ? 'text-brand-500' : 'text-zinc-300 hover:text-white'}`}
+                                            className={`font-heading text-2xl uppercase tracking-widest border-b border-zinc-800/50 py-5 min-h-[56px] flex items-center justify-between transition-colors ${isActive ? 'text-brand-500' : 'text-zinc-300 hover:text-white'}`}
                                         >
                                             {link.name}
                                             {link.badge && (

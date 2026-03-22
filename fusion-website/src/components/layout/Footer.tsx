@@ -147,11 +147,11 @@ const Footer = () => {
                             ].map((item) => (
                                 <li key={item.label}>
                                     {item.isExternal ? (
-                                        <a href={item.path} target="_blank" rel="noopener noreferrer" className="text-zinc-300 hover:text-brand-500 text-sm transition-colors flex items-center gap-2">
+                                        <a href={item.path} target="_blank" rel="noopener noreferrer" className="text-zinc-300 py-1.5 hover:text-brand-500 text-sm transition-colors flex items-center gap-2">
                                             {item.label}
                                         </a>
                                     ) : (
-                                        <Link to={item.path} className="text-zinc-300 hover:text-brand-500 text-sm transition-colors flex items-center gap-2">
+                                        <Link to={item.path} className="text-zinc-300 py-1.5 hover:text-brand-500 text-sm transition-colors flex items-center gap-2">
                                             {item.label}
                                         </Link>
                                     )}
@@ -174,11 +174,11 @@ const Footer = () => {
                                 <MapPin size={18} className="text-brand-500 shrink-0 mt-0.5" />
                                 <span className="text-zinc-300 text-sm">Via Vicentino 1<br />Trivignano (VE)</span>
                             </li>
-                            <li className="flex items-center gap-3">
+                            <li className="flex items-center gap-3 py-1.5">
                                 <Mail size={18} className="text-brand-500 shrink-0" />
                                 <a href="mailto:info@fusionteamvolley.it" className="text-zinc-300 hover:text-white text-sm transition-colors">info@fusionteamvolley.it</a>
                             </li>
-                            <li className="flex items-center gap-3">
+                            <li className="flex items-center gap-3 py-1.5">
                                 <Phone size={18} className="text-brand-500 shrink-0" />
                                 <span className="text-zinc-300 text-sm">0422/485757</span>
                             </li>

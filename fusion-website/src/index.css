@@ -11,6 +11,9 @@
   /* Former primary preserved as fallback */
   --color-brand-primary: #a1355c;
   /* Darker Fuchsia */
+  --color-accent-400: #38bdf8;
+  --color-accent-500: #0ea5e9;
+  /* Neon Cyan Accent */
   --color-zinc-950: #050505;
   --color-zinc-900: #121212;
   /* Pure black aesthetic */
@@ -53,22 +56,64 @@
   .clip-diagonal-rev {
     clip-path: polygon(0 10%, 100% 0, 100% 100%, 0 100%);
   }
+
+  /* Sweep hover effect for buttons */
+  .hover-sweep {
+    position: relative;
+    overflow: hidden;
+  }
+  .hover-sweep::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: all 0.5s ease-in-out;
+  }
+  .hover-sweep:hover::after {
+    left: 100%;
+  }
+
+  /* Shimmer Loading Animation */
+  @keyframes shimmer {
+    0% { background-position: -1000px 0; }
+    100% { background-position: 1000px 0; }
+  }
+  .animate-shimmer {
+    animation: shimmer 2s infinite linear;
+    background: linear-gradient(to right, rgba(24, 24, 27, 0.5) 4%, rgba(39, 39, 42, 0.8) 25%, rgba(24, 24, 27, 0.5) 36%);
+    background-size: 1000px 100%;
+  }
 }
 
 /* Custom Webkit Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--color-zinc-950);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1a1a1a;
-  border-radius: 4px;
+  background: #2a2a2a;
+  border-radius: 6px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-brand-500);
+}
+
+/* Focus styles for custom shapes */
+*:focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 4px;
+}
+.clip-diagonal:focus-visible {
+  /* Using box-shadow instead of outline to respect the shape where possible, or drop-shadow */
+  outline: none;
+  filter: drop-shadow(0 0 8px rgba(255, 20, 147, 0.8));
 }
