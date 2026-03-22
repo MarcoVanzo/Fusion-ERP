@@ -143,11 +143,18 @@ const Footer = () => {
                                 { label: 'Le Squadre', path: '/teams' },
                                 { label: 'Store', path: '/shop' },
                                 { label: 'Il Club', path: '/club' },
+                                { label: 'Privacy Policy', path: '/privacy-policy.pdf', isExternal: true },
                             ].map((item) => (
                                 <li key={item.label}>
-                                    <Link to={item.path} className="text-zinc-300 hover:text-brand-500 text-sm transition-colors flex items-center gap-2">
-                                        {item.label}
-                                    </Link>
+                                    {item.isExternal ? (
+                                        <a href={item.path} target="_blank" rel="noopener noreferrer" className="text-zinc-300 hover:text-brand-500 text-sm transition-colors flex items-center gap-2">
+                                            {item.label}
+                                        </a>
+                                    ) : (
+                                        <Link to={item.path} className="text-zinc-300 hover:text-brand-500 text-sm transition-colors flex items-center gap-2">
+                                            {item.label}
+                                        </Link>
+                                    )}
                                 </li>
                             ))}
                         </ul>
@@ -204,7 +211,7 @@ const Footer = () => {
                         © {new Date().getFullYear()} Fusion Team Volley. Tutti i diritti riservati.
                     </p>
                     <div className="flex gap-4 text-xs">
-                        <a href="#" className="text-zinc-600 hover:text-zinc-300 transition-colors">Privacy Policy</a>
+                        <a href="/privacy-policy.pdf" target="_blank" rel="noopener noreferrer" className="text-zinc-600 hover:text-zinc-300 transition-colors">Privacy Policy</a>
                         <a href="#" className="text-zinc-600 hover:text-zinc-300 transition-colors">Cookie Policy</a>
                     </div>
                 </div>

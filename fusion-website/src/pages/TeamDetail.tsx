@@ -23,6 +23,118 @@ interface Staff {
     gender?: string;
 }
 
+const AthleteCard = ({ athlete }: { athlete: Athlete }) => {
+    const [imgError, setImgError] = useState(false);
+    const photoUrl = athlete.photo_path && athlete.photo_path.trim() !== '' ? `/ERP/${athlete.photo_path}` : null;
+
+    return (
+        <div className="group relative h-[480px] bg-zinc-900 overflow-hidden clip-diagonal-rev transition-all duration-500 hover:-translate-y-2 hover:z-10 hover:scale-[1.02] border border-transparent hover:border-brand-500">
+            {/* Background Texture/Image */}
+            <div className="absolute inset-0 z-0 bg-zinc-950">
+                {photoUrl && !imgError ? (
+                    <img 
+                        src={photoUrl} 
+                        className="w-full h-full object-cover opacity-100 group-hover:scale-110 transition-all duration-500" 
+                        alt={athlete.full_name || athlete.last_name} 
+                        onError={() => setImgError(true)}
+                    />
+                ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center bg-zinc-950">
+                        <span className="font-heading text-9xl text-zinc-800">F</span>
+                    </div>
+                )}
+            </div>
+
+            <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent z-10"></div>
+
+            {/* Player Info - Bottom Pinned */}
+            <div className="absolute bottom-0 left-0 w-full p-6 z-20 flex flex-col justify-end">
+                <div className="font-subheading text-brand-500 tracking-widest text-sm mb-1 uppercase">
+                    {athlete.role || 'ROLE TBD'}
+                </div>
+                <h3 className="@container w-full font-heading leading-none text-white uppercase group-hover:text-brand-500 group-hover:drop-shadow-[0_0_15px_rgba(214,90,134,0.8)] transition-all duration-300">
+                    {(() => {
+                        const nameObj = athlete.full_name || athlete.first_name || '';
+                        const parts = nameObj.split(' ');
+                        const first = parts.shift() || '';
+                        const last = parts.join(' ') || athlete.last_name || '';
+                        return (
+                            <div className="flex flex-col w-full">
+                                <span 
+                                    className="whitespace-nowrap overflow-visible"
+                                    style={{ fontSize: `min(1.875rem, calc(100cqi / (${Math.max(1, first.length)} * 1.2)))` }}
+                                >
+                                    {first}
+                                </span>
+                                <span 
+                                    className="whitespace-nowrap overflow-visible"
+                                    style={{ fontSize: `min(2.25rem, calc(100cqi / (${Math.max(1, last.length)} * 1.2)))` }}
+                                >
+                                    {last}
+                                </span>
+                            </div>
+                        );
+                    })()}
+                </h3>
+
+                {(athlete.height_cm || athlete.weight_kg) && (
+                    <div className="flex gap-4 mt-4 font-subheading text-zinc-400 text-sm">
+                        {athlete.height_cm && <div>H: <span className="text-white">{athlete.height_cm} CM</span></div>}
+                        {athlete.weight_kg && <div>W: <span className="text-white">{athlete.weight_kg} KG</span></div>}
+                    </div>
+                )}
+            </div>
+
+            {/* Jumbo Jersey Number */}
+            <div className="absolute top-4 right-6 z-20 font-heading text-7xl text-white/10 group-hover:text-white group-hover:drop-shadow-[0_0_15px_rgba(255,255,255,0.8)] transition-all duration-300">
+                {athlete.jersey_number || ''}
+            </div>
+        </div>
+    );
+};
+
+const StaffCard = ({ member }: { member: Staff }) => {
+    const [imgError, setImgError] = useState(false);
+    const photoUrl = member.photo_path && member.photo_path.trim() !== '' ? `/ERP/${member.photo_path}` : null;
+    const shadowImg = member.gender === 'F' ? import.meta.env.BASE_URL + 'assets/ombra_donna.png' : import.meta.env.BASE_URL + 'assets/ombra_uomo.png';
+
+    return (
+        <div className="group relative h-[400px] bg-zinc-900 overflow-hidden clip-diagonal-rev transition-all duration-500 hover:-translate-y-2 hover:z-10 hover:scale-[1.02] border border-transparent hover:border-brand-500">
+            <div className="absolute inset-0 z-0 bg-zinc-950">
+                {photoUrl && !imgError ? (
+                    <img 
+                        src={photoUrl} 
+                        className="w-full h-full object-cover opacity-100 group-hover:scale-110 transition-all duration-500" 
+                        alt={`${member.first_name} ${member.last_name}`} 
+                        onError={() => setImgError(true)}
+                    />
+                ) : (
+                    <img 
+                        src={shadowImg} 
+                        className="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-all duration-500" 
+                        alt="Silhouette" 
+                        onError={(e) => {
+                            // If the shadow image itself fails to load, hide it to prevent broken image icons
+                            (e.currentTarget as HTMLImageElement).style.display = 'none';
+                        }}
+                    />
+                )}
+            </div>
+            
+            <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent z-10"></div>
+            
+            <div className="absolute bottom-0 left-0 w-full p-6 z-20 flex flex-col justify-end">
+                <div className="font-subheading text-brand-500 tracking-widest text-sm mb-1 uppercase">
+                    {member.role || 'ALLENATORE'}
+                </div>
+                <h3 className="font-heading text-3xl leading-none text-white uppercase group-hover:text-brand-500 group-hover:drop-shadow-[0_0_15px_rgba(214,90,134,0.8)] transition-all duration-300">
+                    {member.first_name}<br/>{member.last_name}
+                </h3>
+            </div>
+        </div>
+    );
+};
+
 const TeamDetail = () => {
     const { id } = useParams<{ id: string }>();
     const [athletes, setAthletes] = useState<Athlete[]>([]);
@@ -153,79 +265,7 @@ const TeamDetail = () => {
                         <div className="p-12 border border-zinc-800 bg-zinc-900/30 font-subheading text-xl text-zinc-500 text-center clip-diagonal">Nessuna atleta in rosa.</div>
                     ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                            {athletes.map(athlete => {
-                                const photoUrl = athlete.photo_path && athlete.photo_path.trim() !== '' ? `/ERP/${athlete.photo_path}` : null;
-                                return (
-                                    <div key={athlete.id} className="group relative h-[480px] bg-zinc-900 overflow-hidden clip-diagonal-rev transition-all duration-500 hover:-translate-y-2 hover:z-10 hover:scale-[1.02] border border-transparent hover:border-brand-500">
-
-                                        {/* Background Texture/Image */}
-                                        <div className="absolute inset-0 z-0">
-                                            {photoUrl ? (
-                                                <img 
-                                                    src={photoUrl} 
-                                                    className="w-full h-full object-cover opacity-100 group-hover:scale-110 transition-all duration-500" 
-                                                    alt={athlete.full_name || athlete.last_name} 
-                                                    onError={(e) => {
-                                                        (e.target as HTMLImageElement).style.display = 'none';
-                                                        (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
-                                                    }}
-                                                />
-                                            ) : null}
-                                            
-                                            {/* Fallback "F" - visible if no photoUrl or if photoUrl fails to load */}
-                                            <div className={`w-full h-full flex flex-col items-center justify-center bg-zinc-950 ${photoUrl ? 'hidden' : ''}`}>
-                                                <span className="font-heading text-9xl text-zinc-800">F</span>
-                                            </div>
-                                        </div>
-
-                                        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent z-10"></div>
-
-                                        {/* Player Info - Bottom Pinned */}
-                                        <div className="absolute bottom-0 left-0 w-full p-6 z-20 flex flex-col justify-end">
-                                            <div className="font-subheading text-brand-500 tracking-widest text-sm mb-1 uppercase">
-                                                {athlete.role || 'ROLE TBD'}
-                                            </div>
-                                            <h3 className="@container w-full font-heading leading-none text-white uppercase group-hover:text-brand-500 group-hover:drop-shadow-[0_0_15px_rgba(214,90,134,0.8)] transition-all duration-300">
-                                                {(() => {
-                                                    const nameObj = athlete.full_name || athlete.first_name || '';
-                                                    const parts = nameObj.split(' ');
-                                                    const first = parts.shift() || '';
-                                                    const last = parts.join(' ') || athlete.last_name || '';
-                                                    return (
-                                                        <div className="flex flex-col w-full">
-                                                            <span 
-                                                                className="whitespace-nowrap overflow-visible"
-                                                                style={{ fontSize: `min(1.875rem, calc(100cqi / (${Math.max(1, first.length)} * 1.2)))` }}
-                                                            >
-                                                                {first}
-                                                            </span>
-                                                            <span 
-                                                                className="whitespace-nowrap overflow-visible"
-                                                                style={{ fontSize: `min(2.25rem, calc(100cqi / (${Math.max(1, last.length)} * 1.2)))` }}
-                                                            >
-                                                                {last}
-                                                            </span>
-                                                        </div>
-                                                    );
-                                                })()}
-                                            </h3>
-
-                                            {(athlete.height_cm || athlete.weight_kg) && (
-                                                <div className="flex gap-4 mt-4 font-subheading text-zinc-400 text-sm">
-                                                    {athlete.height_cm && <div>H: <span className="text-white">{athlete.height_cm} CM</span></div>}
-                                                    {athlete.weight_kg && <div>W: <span className="text-white">{athlete.weight_kg} KG</span></div>}
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        {/* Jumbo Jersey Number */}
-                                        <div className="absolute top-4 right-6 z-20 font-heading text-7xl text-white/10 group-hover:text-white group-hover:drop-shadow-[0_0_15px_rgba(255,255,255,0.8)] transition-all duration-300">
-                                            {athlete.jersey_number || ''}
-                                        </div>
-
-                                    </div>
-                                );
-                            })}
+                            {athletes.map(athlete => <AthleteCard key={athlete.id} athlete={athlete} />)}
                         </div>
                     )}
                 </div>
@@ -235,46 +275,7 @@ const TeamDetail = () => {
                     <div className="mb-24">
                         <h2 className="font-heading text-4xl text-zinc-500 mb-8 border-l-4 border-brand-500 pl-4">STAFF TECNICO</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                            {staff.map(member => {
-                                const photoUrl = member.photo_path && member.photo_path.trim() !== '' ? `/ERP/${member.photo_path}` : null;
-                                const shadowImg = member.gender === 'F' ? import.meta.env.BASE_URL + 'assets/ombra_donna.png' : import.meta.env.BASE_URL + 'assets/ombra_uomo.png';
-                                
-                                return (
-                                    <div key={member.id} className="group relative h-[400px] bg-zinc-900 overflow-hidden clip-diagonal-rev transition-all duration-500 hover:-translate-y-2 hover:z-10 hover:scale-[1.02] border border-transparent hover:border-brand-500">
-                                        <div className="absolute inset-0 z-0">
-                                            {photoUrl ? (
-                                                <img 
-                                                    src={photoUrl} 
-                                                    className="w-full h-full object-cover opacity-100 group-hover:scale-110 transition-all duration-500" 
-                                                    alt={`${member.first_name} ${member.last_name}`} 
-                                                    onError={(e) => {
-                                                        (e.target as HTMLImageElement).style.display = 'none';
-                                                        (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
-                                                    }}
-                                                />
-                                            ) : null}
-                                            
-                                            {/* Fallback Shadow - visible if no photoUrl or if photoUrl fails to load */}
-                                            <img 
-                                                src={shadowImg} 
-                                                className={`w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-all duration-500 ${photoUrl ? 'hidden' : ''}`} 
-                                                alt="Silhouette" 
-                                            />
-                                        </div>
-                                        
-                                        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent z-10"></div>
-                                        
-                                        <div className="absolute bottom-0 left-0 w-full p-6 z-20 flex flex-col justify-end">
-                                            <div className="font-subheading text-brand-500 tracking-widest text-sm mb-1 uppercase">
-                                                {member.role || 'ALLENATORE'}
-                                            </div>
-                                            <h3 className="font-heading text-3xl leading-none text-white uppercase group-hover:text-brand-500 group-hover:drop-shadow-[0_0_15px_rgba(214,90,134,0.8)] transition-all duration-300">
-                                                {member.first_name}<br/>{member.last_name}
-                                            </h3>
-                                        </div>
-                                    </div>
-                                );
-                            })}
+                            {staff.map(member => <StaffCard key={member.id} member={member} />)}
                         </div>
                     </div>
                 )}
