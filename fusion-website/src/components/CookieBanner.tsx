@@ -7,13 +7,13 @@ export const CookieBanner: React.FC = () => {
     const [isVisible, setIsVisible] = useState(false);
 
     useEffect(() => {
-        // Controlla se l'utente ha già espresso una preferenza
+        // Inizializza GTM a prescindere dal consenso (tracking sempre attivo)
+        initializeGTM();
+
+        // Controlla se l'utente ha già nascosto il banner
         const consent = localStorage.getItem(COOKIE_CONSENT_KEY);
         if (!consent) {
             setIsVisible(true);
-        } else if (consent === 'accepted') {
-            // Inizializza GTM se aveva già accettato in passato
-            initializeGTM();
         }
     }, []);
 
@@ -26,6 +26,7 @@ export const CookieBanner: React.FC = () => {
     const handleDecline = () => {
         localStorage.setItem(COOKIE_CONSENT_KEY, 'declined');
         setIsVisible(false);
+        initializeGTM();
     };
 
     if (!isVisible) return null;

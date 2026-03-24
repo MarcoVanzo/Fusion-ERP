@@ -12,7 +12,7 @@ let isGtmInitialized = false;
 
 /**
  * Inizializza Google Tag Manager spargendo il consenso ai cookie.
- * Chiama questa funzione SOLO quando l'utente accetta i cookie.
+ * ATTENZIONE: Questa funzione è richiamata forzatamente a prescindere dal clic sul banner dei cookie.
  */
 export const initializeGTM = () => {
     if (isGtmInitialized) return;
