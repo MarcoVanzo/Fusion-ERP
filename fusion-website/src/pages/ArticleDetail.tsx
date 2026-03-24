@@ -16,7 +16,7 @@ interface ArticleDetailData {
     color_hex?: string;
 }
 
-const SITE_BASE = 'https://www.fusionteamvolley.it/demo';
+const SITE_BASE = 'https://www.fusionteamvolley.it';
 const ERP_BASE = 'https://www.fusionteamvolley.it/ERP';
 const SITE_NAME = 'Fusion Team Volley';
 const DEFAULT_IMG = `${SITE_BASE}/assets/Gemini_Generated_Image_s2944zs2944zs294.jpeg`;
