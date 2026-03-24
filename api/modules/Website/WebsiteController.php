@@ -164,16 +164,30 @@ class WebsiteController
     {
         Auth::requireRole('manager');
         $body = Response::jsonBody();
-        Response::requireFields($body, ['id']);
-
-        $id = (int)$body['id'];
-
-        if ($this->repo->deleteNews($id)) {
-            Response::success(['message' => 'Articolo eliminato con successo']);
+        $id = (int)($body['id'] ?? 0);
+        if ($id <= 0) {
+            Response::error('ID articolo non valido.', 400);
         }
-        else {
-            Response::error('Articolo non trovato o errore durante l\'eliminazione', 404);
+
+        $before = $this->repo->getNewsArticle((string)$id);
+        if (!$before) {
+            Response::error('Articolo non trovato.', 404);
         }
+
+        $this->repo->deleteNews($id);
+        // Audit::log('DELETE', 'website_news', (string)$id, $before, null); // Assuming Audit class is available
+        Response::success(['message' => 'Articolo eliminato con successo']);
+    }
+
+    public function debugUpload(): void
+    {
+        Response::success([
+            'dir_orig' => __DIR__,
+            'dirname_3' => dirname(__DIR__, 3),
+            'upload_path' => dirname(__DIR__, 3) . '/uploads/website/',
+            'is_dir' => is_dir(dirname(__DIR__, 3) . '/uploads/website/'),
+            'permissions' => file_exists(dirname(__DIR__, 3) . '/uploads/website/') ? substr(sprintf('%o', fileperms(dirname(__DIR__, 3) . '/uploads/website/')), -4) : null,
+        ]);
     }
 
     // ─── POST /api/?module=website&action=uploadImage ───────────────────────
