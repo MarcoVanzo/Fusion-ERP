@@ -94,9 +94,10 @@ class WebsiteController
         Response::requireFields($body, ['title', 'slug', 'category_id']);
 
         $tenantId = TenantContext::id();
+        $dbTenantId = $tenantId === 'TNT_default' ? null : (is_numeric($tenantId) ? (int)$tenantId : $tenantId);
 
         $data = [
-            ':tenant_id' => $tenantId,
+            ':tenant_id' => $dbTenantId,
             ':author_id' => $_SESSION['user_id'] ?? null,
             ':category_id' => $body['category_id'],
             ':title' => trim($body['title']),
@@ -116,7 +117,7 @@ class WebsiteController
             if ($e->getCode() === '23000') { // Integrity constraint violation (e.g. unique slug)
                 Response::error('Lo slug fornito è già in uso. Scegline uno diverso.', 409);
             }
-            Response::error('Errore durante il salvataggio: ' . $e->getMessage(), 500);
+            Response::error('Errore durante il salvataggio.', 500);
         }
     }
 
@@ -154,7 +155,7 @@ class WebsiteController
             if ($e->getCode() === '23000') {
                 Response::error('Lo slug fornito è già in uso. Scegline uno diverso.', 409);
             }
-            Response::error('Errore durante il salvataggio: ' . $e->getMessage(), 500);
+            Response::error('Errore durante il salvataggio.', 500);
         }
     }
 
