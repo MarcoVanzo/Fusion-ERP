@@ -275,16 +275,6 @@ const Staff = (() => {
 
           <!-- HEADER STAFF -->
           <div style="display:flex; align-items:center; gap:var(--sp-4); padding:0 var(--sp-4); margin-top:var(--sp-2);">
-            <div style="width:100px;height:100px;border-radius:12px;background:${s(p.full_name)};display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;color:#000;position:relative;overflow:hidden;flex-shrink:0;">
-                ${p.photo_path ? `<img src="${p.photo_path}" style="width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;z-index:1;">` : ''}
-                ${Utils.initials(p.full_name)}
-                ${f ? `
-                <div class="staff-avatar-overlay" style="position:absolute;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.2s;cursor:pointer;z-index:2;">
-                    <i class="ph ph-camera" style="color:#fff;font-size:24px;"></i>
-                </div>
-                <input type="file" id="staff-photo-upload" accept="image/jpeg,image/png,image/webp" style="display:none;" data-staff-id="${p.id}">
-                ` : ''}
-            </div>
             <div style="display:flex; flex-direction:column;">
               <h2 style="font-size:2.5rem; font-weight:800; margin:0; line-height:1.1; font-family:var(--font-display); text-transform:uppercase; letter-spacing:-0.5px;">${Utils.escapeHtml(p.first_name || "")} <span style="font-weight:300; color:var(--color-text-muted);">${Utils.escapeHtml(p.last_name || "")}</span></h2>
               <div style="font-size:15px; color:var(--color-white); margin-top:8px; display:flex; gap:12px; align-items:center;">
@@ -309,30 +299,66 @@ const Staff = (() => {
 
           <!-- TAB: ANAGRAFICA -->
           <div id="stab-panel-anagrafica" class="athlete-tab-panel" style="display:flex;flex-direction:column;gap:var(--sp-4);padding:0 var(--sp-4);">
-              <div>
-                  <p class="section-label">Dati Anagrafici e Contatti</p>
-                  <div class="card" style="padding:var(--sp-3);">
-                      <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3);">
-                          ${o("Nome", p.first_name)}
-                          ${o("Cognome", p.last_name)}
-                          ${o("Ruolo / Qualifica", p.role)}
-                          ${o("Squadre", v)}
-                          ${o("Data di Nascita", p.birth_date ? Utils.formatDate(p.birth_date) : null)}
-                          ${o("Luogo di Nascita", p.birth_place)}
-                          ${o("Città di Residenza", p.residence_city)}
-                          ${o("Via di Residenza", p.residence_address)}
-                          ${o("Cellulare", p.phone)}
-                          ${o("E-Mail", p.email)}
+            <div style="display:flex;flex-direction:row;align-items:flex-start;gap:var(--sp-4);">
+              <!-- FOTO PERSONALE -->
+              <div style="width:280px;flex-shrink:0;">
+                <p class="section-label" style="text-align:center;">Foto Personale</p>
+                <div class="card" style="padding:var(--sp-3);">
+                  <div style="display:flex;flex-direction:column;align-items:center;gap:var(--sp-3);">
+                    <div id="staff-photo-preview" style="width:240px;height:240px;border-radius:16px;overflow:hidden;flex-shrink:0;border:2px solid var(--color-border);background:${s(p.full_name)};display:flex;align-items:center;justify-content:center;">
+                      ${p.photo_path ? `<img src="${Utils.escapeHtml(p.photo_path)}" alt="Foto staff" style="width:100%;height:100%;object-fit:cover;object-position:center">` : `<span style="font-family:var(--font-display);font-size:4.5rem;font-weight:700;color:#000;">${Utils.initials(p.full_name)}</span>`}
+                    </div>
+                    <div style="display:flex;flex-direction:column;align-items:center;gap:8px;width:100%;">
+                      <div style="font-size:13px;color:var(--color-text-muted);text-align:center;">
+                        ${p.photo_path ? "Foto caricata" : "Nessuna foto caricata"}
                       </div>
-                      ${p.notes ? `<div style="margin-top:var(--sp-2);padding-top:var(--sp-2);border-top:1px solid var(--color-border);"><span style="font-size:11px;color:var(--color-silver);text-transform:uppercase;font-weight:600;">Note</span><p style="font-size:14px;margin-top:4px;line-height:1.6;">${Utils.escapeHtml(p.notes)}</p></div>` : ""}
+                      ${f ? `
+                      <label for="staff-photo-upload" class="btn btn-default btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;width:100%;justify-content:center;">
+                        <i class="ph ph-camera"></i> ${p.photo_path ? "Cambia foto" : "Carica foto"}
+                      </label>
+                      <input id="staff-photo-upload" type="file" accept="image/jpeg,image/png,image/webp" style="display:none;" data-staff-id="${p.id}">
+                      <div id="staff-photo-status" style="font-size:12px;color:var(--color-text-muted);text-align:center;"></div>` : ""}
+                    </div>
                   </div>
+                </div>
               </div>
+              <div style="flex:1;">
+                <p class="section-label">Dati Anagrafici e Contatti</p>
+                <div class="card" style="padding:var(--sp-3);">
+                  <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-3);">
+                      ${o("Nome", p.first_name)}
+                      ${o("Cognome", p.last_name)}
+                      ${o("Ruolo / Qualifica", p.role)}
+                      ${o("Squadre", v)}
+                      ${o("Data di Nascita", p.birth_date ? Utils.formatDate(p.birth_date) : null)}
+                      ${o("Luogo di Nascita", p.birth_place)}
+                      ${o("Città di Residenza", p.residence_city)}
+                      ${o("Via di Residenza", p.residence_address)}
+                      ${o("Cellulare", p.phone)}
+                      ${o("E-Mail", p.email)}
+                  </div>
+                  ${p.notes ? `<div style="margin-top:var(--sp-2);padding-top:var(--sp-2);border-top:1px solid var(--color-border);"><span style="font-size:11px;color:var(--color-silver);text-transform:uppercase;font-weight:600;">Note</span><p style="font-size:14px;margin-top:4px;line-height:1.6;">${Utils.escapeHtml(p.notes)}</p></div>` : ""}
+                </div>
+              </div>
+            </div>
+
+            <!-- DOCUMENTI (in Anagrafica) -->
+            <div>
+              <p class="section-label">Matricola e Documenti</p>
+              <div class="card" style="padding:var(--sp-3);">
+                <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:var(--sp-3);">
+                  ${o("Documento d'Identità", p.identity_document)}
+                  ${o("Codice Fiscale", p.fiscal_code)}
+                  ${o("Scadenza Cert. Medico", p.medical_cert_expires_at ? Utils.formatDate(p.medical_cert_expires_at) : null, b ? "var(--color-pink)" : null)}
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- TAB: DOCUMENTI -->
           <div id="stab-panel-documenti" class="athlete-tab-panel" style="display:none;flex-direction:column;gap:var(--sp-4);padding:0 var(--sp-4);">
               <div>
-                  <p class="section-label">Dati Documenti</p>
+                  <p class="section-label">Matricola e Dati</p>
                   <div class="card" style="padding:var(--sp-3);">
                       <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3);">
                           ${o("Codice Fiscale", p.fiscal_code)}
@@ -376,84 +402,86 @@ const Staff = (() => {
                               <div style="display:flex;align-items:center;gap:10px;">
                                   <i class="ph ph-file-pdf" style="font-size:24px;color:var(--color-pink);flex-shrink:0;"></i>
                                   <div>
-                                      <div style="font-size:13px;font-weight:600;">Contratto (allegato)</div>
+                                      <div style="font-size:13px;font-weight:600;">Contratto</div>
                                       <div style="font-size:11px;color:var(--color-text-muted);">${p.contract_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(p.contract_file_path.split('/').pop()) : 'Nessun file caricato'}</div>
                                   </div>
                               </div>
                               <div style="display:flex;gap:var(--sp-2);align-items:center;">
-                                  ${p.contract_file_path ? `<a href="api/router.php?module=staff&action=downloadDoc&field=contract_file_path&id=${p.id}" target="_blank" class="btn btn-default btn-sm"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ''}
-                                  <button class="btn btn-primary btn-sm" id="upload-contract-file-btn" type="button"><i class="ph ph-upload-simple"></i> Carica</button>
-                                  <input type="file" id="upload-contract-file-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">
+                                  ${p.contract_file_path ? `<a href="api/router.php?module=staff&action=downloadDoc&field=contract_file_path&id=${p.id}" target="_blank" class="btn btn-default btn-sm" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ''}
+                                  ${f ? `<button class="btn btn-primary btn-sm" id="upload-contract-file-btn" type="button" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-upload-simple"></i> Carica</button>
+                                  <input type="file" id="upload-contract-file-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">` : ''}
                               </div>
                           </div>
                       </div>
 
-                      <!-- Documento d'Identità Fronte / Retro -->
-                      <div class="card" style="padding:var(--sp-3); margin-bottom:var(--sp-3);">
-                          <div style="font-size:13px;font-weight:600;margin-bottom:10px;border-bottom:1px solid var(--color-border);padding-bottom:5px;">Carta d'Identità</div>
-                          <!-- Fronte -->
-                          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);margin-bottom:10px;">
+                      <!-- CI Fronte -->
+                      <div class="card" style="padding:var(--sp-3);">
+                          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);">
                               <div style="display:flex;align-items:center;gap:10px;">
                                   <i class="ph ph-identification-badge" style="font-size:24px;color:var(--color-info);flex-shrink:0;"></i>
                                   <div>
-                                      <div style="font-size:12px;font-weight:600;">CI Fronte</div>
+                                      <div style="font-size:13px;font-weight:600;">CI Fronte</div>
                                       <div style="font-size:11px;color:var(--color-text-muted);">${p.id_doc_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(p.id_doc_file_path.split('/').pop()) : 'Nessun file caricato'}</div>
                                   </div>
                               </div>
                               <div style="display:flex;gap:var(--sp-2);align-items:center;">
-                                  ${p.id_doc_file_path ? `<a href="api/router.php?module=staff&action=downloadDoc&field=id_doc_file_path&id=${p.id}" target="_blank" class="btn btn-default btn-sm"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ''}
-                                  <button class="btn btn-primary btn-sm" id="upload-id-doc-btn" type="button"><i class="ph ph-upload-simple"></i> Carica</button>
-                                  <input type="file" id="upload-id-doc-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">
-                              </div>
-                          </div>
-                          <!-- Retro -->
-                          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);">
-                              <div style="display:flex;align-items:center;gap:10px;">
-                                  <i class="ph ph-identification-badge" style="font-size:24px;color:var(--color-info);flex-shrink:0;"></i>
-                                  <div>
-                                      <div style="font-size:12px;font-weight:600;">CI Retro</div>
-                                      <div style="font-size:11px;color:var(--color-text-muted);">${p.id_doc_back_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(p.id_doc_back_file_path.split('/').pop()) : 'Nessun file caricato'}</div>
-                                  </div>
-                              </div>
-                              <div style="display:flex;gap:var(--sp-2);align-items:center;">
-                                  ${p.id_doc_back_file_path ? `<a href="api/router.php?module=staff&action=downloadDoc&field=id_doc_back_file_path&id=${p.id}" target="_blank" class="btn btn-default btn-sm"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ''}
-                                  <button class="btn btn-primary btn-sm" id="upload-id-doc-back-btn" type="button"><i class="ph ph-upload-simple"></i> Carica</button>
-                                  <input type="file" id="upload-id-doc-back-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">
+                                  ${p.id_doc_file_path ? `<a href="api/router.php?module=staff&action=downloadDoc&field=id_doc_file_path&id=${p.id}" target="_blank" class="btn btn-default btn-sm" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ''}
+                                  ${f ? `<button class="btn btn-primary btn-sm" id="upload-id-doc-btn" type="button" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-upload-simple"></i> Carica</button>
+                                  <input type="file" id="upload-id-doc-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">` : ''}
                               </div>
                           </div>
                       </div>
 
-                      <!-- Codice Fiscale Fronte / Retro -->
+                      <!-- CI Retro -->
                       <div class="card" style="padding:var(--sp-3);">
-                          <div style="font-size:13px;font-weight:600;margin-bottom:10px;border-bottom:1px solid var(--color-border);padding-bottom:5px;">Codice Fiscale</div>
-                          <!-- Fronte -->
-                          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);margin-bottom:10px;">
+                          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);">
                               <div style="display:flex;align-items:center;gap:10px;">
-                                  <i class="ph ph-credit-card" style="font-size:24px;color:var(--color-success);flex-shrink:0;"></i>
+                                  <i class="ph ph-identification-card" style="font-size:24px;color:var(--color-info);flex-shrink:0;"></i>
                                   <div>
-                                      <div style="font-size:12px;font-weight:600;">CF Fronte</div>
-                                      <div style="font-size:11px;color:var(--color-text-muted);">${p.cf_doc_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(p.cf_doc_file_path.split('/').pop()) : 'Nessun file caricato'}</div>
+                                      <div style="font-size:13px;font-weight:600;">CI Retro</div>
+                                      <div style="font-size:11px;color:var(--color-text-muted);">${p.id_doc_back_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(p.id_doc_back_file_path.split('/').pop()) : 'Nessun file caricato'}</div>
                                   </div>
                               </div>
                               <div style="display:flex;gap:var(--sp-2);align-items:center;">
-                                  ${p.cf_doc_file_path ? `<a href="api/router.php?module=staff&action=downloadDoc&field=cf_doc_file_path&id=${p.id}" target="_blank" class="btn btn-default btn-sm"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ''}
-                                  <button class="btn btn-primary btn-sm" id="upload-cf-doc-btn" type="button"><i class="ph ph-upload-simple"></i> Carica</button>
-                                  <input type="file" id="upload-cf-doc-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">
+                                  ${p.id_doc_back_file_path ? `<a href="api/router.php?module=staff&action=downloadDoc&field=id_doc_back_file_path&id=${p.id}" target="_blank" class="btn btn-default btn-sm" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ''}
+                                  ${f ? `<button class="btn btn-primary btn-sm" id="upload-id-doc-back-btn" type="button" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-upload-simple"></i> Carica</button>
+                                  <input type="file" id="upload-id-doc-back-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">` : ''}
                               </div>
                           </div>
-                          <!-- Retro -->
+                      </div>
+
+                      <!-- CF Fronte -->
+                      <div class="card" style="padding:var(--sp-3);">
                           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);">
                               <div style="display:flex;align-items:center;gap:10px;">
                                   <i class="ph ph-credit-card" style="font-size:24px;color:var(--color-success);flex-shrink:0;"></i>
                                   <div>
-                                      <div style="font-size:12px;font-weight:600;">CF Retro</div>
+                                      <div style="font-size:13px;font-weight:600;">CF Fronte</div>
+                                      <div style="font-size:11px;color:var(--color-text-muted);">${p.cf_doc_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(p.cf_doc_file_path.split('/').pop()) : 'Nessun file caricato'}</div>
+                                  </div>
+                              </div>
+                              <div style="display:flex;gap:var(--sp-2);align-items:center;">
+                                  ${p.cf_doc_file_path ? `<a href="api/router.php?module=staff&action=downloadDoc&field=cf_doc_file_path&id=${p.id}" target="_blank" class="btn btn-default btn-sm" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ''}
+                                  ${f ? `<button class="btn btn-primary btn-sm" id="upload-cf-doc-btn" type="button" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-upload-simple"></i> Carica</button>
+                                  <input type="file" id="upload-cf-doc-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">` : ''}
+                              </div>
+                          </div>
+                      </div>
+
+                      <!-- CF Retro -->
+                      <div class="card" style="padding:var(--sp-3);">
+                          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);">
+                              <div style="display:flex;align-items:center;gap:10px;">
+                                  <i class="ph ph-credit-card" style="font-size:24px;color:var(--color-success);flex-shrink:0;"></i>
+                                  <div>
+                                      <div style="font-size:13px;font-weight:600;">CF Retro</div>
                                       <div style="font-size:11px;color:var(--color-text-muted);">${p.cf_doc_back_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(p.cf_doc_back_file_path.split('/').pop()) : 'Nessun file caricato'}</div>
                                   </div>
                               </div>
                               <div style="display:flex;gap:var(--sp-2);align-items:center;">
-                                  ${p.cf_doc_back_file_path ? `<a href="api/router.php?module=staff&action=downloadDoc&field=cf_doc_back_file_path&id=${p.id}" target="_blank" class="btn btn-default btn-sm"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ''}
-                                  <button class="btn btn-primary btn-sm" id="upload-cf-doc-back-btn" type="button"><i class="ph ph-upload-simple"></i> Carica</button>
-                                  <input type="file" id="upload-cf-doc-back-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">
+                                  ${p.cf_doc_back_file_path ? `<a href="api/router.php?module=staff&action=downloadDoc&field=cf_doc_back_file_path&id=${p.id}" target="_blank" class="btn btn-default btn-sm" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ''}
+                                  ${f ? `<button class="btn btn-primary btn-sm" id="upload-cf-doc-back-btn" type="button" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-upload-simple"></i> Carica</button>
+                                  <input type="file" id="upload-cf-doc-back-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">` : ''}
                               </div>
                           </div>
                       </div>
@@ -482,15 +510,11 @@ const Staff = (() => {
             { signal: e.signal },
           );
         }),
-        // Add overlay hover events
+        // Add overlay photo upload events connected to the new inline Anagrafica layout
         (() => {
-            const avatarOverlay = document.querySelector('.staff-avatar-overlay');
             const fileInput = document.getElementById('staff-photo-upload');
-            if (avatarOverlay && fileInput) {
-                avatarOverlay.parentElement.addEventListener('mouseenter', () => avatarOverlay.style.opacity = '1');
-                avatarOverlay.parentElement.addEventListener('mouseleave', () => avatarOverlay.style.opacity = '0');
-                avatarOverlay.addEventListener('click', () => fileInput.click());
-                
+            const previewLabel = document.querySelector('label[for="staff-photo-upload"]');
+            if (fileInput) {
                 fileInput.addEventListener('change', async (ev) => {
                     const file = ev.target.files[0];
                     if (!file) return;
@@ -499,7 +523,10 @@ const Staff = (() => {
                     formData.append('id', p.id);
                     formData.append('file', file);
                     
-                    UI.toast('Caricamento foto...', 'info');
+                    const statusText = document.getElementById('staff-photo-status');
+                    if (statusText) statusText.textContent = "Caricamento in corso...";
+                    if (previewLabel) previewLabel.style.opacity = "0.5";
+
                     try {
                         const response = await fetch('api/router.php?module=staff&action=uploadPhoto', {
                             method: 'POST',
@@ -514,6 +541,9 @@ const Staff = (() => {
                         d(p.id); // reload
                     } catch (err) {
                         UI.toast(err.message, 'error');
+                        if (statusText) statusText.textContent = 'Errore: ' + err.message;
+                    } finally {
+                        if (previewLabel) previewLabel.style.opacity = "";
                     }
                 }, { signal: e.signal });
             }
