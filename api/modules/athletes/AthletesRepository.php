@@ -68,15 +68,21 @@ class AthletesRepository
      */
     public function listAthletesLight(string $teamSeasonId = ''): array
     {
-        $sql = 'SELECT DISTINCT a.id, a.team_id, a.full_name, a.jersey_number, a.role, a.photo_path, a.is_active,
-                       a.medical_cert_expires_at,
-                       a.contract_file_path, a.id_doc_front_file_path, a.id_doc_back_file_path,
-                       a.cf_doc_front_file_path, a.cf_doc_back_file_path, a.medical_cert_file_path,
-                       COALESCE(t.name, "Nessuna squadra") AS team_name,
-                       COALESCE(t.category, "Nessuna") AS category,
-                       (SELECT GROUP_CONCAT(at_sub.team_season_id SEPARATOR ",") FROM athlete_teams at_sub WHERE at_sub.athlete_id = a.id) AS team_season_ids
+        // Build document columns dynamically — handles case where V066 migration hasn't been applied yet
+        $docCols = '';
+        $docFields = ['contract_file_path', 'id_doc_front_file_path', 'id_doc_back_file_path',
+                       'cf_doc_front_file_path', 'cf_doc_back_file_path', 'medical_cert_file_path'];
+        if ($this->_hasColumn('athletes', 'contract_file_path')) {
+            $docCols = ', a.' . implode(', a.', $docFields);
+        }
+
+        $sql = "SELECT DISTINCT a.id, a.team_id, a.full_name, a.jersey_number, a.role, a.photo_path, a.is_active,
+                       a.medical_cert_expires_at{$docCols},
+                       COALESCE(t.name, 'Nessuna squadra') AS team_name,
+                       COALESCE(t.category, 'Nessuna') AS category,
+                       (SELECT GROUP_CONCAT(at_sub.team_season_id SEPARATOR ',') FROM athlete_teams at_sub WHERE at_sub.athlete_id = a.id) AS team_season_ids
                 FROM athletes a
-                LEFT JOIN teams t ON a.team_id = t.id';
+                LEFT JOIN teams t ON a.team_id = t.id";
 
         $params = [];
         if ($teamSeasonId !== '') {
