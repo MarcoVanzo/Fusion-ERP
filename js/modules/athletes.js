@@ -891,52 +891,7 @@ const Athletes = (() => {
             });
         }
 
-        if (u) {
-            ["contract-file", "id-doc-front", "id-doc-back", "cf-doc-front", "cf-doc-back", "med-cert"].forEach(type => {
-                const btn = document.getElementById(`upload-${type}-btn`);
-                const input = document.getElementById(`upload-${type}-input`);
-                if (btn && input) {
-                    btn.addEventListener('click', () => input.click(), { signal: e.signal });
-                    input.addEventListener('change', async (ev) => {
-                        const file = ev.target.files[0];
-                        if (!file) return;
-                        
-                        const formData = new FormData();
-                        formData.append('id', n);
-                        formData.append('file', file);
-                        
-                        let action = '';
-                        if (type === 'contract-file') action = 'uploadContractFile';
-                        else if (type === 'id-doc-front') action = 'uploadIdDocFront';
-                        else if (type === 'id-doc-back') action = 'uploadIdDocBack';
-                        else if (type === 'cf-doc-front') action = 'uploadCfDocFront';
-                        else if (type === 'cf-doc-back') action = 'uploadCfDocBack';
-                        else if (type === 'med-cert') action = 'uploadMedicalCert';
 
-                        UI.toast('Caricamento documento in corso...', 'info');
-                        btn.disabled = true;
-                        try {
-                            const response = await fetch(`api/router.php?module=athletes&action=${action}`, {
-                                method: 'POST',
-                                body: formData
-                            });
-                            const res = await response.json();
-                            if (!response.ok || !res.success) throw new Error(res.error || 'Errore di caricamento');
-                            
-                            UI.toast('Documento caricato con successo', 'success');
-                            Store.invalidate("listLight/athletes");
-                            Store.invalidate("get/athletes");
-                            f(n, "documenti");
-                        } catch (err) {
-                            UI.toast(err.message, 'error');
-                            btn.disabled = false;
-                        } finally {
-                            input.value = '';
-                        }
-                    }, { signal: e.signal });
-                }
-            });
-        }
         let E = !1;
         const k = (e) => {
           (document.querySelectorAll(".athlete-tab-panel").forEach((e) => {
