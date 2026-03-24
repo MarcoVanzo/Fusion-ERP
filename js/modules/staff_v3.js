@@ -261,194 +261,207 @@ const Staff = (() => {
                 .join(", ")
             : "");
       ((c.innerHTML = `
-                <!-- BREADCRUMB -->
-                <div style="display:flex;align-items:center;gap:var(--sp-2);padding:var(--sp-2) var(--sp-4);border-bottom:1px solid var(--color-border);background:var(--color-bg);position:sticky;top:72px;z-index:50;">
-                    <button class="btn btn-ghost btn-sm" id="staff-back" style="color:var(--color-text-muted);border:none;padding:0;display:flex;align-items:center;gap:6px;font-size:12px;text-transform:uppercase;letter-spacing:0.06em;" type="button">
-                        <i class="ph ph-arrow-left" style="font-size:16px;"></i> Staff
-                    </button>
-                    <i class="ph ph-caret-right" style="font-size:12px;color:var(--color-text-muted);opacity:0.5;"></i>
-                    <span style="font-size:12px;font-weight:600;color:var(--color-white);text-transform:uppercase;letter-spacing:0.06em;">${Utils.escapeHtml(p.full_name)}</span>
-                    <div style="flex:1;"></div>
-                    ${f ? '<button class="btn btn-primary btn-sm" id="staff-edit-btn" type="button"><i class="ph ph-pencil-simple"></i> MODIFICA</button>' : ""}
-                    ${f ? '<button class="btn btn-default btn-sm" id="staff-delete-btn" type="button" style="margin-left:8px;color:var(--color-pink);border-color:rgba(255,0,122,0.3);"><i class="ph ph-trash"></i></button>' : ""}
+        <div class="page-body" style="display:flex;flex-direction:column;gap:var(--sp-4); background:var(--color-black); min-height:100vh; padding-top:var(--sp-3);">
+
+          <!-- BREADCRUMB NAV -->
+          <div style="display:flex;align-items:center;gap:var(--sp-2);padding:0 var(--sp-4);">
+            <button class="btn btn-ghost btn-sm" id="staff-back" style="color:var(--color-text-muted);border:none;padding:0;display:flex;align-items:center;gap:6px;font-size:12px;text-transform:uppercase;letter-spacing:0.06em;" type="button">
+              <i class="ph ph-arrow-left" style="font-size:16px;"></i> Staff
+            </button>
+            <div style="flex:1;"></div>
+            ${f ? '<button class="btn btn-primary btn-sm" id="staff-edit-btn" type="button" style="margin-right:8px;"><i class="ph ph-pencil-simple"></i> MODIFICA</button>' : ""}
+            ${f ? '<button class="btn btn-default btn-sm" id="staff-delete-btn" type="button" style="color:var(--color-pink);border-color:rgba(255,0,122,0.3);"><i class="ph ph-trash"></i></button>' : ""}
+          </div>
+
+          <!-- HEADER STAFF -->
+          <div style="display:flex; align-items:center; gap:var(--sp-4); padding:0 var(--sp-4); margin-top:var(--sp-2);">
+            <div style="width:100px;height:100px;border-radius:12px;background:${s(p.full_name)};display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;color:#000;position:relative;overflow:hidden;flex-shrink:0;">
+                ${p.photo_path ? `<img src="${p.photo_path}" style="width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;z-index:1;">` : ''}
+                ${Utils.initials(p.full_name)}
+                ${f ? `
+                <div class="staff-avatar-overlay" style="position:absolute;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.2s;cursor:pointer;z-index:2;">
+                    <i class="ph ph-camera" style="color:#fff;font-size:24px;"></i>
                 </div>
+                <input type="file" id="staff-photo-upload" accept="image/jpeg,image/png,image/webp" style="display:none;" data-staff-id="${p.id}">
+                ` : ''}
+            </div>
+            <div style="display:flex; flex-direction:column;">
+              <h2 style="font-size:2.5rem; font-weight:800; margin:0; line-height:1.1; font-family:var(--font-display); text-transform:uppercase; letter-spacing:-0.5px;">${Utils.escapeHtml(p.first_name || "")} <span style="font-weight:300; color:var(--color-text-muted);">${Utils.escapeHtml(p.last_name || "")}</span></h2>
+              <div style="font-size:15px; color:var(--color-white); margin-top:8px; display:flex; gap:12px; align-items:center;">
+                ${p.role ? `<span style="background:rgba(255,255,255,0.1); padding:4px 10px; border-radius:6px; font-weight:600; font-size:13px; letter-spacing:0.5px; text-transform:uppercase;">${Utils.escapeHtml(p.role)}</span>` : ""}
+                ${v ? `<span style="color:var(--color-text-muted); font-weight:500;">${Utils.escapeHtml(v)}</span>` : ""}
+              </div>
+            </div>
+          </div>
 
-                <!-- TAB BAR -->
-                <div style="display:flex;gap:0;border-bottom:1px solid var(--color-border);overflow-x:auto;scrollbar-width:none;" id="staff-tab-bar" class="fusion-tabs-container">
-                    <button class="athlete-tab-btn fusion-tab active" data-stab="anagrafica" type="button">
-                        <i class="ph ph-identification-card"></i> Anagrafica
-                    </button>
-                    <button class="athlete-tab-btn fusion-tab" data-stab="documenti" type="button">
-                        <i class="ph ph-file-text"></i> Documenti
-                    </button>
-                </div>
+          <!-- TAB BAR -->
+          <div style="position:relative;margin:0 calc(var(--sp-4) * -1);padding:0 var(--sp-4);border-bottom:1px solid var(--color-border);margin-bottom:var(--sp-4);">
+            <div id="staff-tab-bar" class="fusion-tabs-container" style="display:flex;gap:0;overflow-x:auto;scrollbar-width:none;position:relative;z-index:2;padding-bottom:1px;">
+              <button class="athlete-tab-btn fusion-tab active" data-stab="anagrafica" type="button" style="flex-shrink:0;white-space:nowrap;">
+                  <i class="ph ph-identification-card"></i> Anagrafica
+              </button>
+              <button class="athlete-tab-btn fusion-tab" data-stab="documenti" type="button" style="flex-shrink:0;white-space:nowrap;">
+                  <i class="ph ph-file-text"></i> Documenti
+              </button>
+            </div>
+            <div id="tab-scroll-indicator" style="position:absolute;top:0;right:0;bottom:0;width:48px;background:linear-gradient(to left, var(--color-black) 20%, transparent 100%);pointer-events:none;z-index:3;transition:opacity 0.3s;opacity:0.8;"></div>
+          </div>
 
-                <!-- TAB: ANAGRAFICA -->
-                <div id="stab-panel-anagrafica" style="padding:var(--sp-4);display:flex;flex-direction:column;gap:var(--sp-4);">
-                    <div style="display:flex;align-items:flex-start;gap:var(--sp-4);">
-                        <div style="width:100px;height:100px;border-radius:12px;background:${s(p.full_name)};display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;color:#000;position:relative;overflow:hidden;flex-shrink:0;">
-                            ${p.photo_path ? `<img src="${p.photo_path}" style="width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;z-index:1;">` : ''}
-                            ${Utils.initials(p.full_name)}
-                            ${f ? `
-                            <div class="staff-avatar-overlay" style="position:absolute;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.2s;cursor:pointer;z-index:2;">
-                                <i class="ph ph-camera" style="color:#fff;font-size:24px;"></i>
-                            </div>
-                            <input type="file" id="staff-photo-upload" accept="image/jpeg,image/png,image/webp" style="display:none;" data-staff-id="${p.id}">
-                            ` : ''}
-                        </div>
-                    <div style="flex:1;">
-                        <p class="section-label">Dati Anagrafici e Contatti</p>
-                        <div class="card" style="padding:var(--sp-3);">
-                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3);">
-                                ${o("Nome", p.first_name)}
-                                ${o("Cognome", p.last_name)}
-                                ${o("Ruolo / Qualifica", p.role)}
-                                ${o("Squadre", v)}
-                                ${o("Data di Nascita", p.birth_date ? Utils.formatDate(p.birth_date) : null)}
-                                ${o("Luogo di Nascita", p.birth_place)}
-                                ${o("Città di Residenza", p.residence_city)}
-                                ${o("Via di Residenza", p.residence_address)}
-                                ${o("Cellulare", p.phone)}
-                                ${o("E-Mail", p.email)}
-                            </div>
-                            ${p.notes ? `<div style="margin-top:var(--sp-2);padding-top:var(--sp-2);border-top:1px solid var(--color-border);"><span style="font-size:11px;color:var(--color-silver);text-transform:uppercase;font-weight:600;">Note</span><p style="font-size:14px;margin-top:4px;line-height:1.6;">${Utils.escapeHtml(p.notes)}</p></div>` : ""}
-                        </div>
-                    </div>
-                    </div>
-                </div>
+          <!-- TAB: ANAGRAFICA -->
+          <div id="stab-panel-anagrafica" class="athlete-tab-panel" style="display:flex;flex-direction:column;gap:var(--sp-4);padding:0 var(--sp-4);">
+              <div>
+                  <p class="section-label">Dati Anagrafici e Contatti</p>
+                  <div class="card" style="padding:var(--sp-3);">
+                      <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3);">
+                          ${o("Nome", p.first_name)}
+                          ${o("Cognome", p.last_name)}
+                          ${o("Ruolo / Qualifica", p.role)}
+                          ${o("Squadre", v)}
+                          ${o("Data di Nascita", p.birth_date ? Utils.formatDate(p.birth_date) : null)}
+                          ${o("Luogo di Nascita", p.birth_place)}
+                          ${o("Città di Residenza", p.residence_city)}
+                          ${o("Via di Residenza", p.residence_address)}
+                          ${o("Cellulare", p.phone)}
+                          ${o("E-Mail", p.email)}
+                      </div>
+                      ${p.notes ? `<div style="margin-top:var(--sp-2);padding-top:var(--sp-2);border-top:1px solid var(--color-border);"><span style="font-size:11px;color:var(--color-silver);text-transform:uppercase;font-weight:600;">Note</span><p style="font-size:14px;margin-top:4px;line-height:1.6;">${Utils.escapeHtml(p.notes)}</p></div>` : ""}
+                  </div>
+              </div>
+          </div>
 
-                <!-- TAB: DOCUMENTI -->
-                <div id="stab-panel-documenti" style="padding:var(--sp-4);display:none;flex-direction:column;gap:var(--sp-4);">
-                    <div>
-                        <p class="section-label">Documenti</p>
-                        <div class="card" style="padding:var(--sp-3);">
-                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3);">
-                                ${o("Codice Fiscale", p.fiscal_code)}
-                                ${o("Documento d'Identità", p.identity_document)}
-                                ${o("Scadenza Cert. Medico", p.medical_cert_expires_at ? Utils.formatDate(p.medical_cert_expires_at) : null, b ? "var(--color-pink)" : null)}
-                            </div>
-                        </div>
-                    </div>
-                    <div>
-                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-                            <p class="section-label" style="margin-bottom:0;">Contratto di Collaborazione</p>
-                            ${f && p.email ? `<button class="btn btn-primary btn-sm" id="generate-contract-btn" style="font-size:11px;padding:4px 10px;">+ NUOVO</button>` : (!p.email ? '<span style="font-size:11px;color:var(--color-pink);">Email mancante per contratto</span>' : '')}
-                        </div>
-                        <div class="card" style="padding:var(--sp-3);">
-                            ${!p.contract_status ? Utils.emptyState("Nessun contratto attivo", "Genera un nuovo contratto per questo membro.") : `
-                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-                                <div><span style="font-size:12px;color:var(--color-text-muted);">Stato:</span> <strong style="color:${p.contract_status === 'firmato' ? 'var(--color-success)' : p.contract_status === 'inviato' ? 'var(--color-info)' : 'var(--color-white)'};text-transform:uppercase;font-size:12px;letter-spacing:1px;">${p.contract_status}</strong></div>
-                                ${p.contract_signed_at ? `<div style="font-size:12px;color:var(--color-text-muted);">Firmato il: ${Utils.formatDateTime(p.contract_signed_at)}</div>` : ''}
-                            </div>
-                            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--sp-3);padding:var(--sp-3);background:rgba(0,0,0,0.2);border-radius:6px;">
-                                ${o("Valido dal", p.contract_valid_from ? Utils.formatDate(p.contract_valid_from) : null)}
-                                ${o("Valido al", p.contract_valid_to ? Utils.formatDate(p.contract_valid_to) : null)}
-                                ${o("Compenso mensile", p.contract_monthly_fee ? '€ ' + Number(p.contract_monthly_fee).toFixed(2) : 'A titolo gratuito')}
-                            </div>
-                            <div style="display:flex;gap:var(--sp-2);margin-top:var(--sp-3);">
-                                ${p.contract_status === 'firmato' && p.contract_signed_pdf_path ? `<a href="api/router.php?module=staff&action=downloadContract&id=${p.id}" target="_blank" class="btn btn-default btn-sm"><i class="ph ph-download"></i> SCARICA FIRMATO</a>` : ''}
-                                ${p.contract_status === 'inviato' && f ? `<button class="btn btn-default btn-sm" id="check-contract-btn" data-id="${p.id}"><i class="ph ph-arrows-clockwise"></i> VERIFICA STATO</button>` : ''}
-                            </div>
-                            `}
-                        </div>
-                    </div>
+          <!-- TAB: DOCUMENTI -->
+          <div id="stab-panel-documenti" class="athlete-tab-panel" style="display:none;flex-direction:column;gap:var(--sp-4);padding:0 var(--sp-4);">
+              <div>
+                  <p class="section-label">Dati Documenti</p>
+                  <div class="card" style="padding:var(--sp-3);">
+                      <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3);">
+                          ${o("Codice Fiscale", p.fiscal_code)}
+                          ${o("Documento d'Identità", p.identity_document)}
+                          ${o("Scadenza Cert. Medico", p.medical_cert_expires_at ? Utils.formatDate(p.medical_cert_expires_at) : null, b ? "var(--color-pink)" : null)}
+                      </div>
+                  </div>
+              </div>
+              <div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                      <p class="section-label" style="margin-bottom:0;">Contratto di Collaborazione</p>
+                      ${f && p.email ? `<button class="btn btn-primary btn-sm" id="generate-contract-btn" style="font-size:11px;padding:4px 10px;">+ NUOVO</button>` : (!p.email ? '<span style="font-size:11px;color:var(--color-pink);">Email mancante per contratto</span>' : '')}
+                  </div>
+                  <div class="card" style="padding:var(--sp-3);">
+                      ${!p.contract_status ? Utils.emptyState("Nessun contratto attivo", "Genera un nuovo contratto per questo membro.") : `
+                      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                          <div><span style="font-size:12px;color:var(--color-text-muted);">Stato:</span> <strong style="color:${p.contract_status === 'firmato' ? 'var(--color-success)' : p.contract_status === 'inviato' ? 'var(--color-info)' : 'var(--color-white)'};text-transform:uppercase;font-size:12px;letter-spacing:1px;">${p.contract_status}</strong></div>
+                          ${p.contract_signed_at ? `<div style="font-size:12px;color:var(--color-text-muted);">Firmato il: ${Utils.formatDateTime(p.contract_signed_at)}</div>` : ''}
+                      </div>
+                      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--sp-3);padding:var(--sp-3);background:rgba(0,0,0,0.2);border-radius:6px;">
+                          ${o("Valido dal", p.contract_valid_from ? Utils.formatDate(p.contract_valid_from) : null)}
+                          ${o("Valido al", p.contract_valid_to ? Utils.formatDate(p.contract_valid_to) : null)}
+                          ${o("Compenso mensile", p.contract_monthly_fee ? '€ ' + Number(p.contract_monthly_fee).toFixed(2) : 'A titolo gratuito')}
+                      </div>
+                      <div style="display:flex;gap:var(--sp-2);margin-top:var(--sp-3);">
+                          ${p.contract_status === 'firmato' && p.contract_signed_pdf_path ? `<a href="api/router.php?module=staff&action=downloadContract&id=${p.id}" target="_blank" class="btn btn-default btn-sm"><i class="ph ph-download"></i> SCARICA FIRMATO</a>` : ''}
+                          ${p.contract_status === 'inviato' && f ? `<button class="btn btn-default btn-sm" id="check-contract-btn" data-id="${p.id}"><i class="ph ph-arrows-clockwise"></i> VERIFICA STATO</button>` : ''}
+                      </div>
+                      `}
+                  </div>
+              </div>
 
-                    <!-- ALLEGATI -->
-                    <div>
-                        <p class="section-label">Allegati</p>
-                        <div style="display:flex;flex-direction:column;gap:var(--sp-3);">
+              <!-- ALLEGATI -->
+              <div>
+                  <p class="section-label">Allegati</p>
+                  <div style="display:flex;flex-direction:column;gap:var(--sp-3);">
 
-                            <!-- Contratto (file) -->
-                            <div class="card" style="padding:var(--sp-3);">
-                                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);">
-                                    <div style="display:flex;align-items:center;gap:10px;">
-                                        <i class="ph ph-file-pdf" style="font-size:24px;color:var(--color-pink);flex-shrink:0;"></i>
-                                        <div>
-                                            <div style="font-size:13px;font-weight:600;">Contratto (allegato)</div>
-                                            <div style="font-size:11px;color:var(--color-text-muted);">${p.contract_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(p.contract_file_path.split('/').pop()) : 'Nessun file caricato'}</div>
-                                        </div>
-                                    </div>
-                                    <div style="display:flex;gap:var(--sp-2);align-items:center;">
-                                        ${p.contract_file_path ? `<a href="api/router.php?module=staff&action=downloadDoc&field=contract_file_path&id=${p.id}" target="_blank" class="btn btn-default btn-sm"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ''}
-                                        <button class="btn btn-primary btn-sm" id="upload-contract-file-btn" type="button"><i class="ph ph-upload-simple"></i> Carica</button>
-                                        <input type="file" id="upload-contract-file-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">
-                                    </div>
-                                </div>
-                            </div>
+                      <!-- Contratto (file) -->
+                      <div class="card" style="padding:var(--sp-3);">
+                          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);">
+                              <div style="display:flex;align-items:center;gap:10px;">
+                                  <i class="ph ph-file-pdf" style="font-size:24px;color:var(--color-pink);flex-shrink:0;"></i>
+                                  <div>
+                                      <div style="font-size:13px;font-weight:600;">Contratto (allegato)</div>
+                                      <div style="font-size:11px;color:var(--color-text-muted);">${p.contract_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(p.contract_file_path.split('/').pop()) : 'Nessun file caricato'}</div>
+                                  </div>
+                              </div>
+                              <div style="display:flex;gap:var(--sp-2);align-items:center;">
+                                  ${p.contract_file_path ? `<a href="api/router.php?module=staff&action=downloadDoc&field=contract_file_path&id=${p.id}" target="_blank" class="btn btn-default btn-sm"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ''}
+                                  <button class="btn btn-primary btn-sm" id="upload-contract-file-btn" type="button"><i class="ph ph-upload-simple"></i> Carica</button>
+                                  <input type="file" id="upload-contract-file-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">
+                              </div>
+                          </div>
+                      </div>
 
-                            <!-- Documento d'Identità Fronte / Retro -->
-                            <div class="card" style="padding:var(--sp-3); margin-bottom:var(--sp-3);">
-                                <div style="font-size:13px;font-weight:600;margin-bottom:10px;border-bottom:1px solid var(--color-border);padding-bottom:5px;">Carta d'Identità</div>
-                                <!-- Fronte -->
-                                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);margin-bottom:10px;">
-                                    <div style="display:flex;align-items:center;gap:10px;">
-                                        <i class="ph ph-identification-badge" style="font-size:24px;color:var(--color-info);flex-shrink:0;"></i>
-                                        <div>
-                                            <div style="font-size:12px;font-weight:600;">CI Fronte</div>
-                                            <div style="font-size:11px;color:var(--color-text-muted);">${p.id_doc_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(p.id_doc_file_path.split('/').pop()) : 'Nessun file caricato'}</div>
-                                        </div>
-                                    </div>
-                                    <div style="display:flex;gap:var(--sp-2);align-items:center;">
-                                        ${p.id_doc_file_path ? `<a href="api/router.php?module=staff&action=downloadDoc&field=id_doc_file_path&id=${p.id}" target="_blank" class="btn btn-default btn-sm"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ''}
-                                        <button class="btn btn-primary btn-sm" id="upload-id-doc-btn" type="button"><i class="ph ph-upload-simple"></i> Carica</button>
-                                        <input type="file" id="upload-id-doc-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">
-                                    </div>
-                                </div>
-                                <!-- Retro -->
-                                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);">
-                                    <div style="display:flex;align-items:center;gap:10px;">
-                                        <i class="ph ph-identification-badge" style="font-size:24px;color:var(--color-info);flex-shrink:0;"></i>
-                                        <div>
-                                            <div style="font-size:12px;font-weight:600;">CI Retro</div>
-                                            <div style="font-size:11px;color:var(--color-text-muted);">${p.id_doc_back_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(p.id_doc_back_file_path.split('/').pop()) : 'Nessun file caricato'}</div>
-                                        </div>
-                                    </div>
-                                    <div style="display:flex;gap:var(--sp-2);align-items:center;">
-                                        ${p.id_doc_back_file_path ? `<a href="api/router.php?module=staff&action=downloadDoc&field=id_doc_back_file_path&id=${p.id}" target="_blank" class="btn btn-default btn-sm"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ''}
-                                        <button class="btn btn-primary btn-sm" id="upload-id-doc-back-btn" type="button"><i class="ph ph-upload-simple"></i> Carica</button>
-                                        <input type="file" id="upload-id-doc-back-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">
-                                    </div>
-                                </div>
-                            </div>
+                      <!-- Documento d'Identità Fronte / Retro -->
+                      <div class="card" style="padding:var(--sp-3); margin-bottom:var(--sp-3);">
+                          <div style="font-size:13px;font-weight:600;margin-bottom:10px;border-bottom:1px solid var(--color-border);padding-bottom:5px;">Carta d'Identità</div>
+                          <!-- Fronte -->
+                          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);margin-bottom:10px;">
+                              <div style="display:flex;align-items:center;gap:10px;">
+                                  <i class="ph ph-identification-badge" style="font-size:24px;color:var(--color-info);flex-shrink:0;"></i>
+                                  <div>
+                                      <div style="font-size:12px;font-weight:600;">CI Fronte</div>
+                                      <div style="font-size:11px;color:var(--color-text-muted);">${p.id_doc_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(p.id_doc_file_path.split('/').pop()) : 'Nessun file caricato'}</div>
+                                  </div>
+                              </div>
+                              <div style="display:flex;gap:var(--sp-2);align-items:center;">
+                                  ${p.id_doc_file_path ? `<a href="api/router.php?module=staff&action=downloadDoc&field=id_doc_file_path&id=${p.id}" target="_blank" class="btn btn-default btn-sm"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ''}
+                                  <button class="btn btn-primary btn-sm" id="upload-id-doc-btn" type="button"><i class="ph ph-upload-simple"></i> Carica</button>
+                                  <input type="file" id="upload-id-doc-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">
+                              </div>
+                          </div>
+                          <!-- Retro -->
+                          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);">
+                              <div style="display:flex;align-items:center;gap:10px;">
+                                  <i class="ph ph-identification-badge" style="font-size:24px;color:var(--color-info);flex-shrink:0;"></i>
+                                  <div>
+                                      <div style="font-size:12px;font-weight:600;">CI Retro</div>
+                                      <div style="font-size:11px;color:var(--color-text-muted);">${p.id_doc_back_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(p.id_doc_back_file_path.split('/').pop()) : 'Nessun file caricato'}</div>
+                                  </div>
+                              </div>
+                              <div style="display:flex;gap:var(--sp-2);align-items:center;">
+                                  ${p.id_doc_back_file_path ? `<a href="api/router.php?module=staff&action=downloadDoc&field=id_doc_back_file_path&id=${p.id}" target="_blank" class="btn btn-default btn-sm"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ''}
+                                  <button class="btn btn-primary btn-sm" id="upload-id-doc-back-btn" type="button"><i class="ph ph-upload-simple"></i> Carica</button>
+                                  <input type="file" id="upload-id-doc-back-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">
+                              </div>
+                          </div>
+                      </div>
 
-                            <!-- Codice Fiscale Fronte / Retro -->
-                            <div class="card" style="padding:var(--sp-3);">
-                                <div style="font-size:13px;font-weight:600;margin-bottom:10px;border-bottom:1px solid var(--color-border);padding-bottom:5px;">Codice Fiscale</div>
-                                <!-- Fronte -->
-                                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);margin-bottom:10px;">
-                                    <div style="display:flex;align-items:center;gap:10px;">
-                                        <i class="ph ph-credit-card" style="font-size:24px;color:var(--color-success);flex-shrink:0;"></i>
-                                        <div>
-                                            <div style="font-size:12px;font-weight:600;">CF Fronte</div>
-                                            <div style="font-size:11px;color:var(--color-text-muted);">${p.cf_doc_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(p.cf_doc_file_path.split('/').pop()) : 'Nessun file caricato'}</div>
-                                        </div>
-                                    </div>
-                                    <div style="display:flex;gap:var(--sp-2);align-items:center;">
-                                        ${p.cf_doc_file_path ? `<a href="api/router.php?module=staff&action=downloadDoc&field=cf_doc_file_path&id=${p.id}" target="_blank" class="btn btn-default btn-sm"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ''}
-                                        <button class="btn btn-primary btn-sm" id="upload-cf-doc-btn" type="button"><i class="ph ph-upload-simple"></i> Carica</button>
-                                        <input type="file" id="upload-cf-doc-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">
-                                    </div>
-                                </div>
-                                <!-- Retro -->
-                                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);">
-                                    <div style="display:flex;align-items:center;gap:10px;">
-                                        <i class="ph ph-credit-card" style="font-size:24px;color:var(--color-success);flex-shrink:0;"></i>
-                                        <div>
-                                            <div style="font-size:12px;font-weight:600;">CF Retro</div>
-                                            <div style="font-size:11px;color:var(--color-text-muted);">${p.cf_doc_back_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(p.cf_doc_back_file_path.split('/').pop()) : 'Nessun file caricato'}</div>
-                                        </div>
-                                    </div>
-                                    <div style="display:flex;gap:var(--sp-2);align-items:center;">
-                                        ${p.cf_doc_back_file_path ? `<a href="api/router.php?module=staff&action=downloadDoc&field=cf_doc_back_file_path&id=${p.id}" target="_blank" class="btn btn-default btn-sm"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ''}
-                                        <button class="btn btn-primary btn-sm" id="upload-cf-doc-back-btn" type="button"><i class="ph ph-upload-simple"></i> Carica</button>
-                                        <input type="file" id="upload-cf-doc-back-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">
-                                    </div>
-                                </div>
-                            </div>
+                      <!-- Codice Fiscale Fronte / Retro -->
+                      <div class="card" style="padding:var(--sp-3);">
+                          <div style="font-size:13px;font-weight:600;margin-bottom:10px;border-bottom:1px solid var(--color-border);padding-bottom:5px;">Codice Fiscale</div>
+                          <!-- Fronte -->
+                          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);margin-bottom:10px;">
+                              <div style="display:flex;align-items:center;gap:10px;">
+                                  <i class="ph ph-credit-card" style="font-size:24px;color:var(--color-success);flex-shrink:0;"></i>
+                                  <div>
+                                      <div style="font-size:12px;font-weight:600;">CF Fronte</div>
+                                      <div style="font-size:11px;color:var(--color-text-muted);">${p.cf_doc_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(p.cf_doc_file_path.split('/').pop()) : 'Nessun file caricato'}</div>
+                                  </div>
+                              </div>
+                              <div style="display:flex;gap:var(--sp-2);align-items:center;">
+                                  ${p.cf_doc_file_path ? `<a href="api/router.php?module=staff&action=downloadDoc&field=cf_doc_file_path&id=${p.id}" target="_blank" class="btn btn-default btn-sm"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ''}
+                                  <button class="btn btn-primary btn-sm" id="upload-cf-doc-btn" type="button"><i class="ph ph-upload-simple"></i> Carica</button>
+                                  <input type="file" id="upload-cf-doc-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">
+                              </div>
+                          </div>
+                          <!-- Retro -->
+                          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);">
+                              <div style="display:flex;align-items:center;gap:10px;">
+                                  <i class="ph ph-credit-card" style="font-size:24px;color:var(--color-success);flex-shrink:0;"></i>
+                                  <div>
+                                      <div style="font-size:12px;font-weight:600;">CF Retro</div>
+                                      <div style="font-size:11px;color:var(--color-text-muted);">${p.cf_doc_back_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(p.cf_doc_back_file_path.split('/').pop()) : 'Nessun file caricato'}</div>
+                                  </div>
+                              </div>
+                              <div style="display:flex;gap:var(--sp-2);align-items:center;">
+                                  ${p.cf_doc_back_file_path ? `<a href="api/router.php?module=staff&action=downloadDoc&field=cf_doc_back_file_path&id=${p.id}" target="_blank" class="btn btn-default btn-sm"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ''}
+                                  <button class="btn btn-primary btn-sm" id="upload-cf-doc-back-btn" type="button"><i class="ph ph-upload-simple"></i> Carica</button>
+                                  <input type="file" id="upload-cf-doc-back-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">
+                              </div>
+                          </div>
+                      </div>
 
-                        </div>
-                    </div>
-                </div>
+                  </div>
+              </div>
+          </div>
+        </div>
             `),
         document.querySelectorAll("[data-stab]").forEach((t) => {
           t.addEventListener(
