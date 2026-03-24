@@ -199,7 +199,7 @@ class WebsiteController
         $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
         $filename = uniqid('news_cover_') . '.' . $ext;
 
-        $uploadDir = dirname(__DIR__, 4) . '/uploads/website/';
+        $uploadDir = dirname(__DIR__, 3) . '/uploads/website/';
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0755, true);
         }
