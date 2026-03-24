@@ -88,6 +88,7 @@ const Website = (() => {
             try {
               (await Store.api("deleteNews", "website", { id: e.id }),
                 UI.toast("Articolo eliminato", "success"),
+                Store.invalidate("website/newsList"),
                 s.close(),
                 await n());
             } catch (e) {
@@ -127,6 +128,7 @@ const Website = (() => {
               UI.toast("Articolo aggiornato!", "success"))
             : (await Store.api("createNews", "website", t),
               UI.toast("Articolo creato!", "success")),
+            Store.invalidate("website/newsList"),
             s.close(),
             await n());
         } catch (e) {
