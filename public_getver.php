@@ -12,7 +12,7 @@ $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->load();
 
 try {
-    $db = Database::getInstance()->getConnection();
+    $db = Database::getInstance();
     
     $stmt = $db->prepare('SELECT * FROM outseason_verifications WHERE season_key = "2026"');
     $stmt->execute();
