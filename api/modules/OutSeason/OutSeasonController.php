@@ -471,14 +471,14 @@ PROMPT;
                 (:season_key, :name, :found, :confidence, :tx_date,
                  :tx_amount, :tx_desc, :notes, :verified_by)
             ON DUPLICATE KEY UPDATE
-                found                   = VALUES(found),
-                confidence              = VALUES(confidence),
-                transaction_date        = VALUES(transaction_date),
-                transaction_amount      = VALUES(transaction_amount),
-                transaction_description = VALUES(transaction_description),
-                notes                   = VALUES(notes),
-                verified_by             = VALUES(verified_by),
-                verified_at             = CURRENT_TIMESTAMP
+                confidence              = IF(VALUES(found) = 1 OR found = 0, VALUES(confidence), confidence),
+                transaction_date        = IF(VALUES(found) = 1 OR found = 0, VALUES(transaction_date), transaction_date),
+                transaction_amount      = IF(VALUES(found) = 1 OR found = 0, VALUES(transaction_amount), transaction_amount),
+                transaction_description = IF(VALUES(found) = 1 OR found = 0, VALUES(transaction_description), transaction_description),
+                notes                   = IF(VALUES(found) = 1 OR found = 0, VALUES(notes), notes),
+                verified_by             = IF(VALUES(found) = 1 OR found = 0, VALUES(verified_by), verified_by),
+                verified_at             = IF(VALUES(found) = 1 OR found = 0, CURRENT_TIMESTAMP, verified_at),
+                found                   = GREATEST(found, VALUES(found))
         ";
 
         $stmt = $pdo->prepare($sql);
