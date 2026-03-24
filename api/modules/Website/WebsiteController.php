@@ -96,6 +96,18 @@ class WebsiteController
         $tenantId = TenantContext::id();
         $dbTenantId = $tenantId === 'TNT_default' ? null : (is_numeric($tenantId) ? (int)$tenantId : $tenantId);
 
+        $excerpt = $body['excerpt'] ?? null;
+        $contentHtml = $body['content_html'] ?? null;
+
+        if (empty(trim((string)$excerpt)) && !empty(trim((string)$contentHtml))) {
+            $plainText = strip_tags($contentHtml);
+            // Decode HTML entities so we count literal characters, then limit to 150
+            $plainText = html_entity_decode($plainText, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            // Remove excessive whitespace
+            $plainText = preg_replace('/\s+/', ' ', $plainText);
+            $excerpt = mb_strlen(trim($plainText)) > 150 ? mb_substr(trim($plainText), 0, 150) . '...' : trim($plainText);
+        }
+
         $data = [
             ':tenant_id' => $dbTenantId,
             ':author_id' => $_SESSION['user_id'] ?? null,
@@ -103,8 +115,8 @@ class WebsiteController
             ':title' => trim($body['title']),
             ':slug' => preg_replace('/[^a-z0-9\-]/', '', strtolower(trim($body['slug']))),
             ':cover_image_url' => $body['cover_image_url'] ?? null,
-            ':excerpt' => $body['excerpt'] ?? null,
-            ':content_html' => $body['content_html'] ?? null,
+            ':excerpt' => $excerpt,
+            ':content_html' => $contentHtml,
             ':is_published' => isset($body['is_published']) ? (int)$body['is_published'] : 0,
             ':published_at' => $body['published_at'] ?? null,
         ];
@@ -130,14 +142,24 @@ class WebsiteController
 
         $id = (int)$body['id'];
 
+        $excerpt = $body['excerpt'] ?? null;
+        $contentHtml = $body['content_html'] ?? null;
+
+        if (empty(trim((string)$excerpt)) && !empty(trim((string)$contentHtml))) {
+            $plainText = strip_tags($contentHtml);
+            $plainText = html_entity_decode($plainText, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            $plainText = preg_replace('/\s+/', ' ', $plainText);
+            $excerpt = mb_strlen(trim($plainText)) > 150 ? mb_substr(trim($plainText), 0, 150) . '...' : trim($plainText);
+        }
+
         // Optional fields check
         $data = [
             ':category_id' => $body['category_id'],
             ':title' => trim($body['title']),
             ':slug' => preg_replace('/[^a-z0-9\-]/', '', strtolower(trim($body['slug']))),
             ':cover_image_url' => $body['cover_image_url'] ?? null,
-            ':excerpt' => $body['excerpt'] ?? null,
-            ':content_html' => $body['content_html'] ?? null,
+            ':excerpt' => $excerpt,
+            ':content_html' => $contentHtml,
             ':is_published' => isset($body['is_published']) ? (int)$body['is_published'] : 0,
             ':published_at' => $body['published_at'] ?? null,
         ];
