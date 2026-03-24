@@ -1,6 +1,9 @@
 <?php
-require_once __DIR__ . '/api/vendor/autoload.php';
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/api');
+error_reporting(E_ALL);
+ini_set('display_errors', '1');
+
+require_once __DIR__ . '/vendor/autoload.php';
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->safeLoad();
 require_once __DIR__ . '/api/Shared/Database.php';
 
@@ -27,5 +30,6 @@ try {
     $pdo->exec($sql);
     echo "Migration outseason_verifications applied successfully!";
 } catch(Exception $e) {
+    http_response_code(500);
     echo "Error applying migration: " . $e->getMessage();
 }
