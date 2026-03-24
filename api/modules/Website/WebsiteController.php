@@ -116,7 +116,7 @@ class WebsiteController
             if ($e->getCode() === '23000') { // Integrity constraint violation (e.g. unique slug)
                 Response::error('Lo slug fornito è già in uso. Scegline uno diverso.', 409);
             }
-            Response::error('Errore durante il salvataggio.', 500);
+            Response::error('Errore durante il salvataggio: ' . $e->getMessage(), 500);
         }
     }
 
@@ -154,7 +154,7 @@ class WebsiteController
             if ($e->getCode() === '23000') {
                 Response::error('Lo slug fornito è già in uso. Scegline uno diverso.', 409);
             }
-            Response::error('Errore durante il salvataggio.', 500);
+            Response::error('Errore durante il salvataggio: ' . $e->getMessage(), 500);
         }
     }
 
