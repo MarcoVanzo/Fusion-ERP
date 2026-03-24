@@ -652,6 +652,6 @@ PROMPT;
     public function getPublicTeamAthletes(): void
     {
         $teamId = filter_input(INPUT_GET, 'teamId', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
-        Response::success($this->repo->listAthletesLight($teamId));
+        Response::success($this->repo->listPublicAthletes($teamId));
     }
 }

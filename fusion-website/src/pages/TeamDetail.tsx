@@ -161,9 +161,10 @@ const TeamDetail = () => {
     const { slug } = useParams<{ slug: string }>();
     const location = useLocation();
     const stateTeamId = location.state?.teamId;
+    const stateTeamName = location.state?.teamName;
     const [athletes, setAthletes] = useState<Athlete[]>([]);
     const [staff, setStaff] = useState<Staff[]>([]);
-    const [teamName, setTeamName] = useState('ROSTER UFFICIALE');
+    const [teamName, setTeamName] = useState(stateTeamName || 'ROSTER UFFICIALE');
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -174,7 +175,7 @@ const TeamDetail = () => {
                 let targetTeamId = stateTeamId;
 
                 // Fetch Teams for the header name
-                const teamRes = await fetch('/ERP/api/router.php?module=athletes&action=teams');
+                const teamRes = await fetch('/ERP/api/router.php?module=athletes&action=getPublicTeams');
                 const teamData = await teamRes.json();
                 if (teamData.status === 'success' || teamData.success === true) {
                     if (!targetTeamId) {

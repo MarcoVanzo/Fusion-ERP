@@ -378,6 +378,38 @@ class AthletesRepository
         return $stmt->fetchAll();
     }
 
+    // ─── PUBLIC WEBSITE ATHLETES ─────────────────────────────────────────────
+    /**
+     * Returns ONLY public-safe athlete fields for the website roster page.
+     * Does NOT include document paths or internal admin fields.
+     */
+    public function listPublicAthletes(string $teamSeasonId = ''): array
+    {
+        $sql = 'SELECT DISTINCT a.id, a.full_name, a.first_name, a.last_name,
+                       a.jersey_number, a.role, a.photo_path,
+                       a.height_cm, a.weight_kg
+                FROM athletes a';
+
+        $params = [];
+        if ($teamSeasonId !== '') {
+            if (str_starts_with($teamSeasonId, 'TEAM_')) {
+                $sql .= ' WHERE a.deleted_at IS NULL AND a.is_active = 1 AND a.team_id = :team_id';
+                $params[':team_id'] = $teamSeasonId;
+            } else {
+                $sql .= ' JOIN athlete_teams at2 ON a.id = at2.athlete_id';
+                $sql .= ' WHERE a.deleted_at IS NULL AND a.is_active = 1 AND at2.team_season_id = :team_season_id';
+                $params[':team_season_id'] = $teamSeasonId;
+            }
+        } else {
+            $sql .= ' WHERE a.deleted_at IS NULL AND a.is_active = 1';
+        }
+        $sql .= ' ORDER BY a.jersey_number ASC, a.full_name ASC';
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll();
+    }
+
     // ─── TEAMS ────────────────────────────────────────────────────────────────
 
     public function listTeams(): array
