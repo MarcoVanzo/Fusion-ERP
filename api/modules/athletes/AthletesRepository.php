@@ -113,8 +113,15 @@ class AthletesRepository
 
     public function getAthleteById(string $id): ?array
     {
+        // Document columns may not exist if V066 migration hasn't been applied
+        $docCols = '';
+        if ($this->_hasColumn('athletes', 'contract_file_path')) {
+            $docCols = ', a.contract_file_path, a.id_doc_front_file_path, a.id_doc_back_file_path,
+                    a.cf_doc_front_file_path, a.cf_doc_back_file_path, a.medical_cert_file_path';
+        }
+
         $stmt = $this->db->prepare(
-            'SELECT a.id, a.user_id, a.team_id, a.full_name,
+            "SELECT a.id, a.user_id, a.team_id, a.full_name,
                     a.first_name, a.last_name,
                     a.jersey_number, a.role,
                     a.birth_date, a.birth_place,
@@ -123,16 +130,14 @@ class AthletesRepository
                     a.fiscal_code, a.identity_document, a.federal_id,
                     a.email, a.phone,
                     a.parent_contact, a.parent_phone,
-                    a.medical_cert_type, a.medical_cert_expires_at,
-                    a.contract_file_path, a.id_doc_front_file_path, a.id_doc_back_file_path,
-                    a.cf_doc_front_file_path, a.cf_doc_back_file_path, a.medical_cert_file_path,
+                    a.medical_cert_type, a.medical_cert_expires_at{$docCols},
                     a.shirt_size, a.shoe_size,
                     a.is_active,
                     t.name AS team_name, t.category
              FROM athletes a
              LEFT JOIN teams t ON a.team_id = t.id
              WHERE a.id = :id AND a.deleted_at IS NULL
-             LIMIT 1'
+             LIMIT 1"
         );
         $stmt->execute([':id' => $id]);
         $row = $stmt->fetch();
