@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link, useLocation } from 'react-router-dom';
+import { useParams, Link, useLocation, useNavigate } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
 import { Seo } from '../components/Seo';
 
@@ -160,6 +160,7 @@ const StaffCard = ({ member }: { member: Staff }) => {
 const TeamDetail = () => {
     const { slug } = useParams<{ slug: string }>();
     const location = useLocation();
+    const navigate = useNavigate();
     const stateTeamId = location.state?.teamId;
     const stateTeamName = location.state?.teamName;
     const [athletes, setAthletes] = useState<Athlete[]>([]);
@@ -174,16 +175,31 @@ const TeamDetail = () => {
 
                 let targetTeamId = stateTeamId;
 
+                const generateSlug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+
                 // Fetch Teams for the header name
                 const teamRes = await fetch('/ERP/api/router.php?module=athletes&action=getPublicTeams');
                 const teamData = await teamRes.json();
                 if (teamData.status === 'success' || teamData.success === true) {
                     if (!targetTeamId) {
-                        const generateSlug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
-                        const t = teamData.data.find((t: any) => generateSlug(t.name) === slug);
+                        // Try matching by slug first (SEO-friendly URL)
+                        let t = teamData.data.find((t: any) => generateSlug(t.name) === slug);
+                        
+                        // Fallback: match by raw team_season_id (e.g. /teams/TS_03bf1a12676b50d)
+                        if (!t && slug) {
+                            t = teamData.data.find((t: any) => t.id.toString() === slug);
+                        }
+                        
                         if (t) {
                             targetTeamId = t.id.toString();
                             setTeamName(t.name);
+                            
+                            // SEO redirect: if URL uses raw ID, redirect to slug-based URL
+                            const correctSlug = generateSlug(t.name);
+                            if (slug !== correctSlug) {
+                                navigate(`/teams/${correctSlug}`, { replace: true, state: { teamId: t.id, teamName: t.name } });
+                                return;
+                            }
                         }
                     } else {
                         const t = teamData.data.find((t: any) => t.id.toString() === targetTeamId.toString());
