@@ -488,18 +488,31 @@ PROMPT;
             if (empty($r['name'])) {
                 continue;
             }
-            $stmt->execute([
-                ':season_key' => $seasonKey,
-                ':name' => $r['name'],
-                ':found' => !empty($r['found']) ? 1 : 0,
-                ':confidence' => $r['confidence'] ?? null,
-                ':tx_date' => $r['transaction_date'] ?? null,
-                ':tx_amount' => isset($r['transaction_amount']) ? (float)$r['transaction_amount'] : null,
-                ':tx_desc' => $r['transaction_description'] ?? null,
-                ':notes' => $r['notes'] ?? null,
-                ':verified_by' => $user['id'] ?? null,
-            ]);
-            $saved++;
+            
+            $conf = strtolower(trim((string)($r['confidence'] ?? '')));
+            if (!in_array($conf, ['high', 'medium', 'low'])) {
+                if ($conf === 'alta' || $conf === 'alto') $conf = 'high';
+                elseif ($conf === 'media' || $conf === 'medio') $conf = 'medium';
+                elseif ($conf === 'bassa' || $conf === 'basso') $conf = 'low';
+                else $conf = 'low';
+            }
+            
+            try {
+                $stmt->execute([
+                    ':season_key' => $seasonKey,
+                    ':name' => $r['name'],
+                    ':found' => !empty($r['found']) ? 1 : 0,
+                    ':confidence' => $conf,
+                    ':tx_date' => $r['transaction_date'] ?? null,
+                    ':tx_amount' => isset($r['transaction_amount']) ? (float)$r['transaction_amount'] : null,
+                    ':tx_desc' => $r['transaction_description'] ?? null,
+                    ':notes' => $r['notes'] ?? null,
+                    ':verified_by' => $user['id'] ?? null,
+                ]);
+                $saved++;
+            } catch (\PDOException $e) {
+                error_log("[OutSeason] Failed to save verification row for {$r['name']}: " . $e->getMessage());
+            }
         }
 
         Response::success(['saved' => $saved, 'season_key' => $seasonKey]);
