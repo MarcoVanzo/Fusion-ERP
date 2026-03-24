@@ -51,14 +51,14 @@ class WebsiteController
     {
         // NO Auth required. Used by the external website SPA
         $limit = (int)(\filter_input(INPUT_GET, 'limit', FILTER_SANITIZE_NUMBER_INT) ?? 10);
+        $path = dirname(__DIR__, 3) . '/uploads/website/';
+        $files = is_dir($path) ? array_diff(scandir($path), ['.', '..']) : [];
+
         Response::success([
             'news' => $this->repo->getNews(true, $limit),
             'debugUpload' => [
-                'dir_orig' => __DIR__,
-                'dirname_3' => dirname(__DIR__, 3),
-                'upload_path' => dirname(__DIR__, 3) . '/uploads/website/',
-                'is_dir' => is_dir(dirname(__DIR__, 3) . '/uploads/website/'),
-                'permissions' => file_exists(dirname(__DIR__, 3) . '/uploads/website/') ? substr(sprintf('%o', fileperms(dirname(__DIR__, 3) . '/uploads/website/')), -4) : null,
+                'files' => array_values($files),
+                'path' => $path
             ]
         ]);
     }
