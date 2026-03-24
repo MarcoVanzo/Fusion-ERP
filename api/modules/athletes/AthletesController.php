@@ -286,6 +286,112 @@ class AthletesController
     }
 
 
+    // ─── DOCUMENT FILE UPLOADS ────────────────────────────────────────────────
+    /**
+     * Shared helper for all 6 athlete document uploads.
+     */
+    private function uploadAthleteDocument(string $dbField): void
+    {
+        Auth::requireWrite('athletes');
+
+        $id = filter_input(INPUT_POST, 'id', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        if (empty($id)) {
+            Response::error('ID atleta mancante', 400);
+        }
+
+        $athlete = $this->repo->getAthleteById($id);
+        if (!$athlete) {
+            Response::error('Atleta non trovato', 404);
+        }
+
+        if (empty($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
+            Response::error('File non caricato o errore upload', 400);
+        }
+
+        $file = $_FILES['file'];
+        $finfo = new \finfo(FILEINFO_MIME_TYPE);
+        $mimeType = $finfo->file($file['tmp_name']);
+
+        $allowedMimes = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
+        if (!in_array($mimeType, $allowedMimes, true)) {
+            Response::error('Formato non supportato (solo PDF, JPG, PNG, WEBP)', 415);
+        }
+
+        $storagePath = dirname(__DIR__, 3) . '/storage/docs/athletes/';
+        if (!is_dir($storagePath)) {
+            mkdir($storagePath, 0755, true);
+        }
+
+        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        $safeFilename = 'athlete_' . $id . '_' . $dbField . '_' . time() . '.' . $ext;
+        $fullPath = $storagePath . $safeFilename;
+
+        if (!move_uploaded_file($file['tmp_name'], $fullPath)) {
+            Response::error('Errore salvataggio documento', 500);
+        }
+
+        $relPath = 'storage/docs/athletes/' . $safeFilename;
+
+        // Delete old file if it exists
+        $oldPath = $athlete[$dbField] ?? null;
+        if ($oldPath) {
+            $oldFullPath = dirname(__DIR__, 3) . '/' . $oldPath;
+            if (file_exists($oldFullPath)) {
+                @unlink($oldFullPath);
+            }
+        }
+
+        $this->repo->updateDocumentPath($id, $dbField, $relPath);
+        Audit::log('UPDATE', 'athletes', $id, null, [$dbField => $relPath]);
+        Response::success(['path' => $relPath, 'filename' => basename($relPath)]);
+    }
+
+    public function uploadContractFile(): void { $this->uploadAthleteDocument('contract_file_path'); }
+    public function uploadIdDocFront(): void { $this->uploadAthleteDocument('id_doc_front_file_path'); }
+    public function uploadIdDocBack(): void { $this->uploadAthleteDocument('id_doc_back_file_path'); }
+    public function uploadCfDocFront(): void { $this->uploadAthleteDocument('cf_doc_front_file_path'); }
+    public function uploadCfDocBack(): void { $this->uploadAthleteDocument('cf_doc_back_file_path'); }
+    public function uploadMedicalCert(): void { $this->uploadAthleteDocument('medical_cert_file_path'); }
+
+    /** Serve an athlete document file for inline display / download */
+    public function downloadDoc(): void
+    {
+        Auth::requireRead('athletes');
+        $id    = filter_input(INPUT_GET, 'id',    FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        $field = filter_input(INPUT_GET, 'field',  FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+
+        $allowed = [
+            'contract_file_path',
+            'id_doc_front_file_path',
+            'id_doc_back_file_path',
+            'cf_doc_front_file_path',
+            'cf_doc_back_file_path',
+            'medical_cert_file_path'
+        ];
+        if (empty($id) || !in_array($field, $allowed, true)) {
+            Response::error('Parametri non validi', 400);
+        }
+
+        $athlete = $this->repo->getAthleteById($id);
+        if (!$athlete || empty($athlete[$field])) {
+            Response::error('Documento non trovato', 404);
+        }
+
+        $fullPath = dirname(__DIR__, 3) . '/' . $athlete[$field];
+        if (!file_exists($fullPath)) {
+            Response::error('File fisico non trovato sul server', 404);
+        }
+
+        $finfo    = new \finfo(FILEINFO_MIME_TYPE);
+        $mimeType = $finfo->file($fullPath);
+        header('Content-Type: ' . $mimeType);
+        header('Content-Disposition: inline; filename="' . basename($fullPath) . '"');
+        header('Content-Length: ' . filesize($fullPath));
+        readfile($fullPath);
+        exit;
+    }
+
+
     public function logMetric(): void
     {
         Auth::requireWrite('athletes');

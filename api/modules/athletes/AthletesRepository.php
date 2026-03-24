@@ -26,7 +26,8 @@ class AthletesRepository
                        a.phone, a.email, a.fiscal_code, a.medical_cert_expires_at,
                        a.residence_address, a.residence_city, a.parent_contact, a.parent_phone,
                        COALESCE(t.name, "Nessuna squadra") AS team_name,
-                       COALESCE(t.category, "Nessuna") AS category
+                       COALESCE(t.category, "Nessuna") AS category,
+                       (SELECT GROUP_CONCAT(at_sub.team_season_id SEPARATOR ",") FROM athlete_teams at_sub WHERE at_sub.athlete_id = a.id) AS team_season_ids
                 FROM athletes a
                 LEFT JOIN teams t ON a.team_id = t.id';
 
@@ -53,7 +54,11 @@ class AthletesRepository
 
         $stmt = $this->db->prepare($sql);
         $stmt->execute($params);
-        return $stmt->fetchAll();
+        $rows = $stmt->fetchAll();
+        foreach ($rows as &$row) {
+            $row['team_season_ids'] = !empty($row['team_season_ids']) ? explode(',', $row['team_season_ids']) : [];
+        }
+        return $rows;
     }
 
     /**
@@ -65,8 +70,11 @@ class AthletesRepository
     {
         $sql = 'SELECT DISTINCT a.id, a.team_id, a.full_name, a.jersey_number, a.role, a.photo_path, a.is_active,
                        a.medical_cert_expires_at,
+                       a.contract_file_path, a.id_doc_front_file_path, a.id_doc_back_file_path,
+                       a.cf_doc_front_file_path, a.cf_doc_back_file_path, a.medical_cert_file_path,
                        COALESCE(t.name, "Nessuna squadra") AS team_name,
-                       COALESCE(t.category, "Nessuna") AS category
+                       COALESCE(t.category, "Nessuna") AS category,
+                       (SELECT GROUP_CONCAT(at_sub.team_season_id SEPARATOR ",") FROM athlete_teams at_sub WHERE at_sub.athlete_id = a.id) AS team_season_ids
                 FROM athletes a
                 LEFT JOIN teams t ON a.team_id = t.id';
 
@@ -89,7 +97,11 @@ class AthletesRepository
 
         $stmt = $this->db->prepare($sql);
         $stmt->execute($params);
-        return $stmt->fetchAll();
+        $rows = $stmt->fetchAll();
+        foreach ($rows as &$row) {
+            $row['team_season_ids'] = !empty($row['team_season_ids']) ? explode(',', $row['team_season_ids']) : [];
+        }
+        return $rows;
     }
 
 
@@ -106,6 +118,8 @@ class AthletesRepository
                     a.email, a.phone,
                     a.parent_contact, a.parent_phone,
                     a.medical_cert_type, a.medical_cert_expires_at,
+                    a.contract_file_path, a.id_doc_front_file_path, a.id_doc_back_file_path,
+                    a.cf_doc_front_file_path, a.cf_doc_back_file_path, a.medical_cert_file_path,
                     a.shirt_size, a.shoe_size,
                     a.is_active,
                     t.name AS team_name, t.category
@@ -273,6 +287,16 @@ class AthletesRepository
             'UPDATE athletes SET photo_path = :photo_path WHERE id = :id AND deleted_at IS NULL'
         );
         $stmt->execute([':photo_path' => $photoPath, ':id' => $id]);
+    }
+
+    public function updateDocumentPath(string $id, string $dbField, ?string $path): void
+    {
+        // Must ensure $dbField is dynamically injected safely or matched against allowlist in Controller
+        // Wait, PDO cannot bind column names, so we inject it safely.
+        $stmt = $this->db->prepare(
+            "UPDATE athletes SET {$dbField} = :path WHERE id = :id AND deleted_at IS NULL"
+        );
+        $stmt->execute([':path' => $path, ':id' => $id]);
     }
 
     // ─── METRICS ──────────────────────────────────────────────────────────────

@@ -117,3 +117,31 @@
   outline: none;
   filter: drop-shadow(0 0 8px rgba(255, 20, 147, 0.8));
 }
+
+/* --- WORDPRESS FIX MIGRATION: RESPONSIVE OVERLAPS & VISUAL CLEANUP --- */
+@media (max-width: 768px) {
+  /* Prevent text overflow inside buttons and cards on small viewports */
+  button, 
+  [role="button"],
+  .clip-diagonal,
+  .clip-diagonal-rev,
+  .hover-sweep {
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow: hidden !important;
+    z-index: 0;
+  }
+}
+
+@layer base {
+  /* Typography spacing (Visual Cleanup) */
+  p {
+    margin-bottom: 1.4em;
+    line-height: 1.75;
+  }
+
+  /* Remove heavy shadows globally but preserve tailored Tailwind dropshadows */
+  *, *::before, *::after {
+    box-shadow: none;
+  }
+}

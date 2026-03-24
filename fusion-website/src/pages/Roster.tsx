@@ -14,6 +14,10 @@ const Roster = () => {
     const [teams, setTeams] = useState<Team[]>([]);
     const [loading, setLoading] = useState(true);
 
+    const generateSlug = (name: string) => {
+        return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+    };
+
     useEffect(() => {
         const fetchTeams = async () => {
             try {
@@ -70,9 +74,12 @@ const Roster = () => {
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        {teams.map(team => (
+                        {teams.map(team => {
+                            const slug = generateSlug(team.name);
+                            return (
                             <Link
-                                to={`/teams/${team.id}`}
+                                to={`/teams/${slug}`}
+                                state={{ teamId: team.id, teamName: team.name }}
                                 key={team.id}
                                 className="group relative h-64 overflow-hidden bg-zinc-900 clip-diagonal-rev transition-all duration-500 hover:scale-[1.02] hover:-translate-y-2"
                             >
@@ -93,7 +100,7 @@ const Roster = () => {
                                         />
                                     ) : (
                                         <div className="absolute inset-0 z-0 bg-gradient-to-br from-zinc-900 to-brand-900/20 flex items-center justify-end opacity-80 group-hover:opacity-100 transition-opacity duration-700 pr-8">
-                                            <img src="/assets/logo-colorato.png" alt="Fusion Logo" className="max-h-40 opacity-10 drop-shadow-2xl" />
+                                            <img src="/assets/logo-colorato.png" loading="lazy" alt="Fusion Logo" className="max-h-40 opacity-10 drop-shadow-2xl" />
                                         </div>
                                     );
                                 })()}
@@ -123,7 +130,8 @@ const Roster = () => {
                                     </div>
                                 </div>
                             </Link>
-                        ))}
+                            );
+                        })}
                     </div>
                 )}
             </div>

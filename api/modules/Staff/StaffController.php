@@ -507,19 +507,28 @@ HTML;
         $this->uploadStaffDocument('id_doc_file_path');
     }
 
+    public function uploadIdDocBack(): void
+    {
+        $this->uploadStaffDocument('id_doc_back_file_path');
+    }
+
     public function uploadCfDoc(): void
     {
         $this->uploadStaffDocument('cf_doc_file_path');
     }
 
-    /** Serve a staff document file for inline display / download */
+    public function uploadCfDocBack(): void
+    {
+        $this->uploadStaffDocument('cf_doc_back_file_path');
+    }
+
     public function downloadDoc(): void
     {
         Auth::requireRole('operator');
         $id    = filter_input(INPUT_GET, 'id',    FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
         $field = filter_input(INPUT_GET, 'field',  FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
 
-        $allowed = ['contract_file_path', 'id_doc_file_path', 'cf_doc_file_path'];
+        $allowed = ['contract_file_path', 'id_doc_file_path', 'id_doc_back_file_path', 'cf_doc_file_path', 'cf_doc_back_file_path'];
         if (empty($id) || !in_array($field, $allowed, true)) {
             Response::error('Parametri non validi', 400);
         }

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useLocation } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
 import { Seo } from '../components/Seo';
 
@@ -158,7 +158,9 @@ const StaffCard = ({ member }: { member: Staff }) => {
 };
 
 const TeamDetail = () => {
-    const { id } = useParams<{ id: string }>();
+    const { slug } = useParams<{ slug: string }>();
+    const location = useLocation();
+    const stateTeamId = location.state?.teamId;
     const [athletes, setAthletes] = useState<Athlete[]>([]);
     const [staff, setStaff] = useState<Staff[]>([]);
     const [teamName, setTeamName] = useState('ROSTER UFFICIALE');
@@ -169,23 +171,39 @@ const TeamDetail = () => {
             try {
                 setLoading(true);
 
+                let targetTeamId = stateTeamId;
+
                 // Fetch Teams for the header name
                 const teamRes = await fetch('/ERP/api/router.php?module=athletes&action=teams');
                 const teamData = await teamRes.json();
                 if (teamData.status === 'success' || teamData.success === true) {
-                    const t = teamData.data.find((t: any) => t.id.toString() === id);
-                    if (t) setTeamName(t.name);
+                    if (!targetTeamId) {
+                        const generateSlug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+                        const t = teamData.data.find((t: any) => generateSlug(t.name) === slug);
+                        if (t) {
+                            targetTeamId = t.id.toString();
+                            setTeamName(t.name);
+                        }
+                    } else {
+                        const t = teamData.data.find((t: any) => t.id.toString() === targetTeamId.toString());
+                        if (t) setTeamName(t.name);
+                    }
+                }
+
+                if (!targetTeamId) {
+                    setLoading(false);
+                    return;
                 }
 
                 // Fetch Athletes
-                const rosterRes = await fetch(`/ERP/api/router.php?module=athletes&action=getPublicTeamAthletes&teamId=${id}`);
+                const rosterRes = await fetch(`/ERP/api/router.php?module=athletes&action=getPublicTeamAthletes&teamId=${targetTeamId}`);
                 const rosterData = await rosterRes.json();
                 if (rosterData.status === 'success' || rosterData.success === true) {
                     setAthletes(rosterData.data || []);
                 }
 
                 // Fetch Staff
-                const staffRes = await fetch(`/ERP/api/router.php?module=staff&action=getPublicStaff&teamId=${id}`);
+                const staffRes = await fetch(`/ERP/api/router.php?module=staff&action=getPublicStaff&teamId=${targetTeamId}`);
                 const staffData = await staffRes.json();
                 if (staffData.status === 'success' || staffData.success === true) {
                     const sortedStaff = (staffData.data || []).sort((a: any, b: any) => {
@@ -218,8 +236,8 @@ const TeamDetail = () => {
             }
         };
 
-        if (id) fetchTeamData();
-    }, [id]);
+        if (slug || stateTeamId) fetchTeamData();
+    }, [slug, stateTeamId]);
 
     if (loading) {
         return (

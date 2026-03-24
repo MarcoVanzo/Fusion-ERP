@@ -376,13 +376,15 @@ const Staff = (() => {
                                 </div>
                             </div>
 
-                            <!-- Documento d'Identità -->
-                            <div class="card" style="padding:var(--sp-3);">
-                                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);">
+                            <!-- Documento d'Identità Fronte / Retro -->
+                            <div class="card" style="padding:var(--sp-3); margin-bottom:var(--sp-3);">
+                                <div style="font-size:13px;font-weight:600;margin-bottom:10px;border-bottom:1px solid var(--color-border);padding-bottom:5px;">Carta d'Identità</div>
+                                <!-- Fronte -->
+                                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);margin-bottom:10px;">
                                     <div style="display:flex;align-items:center;gap:10px;">
                                         <i class="ph ph-identification-badge" style="font-size:24px;color:var(--color-info);flex-shrink:0;"></i>
                                         <div>
-                                            <div style="font-size:13px;font-weight:600;">Documento d'Identità</div>
+                                            <div style="font-size:12px;font-weight:600;">CI Fronte</div>
                                             <div style="font-size:11px;color:var(--color-text-muted);">${p.id_doc_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(p.id_doc_file_path.split('/').pop()) : 'Nessun file caricato'}</div>
                                         </div>
                                     </div>
@@ -392,15 +394,32 @@ const Staff = (() => {
                                         <input type="file" id="upload-id-doc-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">
                                     </div>
                                 </div>
+                                <!-- Retro -->
+                                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);">
+                                    <div style="display:flex;align-items:center;gap:10px;">
+                                        <i class="ph ph-identification-badge" style="font-size:24px;color:var(--color-info);flex-shrink:0;"></i>
+                                        <div>
+                                            <div style="font-size:12px;font-weight:600;">CI Retro</div>
+                                            <div style="font-size:11px;color:var(--color-text-muted);">${p.id_doc_back_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(p.id_doc_back_file_path.split('/').pop()) : 'Nessun file caricato'}</div>
+                                        </div>
+                                    </div>
+                                    <div style="display:flex;gap:var(--sp-2);align-items:center;">
+                                        ${p.id_doc_back_file_path ? `<a href="api/router.php?module=staff&action=downloadDoc&field=id_doc_back_file_path&id=${p.id}" target="_blank" class="btn btn-default btn-sm"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ''}
+                                        <button class="btn btn-primary btn-sm" id="upload-id-doc-back-btn" type="button"><i class="ph ph-upload-simple"></i> Carica</button>
+                                        <input type="file" id="upload-id-doc-back-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">
+                                    </div>
+                                </div>
                             </div>
 
-                            <!-- Codice Fiscale -->
+                            <!-- Codice Fiscale Fronte / Retro -->
                             <div class="card" style="padding:var(--sp-3);">
-                                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);">
+                                <div style="font-size:13px;font-weight:600;margin-bottom:10px;border-bottom:1px solid var(--color-border);padding-bottom:5px;">Codice Fiscale</div>
+                                <!-- Fronte -->
+                                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);margin-bottom:10px;">
                                     <div style="display:flex;align-items:center;gap:10px;">
                                         <i class="ph ph-credit-card" style="font-size:24px;color:var(--color-success);flex-shrink:0;"></i>
                                         <div>
-                                            <div style="font-size:13px;font-weight:600;">Codice Fiscale</div>
+                                            <div style="font-size:12px;font-weight:600;">CF Fronte</div>
                                             <div style="font-size:11px;color:var(--color-text-muted);">${p.cf_doc_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(p.cf_doc_file_path.split('/').pop()) : 'Nessun file caricato'}</div>
                                         </div>
                                     </div>
@@ -408,6 +427,21 @@ const Staff = (() => {
                                         ${p.cf_doc_file_path ? `<a href="api/router.php?module=staff&action=downloadDoc&field=cf_doc_file_path&id=${p.id}" target="_blank" class="btn btn-default btn-sm"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ''}
                                         <button class="btn btn-primary btn-sm" id="upload-cf-doc-btn" type="button"><i class="ph ph-upload-simple"></i> Carica</button>
                                         <input type="file" id="upload-cf-doc-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">
+                                    </div>
+                                </div>
+                                <!-- Retro -->
+                                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);">
+                                    <div style="display:flex;align-items:center;gap:10px;">
+                                        <i class="ph ph-credit-card" style="font-size:24px;color:var(--color-success);flex-shrink:0;"></i>
+                                        <div>
+                                            <div style="font-size:12px;font-weight:600;">CF Retro</div>
+                                            <div style="font-size:11px;color:var(--color-text-muted);">${p.cf_doc_back_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(p.cf_doc_back_file_path.split('/').pop()) : 'Nessun file caricato'}</div>
+                                        </div>
+                                    </div>
+                                    <div style="display:flex;gap:var(--sp-2);align-items:center;">
+                                        ${p.cf_doc_back_file_path ? `<a href="api/router.php?module=staff&action=downloadDoc&field=cf_doc_back_file_path&id=${p.id}" target="_blank" class="btn btn-default btn-sm"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ''}
+                                        <button class="btn btn-primary btn-sm" id="upload-cf-doc-back-btn" type="button"><i class="ph ph-upload-simple"></i> Carica</button>
+                                        <input type="file" id="upload-cf-doc-back-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">
                                     </div>
                                 </div>
                             </div>
@@ -552,7 +586,7 @@ const Staff = (() => {
         }, { signal: e.signal }),
         
         // Document Upload Handlers
-        ["contract-file", "id-doc", "cf-doc"].forEach(type => {
+        ["contract-file", "id-doc", "id-doc-back", "cf-doc", "cf-doc-back"].forEach(type => {
             const btn = document.getElementById(`upload-${type}-btn`);
             const input = document.getElementById(`upload-${type}-input`);
             if (btn && input) {
@@ -568,7 +602,9 @@ const Staff = (() => {
                     let action = '';
                     if (type === 'contract-file') action = 'uploadContractFile';
                     else if (type === 'id-doc') action = 'uploadIdDoc';
+                    else if (type === 'id-doc-back') action = 'uploadIdDocBack';
                     else if (type === 'cf-doc') action = 'uploadCfDoc';
+                    else if (type === 'cf-doc-back') action = 'uploadCfDocBack';
 
                     UI.toast('Caricamento documento...', 'info');
                     try {
