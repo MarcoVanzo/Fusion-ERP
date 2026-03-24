@@ -51,23 +51,7 @@ class WebsiteController
     {
         // NO Auth required. Used by the external website SPA
         $limit = (int)(\filter_input(INPUT_GET, 'limit', FILTER_SANITIZE_NUMBER_INT) ?? 10);
-        
-        $oldPath = dirname(__DIR__, 4) . '/uploads/website/';
-        $newPath = dirname(__DIR__, 3) . '/uploads/website/';
-        $moved = [];
-        if (is_dir($oldPath)) {
-            $files = array_diff(scandir($oldPath), ['.', '..']);
-            foreach ($files as $f) {
-                if (rename($oldPath . $f, $newPath . $f)) {
-                    $moved[] = $f;
-                }
-            }
-        }
-
-        Response::success([
-            'news' => $this->repo->getNews(true, $limit),
-            'moved_files' => $moved
-        ]);
+        Response::success($this->repo->getNews(true, $limit));
     }
 
     // ─── GET /api/?module=website&action=getArticle&id_or_slug=... ──────────
@@ -195,16 +179,7 @@ class WebsiteController
         Response::success(['message' => 'Articolo eliminato con successo']);
     }
 
-    public function debugUpload(): void
-    {
-        Response::success([
-            'dir_orig' => __DIR__,
-            'dirname_3' => dirname(__DIR__, 3),
-            'upload_path' => dirname(__DIR__, 3) . '/uploads/website/',
-            'is_dir' => is_dir(dirname(__DIR__, 3) . '/uploads/website/'),
-            'permissions' => file_exists(dirname(__DIR__, 3) . '/uploads/website/') ? substr(sprintf('%o', fileperms(dirname(__DIR__, 3) . '/uploads/website/')), -4) : null,
-        ]);
-    }
+
 
     // ─── POST /api/?module=website&action=uploadImage ───────────────────────
     public function uploadImage(): void
