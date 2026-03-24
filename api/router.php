@@ -167,7 +167,7 @@ function dispatchWebhook(string $action): void
 function dispatch(string $controllerName, string $action): void
 {
     // FIX: Auth middleware globale. Richiede login per TUTTE le action tranne quelle esplicitamente pubbliche.
-    $publicActions = ['login', 'forgotPassword', 'resetPassword', 'getPublicTeams', 'getPublicTeamAthletes', 'getPublicSponsors', 'getPublicProfile', 'getPublicForesteria', 'getPublicCollaborations', 'getPublicHubConfig', 'getPublicNews', 'getPublicShop', 'getProductImage', 'getPublicMatchCenter', 'getPublicStaff', 'getPublicRecentResults', 'subscribeNewsletter', 'teams'];
+    $publicActions = ['login', 'forgotPassword', 'resetPassword', 'getPublicTeams', 'getPublicTeamAthletes', 'getPublicSponsors', 'getPublicProfile', 'getPublicForesteria', 'getPublicCollaborations', 'getPublicHubConfig', 'getPublicNews', 'getArticle', 'getSitemapUrls', 'getPublicShop', 'getProductImage', 'getPublicMatchCenter', 'getPublicStaff', 'getPublicRecentResults', 'subscribeNewsletter', 'teams'];
     if (!in_array($action, $publicActions, true)) {
         Auth::requireAuth();
     }

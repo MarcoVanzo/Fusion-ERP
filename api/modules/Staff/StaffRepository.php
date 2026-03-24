@@ -204,7 +204,7 @@ class StaffRepository
     public function updateDocumentPath(string $id, string $field, ?string $path): void
     {
         // Allowlist the column name to prevent SQL injection
-        $allowed = ['contract_file_path', 'id_doc_file_path', 'cf_doc_file_path'];
+        $allowed = ['contract_file_path', 'id_doc_file_path', 'id_doc_back_file_path', 'cf_doc_file_path', 'cf_doc_back_file_path'];
         if (!in_array($field, $allowed, true)) {
             throw new \InvalidArgumentException("Campo documento non valido: $field");
         }

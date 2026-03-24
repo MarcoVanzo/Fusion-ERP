@@ -26,17 +26,17 @@ class OutSeasonController
     // Defaults are kept as fallback so the system works without .env changes.
     private static function cognitoFormId(): int
     {
-        return (int)(getenv('COGNITO_FORM_ID') ?: 20);
+        return (int)(($_ENV['COGNITO_FORM_ID'] ?? getenv('COGNITO_FORM_ID')) ?: 20);
     }
 
     private static function cognitoViewId(): int
     {
-        return (int)(getenv('COGNITO_VIEW_ID') ?: 1);
+        return (int)(($_ENV['COGNITO_VIEW_ID'] ?? getenv('COGNITO_VIEW_ID')) ?: 1);
     }
 
     private static function seasonKey(): string
     {
-        return trim((string)(getenv('OUTSEASON_SEASON_KEY') ?: '2026'));
+        return trim((string)(($_ENV['OUTSEASON_SEASON_KEY'] ?? getenv('OUTSEASON_SEASON_KEY')) ?: '2026'));
     }
 
     /* ─────────────────────────────────────────────────────────────────────
@@ -102,7 +102,7 @@ class OutSeasonController
      * ───────────────────────────────────────────────────────────────────── */
     public static function _doSync(string $seasonKey): array
     {
-        $apiKey = getenv('COGNITO_API_KEY');
+        $apiKey = $_ENV['COGNITO_API_KEY'] ?? getenv('COGNITO_API_KEY');
         if (empty($apiKey)) {
             return ['success' => false, 'error' => 'COGNITO_API_KEY non configurata.'];
         }
@@ -274,7 +274,7 @@ class OutSeasonController
         }
 
         // ── Gemini API key check ─────────────────────────────────────────
-        $apiKey = getenv('GEMINI_API_KEY');
+        $apiKey = $_ENV['GEMINI_API_KEY'] ?? getenv('GEMINI_API_KEY');
         if (empty($apiKey) || $apiKey === 'YOUR_GEMINI_API_KEY_HERE') {
             Response::error('GEMINI_API_KEY non configurata.', 500);
         }
@@ -283,8 +283,8 @@ class OutSeasonController
         // ── Determine amount per formula ──────────────────────────────────────────────────
         // Prices are read from env vars to avoid hard-coding financial values.
         // OUTSEASON_PRICE_FULL and OUTSEASON_PRICE_PARTIAL can be set in .env.
-        $priceFull = (int)(getenv('OUTSEASON_PRICE_FULL') ?: 250);
-        $pricePartial = (int)(getenv('OUTSEASON_PRICE_PARTIAL') ?: 150);
+        $priceFull = (int)(($_ENV['OUTSEASON_PRICE_FULL'] ?? getenv('OUTSEASON_PRICE_FULL')) ?: 250);
+        $pricePartial = (int)(($_ENV['OUTSEASON_PRICE_PARTIAL'] ?? getenv('OUTSEASON_PRICE_PARTIAL')) ?: 150);
 
         $entriesText = '';
         $bonificoList = [];
@@ -471,14 +471,14 @@ PROMPT;
                 (:season_key, :name, :found, :confidence, :tx_date,
                  :tx_amount, :tx_desc, :notes, :verified_by)
             ON DUPLICATE KEY UPDATE
-                found                   = VALUES(found),
-                confidence              = VALUES(confidence),
-                transaction_date        = VALUES(transaction_date),
-                transaction_amount      = VALUES(transaction_amount),
-                transaction_description = VALUES(transaction_description),
-                notes                   = VALUES(notes),
-                verified_by             = VALUES(verified_by),
-                verified_at             = CURRENT_TIMESTAMP
+                confidence              = IF(VALUES(found) = 1 OR found = 0, VALUES(confidence), confidence),
+                transaction_date        = IF(VALUES(found) = 1 OR found = 0, VALUES(transaction_date), transaction_date),
+                transaction_amount      = IF(VALUES(found) = 1 OR found = 0, VALUES(transaction_amount), transaction_amount),
+                transaction_description = IF(VALUES(found) = 1 OR found = 0, VALUES(transaction_description), transaction_description),
+                notes                   = IF(VALUES(found) = 1 OR found = 0, VALUES(notes), notes),
+                verified_by             = IF(VALUES(found) = 1 OR found = 0, VALUES(verified_by), verified_by),
+                verified_at             = IF(VALUES(found) = 1 OR found = 0, CURRENT_TIMESTAMP, verified_at),
+                found                   = GREATEST(found, VALUES(found))
         ";
 
         $stmt = $pdo->prepare($sql);
@@ -488,18 +488,31 @@ PROMPT;
             if (empty($r['name'])) {
                 continue;
             }
-            $stmt->execute([
-                ':season_key' => $seasonKey,
-                ':name' => $r['name'],
-                ':found' => !empty($r['found']) ? 1 : 0,
-                ':confidence' => $r['confidence'] ?? null,
-                ':tx_date' => $r['transaction_date'] ?? null,
-                ':tx_amount' => isset($r['transaction_amount']) ? (float)$r['transaction_amount'] : null,
-                ':tx_desc' => $r['transaction_description'] ?? null,
-                ':notes' => $r['notes'] ?? null,
-                ':verified_by' => $user['id'] ?? null,
-            ]);
-            $saved++;
+            
+            $conf = strtolower(trim((string)($r['confidence'] ?? '')));
+            if (!in_array($conf, ['high', 'medium', 'low'])) {
+                if ($conf === 'alta' || $conf === 'alto') $conf = 'high';
+                elseif ($conf === 'media' || $conf === 'medio') $conf = 'medium';
+                elseif ($conf === 'bassa' || $conf === 'basso') $conf = 'low';
+                else $conf = 'low';
+            }
+            
+            try {
+                $stmt->execute([
+                    ':season_key' => $seasonKey,
+                    ':name' => $r['name'],
+                    ':found' => !empty($r['found']) ? 1 : 0,
+                    ':confidence' => $conf,
+                    ':tx_date' => $r['transaction_date'] ?? null,
+                    ':tx_amount' => isset($r['transaction_amount']) ? (float)$r['transaction_amount'] : null,
+                    ':tx_desc' => $r['transaction_description'] ?? null,
+                    ':notes' => $r['notes'] ?? null,
+                    ':verified_by' => $user['id'] ?? null,
+                ]);
+                $saved++;
+            } catch (\PDOException $e) {
+                error_log("[OutSeason] Failed to save verification row for {$r['name']}: " . $e->getMessage());
+            }
         }
 
         Response::success(['saved' => $saved, 'season_key' => $seasonKey]);

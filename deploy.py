@@ -11,6 +11,12 @@ import threading
 import concurrent.futures
 from typing import Optional
 
+# Timeouts (seconds)
+GIT_TIMEOUT = 30
+GIT_PUSH_TIMEOUT = 60
+FTP_CONNECT_TIMEOUT = 30
+FTP_OP_TIMEOUT = 30
+
 CACHE_FILE = '.deploy_cache.json'
 MAX_WORKERS = 8
 
@@ -99,10 +105,12 @@ connection_lock = threading.Lock()
 
 def get_ftp_connection(host, user, password):
     if not hasattr(thread_local, "ftp"):
-        ftp = ftplib.FTP_TLS(host)
+        ftp = ftplib.FTP_TLS(host, timeout=FTP_CONNECT_TIMEOUT)
         ftp.login(user, password)
         ftp.prot_p()
         ftp.set_pasv(True)
+        if ftp.sock:
+            ftp.sock.settimeout(FTP_OP_TIMEOUT)
         thread_local.ftp = ftp
         with connection_lock:
             active_ftp_connections.append(ftp)
@@ -225,10 +233,12 @@ def deploy_files_via_ftp():
         print(f"📦 Found {len(upload_jobs)} files to upload.")
         
         print(f"🔌 Single-thread connection to prepare directories...")
-        ftp = ftplib.FTP_TLS(host)
+        ftp = ftplib.FTP_TLS(host, timeout=FTP_CONNECT_TIMEOUT)
         ftp.login(user, password)
         ftp.prot_p() 
         ftp.set_pasv(True)
+        if ftp.sock:
+            ftp.sock.settimeout(FTP_OP_TIMEOUT)
         created_dirs = set()
         ftp.cwd('/')
         for d in sorted(required_dirs, key=len): # Sort by length to create parents first
@@ -290,29 +300,33 @@ def git_commit_and_push():
         # Controlla se ci sono modifiche
         result = subprocess.run(
             ['git', 'status', '--porcelain'],
-            capture_output=True, text=True, check=True
+            capture_output=True, text=True, check=True,
+            timeout=GIT_TIMEOUT
         )
         if not result.stdout.strip():
             print("  ℹ️  Nessuna modifica locale da committare.")
         else:
             timestamp = _time.strftime('%Y-%m-%d %H:%M')
-            subprocess.run(['git', 'add', '-A'], check=True)
+            subprocess.run(['git', 'add', '-A'], check=True, timeout=GIT_TIMEOUT)
             subprocess.run(
                 ['git', 'commit', '-m', f'deploy: {timestamp}'],
-                check=True
+                check=True, timeout=GIT_TIMEOUT
             )
             print(f"  ✅ Commit creato: deploy: {timestamp}")
 
         # Push sempre (anche se non c'era commit, può esserci roba non pushata)
         push_result = subprocess.run(
             ['git', 'push', 'origin', 'main'],
-            capture_output=True, text=True
+            capture_output=True, text=True,
+            timeout=GIT_PUSH_TIMEOUT
         )
         if push_result.returncode == 0:
             print("  ✅ Push su GitHub completato.")
         else:
             print(f"  ⚠️  Push fallito (non bloccante): {push_result.stderr.strip()}")
 
+    except subprocess.TimeoutExpired:
+        print("  ⚠️  Git timeout — il push potrebbe richiedere credenziali. Continuo il deploy...")
     except subprocess.CalledProcessError as e:
         print(f"  ⚠️  Git error (non bloccante): {e}")
     print()

@@ -57,7 +57,7 @@ function AppContent() {
               <Route path="/news" element={<News />} />
               <Route path="/news/:slug" element={<ArticleDetail />} />
               <Route path="/teams" element={<Roster />} />
-              <Route path="/teams/:id" element={<TeamDetail />} />
+              <Route path="/teams/:slug" element={<TeamDetail />} />
               <Route path="/shop" element={<Shop />} />
               <Route path="/results" element={<Results />} />
               <Route path="/outseason" element={<Outseason />} />

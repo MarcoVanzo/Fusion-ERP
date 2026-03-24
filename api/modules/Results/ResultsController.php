@@ -153,7 +153,7 @@ class ResultsController
             }
             // Re-throw other PDO errors
             error_log('[Results] getCampionati PDOException: ' . $e->getMessage());
-            Response::error('Errore database: ' . $e->getMessage(), 500);
+            Response::error('Errore database. Riprovare o contattare l\'assistenza.', 500);
         }
     }
 
@@ -332,7 +332,7 @@ class ResultsController
                 return;
             }
             error_log('[Results] getStandings PDOException: ' . $e->getMessage());
-            Response::error('Errore database: ' . $e->getMessage(), 500);
+            Response::error('Errore database. Riprovare o contattare l\'assistenza.', 500);
         }
     }
 
@@ -347,7 +347,7 @@ class ResultsController
         Auth::requireWrite('results');
 
         $body = Response::jsonBody();
-        $label = trim((string)($body['label'] ?? ''));
+        $label = strip_tags(trim((string)($body['label'] ?? '')));
         $url = trim((string)($body['url'] ?? ''));
 
         if (empty($label) || empty($url)) {

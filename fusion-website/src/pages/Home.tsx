@@ -122,6 +122,7 @@ const Home = () => {
                     </div>
 
                     <h1 className="font-heading text-4xl sm:text-6xl md:text-8xl lg:text-[7.5rem] tracking-tight md:tracking-tighter mb-4 md:mb-6 text-white leading-[0.85] drop-shadow-2xl">
+                        <span className="sr-only">ASD Fusion Team Volley - Settore giovanile volley</span>
                         FUSION TEAM
                         <br />
                         <span className="text-brand-500 drop-shadow-[0_0_25px_rgba(255,20,147,0.8)]">VOLLEY</span>
@@ -186,7 +187,7 @@ const Home = () => {
                         <div className="mb-8">
                             <p className="text-brand-500 font-heading text-sm tracking-[0.3em] uppercase mb-1">Pallavolo</p>
                             <h2 className="font-heading text-4xl md:text-5xl text-white">
-                                ULTIMI <span className="text-brand-500 drop-shadow-[0_0_15px_rgba(217,70,239,0.6)]">RISULTATI</span>
+                                ULTIMI <span className="text-brand-500 drop-shadow-[0_0_15px_rgba(217,70,239,0.6)]">RISULTATI PALLAVOLO</span>
                             </h2>
                             <div className="mt-3 h-px w-24 bg-gradient-to-r from-brand-500 to-transparent"></div>
                         </div>
@@ -225,7 +226,7 @@ const Home = () => {
                                                 {/* Home Team */}
                                                 <div className="flex-1 flex flex-col items-center gap-2 text-center">
                                                     {isFusionHome ? (
-                                                        <img src="/assets/logo-colorato.png" alt="Fusion" loading="lazy" className="w-14 h-14 rounded-full object-contain border-2 border-brand-500/60 shadow-[0_0_16px_rgba(217,70,239,0.5)] bg-zinc-900" />
+                                                        <img src="/assets/logo-colorato.png" alt="Logo ASD Fusion Team Volley" loading="lazy" className="w-14 h-14 rounded-full object-contain border-2 border-brand-500/60 shadow-[0_0_16px_rgba(217,70,239,0.5)] bg-zinc-900" />
                                                     ) : (
                                                         <div className="w-14 h-14 bg-zinc-800 rounded-full border border-zinc-700 group-hover:border-brand-500/40 flex items-center justify-center transition-colors">
                                                             <span className="font-heading text-xl text-zinc-300">{match.home.charAt(0)}</span>
@@ -246,7 +247,7 @@ const Home = () => {
                                                 {/* Away Team */}
                                                 <div className="flex-1 flex flex-col items-center gap-2 text-center">
                                                     {isFusionAway ? (
-                                                        <img src="/assets/logo-colorato.png" alt="Fusion" loading="lazy" className="w-14 h-14 rounded-full object-contain border-2 border-brand-500/60 shadow-[0_0_16px_rgba(217,70,239,0.5)] bg-zinc-900" />
+                                                        <img src="/assets/logo-colorato.png" alt="Logo ASD Fusion Team Volley" loading="lazy" className="w-14 h-14 rounded-full object-contain border-2 border-brand-500/60 shadow-[0_0_16px_rgba(217,70,239,0.5)] bg-zinc-900" />
                                                     ) : (
                                                         <div className="w-14 h-14 bg-zinc-800 rounded-full border border-zinc-700 group-hover:border-brand-500/40 flex items-center justify-center transition-colors">
                                                             <span className="font-heading text-xl text-zinc-300">{match.away.charAt(0)}</span>
@@ -285,7 +286,7 @@ const Home = () => {
                             <div>
                                 <p className="text-brand-500/70 font-heading text-sm tracking-[0.3em] uppercase mb-1">Dal Campo</p>
                                 <h2 className="font-heading text-4xl md:text-5xl text-white">
-                                    ULTIME <span className="text-brand-500">NEWS</span>
+                                    ULTIME <span className="text-brand-500">NEWS TEAM VOLLEY</span>
                                 </h2>
                                 <div className="mt-3 h-px w-24 bg-gradient-to-r from-brand-500 to-transparent"></div>
                             </div>

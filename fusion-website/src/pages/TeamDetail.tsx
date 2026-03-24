@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useLocation, useNavigate } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
 import { Seo } from '../components/Seo';
 
@@ -158,10 +158,14 @@ const StaffCard = ({ member }: { member: Staff }) => {
 };
 
 const TeamDetail = () => {
-    const { id } = useParams<{ id: string }>();
+    const { slug } = useParams<{ slug: string }>();
+    const location = useLocation();
+    const navigate = useNavigate();
+    const stateTeamId = location.state?.teamId;
+    const stateTeamName = location.state?.teamName;
     const [athletes, setAthletes] = useState<Athlete[]>([]);
     const [staff, setStaff] = useState<Staff[]>([]);
-    const [teamName, setTeamName] = useState('ROSTER UFFICIALE');
+    const [teamName, setTeamName] = useState(stateTeamName || 'ROSTER UFFICIALE');
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -169,23 +173,54 @@ const TeamDetail = () => {
             try {
                 setLoading(true);
 
+                let targetTeamId = stateTeamId;
+
+                const generateSlug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+
                 // Fetch Teams for the header name
-                const teamRes = await fetch('/ERP/api/router.php?module=athletes&action=teams');
+                const teamRes = await fetch('/ERP/api/router.php?module=athletes&action=getPublicTeams');
                 const teamData = await teamRes.json();
                 if (teamData.status === 'success' || teamData.success === true) {
-                    const t = teamData.data.find((t: any) => t.id.toString() === id);
-                    if (t) setTeamName(t.name);
+                    if (!targetTeamId) {
+                        // Try matching by slug first (SEO-friendly URL)
+                        let t = teamData.data.find((t: any) => generateSlug(t.name) === slug);
+                        
+                        // Fallback: match by raw team_season_id (e.g. /teams/TS_03bf1a12676b50d)
+                        if (!t && slug) {
+                            t = teamData.data.find((t: any) => t.id.toString() === slug);
+                        }
+                        
+                        if (t) {
+                            targetTeamId = t.id.toString();
+                            setTeamName(t.name);
+                            
+                            // SEO redirect: if URL uses raw ID, redirect to slug-based URL
+                            const correctSlug = generateSlug(t.name);
+                            if (slug !== correctSlug) {
+                                navigate(`/teams/${correctSlug}`, { replace: true, state: { teamId: t.id, teamName: t.name } });
+                                return;
+                            }
+                        }
+                    } else {
+                        const t = teamData.data.find((t: any) => t.id.toString() === targetTeamId.toString());
+                        if (t) setTeamName(t.name);
+                    }
+                }
+
+                if (!targetTeamId) {
+                    setLoading(false);
+                    return;
                 }
 
                 // Fetch Athletes
-                const rosterRes = await fetch(`/ERP/api/router.php?module=athletes&action=getPublicTeamAthletes&teamId=${id}`);
+                const rosterRes = await fetch(`/ERP/api/router.php?module=athletes&action=getPublicTeamAthletes&teamId=${targetTeamId}`);
                 const rosterData = await rosterRes.json();
                 if (rosterData.status === 'success' || rosterData.success === true) {
                     setAthletes(rosterData.data || []);
                 }
 
                 // Fetch Staff
-                const staffRes = await fetch(`/ERP/api/router.php?module=staff&action=getPublicStaff&teamId=${id}`);
+                const staffRes = await fetch(`/ERP/api/router.php?module=staff&action=getPublicStaff&teamId=${targetTeamId}`);
                 const staffData = await staffRes.json();
                 if (staffData.status === 'success' || staffData.success === true) {
                     const sortedStaff = (staffData.data || []).sort((a: any, b: any) => {
@@ -218,8 +253,8 @@ const TeamDetail = () => {
             }
         };
 
-        if (id) fetchTeamData();
-    }, [id]);
+        if (slug || stateTeamId) fetchTeamData();
+    }, [slug, stateTeamId]);
 
     if (loading) {
         return (

@@ -26,7 +26,8 @@ class AthletesRepository
                        a.phone, a.email, a.fiscal_code, a.medical_cert_expires_at,
                        a.residence_address, a.residence_city, a.parent_contact, a.parent_phone,
                        COALESCE(t.name, "Nessuna squadra") AS team_name,
-                       COALESCE(t.category, "Nessuna") AS category
+                       COALESCE(t.category, "Nessuna") AS category,
+                       (SELECT GROUP_CONCAT(at_sub.team_season_id SEPARATOR ",") FROM athlete_teams at_sub WHERE at_sub.athlete_id = a.id) AS team_season_ids
                 FROM athletes a
                 LEFT JOIN teams t ON a.team_id = t.id';
 
@@ -53,7 +54,11 @@ class AthletesRepository
 
         $stmt = $this->db->prepare($sql);
         $stmt->execute($params);
-        return $stmt->fetchAll();
+        $rows = $stmt->fetchAll();
+        foreach ($rows as &$row) {
+            $row['team_season_ids'] = !empty($row['team_season_ids']) ? explode(',', $row['team_season_ids']) : [];
+        }
+        return $rows;
     }
 
     /**
@@ -63,12 +68,21 @@ class AthletesRepository
      */
     public function listAthletesLight(string $teamSeasonId = ''): array
     {
-        $sql = 'SELECT DISTINCT a.id, a.team_id, a.full_name, a.jersey_number, a.role, a.photo_path, a.is_active,
-                       a.medical_cert_expires_at,
-                       COALESCE(t.name, "Nessuna squadra") AS team_name,
-                       COALESCE(t.category, "Nessuna") AS category
+        // Build document columns dynamically — handles case where V066 migration hasn't been applied yet
+        $docCols = '';
+        $docFields = ['contract_file_path', 'id_doc_front_file_path', 'id_doc_back_file_path',
+                       'cf_doc_front_file_path', 'cf_doc_back_file_path', 'medical_cert_file_path'];
+        if ($this->_hasColumn('athletes', 'contract_file_path')) {
+            $docCols = ', a.' . implode(', a.', $docFields);
+        }
+
+        $sql = "SELECT DISTINCT a.id, a.team_id, a.full_name, a.jersey_number, a.role, a.photo_path, a.is_active,
+                       a.medical_cert_expires_at{$docCols},
+                       COALESCE(t.name, 'Nessuna squadra') AS team_name,
+                       COALESCE(t.category, 'Nessuna') AS category,
+                       (SELECT GROUP_CONCAT(at_sub.team_season_id SEPARATOR ',') FROM athlete_teams at_sub WHERE at_sub.athlete_id = a.id) AS team_season_ids
                 FROM athletes a
-                LEFT JOIN teams t ON a.team_id = t.id';
+                LEFT JOIN teams t ON a.team_id = t.id";
 
         $params = [];
         if ($teamSeasonId !== '') {
@@ -89,14 +103,25 @@ class AthletesRepository
 
         $stmt = $this->db->prepare($sql);
         $stmt->execute($params);
-        return $stmt->fetchAll();
+        $rows = $stmt->fetchAll();
+        foreach ($rows as &$row) {
+            $row['team_season_ids'] = !empty($row['team_season_ids']) ? explode(',', $row['team_season_ids']) : [];
+        }
+        return $rows;
     }
 
 
     public function getAthleteById(string $id): ?array
     {
+        // Document columns may not exist if V066 migration hasn't been applied
+        $docCols = '';
+        if ($this->_hasColumn('athletes', 'contract_file_path')) {
+            $docCols = ', a.contract_file_path, a.id_doc_front_file_path, a.id_doc_back_file_path,
+                    a.cf_doc_front_file_path, a.cf_doc_back_file_path, a.medical_cert_file_path';
+        }
+
         $stmt = $this->db->prepare(
-            'SELECT a.id, a.user_id, a.team_id, a.full_name,
+            "SELECT a.id, a.user_id, a.team_id, a.full_name,
                     a.first_name, a.last_name,
                     a.jersey_number, a.role,
                     a.birth_date, a.birth_place,
@@ -105,14 +130,14 @@ class AthletesRepository
                     a.fiscal_code, a.identity_document, a.federal_id,
                     a.email, a.phone,
                     a.parent_contact, a.parent_phone,
-                    a.medical_cert_type, a.medical_cert_expires_at,
+                    a.medical_cert_type, a.medical_cert_expires_at{$docCols},
                     a.shirt_size, a.shoe_size,
                     a.is_active,
                     t.name AS team_name, t.category
              FROM athletes a
              LEFT JOIN teams t ON a.team_id = t.id
              WHERE a.id = :id AND a.deleted_at IS NULL
-             LIMIT 1'
+             LIMIT 1"
         );
         $stmt->execute([':id' => $id]);
         $row = $stmt->fetch();
@@ -275,6 +300,16 @@ class AthletesRepository
         $stmt->execute([':photo_path' => $photoPath, ':id' => $id]);
     }
 
+    public function updateDocumentPath(string $id, string $dbField, ?string $path): void
+    {
+        // Must ensure $dbField is dynamically injected safely or matched against allowlist in Controller
+        // Wait, PDO cannot bind column names, so we inject it safely.
+        $stmt = $this->db->prepare(
+            "UPDATE athletes SET {$dbField} = :path WHERE id = :id AND deleted_at IS NULL"
+        );
+        $stmt->execute([':path' => $path, ':id' => $id]);
+    }
+
     // ─── METRICS ──────────────────────────────────────────────────────────────
 
     public function insertMetric(array $data): void
@@ -351,6 +386,38 @@ class AthletesRepository
         $stmt->bindValue(':id', $athleteId);
         $stmt->bindValue(':lim', $limit, \PDO::PARAM_INT);
         $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    // ─── PUBLIC WEBSITE ATHLETES ─────────────────────────────────────────────
+    /**
+     * Returns ONLY public-safe athlete fields for the website roster page.
+     * Does NOT include document paths or internal admin fields.
+     */
+    public function listPublicAthletes(string $teamSeasonId = ''): array
+    {
+        $sql = 'SELECT DISTINCT a.id, a.full_name, a.first_name, a.last_name,
+                       a.jersey_number, a.role, a.photo_path,
+                       a.height_cm, a.weight_kg
+                FROM athletes a';
+
+        $params = [];
+        if ($teamSeasonId !== '') {
+            if (str_starts_with($teamSeasonId, 'TEAM_')) {
+                $sql .= ' WHERE a.deleted_at IS NULL AND a.is_active = 1 AND a.team_id = :team_id';
+                $params[':team_id'] = $teamSeasonId;
+            } else {
+                $sql .= ' JOIN athlete_teams at2 ON a.id = at2.athlete_id';
+                $sql .= ' WHERE a.deleted_at IS NULL AND a.is_active = 1 AND at2.team_season_id = :team_season_id';
+                $params[':team_season_id'] = $teamSeasonId;
+            }
+        } else {
+            $sql .= ' WHERE a.deleted_at IS NULL AND a.is_active = 1';
+        }
+        $sql .= ' ORDER BY a.jersey_number ASC, a.full_name ASC';
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
         return $stmt->fetchAll();
     }
 

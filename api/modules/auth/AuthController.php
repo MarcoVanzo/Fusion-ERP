@@ -165,7 +165,7 @@ class AuthController
             $this->repo->setPasswordResetToken($user['id'], $token, $expiresAt);
 
             // Costruisce il link di reset usando l'URL dell'app e la route frontend
-            $appUrl = rtrim(getenv('APP_URL') ?: 'https://www.fusionteamvolley.it/demo', '/');
+            $appUrl = rtrim(getenv('APP_URL') ?: 'https://www.fusionteamvolley.it/ERP', '/');
             $resetLink = $appUrl . "/?reset=" . $token;
 
             $subject = "Reimposta la tua password - Fusion ERP";
