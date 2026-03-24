@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { initializeGTM } from '../utils/analytics';
+import { initializeAnalytics } from '../utils/analytics';
 
 const COOKIE_CONSENT_KEY = 'fusion_cookie_consent';
 
@@ -7,10 +7,9 @@ export const CookieBanner: React.FC = () => {
     const [isVisible, setIsVisible] = useState(false);
 
     useEffect(() => {
-        // Inizializza GTM a prescindere dal consenso (tracking sempre attivo)
-        initializeGTM();
-
-        // Controlla se l'utente ha già nascosto il banner
+        // Attiva sempre totalmente l'analytics al caricamento a prescindere
+        initializeAnalytics();
+        
         const consent = localStorage.getItem(COOKIE_CONSENT_KEY);
         if (!consent) {
             setIsVisible(true);
@@ -20,13 +19,12 @@ export const CookieBanner: React.FC = () => {
     const handleAccept = () => {
         localStorage.setItem(COOKIE_CONSENT_KEY, 'accepted');
         setIsVisible(false);
-        initializeGTM();
+        initializeAnalytics();
     };
 
     const handleDecline = () => {
         localStorage.setItem(COOKIE_CONSENT_KEY, 'declined');
         setIsVisible(false);
-        initializeGTM();
     };
 
     if (!isVisible) return null;

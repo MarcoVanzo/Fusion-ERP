@@ -5,41 +5,46 @@ export const GTM_ID = 'GTM-XXXXXXX';
 declare global {
     interface Window {
         dataLayer: any[];
+        gtag: (...args: any[]) => void;
     }
 }
 
 let isGtmInitialized = false;
 
 /**
- * Inizializza Google Tag Manager spargendo il consenso ai cookie.
- * ATTENZIONE: Questa funzione è richiamata forzatamente a prescindere dal clic sul banner dei cookie.
+ * Inizializza l'analitica aggiornando il consenso ai cookie.
+ * Richiamato quando l'utente accetta i cookie dal banner o se li ha già accettati.
  */
-export const initializeGTM = () => {
+export const initializeAnalytics = () => {
     if (isGtmInitialized) return;
     
-    // Inizializza dataLayer se non esiste
     window.dataLayer = window.dataLayer || [];
+    window.gtag = window.gtag || function() { window.dataLayer.push(arguments); };
     
-    // Push dell'evento personalizzato di consenso accettato per GTM/Consent Mode
-    window.dataLayer.push({
-        'event': 'cookie_consent_update',
-        'consent_status': 'granted'
+    // Aggiorna lo stato del consenso per GA4
+    window.gtag('consent', 'update', {
+        'ad_storage': 'granted',
+        'ad_user_data': 'granted',
+        'ad_personalization': 'granted',
+        'analytics_storage': 'granted'
     });
 
     isGtmInitialized = true;
-    console.log('[Analytics] GTM Configured and Consent Granted.');
+    console.log('[Analytics] GA4 Configured and Consent Granted.');
 };
 
 /**
- * Funzione per inviare i pageview virtuali a GTM.
- * È utile nelle Single Page Applications (SPA) con React Router.
+ * Funzione per inviare i pageview virtuali a GA4.
+ * Utile nelle Single Page Applications (SPA) con React Router.
  */
 export const trackPageView = (url: string) => {
-    // Registra la view solo se l'utente ha dato il consenso (GTM è stato inizializzato o verrà gestito lato Tag Manager)
     window.dataLayer = window.dataLayer || [];
-    window.dataLayer.push({
-        'event': 'virtual_page_view',
-        'page_path': url
+    window.gtag = window.gtag || function() { window.dataLayer.push(arguments); };
+    
+    window.gtag('event', 'page_view', {
+        page_path: url,
+        page_location: window.location.href,
+        send_to: 'G-517030067'
     });
     console.log(`[Analytics] Tracked PageView: ${url}`);
 };
