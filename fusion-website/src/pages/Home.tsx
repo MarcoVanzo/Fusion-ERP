@@ -85,6 +85,7 @@ const Home = () => {
                 title="Home" 
                 description="Scopri le squadre, le news e lo shop ufficiale del Fusion Team Volley." 
                 pathname="/"
+                image="https://www.fusionteamvolley.it/assets/hero-1.jpg"
             />
 
             {/* Hero Section */}

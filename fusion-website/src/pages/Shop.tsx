@@ -68,9 +68,38 @@ const Shop = () => {
         );
     }
 
+    const shopImage = 'https://www.fusionteamvolley.it/assets/Gemini_Generated_Image_4wijvu4wijvu4wij.jpeg';
+    const itemListSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'ItemList',
+        'itemListElement': filteredProducts.map((p, index) => ({
+            '@type': 'ListItem',
+            'position': index + 1,
+            'item': {
+                '@type': 'Product',
+                'name': p.nome,
+                'image': p.immagineUrl,
+                'description': p.descrizione || p.nome,
+                'category': p.categoria,
+                'offers': {
+                    '@type': 'Offer',
+                    'priceCurrency': 'EUR',
+                    'price': p.prezzo,
+                    'availability': 'https://schema.org/InStock',
+                    'url': 'https://www.cognitoforms.com/MVConsulting2/OrdineEcommerce'
+                }
+            }
+        }))
+    };
+
     return (
         <div className="min-h-screen bg-zinc-950 pb-20">
-            <Seo title="Store Ufficiale" description="Acquista abbigliamento ufficiale e merchandising del Fusion Team Volley nel nostro Store online." />
+            <Seo 
+                title="Store Ufficiale" 
+                description="Acquista abbigliamento ufficiale e merchandising del Fusion Team Volley nel nostro Store online." 
+                image={shopImage}
+                structuredData={itemListSchema}
+            />
 
             {/* Hero Section */}
             <div className="relative pt-32 pb-24 border-b-2 border-brand-500/20 overflow-hidden">

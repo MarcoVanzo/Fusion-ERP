@@ -75,6 +75,7 @@ const Club = () => {
             <Seo 
                 title="Il Club" 
                 description="Scopri la storia, i valori e la dirigenza del Fusion Team Volley." 
+                image="https://www.fusionteamvolley.it/assets/hero-2.jpg"
             />
 
             {/* Hero Section */}
