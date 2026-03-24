@@ -9,16 +9,15 @@ require_once __DIR__ . '/api/Shared/Database.php';
 
 try {
     $pdo = FusionERP\Shared\Database::getInstance();
-    $stmt = $pdo->query('SELECT * FROM outseason_verifications ORDER BY updated_at DESC LIMIT 10'); // wait, the column is verified_at
-    // let me rewrite the query
     $stmt = $pdo->query('SELECT * FROM outseason_verifications ORDER BY verified_at DESC LIMIT 10');
     $res = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     if (empty($res)) {
-        echo "TABLE EXISTS BUT IS EMPTY.\n\n";
+        header('Content-Type: application/json');
+        echo json_encode(["status" => "empty"]);
     } else {
-        echo "FOUND ROWS:\n\n";
-        print_r($res);
+        header('Content-Type: application/json');
+        echo json_encode(["status" => "found", "data" => $res]);
     }
 } catch(Exception $e) {
     http_response_code(500);
