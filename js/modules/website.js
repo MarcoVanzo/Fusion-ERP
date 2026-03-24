@@ -71,20 +71,9 @@ const Website = (() => {
         const e = new FormData();
         e.append("image", r.files[0]);
         try {
-          const t = await fetch(
-              "api/router.php?module=website&action=uploadImage",
-              {
-                method: "POST",
-                body: e,
-                headers: {
-                  Authorization: "Bearer " + (Store.getToken() || ""),
-                },
-              },
-            ),
-            n = await t.json();
-          if (!n.success) throw new Error(n.error || "Errore upload");
-          ((c.value = n.data.url),
-            (d.style.backgroundImage = `url(${n.data.url})`),
+          const n = await Store.api("uploadImage", "website", e);
+          ((c.value = n.url),
+            (d.style.backgroundImage = `url(${n.url})`),
             UI.toast("Immagine caricata", "success"));
         } catch (e) {
           UI.toast(e.message, "error");
