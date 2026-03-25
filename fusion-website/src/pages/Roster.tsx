@@ -38,7 +38,11 @@ const Roster = () => {
 
     return (
         <div className="flex flex-col min-h-screen pb-24">
-            <Seo title="Le Squadre" description="I roster ufficiali di tutte le squadre giovanili e prime squadre del Fusion Team Volley." />
+            <Seo 
+                title="Le Squadre" 
+                description="I roster ufficiali di tutte le squadre giovanili e prime squadre del Fusion Team Volley." 
+                image="https://www.fusionteamvolley.it/assets/Gemini_Generated_Image_5v1qm15v1qm15v1q.jpeg"
+            />
             {/* Emotional Header Hero */}
             <section className="relative h-[40vh] min-h-[300px] flex items-center justify-center overflow-hidden mb-12">
                 {/* Background Image */}

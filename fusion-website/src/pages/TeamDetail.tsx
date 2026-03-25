@@ -84,12 +84,7 @@ const AthleteCard = ({ athlete }: { athlete: Athlete }) => {
                     })()}
                 </h3>
 
-                {(athlete.height_cm || athlete.weight_kg) && (
-                    <div className="flex gap-4 mt-4 font-subheading text-zinc-400 text-sm">
-                        {athlete.height_cm && <div>H: <span className="text-white">{athlete.height_cm} CM</span></div>}
-                        {athlete.weight_kg && <div>W: <span className="text-white">{athlete.weight_kg} KG</span></div>}
-                    </div>
-                )}
+
             </div>
 
             {/* Jumbo Jersey Number */}
@@ -267,9 +262,46 @@ const TeamDetail = () => {
         );
     }
 
+    const nameUpper = teamName.toUpperCase();
+    const isU13 = nameUpper.includes('U13') || nameUpper.includes('UNDER 13') || nameUpper.includes('UNDER13');
+    const isU14 = nameUpper.includes('U14') || nameUpper.includes('UNDER 14') || nameUpper.includes('UNDER14');
+    const isU16 = nameUpper.includes('U16') || nameUpper.includes('UNDER 16') || nameUpper.includes('UNDER16');
+    const isU18 = nameUpper.includes('U18') || nameUpper.includes('UNDER 18') || nameUpper.includes('UNDER18');
+    
+    // Determine image for meta tags and hero
+    const teamPhotoRel = isU13 ? 'assets/squadra-u13.jpeg' : isU14 ? 'assets/squadra-u14.jpeg' : isU16 ? 'assets/squadra-u16.jpeg' : isU18 ? 'assets/squadra-u18.jpeg' : null;
+    const teamPhotoFull = teamPhotoRel ? `https://www.fusionteamvolley.it/${teamPhotoRel}` : 'https://www.fusionteamvolley.it/assets/logo-colorato.png';
+    const teamPhotoLocal = teamPhotoRel ? import.meta.env.BASE_URL + teamPhotoRel : null;
+
+    const sportsTeamSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'SportsTeam',
+        'name': teamName,
+        'sport': 'Volleyball',
+        'image': teamPhotoFull,
+        'member': [
+            ...athletes.map(a => ({
+                '@type': 'Person',
+                'name': (a.full_name || `${a.first_name || ''} ${a.last_name || ''}`).trim(),
+                'jobTitle': 'Athlete',
+                'description': a.role
+            })),
+            ...staff.map(s => ({
+                '@type': 'Person',
+                'name': (`${s.first_name || ''} ${s.last_name || ''}`).trim(),
+                'jobTitle': s.role || 'Staff'
+            }))
+        ]
+    };
+
     return (
         <div className="flex flex-col min-h-screen pb-24 bg-zinc-950">
-            <Seo title={teamName !== 'ROSTER UFFICIALE' ? `Roster ${teamName}` : 'Dettaglio Squadra'} description={`Scopri il roster ufficiale, le atlete e lo staff tecnico della squadra ${teamName} del Fusion Team Volley.`} />
+            <Seo 
+                title={teamName !== 'ROSTER UFFICIALE' ? `Roster ${teamName}` : 'Dettaglio Squadra'} 
+                description={`Scopri il roster ufficiale, le atlete e lo staff tecnico della squadra ${teamName} del Fusion Team Volley.`} 
+                image={teamPhotoFull}
+                structuredData={sportsTeamSchema}
+            />
             {/* Emotional Header Hero */}
             <section className="relative h-[40vh] min-h-[350px] flex items-center justify-center overflow-hidden mb-12">
                 {/* Background Image */}
@@ -308,20 +340,11 @@ const TeamDetail = () => {
                 <div className="mb-24">
                     <h2 className="font-heading text-4xl text-zinc-500 mb-8 border-l-4 border-white pl-4">ATLETE</h2>
 
-                    {(() => {
-                        const nameUpper = teamName.toUpperCase();
-                        const isU13 = nameUpper.includes('U13') || nameUpper.includes('UNDER 13') || nameUpper.includes('UNDER13');
-                        const isU14 = nameUpper.includes('U14') || nameUpper.includes('UNDER 14') || nameUpper.includes('UNDER14');
-                        const isU16 = nameUpper.includes('U16') || nameUpper.includes('UNDER 16') || nameUpper.includes('UNDER16');
-                        const isU18 = nameUpper.includes('U18') || nameUpper.includes('UNDER 18') || nameUpper.includes('UNDER18');
-                        const teamPhoto = isU13 ? import.meta.env.BASE_URL + 'assets/squadra-u13.jpeg' : isU14 ? import.meta.env.BASE_URL + 'assets/squadra-u14.jpeg' : isU16 ? import.meta.env.BASE_URL + 'assets/squadra-u16.jpeg' : isU18 ? import.meta.env.BASE_URL + 'assets/squadra-u18.jpeg' : null;
-
-                        return teamPhoto ? (
-                            <div className="w-full mb-16 border border-zinc-800 bg-zinc-900 clip-diagonal overflow-hidden shadow-2xl">
-                                <img loading="lazy" src={teamPhoto} alt={`Foto Ufficiale ${teamName}`} className="w-full h-auto object-cover max-h-[600px] hover:scale-105 transition-transform duration-700" />
-                            </div>
-                        ) : null;
-                    })()}
+                    {teamPhotoLocal ? (
+                        <div className="w-full mb-16 border border-zinc-800 bg-zinc-900 clip-diagonal overflow-hidden shadow-2xl">
+                            <img loading="lazy" src={teamPhotoLocal} alt={`Foto Ufficiale ${teamName}`} className="w-full h-auto object-cover max-h-[600px] hover:scale-105 transition-transform duration-700" />
+                        </div>
+                    ) : null}
 
                     {athletes.length === 0 ? (
                         <div className="p-12 border border-zinc-800 bg-zinc-900/30 font-subheading text-xl text-zinc-500 text-center clip-diagonal">Nessuna atleta in rosa.</div>

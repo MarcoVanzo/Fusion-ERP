@@ -484,6 +484,7 @@ PROMPT;
         $stmt = $pdo->prepare($sql);
         $saved = 0;
 
+        $errors = [];
         foreach ($results as $r) {
             if (empty($r['name'])) {
                 continue;
@@ -511,11 +512,13 @@ PROMPT;
                 ]);
                 $saved++;
             } catch (\PDOException $e) {
+                // Return errors in JSON so we can debug exactly what happened
+                $errors[] = "Failed on {$r['name']}: " . $e->getMessage();
                 error_log("[OutSeason] Failed to save verification row for {$r['name']}: " . $e->getMessage());
             }
         }
 
-        Response::success(['saved' => $saved, 'season_key' => $seasonKey]);
+        Response::success(['saved' => $saved, 'season_key' => $seasonKey, 'errors' => $errors]);
     }
 
     /* ─────────────────────────────────────────────────────────────────────

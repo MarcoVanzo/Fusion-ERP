@@ -8,14 +8,18 @@ interface SeoProps {
     image?: string;
     pathname?: string;
     type?: 'website' | 'article';
+    structuredData?: Record<string, any> | Record<string, any>[];
+    children?: React.ReactNode;
 }
 
 export const Seo: React.FC<SeoProps> = ({ 
     title, 
     description, 
-    image = 'https://www.fusionteamvolley.it/assets/logo.png', // Default meta image
+    image = 'https://www.fusionteamvolley.it/assets/logo-colorato.png', // Default meta image
     pathname, 
-    type = 'website' 
+    type = 'website',
+    structuredData,
+    children
 }) => {
     const location = useLocation();
     const currentPathname = pathname || location.pathname;
@@ -57,10 +61,19 @@ export const Seo: React.FC<SeoProps> = ({
             <meta name="twitter:description" content={description} />
             <meta name="twitter:image" content={image} />
 
-            {/* Structured Data (JSON-LD) */}
+            {/* Organization Schema (Base) */}
             <script type="application/ld+json">
                 {JSON.stringify(organizationSchema)}
             </script>
+
+            {/* Custom Structured Data (if any) */}
+            {structuredData && (
+                <script type="application/ld+json">
+                    {JSON.stringify(structuredData)}
+                </script>
+            )}
+
+            {children}
         </Helmet>
     );
 };

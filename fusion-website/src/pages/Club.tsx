@@ -75,12 +75,14 @@ const Club = () => {
             <Seo 
                 title="Il Club" 
                 description="Scopri la storia, i valori e la dirigenza del Fusion Team Volley." 
+                image="https://www.fusionteamvolley.it/assets/Gemini_Generated_Image_1grfoi1grfoi1grf.jpeg"
             />
 
             {/* Hero Section */}
             <section className="relative h-[60vh] flex items-center justify-center overflow-hidden">
                 <div
-                    style={{ backgroundImage: `url('${import.meta.env.BASE_URL}assets/hero-2.jpg')`, filter: "brightness(0.55) saturate(1.2)" }}
+                    className="absolute inset-0 bg-cover bg-center z-0"
+                    style={{ backgroundImage: `url('${import.meta.env.BASE_URL}assets/Gemini_Generated_Image_1grfoi1grfoi1grf.jpeg')`, filter: "brightness(0.55) saturate(1.2)" }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#09090B] via-[#09090B]/40 to-transparent z-10"></div>
 

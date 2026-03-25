@@ -3,6 +3,7 @@ import { ChevronRight, Calendar } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Seo } from '../components/Seo';
 import { motion } from 'framer-motion';
+import { SponsorBanner } from '../components/SponsorBanner';
 
 interface NewsArticle {
     id: number;
@@ -85,6 +86,7 @@ const Home = () => {
                 title="Home" 
                 description="Scopri le squadre, le news e lo shop ufficiale del Fusion Team Volley." 
                 pathname="/"
+                image="https://www.fusionteamvolley.it/assets/hero-1.jpg"
             />
 
             {/* Hero Section */}
@@ -323,7 +325,7 @@ const Home = () => {
                                     <Link
                                         to={`/news/${article.slug}`}
                                         key={article.id}
-                                        className="group flex flex-col md:flex-row overflow-hidden bg-zinc-900/40 backdrop-blur-md border border-zinc-800/60 border-t-white/5 border-l-white/5 hover:border-brand-500/50 rounded-2xl transition-all duration-500 hover:shadow-[0_4px_20px_rgba(0,0,0,0.3)] hover:-translate-y-1 block"
+                                        className="group flex flex-col md:flex-row overflow-hidden bg-zinc-900/40 backdrop-blur-md border border-zinc-800/60 border-t-white/5 border-l-white/5 hover:border-brand-500/50 rounded-2xl transition-all duration-500 hover:shadow-[0_4px_20px_rgba(0,0,0,0.3)] hover:-translate-y-1 md:h-48"
                                     >
                                         {/* Image */}
                                         <div className="relative w-full h-48 md:w-48 md:h-auto shrink-0 overflow-hidden">
@@ -375,6 +377,11 @@ const Home = () => {
 
                 </div>
             </section>
+            
+            {/* Banner Sponsor (ADV) */}
+            <div className="px-4 md:px-12 w-full">
+                <SponsorBanner placement="home_page" />
+            </div>
         </div>
     );
 };

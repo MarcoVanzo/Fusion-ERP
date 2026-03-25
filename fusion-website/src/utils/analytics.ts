@@ -44,7 +44,7 @@ export const trackPageView = (url: string) => {
     window.gtag('event', 'page_view', {
         page_path: url,
         page_location: window.location.href,
-        send_to: 'G-517030067'
+        send_to: 'G-TX0B96G1RY'
     });
     console.log(`[Analytics] Tracked PageView: ${url}`);
 };

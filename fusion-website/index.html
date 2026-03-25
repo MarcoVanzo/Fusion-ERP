@@ -27,23 +27,33 @@
     content="Sito ufficiale del Fusion Team Volley. Scopri le squadre, risultati e news." />
   <meta name="twitter:image" content="https://www.fusionteamvolley.it/assets/logo-colorato.png" />
 
-  <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-517030067"></script>
+  <!-- Google Consent Mode V2 - Default state -->
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     
-    // Configurazione Consent Mode V2 (Bypass: Default = Granted)
     gtag('consent', 'default', {
-      'ad_storage': 'granted',
-      'ad_user_data': 'granted',
-      'ad_personalization': 'granted',
-      'analytics_storage': 'granted'
+      'ad_storage': 'denied',
+      'ad_user_data': 'denied',
+      'ad_personalization': 'denied',
+      'analytics_storage': 'denied',
+      'wait_for_update': 500
     });
+    gtag('set', 'ads_data_redaction', true);
+  </script>
+
+  <!-- Cookiebot CMP -->
+  <script id="Cookiebot" src="https://consent.cookiebot.com/uc.js" data-cbid="abf0bc57-ae54-458d-bb39-ae97f9323b72" type="text/javascript" async></script>
+
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-TX0B96G1RY"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
     
     gtag('js', new Date());
 
-    gtag('config', 'G-517030067', { send_page_view: false });
+    gtag('config', 'G-TX0B96G1RY', { send_page_view: false });
   </script>
 </head>
 
