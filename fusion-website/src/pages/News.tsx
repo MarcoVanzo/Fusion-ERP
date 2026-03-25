@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, ChevronRight, Newspaper, Instagram } from 'lucide-react';
 import { Seo } from '../components/Seo';
+import { SponsorBanner } from '../components/SponsorBanner';
 
 interface NewsArticle {
     id: number;
@@ -77,6 +78,8 @@ const News = () => {
             </section>
 
             <div className="max-w-7xl mx-auto px-4 w-full flex-grow">
+                {/* ADV Banner before the news list */}
+                <SponsorBanner placement="news_list" />
 
                 {loading ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

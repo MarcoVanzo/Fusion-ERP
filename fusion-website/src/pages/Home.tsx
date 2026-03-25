@@ -3,6 +3,7 @@ import { ChevronRight, Calendar } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Seo } from '../components/Seo';
 import { motion } from 'framer-motion';
+import { SponsorBanner } from '../components/SponsorBanner';
 
 interface NewsArticle {
     id: number;
@@ -376,6 +377,11 @@ const Home = () => {
 
                 </div>
             </section>
+            
+            {/* Banner Sponsor (ADV) */}
+            <div className="px-4 md:px-12 w-full">
+                <SponsorBanner placement="home_page" />
+            </div>
         </div>
     );
 };

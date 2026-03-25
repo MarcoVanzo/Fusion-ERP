@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { Calendar, ChevronLeft, ArrowLeft } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import { Seo } from '../components/Seo';
+import { SponsorBanner } from '../components/SponsorBanner';
 
 interface ArticleDetailData {
     id: number;
@@ -228,6 +229,11 @@ const ArticleDetail = () => {
                             className="prose prose-invert prose-brand max-w-none prose-img:rounded-none prose-img:shadow-lg prose-headings:font-bold prose-a:text-brand-500 hover:prose-a:text-brand-400 prose-p:text-zinc-300 prose-p:leading-relaxed"
                             dangerouslySetInnerHTML={{ __html: article.content_html }}
                         />
+                    </div>
+
+                    {/* Banner Sponsor Intermedio (ADV) */}
+                    <div className="mt-12">
+                        <SponsorBanner placement="article_detail" />
                     </div>
 
                     {/* Internal linking — back to news */}
