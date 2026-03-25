@@ -84,12 +84,7 @@ const AthleteCard = ({ athlete }: { athlete: Athlete }) => {
                     })()}
                 </h3>
 
-                {(athlete.height_cm || athlete.weight_kg) && (
-                    <div className="flex gap-4 mt-4 font-subheading text-zinc-400 text-sm">
-                        {athlete.height_cm && <div>H: <span className="text-white">{athlete.height_cm} CM</span></div>}
-                        {athlete.weight_kg && <div>W: <span className="text-white">{athlete.weight_kg} KG</span></div>}
-                    </div>
-                )}
+
             </div>
 
             {/* Jumbo Jersey Number */}
