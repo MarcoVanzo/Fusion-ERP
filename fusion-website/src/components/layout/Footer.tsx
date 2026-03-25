@@ -224,8 +224,7 @@ const Footer = () => {
                         © {new Date().getFullYear()} Fusion Team Volley. Tutti i diritti riservati.
                     </p>
                     <div className="flex gap-4 text-xs">
-                        <a href="/privacy-policy.pdf" target="_blank" rel="noopener noreferrer" className="text-zinc-600 hover:text-zinc-300 transition-colors py-2">Privacy Policy</a>
-                        <a href="#" className="text-zinc-600 hover:text-zinc-300 transition-colors py-2">Cookie Policy</a>
+                        {/* Policy links rimossi */}
                     </div>
                 </div>
             </div>
