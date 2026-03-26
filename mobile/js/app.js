@@ -262,11 +262,11 @@ class App {
                     <option value="manutenzione">Manutenzione</option>
                     <option value="pulizie">Pulizie</option>
                     <option value="utenze">Utenze</option>
-                    <option value="cibo">Cibo/Spesa</option>
+                    <option value="cibo" selected>Cibo/Spesa</option>
                     <option value="frutta_verdura">Frutta e Verdura</option>
                     <option value="tuto">Tuto</option>
                     <option value="affitto">Affitto</option>
-                    <option value="altro" selected>Altro</option>
+                    <option value="altro">Altro</option>
                   </select>
                 </div>
 

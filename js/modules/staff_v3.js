@@ -37,7 +37,21 @@ const Staff = (() => {
     const l = App.getUser(),
       o = ["admin", "manager", "operator"].includes(l?.role),
       c = [...new Set(t.map((e) => e.role).filter(Boolean))].sort();
-    ((n.innerHTML = `\n            <div class="page-header" style="border-bottom:1px solid var(--color-border);padding-bottom:var(--sp-3);margin-bottom:var(--sp-3);">\n                <div>\n                    <h1 class="page-title">Staff</h1>\n                    <p class="page-subtitle">${t.length} membro${1 !== t.length ? "i" : ""} nel sistema</p>\n                </div>\n            </div>\n\n            <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2);margin-bottom:var(--sp-3);flex-wrap:wrap;">\n                <div class="input-wrapper" style="position:relative;min-width:220px;">\n                    <i class="ph ph-magnifying-glass" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--color-text-muted);font-size:16px;"></i>\n                    <input type="text" id="staff-search" class="form-input" placeholder="Cerca membro staff..." style="padding-left:36px;height:42px;font-size:13px;">\n                </div>\n                ${o ? '<button class="btn btn-primary" id="new-staff-btn" type="button">+ NUOVO MEMBRO</button>' : ""}\n            </div>\n\n            <div class="filter-bar" id="staff-role-filter" style="margin-bottom:var(--sp-3);">\n                <button class="filter-chip active" data-role="" type="button">Tutti</button>\n                ${c.map((e) => `<button class="filter-chip" data-role="${Utils.escapeHtml(e.toLowerCase())}" type="button">${Utils.escapeHtml(e)}</button>`).join("")}\n            </div>\n\n            <div class="grid-3" id="staff-grid">\n                ${
+    ((n.innerHTML = `\n            <div class="transport-dashboard">
+    <div class="dash-top-bar" style="border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 24px; margin-bottom: 24px;">
+        <div>
+            <h1 class="dash-title">Gestione <span style="color:var(--accent-pink);">Staff</span></h1>
+            <p class="dash-subtitle">${t.length} membro${1 !== t.length ? "i" : ""} nel sistema</p>
+        </div>
+        <div style="display:flex;gap:12px; flex-wrap:wrap; align-items:center;">
+            <div class="input-wrapper" style="position:relative;min-width:220px;">
+                <i class="ph ph-magnifying-glass" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,0.4);font-size:16px;"></i>
+                <input type="text" id="staff-search" class="form-input" placeholder="Cerca membro staff..." style="padding-left:36px;height:42px;font-size:13px;background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.1);color:#fff;">
+            </div>
+            ${o ? '<button class="btn-dash pink" id="new-staff-btn" type="button"><i class="ph ph-plus-circle" style="font-size:18px;"></i> NUOVO MEMBRO</button>' : ""}
+        </div>
+    </div>
+    <div class="dash-filters" id="staff-role-filter" style="margin-bottom:24px;">\n                <button class="dash-filter active" data-role="" type="button">Tutti</button>\n                ${c.map((e) => `<button class="dash-filter" data-role="${Utils.escapeHtml(e.toLowerCase())}" type="button">${Utils.escapeHtml(e)}</button>`).join("")}\n            </div>\n\n            <div class="dash-stat-grid" id="staff-grid">\n                ${
       0 === t.length
         ? Utils.emptyState(
             "Nessun membro staff",
@@ -63,11 +77,11 @@ const Staff = (() => {
                           .filter(Boolean)
                           .join(", ")
                       : "");
-                return `\n        <div class="card" style="cursor:pointer;position:relative;overflow:hidden;"\n             data-staff-id="${Utils.escapeHtml(e.id)}"\n             data-name="${Utils.escapeHtml((e.full_name || "").toLowerCase())}"\n             data-role="${Utils.escapeHtml((e.role || "").toLowerCase())}">\n            ${o ? '<div style="position:absolute;top:var(--sp-2);right:var(--sp-2);width:8px;height:8px;border-radius:50%;background:var(--color-pink);box-shadow:0 0 6px var(--color-pink);"></div>' : ""}\n            <div style="display:flex;align-items:flex-start;gap:var(--sp-2);">\n                <div style="width:48px;height:48px;background:${t};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--font-display);font-weight:700;font-size:1.3rem;color:#000;border-radius:8px;position:relative;overflow:hidden;">\n                    ${e.photo_path ? `<img src="${e.photo_path}" style="width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;z-index:1;">` : ""}\n                    ${Utils.escapeHtml(n)}\n                </div>\n                <div style="overflow:hidden;flex:1;">\n                    <div style="font-family:var(--font-display);font-weight:700;font-size:1.1rem;">${Utils.escapeHtml(e.full_name)}</div>\n                    <div style="font-size:12px;color:var(--color-text-muted);">${Utils.escapeHtml(e.role || "—")}</div>\n                    <div style="font-size:12px;color:var(--color-text-muted);">${Utils.escapeHtml(r)}</div>\n                    ${e.phone ? `<div style="font-size:12px;color:var(--color-text-muted);margin-top:2px;"><i class="ph ph-phone" style="font-size:11px;"></i> ${Utils.escapeHtml(e.phone)}</div>` : ""}\n                </div>\n            </div>\n        </div>`;
+                return `\n        <div class="dash-stat-card" style="cursor:pointer;position:relative;overflow:hidden;padding:16px;" data-staff-id="${Utils.escapeHtml(e.id)}"\n             data-name="${Utils.escapeHtml((e.full_name || "").toLowerCase())}"\n             data-role="${Utils.escapeHtml((e.role || "").toLowerCase())}">\n            ${o ? '<div style="position:absolute;top:var(--sp-2);right:var(--sp-2);width:8px;height:8px;border-radius:50%;background:var(--color-pink);box-shadow:0 0 6px var(--color-pink);"></div>' : ""}\n            <div style="display:flex;align-items:flex-start;gap:var(--sp-2);">\n                <div style="width:48px;height:48px;background:${t};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--font-display);font-weight:700;font-size:1.3rem;color:#000;border-radius:8px;position:relative;overflow:hidden;">\n                    ${e.photo_path ? `<img src="${e.photo_path}" style="width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;z-index:1;">` : ""}\n                    ${Utils.escapeHtml(n)}\n                </div>\n                <div style="overflow:hidden;flex:1;">\n                    <div style="font-family:var(--font-display);font-weight:700;font-size:1.1rem;">${Utils.escapeHtml(e.full_name)}</div>\n                    <div style="font-size:12px;color:var(--color-text-muted);">${Utils.escapeHtml(e.role || "—")}</div>\n                    <div style="font-size:12px;color:var(--color-text-muted);">${Utils.escapeHtml(r)}</div>\n                    ${e.phone ? `<div style="font-size:12px;color:var(--color-text-muted);margin-top:2px;"><i class="ph ph-phone" style="font-size:11px;"></i> ${Utils.escapeHtml(e.phone)}</div>` : ""}\n                </div>\n            </div>\n        </div>`;
               })(e),
             )
             .join("")
-    }\n            </div>\n        `),
+    }\n            </div></div>\n        `),
       document.getElementById("staff-search")?.addEventListener(
         "input",
         (e) => {
@@ -261,7 +275,7 @@ const Staff = (() => {
                 .join(", ")
             : "");
       ((c.innerHTML = `
-        <div class="page-body" style="display:flex;flex-direction:column;gap:var(--sp-4); background:var(--color-black); min-height:100vh; padding-top:var(--sp-3);">
+        <div class="transport-dashboard" style="min-height:100vh;">
 
           <!-- BREADCRUMB NAV -->
           <div style="display:flex;align-items:center;gap:var(--sp-2);padding:0 var(--sp-4);">
@@ -303,7 +317,7 @@ const Staff = (() => {
               <!-- FOTO PERSONALE -->
               <div style="width:280px;flex-shrink:0;">
                 <p class="section-label" style="text-align:center;">Foto Personale</p>
-                <div class="card" style="padding:var(--sp-3);">
+                <div class="dash-card" style="padding:var(--sp-3);">
                   <div style="display:flex;flex-direction:column;align-items:center;gap:var(--sp-3);">
                     <div id="staff-photo-preview" style="width:240px;height:240px;border-radius:16px;overflow:hidden;flex-shrink:0;border:2px solid var(--color-border);background:${s(p.full_name)};display:flex;align-items:center;justify-content:center;">
                       ${p.photo_path ? `<img src="${Utils.escapeHtml(p.photo_path)}" alt="Foto staff" style="width:100%;height:100%;object-fit:cover;object-position:center">` : `<span style="font-family:var(--font-display);font-size:4.5rem;font-weight:700;color:#000;">${Utils.initials(p.full_name)}</span>`}
@@ -328,7 +342,7 @@ const Staff = (() => {
               </div>
               <div style="flex:1;">
                 <p class="section-label">Dati Anagrafici e Contatti</p>
-                <div class="card" style="padding:var(--sp-3);">
+                <div class="dash-card" style="padding:var(--sp-3);">
                   <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-3);">
                       ${o("Nome", p.first_name)}
                       ${o("Cognome", p.last_name)}
@@ -349,7 +363,7 @@ const Staff = (() => {
             <!-- DOCUMENTI (in Anagrafica) -->
             <div>
               <p class="section-label">Matricola e Documenti</p>
-              <div class="card" style="padding:var(--sp-3);">
+              <div class="dash-card" style="padding:var(--sp-3);">
                 <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:var(--sp-3);">
                   ${o("Documento d'Identità", p.identity_document)}
                   ${o("Codice Fiscale", p.fiscal_code)}
@@ -363,7 +377,7 @@ const Staff = (() => {
           <div id="stab-panel-documenti" class="athlete-tab-panel" style="display:none;flex-direction:column;gap:var(--sp-4);padding:0 var(--sp-4);">
               <div>
                   <p class="section-label">Matricola e Dati</p>
-                  <div class="card" style="padding:var(--sp-3);">
+                  <div class="dash-card" style="padding:var(--sp-3);">
                       <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3);">
                           ${o("Codice Fiscale", p.fiscal_code)}
                           ${o("Documento d'Identità", p.identity_document)}
@@ -376,7 +390,7 @@ const Staff = (() => {
                       <p class="section-label" style="margin-bottom:0;">Contratto di Collaborazione</p>
                       ${f && p.email ? `<button class="btn btn-primary btn-sm" id="generate-contract-btn" style="font-size:11px;padding:4px 10px;">+ NUOVO</button>` : !p.email ? '<span style="font-size:11px;color:var(--color-pink);">Email mancante per contratto</span>' : ""}
                   </div>
-                  <div class="card" style="padding:var(--sp-3);">
+                  <div class="dash-card" style="padding:var(--sp-3);">
                       ${
                         !p.contract_status
                           ? Utils.emptyState(
@@ -408,7 +422,7 @@ const Staff = (() => {
                   <div style="display:flex;flex-direction:column;gap:var(--sp-3);">
 
                       <!-- Contratto (file) -->
-                      <div class="card" style="padding:var(--sp-3);">
+                      <div class="dash-card" style="padding:var(--sp-3);">
                           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);">
                               <div style="display:flex;align-items:center;gap:10px;">
                                   <i class="ph ph-file-pdf" style="font-size:24px;color:var(--color-pink);flex-shrink:0;"></i>
@@ -430,7 +444,7 @@ const Staff = (() => {
                       </div>
 
                       <!-- CI Fronte -->
-                      <div class="card" style="padding:var(--sp-3);">
+                      <div class="dash-card" style="padding:var(--sp-3);">
                           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);">
                               <div style="display:flex;align-items:center;gap:10px;">
                                   <i class="ph ph-identification-badge" style="font-size:24px;color:var(--color-info);flex-shrink:0;"></i>
@@ -452,7 +466,7 @@ const Staff = (() => {
                       </div>
 
                       <!-- CI Retro -->
-                      <div class="card" style="padding:var(--sp-3);">
+                      <div class="dash-card" style="padding:var(--sp-3);">
                           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);">
                               <div style="display:flex;align-items:center;gap:10px;">
                                   <i class="ph ph-identification-card" style="font-size:24px;color:var(--color-info);flex-shrink:0;"></i>
@@ -474,7 +488,7 @@ const Staff = (() => {
                       </div>
 
                       <!-- CF Fronte -->
-                      <div class="card" style="padding:var(--sp-3);">
+                      <div class="dash-card" style="padding:var(--sp-3);">
                           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);">
                               <div style="display:flex;align-items:center;gap:10px;">
                                   <i class="ph ph-credit-card" style="font-size:24px;color:var(--color-success);flex-shrink:0;"></i>
@@ -496,7 +510,7 @@ const Staff = (() => {
                       </div>
 
                       <!-- CF Retro -->
-                      <div class="card" style="padding:var(--sp-3);">
+                      <div class="dash-card" style="padding:var(--sp-3);">
                           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);">
                               <div style="display:flex;align-items:center;gap:10px;">
                                   <i class="ph ph-credit-card" style="font-size:24px;color:var(--color-success);flex-shrink:0;"></i>
