@@ -459,7 +459,7 @@ class App {
                             <button type="button" class="btn btn-primary" onclick="document.getElementById('upload-${actionName}').click()" style="padding: 6px 12px; font-size: 12px; height: auto; width: auto; min-width: 80px;" id="btn-${actionName}">
                               <i class="fas fa-upload"></i> CARICA
                             </button>
-                            <input type="file" id="upload-${actionName}" accept=".pdf,image/jpeg,image/png,image/webp" style="display: none;" onchange="app.uploadProfileDoc(this, '${actionName}', ${p.id}, '${p.api_module}')">
+                            <input type="file" id="upload-${actionName}" accept=".pdf,image/jpeg,image/png,image/webp" style="display: none;" onchange="app.uploadProfileDoc(this, '${actionName}', '${p.id}', '${p.api_module}')">
                           </div>
                         </div>`;
             }
@@ -630,3 +630,4 @@ class App {
 }
 
 const app = new App();
+window.app = app;
