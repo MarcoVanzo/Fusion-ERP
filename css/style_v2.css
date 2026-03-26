@@ -5886,7 +5886,6 @@ textarea:focus-visible {
 
 .quick-link:hover {
   background: rgba(255, 0, 255, 0.05);
-  transform: translateY(-2px);
   border-color: rgba(255, 0, 255, 0.4);
   box-shadow: var(--shadow-md), var(--glow-card-hover);
 }
