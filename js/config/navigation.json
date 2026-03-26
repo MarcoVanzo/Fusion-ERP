@@ -17,7 +17,7 @@
             { "title": "Metrics Atleti", "path": "athlete-metrics", "icon": "trend-up", "isMobileVisible": false, "roles": ["atleta", "allenatore", "admin"] },
             { "title": "Elenco Staff", "path": "staff", "icon": "identification-badge", "isMobileVisible": false, "roles": ["allenatore", "admin"] },
             { "title": "Documenti Staff", "path": "staff-documents", "icon": "file-text", "isMobileVisible": false, "roles": ["allenatore", "admin"] },
-            { "title": "Partite Risultati", "path": "results-matches", "icon": "volleyball", "isMobileVisible": false, "roles": ["allenatore", "admin"] },
+            { "title": "Risultati", "path": "results-matches", "icon": "volleyball", "isMobileVisible": false, "roles": ["allenatore", "admin"] },
             { "title": "Classifiche", "path": "results-standings", "icon": "list-numbers", "isMobileVisible": false, "roles": ["allenatore", "admin"] },
             { "title": "Database Scouting", "path": "scouting-database", "icon": "database", "isMobileVisible": false, "implemented": true, "roles": ["allenatore", "admin"] },
             { "title": "Valutazioni Scouting", "path": "scouting-evaluations", "icon": "star", "isMobileVisible": false, "implemented": false, "roles": ["allenatore", "admin"] },
@@ -37,11 +37,10 @@
         ],
         "children": [
             { "title": "Task Operativi", "path": "tasks", "icon": "check-square", "isMobileVisible": false, "roles": ["operatore", "admin"] },
-            { "title": "Scadenze Societarie", "path": "societa-scadenze", "icon": "bell-ringing", "isMobileVisible": false, "roles": ["operatore", "admin"] },
-            { "title": "Viaggi & Trasferte", "path": "transport", "icon": "van", "isMobileVisible": false, "roles": ["operatore", "admin"] },
-            { "title": "Trasporti Autisti", "path": "transport-drivers", "icon": "steering-wheel", "isMobileVisible": false, "roles": ["operatore", "admin"] },
+            { "title": "Gestione Trasporti", "path": "transport", "icon": "van", "isMobileVisible": false, "roles": ["operatore", "admin"] },
+            { "title": "Gestione Autisti", "path": "transport-drivers", "icon": "steering-wheel", "isMobileVisible": false, "roles": ["operatore", "admin"] },
             { "title": "Gestione Mezzi", "path": "transport-fleet", "icon": "bus", "isMobileVisible": false, "roles": ["operatore", "admin"] },
-            { "title": "Trasporti Rimborsi", "path": "transport-refunds", "icon": "receipt", "isMobileVisible": false, "roles": ["operatore", "admin"] },
+            { "title": "Rimborsi Trasporti", "path": "transport-refunds", "icon": "receipt", "isMobileVisible": false, "roles": ["operatore", "admin"] },
             { "title": "OutSeason", "path": "outseason-camps", "icon": "tent", "isMobileVisible": false, "roles": ["operatore", "admin"] },
             { "title": "Gestione Tornei", "path": "outseason-tournaments", "icon": "medal", "isMobileVisible": false, "roles": ["operatore", "admin"] }
         ]
@@ -57,11 +56,11 @@
             "admin"
         ],
         "children": [
-            { "title": "WhatsApp Inbox", "path": "whatsapp-inbox", "icon": "chat-circle-dots", "isMobileVisible": false, "roles": ["social media manager", "admin"] },
+            { "title": "WhatsApp", "path": "whatsapp-inbox", "icon": "chat-circle-dots", "isMobileVisible": false, "roles": ["social media manager", "admin"] },
             { "title": "WhatsApp Contatti", "path": "whatsapp-contacts", "icon": "address-book", "isMobileVisible": false, "roles": ["social media manager", "admin"] },
             { "title": "Social Analytics", "path": "social-analytics", "icon": "chart-line", "isMobileVisible": false, "roles": ["social media manager", "admin"] },
             { "title": "Sito Web", "path": "website", "icon": "globe", "isMobileVisible": false, "roles": ["social media manager", "admin"] },
-            { "title": "Web Analytics", "path": "website-analytics", "icon": "chart-bar", "isMobileVisible": false, "roles": ["social media manager", "admin"] },
+            { "title": "Analytics Sito", "path": "website-analytics", "icon": "chart-bar", "isMobileVisible": false, "roles": ["social media manager", "admin"] },
             { "title": "Newsletter", "path": "newsletter", "icon": "envelope-simple", "isMobileVisible": false, "roles": ["social media manager", "admin"] }
         ]
     },

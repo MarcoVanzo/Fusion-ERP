@@ -45,7 +45,6 @@ class App {
   getBottomNav(activeHash) {
     const items = [
       { id: '#dashboard', icon: 'fa-home', text: 'Home' },
-      { id: '#scouting', icon: 'fa-clipboard-list', text: 'Scouting', onclick: "alert('Modulo in sviluppo')" },
       { id: '#profilo', icon: 'fa-user-circle', text: 'Profilo' },
       { id: '#spese', icon: 'fa-receipt', text: 'Spese' }
     ];
@@ -75,7 +74,7 @@ class App {
         <div class="login-header">
           <img src="../uploads/images/Logo%20Colorato.png" alt="Fusion Logo" style="width: 90px; margin-bottom: 24px;">
           <h1 class="login-title">GET GAME<br><span>READY</span></h1>
-          <p class="login-subtitle">Gestione atleti e trasferte</p>
+          <p class="login-subtitle">Gestione atleti e trasporti</p>
         </div>
         <div class="login-card">
           <div class="input-group">
@@ -144,9 +143,16 @@ class App {
           <h2 id="dash-greeting" style="font-size: 24px; margin-bottom: 8px;">Bentornato</h2>
           <p class="text-light" style="margin-bottom: 24px; font-size: 14px;">Il tuo hub sportivo personale.</p>
           
+          <!-- Call to Action Spese -->
+          <div class="card" style="text-align: center; border: 2px dashed var(--accent-secondary); cursor: pointer; background: rgba(255,0,122,0.02); transition: all 0.2s;" onclick="window.location.hash='#spese'" id="cta-add-spesa">
+            <i class="fas fa-plus-circle" style="font-size: 36px; color: var(--accent-secondary); margin-bottom: 12px; filter: drop-shadow(0 0 10px rgba(255,0,122,0.5));"></i>
+            <h3 style="color: var(--text-primary); font-size: 18px; margin-bottom: 4px;">AGGIUNGI SPESA</h3>
+            <p class="text-muted" style="font-size: 13px;">Carica scontrino e importo al volo</p>
+          </div>
+
           <div class="card" style="text-align: center; padding: 40px 20px;">
-            <i class="fas fa-chart-line" style="font-size: 40px; color: var(--accent-secondary); margin-bottom: 16px;"></i>
-            <h3 style="margin-bottom: 8px;">Nessun dato</h3>
+            <i class="fas fa-chart-line" style="font-size: 40px; color: var(--accent-primary); margin-bottom: 16px; opacity: 0.8;"></i>
+            <h3 style="margin-bottom: 8px;">Statistiche</h3>
             <p class="text-muted" style="font-size: 14px;">I widget KPI arriveranno post lancio.</p>
           </div>
 
@@ -158,6 +164,9 @@ class App {
         ${this.getBottomNav('#dashboard')}
       </div>
     `;
+
+    document.getElementById('cta-add-spesa').addEventListener('touchstart', function() { this.style.transform = 'scale(0.98)'; });
+    document.getElementById('cta-add-spesa').addEventListener('touchend', function() { this.style.transform = 'scale(1)'; });
 
     const userStr = localStorage.getItem('erp_user');
     if (userStr) {
@@ -176,7 +185,7 @@ class App {
     });
   }
 
-  // Spese Foresteria View
+  // Spese Foresteria View (Two-Step Wizard)
   renderSpese() {
     const today = new Date().toISOString().split('T')[0];
 
@@ -188,54 +197,74 @@ class App {
         </header>
 
         <div class="p-20">
-          <div class="card">
+          <div class="card" style="padding-top: 30px;">
             <form id="expense-form" onsubmit="return false;">
-              <div class="input-group">
-                <label class="input-label">Descrizione *</label>
-                <input type="text" id="exp-desc" class="input-field" placeholder="Es. Spesa Alimentare" required>
+              
+              <!-- STEP 1: IMPORTANTI (Foto + Importo) -->
+              <div id="step-1">
+                <div class="input-group">
+                  <label for="exp-receipt" class="file-upload-box giant-camera-box">
+                    <i class="fas fa-camera"></i>
+                    <span>Fotografa Scontrino</span>
+                  </label>
+                  <input type="file" id="exp-receipt" accept="image/*" capture="environment" style="display: none;">
+                  <div id="receipt-preview-container" class="mt-10" style="display: none; text-align: center;">
+                     <p id="receipt-name" class="text-light" style="font-size: 13px; font-weight: 500; margin-bottom: 8px;">
+                       <i class="fas fa-check-circle" style="color: var(--success)"></i> <span class="filename"></span>
+                     </p>
+                     <img id="receipt-img-preview" src="" style="max-height: 120px; border-radius: 8px; border: 1px solid var(--border-subtle); margin: 0 auto; display: block;" />
+                  </div>
+                </div>
+
+                <div class="huge-amount-wrapper">
+                  <label class="input-label" style="margin-bottom: -5px;">Importo Totale (€) *</label>
+                  <input type="number" step="0.01" id="exp-amount" class="huge-amount-input" placeholder="0.00" required>
+                </div>
+
+                <button type="button" class="btn mt-20" id="btn-next-step">
+                  AVANTI <i class="fas fa-arrow-right"></i>
+                </button>
               </div>
 
-              <div class="input-group">
-                <label class="input-label">Importo (€) *</label>
-                <input type="number" step="0.01" id="exp-amount" class="input-field" placeholder="0.00" required>
+              <!-- STEP 2: DETTAGLI -->
+              <div id="step-2" class="d-none">
+                <button type="button" class="btn btn-secondary mb-20" id="btn-prev-step" style="width: auto; padding: 10px 16px;">
+                  <i class="fas fa-arrow-left"></i> Indietro
+                </button>
+                
+                <h3 style="margin-bottom: 20px; font-size: 16px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 8px;">Dettagli Spesa</h3>
+
+                <div class="input-group">
+                  <label class="input-label">Descrizione *</label>
+                  <input type="text" id="exp-desc" class="input-field" placeholder="Es. Spesa Alimentare Conad" value="Spesa Generale" required>
+                </div>
+
+                <div class="input-group">
+                  <label class="input-label">Categoria</label>
+                  <select id="exp-category" class="input-field">
+                    <option value="Spesa Alimentare" selected>Spesa Alimentare</option>
+                    <option value="Pulizie">Pulizie</option>
+                    <option value="Manutenzione">Manutenzione</option>
+                    <option value="Utenze">Utenze</option>
+                    <option value="Altro">Altro</option>
+                  </select>
+                </div>
+
+                <div class="input-group">
+                  <label class="input-label">Data *</label>
+                  <input type="date" id="exp-date" class="input-field" value="${today}" required>
+                </div>
+
+                <div class="input-group">
+                  <label class="input-label">Note</label>
+                  <textarea id="exp-notes" class="input-field" rows="2" placeholder="Opzionale..."></textarea>
+                </div>
+
+                <button type="button" class="btn mt-20" id="submit-expense-btn">
+                  <i class="fas fa-paper-plane"></i> SALVA SPESA
+                </button>
               </div>
 
-              <div class="input-group">
-                <label class="input-label">Data Spesa *</label>
-                <input type="date" id="exp-date" class="input-field" value="${today}" required>
-              </div>
-
-              <div class="input-group">
-                <label class="input-label">Categoria</label>
-                <select id="exp-category" class="input-field">
-                  <option value="Spesa Alimentare">Spesa Alimentare</option>
-                  <option value="Pulizie">Pulizie</option>
-                  <option value="Manutenzione">Manutenzione</option>
-                  <option value="Utenze">Utenze</option>
-                  <option value="Altro">Altro</option>
-                </select>
-              </div>
-
-              <div class="input-group">
-                <label class="input-label">Note Opzionali</label>
-                <textarea id="exp-notes" class="input-field" rows="3" placeholder="Aggiungi una nota..."></textarea>
-              </div>
-
-              <div class="input-group mt-20">
-                <label class="input-label">Scontrino (Opzionale)</label>
-                <label for="exp-receipt" class="file-upload-box">
-                  <i class="fas fa-camera" style="font-size: 32px; margin-bottom: 12px; color: var(--accent-secondary);"></i>
-                  <span style="font-weight: 500;">Scatta o allega file</span>
-                </label>
-                <input type="file" id="exp-receipt" accept="image/*" capture="environment" style="display: none;">
-                <p id="receipt-name" style="margin-top: 10px; font-size: 13px; color: var(--success); font-weight: 500; display: none;">
-                  <i class="fas fa-check-circle"></i> <span></span>
-                </p>
-              </div>
-
-              <button type="button" class="btn mt-20" id="submit-expense-btn">
-                <i class="fas fa-paper-plane"></i> SALVA SPESA
-              </button>
             </form>
           </div>
         </div>
@@ -244,17 +273,56 @@ class App {
       </div>
     `;
 
+    // Step 1 <-> Step 2 Logic
+    const step1 = document.getElementById('step-1');
+    const step2 = document.getElementById('step-2');
+
+    document.getElementById('btn-next-step').addEventListener('click', () => {
+      const amt = document.getElementById('exp-amount').value;
+      if (!amt || parseFloat(amt) <= 0) {
+        alert("Inserisci un importo valido prima di proseguire.");
+        document.getElementById('exp-amount').focus();
+        return;
+      }
+      step1.classList.add('d-none');
+      step2.classList.remove('d-none');
+      // smooth scroll up
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    document.getElementById('btn-prev-step').addEventListener('click', () => {
+      step2.classList.add('d-none');
+      step1.classList.remove('d-none');
+    });
+
+    // File input listener with preview
     document.getElementById('exp-receipt').addEventListener('change', (e) => {
       const file = e.target.files[0];
-      const nameTag = document.getElementById('receipt-name');
+      const previewContainer = document.getElementById('receipt-preview-container');
+      const nameSpan = previewContainer.querySelector('.filename');
+      const imgPreview = document.getElementById('receipt-img-preview');
+      
       if (file) {
-        nameTag.style.display = 'block';
-        nameTag.querySelector('span').innerText = ' File allegato: ' + file.name;
+        previewContainer.style.display = 'block';
+        nameSpan.innerText = file.name;
+        
+        // Show lightweight thumbnail
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+          imgPreview.src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+
+        // Hide the giant text partially to save space, or just keep it
+        document.querySelector('.giant-camera-box span').innerText = 'Cambia Foto';
       } else {
-        nameTag.style.display = 'none';
+        previewContainer.style.display = 'none';
+        imgPreview.src = '';
+        document.querySelector('.giant-camera-box span').innerText = 'Fotografa Scontrino';
       }
     });
 
+    // Final Submit Action
     document.getElementById('submit-expense-btn').addEventListener('click', async () => {
       const desc = document.getElementById('exp-desc').value.trim();
       const amount = document.getElementById('exp-amount').value;
@@ -270,7 +338,7 @@ class App {
 
       const btn = document.getElementById('submit-expense-btn');
       btn.disabled = true;
-      btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> INVIO...';
+      btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> INVIO IN CORSO...';
 
       try {
         const formData = new FormData();
@@ -292,13 +360,13 @@ class App {
         const result = await response.json();
 
         if (response.ok && result.success !== false) {
-          alert('Spesa salvata!');
+          alert('Spesa salvata correttamente!');
           window.location.hash = '#dashboard';
         } else {
           alert(result.error || 'Errore durante il salvataggio.');
         }
       } catch (err) {
-        alert("Impossibile connettersi al Server.");
+        alert("Impossibile connettersi al API Server.");
       } finally {
         if (btn) {
           btn.disabled = false;

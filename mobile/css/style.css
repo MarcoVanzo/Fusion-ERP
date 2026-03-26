@@ -376,6 +376,64 @@ select.input-field {
   box-shadow: var(--glow-pink);
 }
 
+/* UI Step classes */
+.d-none { display: none !important; }
+.mb-20 { margin-bottom: 20px; }
+
+.giant-camera-box {
+  padding: 60px 20px;
+  border-width: 3px;
+  border-radius: 20px;
+  margin-bottom: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.giant-camera-box i {
+  font-size: 64px;
+  color: var(--accent-secondary);
+  filter: drop-shadow(0 0 10px rgba(255,0,122,0.3));
+}
+
+.giant-camera-box span {
+  font-size: 18px;
+  font-family: 'Syne', sans-serif;
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.huge-amount-wrapper {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.huge-amount-input {
+  font-size: 48px;
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  text-align: center;
+  background: transparent;
+  border: none;
+  color: var(--accent-primary);
+  width: 100%;
+  padding: 10px 0;
+  border-bottom: 2px solid var(--border-subtle);
+  border-radius: 0;
+  transition: 0.2s;
+}
+
+.huge-amount-input:focus {
+  border-bottom-color: var(--accent-secondary);
+  box-shadow: none;
+  outline: none;
+  color: white;
+}
+
+.huge-amount-input::placeholder {
+  color: rgba(0, 242, 254, 0.3);
+}
+
 .profile-avatar-container {
   width: 90px; 
   height: 90px; 

@@ -7,7 +7,7 @@ const Scouting = (() => {
         const canEdit = ['admin', 'manager', 'allenatore'].includes(App.getUser()?.role);
 
         container.innerHTML = `
-            <div>
+            <div style="width: 100%; display: flex; flex-direction: column;">
                 <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);margin-bottom:var(--sp-3)">
                     <div style="display:flex;align-items:center;gap:var(--sp-2);flex-wrap:wrap">
                         <div class="input-wrapper" style="position:relative;min-width:220px">
