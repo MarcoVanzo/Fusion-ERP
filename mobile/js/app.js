@@ -220,6 +220,25 @@ class App {
             </button>
           </form>
         </div>
+
+        <nav class="bottom-nav">
+          <a href="#dashboard" class="nav-item">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+          </a>
+          <a href="#scouting" class="nav-item" onclick="alert('In sviluppo')">
+            <i class="fas fa-clipboard-list"></i>
+            <span>Scouting</span>
+          </a>
+          <a href="#atleti" class="nav-item" onclick="alert('In sviluppo')">
+            <i class="fas fa-users"></i>
+            <span>Atleti</span>
+          </a>
+          <a href="#spese" class="nav-item active">
+            <i class="fas fa-receipt"></i>
+            <span>Spese</span>
+          </a>
+        </nav>
       </div>
     `;
 
