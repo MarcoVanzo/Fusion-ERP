@@ -877,8 +877,11 @@ const Transport = (() => {
         '<div class="spinner" style="width:20px;height:20px;"></div> Calcolo percorso Google...';
       const i = s.map((t) => t.residence_address);
       let o = null;
+      let pUrl = null;
       try {
         o = await _(e, n, i, !0);
+        const order = o.routes[0].waypoint_order;
+        pUrl = order.map(t => s[t]);
         let baseD = 0;
         const baseLegs = o.routes[0].legs;
         for (let idx = 0; idx < baseLegs.length; idx++) {
@@ -890,7 +893,8 @@ const Transport = (() => {
         const arrDate = new Date(`${transDateStr}T${String(xBase).padStart(2, '0')}:${String(vBase).padStart(2, '0')}:00`);
         const estDep = new Date(arrDate.getTime() - 1e3 * baseD);
         if (estDep > new Date()) {
-          o = await _(e, n, i, !0, estDep);
+          const reorderedI = order.map(idx => i[idx]);
+          o = await _(e, n, reorderedI, !1, estDep);
         }
       } catch (t) {
         throw new Error(
@@ -898,7 +902,7 @@ const Transport = (() => {
         );
       }
       const d = o.routes[0],
-        p = d.waypoint_order.map((t) => s[t]),
+        p = pUrl,
         fullPath = d.overview_path ? d.overview_path.map(pt => ({lat: pt.lat(), lng: pt.lng()})) : [];
       let c = 0,
         g = 0;
