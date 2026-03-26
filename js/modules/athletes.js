@@ -347,7 +347,29 @@ const Athletes = (() => {
   }
   function u() {
     ((document.getElementById("app").innerHTML =
-      `\n      <div class="page-header" style="border-bottom:1px solid var(--color-border);padding-bottom:0;margin-bottom:0;">\n        <div>\n          <h1 class="page-title">Atleti</h1>\n          <p class="page-subtitle">${t.length} atleti nel sistema</p>\n        </div>\n      </div>\n      <div id="main-tab-content" style="flex:1;padding:var(--sp-4) 0;"></div>\n    `),
+      `\n      <div class="transport-dashboard">
+        <div class="dash-top-bar" style="border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 24px; margin-bottom: 24px;">
+            <div>
+                <h1 class="dash-title">Gestione <span style="color:var(--accent-pink);">Atleti</span></h1>
+                <p class="dash-subtitle">${t.length} atleti nel sistema</p>
+            </div>
+            <div style="display:flex;gap:12px; flex-wrap:wrap;">
+                <div class="input-wrapper" style="position:relative;min-width:220px;">
+                    <i class="ph ph-magnifying-glass" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--color-text-muted);font-size:16px;"></i>
+                    <input type="text" id="athlete-search-global" class="form-input" placeholder="Cerca atleta..." style="padding-left:36px;height:42px;font-size:13px;background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.1);color:#fff;">
+                </div>
+            </div>
+        </div>
+        
+        <div class="dash-filters" style="margin-bottom: 24px;">
+            <button class="dash-filter active" data-maintab="anagrafica" type="button">Anagrafica</button>
+            <button class="dash-filter" data-maintab="metrics" type="button">Metriche</button>
+            <button class="dash-filter" data-maintab="pagamenti" type="button">Pagamenti</button>
+            <button class="dash-filter" data-maintab="documenti" type="button">Documenti</button>
+        </div>
+
+        <div id="main-tab-content"></div>
+      </div>\n    `),
       document.querySelectorAll("[data-maintab]").forEach((t) =>
         t.addEventListener(
           "click",
@@ -363,11 +385,7 @@ const Athletes = (() => {
     ((s = i),
       document.querySelectorAll("[data-maintab]").forEach((e) => {
         const t = e.dataset.maintab === i;
-        ((e.style.borderBottomColor = t ? "var(--color-pink)" : "transparent"),
-          (e.style.color = t
-            ? "var(--color-white)"
-            : "var(--color-text-muted)"),
-          (e.style.opacity = t ? "1" : "0.65"));
+        e.classList.toggle("active", t);
       }));
     const r = document.getElementById("main-tab-content");
     if (r)

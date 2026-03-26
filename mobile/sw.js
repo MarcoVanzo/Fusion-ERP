@@ -1,8 +1,8 @@
-const CACHE_NAME = 'fusion-erp-mobile-v2';
+const CACHE_NAME = 'fusion-erp-mobile-v3';
 const ASSETS_TO_CACHE = [
   './index.html',
-  './css/style.css',
-  './js/app.js',
+  './css/style.css?v=3',
+  './js/app.js?v=3',
   './manifest.json'
 ];
 

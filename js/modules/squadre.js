@@ -254,20 +254,20 @@ const Squadre = (() => {
       );
 
       html += `
-                <div class="card" style="padding:0;overflow:hidden;">
+                <div class="dash-card" style="padding:0;overflow:hidden;">
                     <!-- Season header -->
-                    <div style="padding:var(--sp-3) var(--sp-4);background:linear-gradient(135deg,rgba(99,102,241,0.08),rgba(236,72,153,0.06));border-bottom:1px solid var(--color-border);display:flex;align-items:center;justify-content:space-between;">
+                    <div class="dash-card-header" style="margin-bottom:0; padding:24px; background:linear-gradient(135deg,rgba(99,102,241,0.05),rgba(236,72,153,0.05));border-bottom:1px solid var(--color-border);display:flex;align-items:center;justify-content:space-between;">
                         <div style="display:flex;align-items:center;gap:12px;">
-                            <i class="ph ph-calendar-blank" style="font-size:22px;color:var(--color-primary);"></i>
+                            <i class="ph ph-calendar-blank" style="font-size:22px;color:var(--accent-primary);"></i>
                             <div>
-                                <div style="font-size:18px;font-weight:700;letter-spacing:-0.02em;">${Utils.escapeHtml(seasonName)}</div>
+                                <div class="dash-card-title" style="margin-bottom:4px;">${Utils.escapeHtml(seasonName)}</div>
                                 <div style="font-size:12px;color:var(--color-text-muted);">${entries.length} squadr${entries.length === 1 ? "a" : "e"} associate</div>
                             </div>
                         </div>
                         ${
                           isAdmin && unassociatedTeams.length > 0
                             ? `
-                        <button class="btn btn-ghost btn-sm" data-add-team-to-season="${Utils.escapeHtml(seasonName)}" title="Aggiungi squadra a questa stagione" style="display:flex;align-items:center;gap:4px;">
+                        <button class="btn-dash ghost" data-add-team-to-season="${Utils.escapeHtml(seasonName)}" title="Aggiungi squadra a questa stagione" style="padding:8px 16px;">
                             <i class="ph ph-plus"></i> Aggiungi squadra
                         </button>
                         `
@@ -276,7 +276,7 @@ const Squadre = (() => {
                     </div>
 
                     <!-- Teams in this season -->
-                    <div style="padding:var(--sp-3) var(--sp-4);">
+                    <div style="padding:24px;">
                         ${
                           activeEntries.length > 0
                             ? `
@@ -293,9 +293,9 @@ const Squadre = (() => {
                                     ${
                                       isAdmin
                                         ? `
-                                    <div style="display:flex;gap:2px;margin-left:8px;">
-                                        <button class="btn btn-ghost btn-sm" data-toggle-season="${e.teamSeasonId}" data-action="0" title="Disattiva" style="padding:2px 4px;color:var(--color-warning);"><i class="ph ph-eye-slash" style="font-size:14px;"></i></button>
-                                        <button class="btn btn-ghost btn-sm" data-del-season="${e.teamSeasonId}" data-team-name="${Utils.escapeHtml(e.teamName)}" data-season-name="${Utils.escapeHtml(seasonName)}" title="Rimuovi" style="padding:2px 4px;color:var(--color-pink);"><i class="ph ph-trash" style="font-size:14px;"></i></button>
+                                    <div style="display:flex;gap:4px;margin-left:8px;">
+                                        <button class="btn-dash ghost icon-only" data-toggle-season="${e.teamSeasonId}" data-action="0" title="Disattiva" style="padding:6px;color:var(--color-warning);"><i class="ph ph-eye-slash" style="font-size:14px;"></i></button>
+                                        <button class="btn-dash ghost icon-only" data-del-season="${e.teamSeasonId}" data-team-name="${Utils.escapeHtml(e.teamName)}" data-season-name="${Utils.escapeHtml(seasonName)}" title="Rimuovi" style="padding:6px;color:var(--color-pink);"><i class="ph ph-trash" style="font-size:14px;"></i></button>
                                     </div>
                                     `
                                         : ""
@@ -325,9 +325,9 @@ const Squadre = (() => {
                                     ${
                                       isAdmin
                                         ? `
-                                    <div style="display:flex;gap:2px;margin-left:8px;">
-                                        <button class="btn btn-ghost btn-sm" data-toggle-season="${e.teamSeasonId}" data-action="1" title="Riattiva" style="padding:2px 4px;"><i class="ph ph-eye" style="font-size:14px;"></i></button>
-                                        <button class="btn btn-ghost btn-sm" data-del-season="${e.teamSeasonId}" data-team-name="${Utils.escapeHtml(e.teamName)}" data-season-name="${Utils.escapeHtml(seasonName)}" title="Rimuovi" style="padding:2px 4px;color:var(--color-pink);"><i class="ph ph-trash" style="font-size:14px;"></i></button>
+                                    <div style="display:flex;gap:4px;margin-left:8px;">
+                                        <button class="btn-dash ghost icon-only" data-toggle-season="${e.teamSeasonId}" data-action="1" title="Riattiva" style="padding:6px;"><i class="ph ph-eye" style="font-size:14px;"></i></button>
+                                        <button class="btn-dash ghost icon-only" data-del-season="${e.teamSeasonId}" data-team-name="${Utils.escapeHtml(e.teamName)}" data-season-name="${Utils.escapeHtml(seasonName)}" title="Rimuovi" style="padding:6px;color:var(--color-pink);"><i class="ph ph-trash" style="font-size:14px;"></i></button>
                                     </div>
                                     `
                                         : ""
