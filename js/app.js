@@ -944,8 +944,8 @@ const App = (() => {
                 
                 const pageTitleEl = document.getElementById('page-title');
                 const pageSubtitleEl = document.getElementById('page-subtitle');
-                if (pageTitleEl) pageTitleEl.textContent = subTitle || parentTitle;
-                if (pageSubtitleEl) pageSubtitleEl.textContent = parentTitle;
+                if (pageTitleEl) pageTitleEl.textContent = parentTitle;
+                if (pageSubtitleEl) pageSubtitleEl.style.display = 'none';
             }
 
             if (appEl) {
