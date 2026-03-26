@@ -23,7 +23,6 @@ class App {
   route() {
     const hash = window.location.hash || '#login';
     
-    // Check auth (User data in localStorage)
     const activeUser = localStorage.getItem('erp_user');
     
     if (!activeUser && hash !== '#login') {
@@ -40,14 +39,13 @@ class App {
     else if (hash === '#dashboard') this.renderDashboard();
     else if (hash === '#spese') this.renderSpese();
     else if (hash === '#profilo') this.renderProfilo();
-    else this.renderLogin(); // Default fallback
+    else this.renderLogin();
   }
 
-  // Navigation Generator
   getBottomNav(activeHash) {
     const items = [
       { id: '#dashboard', icon: 'fa-home', text: 'Home' },
-      { id: '#scouting', icon: 'fa-clipboard-list', text: 'Scouting', onclick: "alert('In sviluppo')" },
+      { id: '#scouting', icon: 'fa-clipboard-list', text: 'Scouting', onclick: "alert('Modulo in sviluppo')" },
       { id: '#profilo', icon: 'fa-user-circle', text: 'Profilo' },
       { id: '#spese', icon: 'fa-receipt', text: 'Spese' }
     ];
@@ -71,22 +69,25 @@ class App {
   renderLogin() {
     this.container.innerHTML = `
       <div class="screen login-screen">
+        <div class="auth-bg-orb orb-1"></div>
+        <div class="auth-bg-orb orb-2"></div>
+        
         <div class="login-header">
-          <img src="../dummy_logo.png" alt="Logo" style="width: 80px; margin-bottom: 20px; border-radius: 16px; box-shadow: var(--shadow-sm);" onerror="this.style.display='none'">
-          <h1 class="login-title">Fusion ERP</h1>
-          <p class="login-subtitle">Accedi al tuo hub sportivo</p>
+          <img src="../uploads/images/Logo%20Colorato.png" alt="Fusion Logo" style="width: 90px; margin-bottom: 24px;">
+          <h1 class="login-title">GET GAME<br><span>READY</span></h1>
+          <p class="login-subtitle">Gestione atleti e trasferte</p>
         </div>
         <div class="login-card">
           <div class="input-group">
             <label class="input-label">Email</label>
-            <input type="email" id="email" class="input-field" placeholder="Inserisci la tua email" autocorrect="off" autocapitalize="none">
+            <input type="email" id="email" class="input-field" placeholder="nome@fusionteamvolley.it" autocorrect="off" autocapitalize="none">
           </div>
           <div class="input-group">
             <label class="input-label">Password</label>
-            <input type="password" id="password" class="input-field" placeholder="La tua password">
+            <input type="password" id="password" class="input-field" placeholder="Inserisci la password">
           </div>
           <button class="btn mt-20" id="login-btn">
-            <i class="fas fa-sign-in-alt"></i> Accedi
+            ACCEDI <i class="fas fa-chevron-right" style="font-size: 14px;"></i>
           </button>
         </div>
       </div>
@@ -103,7 +104,7 @@ class App {
       }
 
       btn.disabled = true;
-      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Accesso in corso...';
+      btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> CARICAMENTO...';
 
       try {
         const response = await fetch('../api/?module=auth&action=login', {
@@ -115,7 +116,6 @@ class App {
         const result = await response.json();
 
         if (response.ok && result?.data) {
-          // Success: save user data for quick UI presentation.
           localStorage.setItem('erp_user', JSON.stringify(result.data));
           window.location.hash = '#dashboard';
         } else {
@@ -126,7 +126,7 @@ class App {
         console.error(err);
       } finally {
         btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Accedi';
+        btn.innerHTML = 'ACCEDI <i class="fas fa-chevron-right" style="font-size: 14px;"></i>';
       }
     });
   }
@@ -136,22 +136,22 @@ class App {
     this.container.innerHTML = `
       <div class="screen dashboard-screen">
         <header class="app-header">
-          <div class="app-title">Dashboard</div>
+          <div class="app-title">Fusion ERP</div>
           <div class="header-icon"><i class="far fa-bell"></i></div>
         </header>
 
         <div class="p-20">
-          <h2 id="dash-greeting" style="font-size: 28px; margin-bottom: 8px;">Benvenuto</h2>
-          <p class="text-light" style="margin-bottom: 24px;">Qui appariranno i tuoi KPI e gli shortcut della giornata.</p>
+          <h2 id="dash-greeting" style="font-size: 24px; margin-bottom: 8px;">Bentornato</h2>
+          <p class="text-light" style="margin-bottom: 24px; font-size: 14px;">Il tuo hub sportivo personale.</p>
           
           <div class="card" style="text-align: center; padding: 40px 20px;">
-            <i class="fas fa-chart-pie" style="font-size: 48px; color: var(--accent-light); margin-bottom: 16px;"></i>
+            <i class="fas fa-chart-line" style="font-size: 40px; color: var(--accent-secondary); margin-bottom: 16px;"></i>
             <h3 style="margin-bottom: 8px;">Nessun dato</h3>
-            <p class="text-light" style="font-size: 14px;">I widget arriveranno presto.</p>
+            <p class="text-muted" style="font-size: 14px;">I widget KPI arriveranno post lancio.</p>
           </div>
 
-          <button class="btn btn-secondary mt-20" id="logout-btn" style="color: var(--danger);">
-            <i class="fas fa-sign-out-alt"></i> Disconnetti
+          <button class="btn btn-secondary mt-20" id="logout-btn">
+            <i class="fas fa-sign-out-alt"></i> DISCONNETTI
           </button>
         </div>
 
@@ -159,16 +159,14 @@ class App {
       </div>
     `;
 
-    // Populate user greeting
     const userStr = localStorage.getItem('erp_user');
     if (userStr) {
       try {
         const user = JSON.parse(userStr);
-        document.getElementById('dash-greeting').innerText = `Ciao, ${user.full_name || user.fullName || 'Utente'}!`;
+        document.getElementById('dash-greeting').innerText = `Ciao, ${user.full_name || user.fullName || 'Utente'}`;
       } catch(e) {}
     }
 
-    // Attach Logout
     document.getElementById('logout-btn').addEventListener('click', async () => {
       try {
         await fetch('../api/?module=auth&action=logout', { method: 'POST' });
@@ -186,7 +184,7 @@ class App {
       <div class="screen spese-screen">
         <header class="app-header">
           <div class="app-title">Nuova Spesa</div>
-          <a href="#dashboard" class="header-icon"><i class="fas fa-times"></i></a>
+          <a href="#dashboard" class="header-icon" style="color:var(--text-primary)"><i class="fas fa-times"></i></a>
         </header>
 
         <div class="p-20">
@@ -194,12 +192,12 @@ class App {
             <form id="expense-form" onsubmit="return false;">
               <div class="input-group">
                 <label class="input-label">Descrizione *</label>
-                <input type="text" id="exp-desc" class="input-field" placeholder="Es. Spesa Conad" required>
+                <input type="text" id="exp-desc" class="input-field" placeholder="Es. Spesa Alimentare" required>
               </div>
 
               <div class="input-group">
                 <label class="input-label">Importo (€) *</label>
-                <input type="number" step="0.01" id="exp-amount" class="input-field" placeholder="Es. 45.50" required>
+                <input type="number" step="0.01" id="exp-amount" class="input-field" placeholder="0.00" required>
               </div>
 
               <div class="input-group">
@@ -224,19 +222,19 @@ class App {
               </div>
 
               <div class="input-group mt-20">
-                <label class="input-label">Scontrino o Ricevuta</label>
+                <label class="input-label">Scontrino (Opzionale)</label>
                 <label for="exp-receipt" class="file-upload-box">
-                  <i class="fas fa-camera" style="font-size: 32px; color: var(--text-light); margin-bottom: 12px;"></i>
+                  <i class="fas fa-camera" style="font-size: 32px; margin-bottom: 12px; color: var(--accent-secondary);"></i>
                   <span style="font-weight: 500;">Scatta o allega file</span>
                 </label>
                 <input type="file" id="exp-receipt" accept="image/*" capture="environment" style="display: none;">
-                <p id="receipt-name" style="margin-top: 10px; font-size: 14px; color: var(--success); font-weight: 500; display: none;">
+                <p id="receipt-name" style="margin-top: 10px; font-size: 13px; color: var(--success); font-weight: 500; display: none;">
                   <i class="fas fa-check-circle"></i> <span></span>
                 </p>
               </div>
 
               <button type="button" class="btn mt-20" id="submit-expense-btn">
-                <i class="fas fa-paper-plane"></i> Invia Spesa
+                <i class="fas fa-paper-plane"></i> SALVA SPESA
               </button>
             </form>
           </div>
@@ -246,19 +244,17 @@ class App {
       </div>
     `;
 
-    // File input listener to show file name
     document.getElementById('exp-receipt').addEventListener('change', (e) => {
       const file = e.target.files[0];
       const nameTag = document.getElementById('receipt-name');
       if (file) {
         nameTag.style.display = 'block';
-        nameTag.querySelector('span').innerText = ' ' + file.name;
+        nameTag.querySelector('span').innerText = ' File allegato: ' + file.name;
       } else {
         nameTag.style.display = 'none';
       }
     });
 
-    // Submit Action
     document.getElementById('submit-expense-btn').addEventListener('click', async () => {
       const desc = document.getElementById('exp-desc').value.trim();
       const amount = document.getElementById('exp-amount').value;
@@ -268,13 +264,13 @@ class App {
       const fileInput = document.getElementById('exp-receipt');
 
       if (!desc || !amount || !date) {
-        alert("Compila tutti i campi obbligatori (*).");
+        alert("Completa i campi obbligatori.");
         return;
       }
 
       const btn = document.getElementById('submit-expense-btn');
       btn.disabled = true;
-      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Invio in corso...';
+      btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> INVIO...';
 
       try {
         const formData = new FormData();
@@ -296,18 +292,17 @@ class App {
         const result = await response.json();
 
         if (response.ok && result.success !== false) {
-          alert('Spesa salvata con successo!');
+          alert('Spesa salvata!');
           window.location.hash = '#dashboard';
         } else {
           alert(result.error || 'Errore durante il salvataggio.');
         }
       } catch (err) {
         alert("Impossibile connettersi al Server.");
-        console.error(err);
       } finally {
         if (btn) {
           btn.disabled = false;
-          btn.innerHTML = '<i class="fas fa-paper-plane"></i> Invia Spesa';
+          btn.innerHTML = '<i class="fas fa-paper-plane"></i> SALVA SPESA';
         }
       }
     });
@@ -323,11 +318,9 @@ class App {
         </header>
 
         <div class="p-20" id="profilo-content">
-          <!-- Skeleton Loading State -->
-          <div class="profile-card skeleton" style="height: 220px;"></div>
-          
-          <div class="card skeleton" style="height: 280px; margin-bottom: 24px;"></div>
-          <div class="card skeleton" style="height: 300px;"></div>
+          <div class="card skeleton" style="height: 180px; margin-bottom: 24px; border:none;"></div>
+          <div class="card skeleton" style="height: 280px; margin-bottom: 24px; border:none;"></div>
+          <div class="card skeleton" style="height: 300px; border:none;"></div>
         </div>
 
         ${this.getBottomNav('#profilo')}
@@ -341,7 +334,7 @@ class App {
       if (response.ok && result.success && result.data) {
         const p = result.data;
         
-        let dobStr = p.birth_date || 'Non disponibile';
+        let dobStr = p.birth_date || 'N/D';
         if (p.birth_date) {
             const d = new Date(p.birth_date);
             dobStr = d.toLocaleDateString('it-IT');
@@ -349,64 +342,63 @@ class App {
 
         const renderDoc = (title, path, fieldName) => {
             if (!path) {
-                return `<div style="padding: 12px 0; border-bottom: 1px solid var(--border-light); display: flex; align-items: center; justify-content: space-between;">
-                          <span style="font-size: 14px; color: var(--text-dark);"><i class="fas fa-file-alt text-light" style="margin-right: 8px;"></i> ${title}</span>
-                          <span style="font-size: 12px; font-weight: 600; color: var(--danger); background: rgba(239, 68, 68, 0.1); padding: 4px 8px; border-radius: 12px;">Mancante</span>
+                return `<div style="padding: 12px 0; border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between;">
+                          <span style="font-size: 14px; color: var(--text-primary);"><i class="fas fa-file-alt text-muted" style="margin-right: 8px;"></i> ${title}</span>
+                          <span style="font-size: 11px; font-weight: 600; color: var(--danger); background: rgba(255, 77, 77, 0.1); padding: 4px 8px; border-radius: 12px; border: 1px solid rgba(255, 77, 77, 0.3);">MANCANTE</span>
                         </div>`;
             }
-            return `<div style="padding: 12px 0; border-bottom: 1px solid var(--border-light); display: flex; align-items: center; justify-content: space-between;">
-                      <span style="font-size: 14px; font-weight: 500; color: var(--text-dark);"><i class="fas fa-check-circle" style="color: var(--success); margin-right: 8px;"></i> ${title}</span>
-                      <a href="../api/?module=${p.api_module}&action=downloadDoc&id=${p.id}&field=${fieldName}" target="_blank" class="btn" style="padding: 6px 14px; font-size: 12px; height: auto; width: auto; background: var(--surface); color: var(--accent); border: 1.5px solid var(--accent); box-shadow: none;">Apri</a>
+            return `<div style="padding: 12px 0; border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between;">
+                      <span style="font-size: 14px; color: var(--text-primary);"><i class="fas fa-check-circle" style="color: var(--success); margin-right: 8px;"></i> ${title}</span>
+                      <a href="../api/?module=${p.api_module}&action=downloadDoc&id=${p.id}&field=${fieldName}" target="_blank" class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px; height: auto; width: auto;">APRI</a>
                     </div>`;
         };
 
         const renderStat = (label, value) => `
-          <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border-light);">
-            <span class="text-light" style="font-size: 14px;">${label}</span>
+          <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border-subtle);">
+            <span class="text-light" style="font-size: 13px; text-transform: uppercase;">${label}</span>
             <span style="font-weight: 500; font-size: 14px;">${value || '-'}</span>
           </div>
         `;
 
         const html = `
-          <div class="profile-card">
+          <div class="card" style="text-align: center; border-top: 3px solid var(--accent-secondary);">
             <div class="profile-avatar-container">
               ${p.photo_path ? '<img src="../' + p.photo_path + '">' : '<i class="fas fa-user"></i>'}
             </div>
-            <h2 style="margin: 0; color: #fff; font-size: 24px;">${p.first_name} ${p.last_name}</h2>
-            <div style="color: rgba(255,255,255,0.9); margin-top: 8px; font-weight: 500; font-size: 15px;">
-              ${p.role || 'Ruolo non specificato'} ${p.jersey_number ? ' • N. ' + p.jersey_number : ''}
+            <h2 style="margin: 0; font-size: 22px;">${p.first_name} ${p.last_name}</h2>
+            <div style="color: var(--accent-secondary); margin-top: 4px; font-weight: 600; font-size: 14px; letter-spacing: 0.5px;">
+              ${p.role ? p.role.toUpperCase() : 'RUOLO NON SPECIFICATO'} ${p.jersey_number ? ' • N. ' + p.jersey_number : ''}
             </div>
-            <div style="font-size: 13px; opacity: 0.8; margin-top: 6px; background: rgba(0,0,0,0.2); display: inline-block; padding: 4px 12px; border-radius: 20px;">
+            <div style="font-size: 12px; color: var(--text-light); margin-top: 8px; font-family: 'Syne', sans-serif;">
               ${p.team_name}
             </div>
           </div>
 
-          <div class="card" style="padding: 20px;">
-            <h3 style="margin-bottom: 16px; font-size: 16px; display: flex; align-items: center; gap: 8px;">
-              <i class="fas fa-id-card text-light"></i> Dati Anagrafici
+          <div class="card">
+            <h3 style="margin-bottom: 16px; font-size: 15px; display: flex; align-items: center; gap: 8px; color: var(--accent-primary);">
+              <i class="fas fa-id-card"></i> DATI ANAGRAFICI
             </h3>
             <div style="display: flex; flex-direction: column;">
-              ${renderStat('Data di Nascita', dobStr)}
-              ${renderStat('Luogo di Nascita', p.birth_place)}
+              ${renderStat('Nata/o il', dobStr)}
+              ${renderStat('Luogo', p.birth_place)}
               ${renderStat('Codice Fiscale', p.fiscal_code)}
               ${renderStat('Altezza', p.height_cm ? p.height_cm + ' cm' : '')}
               ${renderStat('Telefono', p.phone)}
-              ${renderStat('Email', p.email)}
+              ${renderStat('Mail', p.email)}
             </div>
           </div>
 
-          <div class="card" style="padding: 20px; margin-bottom: 0;">
-            <h3 style="margin-bottom: 8px; font-size: 16px; display: flex; align-items: center; gap: 8px;">
-              <i class="fas fa-folder-open text-light"></i> Documenti
+          <div class="card" style="margin-bottom: 0;">
+            <h3 style="margin-bottom: 16px; font-size: 15px; display: flex; align-items: center; gap: 8px; color: var(--accent-primary);">
+              <i class="fas fa-folder-open"></i> GESTIONE DOCUMENTI
             </h3>
-            <p class="text-light" style="font-size: 13px; margin-bottom: 16px;">I tuoi allegati medici e legali.</p>
             <div style="display: flex; flex-direction: column;">
-              ${renderDoc("Carta d'Identità (Fronte)", p.id_doc_front_file_path, 'id_doc_front_file_path')}
-              ${renderDoc("Carta d'Identità (Retro)", p.id_doc_back_file_path, 'id_doc_back_file_path')}
-              ${renderDoc('Codice Fiscale (Fronte)', p.cf_doc_front_file_path, 'cf_doc_front_file_path')}
-              ${renderDoc('Codice Fiscale (Retro)', p.cf_doc_back_file_path, 'cf_doc_back_file_path')}
+              ${renderDoc("Carta d'Identità (FR)", p.id_doc_front_file_path, 'id_doc_front_file_path')}
+              ${renderDoc("Carta d'Identità (RE)", p.id_doc_back_file_path, 'id_doc_back_file_path')}
+              ${renderDoc('Codice Fiscale (FR)', p.cf_doc_front_file_path, 'cf_doc_front_file_path')}
+              ${renderDoc('Codice Fiscale (RE)', p.cf_doc_back_file_path, 'cf_doc_back_file_path')}
               ${renderDoc('Certificato Medico', p.medical_cert_file_path, 'medical_cert_file_path')}
-              ${renderDoc('Contratto/Tesseramento', p.contract_file_path, 'contract_file_path')}
+              ${renderDoc('Documento Tesseramento', p.contract_file_path, 'contract_file_path')}
             </div>
           </div>
         `;
@@ -416,7 +408,7 @@ class App {
           <div class="card" style="text-align: center; padding: 40px 20px;">
             <i class="fas fa-exclamation-triangle" style="font-size: 40px; color: var(--danger); margin-bottom: 16px;"></i>
             <h3>Errore</h3>
-            <p class="text-light">${result.error || 'Profilo atleta non trovato.'}</p>
+            <p class="text-light">${result.error || 'Nessun profilo trovato.'}</p>
           </div>
         `;
       }
@@ -424,13 +416,12 @@ class App {
       document.getElementById('profilo-content').innerHTML = `
         <div class="card" style="text-align: center; padding: 40px 20px;">
           <i class="fas fa-wifi" style="font-size: 40px; color: var(--warning); margin-bottom: 16px;"></i>
-          <h3>Connessione assente</h3>
-          <p class="text-light">Impossibile caricare i dati dal server.</p>
+          <h3>Offline</h3>
+          <p class="text-light">Dominio non raggiungibile.</p>
         </div>
       `;
     }
   }
 }
 
-// Boot App
 const app = new App();
