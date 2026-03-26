@@ -23,10 +23,16 @@ class App {
   route() {
     const hash = window.location.hash || '#login';
     
-    // Check auth (Dummy implementation)
-    const token = localStorage.getItem('erp_token');
-    if (!token && hash !== '#login') {
+    // Check auth (User data in localStorage)
+    const activeUser = localStorage.getItem('erp_user');
+    
+    if (!activeUser && hash !== '#login') {
       window.location.hash = '#login';
+      return;
+    }
+
+    if (activeUser && hash === '#login') {
+      window.location.hash = '#dashboard';
       return;
     }
 
@@ -57,14 +63,42 @@ class App {
     `;
 
     document.getElementById('login-btn').addEventListener('click', async () => {
-      const email = document.getElementById('email').value;
+      const email = document.getElementById('email').value.trim();
       const pass = document.getElementById('password').value;
-      if (email && pass) {
-        // Here we will do the real fetch to /api/Auth.php
-        localStorage.setItem('erp_token', 'dummy_token');
-        window.location.hash = '#dashboard';
-      } else {
+      const btn = document.getElementById('login-btn');
+
+      if (!email || !pass) {
         alert('Inserisci le credenziali.');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerText = 'Accesso in corso...';
+
+      try {
+        const response = await fetch('../api/?module=auth&action=login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email, password: pass }),
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result?.data) {
+          // Success: The backend handles the session cookie automatically.
+          // Save user data for quick UI presentation.
+          localStorage.setItem('erp_user', JSON.stringify(result.data));
+          window.location.hash = '#dashboard';
+        } else {
+          // Error handling
+          alert(result.error || 'Credenziali non valide o errore del server.');
+        }
+      } catch (err) {
+        alert('Errore di connessione al server.');
+        console.error(err);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'Accedi';
       }
     });
   }
@@ -79,8 +113,10 @@ class App {
         </header>
 
         <div class="p-20">
-          <h2>Benvenuto</h2>
+          <h2 id="dash-greeting">Benvenuto</h2>
           <p class="text-light mt-20">Qui appariranno i tuoi KPI e gli shortcut della giornata.</p>
+          
+          <button class="btn mt-20" id="logout-btn" style="background-color: var(--danger);">Esci</button>
         </div>
 
         <nav class="bottom-nav">
@@ -103,6 +139,24 @@ class App {
         </nav>
       </div>
     `;
+
+    // Populate user greeting
+    const userStr = localStorage.getItem('erp_user');
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        document.getElementById('dash-greeting').innerText = `Ciao, ${user.full_name || user.fullName}!`;
+      } catch(e) {}
+    }
+
+    // Attach Logout
+    document.getElementById('logout-btn').addEventListener('click', async () => {
+      try {
+        await fetch('../api/?module=auth&action=logout', { method: 'POST' });
+      } catch(e) {}
+      localStorage.removeItem('erp_user');
+      window.location.hash = '#login';
+    });
   }
 }
 
