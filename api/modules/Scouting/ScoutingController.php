@@ -22,8 +22,8 @@ class ScoutingController
     private static function getEnvVar(string $key): ?string
     {
         // 1. Force manual generic parse of .env to bypass ANY caching (Dotenv immutability, OPcache, etc.)
-        $rawPath = __DIR__ . '/../../../.env';
-        $envFile = realpath($rawPath) ?: $rawPath;
+        // Using dirname to avoid relative path realpath() issues on restricted servers like Aruba
+        $envFile = dirname(__DIR__, 3) . '/.env';
 
         if (file_exists($envFile)) {
             $lines = @file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
@@ -42,7 +42,7 @@ class ScoutingController
         }
 
         // 2. Fallback to standard environment variables
-        $envVal = $_ENV[$key] ?? getenv($key);
+        $envVal = $_ENV[$key] ?? $_SERVER[$key] ?? getenv($key);
         if ($envVal !== false && $envVal !== null && $envVal !== '') {
             return (string)$envVal;
         }
