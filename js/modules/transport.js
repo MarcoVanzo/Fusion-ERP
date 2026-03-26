@@ -826,7 +826,7 @@ const Transport = (() => {
       },
     );
   }
-  async function _(t, e, n, a = !0, l = null) {
+  async function _(t, e, n, a = !0, l = null, uStopover = !0) {
     return new Promise((i, r) => {
       k(() => {
         if (
@@ -839,7 +839,7 @@ const Transport = (() => {
           s = {
             origin: t,
             destination: e,
-            waypoints: n.map((t) => ({ location: t, stopover: !0 })),
+            waypoints: n.map((t) => ({ location: t, stopover: uStopover })),
             optimizeWaypoints: a,
             travelMode: google.maps.TravelMode.DRIVING,
           };
@@ -878,13 +878,18 @@ const Transport = (() => {
       const i = s.map((t) => t.residence_address);
       let o = null;
       let pUrl = null;
+      let baseLegs = [];
+      let totalTrafficD = 0;
+      let totalBaseD = 0;
+      let oTraffic = null;
       try {
-        o = await _(e, n, i, !0);
+        o = await _(e, n, i, !0, null, !0);
         const order = o.routes[0].waypoint_order;
         pUrl = order.map(t => s[t]);
         let baseD = 0;
-        const baseLegs = o.routes[0].legs;
+        baseLegs = o.routes[0].legs;
         for (let idx = 0; idx < baseLegs.length; idx++) {
+          totalBaseD += baseLegs[idx].duration.value;
           baseD += baseLegs[idx].duration.value;
           if (idx > 0 && idx < baseLegs.length - 1) baseD += 180;
         }
@@ -895,41 +900,42 @@ const Transport = (() => {
         while (estDep <= new Date()) {
           estDep.setDate(estDep.getDate() + 1);
         }
-        if (estDep > new Date()) {
-          const reorderedI = order.map(idx => i[idx]);
-          o = await _(e, n, reorderedI, !1, estDep);
-        }
+        const reorderedI = order.map(idx => i[idx]);
+        oTraffic = await _(e, n, reorderedI, !1, estDep, !1);
+        let tLeg = oTraffic.routes[0].legs[0];
+        totalTrafficD = tLeg.duration_in_traffic ? tLeg.duration_in_traffic.value : tLeg.duration.value;
       } catch (t) {
         throw new Error(
           "Impossibile calcolare il percorso con Google Maps: " + t.message,
         );
       }
-      const d = o.routes[0],
-        p = pUrl,
-        fullPath = d.overview_path ? d.overview_path.map(pt => ({lat: pt.lat(), lng: pt.lng()})) : [];
+      const p = pUrl;
+      const d = oTraffic.routes[0];
+      const fullPath = d.overview_path ? d.overview_path.map(pt => ({lat: pt.lat(), lng: pt.lng()})) : [];
+      let ratio = totalBaseD > 0 ? (totalTrafficD / totalBaseD) : 1;
       let c = 0,
         g = 0;
       const m = [],
         b = [],
         u = [];
       b.push({
-        lat: d.legs[0].start_location.lat(),
-        lng: d.legs[0].start_location.lng(),
+        lat: baseLegs[0].start_location.lat(),
+        lng: baseLegs[0].start_location.lng(),
         label: e,
       });
-      for (let t = 0; t < d.legs.length; t++) {
-        const e = d.legs[t],
-          n = e.distance.value,
-          a = e.duration_in_traffic ? e.duration_in_traffic.value : e.duration.value,
-          i = t > 0 && t < d.legs.length - 1 ? 180 : 0;
-        ((c += n),
-          (g += a + i),
-          m.push(a + i),
-          u.push({ durata: e.duration.text, distanza: e.distance.text }),
+      for (let t = 0; t < baseLegs.length; t++) {
+        const eLeg = baseLegs[t],
+          nDist = eLeg.distance.value,
+          aDur = Math.round(eLeg.duration.value * ratio),
+          iStop = t > 0 && t < baseLegs.length - 1 ? 180 : 0;
+        ((c += nDist),
+          (g += aDur + iStop),
+          m.push(aDur + iStop),
+          u.push({ durata: Math.round(aDur/60)+" min", distanza: (nDist/1000).toFixed(1)+" km" }),
           b.push({
-            lat: e.end_location.lat(),
-            lng: e.end_location.lng(),
-            label: e.end_address,
+            lat: eLeg.end_location.lat(),
+            lng: eLeg.end_location.lng(),
+            label: eLeg.end_address,
           }));
       }
       const f = {
@@ -1147,11 +1153,14 @@ const Transport = (() => {
                         a = document.getElementById("nt-arrival-time")?.value,
                         i = n.map((t) => t.residence_address);
 
-                      let oRaw = await _(t, e, i, !1);
+                      let oRaw = await _(t, e, i, !1, null, !0);
+                      let baseLegs = oRaw.routes[0].legs;
+                      let totalBaseD = 0;
                       let baseD = 0;
-                      for (let idx = 0; idx < oRaw.routes[0].legs.length; idx++) {
-                        baseD += oRaw.routes[0].legs[idx].duration.value;
-                        if (idx > 0 && idx < oRaw.routes[0].legs.length - 1) baseD += 180;
+                      for (let idx = 0; idx < baseLegs.length; idx++) {
+                        totalBaseD += baseLegs[idx].duration.value;
+                        baseD += baseLegs[idx].duration.value;
+                        if (idx > 0 && idx < baseLegs.length - 1) baseD += 180;
                       }
                       const [hx, mx] = a.split(":").map(Number);
                       const tdStr = document.getElementById("nt-transport-date")?.value || new Date().toISOString().slice(0, 10);
@@ -1160,38 +1169,40 @@ const Transport = (() => {
                       while (eDep <= new Date()) {
                         eDep.setDate(eDep.getDate() + 1);
                       }
-                      if (eDep > new Date()) {
-                        oRaw = await _(t, e, i, !1, eDep);
-                      }
-                      const o = oRaw.routes[0];
+                      let oTraffic = await _(t, e, i, !1, eDep, !1);
+                      let tLeg = oTraffic.routes[0].legs[0];
+                      let totalTrafficD = tLeg.duration_in_traffic ? tLeg.duration_in_traffic.value : tLeg.duration.value;
+                      let ratio = totalBaseD > 0 ? (totalTrafficD / totalBaseD) : 1;
+                      
+                      const o = oTraffic.routes[0];
                       const fullP = o.overview_path ? o.overview_path.map(pt => ({lat: pt.lat(), lng: pt.lng()})) : [];
 
-                      let s = 0,
-                        d = 0;
+                      let sT = 0,
+                        dT = 0;
                       const p = [],
                         c = [];
                       c.push({
-                        lat: o.legs[0].start_location.lat(),
-                        lng: o.legs[0].start_location.lng(),
+                        lat: baseLegs[0].start_location.lat(),
+                        lng: baseLegs[0].start_location.lng(),
                         label: t,
                       });
-                      for (let t = 0; t < o.legs.length; t++) {
-                        const e = o.legs[t],
-                          n = e.distance.value,
-                          a = e.duration_in_traffic ? e.duration_in_traffic.value : e.duration.value,
-                          i = t > 0 && t < o.legs.length - 1 ? 180 : 0;
-                        ((s += n),
-                          (d += a + i),
-                          p.push(a + i),
+                      for (let t = 0; t < baseLegs.length; t++) {
+                        const eLeg = baseLegs[t],
+                          nDist = eLeg.distance.value,
+                          aDur = Math.round(eLeg.duration.value * ratio),
+                          iStop = t > 0 && t < baseLegs.length - 1 ? 180 : 0;
+                        ((sT += nDist),
+                          (dT += aDur + iStop),
+                          p.push(aDur + iStop),
                           c.push({
-                            lat: e.end_location.lat(),
-                            lng: e.end_location.lng(),
-                            label: e.end_address,
+                            lat: eLeg.end_location.lat(),
+                            lng: eLeg.end_location.lng(),
+                            label: eLeg.end_address,
                           }));
                       }
                       const g = {
-                          durata: Math.round(d / 60) + " min",
-                          distanza: (s / 1e3).toFixed(1) + " km",
+                          durata: Math.round(dT / 60) + " min",
+                          distanza: (sT / 1e3).toFixed(1) + " km",
                           tappe: n.length,
                         },
                         [m, b] = a.split(":").map(Number),
