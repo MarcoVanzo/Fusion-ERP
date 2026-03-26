@@ -31,35 +31,39 @@ const Transport = (() => {
       }
     }
   }
-  function c() {
+  async function c() {
     const n = document.getElementById("app"),
       a = App.getUser(),
       i = ["admin", "manager", "operator"].includes(a?.role),
-      r = {
-        training: "Allenamento",
-        away_game: "Trasferta",
-        home_game: "Gara Casa",
-        tournament: "Torneo",
-      },
       o = e.length,
       s = e.filter((t) => new Date(t.event_date) >= new Date()).length,
       l = e.filter((t) => "away_game" === t.type).length;
-    ((n.innerHTML = `                <div class="transport-dashboard">        <div class="dash-top-bar">          <div>            <h1 class="dash-title">Gestione <span style="color:var(--accent-pink);">Trasporti</span></h1>            <p class="dash-subtitle">${o} eventi nel sistema</p>          </div>          <div style="display:flex; gap:12px; flex-wrap:wrap;">            <button class="btn-dash" id="storico-btn" type="button"><i class="ph ph-clock-counter-clockwise" style="font-size:18px;"></i> STORICO</button>            <button class="btn-dash" id="autisti-btn" type="button"><i class="ph ph-steering-wheel" style="font-size:18px;"></i> AUTISTI</button>            <button class="btn-dash" id="mezzi-btn" type="button"><i class="ph ph-bus" style="font-size:18px;"></i> GESTIONE MEZZI</button>            <button class="btn-dash pink" id="nuovo-trasporto-btn" type="button"><i class="ph ph-van" style="font-size:18px;"></i> NUOVO TRASPORTO</button>            ${i ? '<button class="btn-dash primary" id="new-event-btn" type="button"><i class="ph ph-plus-circle" style="font-size:20px;"></i> NUOVO EVENTO</button>' : ""}          </div>        </div>        <div class="dash-stat-grid">          <div class="dash-stat-card">            <div class="dash-stat-title">Totale Eventi <div class="dash-stat-icon"><i class="ph ph-calendar-blank"></i></div></div>            <div class="dash-stat-value">${o}</div>          </div>          <div class="dash-stat-card cyan">            <div class="dash-stat-title">In Programma <div class="dash-stat-icon"><i class="ph ph-clock"></i></div></div>            <div class="dash-stat-value">${s}</div>          </div>          <div class="dash-stat-card">            <div class="dash-stat-title">Trasferte <div class="dash-stat-icon"><i class="ph ph-bus"></i></div></div>            <div class="dash-stat-value">${l}</div>          </div>          <div class="dash-stat-card cyan">            <div class="dash-stat-title">Allenamenti <div class="dash-stat-icon"><i class="ph ph-barbell"></i></div></div>            <div class="dash-stat-value">${e.filter((t) => "training" === t.type).length}</div>          </div>        </div>        <div class="dash-grid">          <div class="dash-card">            <div class="dash-card-header">              <div class="dash-card-title">PROSSIMI EVENTI</div>              <div class="dash-card-dots"><i class="ph ph-dots-three-bold"></i></div>            </div>                        <div class="dash-filters">              <button class="dash-filter active" data-type-filter="" type="button">Tutti</button>              <button class="dash-filter" data-type-filter="away_game" type="button">Trasferte</button>              <button class="dash-filter" data-type-filter="home_game" type="button">Gare in Casa</button>              <button class="dash-filter" data-type-filter="training" type="button">Allenamenti</button>              <button class="dash-filter" data-type-filter="tournament" type="button">Tornei</button>            </div>            <div id="events-list">              ${g(e, r)}            </div>          </div>                    <div class="dash-card" style="display:flex; flex-direction:column; gap:20px;">             <div class="dash-card-header" style="margin-bottom:0;">              <div class="dash-card-title">AZIONI RAPIDE</div>              <div class="dash-card-dots"><i class="ph ph-dots-three-bold"></i></div>            </div>                                                 <div class="action-card" style="margin-top: -10px;">              <div class="action-icon-wrap" style="background: rgba(255, 0, 255,0.1); border-color: rgba(255, 0, 255,0.3); box-shadow: 0 0 20px rgba(255, 0, 255,0.2);">                <i class="ph ph-calendar-plus action-icon" style="color: var(--accent-pink);"></i>              </div>              <div class="action-title">Nuovo Evento</div>              <p class="action-desc">Crea un nuovo evento per gestire trasferte, gare e allenamenti.</p>              ${i ? '<button class="btn-dash" id="qa-new-event" style="width: 100%;" type="button"><i class="ph ph-plus-circle"></i> Crea Evento</button>' : ""}          </div>        </div>      </div>`),
-      Utils.qsa("[data-type-filter]").forEach((n) =>
-        n.addEventListener(
-          "click",
-          () => {
-            (Utils.qsa("[data-type-filter]").forEach((t) =>
-              t.classList.remove("active"),
-            ),
-              n.classList.add("active"));
-            const t = n.dataset.typeFilter,
-              a = t ? e.filter((e) => e.type === t) : e;
-            ((document.getElementById("events-list").innerHTML = g(a, r)), m());
-          },
-          { signal: t.signal },
-        ),
-      ),
+    let transports = [];
+    try { transports = await Store.get("listTransports", "transport"); } catch { transports = []; }
+    const today = new Date(); today.setHours(0,0,0,0);
+    const upcoming = transports.filter(tr => { const d = new Date(tr.transport_date); return d >= today; }).sort((a,b) => new Date(a.transport_date) - new Date(b.transport_date));
+    const past = transports.filter(tr => { const d = new Date(tr.transport_date); return d < today; }).sort((a,b) => new Date(b.transport_date) - new Date(a.transport_date));
+    function renderTripCard(tr) {
+      let ath = [];
+      try { ath = typeof tr.athletes_json === "string" ? JSON.parse(tr.athletes_json) : tr.athletes_json || []; } catch { ath = []; }
+      let stats = {};
+      try { stats = typeof tr.stats_json === "string" ? JSON.parse(tr.stats_json) : tr.stats_json || {}; } catch { stats = {}; }
+      const dateStr = tr.transport_date ? new Date(tr.transport_date).toLocaleDateString("it-IT", { weekday: "short", day: "numeric", month: "short" }).toUpperCase() : "";
+      return `<div class="st-card" style="cursor:default;">
+        <div class="st-card-title"><i class="ph ph-map-pin" style="margin-right:8px;"></i>${Utils.escapeHtml(tr.destination_name)}</div>
+        <div class="st-card-meta">
+          <span><i class="ph ph-calendar-blank"></i> ${Utils.escapeHtml(dateStr)}</span>
+          <span><i class="ph ph-clock"></i> Arrivo: ${Utils.escapeHtml(tr.arrival_time || "")}</span>
+          ${tr.departure_time ? `<span><i class="ph ph-van"></i> Partenza: ${Utils.escapeHtml(tr.departure_time)}</span>` : ""}
+          ${stats.durata ? `<span><i class="ph ph-timer"></i> ${Utils.escapeHtml(stats.durata)}</span>` : ""}
+          ${stats.distanza ? `<span><i class="ph ph-navigation-arrow"></i> ${Utils.escapeHtml(stats.distanza)}</span>` : ""}
+          ${stats.driver_name ? `<span><i class="ph ph-steering-wheel"></i> ${Utils.escapeHtml(stats.driver_name)}</span>` : ""}
+          ${stats.vehicle_name ? `<span><i class="ph ph-bus"></i> ${Utils.escapeHtml(stats.vehicle_name)}</span>` : ""}
+        </div>
+        <div class="st-card-athletes"><i class="ph ph-users" style="margin-right:4px;"></i>${ath.map(a => Utils.escapeHtml(a.name || a.full_name || "")).join(", ") || "Nessuna atleta"}</div>
+      </div>`;
+    }
+    ((n.innerHTML = `                <div class="transport-dashboard">        <div class="dash-top-bar">          <div>            <h1 class="dash-title">Gestione <span style="color:var(--accent-pink);">Trasporti</span></h1>            <p class="dash-subtitle">${o} eventi nel sistema</p>          </div>          <div style="display:flex; gap:12px; flex-wrap:wrap;">            <button class="btn-dash" id="storico-btn" type="button"><i class="ph ph-clock-counter-clockwise" style="font-size:18px;"></i> STORICO</button>            <button class="btn-dash" id="autisti-btn" type="button"><i class="ph ph-steering-wheel" style="font-size:18px;"></i> AUTISTI</button>            <button class="btn-dash" id="mezzi-btn" type="button"><i class="ph ph-bus" style="font-size:18px;"></i> GESTIONE MEZZI</button>            <button class="btn-dash pink" id="nuovo-trasporto-btn" type="button"><i class="ph ph-van" style="font-size:18px;"></i> NUOVO TRASPORTO</button>            ${i ? '<button class="btn-dash primary" id="new-event-btn" type="button"><i class="ph ph-plus-circle" style="font-size:20px;"></i> NUOVO EVENTO</button>' : ""}          </div>        </div>        <div class="dash-stat-grid">          <div class="dash-stat-card">            <div class="dash-stat-title">Totale Eventi <div class="dash-stat-icon"><i class="ph ph-calendar-blank"></i></div></div>            <div class="dash-stat-value">${o}</div>          </div>          <div class="dash-stat-card cyan">            <div class="dash-stat-title">In Programma <div class="dash-stat-icon"><i class="ph ph-clock"></i></div></div>            <div class="dash-stat-value">${s}</div>          </div>          <div class="dash-stat-card">            <div class="dash-stat-title">Trasferte <div class="dash-stat-icon"><i class="ph ph-bus"></i></div></div>            <div class="dash-stat-value">${l}</div>          </div>          <div class="dash-stat-card cyan">            <div class="dash-stat-title">Allenamenti <div class="dash-stat-icon"><i class="ph ph-barbell"></i></div></div>            <div class="dash-stat-value">${e.filter((t) => "training" === t.type).length}</div>          </div>        </div>        <div style="display:flex; flex-direction:column; gap:28px;">          <div class="dash-card cyan">            <div class="dash-card-header">              <div class="dash-card-title"><i class="ph ph-road-horizon" style="color:var(--accent-cyan); margin-right:8px;"></i>PROSSIMI VIAGGI</div>              <div class="dash-card-dots"><i class="ph ph-dots-three-bold"></i></div>            </div>            <div id="upcoming-trips-list" style="max-height:420px; overflow-y:auto; padding-right:4px;">              ${upcoming.length === 0 ? '<div style="text-align:center; padding:40px 20px; color:rgba(255,255,255,0.4);"><i class="ph ph-van" style="font-size:48px; display:block; margin-bottom:12px; opacity:0.3;"></i><p style="font-family:var(--font-display); font-size:15px; font-weight:700; text-transform:uppercase; letter-spacing:1px;">Nessun viaggio in programma</p><p style="margin-top:8px; font-size:13px;">Crea un nuovo trasporto per vederlo qui.</p></div>' : upcoming.map(tr => renderTripCard(tr)).join("")}            </div>          </div>          <div class="dash-card">            <div class="dash-card-header">              <div class="dash-card-title"><i class="ph ph-clock-counter-clockwise" style="color:var(--accent-pink); margin-right:8px;"></i>STORICO VIAGGI</div>              <div class="dash-card-dots"><i class="ph ph-dots-three-bold"></i></div>            </div>            <div id="past-trips-list" style="max-height:420px; overflow-y:auto; padding-right:4px;">              ${past.length === 0 ? '<div style="text-align:center; padding:40px 20px; color:rgba(255,255,255,0.4);"><i class="ph ph-archive" style="font-size:48px; display:block; margin-bottom:12px; opacity:0.3;"></i><p style="font-family:var(--font-display); font-size:15px; font-weight:700; text-transform:uppercase; letter-spacing:1px;">Nessun viaggio passato</p></div>' : past.map(tr => renderTripCard(tr)).join("")}            </div>          </div>        </div>      </div>`),
       document
         .getElementById("new-event-btn")
         ?.addEventListener("click", () => f(), { signal: t.signal }),
@@ -76,11 +80,7 @@ const Transport = (() => {
         .getElementById("mezzi-btn")
         ?.addEventListener("click", () => Router.navigate("transport-fleet"), {
           signal: t.signal,
-        }),
-      document
-        .getElementById("qa-new-event")
-        ?.addEventListener("click", () => f(), { signal: t.signal }),
-      m());
+        }));
   }
   function g(t, e) {
     if (0 === t.length)

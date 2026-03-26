@@ -183,9 +183,9 @@ class App {
             <i class="fas fa-sign-out-alt"></i> DISCONNETTI
           </button>
         </div>
-
-        ${this.getBottomNav('#dashboard')}
       </div>
+
+      ${this.getBottomNav('#dashboard')}
     `;
 
     document.getElementById('cta-add-spesa').addEventListener('touchstart', function() { this.style.transform = 'scale(0.98)'; });
@@ -587,9 +587,9 @@ class App {
           <div class="card skeleton" style="height: 280px; margin-bottom: 24px; border:none;"></div>
           <div class="card skeleton" style="height: 300px; border:none;"></div>
         </div>
-
-        ${this.getBottomNav('#profilo')}
       </div>
+
+      ${this.getBottomNav('#profilo')}
     `;
 
     try {
