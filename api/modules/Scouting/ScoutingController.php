@@ -210,13 +210,7 @@ class ScoutingController
         $networkFormId = self::networkFormId();
 
         if ($fusionFormId === 0 && $networkFormId === 0) {
-            $debugPath = dirname(__DIR__, 3) . '/.env';
-            $debugEnv = var_export([
-                'file_exists' => file_exists($debugPath),
-                '__DIR__' => __DIR__,
-                'fallback_env' => $_ENV['SCOUTING_FUSION_FORM_ID'] ?? 'MISSING',
-            ], true);
-            return ['success' => false, 'error' => "Nessun Form ID configurato. Debug: $debugEnv"];
+            return ['success' => false, 'error' => 'Nessun Form ID configurato. Impostare SCOUTING_FUSION_FORM_ID e/o SCOUTING_NETWORK_FORM_ID in .env'];
         }
 
         $fusionUpserted = 0;
