@@ -31,7 +31,7 @@ const Newsletter = (() => {
                         <p class="page-subtitle">Gestisci iscritti e comunicazioni tramite MailerLite.</p>
                     </div>
                 </div>
-                <div class="card no-tilt" style="max-width:600px;margin:0 auto;padding:var(--sp-5);text-align:center;">
+                <div class="dash-card" style="max-width:600px;margin:0 auto;padding:var(--sp-5);text-align:center;">
                     <i class="ph ph-plug" style="font-size:48px;color:var(--color-text-muted);margin-bottom:16px;display:block;opacity:0.5;"></i>
                     <h2 style="margin-bottom:8px;font-size:18px;">MailerLite non configurato</h2>
                     <p style="color:var(--color-text-muted);font-size:14px;margin-bottom:var(--sp-3);">
@@ -61,7 +61,7 @@ const Newsletter = (() => {
                     <button class="btn btn-default" id="btn-nl-groups" type="button">
                         <i class="ph ph-squares-four"></i> Gestisci Gruppi
                     </button>
-                    <button class="btn btn-primary" id="btn-nl-add-subscriber" type="button">
+                    <button class="btn-dash pink" id="btn-nl-add-subscriber" type="button">
                         <i class="ph ph-plus"></i> AGGIUNGI ISCRITTO
                     </button>
                 </div>`
@@ -70,7 +70,7 @@ const Newsletter = (() => {
             </div>
 
             <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom:var(--sp-4);">
-                <div class="stat-card">
+                <div class="dash-stat-card">
                     <div class="stat-icon" style="background:var(--color-primary-soft);color:var(--color-primary);">
                         <i class="ph ph-users"></i>
                     </div>
@@ -79,7 +79,7 @@ const Newsletter = (() => {
                         <div class="stat-value">${_stats.total.toLocaleString("it-IT")}</div>
                     </div>
                 </div>
-                <div class="stat-card">
+                <div class="dash-stat-card">
                     <div class="stat-icon" style="background:var(--color-success-soft);color:var(--color-success);">
                         <i class="ph ph-check-circle"></i>
                     </div>
@@ -88,7 +88,7 @@ const Newsletter = (() => {
                         <div class="stat-value">${_stats.active.toLocaleString("it-IT")}</div>
                     </div>
                 </div>
-                <div class="stat-card">
+                <div class="dash-stat-card">
                     <div class="stat-icon" style="background:rgba(245,158,11,0.15);color:#f59e0b;">
                         <i class="ph ph-x-circle"></i>
                     </div>
@@ -97,7 +97,7 @@ const Newsletter = (() => {
                         <div class="stat-value">${_stats.unsubscribed.toLocaleString("it-IT")}</div>
                     </div>
                 </div>
-                <div class="stat-card">
+                <div class="dash-stat-card">
                     <div class="stat-icon" style="background:rgba(239,68,68,0.1);color:var(--color-pink);">
                         <i class="ph ph-warning-circle"></i>
                     </div>
@@ -110,20 +110,20 @@ const Newsletter = (() => {
 
             ${renderCampaignsCard()}
 
-            <div class="card no-tilt">
-                <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-                    <h2 class="card-title"><i class="ph ph-users-three"></i> Iscritti</h2>
+            <div class="dash-card">
+                <div style="margin-bottom:16px;" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+                    <h2 class="dash-card-title"><i class="ph ph-users-three"></i> Iscritti</h2>
                     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-                        <div class="filter-bar" id="nl-status-filter">
-                            <button class="filter-chip ${_filter.status === "active" ? "active" : ""}" data-nl-status="active" type="button">Attivi</button>
-                            <button class="filter-chip ${_filter.status === "unconfirmed" ? "active" : ""}" data-nl-status="unconfirmed" type="button">Da confermare</button>
-                            <button class="filter-chip ${_filter.status === "unsubscribed" ? "active" : ""}" data-nl-status="unsubscribed" type="button">Disiscritti</button>
-                            <button class="filter-chip ${_filter.status === "bounced" ? "active" : ""}" data-nl-status="bounced" type="button">Bounce</button>
+                        <div class="dash-filters" id="nl-status-filter">
+                            <button class="dash-filter ${_filter.status === "active" ? "active" : ""}" data-nl-status="active" type="button">Attivi</button>
+                            <button class="dash-filter ${_filter.status === "unconfirmed" ? "active" : ""}" data-nl-status="unconfirmed" type="button">Da confermare</button>
+                            <button class="dash-filter ${_filter.status === "unsubscribed" ? "active" : ""}" data-nl-status="unsubscribed" type="button">Disiscritti</button>
+                            <button class="dash-filter ${_filter.status === "bounced" ? "active" : ""}" data-nl-status="bounced" type="button">Bounce</button>
                         </div>
                         ${
                           isAdmin
                             ? `
-                        <button class="btn btn-default btn-sm" id="btn-nl-export" type="button">
+                        <button class="btn-dash" id="btn-nl-export" type="button">
                             <i class="ph ph-download-simple"></i> CSV
                         </button>`
                             : ""
@@ -146,7 +146,7 @@ const Newsletter = (() => {
                   _nextCursor
                     ? `
                 <div style="padding:var(--sp-3) var(--sp-4);border-top:1px solid var(--color-border);text-align:center;">
-                    <button class="btn btn-default btn-sm" id="btn-nl-loadmore" type="button">
+                    <button class="btn-dash" id="btn-nl-loadmore" type="button">
                         <i class="ph ph-arrow-down"></i> Carica altri
                     </button>
                 </div>`
@@ -161,9 +161,9 @@ const Newsletter = (() => {
   function renderCampaignsCard() {
     if (!_campaigns || _campaigns.length === 0) {
       return `
-            <div class="card no-tilt" style="margin-bottom:var(--sp-4);">
-                <div class="card-header">
-                    <h2 class="card-title"><i class="ph ph-megaphone"></i> Ultime Campagne</h2>
+            <div class="dash-card" style="margin-bottom:var(--sp-4);">
+                <div style="margin-bottom:16px;">
+                    <h2 class="dash-card-title"><i class="ph ph-megaphone"></i> Ultime Campagne</h2>
                 </div>
                 <div style="padding:40px 20px; text-align:center; color:var(--color-text-muted);">
                     <i class="ph ph-chart-bar" style="font-size:48px; opacity:0.3; margin-bottom:16px; display:block;"></i>
@@ -174,9 +174,9 @@ const Newsletter = (() => {
     }
 
     return `
-        <div class="card no-tilt" style="margin-bottom:var(--sp-4);">
-            <div class="card-header">
-                <h2 class="card-title"><i class="ph ph-megaphone"></i> Ultime Campagne</h2>
+        <div class="dash-card" style="margin-bottom:var(--sp-4);">
+            <div style="margin-bottom:16px;">
+                <h2 class="dash-card-title"><i class="ph ph-megaphone"></i> Ultime Campagne</h2>
             </div>
             <div style="padding:var(--sp-4); border-bottom:1px solid var(--color-border);">
                 <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:var(--sp-4);">
@@ -509,7 +509,7 @@ const Newsletter = (() => {
                             ${
                               isAdmin
                                 ? `<td style="padding:10px 12px;border-bottom:1px solid var(--color-border);white-space:nowrap;">
-                                <button class="btn btn-ghost btn-sm" data-nl-del-sub="${Utils.escapeHtml(sub.id)}" title="Elimina" type="button" style="color:var(--color-pink);">
+                                <button class="btn-dash" data-nl-del-sub="${Utils.escapeHtml(sub.id)}" title="Elimina" type="button" style="color:var(--color-pink);">
                                     <i class="ph ph-trash"></i>
                                 </button>
                             </td>`
@@ -701,8 +701,8 @@ const Newsletter = (() => {
                 <div id="nl-sub-error" class="form-error hidden"></div>
             `,
       footer: `
-                <button class="btn btn-ghost btn-sm" id="nl-sub-cancel" type="button">Annulla</button>
-                <button class="btn btn-primary btn-sm" id="nl-sub-save" type="button">AGGIUNGI</button>
+                <button class="btn-dash" id="nl-sub-cancel" type="button">Annulla</button>
+                <button class="btn-dash pink" id="nl-sub-save" type="button">AGGIUNGI</button>
             `,
     });
 
@@ -762,8 +762,8 @@ const Newsletter = (() => {
       title: "Elimina Iscritto",
       body: `<p style="font-size:14px;">Sei sicuro di voler eliminare <strong>${Utils.escapeHtml(sub?.email || id)}</strong> da MailerLite?<br><span style="color:var(--color-text-muted);font-size:13px;">Questa azione è irreversibile.</span></p>`,
       footer: `
-                <button class="btn btn-ghost btn-sm" id="nl-del-cancel" type="button">Annulla</button>
-                <button class="btn btn-primary btn-sm" id="nl-del-ok" type="button" style="background:var(--color-pink);">ELIMINA</button>
+                <button class="btn-dash" id="nl-del-cancel" type="button">Annulla</button>
+                <button class="btn-dash pink" id="nl-del-ok" type="button" style="background:var(--color-pink);">ELIMINA</button>
             `,
     });
     document
@@ -800,7 +800,7 @@ const Newsletter = (() => {
                         <div style="font-weight:600;font-size:14px;">${Utils.escapeHtml(g.name)}</div>
                         <div style="font-size:12px;color:var(--color-text-muted);">${g.active_count || 0} iscritti attivi</div>
                     </div>
-                    <button class="btn btn-ghost btn-sm" data-del-group="${Utils.escapeHtml(g.id)}" type="button" style="color:var(--color-pink);">
+                    <button class="btn-dash" data-del-group="${Utils.escapeHtml(g.id)}" type="button" style="color:var(--color-pink);">
                         <i class="ph ph-trash"></i>
                     </button>
                 </div>`,
@@ -814,13 +814,13 @@ const Newsletter = (() => {
                 <div style="margin-bottom:var(--sp-3);">
                     <div style="display:flex;gap:8px;">
                         <input id="nl-group-name" class="form-input" type="text" placeholder="Nome nuovo gruppo..." style="flex:1;">
-                        <button class="btn btn-primary btn-sm" id="nl-group-create" type="button"><i class="ph ph-plus"></i> Crea</button>
+                        <button class="btn-dash pink" id="nl-group-create" type="button"><i class="ph ph-plus"></i> Crea</button>
                     </div>
                     <div id="nl-group-error" class="form-error hidden" style="margin-top:6px;"></div>
                 </div>
                 <div id="nl-groups-list">${renderGroupList()}</div>
             `,
-      footer: `<button class="btn btn-ghost btn-sm" id="nl-groups-close" type="button">Chiudi</button>`,
+      footer: `<button class="btn-dash" id="nl-groups-close" type="button">Chiudi</button>`,
     });
 
     document

@@ -548,30 +548,81 @@ class App {
     const originalText = btn.innerHTML;
     
     btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i>...';
+    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Verifica AI...';
 
     try {
-      const formData = new FormData();
-      formData.append('id', athleteId);
-      formData.append('file', file);
-
-      const response = await fetch(`../api/?module=${apiModule || 'athletes'}&action=${action}`, {
-        method: 'POST',
-        body: formData
-      });
-
-      const result = await response.json();
-
-      if (response.ok && result.success !== false) {
-        alert('Documento caricato con successo!');
-        this.renderProfilo();
-      } else {
-        alert(result.error || 'Errore durante il caricamento del documento.');
+      // 1. Lettura Base64 per Verifica AI
+      const reader = new FileReader();
+      reader.onerror = () => {
+        alert("Errore nella lettura del file per la verifica AI.");
         btn.disabled = false;
         btn.innerHTML = originalText;
-      }
+      };
+      
+      reader.onload = async (e) => {
+        const base64Data = e.target.result;
+        
+        let docType = 'carta_identita';
+        let side = 'fronte';
+        if (action === 'uploadIdDocBack') { docType = 'carta_identita'; side = 'retro'; }
+        else if (action === 'uploadCfDocFront') { docType = 'tessera_sanitaria'; }
+        else if (action === 'uploadCfDocBack') { docType = 'tessera_sanitaria'; side = 'retro'; }
+        else if (action === 'uploadMedicalCert') { docType = 'certificato_medico'; }
+        else if (action === 'uploadContractFile') { docType = 'contratto'; }
+
+        try {
+          const verifyRes = await fetch('../api/verify_document.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              image: base64Data,
+              document_type: docType,
+              side: side
+            })
+          });
+          const verifyData = await verifyRes.json();
+          
+          if (!verifyData.success || (verifyData.data && !verifyData.data.verified)) {
+              alert(verifyData.data?.message || verifyData.error || 'Verifica AI fallita: il documento non sembra corretto.');
+              btn.disabled = false;
+              btn.innerHTML = originalText;
+              inputEl.value = '';
+              return;
+          }
+
+          // 2. Procedi col caricamento (Salviamo il file vero)
+          btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Salvataggio...';
+          const formData = new FormData();
+          formData.append('id', athleteId);
+          formData.append('file', file);
+
+          const response = await fetch(`../api/?module=${apiModule || 'athletes'}&action=${action}`, {
+            method: 'POST',
+            body: formData
+          });
+
+          const result = await response.json();
+
+          if (response.ok && result.success !== false) {
+            alert('Documento verificato dall\\'AI e caricato con successo!');
+            this.renderProfilo();
+          } else {
+            alert(result.error || 'Errore durante il caricamento del documento.');
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+          }
+        } catch (err) {
+          console.error(err);
+          alert("Impossibile connettersi al Server AI o Endpoint Errato.");
+          btn.disabled = false;
+          btn.innerHTML = originalText;
+        }
+      };
+      
+      reader.readAsDataURL(file);
+
     } catch (err) {
-      alert("Impossibile connettersi al Server.");
+      alert("Errore d'impostazione caricamento.");
       btn.disabled = false;
       btn.innerHTML = originalText;
     }
