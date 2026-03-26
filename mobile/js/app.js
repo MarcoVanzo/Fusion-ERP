@@ -596,7 +596,8 @@ class App {
           formData.append('id', athleteId);
           formData.append('file', file);
 
-          const response = await fetch(`../api/?module=${apiModule || 'athletes'}&action=${action}`, {
+          const finalModule = (!apiModule || apiModule === 'undefined' || apiModule === 'null') ? 'athletes' : apiModule;
+          const response = await fetch(`../api/?module=${finalModule}&action=${action}`, {
             method: 'POST',
             body: formData
           });

@@ -826,7 +826,7 @@ const Transport = (() => {
       },
     );
   }
-  async function _(t, e, n, a = !0) {
+  async function _(t, e, n, a = !0, l = null) {
     return new Promise((i, r) => {
       k(() => {
         if (
@@ -843,6 +843,7 @@ const Transport = (() => {
             optimizeWaypoints: a,
             travelMode: google.maps.TravelMode.DRIVING,
           };
+        l && l instanceof Date && l > new Date() && (s.drivingOptions = { departureTime: l, trafficModel: "bestguess" });
         o.route(s, (t, e) => {
           e === google.maps.DirectionsStatus.OK ? i(t) : r(new Error(e));
         });
@@ -878,13 +879,27 @@ const Transport = (() => {
       let o = null;
       try {
         o = await _(e, n, i, !0);
+        let baseD = 0;
+        const baseLegs = o.routes[0].legs;
+        for (let idx = 0; idx < baseLegs.length; idx++) {
+          baseD += baseLegs[idx].duration.value;
+          if (idx > 0 && idx < baseLegs.length - 1) baseD += 180;
+        }
+        const [xBase, vBase] = t.split(":").map(Number);
+        const transDateStr = document.getElementById("nt-transport-date")?.value || new Date().toISOString().slice(0, 10);
+        const arrDate = new Date(`${transDateStr}T${String(xBase).padStart(2, '0')}:${String(vBase).padStart(2, '0')}:00`);
+        const estDep = new Date(arrDate.getTime() - 1e3 * baseD);
+        if (estDep > new Date()) {
+          o = await _(e, n, i, !0, estDep);
+        }
       } catch (t) {
         throw new Error(
           "Impossibile calcolare il percorso con Google Maps: " + t.message,
         );
       }
       const d = o.routes[0],
-        p = d.waypoint_order.map((t) => s[t]);
+        p = d.waypoint_order.map((t) => s[t]),
+        fullPath = d.overview_path ? d.overview_path.map(pt => ({lat: pt.lat(), lng: pt.lng()})) : [];
       let c = 0,
         g = 0;
       const m = [],
@@ -898,7 +913,7 @@ const Transport = (() => {
       for (let t = 0; t < d.legs.length; t++) {
         const e = d.legs[t],
           n = e.distance.value,
-          a = e.duration.value,
+          a = e.duration_in_traffic ? e.duration_in_traffic.value : e.duration.value,
           i = t > 0 && t < d.legs.length - 1 ? 180 : 0;
         ((c += n),
           (g += a + i),
@@ -916,9 +931,8 @@ const Transport = (() => {
           tappe: s.length,
         },
         [x, v] = t.split(":").map(Number),
-        h = new Date();
-      h.setHours(x, v, 0, 0);
-      const y = new Date(h.getTime() - 1e3 * g),
+        transDateStr2 = document.getElementById("nt-transport-date")?.value || new Date().toISOString().slice(0, 10),
+        y = new Date(new Date(`${transDateStr2}T${String(x).padStart(2, '0')}:${String(v).padStart(2, '0')}:00`).getTime() - 1e3 * g),
         w = [];
       let k = new Date(y);
       (w.push({
@@ -967,7 +981,7 @@ const Transport = (() => {
             minute: "2-digit",
           }),
         }),
-        U(w, f, null, b));
+        U(w, f, null, b, fullPath));
     } catch (t) {
       (UI.toast("Errore calcolo percorso: " + t.message, "error"),
         console.error(t));
@@ -977,7 +991,7 @@ const Transport = (() => {
           '<i class="ph ph-route" style="font-size:22px;"></i> Ricalcola Percorso'));
     }
   }
-  function U(e, n, a, i) {
+  function U(e, n, a, i, fullPath) {
     const o = document.getElementById("nt-results");
     if (
       ((o.style.display = "block"),
@@ -1029,13 +1043,12 @@ const Transport = (() => {
               "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
               { attribution: "&copy; OpenStreetMap &copy; CARTO", maxZoom: 19 },
             ).addTo(e);
-            const i = n.map((t) => [t.lat, t.lng]);
+            const routePoints = (fullPath && fullPath.length) ? fullPath.map(pt => [pt.lat, pt.lng]) : n.map((t) => [t.lat, t.lng]);
             (t
-              .polyline(i, {
-                color: "#00e5ff",
-                weight: 3,
-                opacity: 0.8,
-                dashArray: "8, 4",
+              .polyline(routePoints, {
+                color: "#ff00ff",
+                weight: 4,
+                opacity: 0.9,
               })
               .addTo(e),
               n.forEach((a, i) => {
@@ -1056,7 +1069,7 @@ const Transport = (() => {
                     `<b style="color:${s}">${r ? "Partenza" : o ? "Palestra" : "Tappa " + i}</b><br><small>${p}</small>`,
                   );
               }),
-              e.fitBounds(i, { padding: [24, 24] }),
+              e.fitBounds(routePoints, { padding: [24, 24] }),
               setTimeout(() => e.invalidateSize(), 300));
           }));
       })(i);
@@ -1125,8 +1138,24 @@ const Transport = (() => {
                           document.getElementById("nt-departure-addr")?.value,
                         e = r.address || r.name,
                         a = document.getElementById("nt-arrival-time")?.value,
-                        i = n.map((t) => t.residence_address),
-                        o = (await _(t, e, i, !1)).routes[0];
+                        i = n.map((t) => t.residence_address);
+
+                      let oRaw = await _(t, e, i, !1);
+                      let baseD = 0;
+                      for (let idx = 0; idx < oRaw.routes[0].legs.length; idx++) {
+                        baseD += oRaw.routes[0].legs[idx].duration.value;
+                        if (idx > 0 && idx < oRaw.routes[0].legs.length - 1) baseD += 180;
+                      }
+                      const [hx, mx] = a.split(":").map(Number);
+                      const tdStr = document.getElementById("nt-transport-date")?.value || new Date().toISOString().slice(0, 10);
+                      const arrD = new Date(`${tdStr}T${String(hx).padStart(2, '0')}:${String(mx).padStart(2, '0')}:00`);
+                      const eDep = new Date(arrD.getTime() - 1e3 * baseD);
+                      if (eDep > new Date()) {
+                        oRaw = await _(t, e, i, !1, eDep);
+                      }
+                      const o = oRaw.routes[0];
+                      const fullP = o.overview_path ? o.overview_path.map(pt => ({lat: pt.lat(), lng: pt.lng()})) : [];
+
                       let s = 0,
                         d = 0;
                       const p = [],
@@ -1139,7 +1168,7 @@ const Transport = (() => {
                       for (let t = 0; t < o.legs.length; t++) {
                         const e = o.legs[t],
                           n = e.distance.value,
-                          a = e.duration.value,
+                          a = e.duration_in_traffic ? e.duration_in_traffic.value : e.duration.value,
                           i = t > 0 && t < o.legs.length - 1 ? 180 : 0;
                         ((s += n),
                           (d += a + i),
@@ -1156,9 +1185,8 @@ const Transport = (() => {
                           tappe: n.length,
                         },
                         [m, b] = a.split(":").map(Number),
-                        u = new Date();
-                      u.setHours(m, b, 0, 0);
-                      const f = new Date(u.getTime() - 1e3 * d),
+                        tdStr3 = document.getElementById("nt-transport-date")?.value || new Date().toISOString().slice(0, 10),
+                        f = new Date(new Date(`${tdStr3}T${String(m).padStart(2, '0')}:${String(b).padStart(2, '0')}:00`).getTime() - 1e3 * d),
                         x = [];
                       let v = new Date(f);
                       (x.push({
@@ -1207,7 +1235,7 @@ const Transport = (() => {
                           hour: "2-digit",
                           minute: "2-digit",
                         })),
-                        U(x, g, l.ai, c));
+                        U(x, g, l.ai, c, fullP));
                     } catch (t) {
                       UI.toast("Errore nel ricalcolo: " + t.message, "error");
                     }
