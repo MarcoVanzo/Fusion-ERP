@@ -448,11 +448,19 @@ class App {
             dobStr = d.toLocaleDateString('it-IT');
         }
 
-        const renderDoc = (title, path, fieldName) => {
+        const renderDoc = (title, path, fieldName, actionName) => {
             if (!path) {
                 return `<div style="padding: 12px 0; border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between;">
-                          <span style="font-size: 14px; color: var(--text-primary);"><i class="fas fa-file-alt text-muted" style="margin-right: 8px;"></i> ${title}</span>
-                          <span style="font-size: 11px; font-weight: 600; color: var(--danger); background: rgba(255, 77, 77, 0.1); padding: 4px 8px; border-radius: 12px; border: 1px solid rgba(255, 77, 77, 0.3);">MANCANTE</span>
+                          <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <span style="font-size: 14px; color: var(--text-primary);"><i class="fas fa-file-alt text-muted" style="margin-right: 8px;"></i> ${title}</span>
+                            <span style="font-size: 11px; font-weight: 600; color: var(--danger); background: rgba(255, 77, 77, 0.1); padding: 4px 8px; border-radius: 12px; border: 1px solid rgba(255, 77, 77, 0.3); display: inline-block; width: fit-content;">MANCANTE</span>
+                          </div>
+                          <div>
+                            <button type="button" class="btn btn-primary" onclick="document.getElementById('upload-${actionName}').click()" style="padding: 6px 12px; font-size: 12px; height: auto; width: auto; min-width: 80px;" id="btn-${actionName}">
+                              <i class="fas fa-upload"></i> CARICA
+                            </button>
+                            <input type="file" id="upload-${actionName}" accept=".pdf,image/jpeg,image/png,image/webp" style="display: none;" onchange="app.uploadProfileDoc(this, '${actionName}', ${p.id}, '${p.api_module}')">
+                          </div>
                         </div>`;
             }
             return `<div style="padding: 12px 0; border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between;">
@@ -501,12 +509,12 @@ class App {
               <i class="fas fa-folder-open"></i> GESTIONE DOCUMENTI
             </h3>
             <div style="display: flex; flex-direction: column;">
-              ${renderDoc("Carta d'Identità (FR)", p.id_doc_front_file_path, 'id_doc_front_file_path')}
-              ${renderDoc("Carta d'Identità (RE)", p.id_doc_back_file_path, 'id_doc_back_file_path')}
-              ${renderDoc('Codice Fiscale (FR)', p.cf_doc_front_file_path, 'cf_doc_front_file_path')}
-              ${renderDoc('Codice Fiscale (RE)', p.cf_doc_back_file_path, 'cf_doc_back_file_path')}
-              ${renderDoc('Certificato Medico', p.medical_cert_file_path, 'medical_cert_file_path')}
-              ${renderDoc('Documento Tesseramento', p.contract_file_path, 'contract_file_path')}
+              ${renderDoc("Carta d'Identità (FR)", p.id_doc_front_file_path, 'id_doc_front_file_path', 'uploadIdDocFront')}
+              ${renderDoc("Carta d'Identità (RE)", p.id_doc_back_file_path, 'id_doc_back_file_path', 'uploadIdDocBack')}
+              ${renderDoc('Codice Fiscale (FR)', p.cf_doc_front_file_path, 'cf_doc_front_file_path', 'uploadCfDocFront')}
+              ${renderDoc('Codice Fiscale (RE)', p.cf_doc_back_file_path, 'cf_doc_back_file_path', 'uploadCfDocBack')}
+              ${renderDoc('Certificato Medico', p.medical_cert_file_path, 'medical_cert_file_path', 'uploadMedicalCert')}
+              ${renderDoc('Documento Tesseramento', p.contract_file_path, 'contract_file_path', 'uploadContractFile')}
             </div>
           </div>
         `;
@@ -528,6 +536,44 @@ class App {
           <p class="text-light">Dominio non raggiungibile.</p>
         </div>
       `;
+    }
+  }
+
+  // Helper for Profile Document Upload
+  async uploadProfileDoc(inputEl, action, athleteId, apiModule) {
+    if (!inputEl.files || !inputEl.files[0]) return;
+    
+    const file = inputEl.files[0];
+    const btn = document.getElementById('btn-' + action);
+    const originalText = btn.innerHTML;
+    
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i>...';
+
+    try {
+      const formData = new FormData();
+      formData.append('id', athleteId);
+      formData.append('file', file);
+
+      const response = await fetch(`../api/?module=${apiModule || 'athletes'}&action=${action}`, {
+        method: 'POST',
+        body: formData
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success !== false) {
+        alert('Documento caricato con successo!');
+        this.renderProfilo();
+      } else {
+        alert(result.error || 'Errore durante il caricamento del documento.');
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
+    } catch (err) {
+      alert("Impossibile connettersi al Server.");
+      btn.disabled = false;
+      btn.innerHTML = originalText;
     }
   }
 }

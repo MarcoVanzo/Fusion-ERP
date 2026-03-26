@@ -14,19 +14,19 @@ const Scouting = (() => {
                     <div style="display:flex;align-items:center;gap:var(--sp-2);flex-wrap:wrap">
                         <div class="input-wrapper" style="position:relative;min-width:220px">
                             <i class="ph ph-magnifying-glass" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--color-text-muted);font-size:16px"></i>
-                            <input type="text" id="scouting-search" class="form-input" placeholder="Cerca per nome, cognome..." style="padding-left:36px;height:40px;font-size:13px">
+                            <input type="text" id="scouting-search" class="form-input" placeholder="Cerca per nome, cognome..." style="padding-left:36px;height:42px;font-size:13px;background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.1);color:#fff;">
                         </div>
                         <span id="scouting-count" class="status-badge" style="background:var(--color-primary-light);color:var(--color-primary);font-weight:600">${athletes.length} atleti</span>
                     </div>
-                    <div style="display:flex;gap:var(--sp-1);align-items:center;flex-wrap:wrap">
+                    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
                         ${
                           canEdit
                             ? `
-                            <button class="btn btn-default btn-sm" id="scouting-sync-btn" type="button" title="Sincronizza da Cognito Forms">
-                                <i class="ph ph-arrows-clockwise"></i> Sincronizza da Cognito
+                            <button class="btn-dash" id="scouting-sync-btn" type="button" title="Sincronizza da Cognito Forms">
+                                <i class="ph ph-arrows-clockwise" style="font-size:18px;"></i> Sincronizza
                             </button>
-                            <button class="btn btn-primary btn-sm" id="scouting-add-btn" type="button">
-                                <i class="ph ph-plus"></i> NUOVO INSERIMENTO
+                            <button class="btn-dash pink" id="scouting-add-btn" type="button">
+                                <i class="ph ph-plus-circle" style="font-size:18px;"></i> NUOVO INSERIMENTO
                             </button>
                         `
                             : ""
@@ -361,12 +361,14 @@ const Scouting = (() => {
         lastSync = result.last_sync || null;
 
         container.innerHTML = `
-                    <div class="module-wrapper">
-                        <div class="page-header" style="border-bottom:1px solid var(--color-border);padding:var(--sp-4);padding-bottom:var(--sp-3);margin-bottom:0">
-                            <h1 class="page-title">Database Scouting</h1>
-                            <p class="page-subtitle">Contatti e atleti segnalati manualmente o via Cognito Forms</p>
+                    <div class="transport-dashboard">
+                        <div class="dash-top-bar" style="border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 24px; margin-bottom: 24px;">
+                            <div>
+                                <h1 class="dash-title">Database <span style="color:var(--accent-pink);">Scouting</span></h1>
+                                <p class="dash-subtitle">Contatti e atleti segnalati manualmente o via Cognito Forms</p>
+                            </div>
                         </div>
-                        <div class="module-body" style="padding:var(--sp-4)" id="scouting-content-area">
+                        <div class="dash-card" style="padding:var(--sp-4)" id="scouting-content-area">
                         </div>
                     </div>
                 `;
