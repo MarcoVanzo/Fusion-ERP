@@ -449,13 +449,17 @@ const Transport = (() => {
       (s = []),
       (l = null),
       d.clear());
+    let driversArr = [],
+      vehiclesArr = [];
     try {
-      [n, a] = await Promise.all([
+      [n, a, driversArr, vehiclesArr] = await Promise.all([
         Store.get("listGyms", "transport"),
         Store.get("listTeams", "transport"),
+        Store.get("listDrivers", "transport").catch(() => []),
+        Store.get("getAllVehicles", "vehicles").catch(() => []),
       ]);
     } catch (t) {
-      ((n = []), (a = []));
+      ((n = []), (a = []), (driversArr = []), (vehiclesArr = []));
     }
     const i = n
         .map(
@@ -468,8 +472,86 @@ const Transport = (() => {
           (t) =>
             `<option value="${Utils.escapeHtml(t.id)}">${Utils.escapeHtml(t.name)} (${Utils.escapeHtml(t.category)})</option>`,
         )
+        .join(""),
+      driversStr = driversArr
+        .filter((el) => el.is_active)
+        .map((el) => `<option value="${Utils.escapeHtml(el.id)}">${Utils.escapeHtml(el.full_name)}</option>`)
+        .join(""),
+      vehiclesStr = vehiclesArr
+        .filter((el) => el.status === "active")
+        .map((el) => `<option value="${Utils.escapeHtml(el.id)}">${Utils.escapeHtml(el.name)} (${Utils.escapeHtml(el.license_plate)})</option>`)
         .join("");
-    ((e.innerHTML = `        <div class="transport-dashboard">      <div class="dash-top-bar">        <div>          <div class="dash-title-wrap">             <button class="btn-dash icon-only" id="nt-back" type="button" title="Torna Indietro"><i class="ph ph-arrow-left" style="font-size:20px;"></i></button>             <h1 class="dash-title">Nuovo <span style="color:var(--accent-pink);">Trasporto</span></h1>          </div>          <p class="dash-subtitle">Pianifica il percorso di raccolta atlete con backward planning</p>        </div>      </div>      <div class="dash-grid">        \x3c!-- Step 1: Destinazione --\x3e        <div class="dash-card pink">          <div class="dash-card-header">            <div class="dash-card-title"><span style="background:var(--accent-pink);color:#fff;border-radius:50%;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;margin-right:8px;font-size:14px;">1</span> DESTINAZIONE</div>          </div>          <div class="form-group" style="margin-top:16px;">            <label class="form-label" for="nt-gym-select">Palestra / Impianto</label>            <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">              <div style="flex:1; min-width:200px;">                <select class="form-select" id="nt-gym-select">                  <option value="">— Seleziona destinazione —</option>                  ${i}                </select>              </div>              <button class="btn-dash pink" id="nt-add-gym-btn" type="button"><i class="ph ph-plus"></i> Nuova Palestra</button>              <button class="btn-dash" id="nt-del-gym-btn" type="button" style="border-color:rgba(255, 0, 255,0.4);color:#FF00FF;" title="Elimina palestra selezionata"><i class="ph ph-trash"></i> Elimina</button>            </div>          </div>        </div>        \x3c!-- Step 2: Dati Viaggio --\x3e        <div class="dash-card cyan">          <div class="dash-card-header">            <div class="dash-card-title"><span style="background:var(--accent-cyan);color:#000;border-radius:50%;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;margin-right:8px;font-size:14px;font-weight:700;">2</span> DATI VIAGGIO</div>          </div>          <div class="form-grid" style="margin-top:16px;">            <div class="form-group">              <label class="form-label" for="nt-team-select">Squadra</label>              <select class="form-select" id="nt-team-select">                <option value="">— Seleziona squadra —</option>                ${o}              </select>            </div>            <div class="form-group">              <label class="form-label">Orario Arrivo Desiderato</label>              <input class="form-input" type="time" id="nt-arrival-time" value="18:00">            </div>          </div>          <div class="form-group" style="margin-top:0;">            <label class="form-label" style="display:flex;align-items:center;gap:8px;">              Indirizzo di Partenza del Mezzo              <span style="display:inline-flex;align-items:center;gap:4px;background:rgba(66,133,244,0.15);border:1px solid rgba(66,133,244,0.3);border-radius:6px;padding:2px 8px;font-size:10px;color:#4285F4;font-weight:700;letter-spacing:0.5px;">                <i class="ph ph-google-logo"></i> Google Maps              </span>            </label>            <div style="position:relative;">              <i class="ph ph-magnifying-glass" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,0.35);font-size:16px;pointer-events:none;"></i>              <input class="form-input" type="text" id="nt-departure-addr" autocomplete="off"                placeholder="Cerca indirizzo di partenza..."                value="${localStorage.getItem("fusion_last_departure") || ""}"                style="padding-left:40px;">            </div>            <div id="nt-departure-map" style="display:none;margin-top:10px;border-radius:12px;overflow:hidden;height:160px;border:1px solid rgba(66,133,244,0.25);"></div>          </div>          <div class="form-group" style="margin-top:0;">            <label class="form-label">Data Trasporto</label>            <input class="form-input" type="date" id="nt-transport-date" value="${new Date().toISOString().slice(0, 10)}">          </div>        </div>        \x3c!-- Step 3: Atlete --\x3e        <div class="dash-card green" style="grid-column:1/-1;">          <div class="dash-card-header">            <div class="dash-card-title"><span style="background:#00e676;color:#000;border-radius:50%;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;margin-right:8px;font-size:14px;font-weight:700;">3</span> SELEZIONA ATLETE</div>          </div>          <p style="font-size:13px; color:rgba(255,255,255,0.5); margin-top:8px; margin-bottom:16px;">Seleziona una squadra per caricare le atlete. Clicca su una card per selezionare o deselezionare.</p>          <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:16px;" id="nt-athletes-grid">            <div style="grid-column:1/-1; text-align:center; padding:40px; color:rgba(255,255,255,0.4);">              <i class="ph ph-users" style="font-size:48px; display:block; margin-bottom:12px; opacity:0.3;"></i>              Seleziona una squadra per visualizzare le atlete            </div>          </div>          <div style="margin-top:24px; display:flex; gap:16px; flex-wrap:wrap; align-items:center; padding-top:20px; border-top:1px dashed rgba(255,255,255,0.1);">            <button class="btn-dash primary" id="nt-calc-btn" type="button" disabled style="padding:12px 24px;font-size:16px;"><i class="ph ph-route" style="font-size:22px;"></i> Calcola Percorso</button>            <span id="nt-validation-hint" style="font-size:13px; color:rgba(255,255,255,0.4);">Compila destinazione, squadra e seleziona almeno un'atleta</span>          </div>        </div>        \x3c!-- Results --\x3e        <div id="nt-results" style="display:none; grid-column:1/-1; margin-top:10px;"></div>      </div>    </div>`),
+    ((e.innerHTML = `        <div class="transport-dashboard">      <div class="dash-top-bar">        <div>          <div class="dash-title-wrap">             <button class="btn-dash icon-only" id="nt-back" type="button" title="Torna Indietro"><i class="ph ph-arrow-left" style="font-size:20px;"></i></button>             <h1 class="dash-title">Nuovo <span style="color:var(--accent-pink);">Trasporto</span></h1>          </div>          <p class="dash-subtitle">Pianifica il percorso di raccolta atlete con backward planning</p>        </div>      </div>      <div class="dash-grid">        \x3c!-- Step 1: Destinazione --\x3e        <div class="dash-card pink">          <div class="dash-card-header">            <div class="dash-card-title"><span style="background:var(--accent-pink);color:#fff;border-radius:50%;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;margin-right:8px;font-size:14px;">1</span> DESTINAZIONE</div>          </div>          <div class="form-group" style="margin-top:16px;">            <label class="form-label" for="nt-gym-select">Palestra / Impianto</label>            <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">              <div style="flex:1; min-width:200px;">                <select class="form-select" id="nt-gym-select">                  <option value="">— Seleziona destinazione —</option>                  ${i}                </select>              </div>              <button class="btn-dash pink" id="nt-add-gym-btn" type="button"><i class="ph ph-plus"></i> Nuova Palestra</button>              <button class="btn-dash" id="nt-del-gym-btn" type="button" style="border-color:rgba(255, 0, 255,0.4);color:#FF00FF;" title="Elimina palestra selezionata"><i class="ph ph-trash"></i> Elimina</button>            </div>          </div>        </div>        \x3c!-- Step 2: Dati Viaggio --\x3e        <div class="dash-card cyan">          <div class="dash-card-header">            <div class="dash-card-title"><span style="background:var(--accent-cyan);color:#000;border-radius:50%;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;margin-right:8px;font-size:14px;font-weight:700;">2</span> DATI VIAGGIO</div>          </div>          <div class="form-grid" style="margin-top:16px;">
+            <div class="form-group">
+              <label class="form-label" for="nt-team-select">Squadra</label>
+              <select class="form-select" id="nt-team-select">
+                <option value="">— Seleziona squadra —</option>
+                ${o}
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Orario Arrivo Desiderato</label>
+              <input class="form-input" type="time" id="nt-arrival-time" value="18:00">
+            </div>
+          </div>
+          <div class="form-grid" style="margin-top:0;">
+            <div class="form-group">
+              <label class="form-label" for="nt-driver-select">Autista</label>
+              <select class="form-select" id="nt-driver-select">
+                <option value="">— Nessun autista —</option>
+                ${driversStr}
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="nt-veh-select">Mezzo</label>
+              <select class="form-select" id="nt-veh-select">
+                <option value="">— Nessun mezzo —</option>
+                ${vehiclesStr}
+              </select>
+            </div>
+          </div>
+          <div class="form-group" style="margin-top:0;">
+            <label class="form-label" style="display:flex;align-items:center;gap:8px;">
+              Indirizzo di Partenza del Mezzo
+              <span style="display:inline-flex;align-items:center;gap:4px;background:rgba(66,133,244,0.15);border:1px solid rgba(66,133,244,0.3);border-radius:6px;padding:2px 8px;font-size:10px;color:#4285F4;font-weight:700;letter-spacing:0.5px;">
+                <i class="ph ph-google-logo"></i> Google Maps
+              </span>
+            </label>
+            <div style="position:relative;">
+              <i class="ph ph-magnifying-glass" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,0.35);font-size:16px;pointer-events:none;"></i>
+              <input class="form-input" type="text" id="nt-departure-addr" autocomplete="off"
+                placeholder="Cerca indirizzo di partenza..."
+                value="${localStorage.getItem("fusion_last_departure") || ""}"
+                style="padding-left:40px;">
+            </div>
+            <div id="nt-departure-map" style="display:none;margin-top:10px;border-radius:12px;overflow:hidden;height:160px;border:1px solid rgba(66,133,244,0.25);"></div>
+          </div>
+          <div class="form-group" style="margin-top:0;">
+            <label class="form-label">Data Trasporto</label>
+            <input class="form-input" type="date" id="nt-transport-date" value="${new Date().toISOString().slice(0, 10)}">
+          </div>
+        </div>
+        \x3c!-- Step 3: Atlete --\x3e
+        <div class="dash-card green" style="grid-column:1/-1;">
+          <div class="dash-card-header">
+            <div class="dash-card-title"><span style="background:#00e676;color:#000;border-radius:50%;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;margin-right:8px;font-size:14px;font-weight:700;">3</span> SELEZIONA ATLETE</div>
+          </div>
+          <p style="font-size:13px; color:rgba(255,255,255,0.5); margin-top:8px; margin-bottom:16px;">Seleziona una squadra per caricare le atlete. Clicca su una card per selezionare o deselezionare.</p>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:16px;" id="nt-athletes-grid">
+            <div style="grid-column:1/-1; text-align:center; padding:40px; color:rgba(255,255,255,0.4);">
+              <i class="ph ph-users" style="font-size:48px; display:block; margin-bottom:12px; opacity:0.3;"></i>
+              Seleziona una squadra per visualizzare le atlete
+            </div>
+          </div>
+          <div style="margin-top:24px; display:flex; gap:16px; flex-wrap:wrap; align-items:center; padding-top:20px; border-top:1px dashed rgba(255,255,255,0.1);">
+            <button class="btn-dash primary" id="nt-calc-btn" type="button" disabled style="padding:12px 24px;font-size:16px;"><i class="ph ph-route" style="font-size:22px;"></i> Calcola Percorso</button>
+            <span id="nt-validation-hint" style="font-size:13px; color:rgba(255,255,255,0.4);">Compila destinazione, squadra e seleziona almeno un'atleta</span>
+          </div>
+        </div>
+        \x3c!-- Results --\x3e
+        <div id="nt-results" style="display:none; grid-column:1/-1; margin-top:10px;"></div>
+      </div>
+    </div>`),
       document
         .getElementById("nt-back")
         ?.addEventListener("click", () => c(), { signal: t.signal }),
@@ -1273,6 +1355,18 @@ const Transport = (() => {
       (t.innerHTML =
         '<div class="spinner" style="width:18px;height:18px;"></div> Salvataggio...'));
     try {
+      const driverSel = document.getElementById("nt-driver-select");
+      const vehSel = document.getElementById("nt-veh-select");
+      const st = { ...l.stats };
+      if (driverSel && driverSel.value) {
+         st.driver_id = driverSel.value;
+         st.driver_name = driverSel.options[driverSel.selectedIndex].text;
+      }
+      if (vehSel && vehSel.value) {
+         st.vehicle_id = vehSel.value;
+         st.vehicle_name = vehSel.options[vehSel.selectedIndex].text;
+      }
+
       (await Store.api("saveTransport", "transport", {
         team_id: o,
         destination_name: r.name,
@@ -1286,13 +1380,15 @@ const Transport = (() => {
         transport_date:
           document.getElementById("nt-transport-date")?.value ||
           new Date().toISOString().slice(0, 10),
+        driver_id: st.driver_id || null,
+        vehicle_id: st.vehicle_id || null,
         athletes_json: s.map((t) => ({
           id: t.id,
           name: t.full_name,
           address: t.residence_address,
         })),
         timeline_json: l.timeline,
-        stats_json: l.stats,
+        stats_json: st,
       }),
         UI.toast("Trasporto salvato con successo!", "success"),
         L());
@@ -1342,7 +1438,7 @@ const Transport = (() => {
                         month: "long",
                       })
                     : "";
-                  return `            <div class="st-card">              <div class="st-card-title"><i class="ph ph-map-pin" style="margin-right:8px;"></i>${Utils.escapeHtml(t.destination_name)}</div>              <div class="st-card-meta">                <span><i class="ph ph-calendar-blank"></i> ${Utils.escapeHtml(a)}</span>                <span><i class="ph ph-clock"></i> Arrivo: ${Utils.escapeHtml(t.arrival_time || "")}</span>                ${t.departure_time ? `<span><i class="ph ph-van"></i> Partenza: ${Utils.escapeHtml(t.departure_time)}</span>` : ""}                ${n.durata ? `<span><i class="ph ph-timer"></i> ${Utils.escapeHtml(n.durata)}</span>` : ""}                ${n.distanza ? `<span><i class="ph ph-navigation-arrow"></i> ${Utils.escapeHtml(n.distanza)}</span>` : ""}              </div>              <div class="st-card-athletes">                <i class="ph ph-users" style="margin-right:4px;"></i>                ${e.map((t) => Utils.escapeHtml(t.name || t.full_name || "")).join(", ") || "Nessuna atleta"}              </div>            </div>`;
+                  return `            <div class="st-card">              <div class="st-card-title"><i class="ph ph-map-pin" style="margin-right:8px;"></i>${Utils.escapeHtml(t.destination_name)}</div>              <div class="st-card-meta">                <span><i class="ph ph-calendar-blank"></i> ${Utils.escapeHtml(a)}</span>                <span><i class="ph ph-clock"></i> Arrivo: ${Utils.escapeHtml(t.arrival_time || "")}</span>                ${t.departure_time ? `<span><i class="ph ph-van"></i> Partenza: ${Utils.escapeHtml(t.departure_time)}</span>` : ""}                ${n.durata ? `<span><i class="ph ph-timer"></i> ${Utils.escapeHtml(n.durata)}</span>` : ""}                ${n.distanza ? `<span><i class="ph ph-navigation-arrow"></i> ${Utils.escapeHtml(n.distanza)}</span>` : ""}                ${n.driver_name ? `<span><i class="ph ph-steering-wheel"></i> ${Utils.escapeHtml(n.driver_name)}</span>` : ""}                ${n.vehicle_name ? `<span><i class="ph ph-bus"></i> ${Utils.escapeHtml(n.vehicle_name)}</span>` : ""}              </div>              <div class="st-card-athletes">                <i class="ph ph-users" style="margin-right:4px;"></i>                ${e.map((t) => Utils.escapeHtml(t.name || t.full_name || "")).join(", ") || "Nessuna atleta"}              </div>            </div>`;
                 })
                 .join("")
         }      </div>`),
