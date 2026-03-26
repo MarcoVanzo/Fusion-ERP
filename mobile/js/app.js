@@ -364,7 +364,7 @@ class App {
             }
             return `<div class="doc-item" style="padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
                       <span><i class="fas fa-check-circle" style="color: #10b981; margin-right: 8px;"></i> ${title}</span>
-                      <a href="../api/?module=athletes&action=downloadDoc&id=${p.id}&field=${fieldName}" target="_blank" class="btn" style="padding: 6px 12px; font-size: 12px; height: auto;">Apri</a>
+                      <a href="../api/?module=${p.api_module}&action=downloadDoc&id=${p.id}&field=${fieldName}" target="_blank" class="btn" style="padding: 6px 12px; font-size: 12px; height: auto;">Apri</a>
                     </div>`;
         };
 
