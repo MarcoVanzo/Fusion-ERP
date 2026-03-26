@@ -38,6 +38,7 @@ class App {
 
     if (hash === '#login') this.renderLogin();
     else if (hash === '#dashboard') this.renderDashboard();
+    else if (hash === '#spese') this.renderSpese();
     else this.renderLogin(); // Default fallback
   }
 
@@ -132,7 +133,7 @@ class App {
             <i class="fas fa-users"></i>
             <span>Atleti</span>
           </a>
-          <a href="#spese" class="nav-item" onclick="alert('In sviluppo')">
+          <a href="#spese" class="nav-item">
             <i class="fas fa-receipt"></i>
             <span>Spese</span>
           </a>
@@ -156,6 +157,130 @@ class App {
       } catch(e) {}
       localStorage.removeItem('erp_user');
       window.location.hash = '#login';
+    });
+  }
+
+  // Spese Foresteria View
+  renderSpese() {
+    // Basic date formatter for today (YYYY-MM-DD)
+    const today = new Date().toISOString().split('T')[0];
+
+    this.container.innerHTML = `
+      <div class="screen spese-screen">
+        <header class="app-header">
+          <div class="app-title">Nuova Spesa Foresteria</div>
+          <a href="#dashboard" style="color: white; font-size: 20px;"><i class="fas fa-times"></i></a>
+        </header>
+
+        <div class="p-20" style="padding-bottom: 90px; overflow-y: auto;">
+          <form id="expense-form" onsubmit="return false;">
+            <div class="input-group">
+              <label class="input-label">Descrizione *</label>
+              <input type="text" id="exp-desc" class="input-field" placeholder="Es. Spesa Conad" required>
+            </div>
+
+            <div class="input-group">
+              <label class="input-label">Importo (€) *</label>
+              <input type="number" step="0.01" id="exp-amount" class="input-field" placeholder="Es. 45.50" required>
+            </div>
+
+            <div class="input-group">
+              <label class="input-label">Data Spesa *</label>
+              <input type="date" id="exp-date" class="input-field" value="${today}" required>
+            </div>
+
+            <div class="input-group">
+              <label class="input-label">Categoria</label>
+              <select id="exp-category" class="input-field">
+                <option value="Spesa Alimentare">Spesa Alimentare</option>
+                <option value="Pulizie">Pulizie</option>
+                <option value="Manutenzione">Manutenzione</option>
+                <option value="Utenze">Utenze</option>
+                <option value="Altro">Altro</option>
+              </select>
+            </div>
+
+            <div class="input-group">
+              <label class="input-label">Note Opzionali</label>
+              <textarea id="exp-notes" class="input-field" rows="3" placeholder="Aggiungi una nota..."></textarea>
+            </div>
+
+            <div class="input-group mt-20">
+              <label class="input-label">Foto Scontrino / Ricevuta</label>
+              <label for="exp-receipt" class="btn" style="background-color: var(--secondary); color: var(--text-dark); border: 2px dashed var(--border); display: block;">
+                <i class="fas fa-camera" style="font-size: 24px; margin-bottom: 8px;"></i><br>
+                <span>Scatta o seleziona foto</span>
+              </label>
+              <input type="file" id="exp-receipt" accept="image/*" capture="environment" style="display: none;">
+              <p id="receipt-name" style="margin-top: 8px; font-size: 14px; color: var(--success);"></p>
+            </div>
+
+            <button type="button" class="btn mt-20" id="submit-expense-btn">
+              <i class="fas fa-save" style="margin-right: 8px;"></i> Salva Spesa
+            </button>
+          </form>
+        </div>
+      </div>
+    `;
+
+    // File input listener to show file name
+    document.getElementById('exp-receipt').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) document.getElementById('receipt-name').innerText = 'Foto allegata: ' + file.name;
+    });
+
+    // Submit Action
+    document.getElementById('submit-expense-btn').addEventListener('click', async () => {
+      const desc = document.getElementById('exp-desc').value.trim();
+      const amount = document.getElementById('exp-amount').value;
+      const date = document.getElementById('exp-date').value;
+      const cat = document.getElementById('exp-category').value;
+      const notes = document.getElementById('exp-notes').value.trim();
+      const fileInput = document.getElementById('exp-receipt');
+
+      if (!desc || !amount || !date) {
+        alert("Compila tutti i campi obbligatori (*).");
+        return;
+      }
+
+      const btn = document.getElementById('submit-expense-btn');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvataggio...';
+
+      try {
+        const formData = new FormData();
+        formData.append('description', desc);
+        formData.append('amount', amount);
+        formData.append('expense_date', date);
+        formData.append('category', cat);
+        formData.append('notes', notes);
+
+        if (fileInput.files.length > 0) {
+          formData.append('receipt', fileInput.files[0]);
+        }
+
+        const response = await fetch('../api/?module=societa&action=addExpense', {
+          method: 'POST',
+          body: formData, // fetch sets boundary automatically for multipart/form-data
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.success !== false) {
+          alert('Spesa salvata con successo!');
+          window.location.hash = '#dashboard';
+        } else {
+          alert(result.error || 'Errore durante il salvataggio.');
+        }
+      } catch (err) {
+        alert("Impossibile connettersi al Server.");
+        console.error(err);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fas fa-save" style="margin-right: 8px;"></i> Salva Spesa';
+        }
+      }
     });
   }
 }
