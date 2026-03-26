@@ -891,7 +891,10 @@ const Transport = (() => {
         const [xBase, vBase] = t.split(":").map(Number);
         const transDateStr = document.getElementById("nt-transport-date")?.value || new Date().toISOString().slice(0, 10);
         const arrDate = new Date(`${transDateStr}T${String(xBase).padStart(2, '0')}:${String(vBase).padStart(2, '0')}:00`);
-        const estDep = new Date(arrDate.getTime() - 1e3 * baseD);
+        let estDep = new Date(arrDate.getTime() - 1e3 * baseD);
+        while (estDep <= new Date()) {
+          estDep.setDate(estDep.getDate() + 1);
+        }
         if (estDep > new Date()) {
           const reorderedI = order.map(idx => i[idx]);
           o = await _(e, n, reorderedI, !1, estDep);
@@ -1153,7 +1156,10 @@ const Transport = (() => {
                       const [hx, mx] = a.split(":").map(Number);
                       const tdStr = document.getElementById("nt-transport-date")?.value || new Date().toISOString().slice(0, 10);
                       const arrD = new Date(`${tdStr}T${String(hx).padStart(2, '0')}:${String(mx).padStart(2, '0')}:00`);
-                      const eDep = new Date(arrD.getTime() - 1e3 * baseD);
+                      let eDep = new Date(arrD.getTime() - 1e3 * baseD);
+                      while (eDep <= new Date()) {
+                        eDep.setDate(eDep.getDate() + 1);
+                      }
                       if (eDep > new Date()) {
                         oRaw = await _(t, e, i, !1, eDep);
                       }
