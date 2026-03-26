@@ -1,11 +1,36 @@
 class App {
   constructor() {
     this.container = document.getElementById('app-container');
+    this.addGlobalOrbs();
     this.initPWA();
     this.route();
     
     // Listen for hash changes to navigate
-    window.addEventListener('hashchange', () => this.route());
+    window.addEventListener('hashchange', () => {
+      this.vibrate(50);
+      this.route();
+    });
+  }
+
+  // Haptic feedback helper
+  vibrate(ms = 50) {
+    if (navigator.vibrate) {
+      navigator.vibrate(ms);
+    }
+  }
+
+  // Global Background Orbs
+  addGlobalOrbs() {
+    if (!document.getElementById('global-orbs')) {
+      const orbsContainer = document.createElement('div');
+      orbsContainer.id = 'global-orbs';
+      orbsContainer.className = 'global-bg-container';
+      orbsContainer.innerHTML = `
+        <div class="auth-bg-orb orb-1"></div>
+        <div class="auth-bg-orb orb-2"></div>
+      `;
+      document.body.insertBefore(orbsContainer, document.body.firstChild);
+    }
   }
 
   // Register Service Worker
@@ -68,15 +93,13 @@ class App {
   renderLogin() {
     this.container.innerHTML = `
       <div class="screen login-screen">
-        <div class="auth-bg-orb orb-1"></div>
-        <div class="auth-bg-orb orb-2"></div>
         
-        <div class="login-header">
+        <div class="login-header stagger-item delay-1">
           <img src="../uploads/images/Logo%20Colorato.png" alt="Fusion Logo" style="width: 90px; margin-bottom: 24px;">
           <h1 class="login-title">GET GAME<br><span>READY</span></h1>
           <p class="login-subtitle">Gestione atleti e trasporti</p>
         </div>
-        <div class="login-card">
+        <div class="login-card stagger-item delay-2">
           <div class="input-group">
             <label class="input-label">Email</label>
             <input type="email" id="email" class="input-field" placeholder="nome@fusionteamvolley.it" autocorrect="off" autocapitalize="none">
@@ -140,23 +163,23 @@ class App {
         </header>
 
         <div class="p-20">
-          <h2 id="dash-greeting" style="font-size: 24px; margin-bottom: 8px;">Bentornato</h2>
-          <p class="text-light" style="margin-bottom: 24px; font-size: 14px;">Il tuo hub sportivo personale.</p>
+          <h2 id="dash-greeting" class="stagger-item delay-1" style="font-size: 24px; margin-bottom: 8px;">Bentornato</h2>
+          <p class="text-light stagger-item delay-1" style="margin-bottom: 24px; font-size: 14px;">Il tuo hub sportivo personale.</p>
           
           <!-- Call to Action Spese -->
-          <div class="card" style="text-align: center; border: 2px dashed var(--accent-secondary); cursor: pointer; background: rgba(255,0,122,0.02); transition: all 0.2s;" onclick="window.location.hash='#spese'" id="cta-add-spesa">
+          <div class="card stagger-item delay-2" style="text-align: center; border: 2px dashed var(--accent-secondary); cursor: pointer; background: rgba(255,0,122,0.02); transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;" onclick="window.location.hash='#spese'" id="cta-add-spesa">
             <i class="fas fa-plus-circle" style="font-size: 36px; color: var(--accent-secondary); margin-bottom: 12px; filter: drop-shadow(0 0 10px rgba(255,0,122,0.5));"></i>
             <h3 style="color: var(--text-primary); font-size: 18px; margin-bottom: 4px;">AGGIUNGI SPESA</h3>
             <p class="text-muted" style="font-size: 13px;">Carica scontrino e importo al volo</p>
           </div>
 
-          <div class="card" style="text-align: center; padding: 40px 20px;">
+          <div class="card stagger-item delay-3" style="text-align: center; padding: 40px 20px;">
             <i class="fas fa-chart-line" style="font-size: 40px; color: var(--accent-primary); margin-bottom: 16px; opacity: 0.8;"></i>
             <h3 style="margin-bottom: 8px;">Statistiche</h3>
             <p class="text-muted" style="font-size: 14px;">I widget KPI arriveranno post lancio.</p>
           </div>
 
-          <button class="btn btn-secondary mt-20" id="logout-btn">
+          <button class="btn btn-secondary mt-20 stagger-item delay-4" id="logout-btn">
             <i class="fas fa-sign-out-alt"></i> DISCONNETTI
           </button>
         </div>
@@ -197,12 +220,12 @@ class App {
         </header>
 
         <div class="p-20">
-          <div class="card" style="padding-top: 30px;">
+          <div class="card stagger-item delay-1" style="padding-top: 30px;">
             <form id="expense-form" onsubmit="return false;">
               
               <!-- STEP 1: IMPORTANTI (Foto + Importo) -->
               <div id="step-1">
-                <div class="input-group">
+                <div class="input-group stagger-item delay-2">
                   <label for="exp-receipt" class="file-upload-box giant-camera-box">
                     <i class="fas fa-camera"></i>
                     <span>Fotografa Scontrino</span>
@@ -278,6 +301,7 @@ class App {
     const step2 = document.getElementById('step-2');
 
     document.getElementById('btn-next-step').addEventListener('click', () => {
+      this.vibrate(20);
       const amt = document.getElementById('exp-amount').value;
       if (!amt || parseFloat(amt) <= 0) {
         alert("Inserisci un importo valido prima di proseguire.");
@@ -324,6 +348,7 @@ class App {
 
     // Final Submit Action
     document.getElementById('submit-expense-btn').addEventListener('click', async () => {
+      this.vibrate(50);
       const desc = document.getElementById('exp-desc').value.trim();
       const amount = document.getElementById('exp-amount').value;
       const date = document.getElementById('exp-date').value;
@@ -429,7 +454,7 @@ class App {
         `;
 
         const html = `
-          <div class="card" style="text-align: center; border-top: 3px solid var(--accent-secondary);">
+          <div class="card stagger-item delay-1" style="text-align: center; border-top: 3px solid var(--accent-secondary);">
             <div class="profile-avatar-container">
               ${p.photo_path ? '<img src="../' + p.photo_path + '">' : '<i class="fas fa-user"></i>'}
             </div>
@@ -442,7 +467,7 @@ class App {
             </div>
           </div>
 
-          <div class="card">
+          <div class="card stagger-item delay-2">
             <h3 style="margin-bottom: 16px; font-size: 15px; display: flex; align-items: center; gap: 8px; color: var(--accent-primary);">
               <i class="fas fa-id-card"></i> DATI ANAGRAFICI
             </h3>
@@ -456,7 +481,7 @@ class App {
             </div>
           </div>
 
-          <div class="card" style="margin-bottom: 0;">
+          <div class="card stagger-item delay-3" style="margin-bottom: 0;">
             <h3 style="margin-bottom: 16px; font-size: 15px; display: flex; align-items: center; gap: 8px; color: var(--accent-primary);">
               <i class="fas fa-folder-open"></i> GESTIONE DOCUMENTI
             </h3>

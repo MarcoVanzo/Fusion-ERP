@@ -8,20 +8,21 @@
   --bg-dark: #0a0a0c;
   
   /* Glassmorphism Surfaces */
-  --bg-surface: rgba(255, 255, 255, 0.03);
-  --bg-surface-hover: rgba(255, 255, 255, 0.06);
+  --bg-surface: rgba(25, 25, 30, 0.4);
+  --bg-surface-hover: rgba(255, 255, 255, 0.08);
   --bg-input: rgba(255, 255, 255, 0.05);
 
   /* Typography Colors */
   --text-primary: #ffffff;
-  --text-secondary: rgba(255, 255, 255, 0.65);
-  --text-muted: rgba(255, 255, 255, 0.45);
+  --text-secondary: rgba(255, 255, 255, 0.75);
+  --text-muted: rgba(255, 255, 255, 0.5);
 
   /* Borders & Glows */
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-glow: rgba(0, 242, 254, 0.2);
-  --glow-pink: 0 0 12px rgba(255, 0, 122, 0.45);
-  --glow-input: 0 0 0 3px rgba(255, 0, 122, 0.2);
+  --border-subtle: rgba(255, 255, 255, 0.1);
+  --border-highlight: rgba(255, 255, 255, 0.15);
+  --border-glow: rgba(0, 242, 254, 0.3);
+  --glow-pink: 0 0 20px rgba(255, 0, 122, 0.5);
+  --glow-input: 0 0 0 3px rgba(255, 0, 122, 0.25);
 
   /* Utilities */
   --success: #00ffbc;
@@ -37,7 +38,7 @@
   /* Shadows */
   --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.5);
   --shadow-premium: 0 20px 40px rgba(0, 0, 0, 0.6);
-  --glass: blur(20px) saturate(180%);
+  --glass: blur(30px) saturate(200%);
 }
 
 * {
@@ -74,8 +75,37 @@ body {
 }
 
 @keyframes slideFadeIn {
-  from { opacity: 0; transform: translateY(15px); }
+  from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulseGlow {
+  0% { box-shadow: 0 0 10px rgba(255,0,122,0.3); }
+  50% { box-shadow: 0 0 20px rgba(255,0,122,0.6); }
+  100% { box-shadow: 0 0 10px rgba(255,0,122,0.3); }
+}
+
+@keyframes orbFloat1 {
+  0% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-30px) scale(1.05); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+@keyframes orbFloat2 {
+  0% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(30px) scale(0.95); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+.delay-1 { animation-delay: 0.1s !important; }
+.delay-2 { animation-delay: 0.2s !important; }
+.delay-3 { animation-delay: 0.3s !important; }
+.delay-4 { animation-delay: 0.4s !important; }
+.delay-5 { animation-delay: 0.5s !important; }
+
+.stagger-item {
+  opacity: 0;
+  animation: slideFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* Base Typo */
@@ -156,7 +186,7 @@ select.input-field {
 }
 
 .btn:active {
-  transform: scale(0.97);
+  transform: scale(0.96);
   box-shadow: var(--glow-pink);
 }
 
@@ -187,25 +217,39 @@ select.input-field {
 .card {
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
+  border-top: 1px solid var(--border-highlight);
+  border-left: 1px solid var(--border-highlight);
   border-radius: var(--radius-lg);
   padding: 24px;
   margin-bottom: 20px;
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-md), inset 0 0 20px rgba(0,0,0,0.2);
   backdrop-filter: var(--glass);
   -webkit-backdrop-filter: var(--glass);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
 }
 
-/* Hero Background (Orbs) */
+.card:active {
+  transform: scale(0.98);
+}
+
+/* Global Background (Orbs) */
+.global-bg-container {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
 .auth-bg-orb {
   position: absolute;
   border-radius: 50%;
-  filter: blur(80px);
-  z-index: -1;
-  opacity: 0.5;
+  filter: blur(90px);
+  opacity: 0.4;
   pointer-events: none;
 }
-.orb-1 { width: 250px; height: 250px; background: rgba(255, 0, 122, 0.4); top: -50px; left: -50px; }
-.orb-2 { width: 300px; height: 300px; background: rgba(0, 242, 254, 0.3); bottom: -100px; right: -50px; }
+.orb-1 { width: 300px; height: 300px; background: rgba(255, 0, 122, 0.4); top: -80px; left: -80px; animation: orbFloat1 15s infinite ease-in-out; }
+.orb-2 { width: 400px; height: 400px; background: rgba(0, 242, 254, 0.3); bottom: -120px; right: -80px; animation: orbFloat2 18s infinite ease-in-out reverse; }
 
 /* Login Screen */
 .login-screen {
@@ -239,11 +283,13 @@ select.input-field {
 .login-card {
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
+  border-top: 1px solid var(--border-highlight);
+  border-left: 1px solid var(--border-highlight);
   backdrop-filter: var(--glass);
   -webkit-backdrop-filter: var(--glass);
   border-radius: var(--radius-lg);
   padding: 32px 24px;
-  box-shadow: var(--shadow-premium);
+  box-shadow: var(--shadow-premium), inset 0 0 20px rgba(0,0,0,0.2);
   z-index: 1;
 }
 
@@ -302,14 +348,14 @@ select.input-field {
 
 .bottom-nav {
   pointer-events: auto;
-  background: rgba(15, 15, 18, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: rgba(15, 15, 18, 0.65);
+  backdrop-filter: blur(25px) saturate(200%);
+  -webkit-backdrop-filter: blur(25px) saturate(200%);
   display: flex;
   justify-content: space-around;
-  padding: 8px;
+  padding: 10px 8px;
   border-radius: var(--radius-pill);
-  box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+  box-shadow: 0 15px 40px rgba(0,0,0,0.8), inset 0 1px 1px rgba(255,255,255,0.1);
   width: 100%;
   max-width: 400px;
   border: 1px solid var(--border-subtle);
@@ -335,6 +381,7 @@ select.input-field {
   color: var(--accent-secondary);
   background: rgba(255, 0, 122, 0.1);
   box-shadow: 0 0 12px rgba(255, 0, 122, 0.3);
+  animation: pulseGlow 3s infinite ease-in-out;
 }
 .nav-item.active i { color: var(--accent-secondary); }
 
@@ -374,6 +421,7 @@ select.input-field {
   background-color: rgba(255, 0, 122, 0.05);
   border-color: var(--accent-secondary);
   box-shadow: var(--glow-pink);
+  transform: scale(0.98);
 }
 
 /* UI Step classes */

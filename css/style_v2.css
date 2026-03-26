@@ -564,6 +564,11 @@ h3 {
   z-index: 100;
 }
 
+.page-title-box {
+  display: flex;
+  flex-direction: column-reverse; /* Inverts order: subtitle (parent tab) appears above title (sub tab) */
+}
+
 .page-title-box h1 {
   font-size: 1.5rem;
   font-weight: 700;
@@ -573,9 +578,12 @@ h3 {
 }
 
 .page-title-box p {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  margin: 2px 0 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--accent-secondary);
+  margin: 0 0 4px 0;
 }
 
 .topbar-right {

@@ -7,6 +7,7 @@
 
 const App = (() => {
     let _currentUser = null;
+    let _navConfig = null; // Stored for global header titles
 
     async function init() {
         // Try to resume existing session
@@ -378,6 +379,7 @@ const App = (() => {
             }
 
             const navConfig = JSON.parse(textContent);
+            _navConfig = navConfig;
 
             const desktopContainer = document.getElementById('sidebar-nav-container');
             const mobileContainer = document.getElementById('mobile-nav-container');
@@ -918,6 +920,34 @@ const App = (() => {
                 appEl.classList.remove('page-exit');
             }
             await _origNavigate(route, params);
+            
+            // ── Generic Header Title Update ──────────────────────────
+            if (_navConfig) {
+                let parentTitle = 'Dashboard';
+                let subTitle = '';
+                
+                for (const item of _navConfig) {
+                    if (item.path === route || item.id === route) {
+                        parentTitle = item.title;
+                        subTitle = item.title;
+                        break;
+                    }
+                    if (item.children) {
+                        const child = item.children.find(c => c.path === route || c.id === route);
+                        if (child) {
+                            parentTitle = item.title;
+                            subTitle = child.title;
+                            break;
+                        }
+                    }
+                }
+                
+                const pageTitleEl = document.getElementById('page-title');
+                const pageSubtitleEl = document.getElementById('page-subtitle');
+                if (pageTitleEl) pageTitleEl.textContent = subTitle || parentTitle;
+                if (pageSubtitleEl) pageSubtitleEl.textContent = parentTitle;
+            }
+
             if (appEl) {
                 appEl.classList.remove('page-enter');
                 // Force reflow
