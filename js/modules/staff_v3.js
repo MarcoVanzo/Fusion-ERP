@@ -219,7 +219,7 @@ const Staff = (() => {
                       identity_document: o["ns-doc"] || null,
                       medical_cert_expires_at: o["ns-medcert"] || null,
                       notes: o["ns-notes"] || null,
-                      team_season_ids: o["ns-teams"] || [],
+                      team_ids: o["ns-teams"] || [],
                     }),
                       m.close(),
                       UI.toast("Membro staff creato", "success"),
@@ -536,8 +536,8 @@ const Staff = (() => {
                         if (!response.ok || !res.success) throw new Error(res.error || 'Errore di caricamento');
                         
                         UI.toast('Foto aggiornata con successo', 'success');
-                        Store.invalidate("list/staff");
-                        Store.invalidate("get/staff");
+                        Store.invalidate("list", "staff");
+                        Store.invalidate("get", "staff");
                         d(p.id); // reload
                     } catch (err) {
                         UI.toast(err.message, 'error');
@@ -593,8 +593,8 @@ const Staff = (() => {
                      });
                      m.close();
                      UI.toast('Contratto generato e inviato!', 'success');
-                     Store.invalidate('list/staff');
-                     Store.invalidate('get/staff');
+                     Store.invalidate("list", "staff");
+                     Store.invalidate("get", "staff");
                      d(p.id);
                  } catch (errApi) {
                      err.textContent = errApi.message;
@@ -614,8 +614,8 @@ const Staff = (() => {
                  const res = await Store.api('checkContractStatus', 'staff', { id: p.id });
                  UI.toast(res.signed ? 'Contratto firmato!' : 'Ancora in attesa di firma.', res.signed ? 'success' : 'info');
                  if (res.signed) {
-                     Store.invalidate('list/staff');
-                     Store.invalidate('get/staff');
+                     Store.invalidate("list", "staff");
+                     Store.invalidate("get", "staff");
                      d(p.id);
                  } else {
                      btn.disabled = false;
@@ -659,8 +659,8 @@ const Staff = (() => {
                         if (!response.ok || !res.success) throw new Error(res.error || 'Errore di caricamento');
                         
                         UI.toast('Documento caricato con successo', 'success');
-                        Store.invalidate("list/staff");
-                        Store.invalidate("get/staff");
+                        Store.invalidate("list", "staff");
+                        Store.invalidate("get", "staff");
                         d(p.id); // reload
                     } catch (err) {
                         UI.toast(err.message, 'error');
@@ -746,12 +746,12 @@ const Staff = (() => {
                           document.getElementById("es-medcert").value || null,
                         notes:
                           document.getElementById("es-notes").value || null,
-                        team_season_ids: o,
+                        team_ids: o,
                       }),
                         l.close(),
                         UI.toast("Membro staff aggiornato", "success"),
-                        Store.invalidate("list/staff"),
-                        Store.invalidate("get/staff"),
+                        Store.invalidate("list", "staff"),
+                        Store.invalidate("get", "staff"),
                         (t = await Store.get("list", "staff").catch(() => t)),
                         d(e.id));
                     } catch (e) {
