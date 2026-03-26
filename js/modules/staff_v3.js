@@ -63,7 +63,7 @@ const Staff = (() => {
                           .filter(Boolean)
                           .join(", ")
                       : "");
-                return `\n        <div class="card" style="cursor:pointer;position:relative;overflow:hidden;"\n             data-staff-id="${Utils.escapeHtml(e.id)}"\n             data-name="${Utils.escapeHtml((e.full_name || "").toLowerCase())}"\n             data-role="${Utils.escapeHtml((e.role || "").toLowerCase())}">\n            ${o ? '<div style="position:absolute;top:var(--sp-2);right:var(--sp-2);width:8px;height:8px;border-radius:50%;background:var(--color-pink);box-shadow:0 0 6px var(--color-pink);"></div>' : ""}\n            <div style="display:flex;align-items:flex-start;gap:var(--sp-2);">\n                <div style="width:48px;height:48px;background:${t};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--font-display);font-weight:700;font-size:1.3rem;color:#000;border-radius:8px;position:relative;overflow:hidden;">\n                    ${e.photo_path ? `<img src="${e.photo_path}" style="width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;z-index:1;">` : ''}\n                    ${Utils.escapeHtml(n)}\n                </div>\n                <div style="overflow:hidden;flex:1;">\n                    <div style="font-family:var(--font-display);font-weight:700;font-size:1.1rem;">${Utils.escapeHtml(e.full_name)}</div>\n                    <div style="font-size:12px;color:var(--color-text-muted);">${Utils.escapeHtml(e.role || "—")}</div>\n                    <div style="font-size:12px;color:var(--color-text-muted);">${Utils.escapeHtml(r)}</div>\n                    ${e.phone ? `<div style="font-size:12px;color:var(--color-text-muted);margin-top:2px;"><i class="ph ph-phone" style="font-size:11px;"></i> ${Utils.escapeHtml(e.phone)}</div>` : ""}\n                </div>\n            </div>\n        </div>`;
+                return `\n        <div class="card" style="cursor:pointer;position:relative;overflow:hidden;"\n             data-staff-id="${Utils.escapeHtml(e.id)}"\n             data-name="${Utils.escapeHtml((e.full_name || "").toLowerCase())}"\n             data-role="${Utils.escapeHtml((e.role || "").toLowerCase())}">\n            ${o ? '<div style="position:absolute;top:var(--sp-2);right:var(--sp-2);width:8px;height:8px;border-radius:50%;background:var(--color-pink);box-shadow:0 0 6px var(--color-pink);"></div>' : ""}\n            <div style="display:flex;align-items:flex-start;gap:var(--sp-2);">\n                <div style="width:48px;height:48px;background:${t};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--font-display);font-weight:700;font-size:1.3rem;color:#000;border-radius:8px;position:relative;overflow:hidden;">\n                    ${e.photo_path ? `<img src="${e.photo_path}" style="width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;z-index:1;">` : ""}\n                    ${Utils.escapeHtml(n)}\n                </div>\n                <div style="overflow:hidden;flex:1;">\n                    <div style="font-family:var(--font-display);font-weight:700;font-size:1.1rem;">${Utils.escapeHtml(e.full_name)}</div>\n                    <div style="font-size:12px;color:var(--color-text-muted);">${Utils.escapeHtml(e.role || "—")}</div>\n                    <div style="font-size:12px;color:var(--color-text-muted);">${Utils.escapeHtml(r)}</div>\n                    ${e.phone ? `<div style="font-size:12px;color:var(--color-text-muted);margin-top:2px;"><i class="ph ph-phone" style="font-size:11px;"></i> ${Utils.escapeHtml(e.phone)}</div>` : ""}\n                </div>\n            </div>\n        </div>`;
               })(e),
             )
             .join("")
@@ -111,7 +111,7 @@ const Staff = (() => {
             const n = a
                 .map(
                   (e) =>
-                    `<label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" name="ns-teams" value="${Utils.escapeHtml(e.id)}" class="form-checkbox"> ${Utils.escapeHtml(i(e.category, e.name))}${e.season ? ' — ' + Utils.escapeHtml(e.season) : ''}</label>`,
+                    `<label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" name="ns-teams" value="${Utils.escapeHtml(e.id)}" class="form-checkbox"> ${Utils.escapeHtml(i(e.category, e.name))}${e.season ? " — " + Utils.escapeHtml(e.season) : ""}</label>`,
                 )
                 .join(""),
               l = ["Dati Personali", "Contatti & Documenti"];
@@ -312,12 +312,16 @@ const Staff = (() => {
                       <div style="font-size:13px;color:var(--color-text-muted);text-align:center;">
                         ${p.photo_path ? "Foto caricata" : "Nessuna foto caricata"}
                       </div>
-                      ${f ? `
+                      ${
+                        f
+                          ? `
                       <label for="staff-photo-upload" class="btn btn-default btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;width:100%;justify-content:center;">
                         <i class="ph ph-camera"></i> ${p.photo_path ? "Cambia foto" : "Carica foto"}
                       </label>
                       <input id="staff-photo-upload" type="file" accept="image/jpeg,image/png,image/webp" style="display:none;" data-staff-id="${p.id}">
-                      <div id="staff-photo-status" style="font-size:12px;color:var(--color-text-muted);text-align:center;"></div>` : ""}
+                      <div id="staff-photo-status" style="font-size:12px;color:var(--color-text-muted);text-align:center;"></div>`
+                          : ""
+                      }
                     </div>
                   </div>
                 </div>
@@ -370,24 +374,31 @@ const Staff = (() => {
               <div>
                   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
                       <p class="section-label" style="margin-bottom:0;">Contratto di Collaborazione</p>
-                      ${f && p.email ? `<button class="btn btn-primary btn-sm" id="generate-contract-btn" style="font-size:11px;padding:4px 10px;">+ NUOVO</button>` : (!p.email ? '<span style="font-size:11px;color:var(--color-pink);">Email mancante per contratto</span>' : '')}
+                      ${f && p.email ? `<button class="btn btn-primary btn-sm" id="generate-contract-btn" style="font-size:11px;padding:4px 10px;">+ NUOVO</button>` : !p.email ? '<span style="font-size:11px;color:var(--color-pink);">Email mancante per contratto</span>' : ""}
                   </div>
                   <div class="card" style="padding:var(--sp-3);">
-                      ${!p.contract_status ? Utils.emptyState("Nessun contratto attivo", "Genera un nuovo contratto per questo membro.") : `
+                      ${
+                        !p.contract_status
+                          ? Utils.emptyState(
+                              "Nessun contratto attivo",
+                              "Genera un nuovo contratto per questo membro.",
+                            )
+                          : `
                       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-                          <div><span style="font-size:12px;color:var(--color-text-muted);">Stato:</span> <strong style="color:${p.contract_status === 'firmato' ? 'var(--color-success)' : p.contract_status === 'inviato' ? 'var(--color-info)' : 'var(--color-white)'};text-transform:uppercase;font-size:12px;letter-spacing:1px;">${p.contract_status}</strong></div>
-                          ${p.contract_signed_at ? `<div style="font-size:12px;color:var(--color-text-muted);">Firmato il: ${Utils.formatDateTime(p.contract_signed_at)}</div>` : ''}
+                          <div><span style="font-size:12px;color:var(--color-text-muted);">Stato:</span> <strong style="color:${p.contract_status === "firmato" ? "var(--color-success)" : p.contract_status === "inviato" ? "var(--color-info)" : "var(--color-white)"};text-transform:uppercase;font-size:12px;letter-spacing:1px;">${p.contract_status}</strong></div>
+                          ${p.contract_signed_at ? `<div style="font-size:12px;color:var(--color-text-muted);">Firmato il: ${Utils.formatDateTime(p.contract_signed_at)}</div>` : ""}
                       </div>
                       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--sp-3);padding:var(--sp-3);background:rgba(0,0,0,0.2);border-radius:6px;">
                           ${o("Valido dal", p.contract_valid_from ? Utils.formatDate(p.contract_valid_from) : null)}
                           ${o("Valido al", p.contract_valid_to ? Utils.formatDate(p.contract_valid_to) : null)}
-                          ${o("Compenso mensile", p.contract_monthly_fee ? '€ ' + Number(p.contract_monthly_fee).toFixed(2) : 'A titolo gratuito')}
+                          ${o("Compenso mensile", p.contract_monthly_fee ? "€ " + Number(p.contract_monthly_fee).toFixed(2) : "A titolo gratuito")}
                       </div>
                       <div style="display:flex;gap:var(--sp-2);margin-top:var(--sp-3);">
-                          ${p.contract_status === 'firmato' && p.contract_signed_pdf_path ? `<a href="api/router.php?module=staff&action=downloadContract&id=${p.id}" target="_blank" class="btn btn-default btn-sm"><i class="ph ph-download"></i> SCARICA FIRMATO</a>` : ''}
-                          ${p.contract_status === 'inviato' && f ? `<button class="btn btn-default btn-sm" id="check-contract-btn" data-id="${p.id}"><i class="ph ph-arrows-clockwise"></i> VERIFICA STATO</button>` : ''}
+                          ${p.contract_status === "firmato" && p.contract_signed_pdf_path ? `<a href="api/router.php?module=staff&action=downloadContract&id=${p.id}" target="_blank" class="btn btn-default btn-sm"><i class="ph ph-download"></i> SCARICA FIRMATO</a>` : ""}
+                          ${p.contract_status === "inviato" && f ? `<button class="btn btn-default btn-sm" id="check-contract-btn" data-id="${p.id}"><i class="ph ph-arrows-clockwise"></i> VERIFICA STATO</button>` : ""}
                       </div>
-                      `}
+                      `
+                      }
                   </div>
               </div>
 
@@ -403,13 +414,17 @@ const Staff = (() => {
                                   <i class="ph ph-file-pdf" style="font-size:24px;color:var(--color-pink);flex-shrink:0;"></i>
                                   <div>
                                       <div style="font-size:13px;font-weight:600;">Contratto</div>
-                                      <div style="font-size:11px;color:var(--color-text-muted);">${p.contract_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(p.contract_file_path.split('/').pop()) : 'Nessun file caricato'}</div>
+                                      <div style="font-size:11px;color:var(--color-text-muted);">${p.contract_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(p.contract_file_path.split("/").pop()) : "Nessun file caricato"}</div>
                                   </div>
                               </div>
                               <div style="display:flex;gap:var(--sp-2);align-items:center;">
-                                  ${p.contract_file_path ? `<a href="api/router.php?module=staff&action=downloadDoc&field=contract_file_path&id=${p.id}" target="_blank" class="btn btn-default btn-sm" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ''}
-                                  ${f ? `<button class="btn btn-primary btn-sm" id="upload-contract-file-btn" type="button" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-upload-simple"></i> Carica</button>
-                                  <input type="file" id="upload-contract-file-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">` : ''}
+                                  ${p.contract_file_path ? `<a href="api/router.php?module=staff&action=downloadDoc&field=contract_file_path&id=${p.id}" target="_blank" class="btn btn-default btn-sm" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ""}
+                                  ${
+                                    f
+                                      ? `<button class="btn btn-primary btn-sm" id="upload-contract-file-btn" type="button" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-upload-simple"></i> Carica</button>
+                                  <input type="file" id="upload-contract-file-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">`
+                                      : ""
+                                  }
                               </div>
                           </div>
                       </div>
@@ -421,13 +436,17 @@ const Staff = (() => {
                                   <i class="ph ph-identification-badge" style="font-size:24px;color:var(--color-info);flex-shrink:0;"></i>
                                   <div>
                                       <div style="font-size:13px;font-weight:600;">CI Fronte</div>
-                                      <div style="font-size:11px;color:var(--color-text-muted);">${p.id_doc_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(p.id_doc_file_path.split('/').pop()) : 'Nessun file caricato'}</div>
+                                      <div style="font-size:11px;color:var(--color-text-muted);">${p.id_doc_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(p.id_doc_file_path.split("/").pop()) : "Nessun file caricato"}</div>
                                   </div>
                               </div>
                               <div style="display:flex;gap:var(--sp-2);align-items:center;">
-                                  ${p.id_doc_file_path ? `<a href="api/router.php?module=staff&action=downloadDoc&field=id_doc_file_path&id=${p.id}" target="_blank" class="btn btn-default btn-sm" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ''}
-                                  ${f ? `<button class="btn btn-primary btn-sm" id="upload-id-doc-btn" type="button" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-upload-simple"></i> Carica</button>
-                                  <input type="file" id="upload-id-doc-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">` : ''}
+                                  ${p.id_doc_file_path ? `<a href="api/router.php?module=staff&action=downloadDoc&field=id_doc_file_path&id=${p.id}" target="_blank" class="btn btn-default btn-sm" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ""}
+                                  ${
+                                    f
+                                      ? `<button class="btn btn-primary btn-sm" id="upload-id-doc-btn" type="button" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-upload-simple"></i> Carica</button>
+                                  <input type="file" id="upload-id-doc-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">`
+                                      : ""
+                                  }
                               </div>
                           </div>
                       </div>
@@ -439,13 +458,17 @@ const Staff = (() => {
                                   <i class="ph ph-identification-card" style="font-size:24px;color:var(--color-info);flex-shrink:0;"></i>
                                   <div>
                                       <div style="font-size:13px;font-weight:600;">CI Retro</div>
-                                      <div style="font-size:11px;color:var(--color-text-muted);">${p.id_doc_back_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(p.id_doc_back_file_path.split('/').pop()) : 'Nessun file caricato'}</div>
+                                      <div style="font-size:11px;color:var(--color-text-muted);">${p.id_doc_back_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(p.id_doc_back_file_path.split("/").pop()) : "Nessun file caricato"}</div>
                                   </div>
                               </div>
                               <div style="display:flex;gap:var(--sp-2);align-items:center;">
-                                  ${p.id_doc_back_file_path ? `<a href="api/router.php?module=staff&action=downloadDoc&field=id_doc_back_file_path&id=${p.id}" target="_blank" class="btn btn-default btn-sm" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ''}
-                                  ${f ? `<button class="btn btn-primary btn-sm" id="upload-id-doc-back-btn" type="button" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-upload-simple"></i> Carica</button>
-                                  <input type="file" id="upload-id-doc-back-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">` : ''}
+                                  ${p.id_doc_back_file_path ? `<a href="api/router.php?module=staff&action=downloadDoc&field=id_doc_back_file_path&id=${p.id}" target="_blank" class="btn btn-default btn-sm" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ""}
+                                  ${
+                                    f
+                                      ? `<button class="btn btn-primary btn-sm" id="upload-id-doc-back-btn" type="button" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-upload-simple"></i> Carica</button>
+                                  <input type="file" id="upload-id-doc-back-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">`
+                                      : ""
+                                  }
                               </div>
                           </div>
                       </div>
@@ -457,13 +480,17 @@ const Staff = (() => {
                                   <i class="ph ph-credit-card" style="font-size:24px;color:var(--color-success);flex-shrink:0;"></i>
                                   <div>
                                       <div style="font-size:13px;font-weight:600;">CF Fronte</div>
-                                      <div style="font-size:11px;color:var(--color-text-muted);">${p.cf_doc_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(p.cf_doc_file_path.split('/').pop()) : 'Nessun file caricato'}</div>
+                                      <div style="font-size:11px;color:var(--color-text-muted);">${p.cf_doc_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(p.cf_doc_file_path.split("/").pop()) : "Nessun file caricato"}</div>
                                   </div>
                               </div>
                               <div style="display:flex;gap:var(--sp-2);align-items:center;">
-                                  ${p.cf_doc_file_path ? `<a href="api/router.php?module=staff&action=downloadDoc&field=cf_doc_file_path&id=${p.id}" target="_blank" class="btn btn-default btn-sm" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ''}
-                                  ${f ? `<button class="btn btn-primary btn-sm" id="upload-cf-doc-btn" type="button" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-upload-simple"></i> Carica</button>
-                                  <input type="file" id="upload-cf-doc-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">` : ''}
+                                  ${p.cf_doc_file_path ? `<a href="api/router.php?module=staff&action=downloadDoc&field=cf_doc_file_path&id=${p.id}" target="_blank" class="btn btn-default btn-sm" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ""}
+                                  ${
+                                    f
+                                      ? `<button class="btn btn-primary btn-sm" id="upload-cf-doc-btn" type="button" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-upload-simple"></i> Carica</button>
+                                  <input type="file" id="upload-cf-doc-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">`
+                                      : ""
+                                  }
                               </div>
                           </div>
                       </div>
@@ -475,13 +502,17 @@ const Staff = (() => {
                                   <i class="ph ph-credit-card" style="font-size:24px;color:var(--color-success);flex-shrink:0;"></i>
                                   <div>
                                       <div style="font-size:13px;font-weight:600;">CF Retro</div>
-                                      <div style="font-size:11px;color:var(--color-text-muted);">${p.cf_doc_back_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(p.cf_doc_back_file_path.split('/').pop()) : 'Nessun file caricato'}</div>
+                                      <div style="font-size:11px;color:var(--color-text-muted);">${p.cf_doc_back_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(p.cf_doc_back_file_path.split("/").pop()) : "Nessun file caricato"}</div>
                                   </div>
                               </div>
                               <div style="display:flex;gap:var(--sp-2);align-items:center;">
-                                  ${p.cf_doc_back_file_path ? `<a href="api/router.php?module=staff&action=downloadDoc&field=cf_doc_back_file_path&id=${p.id}" target="_blank" class="btn btn-default btn-sm" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ''}
-                                  ${f ? `<button class="btn btn-primary btn-sm" id="upload-cf-doc-back-btn" type="button" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-upload-simple"></i> Carica</button>
-                                  <input type="file" id="upload-cf-doc-back-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">` : ''}
+                                  ${p.cf_doc_back_file_path ? `<a href="api/router.php?module=staff&action=downloadDoc&field=cf_doc_back_file_path&id=${p.id}" target="_blank" class="btn btn-default btn-sm" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ""}
+                                  ${
+                                    f
+                                      ? `<button class="btn btn-primary btn-sm" id="upload-cf-doc-back-btn" type="button" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-upload-simple"></i> Carica</button>
+                                  <input type="file" id="upload-cf-doc-back-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">`
+                                      : ""
+                                  }
                               </div>
                           </div>
                       </div>
@@ -512,48 +543,62 @@ const Staff = (() => {
         }),
         // Add overlay photo upload events connected to the new inline Anagrafica layout
         (() => {
-            const fileInput = document.getElementById('staff-photo-upload');
-            const previewLabel = document.querySelector('label[for="staff-photo-upload"]');
-            if (fileInput) {
-                fileInput.addEventListener('change', async (ev) => {
-                    const file = ev.target.files[0];
-                    if (!file) return;
-                    
-                    const formData = new FormData();
-                    formData.append('id', p.id);
-                    formData.append('file', file);
-                    
-                    const statusText = document.getElementById('staff-photo-status');
-                    if (statusText) statusText.textContent = "Caricamento in corso...";
-                    if (previewLabel) previewLabel.style.opacity = "0.5";
+          const fileInput = document.getElementById("staff-photo-upload");
+          const previewLabel = document.querySelector(
+            'label[for="staff-photo-upload"]',
+          );
+          if (fileInput) {
+            fileInput.addEventListener(
+              "change",
+              async (ev) => {
+                const file = ev.target.files[0];
+                if (!file) return;
 
-                    try {
-                        const response = await fetch('api/router.php?module=staff&action=uploadPhoto', {
-                            method: 'POST',
-                            body: formData
-                        });
-                        const res = await response.json();
-                        if (!response.ok || !res.success) throw new Error(res.error || 'Errore di caricamento');
-                        
-                        UI.toast('Foto aggiornata con successo', 'success');
-                        Store.invalidate("list", "staff");
-                        Store.invalidate("get", "staff");
-                        d(p.id); // reload
-                    } catch (err) {
-                        UI.toast(err.message, 'error');
-                        if (statusText) statusText.textContent = 'Errore: ' + err.message;
-                    } finally {
-                        if (previewLabel) previewLabel.style.opacity = "";
-                    }
-                }, { signal: e.signal });
-            }
+                const formData = new FormData();
+                formData.append("id", p.id);
+                formData.append("file", file);
+
+                const statusText =
+                  document.getElementById("staff-photo-status");
+                if (statusText)
+                  statusText.textContent = "Caricamento in corso...";
+                if (previewLabel) previewLabel.style.opacity = "0.5";
+
+                try {
+                  const response = await fetch(
+                    "api/router.php?module=staff&action=uploadPhoto",
+                    {
+                      method: "POST",
+                      body: formData,
+                    },
+                  );
+                  const res = await response.json();
+                  if (!response.ok || !res.success)
+                    throw new Error(res.error || "Errore di caricamento");
+
+                  UI.toast("Foto aggiornata con successo", "success");
+                  Store.invalidate("list", "staff");
+                  Store.invalidate("get", "staff");
+                  d(p.id); // reload
+                } catch (err) {
+                  UI.toast(err.message, "error");
+                  if (statusText)
+                    statusText.textContent = "Errore: " + err.message;
+                } finally {
+                  if (previewLabel) previewLabel.style.opacity = "";
+                }
+              },
+              { signal: e.signal },
+            );
+          }
         })(),
-        
         // Contract Generation
-        document.getElementById('generate-contract-btn')?.addEventListener('click', () => {
-             const m = UI.modal({
-                 title: 'Genera Contratto di Collaborazione',
-                 body: `
+        document.getElementById("generate-contract-btn")?.addEventListener(
+          "click",
+          () => {
+            const m = UI.modal({
+              title: "Genera Contratto di Collaborazione",
+              body: `
                     <div class="form-grid">
                         <div class="form-group"><label class="form-label" for="cg-from">Valido dal *</label><input type="date" id="cg-from" class="form-input" required></div>
                         <div class="form-group"><label class="form-label" for="cg-to">Valido al *</label><input type="date" id="cg-to" class="form-input" required></div>
@@ -561,114 +606,144 @@ const Staff = (() => {
                     <div class="form-group"><label class="form-label" for="cg-fee">Compenso Mensile (€) (Opzionale)</label><input type="number" id="cg-fee" step="0.01" class="form-input" placeholder="Es. 150.00"></div>
                     <div id="cg-error" class="form-error hidden"></div>
                  `,
-                 footer: `
+              footer: `
                     <button class="btn btn-ghost btn-sm" id="cg-cancel" type="button">Annulla</button>
                     <button class="btn btn-primary btn-sm" id="cg-save" type="button">GENERA E INVIA</button>
-                 `
-             });
-             
-             document.getElementById('cg-cancel').addEventListener('click', () => m.close());
-             document.getElementById('cg-save').addEventListener('click', async () => {
-                 const from = document.getElementById('cg-from').value;
-                 const to = document.getElementById('cg-to').value;
-                 const fee = document.getElementById('cg-fee').value || null;
-                 const err = document.getElementById('cg-error');
-                 const btn = document.getElementById('cg-save');
-                 
-                 if (!from || !to) {
-                     err.textContent = 'Data di inizio e fine obbligatorie';
-                     err.classList.remove('hidden');
-                     return;
-                 }
-                 
-                 btn.disabled = true;
-                 btn.textContent = 'Generazione...';
-                 
-                 try {
-                     await Store.api('generateContract', 'staff', {
-                         staff_id: p.id,
-                         valid_from: from,
-                         valid_to: to,
-                         monthly_fee: fee
-                     });
-                     m.close();
-                     UI.toast('Contratto generato e inviato!', 'success');
-                     Store.invalidate("list", "staff");
-                     Store.invalidate("get", "staff");
-                     d(p.id);
-                 } catch (errApi) {
-                     err.textContent = errApi.message;
-                     err.classList.remove('hidden');
-                     btn.disabled = false;
-                     btn.textContent = 'GENERA E INVIA';
-                 }
-             });
-        }, { signal: e.signal }),
-        
+                 `,
+            });
+
+            document
+              .getElementById("cg-cancel")
+              .addEventListener("click", () => m.close());
+            document
+              .getElementById("cg-save")
+              .addEventListener("click", async () => {
+                const from = document.getElementById("cg-from").value;
+                const to = document.getElementById("cg-to").value;
+                const fee = document.getElementById("cg-fee").value || null;
+                const err = document.getElementById("cg-error");
+                const btn = document.getElementById("cg-save");
+
+                if (!from || !to) {
+                  err.textContent = "Data di inizio e fine obbligatorie";
+                  err.classList.remove("hidden");
+                  return;
+                }
+
+                btn.disabled = true;
+                btn.textContent = "Generazione...";
+
+                try {
+                  await Store.api("generateContract", "staff", {
+                    staff_id: p.id,
+                    valid_from: from,
+                    valid_to: to,
+                    monthly_fee: fee,
+                  });
+                  m.close();
+                  UI.toast("Contratto generato e inviato!", "success");
+                  Store.invalidate("list", "staff");
+                  Store.invalidate("get", "staff");
+                  d(p.id);
+                } catch (errApi) {
+                  err.textContent = errApi.message;
+                  err.classList.remove("hidden");
+                  btn.disabled = false;
+                  btn.textContent = "GENERA E INVIA";
+                }
+              });
+          },
+          { signal: e.signal },
+        ),
         // Contract Status check
-        document.getElementById('check-contract-btn')?.addEventListener('click', async (ev) => {
-             const btn = ev.target.closest('button');
-             btn.disabled = true;
-             btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> VERIFICA...';
-             try {
-                 const res = await Store.api('checkContractStatus', 'staff', { id: p.id });
-                 UI.toast(res.signed ? 'Contratto firmato!' : 'Ancora in attesa di firma.', res.signed ? 'success' : 'info');
-                 if (res.signed) {
-                     Store.invalidate("list", "staff");
-                     Store.invalidate("get", "staff");
-                     d(p.id);
-                 } else {
-                     btn.disabled = false;
-                     btn.innerHTML = '<i class="ph ph-arrows-clockwise"></i> VERIFICA STATO';
-                 }
-             } catch (err) {
-                 UI.toast(err.message, 'error');
-                 btn.disabled = false;
-                 btn.innerHTML = '<i class="ph ph-arrows-clockwise"></i> VERIFICA STATO';
-             }
-        }, { signal: e.signal }),
-        
-        // Document Upload Handlers
-        ["contract-file", "id-doc", "id-doc-back", "cf-doc", "cf-doc-back"].forEach(type => {
-            const btn = document.getElementById(`upload-${type}-btn`);
-            const input = document.getElementById(`upload-${type}-input`);
-            if (btn && input) {
-                btn.addEventListener('click', () => input.click());
-                input.addEventListener('change', async (ev) => {
-                    const file = ev.target.files[0];
-                    if (!file) return;
-                    
-                    const formData = new FormData();
-                    formData.append('id', p.id);
-                    formData.append('file', file);
-                    
-                    let action = '';
-                    if (type === 'contract-file') action = 'uploadContractFile';
-                    else if (type === 'id-doc') action = 'uploadIdDoc';
-                    else if (type === 'id-doc-back') action = 'uploadIdDocBack';
-                    else if (type === 'cf-doc') action = 'uploadCfDoc';
-                    else if (type === 'cf-doc-back') action = 'uploadCfDocBack';
-
-                    UI.toast('Caricamento documento...', 'info');
-                    try {
-                        const response = await fetch(`api/router.php?module=staff&action=${action}`, {
-                            method: 'POST',
-                            body: formData
-                        });
-                        const res = await response.json();
-                        if (!response.ok || !res.success) throw new Error(res.error || 'Errore di caricamento');
-                        
-                        UI.toast('Documento caricato con successo', 'success');
-                        Store.invalidate("list", "staff");
-                        Store.invalidate("get", "staff");
-                        d(p.id); // reload
-                    } catch (err) {
-                        UI.toast(err.message, 'error');
-                    }
-                }, { signal: e.signal });
+        document.getElementById("check-contract-btn")?.addEventListener(
+          "click",
+          async (ev) => {
+            const btn = ev.target.closest("button");
+            btn.disabled = true;
+            btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> VERIFICA...';
+            try {
+              const res = await Store.api("checkContractStatus", "staff", {
+                id: p.id,
+              });
+              UI.toast(
+                res.signed
+                  ? "Contratto firmato!"
+                  : "Ancora in attesa di firma.",
+                res.signed ? "success" : "info",
+              );
+              if (res.signed) {
+                Store.invalidate("list", "staff");
+                Store.invalidate("get", "staff");
+                d(p.id);
+              } else {
+                btn.disabled = false;
+                btn.innerHTML =
+                  '<i class="ph ph-arrows-clockwise"></i> VERIFICA STATO';
+              }
+            } catch (err) {
+              UI.toast(err.message, "error");
+              btn.disabled = false;
+              btn.innerHTML =
+                '<i class="ph ph-arrows-clockwise"></i> VERIFICA STATO';
             }
-        }),
+          },
+          { signal: e.signal },
+        ),
+        // Document Upload Handlers
+        [
+          "contract-file",
+          "id-doc",
+          "id-doc-back",
+          "cf-doc",
+          "cf-doc-back",
+        ].forEach((type) => {
+          const btn = document.getElementById(`upload-${type}-btn`);
+          const input = document.getElementById(`upload-${type}-input`);
+          if (btn && input) {
+            btn.addEventListener("click", () => input.click());
+            input.addEventListener(
+              "change",
+              async (ev) => {
+                const file = ev.target.files[0];
+                if (!file) return;
 
+                const formData = new FormData();
+                formData.append("id", p.id);
+                formData.append("file", file);
+
+                let action = "";
+                if (type === "contract-file") action = "uploadContractFile";
+                else if (type === "id-doc") action = "uploadIdDoc";
+                else if (type === "id-doc-back") action = "uploadIdDocBack";
+                else if (type === "cf-doc") action = "uploadCfDoc";
+                else if (type === "cf-doc-back") action = "uploadCfDocBack";
+
+                UI.toast("Caricamento documento...", "info");
+                try {
+                  const response = await fetch(
+                    `api/router.php?module=staff&action=${action}`,
+                    {
+                      method: "POST",
+                      body: formData,
+                    },
+                  );
+                  const res = await response.json();
+                  if (!response.ok || !res.success)
+                    throw new Error(res.error || "Errore di caricamento");
+
+                  UI.toast("Documento caricato con successo", "success");
+                  Store.invalidate("list", "staff");
+                  Store.invalidate("get", "staff");
+                  d(p.id); // reload
+                } catch (err) {
+                  UI.toast(err.message, "error");
+                }
+              },
+              { signal: e.signal },
+            );
+          }
+        }),
         document.getElementById("staff-back")?.addEventListener(
           "click",
           () => {
@@ -683,7 +758,7 @@ const Staff = (() => {
               const n = a
                   .map(
                     (t) =>
-                      `<label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" name="es-teams" value="${Utils.escapeHtml(String(t.id))}" class="form-checkbox" ${(e.team_season_ids || []).map(String).includes(String(t.id)) ? "checked" : ""}> ${Utils.escapeHtml(i(t.category, t.name))}${t.season ? ' — ' + Utils.escapeHtml(t.season) : ''}</label>`,
+                      `<label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" name="es-teams" value="${Utils.escapeHtml(String(t.id))}" class="form-checkbox" ${(e.team_season_ids || []).map(String).includes(String(t.id)) ? "checked" : ""}> ${Utils.escapeHtml(i(t.category, t.name))}${t.season ? " — " + Utils.escapeHtml(t.season) : ""}</label>`,
                   )
                   .join(""),
                 l = UI.modal({
@@ -692,78 +767,112 @@ const Staff = (() => {
                   footer:
                     '\n                <button class="btn btn-ghost btn-sm" id="es-cancel" type="button">Annulla</button>\n                <button class="btn btn-primary btn-sm" id="es-save" type="button">SALVA MODIFICHE</button>\n            ',
                 });
-              const performSave = async (showSuccessToast = true, closeOnSuccess = false) => {
-                    const a = document.getElementById("es-fname").value.trim(),
-                      n = document.getElementById("es-lname").value.trim(),
-                      s = document.getElementById("es-error");
-                    if (!a || !n) {
-                      s.textContent = "Nome e cognome sono obbligatori";
-                      s.classList.remove("hidden");
-                      return;
+              const performSave = async (
+                showSuccessToast = true,
+                closeOnSuccess = false,
+              ) => {
+                const a = document.getElementById("es-fname").value.trim(),
+                  n = document.getElementById("es-lname").value.trim(),
+                  s = document.getElementById("es-error");
+                if (!a || !n) {
+                  s.textContent = "Nome e cognome sono obbligatori";
+                  s.classList.remove("hidden");
+                  return;
+                }
+                const i = document.getElementById("es-teams-wrapper"),
+                  o = i
+                    ? Array.from(
+                        i.querySelectorAll('input[name="es-teams"]:checked'),
+                      ).map((e) => e.value)
+                    : [];
+                const r = document.getElementById("es-save");
+                r.disabled = !0;
+                r.textContent = "Salvataggio...";
+                try {
+                  await Store.api("update", "staff", {
+                    id: e.id,
+                    first_name: a,
+                    last_name: n,
+                    role: document.getElementById("es-role").value || null,
+                    birth_date:
+                      document.getElementById("es-birth").value || null,
+                    birth_place:
+                      document.getElementById("es-birthplace").value || null,
+                    residence_address:
+                      document.getElementById("es-resaddr").value || null,
+                    residence_city:
+                      document.getElementById("es-rescity").value || null,
+                    phone: document.getElementById("es-phone").value || null,
+                    email: document.getElementById("es-email").value || null,
+                    fiscal_code:
+                      document
+                        .getElementById("es-fiscal")
+                        .value?.toUpperCase() || null,
+                    identity_document:
+                      document.getElementById("es-doc").value || null,
+                    medical_cert_expires_at:
+                      document.getElementById("es-medcert").value || null,
+                    notes: document.getElementById("es-notes").value || null,
+                    team_ids: o,
+                  });
+                  if (showSuccessToast) {
+                    UI.toast("Auto-Salvataggio completato", "success");
+                    const activeEl = document.activeElement;
+                    if (
+                      activeEl &&
+                      ["INPUT", "SELECT", "TEXTAREA"].includes(activeEl.tagName)
+                    ) {
+                      const originalBorder = activeEl.style.borderColor;
+                      activeEl.style.borderColor = "var(--color-success)";
+                      setTimeout(
+                        () => (activeEl.style.borderColor = originalBorder),
+                        1500,
+                      );
                     }
-                    const i = document.getElementById("es-teams-wrapper"),
-                      o = i ? Array.from(i.querySelectorAll('input[name="es-teams"]:checked')).map((e) => e.value) : [];
-                    const r = document.getElementById("es-save");
-                    r.disabled = !0; r.textContent = "Salvataggio...";
-                    try {
-                      await Store.api("update", "staff", {
-                        id: e.id,
-                        first_name: a,
-                        last_name: n,
-                        role: document.getElementById("es-role").value || null,
-                        birth_date: document.getElementById("es-birth").value || null,
-                        birth_place: document.getElementById("es-birthplace").value || null,
-                        residence_address: document.getElementById("es-resaddr").value || null,
-                        residence_city: document.getElementById("es-rescity").value || null,
-                        phone: document.getElementById("es-phone").value || null,
-                        email: document.getElementById("es-email").value || null,
-                        fiscal_code: document.getElementById("es-fiscal").value?.toUpperCase() || null,
-                        identity_document: document.getElementById("es-doc").value || null,
-                        medical_cert_expires_at: document.getElementById("es-medcert").value || null,
-                        notes: document.getElementById("es-notes").value || null,
-                        team_ids: o,
-                      });
-                      if(showSuccessToast) {
-                          UI.toast("Auto-Salvataggio completato", "success");
-                          const activeEl = document.activeElement;
-                          if (activeEl && ['INPUT', 'SELECT', 'TEXTAREA'].includes(activeEl.tagName)) {
-                              const originalBorder = activeEl.style.borderColor;
-                              activeEl.style.borderColor = "var(--color-success)";
-                              setTimeout(() => activeEl.style.borderColor = originalBorder, 1500);
-                          }
-                      }
-                      Store.invalidate("list", "staff");
-                      Store.invalidate("get", "staff");
-                      
-                      // Aggiorna lo store t se necessario
-                      t = await Store.get("list", "staff").catch(() => t);
-                      
-                      if(closeOnSuccess) {
-                          l.close();
-                          d(e.id);
-                      }
-                    } catch (err) {
-                      s.textContent = err.message;
-                      s.classList.remove("hidden");
-                    } finally {
-                      r.disabled = !1; r.textContent = "SALVA MODIFICHE";
-                    }
-                };
+                  }
+                  Store.invalidate("list", "staff");
+                  Store.invalidate("get", "staff");
 
-                document.getElementById("es-cancel")?.addEventListener("click", () => l.close());
-                document.getElementById("es-save")?.addEventListener("click", () => performSave(true, true));
-                
-                // Attach blur listener to all inputs in the modal body for Auto-save (T3, T5)
-                setTimeout(() => {
-                    const modalWrapper = document.getElementById("es-fname")?.closest('.fusion-modal-body');
-                    if(modalWrapper) {
-                        modalWrapper.addEventListener('focusout', (ev) => {
-                            if(['INPUT', 'SELECT', 'TEXTAREA'].includes(ev.target.tagName)) {
-                                performSave(true, false);
-                            }
-                        });
+                  // Aggiorna lo store t se necessario
+                  t = await Store.get("list", "staff").catch(() => t);
+
+                  if (closeOnSuccess) {
+                    l.close();
+                    d(e.id);
+                  }
+                } catch (err) {
+                  s.textContent = err.message;
+                  s.classList.remove("hidden");
+                } finally {
+                  r.disabled = !1;
+                  r.textContent = "SALVA MODIFICHE";
+                }
+              };
+
+              document
+                .getElementById("es-cancel")
+                ?.addEventListener("click", () => l.close());
+              document
+                .getElementById("es-save")
+                ?.addEventListener("click", () => performSave(true, true));
+
+              // Attach blur listener to all inputs in the modal body for Auto-save (T3, T5)
+              setTimeout(() => {
+                const modalWrapper = document
+                  .getElementById("es-fname")
+                  ?.closest(".fusion-modal-body");
+                if (modalWrapper) {
+                  modalWrapper.addEventListener("focusout", (ev) => {
+                    if (
+                      ["INPUT", "SELECT", "TEXTAREA"].includes(
+                        ev.target.tagName,
+                      )
+                    ) {
+                      performSave(true, false);
                     }
-                }, 100);
+                  });
+                }
+              }, 100);
             })(p),
           { signal: e.signal },
         ),
@@ -806,41 +915,46 @@ const Staff = (() => {
     if (!c) return;
     const today = new Date();
     const future60 = new Date(today.getTime() + 60 * 24 * 60 * 60 * 1000);
-    
+
     const medCertStats = { expired: 0, expiring: 0, valid: 0, missing: 0 };
-    const certRows = t.map(p => {
-        let statusHtml = '';
-        let certDate = p.medical_cert_expires_at ? new Date(p.medical_cert_expires_at) : null;
+    const certRows = t
+      .map((p) => {
+        let statusHtml = "";
+        let certDate = p.medical_cert_expires_at
+          ? new Date(p.medical_cert_expires_at)
+          : null;
         let isExpired = certDate && certDate < today;
         let isExpiring = certDate && !isExpired && certDate < future60;
-        
+
         if (isExpired) {
-            medCertStats.expired++;
-            statusHtml = '<span class="badge badge-danger">Scaduto</span>';
+          medCertStats.expired++;
+          statusHtml = '<span class="badge badge-danger">Scaduto</span>';
         } else if (isExpiring) {
-            medCertStats.expiring++;
-            statusHtml = '<span class="badge badge-warning">In scadenza</span>';
+          medCertStats.expiring++;
+          statusHtml = '<span class="badge badge-warning">In scadenza</span>';
         } else if (certDate) {
-            medCertStats.valid++;
-            statusHtml = '<span class="badge badge-success">Valido</span>';
+          medCertStats.valid++;
+          statusHtml = '<span class="badge badge-success">Valido</span>';
         } else {
-            medCertStats.missing++;
-            statusHtml = '<span class="badge">Mancante</span>';
+          medCertStats.missing++;
+          statusHtml = '<span class="badge">Mancante</span>';
         }
 
-        let contractStatusHtml = '';
-        if (p.contract_status === 'firmato') {
-            contractStatusHtml = '<span class="badge badge-success">Firmato</span>';
-        } else if (p.contract_status === 'inviato') {
-            contractStatusHtml = '<span class="badge badge-warning">Inviato</span>';
+        let contractStatusHtml = "";
+        if (p.contract_status === "firmato") {
+          contractStatusHtml =
+            '<span class="badge badge-success">Firmato</span>';
+        } else if (p.contract_status === "inviato") {
+          contractStatusHtml =
+            '<span class="badge badge-warning">Inviato</span>';
         } else {
-            contractStatusHtml = '<span class="badge">Nessuno</span>';
+          contractStatusHtml = '<span class="badge">Nessuno</span>';
         }
 
         return `<tr style="cursor:pointer;" data-staff-id="${Utils.escapeHtml(p.id)}">
             <td><strong>${Utils.escapeHtml(p.full_name)}</strong></td>
             <td>${Utils.escapeHtml(p.role || "—")}</td>
-            <td style="color:${isExpired ? 'var(--color-pink)' : isExpiring ? 'var(--color-warning)' : 'var(--color-text)'}">
+            <td style="color:${isExpired ? "var(--color-pink)" : isExpiring ? "var(--color-warning)" : "var(--color-text)"}">
                 ${certDate ? Utils.formatDate(p.medical_cert_expires_at) : '<span style="color:var(--color-text-muted)">—</span>'}
             </td>
             <td>${statusHtml}</td>
@@ -848,7 +962,8 @@ const Staff = (() => {
             <td>${Utils.escapeHtml(p.fiscal_code || "—")}</td>
             <td>${contractStatusHtml}</td>
         </tr>`;
-    }).join('');
+      })
+      .join("");
 
     c.innerHTML = `
         <div class="page-header" style="border-bottom:1px solid var(--color-border);padding-bottom:var(--sp-3);margin-bottom:var(--sp-3);">
@@ -905,7 +1020,9 @@ const Staff = (() => {
             Store.get("teams", "athletes").catch(() => []),
           ])),
             (n = null),
-            Router.getCurrentRoute() === "staff-documents" ? renderDocumentsView() : r());
+            Router.getCurrentRoute() === "staff-documents"
+              ? renderDocumentsView()
+              : r());
         } catch (t) {
           ((e.innerHTML = Utils.emptyState(
             "Errore caricamento staff",

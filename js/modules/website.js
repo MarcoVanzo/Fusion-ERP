@@ -11,11 +11,15 @@ const Website = (() => {
           t && 0 !== t.length
             ? ((e.innerHTML = `\n            <div class="table-responsive">\n                <table class="table">\n                    <thead>\n                        <tr>\n                            <th>Titolo</th>\n                            <th>Categoria</th>\n                            <th>Stato</th>\n                            <th>Data Pubblicazione</th>\n                            <th style="text-align: right;">Azioni</th>\n                        </tr>\n                    </thead>\n                    <tbody>\n                        ${t.map((e) => `\n                            <tr>\n                                <td>\n                                    <div style="font-weight: 600;">${Utils.escapeHtml(e.title)}</div>\n                                    <div style="font-size: 11px; color: var(--text-muted);">/${e.slug}</div>\n                                </td>\n                                <td>\n                                    <span class="badge" style="background: ${e.color_hex}20; color: ${e.color_hex}; border: 1px solid ${e.color_hex}40;">\n                                        ${Utils.escapeHtml(e.category_name)}\n                                    </span>\n                                </td>\n                                <td>\n                                    ${1 === Number(e.is_published) ? '<span class="badge badge-success">Pubblicato</span>' : '<span class="badge badge-warning">Bozza</span>'}\n                                </td>\n                                <td>${e.published_at ? Utils.formatDate(e.published_at) : "-"}</td>\n                                <td style="text-align: right;">\n                                    <button class="btn btn-ghost btn-icon btn-sm news-edit-btn" data-id="${e.id}" title="Modifica">\n                                        <i class="ph ph-pencil"></i>\n                                    </button>\n                                </td>\n                            </tr>\n                        `).join("")}\n                    </tbody>\n                </table>\n            </div>\n        `),
               e.querySelectorAll(".news-edit-btn").forEach((e) => {
-                e.addEventListener("click", () => {
-                  const n = parseInt(e.dataset.id, 10),
-                    i = t.find((e) => e.id === n);
-                  i ? a(i) : UI.toast("Articolo non trovato", "error");
-                }, { signal: controller.signal });
+                e.addEventListener(
+                  "click",
+                  () => {
+                    const n = parseInt(e.dataset.id, 10),
+                      i = t.find((e) => e.id === n);
+                    i ? a(i) : UI.toast("Articolo non trovato", "error");
+                  },
+                  { signal: controller.signal },
+                );
               }))
             : (e.innerHTML = Utils.emptyState(
                 "Nessun articolo trovato",
@@ -83,19 +87,22 @@ const Website = (() => {
       }),
       a &&
         (document.getElementById("btn-delete").onclick = async () => {
-          UI.confirm("Sei sicuro di voler eliminare questo articolo?", async () => {
-            document.getElementById("btn-delete").disabled = true;
-            try {
-              (await Store.api("deleteNews", "website", { id: e.id }),
-                UI.toast("Articolo eliminato", "success"),
-                Store.invalidate("website/newsList"),
-                s.close(),
-                await n());
-            } catch (e) {
-              (UI.toast(e.message, "error"),
-                (document.getElementById("btn-delete").disabled = false));
-            }
-          });
+          UI.confirm(
+            "Sei sicuro di voler eliminare questo articolo?",
+            async () => {
+              document.getElementById("btn-delete").disabled = true;
+              try {
+                (await Store.api("deleteNews", "website", { id: e.id }),
+                  UI.toast("Articolo eliminato", "success"),
+                  Store.invalidate("website/newsList"),
+                  s.close(),
+                  await n());
+              } catch (e) {
+                (UI.toast(e.message, "error"),
+                  (document.getElementById("btn-delete").disabled = false));
+              }
+            },
+          );
         }),
       (document.getElementById("btn-cancel").onclick = () => s.close()),
       (document.getElementById("btn-save").onclick = async () => {

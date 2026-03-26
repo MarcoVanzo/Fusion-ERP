@@ -244,17 +244,11 @@ class App {
                   <input type="number" step="0.01" id="exp-amount" class="huge-amount-input" placeholder="0.00" required>
                 </div>
 
-                <button type="button" class="btn mt-20" id="btn-next-step">
-                  AVANTI <i class="fas fa-arrow-right"></i>
-                </button>
+                <!-- Action buttons removed from here, placed at bottom -->
               </div>
 
               <!-- STEP 2: DETTAGLI -->
               <div id="step-2" class="d-none">
-                <button type="button" class="btn btn-secondary mb-20" id="btn-prev-step" style="width: auto; padding: 10px 16px;">
-                  <i class="fas fa-arrow-left"></i> Indietro
-                </button>
-                
                 <h3 style="margin-bottom: 20px; font-size: 16px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 8px;">Dettagli Spesa</h3>
 
                 <div class="input-group">
@@ -265,11 +259,14 @@ class App {
                 <div class="input-group">
                   <label class="input-label">Categoria</label>
                   <select id="exp-category" class="input-field">
-                    <option value="Spesa Alimentare" selected>Spesa Alimentare</option>
-                    <option value="Pulizie">Pulizie</option>
-                    <option value="Manutenzione">Manutenzione</option>
-                    <option value="Utenze">Utenze</option>
-                    <option value="Altro">Altro</option>
+                    <option value="manutenzione">Manutenzione</option>
+                    <option value="pulizie">Pulizie</option>
+                    <option value="utenze">Utenze</option>
+                    <option value="cibo">Cibo/Spesa</option>
+                    <option value="frutta_verdura">Frutta e Verdura</option>
+                    <option value="tuto">Tuto</option>
+                    <option value="affitto">Affitto</option>
+                    <option value="altro" selected>Altro</option>
                   </select>
                 </div>
 
@@ -282,14 +279,26 @@ class App {
                   <label class="input-label">Note</label>
                   <textarea id="exp-notes" class="input-field" rows="2" placeholder="Opzionale..."></textarea>
                 </div>
-
-                <button type="button" class="btn mt-20" id="submit-expense-btn">
-                  <i class="fas fa-paper-plane"></i> SALVA SPESA
-                </button>
               </div>
-
             </form>
           </div>
+          <!-- Wizard Padding for space at bottom -->
+          <div class="wizard-padding"></div>
+        </div>
+
+        <!-- Wizard Fixed Actions -->
+        <div class="wizard-actions" id="step-1-actions">
+          <button type="button" class="btn" id="btn-next-step" style="flex: 1;">
+            AVANTI <i class="fas fa-arrow-right"></i>
+          </button>
+        </div>
+        <div class="wizard-actions d-none" id="step-2-actions">
+          <button type="button" class="btn btn-secondary" id="btn-prev-step" style="flex: 1;">
+            INDIETRO
+          </button>
+          <button type="button" class="btn" id="submit-expense-btn" style="flex: 2;">
+            SALVA SPESA
+          </button>
         </div>
 
         ${this.getBottomNav('#spese')}
@@ -299,6 +308,8 @@ class App {
     // Step 1 <-> Step 2 Logic
     const step1 = document.getElementById('step-1');
     const step2 = document.getElementById('step-2');
+    const step1Actions = document.getElementById('step-1-actions');
+    const step2Actions = document.getElementById('step-2-actions');
 
     document.getElementById('btn-next-step').addEventListener('click', () => {
       this.vibrate(20);
@@ -309,14 +320,18 @@ class App {
         return;
       }
       step1.classList.add('d-none');
+      step1Actions.classList.add('d-none');
       step2.classList.remove('d-none');
+      step2Actions.classList.remove('d-none');
       // smooth scroll up
       window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 
     document.getElementById('btn-prev-step').addEventListener('click', () => {
       step2.classList.add('d-none');
+      step2Actions.classList.add('d-none');
       step1.classList.remove('d-none');
+      step1Actions.classList.remove('d-none');
     });
 
     // File input listener with preview

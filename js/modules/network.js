@@ -44,12 +44,22 @@ const Network = (() => {
                         <h3 style="margin:0;font-size:20px;font-weight:600;">Savino del bene volley HUB</h3>
                         ${e ? `<button class="btn btn-default btn-sm" id="net-edit-hub" type="button"><i class="ph ph-pencil-simple"></i> Modifica</button>` : ""}
                     </div>
-                    <div style="margin:0;font-size:14px;color:var(--color-text-muted);line-height:1.6;">${hz.text ? Utils.escapeHtml(hz.text).replace(/\\n/g, '<br>') : "Nessun testo inserito."}</div>
+                    <div style="margin:0;font-size:14px;color:var(--color-text-muted);line-height:1.6;">${hz.text ? Utils.escapeHtml(hz.text).replace(/\\n/g, "<br>") : "Nessun testo inserito."}</div>
                 </div>
             </div>
         </div>`;
     ((t.innerHTML = `\n            <div>
-                ${hubBanner}\n                <div class="net-filter-bar" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);margin-bottom:var(--sp-3)">\n                    <div style="display:flex;gap:var(--sp-1);flex-wrap:wrap">\n                        <button class="filter-chip ${o ? "" : "active"}" data-col-status="" type="button">Tutte</button>\n                        ${r.map((t) => `\n                            <button class="filter-chip ${o === t ? "active" : ""}" data-col-status="${Utils.escapeHtml(t)}" type="button">\n                                ${Utils.escapeHtml(p[t] || t)}\n                            </button>`).join("")}\n                    </div>\n                    ${e ? '<button class="btn btn-primary btn-sm" id="net-add-col" type="button"><i class="ph ph-plus"></i> NUOVA COLLABORAZIONE</button>' : ""}\n                </div>\n                <div class="net-card-grid">\n                    ${0 === n.length ? Utils.emptyState("Nessuna collaborazione", "Aggiungi la prima collaborazione con il pulsante in alto.") : n.map((t) => `\n                            <div class="net-card" data-open-col="${Utils.escapeHtml(t.id)}">\n                                <div class="net-card-header">
+                ${hubBanner}\n                <div class="net-filter-bar" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);margin-bottom:var(--sp-3)">\n                    <div style="display:flex;gap:var(--sp-1);flex-wrap:wrap">\n                        <button class="filter-chip ${o ? "" : "active"}" data-col-status="" type="button">Tutte</button>\n                        ${r.map((t) => `\n                            <button class="filter-chip ${o === t ? "active" : ""}" data-col-status="${Utils.escapeHtml(t)}" type="button">\n                                ${Utils.escapeHtml(p[t] || t)}\n                            </button>`).join("")}\n                    </div>\n                    ${e ? '<button class="btn btn-primary btn-sm" id="net-add-col" type="button"><i class="ph ph-plus"></i> NUOVA COLLABORAZIONE</button>' : ""}\n                </div>\n                <div class="net-card-grid">\n                    ${
+                  0 === n.length
+                    ? Utils.emptyState(
+                        "Nessuna collaborazione",
+                        "Aggiungi la prima collaborazione con il pulsante in alto.",
+                      )
+                    : n
+                        .map(
+                          (
+                            t,
+                          ) => `\n                            <div class="net-card" data-open-col="${Utils.escapeHtml(t.id)}">\n                                <div class="net-card-header">
                                     <div style="display:flex; align-items:center; gap:12px;">
                                         ${
                                           t.logo_path
@@ -61,11 +71,16 @@ const Network = (() => {
                                         )}</div>
                                     </div>
                                     ${u(t.status, "col")}
-                                </div>\n                                <div class="net-card-meta">\n                                    <i class="ph ph-tag" style="margin-right:4px"></i>${Utils.escapeHtml(t.partner_type || "—")}\n                                    ${t.agreement_type ? ` · <em>${Utils.escapeHtml(t.agreement_type)}</em>` : ""}\n                                </div>\n                                ${t.referent_name ? `<div class="net-card-meta"><i class="ph ph-user" style="margin-right:4px"></i>${Utils.escapeHtml(t.referent_name)}</div>` : ""}\n                                ${t.start_date || t.end_date ? `\n                                    <div class="net-card-meta">\n                                        <i class="ph ph-calendar" style="margin-right:4px"></i>\n                                        ${t.start_date || ""} → ${t.end_date || "∞"}\n                                    </div>` : ""}\n                                ${e ? `<div style="display:flex;gap:4px;margin-top:var(--sp-1)">\n                                    <button class="btn btn-default btn-sm" data-edit-col="${Utils.escapeHtml(t.id)}" type="button" onclick="event.stopPropagation()"><i class="ph ph-pencil-simple"></i></button>\n                                    <button class="btn btn-default btn-sm" data-del-col="${Utils.escapeHtml(t.id)}" type="button" style="color:var(--color-pink)" onclick="event.stopPropagation()"><i class="ph ph-trash"></i></button>\n                                </div>` : ""}\n                            </div>`).join("")}\n                </div>\n            </div>`),
-      document.getElementById("net-edit-hub")?.addEventListener("click", () => {
+                                </div>\n                                <div class="net-card-meta">\n                                    <i class="ph ph-tag" style="margin-right:4px"></i>${Utils.escapeHtml(t.partner_type || "—")}\n                                    ${t.agreement_type ? ` · <em>${Utils.escapeHtml(t.agreement_type)}</em>` : ""}\n                                </div>\n                                ${t.referent_name ? `<div class="net-card-meta"><i class="ph ph-user" style="margin-right:4px"></i>${Utils.escapeHtml(t.referent_name)}</div>` : ""}\n                                ${t.start_date || t.end_date ? `\n                                    <div class="net-card-meta">\n                                        <i class="ph ph-calendar" style="margin-right:4px"></i>\n                                        ${t.start_date || ""} → ${t.end_date || "∞"}\n                                    </div>` : ""}\n                                ${e ? `<div style="display:flex;gap:4px;margin-top:var(--sp-1)">\n                                    <button class="btn btn-default btn-sm" data-edit-col="${Utils.escapeHtml(t.id)}" type="button" onclick="event.stopPropagation()"><i class="ph ph-pencil-simple"></i></button>\n                                    <button class="btn btn-default btn-sm" data-del-col="${Utils.escapeHtml(t.id)}" type="button" style="color:var(--color-pink)" onclick="event.stopPropagation()"><i class="ph ph-trash"></i></button>\n                                </div>` : ""}\n                            </div>`,
+                        )
+                        .join("")
+                }\n                </div>\n            </div>`),
+      document.getElementById("net-edit-hub")?.addEventListener(
+        "click",
+        () => {
           const mModal = UI.modal({
-              title: "Modifica Savino del bene volley HUB",
-              body: `
+            title: "Modifica Savino del bene volley HUB",
+            body: `
                   <div class="form-group">
                       <label class="form-label" for="hub-text">Testo</label>
                       <textarea id="hub-text" class="form-input" rows="4" placeholder="Testo descrittivo...">${Utils.escapeHtml(hz.text || "")}</textarea>
@@ -75,36 +90,42 @@ const Network = (() => {
                       <input id="hub-logo" class="form-input" type="file" accept="image/*">
                   </div>
               `,
-              footer: `
+            footer: `
                   <button class="btn btn-ghost btn-sm" id="hub-cancel" type="button">Annulla</button>
                   <button class="btn btn-primary btn-sm" id="hub-save" type="button">SALVA</button>
-              `
+              `,
           });
-          document.getElementById("hub-cancel")?.addEventListener("click", () => mModal.close());
-          document.getElementById("hub-save")?.addEventListener("click", async () => {
+          document
+            .getElementById("hub-cancel")
+            ?.addEventListener("click", () => mModal.close());
+          document
+            .getElementById("hub-save")
+            ?.addEventListener("click", async () => {
               const saveBtn = document.getElementById("hub-save");
               saveBtn.disabled = true;
               saveBtn.textContent = "Salvataggio...";
               try {
-                  const text = document.getElementById("hub-text").value;
-                  await Store.api("updateHubText", "network", { text });
-                  const logoFile = document.getElementById("hub-logo").files[0];
-                  if (logoFile) {
-                      const fd = new FormData();
-                      fd.append("logo", logoFile);
-                      await Store.api("uploadHubLogo", "network", fd);
-                  }
-                  hz = await Store.get("getHubConfig", "network").catch(() => hz);
-                  UI.toast("HUB aggiornato", "success");
-                  v();
-                  mModal.close();
+                const text = document.getElementById("hub-text").value;
+                await Store.api("updateHubText", "network", { text });
+                const logoFile = document.getElementById("hub-logo").files[0];
+                if (logoFile) {
+                  const fd = new FormData();
+                  fd.append("logo", logoFile);
+                  await Store.api("uploadHubLogo", "network", fd);
+                }
+                hz = await Store.get("getHubConfig", "network").catch(() => hz);
+                UI.toast("HUB aggiornato", "success");
+                v();
+                mModal.close();
               } catch (err) {
-                  UI.toast("Errore: " + err.message, "error");
-                  saveBtn.disabled = false;
-                  saveBtn.textContent = "SALVA";
+                UI.toast("Errore: " + err.message, "error");
+                saveBtn.disabled = false;
+                saveBtn.textContent = "SALVA";
               }
-          });
-      }, m()),
+            });
+        },
+        m(),
+      ),
       t.querySelectorAll("[data-col-status]").forEach((e) => {
         e.addEventListener(
           "click",
@@ -124,7 +145,7 @@ const Network = (() => {
               (function (t) {
                 const e = UI.modal({
                   title: Utils.escapeHtml(t.partner_name),
-                  body: `\n                <div style="display:flex;flex-direction:column;gap:var(--sp-2)">\n                    <div style="display:flex;gap:var(--sp-2);align-items:center;justify-content:space-between">\n                        <div style="display:flex;gap:var(--sp-2);align-items:center">\n                            ${u(t.status, "col")}\n                            <span style="font-size:13px;color:var(--color-text-muted)">${Utils.escapeHtml(t.partner_type || "")}</span>\n                        </div>\n                        ${t.logo_path ? `<img src="${t.logo_path}" style="height:40px;object-fit:contain;border-radius:var(--radius-sm)">` : ""}\n                    </div>\n                    ${t.agreement_type ? `<div><span style="font-size:12px;color:var(--color-text-muted)">Accordo</span><div style="font-weight:600">${Utils.escapeHtml(t.agreement_type)}</div></div>` : ""}\n                    ${t.start_date || t.end_date ? `<div><span style="font-size:12px;color:var(--color-text-muted)">Periodo</span><div>${t.start_date || "?"} → ${t.end_date || "∞"}</div></div>` : ""}\n                    ${t.referent_name ? `<div><span style="font-size:12px;color:var(--color-text-muted)">Referente</span><div>${Utils.escapeHtml(t.referent_name)} ${t.referent_contact ? "· " + Utils.escapeHtml(t.referent_contact) : ""}</div></div>` : ""}\n                    ${t.description ? `<div><span style="font-size:12px;color:var(--color-text-muted)">Descrizione</span><div style="font-size:13px">${Utils.escapeHtml(t.description).replace(/\\n/g, "<br>")}</div></div>` : ""}\n                    ${t.notes ? `<div><span style="font-size:12px;color:var(--color-text-muted)">Note interne</span><div style="font-size:13px">${Utils.escapeHtml(t.notes)}</div></div>` : ""}\n                    ${t.website || t.instagram || t.facebook || t.youtube ? `<div style="display:flex;gap:12px;align-items:center;padding-top:var(--sp-2);border-top:1px solid var(--color-border)">${t.website ? `<a href="${Utils.escapeHtml(t.website.startsWith('http') ? t.website : 'https://' + t.website)}" target="_blank" style="color:var(--color-text-muted);font-size:22px" title="Website"><i class="ph ph-globe"></i></a>` : ""}${t.instagram ? `<a href="${Utils.escapeHtml(t.instagram.startsWith('http') ? t.instagram : 'https://instagram.com/' + t.instagram.replace('@', ''))}" target="_blank" style="color:var(--color-pink);font-size:22px" title="Instagram"><i class="ph ph-instagram-logo"></i></a>` : ""}${t.facebook ? `<a href="${Utils.escapeHtml(t.facebook.startsWith('http') ? t.facebook : 'https://' + t.facebook)}" target="_blank" style="color:#1877F2;font-size:22px" title="Facebook"><i class="ph ph-facebook-logo"></i></a>` : ""}${t.youtube ? `<a href="${Utils.escapeHtml(t.youtube.startsWith('http') ? t.youtube : 'https://youtube.com/' + t.youtube)}" target="_blank" style="color:#FF0000;font-size:22px" title="YouTube"><i class="ph ph-youtube-logo"></i></a>` : ""}</div>` : ""}\n                    <div id="col-docs-area" style="margin-top:var(--sp-3)">\n                        <span style="font-size:12px;color:var(--color-text-muted);display:block;margin-bottom:var(--sp-1)">Documenti Allegati</span>\n                        <div id="col-docs-list" style="font-size:13px;display:flex;flex-direction:column;gap:4px">Caricamento...</div>\n                    </div>\n                </div>`,
+                  body: `\n                <div style="display:flex;flex-direction:column;gap:var(--sp-2)">\n                    <div style="display:flex;gap:var(--sp-2);align-items:center;justify-content:space-between">\n                        <div style="display:flex;gap:var(--sp-2);align-items:center">\n                            ${u(t.status, "col")}\n                            <span style="font-size:13px;color:var(--color-text-muted)">${Utils.escapeHtml(t.partner_type || "")}</span>\n                        </div>\n                        ${t.logo_path ? `<img src="${t.logo_path}" style="height:40px;object-fit:contain;border-radius:var(--radius-sm)">` : ""}\n                    </div>\n                    ${t.agreement_type ? `<div><span style="font-size:12px;color:var(--color-text-muted)">Accordo</span><div style="font-weight:600">${Utils.escapeHtml(t.agreement_type)}</div></div>` : ""}\n                    ${t.start_date || t.end_date ? `<div><span style="font-size:12px;color:var(--color-text-muted)">Periodo</span><div>${t.start_date || "?"} → ${t.end_date || "∞"}</div></div>` : ""}\n                    ${t.referent_name ? `<div><span style="font-size:12px;color:var(--color-text-muted)">Referente</span><div>${Utils.escapeHtml(t.referent_name)} ${t.referent_contact ? "· " + Utils.escapeHtml(t.referent_contact) : ""}</div></div>` : ""}\n                    ${t.description ? `<div><span style="font-size:12px;color:var(--color-text-muted)">Descrizione</span><div style="font-size:13px">${Utils.escapeHtml(t.description).replace(/\\n/g, "<br>")}</div></div>` : ""}\n                    ${t.notes ? `<div><span style="font-size:12px;color:var(--color-text-muted)">Note interne</span><div style="font-size:13px">${Utils.escapeHtml(t.notes)}</div></div>` : ""}\n                    ${t.website || t.instagram || t.facebook || t.youtube ? `<div style="display:flex;gap:12px;align-items:center;padding-top:var(--sp-2);border-top:1px solid var(--color-border)">${t.website ? `<a href="${Utils.escapeHtml(t.website.startsWith("http") ? t.website : "https://" + t.website)}" target="_blank" style="color:var(--color-text-muted);font-size:22px" title="Website"><i class="ph ph-globe"></i></a>` : ""}${t.instagram ? `<a href="${Utils.escapeHtml(t.instagram.startsWith("http") ? t.instagram : "https://instagram.com/" + t.instagram.replace("@", ""))}" target="_blank" style="color:var(--color-pink);font-size:22px" title="Instagram"><i class="ph ph-instagram-logo"></i></a>` : ""}${t.facebook ? `<a href="${Utils.escapeHtml(t.facebook.startsWith("http") ? t.facebook : "https://" + t.facebook)}" target="_blank" style="color:#1877F2;font-size:22px" title="Facebook"><i class="ph ph-facebook-logo"></i></a>` : ""}${t.youtube ? `<a href="${Utils.escapeHtml(t.youtube.startsWith("http") ? t.youtube : "https://youtube.com/" + t.youtube)}" target="_blank" style="color:#FF0000;font-size:22px" title="YouTube"><i class="ph ph-youtube-logo"></i></a>` : ""}</div>` : ""}\n                    <div id="col-docs-area" style="margin-top:var(--sp-3)">\n                        <span style="font-size:12px;color:var(--color-text-muted);display:block;margin-bottom:var(--sp-1)">Documenti Allegati</span>\n                        <div id="col-docs-list" style="font-size:13px;display:flex;flex-direction:column;gap:4px">Caricamento...</div>\n                    </div>\n                </div>`,
                   footer:
                     '<button class="btn btn-ghost btn-sm" id="cod-close" type="button">Chiudi</button>',
                 });
@@ -247,7 +268,8 @@ const Network = (() => {
           try {
             const l = {
               partner_name: n,
-              partner_type: document.getElementById("cl-type")?.value || "altro",
+              partner_type:
+                document.getElementById("cl-type")?.value || "altro",
               status: document.getElementById("cl-status")?.value || "attivo",
               agreement_type:
                 document.getElementById("cl-agreement")?.value || null,
@@ -262,7 +284,8 @@ const Network = (() => {
               instagram: document.getElementById("cl-instagram")?.value || null,
               facebook: document.getElementById("cl-facebook")?.value || null,
               youtube: document.getElementById("cl-youtube")?.value || null,
-              description: document.getElementById("cl-description")?.value || null,
+              description:
+                document.getElementById("cl-description")?.value || null,
             };
             let i = t?.id;
             e
@@ -682,7 +705,10 @@ const Network = (() => {
             Store.get("listCollaborations", "network").catch(() => []),
             Store.get("listTrials", "network").catch(() => []),
             Store.get("listActivities", "network").catch(() => []),
-            Store.get("getHubConfig", "network").catch(() => ({ text: "", logo_path: "" })),
+            Store.get("getHubConfig", "network").catch(() => ({
+              text: "",
+              logo_path: "",
+            })),
           ]);
           const t = Router.getCurrentRoute();
           ((e =
