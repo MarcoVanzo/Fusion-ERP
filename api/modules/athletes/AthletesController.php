@@ -60,6 +60,25 @@ class AthletesController
         Response::success($athlete);
     }
 
+    // ─── GET /api/?module=athletes&action=myProfile ───────────────────────────
+    public function myProfile(): void
+    {
+        $user = Auth::requireAuth();
+        $athlete = $this->repo->getAthleteByUserId($user['id']);
+        if (!$athlete) {
+            Response::error('Profilo atleta non trovato per questo utente.', 404);
+        }
+
+        // Append ACWR
+        $acwr = $this->calcACWR($athlete['id']);
+        $athlete['acwr'] = $acwr;
+
+        // Append metrics history (30 days)
+        $athlete['metrics'] = $this->repo->getMetricsHistory($athlete['id'], 30);
+
+        Response::success($athlete);
+    }
+
     // ─── POST /api/?module=athletes&action=create ─────────────────────────────
     public function create(): void
     {
