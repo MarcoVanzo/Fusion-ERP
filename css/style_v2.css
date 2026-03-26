@@ -564,18 +564,22 @@ h3 {
   z-index: 100;
 }
 
+.page-title-box {
+  display: flex;
+  align-items: center;
+}
+
 .page-title-box h1 {
   font-size: 1.5rem;
   font-weight: 700;
   margin: 0;
   letter-spacing: -0.5px;
-  color: var(--text-primary);
+  color: var(--primary-color);
+  text-transform: uppercase;
 }
 
 .page-title-box p {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  margin: 2px 0 0;
+  display: none;
 }
 
 .topbar-right {
@@ -1117,7 +1121,6 @@ h3 {
 
 .card:hover {
   border-color: rgba(255, 0, 255, 0.4);
-  transform: translateY(-4px);
   box-shadow: var(--shadow-lg), var(--glow-card-hover);
   background: var(--color-bg-card-hover);
 }
@@ -1169,7 +1172,6 @@ h3 {
 }
 
 .stat-card:hover {
-  transform: translateY(-4px) scale(1.02);
   border-color: rgba(255, 0, 255, 0.5);
   box-shadow: var(--shadow-lg), var(--glow-card-hover);
   background: linear-gradient(180deg, rgba(20, 20, 20, 0.9) 0%, rgba(10, 10, 10, 1) 100%);
@@ -3073,7 +3075,6 @@ h3 {
 }
 
 .social-kpi-card:hover {
-  transform: translateY(-3px);
   border-color: var(--color-pink);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
 }
@@ -3274,7 +3275,6 @@ h3 {
 }
 
 .social-post-card:hover {
-  transform: translateY(-3px);
   border-color: var(--color-pink);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
 }
@@ -3820,7 +3820,6 @@ h3 {
 }
 
 .task-card:hover {
-  transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
@@ -4274,7 +4273,6 @@ h3 {
 }
 
 .finance-kpi-card:hover {
-  transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
@@ -4594,7 +4592,6 @@ h3 {
 }
 
 .compliance-traffic-card:hover {
-  transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
@@ -5893,7 +5890,6 @@ textarea:focus-visible {
 
 .quick-link:hover {
   background: rgba(255, 0, 255, 0.05);
-  transform: translateY(-2px);
   border-color: rgba(255, 0, 255, 0.4);
   box-shadow: var(--shadow-md), var(--glow-card-hover);
 }
@@ -7013,7 +7009,6 @@ textarea:focus-visible {
 }
 
 .website-stat-card:hover {
-  transform: none !important;
   box-shadow: var(--shadow-lg) !important;
   border-color: rgba(255, 255, 255, 0.12) !important;
   background: linear-gradient(180deg, rgba(30, 30, 35, 0.5) 0%, rgba(18, 18, 20, 0.7) 100%) !important;

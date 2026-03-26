@@ -75,6 +75,29 @@ class StaffRepository
         return $row ?: null;
     }
 
+    public function getByEmail(string $email): ?array
+    {
+        $tenantId = TenantContext::id();
+        $sql = "SELECT s.*, CONCAT(s.first_name, ' ', s.last_name) AS full_name,
+                       GROUP_CONCAT(ts.id SEPARATOR ',') as team_season_ids,
+                       GROUP_CONCAT(COALESCE(CONCAT(t.category, ' — ', t.name), t.name) SEPARATOR ', ') as team_names
+                FROM staff_members s
+                LEFT JOIN staff_teams st ON s.id = st.staff_id
+                LEFT JOIN team_seasons ts ON st.team_season_id = ts.id
+                LEFT JOIN teams t ON ts.team_id = t.id AND t.deleted_at IS NULL
+                WHERE s.email = :email AND s.tenant_id = :tenant_id AND s.is_deleted = 0
+                GROUP BY s.id
+                LIMIT 1";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':email' => $email, ':tenant_id' => $tenantId]);
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+        if ($row) {
+            $row['team_season_ids'] = $row['team_season_ids'] ? explode(',', $row['team_season_ids']) : [];
+            unset($row['team_ids']);
+        }
+        return $row ?: null;
+    }
+
     // ─── Create ───────────────────────────────────────────────────────────────
     public function create(array $data, array $teamIds = []): void
     {

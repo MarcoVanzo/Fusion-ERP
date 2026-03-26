@@ -33,24 +33,35 @@ const Athletes = (() => {
                 e.team_season_ids.some((e) => String(e) === String(n))),
           )
         : t;
-    ((g.innerHTML = `\n      <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2);margin-bottom:var(--sp-3);flex-wrap:wrap;">\n        <p class="page-subtitle">${y.length} atleti${n ? " in squadra selezionata" : " totali"}</p>\n        <div style="display:flex;align-items:center;gap:var(--sp-2);">\n          <div class="input-wrapper" style="position:relative;min-width:220px;">\n            <i class="ph ph-magnifying-glass" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--color-text-muted);font-size:16px;"></i>\n            <input type="text" id="athlete-search" class="form-input" placeholder="Cerca atleta..." style="padding-left:36px;height:42px;font-size:13px;">\n          </div>\n          <button class="btn btn-primary" id="new-athlete-btn" type="button">+ NUOVO ATLETA</button>\n        </div>\n      </div>\n      <div class="filter-bar" id="team-filter">\n        <button class="filter-chip ${n ? "" : "active"}" data-team="" type="button">Tutti</button>\n        ${v.map((e) => `<button class="filter-chip ${n === e.id ? "active" : ""}" data-team="${Utils.escapeHtml(e.id)}" type="button">${Utils.escapeHtml(d(e.category, e.name))}</button>`).join("")}\n      </div>\n      ${
-      0 === y.length
-        ? Utils.emptyState(
-            "Nessun atleta trovato",
-            "Aggiungi il primo atleta con il pulsante in alto.",
-          )
-        : `<div class="grid-3" id="athletes-grid">${y
-            .map((e) =>
-              (function (e) {
-                const t = e.acwr_risk
-                    ? Utils.acwrRiskColor(e.acwr_risk)
-                    : "transparent",
-                  a = p(e.full_name);
-                return `\n      <div class="card" style="cursor:pointer;position:relative;overflow:hidden;" data-athlete-id="${Utils.escapeHtml(e.id)}" data-name="${Utils.escapeHtml((e.full_name || "").toLowerCase())}" data-role="${Utils.escapeHtml((e.role || "").toLowerCase())}" data-team="${Utils.escapeHtml(((e.team_names || []).map((e) => e.name).join(" ") + " " + (e.team_name || "")).toLowerCase())}">\n        ${e.acwr_risk && "moderate" !== e.acwr_risk && "low" !== e.acwr_risk ? `<div style="position:absolute;top:var(--sp-2);right:var(--sp-2);width:24px;height:24px;border-radius:50%;background:${t};display:flex;align-items:center;justify-content:center;font-size:14px;color:#000;box-shadow:0 0 8px ${t};"><i class="ph-fill ph-warning-circle"></i></div>` : ""}\n        <div style="display:flex;align-items:flex-start;gap:var(--sp-2);">\n          <div style="width:48px;height:48px;background:${a};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--font-display);font-weight:700;font-size:1.3rem;color:#000;border-radius:8px;">${e.photo_path ? `<img src="${Utils.escapeHtml(e.photo_path)}" style="width:100%;height:100%;object-fit:cover;object-position:center;display:block;border-radius:8px;">` : `\n            ${null != e.jersey_number ? Utils.escapeHtml(String(e.jersey_number)) : Utils.initials(e.full_name)}`}\n          </div>\n          <div style="overflow:hidden;flex:1;">\n            <div style="font-family:var(--font-display);font-weight:700;font-size:1.1rem;">${Utils.escapeHtml(e.full_name)}</div>\n            <div style="font-size:12px;color:var(--color-text-muted);">${Utils.escapeHtml(e.role || "—")}</div>\n            <div style="margin-top:4px; display:flex; flex-wrap:wrap; gap:4px;">\n              ${e.team_names && e.team_names.length > 0 ? e.team_names.map((e) => Utils.badge(d(e.category, e.name), "muted")).join("") : Utils.badge(d(e.category, e.team_name), "muted")}\n            </div>\n          </div>\n        </div>\n      </div>`;
-              })(e),
+    ((g.innerHTML = `\n      
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:24px;flex-wrap:wrap;">
+        <p class="dash-subtitle">${y.length} atleti${n ? " in squadra selezionata" : " totali"}</p>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div class="input-wrapper" style="position:relative;min-width:220px;">
+            <i class="ph ph-magnifying-glass" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,0.4);font-size:16px;"></i>
+            <input type="text" id="athlete-search" class="form-input" placeholder="Cerca atleta..." style="padding-left:36px;height:42px;font-size:13px;background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.1);color:#fff;">
+          </div>
+          <button class="btn-dash pink" id="new-athlete-btn" type="button"><i class="ph ph-plus-circle" style="font-size:18px;"></i> NUOVO ATLETA</button>
+        </div>
+      </div>
+      <div class="dash-filters" id="team-filter" style="margin-bottom:24px;">\n        <button class="dash-filter ${n ? "" : "active"}" data-team="" type="button">Tutti</button>\n        ${v.map((e) => `<button class="dash-filter ${n === e.id ? "active" : ""}" data-team="${Utils.escapeHtml(e.id)}" type="button">${Utils.escapeHtml(d(e.category, e.name))}</button>`).join("")}\n      </div>\n      ${
+        0 === y.length
+          ? Utils.emptyState(
+              "Nessun atleta trovato",
+              "Aggiungi il primo atleta con il pulsante in alto.",
             )
-            .join("")}</div>`
-    }\n    `),
+          : `<div class="dash-stat-grid" id="athletes-grid">${y
+              .map((e) =>
+                (function (e) {
+                  const t = e.acwr_risk
+                      ? Utils.acwrRiskColor(e.acwr_risk)
+                      : "transparent",
+                    a = p(e.full_name);
+                  return `\n      <div class="dash-stat-card" style="cursor:pointer;position:relative;overflow:hidden;padding:16px;" data-athlete-id="${Utils.escapeHtml(e.id)}" data-name="${Utils.escapeHtml((e.full_name || "").toLowerCase())}" data-role="${Utils.escapeHtml((e.role || "").toLowerCase())}" data-team="${Utils.escapeHtml(((e.team_names || []).map((e) => e.name).join(" ") + " " + (e.team_name || "")).toLowerCase())}">\n        ${e.acwr_risk && "moderate" !== e.acwr_risk && "low" !== e.acwr_risk ? `<div style="position:absolute;top:var(--sp-2);right:var(--sp-2);width:24px;height:24px;border-radius:50%;background:${t};display:flex;align-items:center;justify-content:center;font-size:14px;color:#000;box-shadow:0 0 8px ${t};"><i class="ph-fill ph-warning-circle"></i></div>` : ""}\n        <div style="display:flex;align-items:flex-start;gap:var(--sp-2);">\n          <div style="width:48px;height:48px;background:${a};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--font-display);font-weight:700;font-size:1.3rem;color:#000;border-radius:8px;">${e.photo_path ? `<img src="${Utils.escapeHtml(e.photo_path)}" style="width:100%;height:100%;object-fit:cover;object-position:center;display:block;border-radius:8px;">` : `\n            ${null != e.jersey_number ? Utils.escapeHtml(String(e.jersey_number)) : Utils.initials(e.full_name)}`}\n          </div>\n          <div style="overflow:hidden;flex:1;">\n            <div style="font-family:var(--font-display);font-weight:700;font-size:1.1rem;">${Utils.escapeHtml(e.full_name)}</div>\n            <div style="font-size:12px;color:var(--color-text-muted);">${Utils.escapeHtml(e.role || "—")}</div>\n            <div style="margin-top:4px; display:flex; flex-wrap:wrap; gap:4px;">\n              ${e.team_names && e.team_names.length > 0 ? e.team_names.map((e) => Utils.badge(d(e.category, e.name), "muted")).join("") : Utils.badge(d(e.category, e.team_name), "muted")}\n            </div>\n          </div>\n        </div>\n      </div>`;
+                })(e),
+              )
+              .join("")}</div>`
+      }\n    `),
       g.addEventListener(
         "click",
         (e) => {
@@ -90,7 +101,7 @@ const Athletes = (() => {
                 "Documenti",
               ],
               i = [
-                `\n  <div class="form-grid">\n        <div class="form-group"><label class="form-label" for="na-fname">Nome *</label><input id="na-fname" class="form-input" type="text" placeholder="Marco" required></div>\n        <div class="form-group"><label class="form-label" for="na-lname">Cognome *</label><input id="na-lname" class="form-input" type="text" placeholder="Rossi" required></div>\n      </div>\n      <div class="form-grid">\n        <div class="form-group">\n          <label class="form-label">Squadre *</label>\n          <div id="na-team-panel" class="multi-team-panel" style="max-height:140px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding:10px;background:rgba(255,255,255,0.04);border:1px solid var(--color-border);border-radius:var(--radius);">\n            ${a.map((e) => `\n              <label class="multi-team-option" for="na-team-${Utils.escapeHtml(e.id)}">\n                <input type="checkbox" id="na-team-${Utils.escapeHtml(e.id)}" class="na-team-cb" value="${Utils.escapeHtml(e.id)}" style="display:none;">\n                <span class="multi-team-label">${Utils.escapeHtml(d(e.category, e.name))}${e.season ? ' \u2014 ' + Utils.escapeHtml(e.season) : ''}</span>\n              </label>\n            `).join("")}\n          </div>\n          <div style="font-size:11px;color:var(--color-text-muted);margin-top:4px;"><i class="ph ph-info"></i> Seleziona una o più squadre</div>\n        </div>\n        <div class="form-group"><label class="form-label" for="na-birth">Data di Nascita</label><input id="na-birth" class="form-input" type="date"></div>\n      </div>\n      <div class="form-grid">\n        <div class="form-group"><label class="form-label" for="na-birthplace">Luogo di Nascita</label><input id="na-birthplace" class="form-input" type="text" placeholder="Roma"></div>\n        <div class="form-group"><label class="form-label" for="na-rescity">Città di Residenza</label><input id="na-rescity" class="form-input" type="text" placeholder="Milano"></div>\n      </div>`,
+                `\n  <div class="form-grid">\n        <div class="form-group"><label class="form-label" for="na-fname">Nome *</label><input id="na-fname" class="form-input" type="text" placeholder="Marco" required></div>\n        <div class="form-group"><label class="form-label" for="na-lname">Cognome *</label><input id="na-lname" class="form-input" type="text" placeholder="Rossi" required></div>\n      </div>\n      <div class="form-grid">\n        <div class="form-group">\n          <label class="form-label">Squadre *</label>\n          <div id="na-team-panel" class="multi-team-panel" style="max-height:140px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding:10px;background:rgba(255,255,255,0.04);border:1px solid var(--color-border);border-radius:var(--radius);">\n            ${a.map((e) => `\n              <label class="multi-team-option" for="na-team-${Utils.escapeHtml(e.id)}">\n                <input type="checkbox" id="na-team-${Utils.escapeHtml(e.id)}" class="na-team-cb" value="${Utils.escapeHtml(e.id)}" style="display:none;">\n                <span class="multi-team-label">${Utils.escapeHtml(d(e.category, e.name))}${e.season ? " \u2014 " + Utils.escapeHtml(e.season) : ""}</span>\n              </label>\n            `).join("")}\n          </div>\n          <div style="font-size:11px;color:var(--color-text-muted);margin-top:4px;"><i class="ph ph-info"></i> Seleziona una o più squadre</div>\n        </div>\n        <div class="form-group"><label class="form-label" for="na-birth">Data di Nascita</label><input id="na-birth" class="form-input" type="date"></div>\n      </div>\n      <div class="form-grid">\n        <div class="form-group"><label class="form-label" for="na-birthplace">Luogo di Nascita</label><input id="na-birthplace" class="form-input" type="text" placeholder="Roma"></div>\n        <div class="form-group"><label class="form-label" for="na-rescity">Città di Residenza</label><input id="na-rescity" class="form-input" type="text" placeholder="Milano"></div>\n      </div>`,
                 '\n  <div class="form-grid">\n        <div class="form-group"><label class="form-label" for="na-role">Ruolo</label><input id="na-role" class="form-input" type="text" placeholder="Palleggiatrice"></div>\n        <div class="form-group"><label class="form-label" for="na-jersey">N° Maglia</label><input id="na-jersey" class="form-input" type="number" min="1" max="99" placeholder="10"></div>\n      </div>\n  <div class="form-grid">\n    <div class="form-group"><label class="form-label" for="na-height">Altezza (cm)</label><input id="na-height" class="form-input" type="number" placeholder="180"></div>\n    <div class="form-group"><label class="form-label" for="na-weight">Peso (kg)</label><input id="na-weight" class="form-input" type="number" placeholder="75"></div>\n  </div>',
                 '\n    <div class="form-grid">\n        <div class="form-group"><label class="form-label" for="na-phone">Cellulare</label><input id="na-phone" class="form-input" type="tel" placeholder="+39 333 1234567"></div>\n        <div class="form-group"><label class="form-label" for="na-email">E-Mail</label><input id="na-email" class="form-input" type="email" placeholder="atleta@email.com"></div>\n      </div>\n  <div class="form-group">\n    <label class="form-label" for="na-resaddr" style="display:flex;align-items:center;gap:8px;">\n      Via di Residenza\n      <span style="display:inline-flex;align-items:center;gap:4px;background:rgba(66,133,244,0.15);border:1px solid rgba(66,133,244,0.3);border-radius:6px;padding:2px 8px;font-size:10px;color:#4285F4;font-weight:700;letter-spacing:0.5px;">\n        <i class="ph ph-google-logo"></i> Google Maps\n      </span>\n    </label>\n    <div style="position:relative;">\n      <i class="ph ph-magnifying-glass" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,0.35);font-size:16px;pointer-events:none;"></i>\n      <input id="na-resaddr" class="form-input" type="text" placeholder="Via Roma 1, Milano" autocomplete="off" style="padding-left:40px;">\n    </div>\n  </div>',
                 '\n    <div class="form-grid">\n        <div class="form-group"><label class="form-label" for="na-fiscal">Codice Fiscale</label><input id="na-fiscal" class="form-input" type="text" placeholder="RSSMRC90A01H501Z" maxlength="16" style="text-transform:uppercase;"></div>\n        <div class="form-group"><label class="form-label" for="na-doc">Documento d\'Identità</label><input id="na-doc" class="form-input" type="text" placeholder="CI / Passaporto"></div>\n      </div>\n      <div class="form-grid">\n        <div class="form-group"><label class="form-label" for="na-medcert">Scadenza Cert. Medico</label><input id="na-medcert" class="form-input" type="date"></div>\n        <div class="form-group"><label class="form-label" for="na-fipav">Matricola FIPAV</label><input id="na-fipav" class="form-input" type="text" placeholder="FI-123456"></div>\n      </div>\n      <div class="form-group"><label class="form-label" for="na-parent">Contatto genitore (per minori)</label><input id="na-parent" class="form-input" type="text" placeholder="Nome cognome genitore"></div>',
@@ -116,7 +127,8 @@ const Athletes = (() => {
                 ((e.innerHTML = `\n  <div style="display:flex;align-items:center;gap:0;margin-bottom:20px;">\n    ${[1, 2, 3, 4].map((e) => `\n          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;">\n            <div style="width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;\n              ${e < n ? "background:var(--color-success);color:#000;" : e === n ? "background:var(--color-pink);color:#fff;" : "background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.4);"}">${e < n ? "✓" : e}</div>\n            <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;color:${e === n ? "var(--color-white)" : "rgba(255,255,255,0.35)"};">${l[e - 1]}</div>\n          </div>\n          ${e < 4 ? `<div style="flex:0.5;height:2px;background:${e < n ? "var(--color-success)" : "rgba(255,255,255,0.1)"};margin-bottom:20px;"></div>` : ""}\n        `).join("")}\n      </div><div id="wizard-step-content">${i[n - 1]}</div><div id="na-error" class="form-error hidden"></div>`),
                   requestAnimationFrame(() => {
                     (Object.entries(r).forEach(([e, t]) => {
-                      if ("team_season_ids" === e || "na-teams-touched" === e) return;
+                      if ("team_season_ids" === e || "na-teams-touched" === e)
+                        return;
                       const a = document.getElementById(e);
                       a && (a.value = t);
                     }),
@@ -346,7 +358,21 @@ const Athletes = (() => {
   }
   function u() {
     ((document.getElementById("app").innerHTML =
-      `\n      <div class="page-header" style="border-bottom:1px solid var(--color-border);padding-bottom:0;margin-bottom:0;">\n        <div>\n          <h1 class="page-title">Atleti</h1>\n          <p class="page-subtitle">${t.length} atleti nel sistema</p>\n        </div>\n      </div>\n      <div id="main-tab-content" style="flex:1;padding:var(--sp-4) 0;"></div>\n    `),
+      `\n      <div class="transport-dashboard">
+        <div class="dash-top-bar" style="border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 24px; margin-bottom: 24px;">
+            <div>
+                <h1 class="dash-title">Gestione <span style="color:var(--accent-pink);">Atleti</span></h1>
+                <p class="dash-subtitle">${t.length} atleti nel sistema</p>
+            </div>
+            <div style="display:flex;gap:12px; flex-wrap:wrap;">
+                <div class="input-wrapper" style="position:relative;min-width:220px;">
+                    <i class="ph ph-magnifying-glass" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--color-text-muted);font-size:16px;"></i>
+                    <input type="text" id="athlete-search-global" class="form-input" placeholder="Cerca atleta..." style="padding-left:36px;height:42px;font-size:13px;background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.1);color:#fff;">
+                </div>
+            </div>
+        </div>
+                <div id="main-tab-content"></div>
+      </div>\n    `),
       document.querySelectorAll("[data-maintab]").forEach((t) =>
         t.addEventListener(
           "click",
@@ -362,11 +388,7 @@ const Athletes = (() => {
     ((s = i),
       document.querySelectorAll("[data-maintab]").forEach((e) => {
         const t = e.dataset.maintab === i;
-        ((e.style.borderBottomColor = t ? "var(--color-pink)" : "transparent"),
-          (e.style.color = t
-            ? "var(--color-white)"
-            : "var(--color-text-muted)"),
-          (e.style.opacity = t ? "1" : "0.65"));
+        e.classList.toggle("active", t);
       }));
     const r = document.getElementById("main-tab-content");
     if (r)
@@ -400,7 +422,7 @@ const Athletes = (() => {
                     )
                   : `\n          <div class="table-wrapper">\n            <table class="table">\n              <thead><tr><th>Atleta</th><th>Scadenza</th><th>Importo</th><th>Stato</th><th>Metodo</th></tr></thead>\n              <tbody>\n                ${t.map((e) => `<tr>\n                  <td><strong>${Utils.escapeHtml(e.athlete_name || "—")}</strong></td>\n                  <td>${Utils.formatDate(e.due_date)}</td>\n                  <td><strong>€ ${Utils.formatNum(e.amount, 2)}</strong></td>\n                  <td>${"PAID" === e.status ? '<span class="badge badge-success">Pagato</span>' : "OVERDUE" === e.status ? '<span class="badge badge-danger">Scaduto</span>' : '<span class="badge badge-warning">In attesa</span>'}</td>\n                  <td>${Utils.escapeHtml(e.payment_method || "—")}</td>\n                </tr>`).join("")}\n              </tbody>\n            </table>\n          </div>`;
               };
-              ((t.innerHTML = `\n        <p class="section-label">Riepilogo Pagamenti Squadra</p>\n        <div class="grid-3" style="margin-bottom:var(--sp-3);">\n          <div class="stat-card"><span class="stat-label">Atteso</span><span class="stat-value">&euro; ${Utils.formatNum(l.total_expected, 2)}</span></div>\n          <div class="stat-card"><span class="stat-label">Incassato</span><span class="stat-value" style="color:var(--color-success)">&euro; ${Utils.formatNum(l.total_paid, 2)}</span></div>\n          <div class="stat-card"><span class="stat-label">Scaduto</span><span class="stat-value" style="color:var(--color-pink)">&euro; ${Utils.formatNum(l.total_overdue, 2)}</span></div>\n        </div>\n        <div class="filter-bar" style="margin-bottom:var(--sp-3);" id="pay-status-filter">\n          <button class="filter-chip active" data-status="" type="button">Tutti (${s.length})</button>\n          <button class="filter-chip" data-status="PAID" type="button">Pagati</button>\n          <button class="filter-chip" data-status="OVERDUE" type="button">Scaduti</button>\n          <button class="filter-chip" data-status="PENDING" type="button">In attesa</button>\n        </div>\n        <div id="pay-table-container">${r(s)}</div>\n      `),
+              ((t.innerHTML = `\n        <p class="section-label">Riepilogo Pagamenti Squadra</p>\n        <div class="dash-stat-grid" style="margin-bottom:var(--sp-3);">\n          <div class="dash-stat-card"><div class="dash-stat-title">Atteso</div><div class="dash-stat-value">&euro; ${Utils.formatNum(l.total_expected, 2)}</div></div>\n          <div class="dash-stat-card"><div class="dash-stat-title">Incassato</div><div class="dash-stat-value" style="color:var(--color-success)">&euro; ${Utils.formatNum(l.total_paid, 2)}</div></div>\n          <div class="dash-stat-card"><div class="dash-stat-title">Scaduto</div><div class="dash-stat-value" style="color:var(--color-pink)">&euro; ${Utils.formatNum(l.total_overdue, 2)}</div></div>\n        </div>\n        <div class="dash-filters" style="margin-bottom:var(--sp-3);" id="pay-status-filter">\n          <button class="dash-filter active" data-status="" type="button">Tutti (${s.length})</button>\n          <button class="dash-filter" data-status="PAID" type="button">Pagati</button>\n          <button class="dash-filter" data-status="OVERDUE" type="button">Scaduti</button>\n          <button class="dash-filter" data-status="PENDING" type="button">In attesa</button>\n        </div>\n        <div id="pay-table-container">${r(s)}</div>\n      `),
                 t
                   .querySelectorAll("#pay-status-filter [data-status]")
                   .forEach((a) => {
@@ -466,10 +488,10 @@ const Athletes = (() => {
                   if (!e || !e[t])
                     return '<span style="color:var(--color-text-muted);">—</span>';
                   const a = e[t];
-                  return `<div style="display:flex;align-items:center;gap:4px;justify-content:center;">${a.icon ? `<i class="ph ph-${a.icon}" style="color:${a.color || 'inherit'}"></i>` : ""}<span style="font-weight:600;${a.color ? `color:${a.color};` : ""}">${u(a.value)}</span><span style="font-size:10px;color:var(--color-text-muted);">${Utils.escapeHtml(a.unit)}</span></div>`;
+                  return `<div style="display:flex;align-items:center;gap:4px;justify-content:center;">${a.icon ? `<i class="ph ph-${a.icon}" style="color:${a.color || "inherit"}"></i>` : ""}<span style="font-weight:600;${a.color ? `color:${a.color};` : ""}">${u(a.value)}</span><span style="font-size:10px;color:var(--color-text-muted);">${Utils.escapeHtml(a.unit)}</span></div>`;
                 },
                 y = Array.isArray(a) ? a : [],
-                b = `<div style="display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2);margin-bottom:var(--sp-3);flex-wrap:wrap;"><p class="page-subtitle">${(i || []).length} atlete${n ? " nella squadra selezionata" : " totali"}</p><div class="filter-bar" id="metrics-team-filter"><button class="filter-chip ${n ? "" : "active"}" data-team="" type="button">Tutte</button>${y.map((e) => `<button class="filter-chip ${n === e.id ? "active" : ""}" data-team="${e.id}" type="button">${Utils.escapeHtml(d(e.category, e.name))}</button>`).join("")}</div></div>`,
+                b = `<div style="display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2);margin-bottom:var(--sp-3);flex-wrap:wrap;"><p class="page-subtitle">${(i || []).length} atlete${n ? " nella squadra selezionata" : " totali"}</p><div class="dash-filters" id="metrics-team-filter"><button class="dash-filter ${n ? "" : "active"}" data-team="" type="button">Tutte</button>${y.map((e) => `<button class="dash-filter ${n === e.id ? "active" : ""}" data-team="${e.id}" type="button">${Utils.escapeHtml(d(e.category, e.name))}</button>`).join("")}</div></div>`,
                 h =
                   0 === c.length
                     ? '<th style="white-space:nowrap;text-align:center;color:var(--color-text-muted);">Metriche</th>'
@@ -543,14 +565,12 @@ const Athletes = (() => {
               l = s.filter((e) => e.expired).length,
               i = s.filter((e) => e.expiring).length,
               r = s.length - l - i;
-            e.innerHTML = `\n      <p class="section-label">Stato Documenti Squadra</p>\n      <div class="grid-3" style="margin-bottom:var(--sp-3);">\n        <div class="stat-card"><span class="stat-label">Completati</span><span class="stat-value" style="color:var(--color-success)">${r}</span></div>\n        <div class="stat-card"><span class="stat-label">In scadenza (60gg)</span><span class="stat-value" style="color:var(--color-warning)">${i}</span></div>\n        <div class="stat-card"><span class="stat-label">Scaduti</span><span class="stat-value" style="color:var(--color-pink)">${l}</span></div>\n      </div>\n      <p class="section-label">Certificati Medici</p>\n      <div class="table-wrapper">\n        <table class="table">\n          <thead><tr><th>Atleta</th><th>Squadra</th><th>Scadenza Cert. Medico</th><th>Stato</th><th>Matricola FIPAV</th></tr></thead>\n          <tbody>\n            ${s.map(({ a: e, certDate: t, expired: a, expiring: n }) => `<tr>\n              <td><strong>${Utils.escapeHtml(e.full_name)}</strong></td>\n              <td>${Utils.escapeHtml(d(e.category, e.team_name))}</td>\n              <td style="color:${a ? "var(--color-pink)" : n ? "var(--color-warning)" : "var(--color-text)"}">\n                ${t ? Utils.formatDate(e.medical_cert_expires_at) : '<span style="color:var(--color-text-muted)">—</span>'}\n              </td>\n              <td>${a ? '<span class="badge badge-danger">Scaduto</span>' : n ? '<span class="badge badge-warning">In scadenza</span>' : t ? '<span class="badge badge-success">Valido</span>' : '<span class="badge">Mancante</span>'}</td>\n              <td>${Utils.escapeHtml(e.federal_id || "—")}</td>\n            </tr>`).join("")}\n          </tbody>\n        </table>\n      </div>\n    `;
+            e.innerHTML = `\n      <p class="section-label">Stato Documenti Squadra</p>\n      <div class="dash-stat-grid" style="margin-bottom:var(--sp-3);">\n        <div class="dash-stat-card"><div class="dash-stat-title">Completati</div><div class="dash-stat-value" style="color:var(--color-success)">${r}</div></div>\n        <div class="dash-stat-card"><div class="dash-stat-title">In scadenza (60gg)</div><div class="dash-stat-value" style="color:var(--color-warning)">${i}</div></div>\n        <div class="dash-stat-card"><div class="dash-stat-title">Scaduti</div><div class="dash-stat-value" style="color:var(--color-pink)">${l}</div></div>\n      </div>\n      <p class="section-label">Certificati Medici</p>\n      <div class="table-wrapper">\n        <table class="table">\n          <thead><tr><th>Atleta</th><th>Squadra</th><th>Scadenza Cert. Medico</th><th>Stato</th><th>Matricola FIPAV</th></tr></thead>\n          <tbody>\n            ${s.map(({ a: e, certDate: t, expired: a, expiring: n }) => `<tr>\n              <td><strong>${Utils.escapeHtml(e.full_name)}</strong></td>\n              <td>${Utils.escapeHtml(d(e.category, e.team_name))}</td>\n              <td style="color:${a ? "var(--color-pink)" : n ? "var(--color-warning)" : "var(--color-text)"}">\n                ${t ? Utils.formatDate(e.medical_cert_expires_at) : '<span style="color:var(--color-text-muted)">—</span>'}\n              </td>\n              <td>${a ? '<span class="badge badge-danger">Scaduto</span>' : n ? '<span class="badge badge-warning">In scadenza</span>' : t ? '<span class="badge badge-success">Valido</span>' : '<span class="badge">Mancante</span>'}</td>\n              <td>${Utils.escapeHtml(e.federal_id || "—")}</td>\n            </tr>`).join("")}\n          </tbody>\n        </table>\n      </div>\n    `;
           })(r);
       }
   }
   function v() {
-    ((l = null),
-      sessionStorage.removeItem("last_athlete_id"),
-      u());
+    ((l = null), sessionStorage.removeItem("last_athlete_id"), u());
   }
   async function f(n, s = "anagrafica") {
     const l = document.getElementById("app");
@@ -562,17 +582,20 @@ const Athletes = (() => {
       try {
         const [r, o, c] = await Promise.all([
             Store.get("get", "athletes", { id: n }),
-            Store.get("payments", "athletes", { id: n }).catch(() => []),
+            Store.get("getPlan", "payments", { id: n }).then(res => res ? res.installments || [] : []).catch(() => []),
             Store.get("getMetricsSummary", "biometrics", { id: n }).catch(
               () => [],
             ),
           ]),
           m = App.getUser(),
-          u = ["admin", "manager", "operator"].includes(m?.role) || String(m?.athleteId) === String(n),
+          u =
+            ["admin", "manager", "operator"].includes(m?.role) ||
+            String(m?.athleteId) === String(n),
           g = (e, t, a) =>
-            `\n            <div class="stat-card" style="padding:var(--sp-2); border:1px solid var(--color-border); ${a ? `border-left:4px solid ${a};` : ""}">\n              <span class="stat-label" style="font-size:10px;text-transform:uppercase;color:var(--color-text-muted);">${e}</span>\n              <span class="stat-value" style="font-size:13px;font-weight:600;display:block;">${Utils.escapeHtml(t || "—")}</span>\n            </div>`;
-        ((l.innerHTML = `\n        <div class="page-body" style="display:flex;flex-direction:column;gap:var(--sp-4); background:var(--color-black); min-height:100vh; padding-top:var(--sp-3);">\n\n          \x3c!-- BREADCRUMB NAV --\x3e\n          <div style="display:flex;align-items:center;gap:var(--sp-2);padding:0 var(--sp-4);">\n            <button class="btn btn-ghost btn-sm" id="back-to-list" style="color:var(--color-text-muted);border:none;padding:0;display:flex;align-items:center;gap:6px;font-size:12px;text-transform:uppercase;letter-spacing:0.06em;" type="button">\n              <i class="ph ph-arrow-left" style="font-size:16px;"></i> Atleti\n            </button>\n            <div style="flex:1;"></div>\n            ${u ? '<button class="btn btn-primary btn-sm" id="edit-athlete-btn" type="button" style="margin-right:8px;"><i class="ph ph-pencil-simple"></i> MODIFICA</button>' : ""}\n          </div>\n\n          \x3c!-- HEADER ATLETA --\x3e\n          <div style="display:flex; align-items:center; gap:var(--sp-4); padding:0 var(--sp-4); margin-top:var(--sp-2);">\n            ${null != r.jersey_number ? `<div style="font-size:4rem; font-weight:800; color:var(--color-pink); font-family:var(--font-display); line-height:1; letter-spacing:-2px;">#${Utils.escapeHtml(String(r.jersey_number))}</div>` : ""}\n            <div style="display:flex; flex-direction:column;">\n              <h2 style="font-size:2.5rem; font-weight:800; margin:0; line-height:1.1; font-family:var(--font-display); text-transform:uppercase; letter-spacing:-0.5px;">${Utils.escapeHtml(r.first_name || "")} <span style="font-weight:300; color:var(--color-text-muted);">${Utils.escapeHtml(r.last_name || "")}</span></h2>\n              <div style="font-size:15px; color:var(--color-white); margin-top:8px; display:flex; gap:12px; align-items:center;">\n                ${r.role ? `<span style="background:rgba(255,255,255,0.1); padding:4px 10px; border-radius:6px; font-weight:600; font-size:13px; letter-spacing:0.5px; text-transform:uppercase;">${Utils.escapeHtml(r.role)}</span>` : ""}\n                ${r.team_names && r.team_names.length > 0 ? r.team_names.map((e) => `<span style="color:var(--color-text-muted); font-weight:500;">${Utils.escapeHtml(d(e.category, e.name))}</span>`).join('<span style="color:var(--color-text-muted); opacity:0.5;">·</span>') : r.team_name ? `<span style="color:var(--color-text-muted); font-weight:500;">${Utils.escapeHtml(d(r.category, r.team_name))}</span>` : ""}\n              </div>\n            </div>\n          </div>\n\n          \x3c!-- TAB BAR --\x3e\n          <div style="position:relative;margin:0 calc(var(--sp-4) * -1);padding:0 var(--sp-4);border-bottom:1px solid var(--color-border);margin-bottom:var(--sp-4);">\n            <div id="athlete-tab-bar" class="fusion-tabs-container" style="display:flex;gap:0;overflow-x:auto;scrollbar-width:none;position:relative;z-index:2;padding-bottom:1px;">\n              ${[
+            `\n            <div class="dash-stat-card" style="padding:var(--sp-2); border:1px solid var(--color-border); ${a ? `border-left:4px solid ${a};` : ""}">\n              <div class="dash-stat-title" style="font-size:10px;text-transform:uppercase;color:var(--color-text-muted);">${e}</div>\n              <div class="dash-stat-value" style="font-size:13px;font-weight:600;display:block;">${Utils.escapeHtml(t || "—")}</div>\n            </div>`;
+        ((l.innerHTML = `\n        <div class="transport-dashboard" style="min-height:100vh;">\n\n          \x3c!-- BREADCRUMB NAV --\x3e\n          <div style="display:flex;align-items:center;gap:var(--sp-2);padding:0 var(--sp-4);">\n            <button class="btn btn-ghost btn-sm" id="back-to-list" style="color:var(--color-text-muted);border:none;padding:0;display:flex;align-items:center;gap:6px;font-size:12px;text-transform:uppercase;letter-spacing:0.06em;" type="button">\n              <i class="ph ph-arrow-left" style="font-size:16px;"></i> Atleti\n            </button>\n            <div style="flex:1;"></div>\n            ${u ? '<button class="btn btn-primary btn-sm" id="edit-athlete-btn" type="button" style="margin-right:8px;"><i class="ph ph-pencil-simple"></i> MODIFICA</button>' : ""}\n          </div>\n\n          \x3c!-- HEADER ATLETA --\x3e\n          <div style="display:flex; align-items:center; gap:var(--sp-4); padding:0 var(--sp-4); margin-top:var(--sp-2);">\n            ${null != r.jersey_number ? `<div style="font-size:4rem; font-weight:800; color:var(--color-pink); font-family:var(--font-display); line-height:1; letter-spacing:-2px;">#${Utils.escapeHtml(String(r.jersey_number))}</div>` : ""}\n            <div style="display:flex; flex-direction:column;">\n              <h2 style="font-size:2.5rem; font-weight:800; margin:0; line-height:1.1; font-family:var(--font-display); text-transform:uppercase; letter-spacing:-0.5px;">${Utils.escapeHtml(r.first_name || "")} <span style="font-weight:300; color:var(--color-text-muted);">${Utils.escapeHtml(r.last_name || "")}</span></h2>\n              <div style="font-size:15px; color:var(--color-white); margin-top:8px; display:flex; gap:12px; align-items:center;">\n                ${r.role ? `<span style="background:rgba(255,255,255,0.1); padding:4px 10px; border-radius:6px; font-weight:600; font-size:13px; letter-spacing:0.5px; text-transform:uppercase;">${Utils.escapeHtml(r.role)}</span>` : ""}\n                ${r.team_names && r.team_names.length > 0 ? r.team_names.map((e) => `<span style="color:var(--color-text-muted); font-weight:500;">${Utils.escapeHtml(d(e.category, e.name))}</span>`).join('<span style="color:var(--color-text-muted); opacity:0.5;">·</span>') : r.team_name ? `<span style="color:var(--color-text-muted); font-weight:500;">${Utils.escapeHtml(d(r.category, r.team_name))}</span>` : ""}\n              </div>\n            </div>\n          </div>\n\n          \x3c!-- TAB BAR --\x3e\n          <div style="display:block;position:relative;margin:0 calc(var(--sp-4) * -1);padding:0 var(--sp-4);border-bottom:1px solid var(--color-border);margin-bottom:var(--sp-4);">\n            <div id="athlete-tab-bar" class="fusion-tabs-container" style="display:flex;gap:0;overflow-x:auto;scrollbar-width:none;position:relative;z-index:2;padding-bottom:1px;">\n              ${[
           { id: "anagrafica", label: "Anagrafica" },
+          { id: "metrics", label: "Metriche", pink: !0 },
           { id: "pagamenti", label: "Pagamenti" },
           { id: "documenti", label: "Documenti" },
         ]
@@ -582,7 +605,7 @@ const Athletes = (() => {
           )
           .join(
             "",
-          )}\n            </div>\n            \x3c!-- Shadow gradient for scroll indication --\x3e\n            <div id="tab-scroll-indicator" style="position:absolute;top:0;right:0;bottom:0;width:48px;background:linear-gradient(to left, var(--color-black) 20%, transparent 100%);pointer-events:none;z-index:3;transition:opacity 0.3s;opacity:0.8;"></div>\n          </div>\n\n          \x3c!-- ANAGRAFICA TAB --\x3e\n          <div id="tab-panel-anagrafica" class="athlete-tab-panel" style="display:flex;flex-direction:column;gap:var(--sp-4);">\n            <div style="display:flex;flex-direction:row;align-items:flex-start;gap:var(--sp-4);">\n              \x3c!-- FOTO PERSONALE --\x3e\n              <div style="width:280px;flex-shrink:0;">\n                <p class="section-label" style="text-align:center;">Foto Personale</p>\n                <div class="card" style="padding:var(--sp-3);">\n                  <div style="display:flex;flex-direction:column;align-items:center;gap:var(--sp-3);">\n                    <div id="athlete-photo-preview" style="width:240px;height:240px;border-radius:16px;overflow:hidden;flex-shrink:0;border:2px solid var(--color-border);background:${p(r.full_name)};display:flex;align-items:center;justify-content:center;">\n                      ${r.photo_path ? `<img src="${Utils.escapeHtml(r.photo_path)}" alt="Foto atleta" style="width:100%;height:100%;object-fit:cover;object-position:center">` : `<span style="font-family:var(--font-display);font-size:4.5rem;font-weight:700;color:#000;">${Utils.initials(r.full_name)}</span>`}\n                    </div>\n                    <div style="display:flex;flex-direction:column;align-items:center;gap:8px;width:100%;">\n                      <div style="font-size:13px;color:var(--color-text-muted);text-align:center;">\n                        ${r.photo_path ? "Foto caricata" : "Nessuna foto caricata"}\n                      </div>\n                      ${u ? `\n                      <label for="athlete-photo-upload" class="btn btn-default btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;width:100%;justify-content:center;">\n                        <i class="ph ph-camera"></i> ${r.photo_path ? "Cambia foto" : "Carica foto"}\n                      </label>\n                      <input id="athlete-photo-upload" type="file" accept="image/jpeg,image/png,image/webp" style="display:none;">\n                      <div id="athlete-photo-status" style="font-size:12px;color:var(--color-text-muted);text-align:center;"></div>` : ""}\n                    </div>\n                  </div>\n                </div>\n              </div>\n              <div style="flex:1;">\n                <p class="section-label">Dati Anagrafici e Contatti</p>\n                <div class="card" style="padding:var(--sp-3);">\n                  <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-3);">\n                    ${g("Nome", r.first_name)}\n                    ${g("Cognome", r.last_name)}\n                    ${g("Data di Nascita", r.birth_date ? Utils.formatDate(r.birth_date) : null)}\n                    ${g("Luogo di Nascita", r.birth_place)}\n                    ${g("Via di Residenza", r.residence_address)}\n                    ${g("Città di Residenza", r.residence_city)}\n                    ${g("Cellulare", r.phone)}\n                    ${g("E-Mail", r.email)}\n                    ${g("Documento d'Identità", r.identity_document)}\n                    ${g("Codice Fiscale", r.fiscal_code)}\n                    ${g("Scadenza Cert. Medico", r.medical_cert_expires_at ? Utils.formatDate(r.medical_cert_expires_at) : null, r.medical_cert_expires_at && new Date(r.medical_cert_expires_at) < new Date() ? "var(--color-pink)" : null)}\n                    ${g("Matricola FIPAV", r.federal_id)}\n                  </div>\n                </div>\n              </div>\n            </div>\n\n            \x3c!-- DOCUMENTI (in Anagrafica) --\x3e\n            <div>\n              <p class="section-label">Matricola e Documenti</p>\n              <div class="card" style="padding:var(--sp-3);">\n                <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:var(--sp-3);">\n                  ${g("Documento d'Identità", r.identity_document)}\n                  ${g("Codice Fiscale", r.fiscal_code)}\n                  ${g("Matricola FIPAV", r.federal_id)}\n                  ${g("Scadenza Cert. Medico", r.medical_cert_expires_at ? Utils.formatDate(r.medical_cert_expires_at) : null, r.medical_cert_expires_at && new Date(r.medical_cert_expires_at) < new Date() ? "var(--color-pink)" : null)}\n                </div>\n              </div>\n            </div>\n\n            \x3c!-- PAGAMENTI (in Anagrafica) --\x3e\n            <div>\n              <p class="section-label">Recenti Pagamenti</p>\n              ${
+          )}\n            </div>\n            \x3c!-- Shadow gradient for scroll indication --\x3e\n            <div id="tab-scroll-indicator" style="position:absolute;top:0;right:0;bottom:0;width:48px;background:linear-gradient(to left, var(--color-black) 20%, transparent 100%);pointer-events:none;z-index:3;transition:opacity 0.3s;opacity:0.8;"></div>\n          </div>\n\n          \x3c!-- ANAGRAFICA TAB --\x3e\n          <div id="tab-panel-anagrafica" class="athlete-tab-panel" style="display:flex;flex-direction:column;gap:var(--sp-4);">\n            <div style="display:flex;flex-direction:row;align-items:flex-start;gap:var(--sp-4);">\n              \x3c!-- FOTO PERSONALE --\x3e\n              <div style="width:280px;flex-shrink:0;">\n                <p class="section-label" style="text-align:center;">Foto Personale</p>\n                <div class="dash-card" style="padding:var(--sp-3);">\n                  <div style="display:flex;flex-direction:column;align-items:center;gap:var(--sp-3);">\n                    <div id="athlete-photo-preview" style="width:240px;height:240px;border-radius:16px;overflow:hidden;flex-shrink:0;border:2px solid var(--color-border);background:${p(r.full_name)};display:flex;align-items:center;justify-content:center;">\n                      ${r.photo_path ? `<img src="${Utils.escapeHtml(r.photo_path)}" alt="Foto atleta" style="width:100%;height:100%;object-fit:cover;object-position:center">` : `<span style="font-family:var(--font-display);font-size:4.5rem;font-weight:700;color:#000;">${Utils.initials(r.full_name)}</span>`}\n                    </div>\n                    <div style="display:flex;flex-direction:column;align-items:center;gap:8px;width:100%;">\n                      <div style="font-size:13px;color:var(--color-text-muted);text-align:center;">\n                        ${r.photo_path ? "Foto caricata" : "Nessuna foto caricata"}\n                      </div>\n                      ${u ? `\n                      <label for="athlete-photo-upload" class="btn btn-default btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;width:100%;justify-content:center;">\n                        <i class="ph ph-camera"></i> ${r.photo_path ? "Cambia foto" : "Carica foto"}\n                      </label>\n                      <input id="athlete-photo-upload" type="file" accept="image/jpeg,image/png,image/webp" style="display:none;">\n                      <div id="athlete-photo-status" style="font-size:12px;color:var(--color-text-muted);text-align:center;"></div>` : ""}\n                    </div>\n                  </div>\n                </div>\n              </div>\n              <div style="flex:1;">\n                <p class="section-label">Dati Anagrafici e Contatti</p>\n                <div class="dash-card" style="padding:var(--sp-3);">\n                  <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-3);">\n                    ${g("Nome", r.first_name)}\n                    ${g("Cognome", r.last_name)}\n                    ${g("Data di Nascita", r.birth_date ? Utils.formatDate(r.birth_date) : null)}\n                    ${g("Luogo di Nascita", r.birth_place)}\n                    ${g("Via di Residenza", r.residence_address)}\n                    ${g("Città di Residenza", r.residence_city)}\n                    ${g("Cellulare", r.phone)}\n                    ${g("E-Mail", r.email)}\n                    ${g("Documento d'Identità", r.identity_document)}\n                    ${g("Codice Fiscale", r.fiscal_code)}\n                    ${g("Scadenza Cert. Medico", r.medical_cert_expires_at ? Utils.formatDate(r.medical_cert_expires_at) : null, r.medical_cert_expires_at && new Date(r.medical_cert_expires_at) < new Date() ? "var(--color-pink)" : null)}\n                    ${g("Matricola FIPAV", r.federal_id)}\n                  </div>\n                </div>\n              </div>\n            </div>\n\n            \x3c!-- DOCUMENTI (in Anagrafica) --\x3e\n            <div>\n              <p class="section-label">Matricola e Documenti</p>\n              <div class="dash-card" style="padding:var(--sp-3);">\n                <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:var(--sp-3);">\n                  ${g("Documento d'Identità", r.identity_document)}\n                  ${g("Codice Fiscale", r.fiscal_code)}\n                  ${g("Matricola FIPAV", r.federal_id)}\n                  ${g("Scadenza Cert. Medico", r.medical_cert_expires_at ? Utils.formatDate(r.medical_cert_expires_at) : null, r.medical_cert_expires_at && new Date(r.medical_cert_expires_at) < new Date() ? "var(--color-pink)" : null)}\n                </div>\n              </div>\n            </div>\n\n            \x3c!-- PAGAMENTI (in Anagrafica) --\x3e\n            <div>\n              <p class="section-label">Recenti Pagamenti</p>\n              ${
           o && o.length > 0
             ? `\n                <div class="table-wrapper">\n                  <table class="table">\n                    <thead><tr><th>Scadenza</th><th>Importo</th><th>Stato</th><th>Metodo</th><th>Data Pagamento</th></tr></thead>\n                    <tbody>\n                      ${o
                 .slice(0, 5)
@@ -594,7 +617,7 @@ const Athletes = (() => {
                   "",
                 )}\n                    </tbody>\n                  </table>\n                </div>`
             : Utils.emptyState("Nessun pagamento registrato")
-        }\n            </div>\n          </div>\n\n          \x3c!-- METRICS TAB --\x3e\n          <div id="tab-panel-metrics" class="athlete-tab-panel" style="display:none;flex-direction:column;gap:var(--sp-4);">\n\n            \x3c!-- PARAMETRI FISICI E SALTO --\x3e\n            <div>\n              <p class="section-label">Parametri Fisici e Salto</p>\n              <div class="grid-3">\n                <div class="stat-card">\n                  <span class="stat-label">Peso Attuale</span>\n                  <span class="stat-value">${r.weight_kg ? r.weight_kg + " kg" : "—"}</span>\n                </div>\n                <div class="stat-card">\n                  <span class="stat-label">Altezza Attuale</span>\n                  <span class="stat-value">${r.height_cm ? r.height_cm + " cm" : "—"}</span>\n                </div>\n                <div class="stat-card">\n                  <span class="stat-label">Miglior Salto (di recente)</span>\n                  <span class="stat-value">${(function (
+        }\n            </div>\n          </div>\n\n          \x3c!-- METRICS TAB --\x3e\n          <div id="tab-panel-metrics" class="athlete-tab-panel" style="display:none;flex-direction:column;gap:var(--sp-4);">\n\n            \x3c!-- PARAMETRI FISICI E SALTO --\x3e\n            <div>\n              <p class="section-label">Parametri Fisici e Salto</p>\n              <div class="dash-stat-grid">\n                <div class="dash-stat-card">\n                  <div class="dash-stat-title">Peso Attuale</div>\n                  <div class="dash-stat-value">${r.weight_kg ? r.weight_kg + " kg" : "—"}</div>\n                </div>\n                <div class="dash-stat-card">\n                  <div class="dash-stat-title">Altezza Attuale</div>\n                  <div class="dash-stat-value">${r.height_cm ? r.height_cm + " cm" : "—"}</div>\n                </div>\n                <div class="dash-stat-card">\n                  <div class="dash-stat-title">Miglior Salto (di recente)</div>\n                  <div class="dash-stat-value" id="athlete-best-jump-val">${(function (
           e,
         ) {
           if (!e || !e.length) return "—";
@@ -607,7 +630,7 @@ const Athletes = (() => {
           return t ? t.value + (t.unit ? " " + t.unit : "") : "—";
         })(
           c,
-        )}</span>\n                </div>\n              </div>\n            </div>\n\n            \x3c!-- VALD Performance Tracking --\x3e\n            <div id="vald-section">\n              <p class="section-label" style="display:flex;align-items:center;gap:8px;justify-content:space-between;">\n                <span style="display:flex;align-items:center;gap:8px;"><span style="color:var(--color-pink);">⚡</span> VALD Performance Tracking</span>\n                <span style="display:flex;align-items:center;gap:6px;">\n                  <button id="vald-link-btn" type="button" class="btn btn-sm btn-ghost" style="display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:4px 10px;" title="Collega atleti VALD/ERP"><i class="ph ph-link" style="font-size:13px;"></i> Collega</button>\n                  <button id="vald-sync-btn" type="button" class="btn btn-sm btn-default" style="display:inline-flex;align-items:center;gap:6px;font-size:11px;padding:4px 12px;border-color:rgba(255,0,255,0.3);color:var(--color-pink);" title="Sincronizza dati VALD ForceDecks"><i class="ph ph-arrows-clockwise" style="font-size:13px;"></i> Sincronizza</button>\n                </span>\n              </p>\n              <div id="vald-tab-content">\n                <div style="display:flex;flex-direction:column;gap:8px;">\n                  <div class="skeleton skeleton-title"></div>\n                  <div class="skeleton skeleton-text" style="width:60%;"></div>\n                </div>\n              </div>\n            </div>\n\n            ${
+        )}</div>\n                </div>\n              </div>\n            </div>\n\n            \x3c!-- VALD Performance Tracking --\x3e\n            <div id="vald-section">\n              <p class="section-label" style="display:flex;align-items:center;gap:8px;justify-content:space-between;">\n                <span style="display:flex;align-items:center;gap:8px;"><span style="color:var(--color-pink);">⚡</span> VALD Performance Tracking</span>\n                <span style="display:flex;align-items:center;gap:6px;">\n                  <button id="vald-link-btn" type="button" class="btn btn-sm btn-ghost" style="display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:4px 10px;" title="Collega atleti VALD/ERP"><i class="ph ph-link" style="font-size:13px;"></i> Collega</button>\n                  <button id="vald-sync-btn" type="button" class="btn btn-sm btn-default" style="display:inline-flex;align-items:center;gap:6px;font-size:11px;padding:4px 12px;border-color:rgba(255,0,255,0.3);color:var(--color-pink);" title="Sincronizza dati VALD ForceDecks"><i class="ph ph-arrows-clockwise" style="font-size:13px;"></i> Sincronizza</button>\n                </span>\n              </p>\n              <div id="vald-tab-content">\n                <div style="display:flex;flex-direction:column;gap:8px;">\n                  <div class="skeleton skeleton-title"></div>\n                  <div class="skeleton skeleton-text" style="width:60%;"></div>\n                </div>\n              </div>\n            </div>\n\n            ${
           r.metrics?.length
             ? `\n              <div class="table-wrapper">\n                <table class="table">\n                  <thead><tr><th>Data</th><th>Durata (min)</th><th>RPE</th><th>Carico</th><th>Note</th></tr></thead>\n                  <tbody>\n                    ${r.metrics
                 .map((e) => {
@@ -618,7 +641,7 @@ const Athletes = (() => {
                   "",
                 )}\n                  </tbody>\n                </table>\n              </div>`
             : ""
-        }\n\n          </div>\n\n          \x3c!-- PAGAMENTI --\x3e\n          <div id="tab-panel-pagamenti" class="athlete-tab-panel" style="display:none;">\n            <p class="section-label">Storico Pagamenti</p>\n            ${o && o.length > 0 ? `\n              <div class="table-wrapper">\n                <table class="table">\n                  <thead><tr><th>Scadenza</th><th>Importo</th><th>Stato</th><th>Pagante</th><th>Metodo</th><th>Data Pagamento</th></tr></thead>\n                  <tbody>\n                    ${o.map((e) => `<tr>\n                      <td>${Utils.formatDate(e.due_date)}</td>\n                      <td><strong>€ ${Utils.formatNum(e.amount, 2)}</strong></td>\n                      <td>${"paid" === e.status ? '<span class="badge badge-success">Pagato</span>' : "overdue" === e.status ? '<span class="badge badge-danger">Scaduto</span>' : '<span class="badge badge-warning">In attesa</span>'}</td>\n                      <td>${Utils.escapeHtml(e.payer_name || "—")}</td>\n                      <td>${Utils.escapeHtml(e.payment_method || "—")}</td>\n                      <td style="font-size:12px;color:var(--color-text-muted);">${e.paid_at ? Utils.formatDate(e.paid_at) : "—"}</td>\n                    </tr>`).join("")}\n                  </tbody>\n                </table>\n              </div>` : Utils.emptyState("Nessun pagamento registrato")}\n          </div>\n          \x3c!-- DOCUMENTI TAB --\x3e\n          <div id="tab-panel-documenti" class="athlete-tab-panel" style="display:none;flex-direction:column;gap:var(--sp-4);">\n            <p class="section-label">Matricola e Dati</p>\n            <div class="card" style="padding:var(--sp-3);">\n              <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3);">\n                ${g("Documento d'Identità", r.identity_document)}\n                ${g("Codice Fiscale", r.fiscal_code)}\n                ${g("Matricola FIPAV", r.federal_id)}\n                ${g("Scadenza Cert. Medico", r.medical_cert_expires_at ? Utils.formatDate(r.medical_cert_expires_at) : null, r.medical_cert_expires_at && new Date(r.medical_cert_expires_at) < new Date() ? "var(--color-pink)" : null)}\n              </div>\n            </div>\n\n            <p class="section-label">Allegati</p>\n            <div style="display:flex;flex-direction:column;gap:var(--sp-3);">\n              \x3c!-- Contratto --\x3e\n              <div class="card" style="padding:var(--sp-3);">\n                  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);">\n                      <div style="display:flex;align-items:center;gap:10px;">\n                          <i class="ph ph-file-pdf" style="font-size:24px;color:var(--color-pink);flex-shrink:0;"></i>\n                          <div>\n                              <div style="font-size:13px;font-weight:600;">Contratto</div>\n                              <div style="font-size:11px;color:var(--color-text-muted);">${r.contract_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(r.contract_file_path.split('/').pop()) : 'Nessun file caricato'}</div>\n                          </div>\n                      </div>\n                      <div style="display:flex;gap:var(--sp-2);align-items:center;">\n                          ${r.contract_file_path ? `<a href="api/router.php?module=athletes&action=downloadDoc&field=contract_file_path&id=${r.id}" target="_blank" class="btn btn-default btn-sm" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ''}\n                          ${u ? `<button class="btn btn-primary btn-sm" id="upload-contract-file-btn" type="button" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-upload-simple"></i> Carica</button>\n                          <input type="file" id="upload-contract-file-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">` : ''}\n                      </div>\n                  </div>\n              </div>\n              \n              \x3c!-- CI Fronte --\x3e\n              <div class="card" style="padding:var(--sp-3);">\n                  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);">\n                      <div style="display:flex;align-items:center;gap:10px;">\n                          <i class="ph ph-identification-badge" style="font-size:24px;color:var(--color-info);flex-shrink:0;"></i>\n                          <div>\n                              <div style="font-size:13px;font-weight:600;">CI Fronte</div>\n                              <div style="font-size:11px;color:var(--color-text-muted);">${r.id_doc_front_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(r.id_doc_front_file_path.split('/').pop()) : 'Nessun file caricato'}</div>\n                          </div>\n                      </div>\n                      <div style="display:flex;gap:var(--sp-2);align-items:center;">\n                          ${r.id_doc_front_file_path ? `<a href="api/router.php?module=athletes&action=downloadDoc&field=id_doc_front_file_path&id=${r.id}" target="_blank" class="btn btn-default btn-sm" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ''}\n                          ${u ? `<button class="btn btn-primary btn-sm" id="upload-id-doc-front-btn" type="button" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-upload-simple"></i> Carica</button>\n                          <input type="file" id="upload-id-doc-front-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">` : ''}\n                      </div>\n                  </div>\n              </div>\n\n              \x3c!-- CI Retro --\x3e\n              <div class="card" style="padding:var(--sp-3);">\n                  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);">\n                      <div style="display:flex;align-items:center;gap:10px;">\n                          <i class="ph ph-identification-card" style="font-size:24px;color:var(--color-info);flex-shrink:0;"></i>\n                          <div>\n                              <div style="font-size:13px;font-weight:600;">CI Retro</div>\n                              <div style="font-size:11px;color:var(--color-text-muted);">${r.id_doc_back_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(r.id_doc_back_file_path.split('/').pop()) : 'Nessun file caricato'}</div>\n                          </div>\n                      </div>\n                      <div style="display:flex;gap:var(--sp-2);align-items:center;">\n                          ${r.id_doc_back_file_path ? `<a href="api/router.php?module=athletes&action=downloadDoc&field=id_doc_back_file_path&id=${r.id}" target="_blank" class="btn btn-default btn-sm" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ''}\n                          ${u ? `<button class="btn btn-primary btn-sm" id="upload-id-doc-back-btn" type="button" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-upload-simple"></i> Carica</button>\n                          <input type="file" id="upload-id-doc-back-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">` : ''}\n                      </div>\n                  </div>\n              </div>\n\n              \x3c!-- CF Fronte --\x3e\n              <div class="card" style="padding:var(--sp-3);">\n                  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);">\n                      <div style="display:flex;align-items:center;gap:10px;">\n                          <i class="ph ph-credit-card" style="font-size:24px;color:var(--color-success);flex-shrink:0;"></i>\n                          <div>\n                              <div style="font-size:13px;font-weight:600;">CF Fronte</div>\n                              <div style="font-size:11px;color:var(--color-text-muted);">${r.cf_doc_front_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(r.cf_doc_front_file_path.split('/').pop()) : 'Nessun file caricato'}</div>\n                          </div>\n                      </div>\n                      <div style="display:flex;gap:var(--sp-2);align-items:center;">\n                          ${r.cf_doc_front_file_path ? `<a href="api/router.php?module=athletes&action=downloadDoc&field=cf_doc_front_file_path&id=${r.id}" target="_blank" class="btn btn-default btn-sm" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ''}\n                          ${u ? `<button class="btn btn-primary btn-sm" id="upload-cf-doc-front-btn" type="button" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-upload-simple"></i> Carica</button>\n                          <input type="file" id="upload-cf-doc-front-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">` : ''}\n                      </div>\n                  </div>\n              </div>\n\n              \x3c!-- CF Retro --\x3e\n              <div class="card" style="padding:var(--sp-3);">\n                  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);">\n                      <div style="display:flex;align-items:center;gap:10px;">\n                          <i class="ph ph-credit-card" style="font-size:24px;color:var(--color-success);flex-shrink:0;"></i>\n                          <div>\n                              <div style="font-size:13px;font-weight:600;">CF Retro</div>\n                              <div style="font-size:11px;color:var(--color-text-muted);">${r.cf_doc_back_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(r.cf_doc_back_file_path.split('/').pop()) : 'Nessun file caricato'}</div>\n                          </div>\n                      </div>\n                      <div style="display:flex;gap:var(--sp-2);align-items:center;">\n                          ${r.cf_doc_back_file_path ? `<a href="api/router.php?module=athletes&action=downloadDoc&field=cf_doc_back_file_path&id=${r.id}" target="_blank" class="btn btn-default btn-sm" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ''}\n                          ${u ? `<button class="btn btn-primary btn-sm" id="upload-cf-doc-back-btn" type="button" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-upload-simple"></i> Carica</button>\n                          <input type="file" id="upload-cf-doc-back-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">` : ''}\n                      </div>\n                  </div>\n              </div>\n\n              \x3c!-- Certificato Medico --\x3e\n              <div class="card" style="padding:var(--sp-3);">\n                  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);">\n                      <div style="display:flex;align-items:center;gap:10px;">\n                          <i class="ph ph-first-aid" style="font-size:24px;color:var(--color-warning);flex-shrink:0;"></i>\n                          <div>\n                              <div style="font-size:13px;font-weight:600;">Certificato Medico</div>\n                              <div style="font-size:11px;color:var(--color-text-muted);">${r.medical_cert_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(r.medical_cert_file_path.split('/').pop()) : 'Nessun file caricato'}</div>\n                          </div>\n                      </div>\n                      <div style="display:flex;gap:var(--sp-2);align-items:center;">\n                          ${r.medical_cert_file_path ? `<a href="api/router.php?module=athletes&action=downloadDoc&field=medical_cert_file_path&id=${r.id}" target="_blank" class="btn btn-default btn-sm" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ''}\n                          ${u ? `<button class="btn btn-primary btn-sm" id="upload-med-cert-btn" type="button" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-upload-simple"></i> Carica</button>\n                          <input type="file" id="upload-med-cert-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">` : ''}\n                      </div>\n                  </div>\n              </div>\n\n            </div>\n          </div>\n        </div>\n        \n        `),
+        }\n\n          </div>\n\n          \x3c!-- PAGAMENTI --\x3e\n          <div id="tab-panel-pagamenti" class="athlete-tab-panel" style="display:none;">\n            <p class="section-label">Storico Pagamenti</p>\n            ${o && o.length > 0 ? `\n              <div class="table-wrapper">\n                <table class="table">\n                  <thead><tr><th>Scadenza</th><th>Importo</th><th>Stato</th><th>Pagante</th><th>Metodo</th><th>Data Pagamento</th></tr></thead>\n                  <tbody>\n                    ${o.map((e) => `<tr>\n                      <td>${Utils.formatDate(e.due_date)}</td>\n                      <td><strong>€ ${Utils.formatNum(e.amount, 2)}</strong></td>\n                      <td>${"paid" === e.status ? '<span class="badge badge-success">Pagato</span>' : "overdue" === e.status ? '<span class="badge badge-danger">Scaduto</span>' : '<span class="badge badge-warning">In attesa</span>'}</td>\n                      <td>${Utils.escapeHtml(e.payer_name || "—")}</td>\n                      <td>${Utils.escapeHtml(e.payment_method || "—")}</td>\n                      <td style="font-size:12px;color:var(--color-text-muted);">${e.paid_at ? Utils.formatDate(e.paid_at) : "—"}</td>\n                    </tr>`).join("")}\n                  </tbody>\n                </table>\n              </div>` : Utils.emptyState("Nessun pagamento registrato")}\n          </div>\n          \x3c!-- DOCUMENTI TAB --\x3e\n          <div id="tab-panel-documenti" class="athlete-tab-panel" style="display:none;flex-direction:column;gap:var(--sp-4);">\n            <p class="section-label">Matricola e Dati</p>\n            <div class="dash-card" style="padding:var(--sp-3);">\n              <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3);">\n                ${g("Documento d'Identità", r.identity_document)}\n                ${g("Codice Fiscale", r.fiscal_code)}\n                ${g("Matricola FIPAV", r.federal_id)}\n                ${g("Scadenza Cert. Medico", r.medical_cert_expires_at ? Utils.formatDate(r.medical_cert_expires_at) : null, r.medical_cert_expires_at && new Date(r.medical_cert_expires_at) < new Date() ? "var(--color-pink)" : null)}\n              </div>\n            </div>\n\n            <p class="section-label">Allegati</p>\n            <div style="display:flex;flex-direction:column;gap:var(--sp-3);">\n              \x3c!-- Contratto --\x3e\n              <div class="dash-card" style="padding:var(--sp-3);">\n                  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);">\n                      <div style="display:flex;align-items:center;gap:10px;">\n                          <i class="ph ph-file-pdf" style="font-size:24px;color:var(--color-pink);flex-shrink:0;"></i>\n                          <div>\n                              <div style="font-size:13px;font-weight:600;">Contratto</div>\n                              <div style="font-size:11px;color:var(--color-text-muted);">${r.contract_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(r.contract_file_path.split("/").pop()) : "Nessun file caricato"}</div>\n                          </div>\n                      </div>\n                      <div style="display:flex;gap:var(--sp-2);align-items:center;">\n                          ${r.contract_file_path ? `<a href="api/router.php?module=athletes&action=downloadDoc&field=contract_file_path&id=${r.id}" target="_blank" class="btn btn-default btn-sm" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ""}\n                          ${u ? `<button class="btn btn-primary btn-sm" id="upload-contract-file-btn" type="button" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-upload-simple"></i> Carica</button>\n                          <input type="file" id="upload-contract-file-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">` : ""}\n                      </div>\n                  </div>\n              </div>\n              \n              \x3c!-- CI Fronte --\x3e\n              <div class="dash-card" style="padding:var(--sp-3);">\n                  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);">\n                      <div style="display:flex;align-items:center;gap:10px;">\n                          <i class="ph ph-identification-badge" style="font-size:24px;color:var(--color-info);flex-shrink:0;"></i>\n                          <div>\n                              <div style="font-size:13px;font-weight:600;">CI Fronte</div>\n                              <div style="font-size:11px;color:var(--color-text-muted);">${r.id_doc_front_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(r.id_doc_front_file_path.split("/").pop()) : "Nessun file caricato"}</div>\n                          </div>\n                      </div>\n                      <div style="display:flex;gap:var(--sp-2);align-items:center;">\n                          ${r.id_doc_front_file_path ? `<a href="api/router.php?module=athletes&action=downloadDoc&field=id_doc_front_file_path&id=${r.id}" target="_blank" class="btn btn-default btn-sm" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ""}\n                          ${u ? `<button class="btn btn-primary btn-sm" id="upload-id-doc-front-btn" type="button" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-upload-simple"></i> Carica</button>\n                          <input type="file" id="upload-id-doc-front-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">` : ""}\n                      </div>\n                  </div>\n              </div>\n\n              \x3c!-- CI Retro --\x3e\n              <div class="dash-card" style="padding:var(--sp-3);">\n                  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);">\n                      <div style="display:flex;align-items:center;gap:10px;">\n                          <i class="ph ph-identification-card" style="font-size:24px;color:var(--color-info);flex-shrink:0;"></i>\n                          <div>\n                              <div style="font-size:13px;font-weight:600;">CI Retro</div>\n                              <div style="font-size:11px;color:var(--color-text-muted);">${r.id_doc_back_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(r.id_doc_back_file_path.split("/").pop()) : "Nessun file caricato"}</div>\n                          </div>\n                      </div>\n                      <div style="display:flex;gap:var(--sp-2);align-items:center;">\n                          ${r.id_doc_back_file_path ? `<a href="api/router.php?module=athletes&action=downloadDoc&field=id_doc_back_file_path&id=${r.id}" target="_blank" class="btn btn-default btn-sm" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ""}\n                          ${u ? `<button class="btn btn-primary btn-sm" id="upload-id-doc-back-btn" type="button" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-upload-simple"></i> Carica</button>\n                          <input type="file" id="upload-id-doc-back-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">` : ""}\n                      </div>\n                  </div>\n              </div>\n\n              \x3c!-- CF Fronte --\x3e\n              <div class="dash-card" style="padding:var(--sp-3);">\n                  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);">\n                      <div style="display:flex;align-items:center;gap:10px;">\n                          <i class="ph ph-credit-card" style="font-size:24px;color:var(--color-success);flex-shrink:0;"></i>\n                          <div>\n                              <div style="font-size:13px;font-weight:600;">CF Fronte</div>\n                              <div style="font-size:11px;color:var(--color-text-muted);">${r.cf_doc_front_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(r.cf_doc_front_file_path.split("/").pop()) : "Nessun file caricato"}</div>\n                          </div>\n                      </div>\n                      <div style="display:flex;gap:var(--sp-2);align-items:center;">\n                          ${r.cf_doc_front_file_path ? `<a href="api/router.php?module=athletes&action=downloadDoc&field=cf_doc_front_file_path&id=${r.id}" target="_blank" class="btn btn-default btn-sm" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ""}\n                          ${u ? `<button class="btn btn-primary btn-sm" id="upload-cf-doc-front-btn" type="button" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-upload-simple"></i> Carica</button>\n                          <input type="file" id="upload-cf-doc-front-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">` : ""}\n                      </div>\n                  </div>\n              </div>\n\n              \x3c!-- CF Retro --\x3e\n              <div class="dash-card" style="padding:var(--sp-3);">\n                  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);">\n                      <div style="display:flex;align-items:center;gap:10px;">\n                          <i class="ph ph-credit-card" style="font-size:24px;color:var(--color-success);flex-shrink:0;"></i>\n                          <div>\n                              <div style="font-size:13px;font-weight:600;">CF Retro</div>\n                              <div style="font-size:11px;color:var(--color-text-muted);">${r.cf_doc_back_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(r.cf_doc_back_file_path.split("/").pop()) : "Nessun file caricato"}</div>\n                          </div>\n                      </div>\n                      <div style="display:flex;gap:var(--sp-2);align-items:center;">\n                          ${r.cf_doc_back_file_path ? `<a href="api/router.php?module=athletes&action=downloadDoc&field=cf_doc_back_file_path&id=${r.id}" target="_blank" class="btn btn-default btn-sm" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ""}\n                          ${u ? `<button class="btn btn-primary btn-sm" id="upload-cf-doc-back-btn" type="button" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-upload-simple"></i> Carica</button>\n                          <input type="file" id="upload-cf-doc-back-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">` : ""}\n                      </div>\n                  </div>\n              </div>\n\n              \x3c!-- Certificato Medico --\x3e\n              <div class="dash-card" style="padding:var(--sp-3);">\n                  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);">\n                      <div style="display:flex;align-items:center;gap:10px;">\n                          <i class="ph ph-first-aid" style="font-size:24px;color:var(--color-warning);flex-shrink:0;"></i>\n                          <div>\n                              <div style="font-size:13px;font-weight:600;">Certificato Medico</div>\n                              <div style="font-size:11px;color:var(--color-text-muted);">${r.medical_cert_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(r.medical_cert_file_path.split("/").pop()) : "Nessun file caricato"}</div>\n                          </div>\n                      </div>\n                      <div style="display:flex;gap:var(--sp-2);align-items:center;">\n                          ${r.medical_cert_file_path ? `<a href="api/router.php?module=athletes&action=downloadDoc&field=medical_cert_file_path&id=${r.id}" target="_blank" class="btn btn-default btn-sm" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ""}\n                          ${u ? `<button class="btn btn-primary btn-sm" id="upload-med-cert-btn" type="button" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-upload-simple"></i> Carica</button>\n                          <input type="file" id="upload-med-cert-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">` : ""}\n                      </div>\n                  </div>\n              </div>\n\n            </div>\n          </div>\n        </div>\n        \n        `),
           document
             .getElementById("back-to-list")
             ?.addEventListener("click", () => v(), { signal: e.signal }),
@@ -634,7 +657,7 @@ const Athletes = (() => {
                     ? a
                         .map((e) => {
                           const t = l.includes(e.id) ? "checked" : "";
-                          return `<label class="multi-team-option${t ? " selected" : ""}" for="ea-team-${Utils.escapeHtml(e.id)}">\n                          <input type="checkbox" id="ea-team-${Utils.escapeHtml(e.id)}" class="ea-team-cb" value="${Utils.escapeHtml(e.id)}" ${t} style="display:none;">\n                          <span class="multi-team-label">${Utils.escapeHtml(d(e.category, e.name))}${e.season ? ' \u2014 ' + Utils.escapeHtml(e.season) : ''}</span>\n                        </label>`;
+                          return `<label class="multi-team-option${t ? " selected" : ""}" for="ea-team-${Utils.escapeHtml(e.id)}">\n                          <input type="checkbox" id="ea-team-${Utils.escapeHtml(e.id)}" class="ea-team-cb" value="${Utils.escapeHtml(e.id)}" ${t} style="display:none;">\n                          <span class="multi-team-label">${Utils.escapeHtml(d(e.category, e.name))}${e.season ? " \u2014 " + Utils.escapeHtml(e.season) : ""}</span>\n                        </label>`;
                         })
                         .join("")
                     : "",
@@ -823,99 +846,132 @@ const Athletes = (() => {
           });
 
         if (u) {
-            ["contract-file", "id-doc-front", "id-doc-back", "cf-doc-front", "cf-doc-back", "med-cert"].forEach(type => {
-                const btn = document.getElementById(`upload-${type}-btn`);
-                const input = document.getElementById(`upload-${type}-input`);
-                if (btn && input) {
-                    btn.addEventListener('click', () => input.click(), { signal: e.signal });
-                    input.addEventListener('change', async (ev) => {
-                        const file = ev.target.files[0];
-                        if (!file) return;
-                        
-                        const formData = new FormData();
-                        formData.append('id', n);
-                        formData.append('file', file);
-                        
-                        let action = '';
-                        if (type === 'contract-file') action = 'uploadContractFile';
-                        else if (type === 'id-doc-front') action = 'uploadIdDocFront';
-                        else if (type === 'id-doc-back') action = 'uploadIdDocBack';
-                        else if (type === 'cf-doc-front') action = 'uploadCfDocFront';
-                        else if (type === 'cf-doc-back') action = 'uploadCfDocBack';
-                        else if (type === 'med-cert') action = 'uploadMedicalCert';
+          [
+            "contract-file",
+            "id-doc-front",
+            "id-doc-back",
+            "cf-doc-front",
+            "cf-doc-back",
+            "med-cert",
+          ].forEach((type) => {
+            const btn = document.getElementById(`upload-${type}-btn`);
+            const input = document.getElementById(`upload-${type}-input`);
+            if (btn && input) {
+              btn.addEventListener("click", () => input.click(), {
+                signal: e.signal,
+              });
+              input.addEventListener(
+                "change",
+                async (ev) => {
+                  const file = ev.target.files[0];
+                  if (!file) return;
 
-                        UI.toast('Caricamento documento in corso...', 'info');
-                        btn.disabled = true;
-                        try {
-                            const response = await fetch(`api/router.php?module=athletes&action=${action}`, {
-                                method: 'POST',
-                                body: formData
-                            });
-                            const res = await response.json();
-                            if (!response.ok || !res.success) throw new Error(res.error || 'Errore di caricamento');
-                            
-                            UI.toast('Documento caricato con successo', 'success');
-                            Store.invalidate("listLight/athletes");
-                            Store.invalidate("get/athletes");
-                            f(n, "documenti");
-                        } catch (err) {
-                            UI.toast(err.message, 'error');
-                            btn.disabled = false;
-                        } finally {
-                            input.value = '';
-                        }
-                    }, { signal: e.signal });
-                }
-            });
+                  const formData = new FormData();
+                  formData.append("id", n);
+                  formData.append("file", file);
+
+                  let action = "";
+                  if (type === "contract-file") action = "uploadContractFile";
+                  else if (type === "id-doc-front") action = "uploadIdDocFront";
+                  else if (type === "id-doc-back") action = "uploadIdDocBack";
+                  else if (type === "cf-doc-front") action = "uploadCfDocFront";
+                  else if (type === "cf-doc-back") action = "uploadCfDocBack";
+                  else if (type === "med-cert") action = "uploadMedicalCert";
+
+                  UI.toast("Caricamento documento in corso...", "info");
+                  btn.disabled = true;
+                  try {
+                    const response = await fetch(
+                      `api/router.php?module=athletes&action=${action}`,
+                      {
+                        method: "POST",
+                        body: formData,
+                      },
+                    );
+                    const res = await response.json();
+                    if (!response.ok || !res.success)
+                      throw new Error(res.error || "Errore di caricamento");
+
+                    UI.toast("Documento caricato con successo", "success");
+                    Store.invalidate("listLight/athletes");
+                    Store.invalidate("get/athletes");
+                    f(n, "documenti");
+                  } catch (err) {
+                    UI.toast(err.message, "error");
+                    btn.disabled = false;
+                  } finally {
+                    input.value = "";
+                  }
+                },
+                { signal: e.signal },
+              );
+            }
+          });
         }
 
         if (u) {
-            ["contract-file", "id-doc-front", "id-doc-back", "cf-doc-front", "cf-doc-back", "med-cert"].forEach(type => {
-                const btn = document.getElementById(`upload-${type}-btn`);
-                const input = document.getElementById(`upload-${type}-input`);
-                if (btn && input) {
-                    btn.addEventListener('click', () => input.click(), { signal: e.signal });
-                    input.addEventListener('change', async (ev) => {
-                        const file = ev.target.files[0];
-                        if (!file) return;
-                        
-                        const formData = new FormData();
-                        formData.append('id', n);
-                        formData.append('file', file);
-                        
-                        let action = '';
-                        if (type === 'contract-file') action = 'uploadContractFile';
-                        else if (type === 'id-doc-front') action = 'uploadIdDocFront';
-                        else if (type === 'id-doc-back') action = 'uploadIdDocBack';
-                        else if (type === 'cf-doc-front') action = 'uploadCfDocFront';
-                        else if (type === 'cf-doc-back') action = 'uploadCfDocBack';
-                        else if (type === 'med-cert') action = 'uploadMedicalCert';
+          [
+            "contract-file",
+            "id-doc-front",
+            "id-doc-back",
+            "cf-doc-front",
+            "cf-doc-back",
+            "med-cert",
+          ].forEach((type) => {
+            const btn = document.getElementById(`upload-${type}-btn`);
+            const input = document.getElementById(`upload-${type}-input`);
+            if (btn && input) {
+              btn.addEventListener("click", () => input.click(), {
+                signal: e.signal,
+              });
+              input.addEventListener(
+                "change",
+                async (ev) => {
+                  const file = ev.target.files[0];
+                  if (!file) return;
 
-                        UI.toast('Caricamento documento in corso...', 'info');
-                        btn.disabled = true;
-                        try {
-                            const response = await fetch(`api/router.php?module=athletes&action=${action}`, {
-                                method: 'POST',
-                                body: formData
-                            });
-                            const res = await response.json();
-                            if (!response.ok || !res.success) throw new Error(res.error || 'Errore di caricamento');
-                            
-                            UI.toast('Documento caricato con successo', 'success');
-                            Store.invalidate("listLight/athletes");
-                            Store.invalidate("get/athletes");
-                            f(n, "documenti");
-                        } catch (err) {
-                            UI.toast(err.message, 'error');
-                            btn.disabled = false;
-                        } finally {
-                            input.value = '';
-                        }
-                    }, { signal: e.signal });
-                }
-            });
+                  const formData = new FormData();
+                  formData.append("id", n);
+                  formData.append("file", file);
+
+                  let action = "";
+                  if (type === "contract-file") action = "uploadContractFile";
+                  else if (type === "id-doc-front") action = "uploadIdDocFront";
+                  else if (type === "id-doc-back") action = "uploadIdDocBack";
+                  else if (type === "cf-doc-front") action = "uploadCfDocFront";
+                  else if (type === "cf-doc-back") action = "uploadCfDocBack";
+                  else if (type === "med-cert") action = "uploadMedicalCert";
+
+                  UI.toast("Caricamento documento in corso...", "info");
+                  btn.disabled = true;
+                  try {
+                    const response = await fetch(
+                      `api/router.php?module=athletes&action=${action}`,
+                      {
+                        method: "POST",
+                        body: formData,
+                      },
+                    );
+                    const res = await response.json();
+                    if (!response.ok || !res.success)
+                      throw new Error(res.error || "Errore di caricamento");
+
+                    UI.toast("Documento caricato con successo", "success");
+                    Store.invalidate("listLight/athletes");
+                    Store.invalidate("get/athletes");
+                    f(n, "documenti");
+                  } catch (err) {
+                    UI.toast(err.message, "error");
+                    btn.disabled = false;
+                  } finally {
+                    input.value = "";
+                  }
+                },
+                { signal: e.signal },
+              );
+            }
+          });
         }
-
 
         let E = !1;
         const k = (e) => {
@@ -951,23 +1007,40 @@ const Athletes = (() => {
                   syncBtn.addEventListener("click", async () => {
                     const origHtml = syncBtn.innerHTML;
                     syncBtn.disabled = true;
-                    syncBtn.innerHTML = '<i class="ph ph-spinner" style="display:inline-block;animation:spin 1s linear infinite;"></i> Sincronizzando…';
+                    syncBtn.innerHTML =
+                      '<i class="ph ph-spinner" style="display:inline-block;animation:spin 1s linear infinite;"></i> Sincronizzando…';
                     try {
                       const res = await Store.api("sync", "vald", {});
                       const synced = res?.synced ?? 0;
                       const found = res?.found ?? 0;
                       if (synced > 0) {
-                        UI.toast(`✅ VALD: ${synced} nuovi test importati su ${found} trovati.`, "success", 5000);
+                        UI.toast(
+                          `✅ VALD: ${synced} nuovi test importati su ${found} trovati.`,
+                          "success",
+                          5000,
+                        );
                         // Reload VALD analytics
                         E = false;
                         Store.clearCache();
                       } else if (found > 0) {
-                        UI.toast(`ℹ️ VALD: ${found} test trovati, nessun dato nuovo da importare.`, "info", 4000);
+                        UI.toast(
+                          `ℹ️ VALD: ${found} test trovati, nessun dato nuovo da importare.`,
+                          "info",
+                          4000,
+                        );
                       } else {
-                        UI.toast("ℹ️ VALD: Nessun nuovo test trovato.", "info", 3000);
+                        UI.toast(
+                          "ℹ️ VALD: Nessun nuovo test trovato.",
+                          "info",
+                          3000,
+                        );
                       }
                     } catch (err) {
-                      UI.toast("❌ Errore sync VALD: " + (err.message || err), "error", 5000);
+                      UI.toast(
+                        "❌ Errore sync VALD: " + (err.message || err),
+                        "error",
+                        5000,
+                      );
                     } finally {
                       syncBtn.disabled = false;
                       syncBtn.innerHTML = origHtml;
@@ -981,35 +1054,60 @@ const Athletes = (() => {
                   linkBtn._linkAttached = true;
                   linkBtn.addEventListener("click", async () => {
                     linkBtn.disabled = true;
-                    linkBtn.innerHTML = '<i class="ph ph-spinner" style="display:inline-block;animation:spin 1s linear infinite;"></i>';
+                    linkBtn.innerHTML =
+                      '<i class="ph ph-spinner" style="display:inline-block;animation:spin 1s linear infinite;"></i>';
                     try {
                       const data = await Store.get("valdAthletes", "vald", {});
-                      const { valdAthletes: vList = [], erpAthletes: eList = [] } = data || {};
+                      const {
+                        valdAthletes: vList = [],
+                        erpAthletes: eList = [],
+                      } = data || {};
 
                       // Build select options html
-                      const optionsHtml = `<option value="">— non collegare —</option>` +
-                        eList.map(a => `<option value="${Utils.escapeHtml(a.id)}">${Utils.escapeHtml(a.name)}</option>`).join("");
+                      const optionsHtml =
+                        `<option value="">— non collegare —</option>` +
+                        eList
+                          .map(
+                            (a) =>
+                              `<option value="${Utils.escapeHtml(a.id)}">${Utils.escapeHtml(a.name)}</option>`,
+                          )
+                          .join("");
 
-                      const rowsHtml = vList.map((va, idx) => {
-                        const currentId = va.linked_erp_id || va.suggested_erp_id || "";
-                        const isLinked = !!va.linked_erp_id;
-                        const isSuggested = !isLinked && !!va.suggested_erp_id;
-                        const badge = isLinked ? '<span class="badge badge-success" style="font-size:9px;">Collegato</span>' :
-                          isSuggested ? '<span class="badge badge-warning" style="font-size:9px;">Auto</span>' : '';
-                        const categoryBadge = va.vald_category ? `<span style="font-size:10px;color:var(--color-text-muted);margin-left:6px;">${Utils.escapeHtml(va.vald_category)}</span>` : '';
-                        // Insert pre-selected value
-                        const opts = `<option value="">— non collegare —</option>` +
-                          eList.map(a => `<option value="${Utils.escapeHtml(a.id)}"${a.id === currentId ? ' selected' : ''}>${Utils.escapeHtml(a.name)}</option>`).join("");
-                        return `<tr>
+                      const rowsHtml = vList
+                        .map((va, idx) => {
+                          const currentId =
+                            va.linked_erp_id || va.suggested_erp_id || "";
+                          const isLinked = !!va.linked_erp_id;
+                          const isSuggested =
+                            !isLinked && !!va.suggested_erp_id;
+                          const badge = isLinked
+                            ? '<span class="badge badge-success" style="font-size:9px;">Collegato</span>'
+                            : isSuggested
+                              ? '<span class="badge badge-warning" style="font-size:9px;">Auto</span>'
+                              : "";
+                          const categoryBadge = va.vald_category
+                            ? `<span style="font-size:10px;color:var(--color-text-muted);margin-left:6px;">${Utils.escapeHtml(va.vald_category)}</span>`
+                            : "";
+                          // Insert pre-selected value
+                          const opts =
+                            `<option value="">— non collegare —</option>` +
+                            eList
+                              .map(
+                                (a) =>
+                                  `<option value="${Utils.escapeHtml(a.id)}"${a.id === currentId ? " selected" : ""}>${Utils.escapeHtml(a.name)}</option>`,
+                              )
+                              .join("");
+                          return `<tr>
                           <td style="font-size:13px;font-weight:600;">${Utils.escapeHtml(va.vald_name)}${categoryBadge}</td>
                           <td>${badge}</td>
                           <td><select class="form-input vald-link-select" style="font-size:12px;padding:4px 8px;" data-vald-id="${Utils.escapeHtml(va.vald_id)}">${opts}</select></td>
                         </tr>`;
-                      }).join("");
+                        })
+                        .join("");
 
                       const modal = UI.modal({
-                        title: '🔗 Collega Atleti VALD',
-                        maxWidth: '700px',
+                        title: "🔗 Collega Atleti VALD",
+                        maxWidth: "700px",
                         body: `
                           <p style="font-size:12px;color:var(--color-text-muted);margin-bottom:var(--sp-2);">Associa ogni atleta VALD al corrispettivo nella tua anagrafica ERP. Le corrispondenze automatiche (Auto) sono basate sulla somiglianza del nome.</p>
                           <div class="table-wrapper" style="max-height:60vh;overflow-y:auto;">
@@ -1018,34 +1116,69 @@ const Athletes = (() => {
                               <tbody>${rowsHtml}</tbody>
                             </table>
                           </div>`,
-                        footer: '<button class="btn btn-ghost btn-sm" id="vald-link-cancel" type="button">Annulla</button><button class="btn btn-primary btn-sm" id="vald-link-save" type="button">💾 Salva Abbinamenti</button>',
+                        footer:
+                          '<button class="btn btn-ghost btn-sm" id="vald-link-cancel" type="button">Annulla</button><button class="btn btn-primary btn-sm" id="vald-link-save" type="button">💾 Salva Abbinamenti</button>',
                       });
 
-                      document.getElementById("vald-link-cancel")?.addEventListener("click", () => modal.close());
-                      document.getElementById("vald-link-save")?.addEventListener("click", async () => {
-                        const saveBtn2 = document.getElementById("vald-link-save");
-                        if (saveBtn2) { saveBtn2.disabled = true; saveBtn2.textContent = "Salvando…"; }
-                        try {
-                          const links = [];
-                          document.querySelectorAll(".vald-link-select").forEach(sel => {
-                            if (sel.value) {
-                              links.push({ athlete_id: sel.value, vald_athlete_id: sel.dataset.valdId });
+                      document
+                        .getElementById("vald-link-cancel")
+                        ?.addEventListener("click", () => modal.close());
+                      document
+                        .getElementById("vald-link-save")
+                        ?.addEventListener("click", async () => {
+                          const saveBtn2 =
+                            document.getElementById("vald-link-save");
+                          if (saveBtn2) {
+                            saveBtn2.disabled = true;
+                            saveBtn2.textContent = "Salvando…";
+                          }
+                          try {
+                            const links = [];
+                            document
+                              .querySelectorAll(".vald-link-select")
+                              .forEach((sel) => {
+                                if (sel.value) {
+                                  links.push({
+                                    athlete_id: sel.value,
+                                    vald_athlete_id: sel.dataset.valdId,
+                                  });
+                                }
+                              });
+                            const res = await Store.api(
+                              "linkAthlete",
+                              "vald",
+                              links,
+                            );
+                            modal.close();
+                            UI.toast(
+                              `✅ ${res?.saved ?? links.length} atleti collegati! Ora puoi sincronizzare i dati.`,
+                              "success",
+                              5000,
+                            );
+                            Store.clearCache();
+                          } catch (err) {
+                            UI.toast(
+                              "❌ Errore: " + (err.message || err),
+                              "error",
+                              5000,
+                            );
+                            if (saveBtn2) {
+                              saveBtn2.disabled = false;
+                              saveBtn2.textContent = "💾 Salva Abbinamenti";
                             }
-                          });
-                          const res = await Store.api("linkAthlete", "vald", links);
-                          modal.close();
-                          UI.toast(`✅ ${res?.saved ?? links.length} atleti collegati! Ora puoi sincronizzare i dati.`, "success", 5000);
-                          Store.clearCache();
-                        } catch (err) {
-                          UI.toast("❌ Errore: " + (err.message || err), "error", 5000);
-                          if (saveBtn2) { saveBtn2.disabled = false; saveBtn2.textContent = "💾 Salva Abbinamenti"; }
-                        }
-                      });
+                          }
+                        });
                     } catch (err) {
-                      UI.toast("❌ Impossibile caricare atleti VALD: " + (err.message || err), "error", 5000);
+                      UI.toast(
+                        "❌ Impossibile caricare atleti VALD: " +
+                          (err.message || err),
+                        "error",
+                        5000,
+                      );
                     } finally {
                       linkBtn.disabled = false;
-                      linkBtn.innerHTML = '<i class="ph ph-link" style="font-size:13px;"></i> Collega';
+                      linkBtn.innerHTML =
+                        '<i class="ph ph-link" style="font-size:13px;"></i> Collega';
                     }
                   });
                 }
@@ -1183,6 +1316,12 @@ const Athletes = (() => {
                           icon: "arrows-left-right",
                         },
                       ];
+
+                    const bestJumpEl = document.getElementById("athlete-best-jump-val");
+                    if (bestJumpEl && p != null) {
+                      bestJumpEl.textContent = p.toFixed(1) + " cm";
+                    }
+
                     t.innerHTML = `\n        <div style="display:flex;align-items:center;gap:12px;margin-bottom:var(--sp-2);padding-bottom:var(--sp-2);border-bottom:1px solid var(--color-border);">\n          <div style="width:10px;height:10px;border-radius:50%;background:${U};box-shadow:0 0 8px ${U};flex-shrink:0;"></div>\n          <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;">${Utils.escapeHtml(n?.label || k)}</span>\n          <span style="font-size:10px;color:var(--color-text-muted);margin-left:auto;">Test: ${Utils.escapeHtml(o || "—")} · ${Utils.escapeHtml(d || "CMJ")}</span>\n        </div>\n\n        \x3c!-- ── HERO: immagini a tutto schermo ── --\x3e\n        <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-2);margin-bottom:var(--sp-3);">\n          <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">\n            <span style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-text-muted);">Frontale</span>\n            ${$("front", I)}\n          </div>\n          <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">\n            <span style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-text-muted);">Posteriore</span>\n            ${$("back", I)}\n          </div>\n        </div>\n\n        \x3c!-- Legenda colori --\x3e\n        <div class="cmj-legend" style="margin-bottom:var(--sp-3);">\n          <div class="cmj-legend-item"><div class="cmj-legend-dot" style="background:#00E676;"></div>OK</div>\n          <div class="cmj-legend-item"><div class="cmj-legend-dot" style="background:#FFD600;"></div>Attenzione</div>\n          <div class="cmj-legend-item"><div class="cmj-legend-dot" style="background:#FF1744;"></div>Rischio</div>\n          <div class="cmj-legend-item"><div class="cmj-legend-dot" style="background:#FF6D00;"></div>Alert</div>\n        </div>\n\n        \x3c!-- ── INDICATORI SOTTO ── --\x3e\n        <div style="display:flex;flex-direction:column;gap:var(--sp-2);">\n\n          \x3c!-- 4 KPI card --\x3e\n          <div class="cmj-kpi-grid">\n            ${L.map(
                       (e) => {
                         return `\n              <div class="cmj-kpi-card ${h(e.status)}">\n                <div class="cmj-kpi-name"><i class="ph ph-${e.icon}" style="margin-right:4px;"></i>${e.name}</div>\n                <div class="cmj-kpi-value">${e.value}<span class="cmj-kpi-unit">${e.unit}</span></div>\n                <div class="cmj-kpi-delta">${((t = e.status), "unknown" === t ? "" : `<span class="cmj-kpi-badge ${{ GREEN: "green", YELLOW: "yellow", RED: "red", ALERT: "alert", unknown: "" }[t]}">${{ GREEN: "✓ OK", YELLOW: "⚠ Attenzione", RED: "✗ Rischio", ALERT: "⚡ Alert", unknown: "—" }[t]}</span>`)} ${e.delta}</div>\n              </div>`;
@@ -1228,10 +1367,7 @@ const Athletes = (() => {
                           )
                           .join(" ");
                       return `\n      <svg class="cmj-force-svg" viewBox="0 0 400 60" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">\n        <defs>\n          <linearGradient id="cmj-grad" x1="0" y1="0" x2="0" y2="1">\n            <stop offset="0%" stop-color="${a}" stop-opacity="0.3"/>\n            <stop offset="100%" stop-color="${a}" stop-opacity="0"/>\n          </linearGradient>\n        </defs>\n        \x3c!-- Area fill --\x3e\n        <path d="${`M${r(0)},60 ` + n.map((e, t) => `L${r(t).toFixed(1)},${i(e).toFixed(1)}`).join(" ") + ` L${r(d)},60 Z`}" fill="url(#cmj-grad)" />\n        \x3c!-- Line --\x3e\n        <polyline points="${c}" fill="none" stroke="${a}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>\n        \x3c!-- Current (last) dot --\x3e\n        <circle cx="${r(d).toFixed(1)}" cy="${i(n[d]).toFixed(1)}" r="4" fill="${a}" />\n        \x3c!-- Peak dot --\x3e\n        ${o !== d ? `<circle cx="${r(o).toFixed(1)}" cy="${i(n[o]).toFixed(1)}" r="3" fill="white" opacity="0.5"/>` : ""}\n      </svg>`;
-                    })(
-                      c,
-                      k,
-                    )}
+                    })(c, k)}
             <div style="display:flex;justify-content:space-between;margin-top:4px;">
               <span style="font-size:9px;color:var(--color-text-muted);">Più vecchio</span>
               <span style="font-size:9px;color:var(--color-text-muted);">Più recente</span>
@@ -1243,7 +1379,9 @@ const Athletes = (() => {
             <p class="section-label" style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
               <i class="ph ph-list-numbers"></i> Dettaglio Misurazioni VALD
             </p>
-            ${c && c.length > 0 ? `
+            ${
+              c && c.length > 0
+                ? `
             <div class="table-wrapper">
               <table class="table" style="font-size:12px;">
                 <thead>
@@ -1256,33 +1394,43 @@ const Athletes = (() => {
                   </tr>
                 </thead>
                 <tbody>
-                  ${c.map(test => {
-                    const metrics = test.metrics || {};
-                    const asymmValue = test.asymmetry?.landing?.asymmetry;
-                    
-                    return `
+                  ${c
+                    .map((test) => {
+                      const metrics = test.metrics || {};
+                      const asymmValue = test.asymmetry?.landing?.asymmetry;
+
+                      return `
                     <tr>
                       <td>${Utils.formatDate(test.test_date) || "—"}</td>
                       <td>${Utils.escapeHtml(test.test_type || "CMJ")}</td>
                       <td style="text-align:right;font-weight:600;">${metrics.RSIModified?.Value ? metrics.RSIModified.Value.toFixed(2) : "—"}</td>
                       <td style="text-align:right;">${metrics.JumpHeight?.Value || metrics.JumpHeightImpMom?.Value || metrics.JumpHeightTotal?.Value ? (metrics.JumpHeight?.Value || metrics.JumpHeightImpMom?.Value || metrics.JumpHeightTotal?.Value).toFixed(1) + " cm" : "—"}</td>
                       <td style="text-align:right;">
-                        ${asymmValue != null ? `
+                        ${
+                          asymmValue != null
+                            ? `
                           <span style="display:inline-flex;align-items:center;gap:4px;">
                             ${asymmValue.toFixed(1)}% <span style="font-size:9px;color:var(--color-text-muted);">${test.asymmetry?.landing?.dominant || ""}</span>
                           </span>
-                        ` : "—"}
+                        `
+                            : "—"
+                        }
                       </td>
                     </tr>
                     `;
-                  }).join("")}
+                    })
+                    .join("")}
                 </tbody>
               </table>
-            </div>` : '<div style="font-size:12px;color:var(--color-text-muted);text-align:center;padding:16px;">Nessuna misurazione disponibile.</div>'}
+            </div>`
+                : '<div style="font-size:12px;color:var(--color-text-muted);text-align:center;padding:16px;">Nessuna misurazione disponibile.</div>'
+            }
           </div>
 
           <!-- Asimmetria SX / DX -->
-          ${s ? `
+          ${
+            s
+              ? `
           <div style="background:rgba(255,255,255,0.02);border:1px solid var(--color-border);border-radius:var(--radius);padding:var(--sp-2) var(--sp-3);">
             <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--color-text-muted);margin-bottom:10px;">
               <i class="ph ph-arrows-left-right" style="margin-right:4px;"></i>Dettaglio Asimmetria SX / DX
@@ -1300,7 +1448,9 @@ const Athletes = (() => {
                 <div style="height:8px;background:rgba(255,255,255,0.06);border-radius:4px;margin-top:4px;overflow:hidden;"><div style="height:100%;background:#ff007a;border-radius:4px;margin-left:auto;width:${Math.round(((s.landing?.right || 0) / ((s.landing?.left || 0) + (s.landing?.right || 1))) * 100)}%;"></div></div>
               </div>
             </div>
-          </div>` : ""}
+          </div>`
+              : ""
+          }
 
         </div>\n      `;
                   } catch (e) {
@@ -1331,7 +1481,9 @@ const Athletes = (() => {
     } else v();
     var i;
   }
-  async function y(_e) { /* ai-summary removed */ }
+  async function y(_e) {
+    /* ai-summary removed */
+  }
   function b(e, t, a) {
     if (null == t) return "unknown";
     if ("asymmetry" === e)
@@ -1406,7 +1558,14 @@ const Athletes = (() => {
   }
   return {
     destroy: function () {
-      (e.abort(), (e = new AbortController()), i.clear(), (r = !1), (t = []), (a = []), (l = null), (n = ""));
+      (e.abort(),
+        (e = new AbortController()),
+        i.clear(),
+        (r = !1),
+        (t = []),
+        (a = []),
+        (l = null),
+        (n = ""));
       const el = document.getElementById("athlete-bulk-bar");
       el && el.remove();
     },
@@ -1464,170 +1623,260 @@ const Athletes = (() => {
 window.Athletes = Athletes;
 
 // VALD On-Demand AI Analysis — persistent results + chat per section
-window.__valdAi = async function(athleteId, part) {
-  const label  = part === 'plan' ? 'Piano di Intervento' : 'Analisi Stato di Forma';
-  const color  = part === 'plan' ? 'rgba(0,200,140,0.9)' : 'rgba(150,130,255,0.9)';
-  const bg     = part === 'plan' ? 'rgba(0,180,120,0.07)' : 'rgba(100,80,255,0.07)';
-  const border = part === 'plan' ? 'rgba(0,180,120,0.25)' : 'rgba(100,80,255,0.25)';
-  const icon   = part === 'plan' ? 'ph-barbell' : 'ph-brain';
+window.__valdAi = async function (athleteId, part) {
+  const label =
+    part === "plan" ? "Piano di Intervento" : "Analisi Stato di Forma";
+  const color =
+    part === "plan" ? "rgba(0,200,140,0.9)" : "rgba(150,130,255,0.9)";
+  const bg = part === "plan" ? "rgba(0,180,120,0.07)" : "rgba(100,80,255,0.07)";
+  const border =
+    part === "plan" ? "rgba(0,180,120,0.25)" : "rgba(100,80,255,0.25)";
+  const icon = part === "plan" ? "ph-barbell" : "ph-brain";
   // Each part has its own result container so both can show simultaneously
-  const resultId = 'vald-ai-' + part + '-result-' + athleteId;
-  const btnId    = (part === 'plan' ? 'vald-ai-pl-btn-' : 'vald-ai-dx-btn-') + athleteId;
-  const btn      = document.getElementById(btnId);
-  let resultEl   = document.getElementById(resultId);
+  const resultId = "vald-ai-" + part + "-result-" + athleteId;
+  const btnId =
+    (part === "plan" ? "vald-ai-pl-btn-" : "vald-ai-dx-btn-") + athleteId;
+  const btn = document.getElementById(btnId);
+  let resultEl = document.getElementById(resultId);
 
   // Create slot if missing
-  const section = document.getElementById('vald-ai-section-' + athleteId);
+  const section = document.getElementById("vald-ai-section-" + athleteId);
   if (!resultEl && section) {
-    resultEl = document.createElement('div');
+    resultEl = document.createElement("div");
     resultEl.id = resultId;
     section.appendChild(resultEl);
   }
   if (!resultEl) return;
 
   // Always invalidate cache before calling AI — prevents stale error responses
-  Store.invalidate('aiAnalysis/vald');
+  Store.invalidate("aiAnalysis/vald");
 
-  if (btn) { btn.disabled = true; btn.textContent = 'Elaborazione AI\u2026'; }
-  resultEl.style.display = 'block';
-  resultEl.innerHTML = '<div style="font-size:12px;color:var(--color-text-muted);padding:8px 0;">AI in elaborazione\u2026 (15-25s)</div>';
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = "Elaborazione AI\u2026";
+  }
+  resultEl.style.display = "block";
+  resultEl.innerHTML =
+    '<div style="font-size:12px;color:var(--color-text-muted);padding:8px 0;">AI in elaborazione\u2026 (15-25s)</div>';
 
   try {
-    const data = await Store.get('aiAnalysis', 'vald', { athleteId, part });
-    const raw  = (data && data.text) ? data.text : 'Nessuna risposta AI.';
+    const data = await Store.get("aiAnalysis", "vald", { athleteId, part });
+    const raw = data && data.text ? data.text : "Nessuna risposta AI.";
     const text = raw
-      .replace(/^(DIAGNOSI|PIANO\s+DI\s+INTERVENTO|PIANO)\s*:\s*/i, '')
-      .replace(/\*+/g, '')   // strip markdown asterisks (bold/italic)
+      .replace(/^(DIAGNOSI|PIANO\s+DI\s+INTERVENTO|PIANO)\s*:\s*/i, "")
+      .replace(/\*+/g, "") // strip markdown asterisks (bold/italic)
       .trim();
 
-    const chatId = 'vald-chat-' + part + '-' + athleteId;
+    const chatId = "vald-chat-" + part + "-" + athleteId;
 
     // Mini markdown renderer: tables, headings, lists, plain text
     function renderAiMarkdown(md) {
-      const lines  = md.split('\n');
-      let html     = '';
-      let inList   = false;
-      let i        = 0;
+      const lines = md.split("\n");
+      let html = "";
+      let inList = false;
+      let i = 0;
       while (i < lines.length) {
         const line = lines[i];
         // Markdown table: detect block of lines containing |
-        if (line.trim().startsWith('|')) {
+        if (line.trim().startsWith("|")) {
           // close any open list
-          if (inList) { html += '</ul>'; inList = false; }
+          if (inList) {
+            html += "</ul>";
+            inList = false;
+          }
           // collect table rows
           const tRows = [];
-          while (i < lines.length && lines[i].trim().startsWith('|')) {
-            const row = lines[i].trim().replace(/^\||\|$/g, '').split('|').map(c => c.trim());
+          while (i < lines.length && lines[i].trim().startsWith("|")) {
+            const row = lines[i]
+              .trim()
+              .replace(/^\||\|$/g, "")
+              .split("|")
+              .map((c) => c.trim());
             // skip separator rows (----)
-            if (!row.every(c => /^[-: ]+$/.test(c))) tRows.push(row);
+            if (!row.every((c) => /^[-: ]+$/.test(c))) tRows.push(row);
             i++;
           }
           if (tRows.length) {
-            html += '<table style="width:100%;border-collapse:collapse;font-size:12px;margin:6px 0;">';
+            html +=
+              '<table style="width:100%;border-collapse:collapse;font-size:12px;margin:6px 0;">';
             tRows.forEach((row, ri) => {
-              const tag = ri === 0 ? 'th' : 'td';
-              html += '<tr>' + row.map(c =>
-                `<${tag} style="border:1px solid ${border};padding:4px 8px;text-align:left;${ri===0?'background:rgba(255,255,255,0.05);font-weight:600;':''}">${Utils.escapeHtml(c)}</${tag}>`
-              ).join('') + '</tr>';
+              const tag = ri === 0 ? "th" : "td";
+              html +=
+                "<tr>" +
+                row
+                  .map(
+                    (c) =>
+                      `<${tag} style="border:1px solid ${border};padding:4px 8px;text-align:left;${ri === 0 ? "background:rgba(255,255,255,0.05);font-weight:600;" : ""}">${Utils.escapeHtml(c)}</${tag}>`,
+                  )
+                  .join("") +
+                "</tr>";
             });
-            html += '</table>';
+            html += "</table>";
           }
           continue;
         }
         // Heading ## or ###
         if (/^#{1,3}\s/.test(line)) {
-          if (inList) { html += '</ul>'; inList = false; }
-          const txt = line.replace(/^#{1,3}\s/, '');
+          if (inList) {
+            html += "</ul>";
+            inList = false;
+          }
+          const txt = line.replace(/^#{1,3}\s/, "");
           html += `<div style="font-weight:700;margin:8px 0 3px;font-size:13px;">${Utils.escapeHtml(txt)}</div>`;
-          i++; continue;
+          i++;
+          continue;
         }
         // Bullet / numbered list
         if (/^[-•*]\s|^\d+\.\s/.test(line.trim())) {
-          if (!inList) { html += '<ul style="margin:4px 0 4px 16px;padding:0;list-style:disc;">'; inList = true; }
-          const txt = line.replace(/^[-•*]\s|^\d+\.\s/, '');
+          if (!inList) {
+            html +=
+              '<ul style="margin:4px 0 4px 16px;padding:0;list-style:disc;">';
+            inList = true;
+          }
+          const txt = line.replace(/^[-•*]\s|^\d+\.\s/, "");
           html += `<li style="margin:2px 0;font-size:13px;line-height:1.55;">${Utils.escapeHtml(txt)}</li>`;
-          i++; continue;
+          i++;
+          continue;
         }
         // Empty line
-        if (line.trim() === '') {
-          if (inList) { html += '</ul>'; inList = false; }
-          html += '<br>';
-          i++; continue;
+        if (line.trim() === "") {
+          if (inList) {
+            html += "</ul>";
+            inList = false;
+          }
+          html += "<br>";
+          i++;
+          continue;
         }
         // Normal paragraph line
-        if (inList) { html += '</ul>'; inList = false; }
+        if (inList) {
+          html += "</ul>";
+          inList = false;
+        }
         html += `<span style="font-size:13px;line-height:1.65;">${Utils.escapeHtml(line)}</span><br>`;
         i++;
       }
-      if (inList) html += '</ul>';
+      if (inList) html += "</ul>";
       return html;
     }
 
     resultEl.innerHTML =
-      '<div style="background:'+bg+';border:1px solid '+border+';border-radius:var(--radius);padding:var(--sp-2) var(--sp-3);margin-top:var(--sp-1);">'
-      + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:'+color+';margin-bottom:6px;">'
-      + '<i class="ph '+icon+'" style="margin-right:4px;"></i>'+label+' <span style="font-size:9px;opacity:0.7;">AI \u00b7 Gemini</span>'
-      + '</div>'
-      + '<div id="vald-ai-'+part+'-text-'+athleteId+'" style="color:var(--color-text);margin:0 0 10px;">'+renderAiMarkdown(text)+'</div>'
+      '<div style="background:' +
+      bg +
+      ";border:1px solid " +
+      border +
+      ';border-radius:var(--radius);padding:var(--sp-2) var(--sp-3);margin-top:var(--sp-1);">' +
+      '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:' +
+      color +
+      ';margin-bottom:6px;">' +
+      '<i class="ph ' +
+      icon +
+      '" style="margin-right:4px;"></i>' +
+      label +
+      ' <span style="font-size:9px;opacity:0.7;">AI \u00b7 Gemini</span>' +
+      "</div>" +
+      '<div id="vald-ai-' +
+      part +
+      "-text-" +
+      athleteId +
+      '" style="color:var(--color-text);margin:0 0 10px;">' +
+      renderAiMarkdown(text) +
+      "</div>" +
       // Chat section
-      + '<div id="'+chatId+'" style="border-top:1px solid '+border+';padding-top:8px;margin-top:4px;">'
-      + '<div id="'+chatId+'-history" style="display:flex;flex-direction:column;gap:8px;max-height:220px;overflow-y:auto;margin-bottom:8px;"></div>'
-      + '<div style="display:flex;gap:6px;align-items:center;">'
-      + '<input id="'+chatId+'-input" type="text" placeholder="Chiedi al preparatore AI\u2026" style="flex:1;font-size:12px;padding:6px 10px;border-radius:var(--radius);border:1px solid '+border+';background:rgba(255,255,255,0.04);color:var(--color-text);outline:none;" '
-      + 'onkeydown="if(event.key===\'Enter\')window.__valdChat(\''+athleteId+'\',\''+part+'\');">'
-      + '<button type="button" onclick="window.__valdChat(\''+athleteId+'\',\''+part+'\');" style="padding:6px 12px;font-size:12px;border-radius:var(--radius);border:1px solid '+border+';background:'+bg+';color:'+color+';cursor:pointer;white-space:nowrap;">'
-      + '<i class="ph ph-paper-plane-tilt"></i> Invia</button>'
-      + '</div></div>'
-      + '</div>';
+      '<div id="' +
+      chatId +
+      '" style="border-top:1px solid ' +
+      border +
+      ';padding-top:8px;margin-top:4px;">' +
+      '<div id="' +
+      chatId +
+      '-history" style="display:flex;flex-direction:column;gap:8px;max-height:220px;overflow-y:auto;margin-bottom:8px;"></div>' +
+      '<div style="display:flex;gap:6px;align-items:center;">' +
+      '<input id="' +
+      chatId +
+      '-input" type="text" placeholder="Chiedi al preparatore AI\u2026" style="flex:1;font-size:12px;padding:6px 10px;border-radius:var(--radius);border:1px solid ' +
+      border +
+      ';background:rgba(255,255,255,0.04);color:var(--color-text);outline:none;" ' +
+      "onkeydown=\"if(event.key==='Enter')window.__valdChat('" +
+      athleteId +
+      "','" +
+      part +
+      "');\">" +
+      '<button type="button" onclick="window.__valdChat(\'' +
+      athleteId +
+      "','" +
+      part +
+      '\');" style="padding:6px 12px;font-size:12px;border-radius:var(--radius);border:1px solid ' +
+      border +
+      ";background:" +
+      bg +
+      ";color:" +
+      color +
+      ';cursor:pointer;white-space:nowrap;">' +
+      '<i class="ph ph-paper-plane-tilt"></i> Invia</button>' +
+      "</div></div>" +
+      "</div>";
   } catch (err) {
-    resultEl.innerHTML = '<div style="color:var(--color-danger);font-size:12px;">Errore: ' + Utils.escapeHtml(err.message) + '</div>';
+    resultEl.innerHTML =
+      '<div style="color:var(--color-danger);font-size:12px;">Errore: ' +
+      Utils.escapeHtml(err.message) +
+      "</div>";
   }
 
   if (btn) {
     btn.disabled = false;
-    btn.innerHTML = (part === 'plan'
-      ? '<i class="ph ph-barbell"></i> Piano di Intervento (AI)'
-      : '<i class="ph ph-brain"></i> Analisi Stato di Forma (AI)');
+    btn.innerHTML =
+      part === "plan"
+        ? '<i class="ph ph-barbell"></i> Piano di Intervento (AI)'
+        : '<i class="ph ph-brain"></i> Analisi Stato di Forma (AI)';
   }
 };
 
 // VALD AI Chat — ask follow-up questions
-window.__valdChat = async function(athleteId, part) {
-  const chatId  = 'vald-chat-' + part + '-' + athleteId;
-  const input   = document.getElementById(chatId + '-input');
-  const history = document.getElementById(chatId + '-history');
+window.__valdChat = async function (athleteId, part) {
+  const chatId = "vald-chat-" + part + "-" + athleteId;
+  const input = document.getElementById(chatId + "-input");
+  const history = document.getElementById(chatId + "-history");
   if (!input || !history) return;
 
   const question = input.value.trim();
   if (!question) return;
 
   // Get last AI result as context
-  const textEl = document.getElementById('vald-ai-' + part + '-text-' + athleteId);
-  const context = textEl ? textEl.textContent.slice(0, 600) : '';
+  const textEl = document.getElementById(
+    "vald-ai-" + part + "-text-" + athleteId,
+  );
+  const context = textEl ? textEl.textContent.slice(0, 600) : "";
 
-  input.value = '';
+  input.value = "";
   input.disabled = true;
 
   // User bubble
-  const userDiv = document.createElement('div');
-  userDiv.style.cssText = 'background:rgba(255,255,255,0.06);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--color-text);align-self:flex-end;max-width:85%;';
+  const userDiv = document.createElement("div");
+  userDiv.style.cssText =
+    "background:rgba(255,255,255,0.06);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--color-text);align-self:flex-end;max-width:85%;";
   userDiv.textContent = question;
   history.appendChild(userDiv);
 
   // AI thinking bubble
-  const aiDiv = document.createElement('div');
-  aiDiv.style.cssText = 'background:rgba(100,80,255,0.08);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--color-text-muted);align-self:flex-start;max-width:90%;white-space:pre-line;';
-  aiDiv.textContent = 'Sto elaborando\u2026';
+  const aiDiv = document.createElement("div");
+  aiDiv.style.cssText =
+    "background:rgba(100,80,255,0.08);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--color-text-muted);align-self:flex-start;max-width:90%;white-space:pre-line;";
+  aiDiv.textContent = "Sto elaborando\u2026";
   history.appendChild(aiDiv);
   history.scrollTop = history.scrollHeight;
 
   try {
-    const resp = await Store.api('aiChat', 'vald', { athleteId, question, context });
-    aiDiv.style.color = 'var(--color-text)';
-    aiDiv.textContent = (resp && resp.answer) ? resp.answer : 'Nessuna risposta.';
+    const resp = await Store.api("aiChat", "vald", {
+      athleteId,
+      question,
+      context,
+    });
+    aiDiv.style.color = "var(--color-text)";
+    aiDiv.textContent = resp && resp.answer ? resp.answer : "Nessuna risposta.";
   } catch (err) {
-    aiDiv.style.color = 'var(--color-danger)';
-    aiDiv.textContent = 'Errore: ' + err.message;
+    aiDiv.style.color = "var(--color-danger)";
+    aiDiv.textContent = "Errore: " + err.message;
   }
 
   input.disabled = false;

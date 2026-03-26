@@ -60,6 +60,53 @@ class AthletesController
         Response::success($athlete);
     }
 
+    // ─── GET /api/?module=athletes&action=myProfile ───────────────────────────
+    public function myProfile(): void
+    {
+        $user = Auth::requireAuth();
+        $email = $user['email'] ?? '';
+
+        if (empty($email)) {
+            Response::error('Email utente non disponibile nella sessione.', 400);
+        }
+
+        // 1. Try to find an athlete with this email
+        $athlete = $this->repo->getAthleteByEmail($email);
+        
+        if ($athlete) {
+            $athlete['profile_type'] = 'athlete';
+            $athlete['api_module'] = 'athletes';
+            // Append ACWR
+            $athlete['acwr'] = $this->calcACWR($athlete['id']);
+            // Append metrics history (30 days)
+            $athlete['metrics'] = $this->repo->getMetricsHistory($athlete['id'], 30);
+
+            Response::success($athlete);
+        }
+
+        // 2. Try to find a staff member with this email
+        $staffRepo = new \FusionERP\Modules\Staff\StaffRepository();
+        $staff = $staffRepo->getByEmail($email);
+
+        if ($staff) {
+            $staff['profile_type'] = 'staff';
+            $staff['api_module'] = 'staff';
+            
+            // Map staff fields to match the frontend expectations in renderProfilo()
+            $staff['team_name'] = $staff['team_names'] ?? 'Staff FTV';
+            $staff['id_doc_front_file_path'] = $staff['id_doc_file_path'] ?? null;
+            $staff['id_doc_back_file_path'] = $staff['id_doc_back_file_path'] ?? null;
+            $staff['cf_doc_front_file_path'] = $staff['cf_doc_file_path'] ?? null;
+            $staff['cf_doc_back_file_path'] = $staff['cf_doc_back_file_path'] ?? null;
+            // medical_cert_file_path doesn't normally exist for staff in the DB, leave null unless handled
+            $staff['medical_cert_file_path'] = null; 
+
+            Response::success($staff);
+        }
+
+        Response::error('Nessun profilo anagrafico trovato per questa email.', 404);
+    }
+
     // ─── POST /api/?module=athletes&action=create ─────────────────────────────
     public function create(): void
     {
@@ -513,7 +560,7 @@ class AthletesController
     // ─── GET /api/?module=athletes&action=alerts ──────────────────────────────
     public function alerts(): void
     {
-        $user = Auth::requireRole('manager');
+        $user = Auth::requireRole('social media manager');
         $tenantId = \FusionERP\Shared\TenantContext::id();
         $alerts = $this->repo->getUnacknowledgedAlerts($tenantId);
         Response::success($alerts);

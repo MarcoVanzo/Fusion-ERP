@@ -86,7 +86,7 @@ class NewsletterController
 
     public function upsertSubscriber(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
         $body = Response::jsonBody();
         Response::requireFields($body, ['email']);
 
@@ -106,7 +106,7 @@ class NewsletterController
 
     public function deleteSubscriber(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
         $body = Response::jsonBody();
         Response::requireFields($body, ['id']);
 
@@ -125,7 +125,7 @@ class NewsletterController
 
     public function createGroup(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
         $body = Response::jsonBody();
         Response::requireFields($body, ['name']);
 
@@ -139,7 +139,7 @@ class NewsletterController
 
     public function deleteGroup(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
         $body = Response::jsonBody();
         Response::requireFields($body, ['id']);
 
@@ -150,7 +150,7 @@ class NewsletterController
 
     public function assignToGroup(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
         $body = Response::jsonBody();
         Response::requireFields($body, ['group_id', 'subscriber_id']);
 
@@ -160,7 +160,7 @@ class NewsletterController
 
     public function unassignFromGroup(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
         $body = Response::jsonBody();
         Response::requireFields($body, ['group_id', 'subscriber_id']);
 
@@ -172,7 +172,7 @@ class NewsletterController
 
     public function exportCsv(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
 
         $csv = $this->ml->exportCsv();
 

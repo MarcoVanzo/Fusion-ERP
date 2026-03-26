@@ -1,97 +1,145 @@
 "use strict";
 const Dashboard = (() => {
   let _abort = new AbortController();
-  function sig() { return { signal: _abort.signal }; }
+  function sig() {
+    return { signal: _abort.signal };
+  }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
   function weekdayShort(dateStr) {
-    if (!dateStr) return '';
+    if (!dateStr) return "";
     const d = new Date(dateStr);
-    return d.toLocaleDateString('it-IT', { weekday: 'short', day: '2-digit', month: 'short' });
+    return d.toLocaleDateString("it-IT", {
+      weekday: "short",
+      day: "2-digit",
+      month: "short",
+    });
   }
   function formatDate(dateStr) {
-    if (!dateStr) return '—';
-    return new Date(dateStr).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    if (!dateStr) return "—";
+    return new Date(dateStr).toLocaleDateString("it-IT", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
   }
   function alertColor(days) {
-    if (days <= 7)  return { bg: 'rgba(255,59,48,0.12)',  border: '#FF3B30', text: '#FF3B30',  badge: '#FF3B30' };
-    if (days <= 15) return { bg: 'rgba(255,149,0,0.12)', border: '#FF9500', text: '#FF9500',  badge: '#FF9500' };
-    return            { bg: 'rgba(255,214,0,0.10)',  border: '#FFD600', text: '#FFD600',  badge: '#FFD600' };
+    if (days <= 7)
+      return {
+        bg: "rgba(255,59,48,0.12)",
+        border: "#FF3B30",
+        text: "#FF3B30",
+        badge: "#FF3B30",
+      };
+    if (days <= 15)
+      return {
+        bg: "rgba(255,149,0,0.12)",
+        border: "#FF9500",
+        text: "#FF9500",
+        badge: "#FF9500",
+      };
+    return {
+      bg: "rgba(255,214,0,0.10)",
+      border: "#FFD600",
+      text: "#FFD600",
+      badge: "#FFD600",
+    };
   }
   function outcomeColor(outcome) {
-    return outcome === 'W' ? '#00E676' : outcome === 'L' ? '#FF3B30' : '#FFD600';
+    return outcome === "W"
+      ? "#00E676"
+      : outcome === "L"
+        ? "#FF3B30"
+        : "#FFD600";
   }
   function outcomeLabel(outcome) {
-    return outcome === 'W' ? 'V' : outcome === 'L' ? 'P' : 'D';
+    return outcome === "W" ? "V" : outcome === "L" ? "P" : "D";
   }
 
   // ── Render KPI card ───────────────────────────────────────────────────────
   function kpiCard({ icon, label, value, color, route, sub }) {
-    const nav = route ? `onclick="Router.navigate('${route}')" style="cursor:pointer;"` : '';
+    const nav = route
+      ? `onclick="Router.navigate('${route}')" style="cursor:pointer;"`
+      : "";
     return `
       <div class="dash-kpi-card" ${nav}>
         <div class="dash-kpi-icon" style="color:${color}">${icon}</div>
         <div class="dash-kpi-body">
           <div class="dash-kpi-val" style="color:${color}">${value}</div>
           <div class="dash-kpi-label">${label}</div>
-          ${sub ? `<div class="dash-kpi-sub">${sub}</div>` : ''}
+          ${sub ? `<div class="dash-kpi-sub">${sub}</div>` : ""}
         </div>
       </div>`;
   }
 
   // ── Render: partite in arrivo ─────────────────────────────────────────────
   function renderMatches(matches) {
-    if (!matches || matches.length === 0) return `
+    if (!matches || matches.length === 0)
+      return `
       <div class="dash-empty">
         <i class="ph ph-calendar-blank"></i>
         <span>Nessuna partita questa settimana</span>
       </div>`;
-    return matches.map(m => `
+    return matches
+      .map(
+        (m) => `
       <div class="dash-match-row">
         <div class="dash-match-date">${weekdayShort(m.match_date)}</div>
         <div class="dash-match-teams">
-          <span class="dash-match-home">${Utils.escapeHtml(m.home_team || '—')}</span>
+          <span class="dash-match-home">${Utils.escapeHtml(m.home_team || "—")}</span>
           <span class="dash-match-vs">vs</span>
-          <span class="dash-match-away">${Utils.escapeHtml(m.away_team || '—')}</span>
+          <span class="dash-match-away">${Utils.escapeHtml(m.away_team || "—")}</span>
         </div>
-        ${m.location ? `<div class="dash-match-loc"><i class="ph ph-map-pin"></i> ${Utils.escapeHtml(m.location)}</div>` : ''}
-      </div>`).join('');
+        ${m.location ? `<div class="dash-match-loc"><i class="ph ph-map-pin"></i> ${Utils.escapeHtml(m.location)}</div>` : ""}
+      </div>`,
+      )
+      .join("");
   }
 
   // ── Render: risultati settimana scorsa ────────────────────────────────────
   function renderResults(results) {
-    if (!results || results.length === 0) return `
+    if (!results || results.length === 0)
+      return `
       <div class="dash-empty">
         <i class="ph ph-check-square-offset"></i>
         <span>Nessun risultato la settimana scorsa</span>
       </div>`;
-    return results.map(r => {
-      const col = outcomeColor(r.outcome);
-      const lbl = outcomeLabel(r.outcome);
-      return `
+    return results
+      .map((r) => {
+        const col = outcomeColor(r.outcome);
+        const lbl = outcomeLabel(r.outcome);
+        return `
         <div class="dash-result-row">
           <div class="dash-result-badge" style="background:${col}22;color:${col};border-color:${col}">${lbl}</div>
           <div class="dash-result-teams">
-            <span>${Utils.escapeHtml(r.home_team || '—')}</span>
-            <strong style="color:${col}">${r.home_score ?? '—'}–${r.away_score ?? '—'}</strong>
-            <span>${Utils.escapeHtml(r.away_team || '—')}</span>
+            <span>${Utils.escapeHtml(r.home_team || "—")}</span>
+            <strong style="color:${col}">${r.home_score ?? "—"}–${r.away_score ?? "—"}</strong>
+            <span>${Utils.escapeHtml(r.away_team || "—")}</span>
           </div>
           <div class="dash-result-date">${weekdayShort(r.match_date)}</div>
         </div>`;
-    }).join('');
+      })
+      .join("");
   }
 
   // ── Render: alert scadenze ────────────────────────────────────────────────
   function renderAlerts(alerts) {
-    if (!alerts || alerts.length === 0) return `
+    if (!alerts || alerts.length === 0)
+      return `
       <div class="dash-empty" style="color:#00E676">
         <i class="ph ph-check-circle"></i>
         <span>Nessuna scadenza urgente 🎉</span>
       </div>`;
-    return alerts.map(a => {
-      const c = alertColor(a.days_left);
-      const when = a.days_left === 0 ? 'OGGI' : a.days_left === 1 ? 'domani' : `${a.days_left} giorni`;
-      return `
+    return alerts
+      .map((a) => {
+        const c = alertColor(a.days_left);
+        const when =
+          a.days_left === 0
+            ? "OGGI"
+            : a.days_left === 1
+              ? "domani"
+              : `${a.days_left} giorni`;
+        return `
         <div class="dash-alert-row" style="border-left-color:${c.border};background:${c.bg}">
           <i class="ph ph-${Utils.escapeHtml(a.icon)}" style="font-size:18px;color:${c.text};flex-shrink:0"></i>
           <div class="dash-alert-body">
@@ -100,18 +148,19 @@ const Dashboard = (() => {
           </div>
           <div class="dash-alert-days" style="color:${c.badge}">${when}</div>
         </div>`;
-    }).join('');
+      })
+      .join("");
   }
 
   // ── Render full page ──────────────────────────────────────────────────────
   function render(data) {
-    const el = document.getElementById('app');
+    const el = document.getElementById("app");
     if (!el) return;
 
     const kpi = data?.kpi ?? {};
-    const matches  = data?.upcoming_matches ?? [];
-    const results  = data?.last_week_results ?? [];
-    const alerts   = data?.alerts ?? [];
+    const matches = data?.upcoming_matches ?? [];
+    const results = data?.last_week_results ?? [];
+    const alerts = data?.alerts ?? [];
 
     el.innerHTML = `
       <div class="dash-wrap">
@@ -119,16 +168,16 @@ const Dashboard = (() => {
         <div class="dash-header">
           <div>
             <h1 class="dash-title">Dashboard</h1>
-            <p class="dash-subtitle">${new Date().toLocaleDateString('it-IT', { weekday:'long', day:'2-digit', month:'long', year:'numeric' })}</p>
+            <p class="dash-subtitle">${new Date().toLocaleDateString("it-IT", { weekday: "long", day: "2-digit", month: "long", year: "numeric" })}</p>
           </div>
         </div>
 
         <!-- KPI Row -->
         <div class="dash-kpi-row">
-          ${kpiCard({ icon:'<i class="ph-fill ph-users"></i>',       label:'Atleti Attivi',        value: kpi.total_athletes ?? '—',  color:'#7C3AED', route:'athlete-profile' })}
-          ${kpiCard({ icon:'<i class="ph-fill ph-users-four"></i>',   label:'Squadre',              value: kpi.total_teams ?? '—',     color:'#2563EB', route:'squadre' })}
-          ${kpiCard({ icon:'<i class="ph-fill ph-shopping-cart"></i>',label:'Ordini eCommerce',     value: kpi.new_orders ?? 0,        color:'#FF00FF', route:'ecommerce-orders', sub:'ultimi 7 giorni' })}
-          ${kpiCard({ icon:'<i class="ph-fill ph-tent"></i>',          label:'Iscritti OutSeason',   value: kpi.new_outseason ?? 0,     color:'#10B981', route:'outseason-camps', sub:'ultimi 7 giorni' })}
+          ${kpiCard({ icon: '<i class="ph-fill ph-users"></i>', label: "Atleti Attivi", value: kpi.total_athletes ?? "—", color: "#7C3AED", route: "athlete-profile" })}
+          ${kpiCard({ icon: '<i class="ph-fill ph-users-four"></i>', label: "Squadre", value: kpi.total_teams ?? "—", color: "#2563EB", route: "squadre" })}
+          ${kpiCard({ icon: '<i class="ph-fill ph-shopping-cart"></i>', label: "Ordini eCommerce", value: kpi.new_orders ?? 0, color: "#FF00FF", route: "ecommerce-orders", sub: "ultimi 7 giorni" })}
+          ${kpiCard({ icon: '<i class="ph-fill ph-tent"></i>', label: "Iscritti OutSeason", value: kpi.new_outseason ?? 0, color: "#10B981", route: "outseason-camps", sub: "ultimi 7 giorni" })}
         </div>
 
         <!-- Main grid: 2 col on wide, 1 col on narrow -->
@@ -243,18 +292,20 @@ const Dashboard = (() => {
       _abort = new AbortController();
     },
     async init() {
-      const el = document.getElementById('app');
+      const el = document.getElementById("app");
       if (!el) return;
       el.innerHTML = UI.skeletonPage();
       try {
-        const data = await Store.get('weeklyFull', 'dashboard').catch(() => null);
+        const data = await Store.get("weeklyFull", "dashboard").catch(
+          () => null,
+        );
         render(data);
       } catch (err) {
-        if (err.name === 'AbortError') return;
-        console.error('[Dashboard] init error', err);
+        if (err.name === "AbortError") return;
+        console.error("[Dashboard] init error", err);
         render(null);
       }
-    }
+    },
   };
 })();
 window.Dashboard = Dashboard;

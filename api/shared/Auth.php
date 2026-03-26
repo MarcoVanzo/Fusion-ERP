@@ -17,7 +17,7 @@ class Auth
         'operatore'  => 2,
         'operator'   => 2,
         'allenatore' => 3,
-        'manager'    => 4,
+        'social media manager' => 4,
         'admin'      => 5,
     ];
 
@@ -95,11 +95,12 @@ class Auth
             return $user;
         }
 
-        $perms = $user['permissions'] ?? null;
-        // Deny-by-default: if no permissions map is configured, block access (fix M5)
-        // This follows the principle of least privilege. Admins bypass this check above.
-        // Ensure all non-admin users have their permissions configured in the DB.
-        if (!$perms || !is_array($perms) || empty($perms)) {
+        $perms = $user['permissions'] ?? [];
+        $defaults = self::getDefaultPermissions($user['role'] ?? '');
+        $perms = array_merge($defaults, $perms);
+
+        // Deny-by-default: if still no permissions map is configured, block access
+        if (empty($perms)) {
             error_log("[Auth] requireRead('{$module}'): user {$user['id']} has no permissions configured.");
             Response::error("Permessi non configurati per il modulo '{$module}'. Contatta l'amministratore.", 403);
         }
@@ -112,13 +113,6 @@ class Auth
         return $user;
     }
 
-    /**
-     * Require WRITE permission on a module (403 if 'read' or 'none').
-     * Uses the permissions map stored in session: { 'athletes': 'write', 'social': 'read', ... }
-     * Admin users bypass all module-level checks.
-     *
-     * @return array The authenticated user
-     */
     public static function requireWrite(string $module): array
     {
         $user = self::requireAuth();
@@ -128,9 +122,12 @@ class Auth
             return $user;
         }
 
-        $perms = $user['permissions'] ?? null;
-        // Deny-by-default: if no permissions map is configured, block access (fix M5)
-        if (!$perms || !is_array($perms) || empty($perms)) {
+        $perms = $user['permissions'] ?? [];
+        $defaults = self::getDefaultPermissions($user['role'] ?? '');
+        $perms = array_merge($defaults, $perms);
+
+        // Deny-by-default: if still no permissions map is configured, block access
+        if (empty($perms)) {
             error_log("[Auth] requireWrite('{$module}'): user {$user['id']} has no permissions configured.");
             Response::error("Permessi di scrittura non configurati per il modulo '{$module}'. Contatta l'amministratore.", 403);
         }
@@ -158,12 +155,16 @@ class Auth
             error_log('[Auth] session_regenerate_id failed: ' . $e->getMessage());
         }
 
+        $perms = $user['permissions'] ?? [];
+        $defaults = self::getDefaultPermissions($user['role'] ?? '');
+        $perms = array_merge($defaults, $perms);
+
         $_SESSION['user'] = [
             'id' => $user['id'],
             'email' => $user['email'],
             'role' => $user['role'],
             'fullName' => $user['full_name'],
-            'permissions' => $user['permissions'] ?? [],
+            'permissions' => $perms,
         ];
     }
 
@@ -192,5 +193,87 @@ class Auth
         $now = new \DateTime();
         $limitDuration = (int)(getenv('PASSWORD_EXPIRY_DAYS') ?: 90);
         return $changed->diff($now)->days > $limitDuration;
+    }
+
+    /**
+     * Define default module permissions per role dynamically (matching frontend rules).
+     */
+    public static function getDefaultPermissions(string $role): array
+    {
+        $base = [
+            'athletes' => 'read',
+            'athlete-profile' => 'read',
+            'athlete-payments' => 'read',
+            'athlete-metrics' => 'read',
+            'athlete-documents' => 'read',
+            'biometrics' => 'read',
+            'teams' => 'read',
+            'results' => 'read',
+            'results-matches' => 'read',
+            'results-standings' => 'read',
+            'transport' => 'read',
+            'transport-drivers' => 'read',
+            'transport-fleet' => 'read',
+            'outseason' => 'read',
+            'outseason-camps' => 'read',
+            'outseason-tournaments' => 'read',
+            'tournaments' => 'read',
+            'social' => 'read',
+            'social-analytics' => 'read',
+            'social-gallery' => 'read',
+            'finance' => 'read',
+            'admin' => 'read',
+            'admin-backup' => 'read',
+            'admin-logs' => 'read',
+            'users' => 'read',
+            'utenti' => 'read',
+            'tasks' => 'read',
+            'staff' => 'read',
+            'staff-documents' => 'read',
+            'ecommerce' => 'read',
+            'ecommerce-articles' => 'read',
+            'ecommerce-orders' => 'read',
+            'whatsapp-inbox' => 'read',
+            'whatsapp-contacts' => 'read',
+            'website' => 'read',
+            'newsletter' => 'read',
+            'societa' => 'read',
+            'societa-identita' => 'read',
+            'societa-organigramma' => 'read',
+            'societa-membri' => 'read',
+            'societa-documenti' => 'read',
+            'societa-scadenze' => 'read',
+            'societa-sponsor' => 'read',
+            'societa-titoli' => 'read',
+            'network' => 'read',
+            'network-collaborazioni' => 'read',
+            'network-prove' => 'read',
+            'network-attivita' => 'read'
+        ];
+
+        if ($role === 'admin') {
+            foreach ($base as $k => $v) {
+                $base[$k] = 'write';
+            }
+            return $base;
+        }
+
+        if ($role === 'allenatore' || $role === 'operatore') {
+            $base['finance'] = 'none';
+            $base['admin'] = 'none';
+            $base['admin-backup'] = 'none';
+            $base['admin-logs'] = 'none';
+        }
+
+        if ($role === 'atleta') {
+            $base['finance'] = 'none';
+            $base['admin'] = 'none';
+            $base['admin-backup'] = 'none';
+            $base['admin-logs'] = 'none';
+            $base['societa'] = 'none';
+            $base['staff'] = 'none';
+        }
+
+        return $base;
     }
 }

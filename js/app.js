@@ -7,6 +7,7 @@
 
 const App = (() => {
     let _currentUser = null;
+    let _navConfig = null; // Stored for global header titles
 
     async function init() {
         // Try to resume existing session
@@ -378,6 +379,7 @@ const App = (() => {
             }
 
             const navConfig = JSON.parse(textContent);
+            _navConfig = navConfig;
 
             const desktopContainer = document.getElementById('sidebar-nav-container');
             const mobileContainer = document.getElementById('mobile-nav-container');
@@ -893,30 +895,7 @@ const App = (() => {
     // Applies a subtle perspective tilt effect to cards on mousemove.
     // Cards with class .no-tilt are excluded from the effect.
     function _init3DCardHover() {
-        const appEl = document.getElementById('app');
-        if (!appEl) return;
-
-        // Use event delegation — works with dynamically rendered cards
-        appEl.addEventListener('mousemove', (e) => {
-            const card = e.target.closest('.card');
-            if (!card || card.classList.contains('no-tilt')) return;
-            const { left, top, width, height } = card.getBoundingClientRect();
-            const rx = ((e.clientY - top) / height - 0.5) * 10;
-            const ry = ((e.clientX - left) / width - 0.5) * -10;
-            card.style.transform = `perspective(700px) rotateX(${rx}deg) rotateY(${ry}deg) scale(1.015)`;
-        });
-
-        appEl.addEventListener('mouseleave', (e) => {
-            const card = e.target.closest('.card');
-            if (card && !card.classList.contains('no-tilt')) card.style.transform = '';
-        }, true);
-
-        // Also reset on fast mouse-out from card
-        appEl.addEventListener('mouseout', (e) => {
-            if (e.target.classList?.contains('card') && !e.target.classList.contains('no-tilt')) {
-                e.target.style.transform = '';
-            }
-        });
+        // Disabled per request: eliminate movement-based animation effects on cards
     }
 
     // ── G#6: Generative Gradient Avatar ──────────────────────────────────────
@@ -941,6 +920,34 @@ const App = (() => {
                 appEl.classList.remove('page-exit');
             }
             await _origNavigate(route, params);
+            
+            // ── Generic Header Title Update ──────────────────────────
+            if (_navConfig) {
+                let parentTitle = 'Dashboard';
+                let subTitle = '';
+                
+                for (const item of _navConfig) {
+                    if (item.path === route || item.id === route) {
+                        parentTitle = item.title;
+                        subTitle = item.title;
+                        break;
+                    }
+                    if (item.children) {
+                        const child = item.children.find(c => c.path === route || c.id === route);
+                        if (child) {
+                            parentTitle = item.title;
+                            subTitle = child.title;
+                            break;
+                        }
+                    }
+                }
+                
+                const pageTitleEl = document.getElementById('page-title');
+                const pageSubtitleEl = document.getElementById('page-subtitle');
+                if (pageTitleEl) pageTitleEl.textContent = parentTitle;
+                if (pageSubtitleEl) pageSubtitleEl.style.display = 'none';
+            }
+
             if (appEl) {
                 appEl.classList.remove('page-enter');
                 // Force reflow

@@ -65,6 +65,7 @@ Options -Indexes
     RewriteBase /ERP/
 
     # API requests → pass through to PHP
+    RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^api/(.*)$ api/router.php [L,QSA]
 
     # Static files → serve directly

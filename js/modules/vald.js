@@ -11,33 +11,47 @@
  * @param {HTMLButtonElement} [btn] - The button element to show spinner on
  */
 export async function syncVald(btn) {
-  const buttonEl = btn || document.getElementById('vald-sync-btn');
-  const originalHtml = buttonEl ? buttonEl.innerHTML : '';
+  const buttonEl = btn || document.getElementById("vald-sync-btn");
+  const originalHtml = buttonEl ? buttonEl.innerHTML : "";
 
   if (buttonEl) {
     buttonEl.disabled = true;
-    buttonEl.innerHTML = '<i class="ph ph-spinner" style="animation:spin 1s linear infinite;display:inline-block;"></i> Sincronizzando…';
+    buttonEl.innerHTML =
+      '<i class="ph ph-spinner" style="animation:spin 1s linear infinite;display:inline-block;"></i> Sincronizzando…';
   }
 
   try {
-    const result = await Store.api('sync', 'vald', {});
-    const {synced = 0, found = 0, unlinkedAthletes = []} = result || {};
+    const result = await Store.api("sync", "vald", {});
+    const { synced = 0, found = 0, unlinkedAthletes = [] } = result || {};
 
     if (synced > 0) {
-      UI.toast(`✅ Sincronizzazione completata: ${synced} nuovi test su ${found} trovati.`, 'success', 5000);
+      UI.toast(
+        `✅ Sincronizzazione completata: ${synced} nuovi test su ${found} trovati.`,
+        "success",
+        5000,
+      );
     } else if (unlinkedAthletes.length > 0) {
       UI.toast(
         `⚠️ ${found} test trovati, ma ${unlinkedAthletes.length} atleti VALD non sono ancora collegati. ` +
-        `Usa il pulsante "Collega" per abbinarli all'anagrafica ERP, poi sincronizza di nuovo.`,
-        'error', 8000
+          `Usa il pulsante "Collega" per abbinarli all'anagrafica ERP, poi sincronizza di nuovo.`,
+        "error",
+        8000,
       );
     } else if (found > 0) {
-      UI.toast(`ℹ️ ${found} test trovati, nessun nuovo dato da importare.`, 'info', 4000);
+      UI.toast(
+        `ℹ️ ${found} test trovati, nessun nuovo dato da importare.`,
+        "info",
+        4000,
+      );
     } else {
-      UI.toast('ℹ️ Nessun test nuovo trovato su VALD.', 'info', 3000);
+      UI.toast("ℹ️ Nessun test nuovo trovato su VALD.", "info", 3000);
     }
   } catch (err) {
-    UI.toast('❌ Errore sincronizzazione VALD: ' + (err.message || err), 'error', 5000);
+    UI.toast(
+      "❌ Errore sincronizzazione VALD: " + (err.message || err),
+      "error",
+      5000,
+    );
   } finally {
     if (buttonEl) {
       buttonEl.disabled = false;
@@ -45,7 +59,6 @@ export async function syncVald(btn) {
     }
   }
 }
-
 
 /**
  * Render the HTML for the VALD sync button.
@@ -71,8 +84,8 @@ export function syncButtonHtml() {
  * Call after rendering the button HTML into the DOM.
  */
 export function attachSyncButton() {
-  const btn = document.getElementById('vald-sync-btn');
+  const btn = document.getElementById("vald-sync-btn");
   if (btn) {
-    btn.addEventListener('click', () => syncVald(btn));
+    btn.addEventListener("click", () => syncVald(btn));
   }
 }
