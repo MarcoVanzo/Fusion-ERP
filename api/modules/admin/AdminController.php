@@ -182,7 +182,7 @@ class AdminController
 
     public function listContracts(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
         $userId = filter_input(INPUT_GET, 'userId', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
         Response::success($this->repo->listContracts($userId));
     }
@@ -192,7 +192,7 @@ class AdminController
      */
     public function generateContract(): void
     {
-        $adminUser = Auth::requireRole('manager');
+        $adminUser = Auth::requireRole('social media manager');
         $body = Response::jsonBody();
         Response::requireFields($body, ['user_id', 'valid_from', 'valid_to', 'role_description']);
 
@@ -404,7 +404,7 @@ HTML;
      */
     public function adminSummary(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
 
         $users = $this->repo->getUsersSummary();
         $backups = $this->repo->getLastBackup();
@@ -435,7 +435,7 @@ HTML;
      */
     public function listLogs(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
 
         $action = filter_input(INPUT_GET, 'action', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
         $tableName = filter_input(INPUT_GET, 'table_name', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
@@ -475,7 +475,7 @@ HTML;
      */
     public function listBackups(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
 
         $backups = $this->repo->listBackupRecords();
         $tables = $this->repo->listDatabaseTables();

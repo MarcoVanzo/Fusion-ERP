@@ -89,7 +89,7 @@ class WebsiteController
     // ─── POST /api/?module=website&action=createNews ────────────────────────
     public function createNews(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
         $body = Response::jsonBody();
         Response::requireFields($body, ['title', 'slug', 'category_id']);
 
@@ -136,7 +136,7 @@ class WebsiteController
     // ─── PUT /api/?module=website&action=updateNews ─────────────────────────
     public function updateNews(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
         $body = Response::jsonBody();
         Response::requireFields($body, ['id', 'title', 'slug', 'category_id']);
 
@@ -184,7 +184,7 @@ class WebsiteController
     // ─── DELETE /api/?module=website&action=deleteNews ──────────────────────
     public function deleteNews(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
         $body = Response::jsonBody();
         $id = (int)($body['id'] ?? 0);
         if ($id <= 0) {

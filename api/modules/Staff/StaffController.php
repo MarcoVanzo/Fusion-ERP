@@ -56,7 +56,7 @@ class StaffController
     // ─── POST /api/?module=staff&action=create ────────────────────────────────
     public function create(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
         $body = Response::jsonBody();
         Response::requireFields($body, ['first_name', 'last_name']);
 
@@ -91,7 +91,7 @@ class StaffController
     // ─── POST /api/?module=staff&action=update ────────────────────────────────
     public function update(): void
     {
-        // Auth::requireRole('manager');
+        // Auth::requireRole('social media manager');
         $body = Response::jsonBody();
         Response::requireFields($body, ['id', 'first_name', 'last_name']);
 
@@ -126,7 +126,7 @@ class StaffController
     // ─── POST /api/?module=staff&action=delete ────────────────────────────────
     public function delete(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
         $body = Response::jsonBody();
         $id = $body['id'] ?? '';
         if (empty($id)) {
@@ -200,7 +200,7 @@ class StaffController
     // ─── CONTRACT GENERATION & SIGNING ───────────────────────────────────────
     public function generateContract(): void
     {
-        $user = Auth::requireRole('manager');
+        $user = Auth::requireRole('social media manager');
         $body = Response::jsonBody();
         Response::requireFields($body, ['staff_id', 'valid_from', 'valid_to']);
 
@@ -351,7 +351,7 @@ HTML;
 
     public function checkContractStatus(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
         $id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
         if (empty($id)) {
             Response::error('id obbligatorio', 400);
@@ -413,7 +413,7 @@ HTML;
 
     public function downloadContract(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
         $id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
         if (empty($id)) {
             Response::error('id obbligatorio', 400);

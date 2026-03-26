@@ -8,23 +8,21 @@
         "roles": [
             "atleta",
             "allenatore",
-            "operatore",
-            "manager",
             "admin"
         ],
         "children": [
-            { "title": "Squadre", "path": "squadre", "icon": "users-four", "isMobileVisible": false, "roles": ["allenatore", "operatore", "manager", "admin"] },
-            { "title": "Anagrafica Atleti", "path": "athlete-profile", "icon": "users", "isMobileVisible": false },
-            { "title": "Documenti Atleti", "path": "athlete-documents", "icon": "file-text", "isMobileVisible": false },
-            { "title": "Metrics Atleti", "path": "athlete-metrics", "icon": "trend-up", "isMobileVisible": false },
-            { "title": "Elenco Staff", "path": "staff", "icon": "identification-badge", "isMobileVisible": false, "roles": ["allenatore", "operatore", "manager", "admin"] },
-            { "title": "Documenti Staff", "path": "staff-documents", "icon": "file-text", "isMobileVisible": false, "roles": ["allenatore", "operatore", "manager", "admin"] },
-            { "title": "Partite Risultati", "path": "results-matches", "icon": "volleyball", "isMobileVisible": false, "roles": ["allenatore", "operatore", "manager", "admin"] },
-            { "title": "Classifiche", "path": "results-standings", "icon": "list-numbers", "isMobileVisible": false, "roles": ["allenatore", "operatore", "manager", "admin"] },
-            { "title": "Database Scouting", "path": "scouting-database", "icon": "database", "isMobileVisible": false, "implemented": true, "roles": ["allenatore", "manager", "admin"] },
-            { "title": "Valutazioni Scouting", "path": "scouting-evaluations", "icon": "star", "isMobileVisible": false, "implemented": false, "roles": ["allenatore", "manager", "admin"] },
-            { "title": "Watchlist Scouting", "path": "scouting-watchlist", "icon": "eye", "isMobileVisible": false, "implemented": false, "roles": ["allenatore", "manager", "admin"] },
-            { "title": "Report Scouting", "path": "scouting-reports", "icon": "note-pencil", "isMobileVisible": false, "implemented": false, "roles": ["allenatore", "manager", "admin"] }
+            { "title": "Squadre", "path": "squadre", "icon": "users-four", "isMobileVisible": false, "roles": ["allenatore", "admin"] },
+            { "title": "Anagrafica Atleti", "path": "athlete-profile", "icon": "users", "isMobileVisible": false, "roles": ["atleta", "allenatore", "admin"] },
+            { "title": "Documenti Atleti", "path": "athlete-documents", "icon": "file-text", "isMobileVisible": false, "roles": ["atleta", "allenatore", "admin"] },
+            { "title": "Metrics Atleti", "path": "athlete-metrics", "icon": "trend-up", "isMobileVisible": false, "roles": ["atleta", "allenatore", "admin"] },
+            { "title": "Elenco Staff", "path": "staff", "icon": "identification-badge", "isMobileVisible": false, "roles": ["allenatore", "admin"] },
+            { "title": "Documenti Staff", "path": "staff-documents", "icon": "file-text", "isMobileVisible": false, "roles": ["allenatore", "admin"] },
+            { "title": "Partite Risultati", "path": "results-matches", "icon": "volleyball", "isMobileVisible": false, "roles": ["allenatore", "admin"] },
+            { "title": "Classifiche", "path": "results-standings", "icon": "list-numbers", "isMobileVisible": false, "roles": ["allenatore", "admin"] },
+            { "title": "Database Scouting", "path": "scouting-database", "icon": "database", "isMobileVisible": false, "implemented": true, "roles": ["allenatore", "admin"] },
+            { "title": "Valutazioni Scouting", "path": "scouting-evaluations", "icon": "star", "isMobileVisible": false, "implemented": false, "roles": ["allenatore", "admin"] },
+            { "title": "Watchlist Scouting", "path": "scouting-watchlist", "icon": "eye", "isMobileVisible": false, "implemented": false, "roles": ["allenatore", "admin"] },
+            { "title": "Report Scouting", "path": "scouting-reports", "icon": "note-pencil", "isMobileVisible": false, "implemented": false, "roles": ["allenatore", "admin"] }
         ]
     },
     {
@@ -34,20 +32,18 @@
         "icon": "calendar-check",
         "isMobileVisible": true,
         "roles": [
-            "allenatore",
             "operatore",
-            "manager",
             "admin"
         ],
         "children": [
-            { "title": "Task Operativi", "path": "tasks", "icon": "check-square", "isMobileVisible": false, "roles": ["manager", "admin"] },
-            { "title": "Scadenze Societarie", "path": "societa-scadenze", "icon": "bell-ringing", "isMobileVisible": false, "roles": ["manager", "admin"] },
-            { "title": "Viaggi & Trasferte", "path": "transport", "icon": "van", "isMobileVisible": false },
-            { "title": "Trasporti Autisti", "path": "transport-drivers", "icon": "steering-wheel", "isMobileVisible": false },
-            { "title": "Gestione Mezzi", "path": "transport-fleet", "icon": "bus", "isMobileVisible": false },
-            { "title": "Trasporti Rimborsi", "path": "transport-refunds", "icon": "receipt", "isMobileVisible": false },
-            { "title": "OutSeason", "path": "outseason-camps", "icon": "tent", "isMobileVisible": false, "roles": ["manager", "admin"] },
-            { "title": "Gestione Tornei", "path": "outseason-tournaments", "icon": "medal", "isMobileVisible": false, "roles": ["manager", "admin"] }
+            { "title": "Task Operativi", "path": "tasks", "icon": "check-square", "isMobileVisible": false, "roles": ["operatore", "admin"] },
+            { "title": "Scadenze Societarie", "path": "societa-scadenze", "icon": "bell-ringing", "isMobileVisible": false, "roles": ["operatore", "admin"] },
+            { "title": "Viaggi & Trasferte", "path": "transport", "icon": "van", "isMobileVisible": false, "roles": ["operatore", "admin"] },
+            { "title": "Trasporti Autisti", "path": "transport-drivers", "icon": "steering-wheel", "isMobileVisible": false, "roles": ["operatore", "admin"] },
+            { "title": "Gestione Mezzi", "path": "transport-fleet", "icon": "bus", "isMobileVisible": false, "roles": ["operatore", "admin"] },
+            { "title": "Trasporti Rimborsi", "path": "transport-refunds", "icon": "receipt", "isMobileVisible": false, "roles": ["operatore", "admin"] },
+            { "title": "OutSeason", "path": "outseason-camps", "icon": "tent", "isMobileVisible": false, "roles": ["operatore", "admin"] },
+            { "title": "Gestione Tornei", "path": "outseason-tournaments", "icon": "medal", "isMobileVisible": false, "roles": ["operatore", "admin"] }
         ]
     },
     {
@@ -57,17 +53,16 @@
         "icon": "megaphone",
         "isMobileVisible": true,
         "roles": [
-            "operatore",
-            "manager",
+            "social media manager",
             "admin"
         ],
         "children": [
-            { "title": "WhatsApp Inbox", "path": "whatsapp-inbox", "icon": "chat-circle-dots", "isMobileVisible": false },
-            { "title": "WhatsApp Contatti", "path": "whatsapp-contacts", "icon": "address-book", "isMobileVisible": false },
-            { "title": "Social Analytics", "path": "social-analytics", "icon": "chart-line", "isMobileVisible": false },
-            { "title": "Sito Web", "path": "website", "icon": "globe", "isMobileVisible": false },
-            { "title": "Web Analytics", "path": "website-analytics", "icon": "chart-bar", "isMobileVisible": false },
-            { "title": "Newsletter", "path": "newsletter", "icon": "envelope-simple", "isMobileVisible": false }
+            { "title": "WhatsApp Inbox", "path": "whatsapp-inbox", "icon": "chat-circle-dots", "isMobileVisible": false, "roles": ["social media manager", "admin"] },
+            { "title": "WhatsApp Contatti", "path": "whatsapp-contacts", "icon": "address-book", "isMobileVisible": false, "roles": ["social media manager", "admin"] },
+            { "title": "Social Analytics", "path": "social-analytics", "icon": "chart-line", "isMobileVisible": false, "roles": ["social media manager", "admin"] },
+            { "title": "Sito Web", "path": "website", "icon": "globe", "isMobileVisible": false, "roles": ["social media manager", "admin"] },
+            { "title": "Web Analytics", "path": "website-analytics", "icon": "chart-bar", "isMobileVisible": false, "roles": ["social media manager", "admin"] },
+            { "title": "Newsletter", "path": "newsletter", "icon": "envelope-simple", "isMobileVisible": false, "roles": ["social media manager", "admin"] }
         ]
     },
     {
@@ -77,18 +72,16 @@
         "icon": "vault",
         "isMobileVisible": false,
         "roles": [
-            "operatore",
-            "manager",
             "admin"
         ],
         "children": [
-            { "title": "Contabilità", "path": "finance", "icon": "calculator", "isMobileVisible": false, "roles": ["manager", "admin"] },
-            { "title": "Fatturazione", "path": "finance-invoices", "icon": "receipt", "isMobileVisible": false, "roles": ["manager", "admin"] },
-            { "title": "Quote Atleti", "path": "athlete-payments", "icon": "credit-card", "isMobileVisible": false, "roles": ["manager", "admin"] },
-            { "title": "Articoli eCommerce", "path": "ecommerce-articles", "icon": "tag", "isMobileVisible": false },
-            { "title": "Ordini eCommerce", "path": "ecommerce-orders", "icon": "package", "isMobileVisible": false },
-            { "title": "Partner & Sponsor", "path": "societa-sponsor", "icon": "storefront", "isMobileVisible": false, "roles": ["manager", "admin"] },
-            { "title": "Spese Foresteria", "path": "finance-foresteria", "icon": "house-line", "isMobileVisible": false, "roles": ["manager", "admin"] }
+            { "title": "Contabilità", "path": "finance", "icon": "calculator", "isMobileVisible": false, "roles": ["admin"] },
+            { "title": "Fatturazione", "path": "finance-invoices", "icon": "receipt", "isMobileVisible": false, "roles": ["admin"] },
+            { "title": "Quote Atleti", "path": "athlete-payments", "icon": "credit-card", "isMobileVisible": false, "roles": ["admin"] },
+            { "title": "Articoli eCommerce", "path": "ecommerce-articles", "icon": "tag", "isMobileVisible": false, "roles": ["admin"] },
+            { "title": "Ordini eCommerce", "path": "ecommerce-orders", "icon": "package", "isMobileVisible": false, "roles": ["admin"] },
+            { "title": "Partner & Sponsor", "path": "societa-sponsor", "icon": "storefront", "isMobileVisible": false, "roles": ["admin"] },
+            { "title": "Spese Foresteria", "path": "finance-foresteria", "icon": "house-line", "isMobileVisible": false, "roles": ["admin"] }
         ]
     },
     {
@@ -98,16 +91,16 @@
         "icon": "buildings",
         "isMobileVisible": false,
         "roles": [
-            "manager",
+            "operatore",
             "admin"
         ],
         "children": [
-            { "title": "Identità", "path": "societa-identita", "icon": "identification-card", "isMobileVisible": false },
-            { "title": "Organigramma", "path": "societa-organigramma", "icon": "tree-structure", "isMobileVisible": false },
-            { "title": "Direttivo", "path": "societa-membri", "icon": "users-three", "isMobileVisible": false },
-            { "title": "Network", "path": "network-collaborazioni", "icon": "share-network", "isMobileVisible": false },
-            { "title": "Titoli & Palmares", "path": "societa-titoli", "icon": "trophy", "isMobileVisible": false },
-            { "title": "La Foresteria", "path": "societa-foresteria", "icon": "house-line", "isMobileVisible": false }
+            { "title": "Identità", "path": "societa-identita", "icon": "identification-card", "isMobileVisible": false, "roles": ["operatore", "admin"] },
+            { "title": "Organigramma", "path": "societa-organigramma", "icon": "tree-structure", "isMobileVisible": false, "roles": ["operatore", "admin"] },
+            { "title": "Direttivo", "path": "societa-membri", "icon": "users-three", "isMobileVisible": false, "roles": ["operatore", "admin"] },
+            { "title": "Network", "path": "network-collaborazioni", "icon": "share-network", "isMobileVisible": false, "roles": ["operatore", "admin"] },
+            { "title": "Titoli & Palmares", "path": "societa-titoli", "icon": "trophy", "isMobileVisible": false, "roles": ["operatore", "admin"] },
+            { "title": "La Foresteria", "path": "societa-foresteria", "icon": "house-line", "isMobileVisible": false, "roles": ["operatore", "admin"] }
         ]
     }
-] 
+]

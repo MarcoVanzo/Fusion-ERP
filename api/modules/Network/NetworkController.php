@@ -59,7 +59,7 @@ class NetworkController
 
     public function createCollaboration(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
         $body = Response::jsonBody();
         Response::requireFields($body, ['partner_name']);
 
@@ -103,7 +103,7 @@ class NetworkController
 
     public function updateCollaboration(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
         $body = Response::jsonBody();
         Response::requireFields($body, ['id', 'partner_name']);
 
@@ -149,7 +149,7 @@ class NetworkController
 
     public function uploadColLogo(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
 
         $collabId = $_POST['collaboration_id'] ?? '';
         if (empty($collabId)) {
@@ -208,7 +208,7 @@ class NetworkController
 
     public function deleteCollaboration(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
         $body = Response::jsonBody();
         $id = $body['id'] ?? '';
         if (empty($id)) {
@@ -237,7 +237,7 @@ class NetworkController
 
     public function uploadColDocument(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
 
         $collabId = $_POST['collaboration_id'] ?? '';
         $docType = $_POST['doc_type'] ?? null;
@@ -332,7 +332,7 @@ class NetworkController
 
     public function deleteColDocument(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
         $body = Response::jsonBody();
         $docId = $body['id'] ?? '';
         if (empty($docId)) {
@@ -357,7 +357,7 @@ class NetworkController
 
     public function createTrial(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
         $body = Response::jsonBody();
         Response::requireFields($body, ['athlete_first_name', 'athlete_last_name']);
 
@@ -390,7 +390,7 @@ class NetworkController
 
     public function updateTrial(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
         $body = Response::jsonBody();
         Response::requireFields($body, ['id', 'athlete_first_name', 'athlete_last_name']);
 
@@ -425,7 +425,7 @@ class NetworkController
 
     public function deleteTrial(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
         $body = Response::jsonBody();
         $id = $body['id'] ?? '';
         if (empty($id)) {
@@ -454,7 +454,7 @@ class NetworkController
 
     public function evaluateTrial(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
         $body = Response::jsonBody();
         Response::requireFields($body, ['trial_id', 'eval_date']);
 
@@ -494,7 +494,7 @@ class NetworkController
 
     public function convertToScouting(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
         $body = Response::jsonBody();
         $trialId = $body['trial_id'] ?? '';
         if (empty($trialId)) {
@@ -543,7 +543,7 @@ class NetworkController
 
     public function createActivity(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
         $body = Response::jsonBody();
         Response::requireFields($body, ['title', 'date']);
 
@@ -567,7 +567,7 @@ class NetworkController
 
     public function updateActivity(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
         $body = Response::jsonBody();
         Response::requireFields($body, ['id', 'title', 'date']);
 
@@ -593,7 +593,7 @@ class NetworkController
 
     public function deleteActivity(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
         $body = Response::jsonBody();
         $id = $body['id'] ?? '';
         if (empty($id)) {
@@ -618,7 +618,7 @@ class NetworkController
 
     public function updateHubText(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
         $body = Response::jsonBody();
         // text can be empty, but should exist in payload
         if (!array_key_exists('text', $body)) {
@@ -633,7 +633,7 @@ class NetworkController
 
     public function uploadHubLogo(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
 
         if (!isset($_FILES['logo']) || $_FILES['logo']['error'] !== UPLOAD_ERR_OK) {
             $errorCode = $_FILES['logo']['error'] ?? -1;

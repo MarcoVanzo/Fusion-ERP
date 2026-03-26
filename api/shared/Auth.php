@@ -17,7 +17,7 @@ class Auth
         'operatore'  => 2,
         'operator'   => 2,
         'allenatore' => 3,
-        'manager'    => 4,
+        'social media manager' => 4,
         'admin'      => 5,
     ];
 

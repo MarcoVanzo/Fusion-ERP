@@ -513,7 +513,7 @@ class AthletesController
     // ─── GET /api/?module=athletes&action=alerts ──────────────────────────────
     public function alerts(): void
     {
-        $user = Auth::requireRole('manager');
+        $user = Auth::requireRole('social media manager');
         $tenantId = \FusionERP\Shared\TenantContext::id();
         $alerts = $this->repo->getUnacknowledgedAlerts($tenantId);
         Response::success($alerts);

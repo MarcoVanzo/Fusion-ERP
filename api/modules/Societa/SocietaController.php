@@ -60,7 +60,7 @@ class SocietaController
 
     public function saveProfile(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
         $body = Response::jsonBody();
 
         $data = [
@@ -84,7 +84,7 @@ class SocietaController
 
     public function uploadLogo(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
 
         if (!isset($_FILES['logo']) || $_FILES['logo']['error'] !== UPLOAD_ERR_OK) {
             Response::error('Errore upload logo', 400);
@@ -130,7 +130,7 @@ class SocietaController
 
     public function createRole(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
         $body = Response::jsonBody();
         Response::requireFields($body, ['name']);
 
@@ -152,7 +152,7 @@ class SocietaController
 
     public function updateRole(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
         $body = Response::jsonBody();
         Response::requireFields($body, ['id', 'name']);
 
@@ -176,7 +176,7 @@ class SocietaController
 
     public function deleteRole(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
         $body = Response::jsonBody();
         Response::requireFields($body, ['id']);
 
@@ -200,7 +200,7 @@ class SocietaController
 
     public function createMember(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
         $body = Response::jsonBody();
         Response::requireFields($body, ['full_name', 'role_id']);
 
@@ -226,7 +226,7 @@ class SocietaController
 
     public function updateMember(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
         $body = Response::jsonBody();
         Response::requireFields($body, ['id', 'full_name', 'role_id']);
 
@@ -254,7 +254,7 @@ class SocietaController
 
     public function deleteMember(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
         $body = Response::jsonBody();
         $id = $body['id'] ?? '';
         if (empty($id)) {
@@ -273,7 +273,7 @@ class SocietaController
     
     public function uploadMemberPhoto(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
         
         $id = filter_input(INPUT_POST, 'id', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
         if (empty($id)) {
@@ -341,7 +341,7 @@ class SocietaController
 
     public function uploadDocument(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
 
         $category = $_POST['category'] ?? 'altro';
         $expiryDate = $_POST['expiry_date'] ?? null;
@@ -435,7 +435,7 @@ class SocietaController
 
     public function deleteDocument(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
         $body = Response::jsonBody();
         $docId = $body['id'] ?? '';
         if (empty($docId)) {
@@ -460,7 +460,7 @@ class SocietaController
 
     public function createDeadline(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
         $body = Response::jsonBody();
         Response::requireFields($body, ['title', 'due_date']);
 
@@ -489,7 +489,7 @@ class SocietaController
 
     public function updateDeadline(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
         $body = Response::jsonBody();
         Response::requireFields($body, ['id', 'title', 'due_date']);
 
@@ -520,7 +520,7 @@ class SocietaController
 
     public function deleteDeadline(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
         $body = Response::jsonBody();
         $id = $body['id'] ?? '';
         if (empty($id)) {
@@ -545,7 +545,7 @@ class SocietaController
 
     public function createSponsor(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
         $body = Response::jsonBody();
         Response::requireFields($body, ['name']);
 
@@ -577,7 +577,7 @@ class SocietaController
 
     public function updateSponsor(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
         $body = Response::jsonBody();
         Response::requireFields($body, ['id', 'name']);
 
@@ -611,7 +611,7 @@ class SocietaController
 
     public function uploadSponsorLogo(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
 
         $sponsorId = $_POST['sponsor_id'] ?? '';
         if (empty($sponsorId)) {
@@ -661,7 +661,7 @@ class SocietaController
 
     public function deleteSponsor(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
         $body = Response::jsonBody();
         $id = $body['id'] ?? '';
         if (empty($id)) {
@@ -686,7 +686,7 @@ class SocietaController
 
     public function createTitolo(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
         $body = Response::jsonBody();
         Response::requireFields($body, ['stagione', 'campionato', 'categoria', 'piazzamento']);
 
@@ -723,7 +723,7 @@ class SocietaController
 
     public function updateTitolo(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
         $body = Response::jsonBody();
         Response::requireFields($body, ['id', 'stagione', 'campionato', 'categoria', 'piazzamento']);
 
@@ -758,7 +758,7 @@ class SocietaController
 
     public function deleteTitolo(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
         $body = Response::jsonBody();
         $id = $body['id'] ?? '';
         if (empty($id)) {
@@ -898,7 +898,7 @@ class SocietaController
     /** POST ?module=societa&action=saveForesteria — salva descrizione */
     public function saveForesteria(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
         $body = Response::jsonBody();
         $db   = \FusionERP\Shared\Database::getInstance();
         $tid  = TenantContext::id();
@@ -919,7 +919,7 @@ class SocietaController
     /** POST ?module=societa&action=addExpense — aggiunge spesa */
     public function addExpense(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
         $body = Response::jsonBody();
         Response::requireFields($body, ['description', 'amount', 'expense_date']);
 
@@ -949,7 +949,7 @@ class SocietaController
     /** POST ?module=societa&action=deleteExpense — soft-delete spesa */
     public function deleteExpense(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
         $body = Response::jsonBody();
         $id   = $body['id'] ?? '';
         if (empty($id)) Response::error('id obbligatorio', 400);
@@ -968,7 +968,7 @@ class SocietaController
     /** POST ?module=societa&action=uploadForesteriaMedia — upload foto/video */
     public function uploadForesteriaMedia(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
 
         if (empty($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
             Response::error('File non caricato', 400);
@@ -1018,7 +1018,7 @@ class SocietaController
     /** POST ?module=societa&action=addForesteriaYoutubeLink — aggiunge link YouTube */
     public function addForesteriaYoutubeLink(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
         $body  = Response::jsonBody();
         $url   = trim($body['url'] ?? '');
         $title = trim($body['title'] ?? '');
@@ -1066,7 +1066,7 @@ class SocietaController
     /** POST ?module=societa&action=deleteForesteriaMedia — soft-delete media */
     public function deleteForesteriaMedia(): void
     {
-        Auth::requireRole('manager');
+        Auth::requireRole('social media manager');
         $body = Response::jsonBody();
         $id   = $body['id'] ?? '';
         if (empty($id)) Response::error('id obbligatorio', 400);
