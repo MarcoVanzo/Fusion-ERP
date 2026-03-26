@@ -504,6 +504,12 @@ class AuthController
 
     private function getClientIp(): string
     {
+        $trustedProxy = strtolower(trim((string)(getenv('TRUSTED_PROXY') ?: '')));
+        if ($trustedProxy === 'cloudflare') {
+            $ip = $_SERVER['HTTP_CF_CONNECTING_IP'] ?? $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+            return trim(explode(',', $ip)[0]);
+        }
+
         // Linea guida: Non fidarsi dell'X-Forwarded-For per rate-limiting se non dietro proxy certificato.
         // Proxy spoofing vanificherebbe il brute-force protection.
         $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
