@@ -208,108 +208,159 @@ class App {
     });
   }
 
-  // Spese Foresteria View (Two-Step Wizard)
+  // Spese Foresteria View (Tabs: Nuova Spesa + Storico)
   renderSpese() {
     const today = new Date().toISOString().split('T')[0];
 
     this.container.innerHTML = `
       <div class="screen spese-screen">
         <header class="app-header">
-          <div class="app-title">Nuova Spesa</div>
+          <div class="app-title">Spese</div>
           <a href="#dashboard" class="header-icon" style="color:var(--text-primary)"><i class="fas fa-times"></i></a>
         </header>
 
         <div class="p-20">
-          <div class="card stagger-item delay-1" style="padding-top: 30px;">
-            <form id="expense-form" onsubmit="return false;">
-              
-              <!-- STEP 1: IMPORTANTI (Foto + Importo) -->
-              <div id="step-1">
-                <div class="input-group stagger-item delay-2">
-                  <label for="exp-receipt" class="file-upload-box giant-camera-box">
-                    <i class="fas fa-camera"></i>
-                    <span>Fotografa Scontrino</span>
-                  </label>
-                  <input type="file" id="exp-receipt" accept="image/*" capture="environment" style="display: none;">
-                  <div id="receipt-preview-container" class="mt-10" style="display: none; text-align: center;">
-                     <p id="receipt-name" class="text-light" style="font-size: 13px; font-weight: 500; margin-bottom: 8px;">
-                       <i class="fas fa-check-circle" style="color: var(--success)"></i> <span class="filename"></span>
-                     </p>
-                     <img id="receipt-img-preview" src="" style="max-height: 120px; border-radius: 8px; border: 1px solid var(--border-subtle); margin: 0 auto; display: block;" />
+          <!-- Tab Bar -->
+          <div class="spese-tabs stagger-item delay-1">
+            <button class="spese-tab-btn active" id="tab-nuova"><i class="fas fa-plus-circle" style="margin-right:5px;"></i> Nuova</button>
+            <button class="spese-tab-btn" id="tab-storico"><i class="fas fa-history" style="margin-right:5px;"></i> Storico</button>
+          </div>
+
+          <!-- TAB CONTENT: Nuova Spesa -->
+          <div id="tab-nuova-content">
+            <div class="card stagger-item delay-2" style="padding-top: 30px;">
+              <form id="expense-form" onsubmit="return false;">
+                
+                <!-- STEP 1: IMPORTANTI (Foto + Importo) -->
+                <div id="step-1">
+                  <div class="input-group">
+                    <label for="exp-receipt" class="file-upload-box giant-camera-box">
+                      <i class="fas fa-camera"></i>
+                      <span>Fotografa Scontrino</span>
+                    </label>
+                    <input type="file" id="exp-receipt" accept="image/*" capture="environment" style="display: none;">
+                    <div id="receipt-preview-container" class="mt-10" style="display: none; text-align: center;">
+                       <p id="receipt-name" class="text-light" style="font-size: 13px; font-weight: 500; margin-bottom: 8px;">
+                         <i class="fas fa-check-circle" style="color: var(--success)"></i> <span class="filename"></span>
+                       </p>
+                       <img id="receipt-img-preview" src="" style="max-height: 120px; border-radius: 8px; border: 1px solid var(--border-subtle); margin: 0 auto; display: block;" />
+                    </div>
+                  </div>
+
+                  <div class="huge-amount-wrapper">
+                    <label class="input-label" style="margin-bottom: -5px;">Importo Totale (€) *</label>
+                    <input type="number" step="0.01" id="exp-amount" class="huge-amount-input" placeholder="0.00" required>
                   </div>
                 </div>
 
-                <div class="huge-amount-wrapper">
-                  <label class="input-label" style="margin-bottom: -5px;">Importo Totale (€) *</label>
-                  <input type="number" step="0.01" id="exp-amount" class="huge-amount-input" placeholder="0.00" required>
+                <!-- STEP 2: DETTAGLI -->
+                <div id="step-2" class="d-none">
+                  <h3 style="margin-bottom: 20px; font-size: 16px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 8px;">Dettagli Spesa</h3>
+
+                  <div class="input-group">
+                    <label class="input-label">Descrizione *</label>
+                    <input type="text" id="exp-desc" class="input-field" placeholder="Es. Spesa Alimentare Conad" value="Spesa Generale" required>
+                  </div>
+
+                  <div class="input-group">
+                    <label class="input-label">Categoria</label>
+                    <select id="exp-category" class="input-field">
+                      <option value="manutenzione">Manutenzione</option>
+                      <option value="pulizie">Pulizie</option>
+                      <option value="utenze">Utenze</option>
+                      <option value="cibo" selected>Cibo/Spesa</option>
+                      <option value="frutta_verdura">Frutta e Verdura</option>
+                      <option value="tuto">Tuto</option>
+                      <option value="affitto">Affitto</option>
+                      <option value="altro">Altro</option>
+                    </select>
+                  </div>
+
+                  <div class="input-group">
+                    <label class="input-label">Data *</label>
+                    <input type="date" id="exp-date" class="input-field" value="${today}" required>
+                  </div>
+
+                  <div class="input-group">
+                    <label class="input-label">Note</label>
+                    <textarea id="exp-notes" class="input-field" rows="2" placeholder="Opzionale..."></textarea>
+                  </div>
                 </div>
-
-                <!-- Action buttons removed from here, placed at bottom -->
-              </div>
-
-              <!-- STEP 2: DETTAGLI -->
-              <div id="step-2" class="d-none">
-                <h3 style="margin-bottom: 20px; font-size: 16px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 8px;">Dettagli Spesa</h3>
-
-                <div class="input-group">
-                  <label class="input-label">Descrizione *</label>
-                  <input type="text" id="exp-desc" class="input-field" placeholder="Es. Spesa Alimentare Conad" value="Spesa Generale" required>
-                </div>
-
-                <div class="input-group">
-                  <label class="input-label">Categoria</label>
-                  <select id="exp-category" class="input-field">
-                    <option value="manutenzione">Manutenzione</option>
-                    <option value="pulizie">Pulizie</option>
-                    <option value="utenze">Utenze</option>
-                    <option value="cibo" selected>Cibo/Spesa</option>
-                    <option value="frutta_verdura">Frutta e Verdura</option>
-                    <option value="tuto">Tuto</option>
-                    <option value="affitto">Affitto</option>
-                    <option value="altro">Altro</option>
-                  </select>
-                </div>
-
-                <div class="input-group">
-                  <label class="input-label">Data *</label>
-                  <input type="date" id="exp-date" class="input-field" value="${today}" required>
-                </div>
-
-                <div class="input-group">
-                  <label class="input-label">Note</label>
-                  <textarea id="exp-notes" class="input-field" rows="2" placeholder="Opzionale..."></textarea>
-                </div>
-              </div>
-            </form>
+              </form>
+            </div>
+            <div class="wizard-padding"></div>
           </div>
-          <!-- Wizard Padding for space at bottom -->
-          <div class="wizard-padding"></div>
-        </div>
 
-        <!-- Wizard Fixed Actions -->
-        <div class="wizard-actions" id="step-1-actions">
-          <button type="button" class="btn" id="btn-next-step" style="flex: 1;">
-            AVANTI <i class="fas fa-arrow-right"></i>
-          </button>
+          <!-- TAB CONTENT: Storico Spese -->
+          <div id="tab-storico-content" class="d-none">
+            <div id="expense-history-list">
+              <div class="card skeleton" style="height: 60px; margin-bottom: 12px; border: none;"></div>
+              <div class="card skeleton" style="height: 60px; margin-bottom: 12px; border: none;"></div>
+              <div class="card skeleton" style="height: 60px; margin-bottom: 12px; border: none;"></div>
+            </div>
+          </div>
         </div>
-        <div class="wizard-actions d-none" id="step-2-actions">
-          <button type="button" class="btn btn-secondary" id="btn-prev-step" style="flex: 1;">
-            INDIETRO
-          </button>
-          <button type="button" class="btn" id="submit-expense-btn" style="flex: 2;">
-            SALVA SPESA
-          </button>
-        </div>
-
-        ${this.getBottomNav('#spese')}
       </div>
+
+      <!-- Wizard Fixed Actions (OUTSIDE .screen to avoid transform stacking context) -->
+      <div class="wizard-actions" id="step-1-actions">
+        <button type="button" class="btn" id="btn-next-step" style="flex: 1;">
+          AVANTI <i class="fas fa-arrow-right"></i>
+        </button>
+      </div>
+      <div class="wizard-actions d-none" id="step-2-actions">
+        <button type="button" class="btn btn-secondary" id="btn-prev-step" style="flex: 1;">
+          INDIETRO
+        </button>
+        <button type="button" class="btn" id="submit-expense-btn" style="flex: 2;">
+          SALVA SPESA
+        </button>
+      </div>
+
+      ${this.getBottomNav('#spese')}
     `;
+
+    // Tab switching logic
+    const tabNuova = document.getElementById('tab-nuova');
+    const tabStorico = document.getElementById('tab-storico');
+    const contentNuova = document.getElementById('tab-nuova-content');
+    const contentStorico = document.getElementById('tab-storico-content');
+    const step1Actions = document.getElementById('step-1-actions');
+    const step2Actions = document.getElementById('step-2-actions');
+
+    tabNuova.addEventListener('click', () => {
+      this.vibrate(20);
+      tabNuova.classList.add('active');
+      tabStorico.classList.remove('active');
+      contentNuova.classList.remove('d-none');
+      contentStorico.classList.add('d-none');
+      // Show wizard actions for the active step
+      const step1Visible = !document.getElementById('step-1').classList.contains('d-none');
+      if (step1Visible) {
+        step1Actions.classList.remove('d-none');
+        step2Actions.classList.add('d-none');
+      } else {
+        step1Actions.classList.add('d-none');
+        step2Actions.classList.remove('d-none');
+      }
+    });
+
+    tabStorico.addEventListener('click', () => {
+      this.vibrate(20);
+      tabStorico.classList.add('active');
+      tabNuova.classList.remove('active');
+      contentStorico.classList.remove('d-none');
+      contentNuova.classList.add('d-none');
+      // Hide wizard actions on storico tab
+      step1Actions.classList.add('d-none');
+      step2Actions.classList.add('d-none');
+      // Load history if not already loaded
+      this.loadExpenseHistory();
+    });
 
     // Step 1 <-> Step 2 Logic
     const step1 = document.getElementById('step-1');
     const step2 = document.getElementById('step-2');
-    const step1Actions = document.getElementById('step-1-actions');
-    const step2Actions = document.getElementById('step-2-actions');
 
     document.getElementById('btn-next-step').addEventListener('click', () => {
       this.vibrate(20);
@@ -323,7 +374,6 @@ class App {
       step1Actions.classList.add('d-none');
       step2.classList.remove('d-none');
       step2Actions.classList.remove('d-none');
-      // smooth scroll up
       window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 
@@ -345,14 +395,12 @@ class App {
         previewContainer.style.display = 'block';
         nameSpan.innerText = file.name;
         
-        // Show lightweight thumbnail
         const reader = new FileReader();
         reader.onload = function(ev) {
           imgPreview.src = ev.target.result;
         };
         reader.readAsDataURL(file);
 
-        // Hide the giant text partially to save space, or just keep it
         document.querySelector('.giant-camera-box span').innerText = 'Cambia Foto';
       } else {
         previewContainer.style.display = 'none';
@@ -401,6 +449,8 @@ class App {
 
         if (response.ok && result.success !== false) {
           alert('Spesa salvata correttamente!');
+          // Reset cache so storico reloads
+          this._expenseHistoryLoaded = false;
           window.location.hash = '#dashboard';
         } else {
           alert(result.error || 'Errore durante il salvataggio.');
@@ -414,6 +464,113 @@ class App {
         }
       }
     });
+  }
+
+  // Load and render expense history
+  async loadExpenseHistory() {
+    const container = document.getElementById('expense-history-list');
+    if (!container) return;
+
+    // Show skeleton on each load for fresh data
+    container.innerHTML = `
+      <div class="card skeleton" style="height: 60px; margin-bottom: 12px; border: none;"></div>
+      <div class="card skeleton" style="height: 60px; margin-bottom: 12px; border: none;"></div>
+      <div class="card skeleton" style="height: 60px; margin-bottom: 12px; border: none;"></div>
+    `;
+
+    const categoryLabels = {
+      cibo: 'Cibo/Spesa',
+      utenze: 'Utenze',
+      pulizie: 'Pulizie',
+      manutenzione: 'Manutenzione',
+      affitto: 'Affitto',
+      frutta_verdura: 'Frutta e Verdura',
+      tuto: 'Tuto',
+      altro: 'Altro'
+    };
+
+    const categoryIcons = {
+      cibo: 'fa-utensils',
+      utenze: 'fa-bolt',
+      pulizie: 'fa-broom',
+      manutenzione: 'fa-wrench',
+      affitto: 'fa-home',
+      frutta_verdura: 'fa-apple-alt',
+      tuto: 'fa-tshirt',
+      altro: 'fa-ellipsis-h'
+    };
+
+    try {
+      const response = await fetch('../api/?module=societa&action=getForesteria');
+      const result = await response.json();
+
+      if (response.ok && result.success && result.data) {
+        const expenses = result.data.expenses || [];
+
+        if (expenses.length === 0) {
+          container.innerHTML = `
+            <div style="text-align: center; padding: 40px 20px;">
+              <i class="fas fa-receipt" style="font-size: 48px; color: var(--text-muted); margin-bottom: 16px; opacity: 0.4;"></i>
+              <h3 style="color: var(--text-secondary); font-size: 16px; margin-bottom: 4px;">Nessuna spesa registrata</h3>
+              <p class="text-muted" style="font-size: 13px;">Le spese compariranno qui dopo il primo inserimento.</p>
+            </div>
+          `;
+          return;
+        }
+
+        // Compute total
+        const total = expenses.reduce((sum, e) => sum + parseFloat(e.amount || 0), 0);
+
+        let html = `
+          <div class="expense-total-bar stagger-item delay-1">
+            <span class="label">Totale Spese</span>
+            <span class="value">€ ${total.toFixed(2)}</span>
+          </div>
+          <div class="expense-list">
+        `;
+
+        expenses.forEach((exp, i) => {
+          const cat = exp.category || 'altro';
+          const icon = categoryIcons[cat] || 'fa-ellipsis-h';
+          const catLabel = categoryLabels[cat] || cat;
+          const dateStr = exp.expense_date
+            ? new Date(exp.expense_date).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })
+            : '';
+          const amount = parseFloat(exp.amount || 0).toFixed(2);
+          const delayClass = i < 10 ? `stagger-item delay-${Math.min(i + 1, 5)}` : '';
+
+          html += `
+            <div class="expense-item ${delayClass}">
+              <div class="expense-icon cat-${cat}">
+                <i class="fas ${icon}"></i>
+              </div>
+              <div class="expense-details">
+                <div class="expense-desc">${exp.description || 'Spesa'}</div>
+                <div class="expense-meta">${catLabel} • ${dateStr}</div>
+              </div>
+              <div class="expense-amount">€ ${amount}</div>
+            </div>
+          `;
+        });
+
+        html += '</div>';
+        container.innerHTML = html;
+      } else {
+        container.innerHTML = `
+          <div class="card" style="text-align: center; padding: 30px 20px;">
+            <i class="fas fa-exclamation-triangle" style="font-size: 36px; color: var(--danger); margin-bottom: 12px;"></i>
+            <p class="text-light">${result.error || 'Errore nel caricamento dello storico.'}</p>
+          </div>
+        `;
+      }
+    } catch (err) {
+      container.innerHTML = `
+        <div class="card" style="text-align: center; padding: 30px 20px;">
+          <i class="fas fa-wifi" style="font-size: 36px; color: var(--warning); margin-bottom: 12px;"></i>
+          <p class="text-light">Connessione non disponibile.</p>
+        </div>
+      `;
+    }
   }
 
   // Profilo View

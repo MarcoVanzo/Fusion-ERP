@@ -97,9 +97,10 @@ const Vehicles = (() => {
                 "vehicles",
                 o,
               ),
-              UI.toast(t ? "Mezzo aggiornato" : "Mezzo aggiunto", "success"),
-              await a(),
-              n.close());
+               Store.invalidate("vehicles"),
+               UI.toast(t ? "Mezzo aggiornato" : "Mezzo aggiunto", "success"),
+               await a(),
+               n.close());
           } catch (e) {
             ((document.getElementById("veh-error").textContent = e.message),
               document.getElementById("veh-error").classList.remove("hidden"),
@@ -119,6 +120,7 @@ const Vehicles = (() => {
               e && (e.disabled = !0);
               try {
                 (await Store.api("deleteVehicle", "vehicles", { id: t.id }),
+                  Store.invalidate("vehicles"),
                   UI.toast("Veicolo eliminato", "success"),
                   await a(),
                   n.close());

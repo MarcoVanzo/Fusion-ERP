@@ -991,7 +991,7 @@
 }
 .nt-tl-item {
   display: grid;
-  grid-template-columns: 80px 1fr;
+  grid-template-columns: 140px 1fr;
   gap: 16px;
   padding: 16px;
   background: rgba(255, 255, 255, 0.03);
