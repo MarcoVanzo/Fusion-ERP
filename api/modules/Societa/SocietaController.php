@@ -920,17 +920,38 @@ class SocietaController
     public function addExpense(): void
     {
         Auth::requireRole('social media manager');
-        $body = Response::jsonBody();
+        
+        $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+        if (strpos($contentType, 'application/json') !== false) {
+            $body = Response::jsonBody();
+        } else {
+            $body = $_POST;
+        }
+        
         Response::requireFields($body, ['description', 'amount', 'expense_date']);
 
         $db  = \FusionERP\Shared\Database::getInstance();
         $tid = TenantContext::id();
         $id  = 'FEX_' . bin2hex(random_bytes(4));
 
+        $receiptPath = null;
+        if (isset($_FILES['receipt']) && $_FILES['receipt']['error'] === UPLOAD_ERR_OK) {
+            $uploadDir = __DIR__ . '/../../../public/uploads/' . $tid . '/foresteria/';
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0777, true);
+            }
+            $ext = pathinfo($_FILES['receipt']['name'], PATHINFO_EXTENSION);
+            if (!$ext) $ext = 'jpg';
+            $filename = 'receipt_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
+            if (move_uploaded_file($_FILES['receipt']['tmp_name'], $uploadDir . $filename)) {
+                $receiptPath = 'uploads/' . $tid . '/foresteria/' . $filename;
+            }
+        }
+
         $db->prepare(
             'INSERT INTO foresteria_expenses
-             (id, tenant_id, description, amount, category, expense_date, notes, created_by)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+             (id, tenant_id, description, amount, category, expense_date, receipt_path, notes, created_by)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
         )->execute([
             $id,
             $tid,
@@ -938,12 +959,13 @@ class SocietaController
             (float)$body['amount'],
             $body['category'] ?? null,
             $body['expense_date'],
+            $receiptPath,
             $body['notes'] ?? null,
             Auth::requireAuth()['id'] ?? null,
         ]);
 
         Audit::log('INSERT', 'foresteria_expenses', $id, null, $body);
-        Response::success(['id' => $id], 201);
+        Response::success(['id' => $id, 'receipt_path' => $receiptPath], 201);
     }
 
     /** POST ?module=societa&action=deleteExpense — soft-delete spesa */

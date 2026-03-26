@@ -95,12 +95,9 @@ class Auth
             return $user;
         }
 
-        $perms = $user['permissions'] ?? null;
-        
-        // Fallback to default permissions if empty (e.g. newly created user)
-        if (empty($perms)) {
-            $perms = self::getDefaultPermissions($user['role'] ?? '');
-        }
+        $perms = $user['permissions'] ?? [];
+        $defaults = self::getDefaultPermissions($user['role'] ?? '');
+        $perms = array_merge($defaults, $perms);
 
         // Deny-by-default: if still no permissions map is configured, block access
         if (empty($perms)) {
@@ -125,12 +122,9 @@ class Auth
             return $user;
         }
 
-        $perms = $user['permissions'] ?? null;
-        
-        // Fallback to default permissions if empty (e.g. newly created user)
-        if (empty($perms)) {
-            $perms = self::getDefaultPermissions($user['role'] ?? '');
-        }
+        $perms = $user['permissions'] ?? [];
+        $defaults = self::getDefaultPermissions($user['role'] ?? '');
+        $perms = array_merge($defaults, $perms);
 
         // Deny-by-default: if still no permissions map is configured, block access
         if (empty($perms)) {
@@ -162,9 +156,8 @@ class Auth
         }
 
         $perms = $user['permissions'] ?? [];
-        if (empty($perms)) {
-            $perms = self::getDefaultPermissions($user['role'] ?? '');
-        }
+        $defaults = self::getDefaultPermissions($user['role'] ?? '');
+        $perms = array_merge($defaults, $perms);
 
         $_SESSION['user'] = [
             'id' => $user['id'],
@@ -213,6 +206,7 @@ class Auth
             'athlete-payments' => 'read',
             'athlete-metrics' => 'read',
             'athlete-documents' => 'read',
+            'biometrics' => 'read',
             'teams' => 'read',
             'results' => 'read',
             'results-matches' => 'read',
