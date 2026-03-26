@@ -21,28 +21,33 @@ class ScoutingController
      * ───────────────────────────────────────────────────────────────────── */
     private static function getEnvVar(string $key): ?string
     {
-        // Force manual generic parse of .env to bypass ANY caching (Dotenv immutability, OPcache, etc.)
-        $envFile = realpath(__DIR__ . '/../../../.env');
-        if (!$envFile || !file_exists($envFile)) {
-            error_log("ScoutingController getEnvVar: Missing .env at expected path.");
-            return null;
-        }
+        // 1. Force manual generic parse of .env to bypass ANY caching (Dotenv immutability, OPcache, etc.)
+        $rawPath = __DIR__ . '/../../../.env';
+        $envFile = realpath($rawPath) ?: $rawPath;
 
-        $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        $foundKeys = [];
-        foreach ($lines as $line) {
-            $line = trim($line);
-            if ($line === '' || $line[0] === '#') continue;
-            $parts = explode('=', $line, 2);
-            if (count($parts) === 2) {
-                $foundKeys[] = trim($parts[0]);
-                if (trim($parts[0]) === $key) {
-                    return trim($parts[1]);
+        if (file_exists($envFile)) {
+            $lines = @file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+            if ($lines !== false) {
+                foreach ($lines as $line) {
+                    $line = trim($line);
+                    if ($line === '' || $line[0] === '#') continue;
+                    $parts = explode('=', $line, 2);
+                    if (count($parts) === 2 && trim($parts[0]) === $key) {
+                        return trim($parts[1], " \t\n\r\0\x0B\"'");
+                    }
                 }
             }
+        } else {
+            error_log("ScoutingController getEnvVar: Missing .env at path ($envFile). Falling back to ENV.");
         }
-        error_log("ScoutingController getEnvVar: Key '$key' not found in " . count($foundKeys) . " parsed keys.");
-        error_log("Found keys dump: " . implode(', ', $foundKeys));
+
+        // 2. Fallback to standard environment variables
+        $envVal = $_ENV[$key] ?? getenv($key);
+        if ($envVal !== false && $envVal !== null && $envVal !== '') {
+            return (string)$envVal;
+        }
+
+        error_log("ScoutingController getEnvVar: Key '$key' not found.");
         return null;
     }
 
@@ -273,7 +278,6 @@ class ScoutingController
         $response = curl_exec($ch);
         $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $curlError = curl_error($ch);
-        curl_close($ch);
 
         if ($response === false || !empty($curlError)) {
             return ['success' => false, 'error' => 'Errore cURL Cognito: ' . $curlError];
