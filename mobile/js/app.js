@@ -604,7 +604,7 @@ class App {
           const result = await response.json();
 
           if (response.ok && result.success !== false) {
-            alert('Documento verificato dall\\'AI e caricato con successo!');
+            alert("Documento verificato dall'AI e caricato con successo!");
             this.renderProfilo();
           } else {
             alert(result.error || 'Errore durante il caricamento del documento.');

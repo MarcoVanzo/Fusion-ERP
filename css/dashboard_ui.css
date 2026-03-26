@@ -47,6 +47,7 @@
   line-height: 1.1;
   background: linear-gradient(90deg, #fff, rgba(255, 255, 255, 0.6));
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
   display: flex;
   align-items: center;
@@ -573,4 +574,469 @@
 .dash-select option {
   background: #1a1a1e;
   color: #fff;
+}
+
+/* ─── GESTIONE AUTISTI ─── */
+.drv-page {
+  padding: 0;
+}
+.drv-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.drv-title {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 800;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.drv-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+}
+.drv-card {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 20px;
+  transition: all 0.3s;
+}
+.drv-card.inactive {
+  opacity: 0.6;
+  filter: grayscale(0.8);
+}
+.drv-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+}
+.drv-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(0, 229, 255, 0.1);
+  color: var(--accent-cyan);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  border: 1px solid rgba(0, 229, 255, 0.3);
+  box-shadow: 0 0 15px rgba(0, 229, 255, 0.2);
+}
+.drv-name {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.drv-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 12px;
+}
+.drv-meta span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.drv-meta i {
+  color: rgba(255, 255, 255, 0.4);
+}
+.drv-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.drv-badge.active {
+  background: rgba(0, 230, 118, 0.15);
+  color: #00E676;
+}
+.drv-badge.inactive {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.5);
+}
+.drv-actions {
+  display: flex;
+  gap: 12px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.1);
+  padding-top: 16px;
+}
+.btn-drv {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border-radius: 8px;
+  padding: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.btn-drv:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+.btn-drv.danger {
+  color: #ff1a1a;
+  border-color: rgba(255, 26, 26, 0.3);
+  background: rgba(255, 26, 26, 0.05);
+}
+.btn-drv.danger:hover {
+  background: rgba(255, 26, 26, 0.15);
+}
+
+/* ─── STORICO TRASPORTI ─── */
+.st-page {
+  padding: 0;
+}
+.st-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.st-title {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 800;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.st-card {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
+  padding: 24px;
+  margin-bottom: 16px;
+  transition: all 0.3s;
+}
+.st-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(0, 229, 255, 0.3);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+.st-card-title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--accent-cyan);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+}
+.st-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 16px;
+}
+.st-card-meta span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.st-card-meta i {
+  color: rgba(255, 255, 255, 0.4);
+}
+.st-card-athletes {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.8);
+  padding-top: 16px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: flex-start;
+  line-height: 1.5;
+}
+
+/* ─── NUOVO TRASPORTO ─── */
+.nt-page {
+  padding: 0;
+}
+.nt-top {
+  margin-bottom: 24px;
+}
+.nt-title {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 800;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.nt-subtitle {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 8px;
+  margin-left: 48px;
+}
+.nt-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+@media (max-width: 768px) {
+  .nt-form-row {
+    grid-template-columns: 1fr;
+  }
+}
+.nt-label {
+  display: block;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+.nt-input, .nt-select {
+  width: 100%;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  color: #fff;
+  font-size: 14px;
+  transition: all 0.3s;
+}
+.nt-input:focus, .nt-select:focus {
+  outline: none;
+  border-color: var(--accent-pink);
+  box-shadow: 0 0 0 3px rgba(255, 0, 255, 0.1);
+}
+.nt-select option {
+  background: #1a1a1e;
+  color: #fff;
+}
+.nt-btn-add {
+  padding: 12px 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+}
+.nt-btn-add:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+.nt-athletes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+.nt-athlete-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+.nt-athlete-card:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+.nt-athlete-card.selected {
+  background: rgba(0, 230, 118, 0.1);
+  border-color: rgba(0, 230, 118, 0.4);
+}
+.nt-athlete-card.selected::after {
+  content: '✓';
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  color: #00E676;
+  font-weight: 800;
+  font-size: 16px;
+}
+.nt-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+}
+.nt-athlete-name {
+  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+.nt-athlete-addr {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.nt-athlete-addr.missing {
+  color: #FFD600;
+}
+.nt-addr-input {
+  width: 100%;
+  padding: 8px;
+  margin-top: 8px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: #fff;
+  font-size: 12px;
+}
+.nt-calc-btn {
+  padding: 16px 32px;
+  background: linear-gradient(135deg, var(--accent-pink), #cc0070);
+  border: none;
+  border-radius: 12px;
+  color: #fff;
+  font-weight: 800;
+  font-size: 16px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 4px 20px rgba(255, 0, 255, 0.4);
+  transition: all 0.3s;
+}
+.nt-calc-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(255, 0, 255, 0.6);
+}
+.nt-calc-btn:disabled {
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: none;
+  color: rgba(255, 255, 255, 0.3);
+  cursor: not-allowed;
+}
+.nt-results {
+  margin-top: 40px;
+  padding-top: 40px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+.nt-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 32px;
+}
+.nt-stat {
+  background: rgba(0, 229, 255, 0.05);
+  border: 1px solid rgba(0, 229, 255, 0.2);
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+}
+.nt-stat-val {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--accent-cyan);
+  margin-bottom: 4px;
+}
+.nt-stat-lbl {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: rgba(255, 255, 255, 0.5);
+}
+.nt-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.nt-tl-item {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 16px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  border-left: 4px solid rgba(255, 255, 255, 0.2);
+}
+.nt-tl-item.partenza { border-left-color: var(--accent-cyan); }
+.nt-tl-item.raccolta { border-left-color: var(--accent-pink); cursor: grab; }
+.nt-tl-item.arrivo { border-left-color: #00E676; }
+.nt-tl-time {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 800;
+  color: #fff;
+}
+.nt-tl-note {
+  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+.nt-tl-place {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.nt-save-btn {
+  padding: 16px 32px;
+  background: linear-gradient(135deg, #00e5ff, #00b3cc);
+  border: none;
+  border-radius: 12px;
+  color: #000;
+  font-weight: 800;
+  font-size: 16px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 4px 20px rgba(0, 229, 255, 0.4);
+  transition: all 0.3s;
+}
+.nt-save-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 229, 255, 0.6);
 }
