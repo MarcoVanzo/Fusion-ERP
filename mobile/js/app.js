@@ -39,6 +39,7 @@ class App {
     if (hash === '#login') this.renderLogin();
     else if (hash === '#dashboard') this.renderDashboard();
     else if (hash === '#spese') this.renderSpese();
+    else if (hash === '#profilo') this.renderProfilo();
     else this.renderLogin(); // Default fallback
   }
 
@@ -129,9 +130,9 @@ class App {
             <i class="fas fa-clipboard-list"></i>
             <span>Scouting</span>
           </a>
-          <a href="#atleti" class="nav-item" onclick="alert('In sviluppo')">
-            <i class="fas fa-users"></i>
-            <span>Atleti</span>
+          <a href="#profilo" class="nav-item">
+            <i class="fas fa-user-circle"></i>
+            <span>Profilo</span>
           </a>
           <a href="#spese" class="nav-item">
             <i class="fas fa-receipt"></i>
@@ -230,9 +231,9 @@ class App {
             <i class="fas fa-clipboard-list"></i>
             <span>Scouting</span>
           </a>
-          <a href="#atleti" class="nav-item" onclick="alert('In sviluppo')">
-            <i class="fas fa-users"></i>
-            <span>Atleti</span>
+          <a href="#profilo" class="nav-item">
+            <i class="fas fa-user-circle"></i>
+            <span>Profilo</span>
           </a>
           <a href="#spese" class="nav-item active">
             <i class="fas fa-receipt"></i>
@@ -301,6 +302,137 @@ class App {
         }
       }
     });
+  }
+
+  // Profilo View
+  async renderProfilo() {
+    this.container.innerHTML = `
+      <div class="screen profilo-screen">
+        <header class="app-header">
+          <div class="app-title">Profilo Atleta</div>
+        </header>
+
+        <div class="p-20" id="profilo-content" style="padding-bottom: 90px; overflow-y: auto;">
+          <div style="text-align: center; margin-top: 40px;">
+            <i class="fas fa-spinner fa-spin" style="font-size: 2rem;"></i>
+            <p class="mt-10">Caricamento profilo...</p>
+          </div>
+        </div>
+
+        <nav class="bottom-nav">
+          <a href="#dashboard" class="nav-item">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+          </a>
+          <a href="#scouting" class="nav-item" onclick="alert('In sviluppo')">
+            <i class="fas fa-clipboard-list"></i>
+            <span>Scouting</span>
+          </a>
+          <a href="#profilo" class="nav-item active">
+            <i class="fas fa-user-circle"></i>
+            <span>Profilo</span>
+          </a>
+          <a href="#spese" class="nav-item">
+            <i class="fas fa-receipt"></i>
+            <span>Spese</span>
+          </a>
+        </nav>
+      </div>
+    `;
+
+    try {
+      const response = await fetch('../api/?module=athletes&action=myProfile');
+      const result = await response.json();
+
+      if (response.ok && result.success && result.data) {
+        const p = result.data;
+        
+        // Formatta la data di nascita
+        let dobStr = p.birth_date || 'Non disponibile';
+        if (p.birth_date) {
+            const d = new Date(p.birth_date);
+            dobStr = d.toLocaleDateString('it-IT');
+        }
+
+        // Funzione helper per documenti
+        const renderDoc = (title, path, fieldName) => {
+            if (!path) {
+                return `<div class="doc-item" style="padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
+                          <span><i class="fas fa-file-alt" style="color: #666; margin-right: 8px;"></i> ${title}</span>
+                          <span style="font-size: 12px; color: #f87171;">Mancante</span>
+                        </div>`;
+            }
+            return `<div class="doc-item" style="padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
+                      <span><i class="fas fa-check-circle" style="color: #10b981; margin-right: 8px;"></i> ${title}</span>
+                      <a href="../api/?module=athletes&action=downloadDoc&id=${p.id}&field=${fieldName}" target="_blank" class="btn" style="padding: 6px 12px; font-size: 12px; height: auto;">Apri</a>
+                    </div>`;
+        };
+
+        const html = `
+          <div style="background: var(--surface); border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 20px;">
+            <div style="width: 80px; height: 80px; background: var(--secondary); border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; font-size: 32px; color: #fff; overflow: hidden;">
+              ${p.photo_path ? '<img src="../' + p.photo_path + '" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">' : '<i class="fas fa-user"></i>'}
+            </div>
+            <h2 style="margin: 0; color: #fff; font-size: 22px;">${p.first_name} ${p.last_name}</h2>
+            <div style="color: var(--secondary); margin-top: 5px; font-weight: 600;">${p.role || 'Ruolo non specificato'} ${p.jersey_number ? '- Num. ' + p.jersey_number : ''}</div>
+            <div style="font-size: 14px; opacity: 0.8; margin-top: 5px;">${p.team_name}</div>
+          </div>
+
+          <div style="margin-bottom: 24px;">
+            <h3 style="margin-bottom: 12px; font-size: 16px; color: var(--secondary); border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">Scheda Anagrafica</h3>
+            
+            <div style="display: grid; grid-template-columns: 1fr; gap: 12px; font-size: 14px;">
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 4px;">
+                    <span style="opacity:0.7">Data Nascita</span><span>${dobStr}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 4px;">
+                    <span style="opacity:0.7">Luogo Nascita</span><span>${p.birth_place || '-'}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 4px;">
+                    <span style="opacity:0.7">Codice Fiscale</span><span>${p.fiscal_code || '-'}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 4px;">
+                    <span style="opacity:0.7">Indirizzo</span><span>${p.residence_address || '-'}, ${p.residence_city || '-'}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 4px;">
+                    <span style="opacity:0.7">Telefono</span><span>${p.phone || '-'}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 4px;">
+                    <span style="opacity:0.7">Email</span><span>${p.email || '-'}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding-bottom: 4px;">
+                    <span style="opacity:0.7">Dati Fisici</span><span>${p.height_cm ? p.height_cm+'cm' : '-'} / ${p.weight_kg ? p.weight_kg+'kg' : '-'}</span>
+                </div>
+            </div>
+          </div>
+
+          <div style="margin-bottom: 24px;">
+            <h3 style="margin-bottom: 12px; font-size: 16px; color: var(--secondary); border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">Documenti Allegati</h3>
+            ${renderDoc("Carta d'Identità (Fronte)", p.id_doc_front_file_path, 'id_doc_front_file_path')}
+            ${renderDoc("Carta d'Identità (Retro)", p.id_doc_back_file_path, 'id_doc_back_file_path')}
+            ${renderDoc('Codice Fiscale (Fronte)', p.cf_doc_front_file_path, 'cf_doc_front_file_path')}
+            ${renderDoc('Codice Fiscale (Retro)', p.cf_doc_back_file_path, 'cf_doc_back_file_path')}
+            ${renderDoc('Certificato Medico', p.medical_cert_file_path, 'medical_cert_file_path')}
+            ${renderDoc('Contratto / Tesseramento', p.contract_file_path, 'contract_file_path')}
+          </div>
+        `;
+        document.getElementById('profilo-content').innerHTML = html;
+      } else {
+        document.getElementById('profilo-content').innerHTML = `
+          <div style="text-align: center; margin-top: 40px; color: #f87171;">
+            <i class="fas fa-exclamation-circle" style="font-size: 2rem; margin-bottom: 10px;"></i>
+            <p>${result.error || 'Profilo atleta non trovato.'}</p>
+          </div>
+        `;
+      }
+    } catch (err) {
+      document.getElementById('profilo-content').innerHTML = `
+        <div style="text-align: center; margin-top: 40px; color: #f87171;">
+          <i class="fas fa-wifi" style="font-size: 2rem; margin-bottom: 10px;"></i>
+          <p>Errore di connessione.</p>
+        </div>
+      `;
+    }
   }
 }
 
