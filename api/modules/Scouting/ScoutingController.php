@@ -190,7 +190,7 @@ class ScoutingController
         $result = self::_doSync();
 
         if (!$result['success']) {
-            Response::error($result['error'], 502);
+            Response::error($result['error'], 400); // 400 instead of 502 so Cloudflare doesn't intercept it
         }
 
         Response::success([
