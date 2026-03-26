@@ -893,30 +893,7 @@ const App = (() => {
     // Applies a subtle perspective tilt effect to cards on mousemove.
     // Cards with class .no-tilt are excluded from the effect.
     function _init3DCardHover() {
-        const appEl = document.getElementById('app');
-        if (!appEl) return;
-
-        // Use event delegation — works with dynamically rendered cards
-        appEl.addEventListener('mousemove', (e) => {
-            const card = e.target.closest('.card');
-            if (!card || card.classList.contains('no-tilt')) return;
-            const { left, top, width, height } = card.getBoundingClientRect();
-            const rx = ((e.clientY - top) / height - 0.5) * 10;
-            const ry = ((e.clientX - left) / width - 0.5) * -10;
-            card.style.transform = `perspective(700px) rotateX(${rx}deg) rotateY(${ry}deg) scale(1.015)`;
-        });
-
-        appEl.addEventListener('mouseleave', (e) => {
-            const card = e.target.closest('.card');
-            if (card && !card.classList.contains('no-tilt')) card.style.transform = '';
-        }, true);
-
-        // Also reset on fast mouse-out from card
-        appEl.addEventListener('mouseout', (e) => {
-            if (e.target.classList?.contains('card') && !e.target.classList.contains('no-tilt')) {
-                e.target.style.transform = '';
-            }
-        });
+        // Disabled per request: eliminate movement-based animation effects on cards
     }
 
     // ── G#6: Generative Gradient Avatar ──────────────────────────────────────

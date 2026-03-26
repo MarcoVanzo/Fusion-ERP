@@ -79,10 +79,12 @@ class ScoutingController
     {
         Auth::requireRole('allenatore');
 
+        // Security Filter (T6): Limita a 250 record recenti per non appesantire il caricamento mobile iniziale
         $stmt = $this->db->prepare("
             SELECT id, nome, cognome, societa_appartenenza, anno_nascita, note, rilevatore, data_rilevazione, source, is_locked_edit
             FROM scouting_athletes
             ORDER BY created_at DESC
+            LIMIT 250
         ");
         $stmt->execute();
         $athletes = $stmt->fetchAll(PDO::FETCH_ASSOC);

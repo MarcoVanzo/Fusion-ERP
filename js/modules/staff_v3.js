@@ -692,75 +692,78 @@ const Staff = (() => {
                   footer:
                     '\n                <button class="btn btn-ghost btn-sm" id="es-cancel" type="button">Annulla</button>\n                <button class="btn btn-primary btn-sm" id="es-save" type="button">SALVA MODIFICHE</button>\n            ',
                 });
-              (document
-                .getElementById("es-cancel")
-                ?.addEventListener("click", () => l.close()),
-                document
-                  .getElementById("es-save")
-                  ?.addEventListener("click", async () => {
+              const performSave = async (showSuccessToast = true, closeOnSuccess = false) => {
                     const a = document.getElementById("es-fname").value.trim(),
                       n = document.getElementById("es-lname").value.trim(),
                       s = document.getElementById("es-error");
-                    if (!a || !n)
-                      return (
-                        (s.textContent = "Nome e cognome sono obbligatori"),
-                        void s.classList.remove("hidden")
-                      );
+                    if (!a || !n) {
+                      s.textContent = "Nome e cognome sono obbligatori";
+                      s.classList.remove("hidden");
+                      return;
+                    }
                     const i = document.getElementById("es-teams-wrapper"),
-                      o = i
-                        ? Array.from(
-                            i.querySelectorAll(
-                              'input[name="es-teams"]:checked',
-                            ),
-                          ).map((e) => e.value)
-                        : [];
-                    console.log("Saving staff with teams:", o);
+                      o = i ? Array.from(i.querySelectorAll('input[name="es-teams"]:checked')).map((e) => e.value) : [];
                     const r = document.getElementById("es-save");
-                    ((r.disabled = !0), (r.textContent = "Salvataggio..."));
+                    r.disabled = !0; r.textContent = "Salvataggio...";
                     try {
-                      (await Store.api("update", "staff", {
+                      await Store.api("update", "staff", {
                         id: e.id,
                         first_name: a,
                         last_name: n,
                         role: document.getElementById("es-role").value || null,
-                        birth_date:
-                          document.getElementById("es-birth").value || null,
-                        birth_place:
-                          document.getElementById("es-birthplace").value ||
-                          null,
-                        residence_address:
-                          document.getElementById("es-resaddr").value || null,
-                        residence_city:
-                          document.getElementById("es-rescity").value || null,
-                        phone:
-                          document.getElementById("es-phone").value || null,
-                        email:
-                          document.getElementById("es-email").value || null,
-                        fiscal_code:
-                          document
-                            .getElementById("es-fiscal")
-                            .value?.toUpperCase() || null,
-                        identity_document:
-                          document.getElementById("es-doc").value || null,
-                        medical_cert_expires_at:
-                          document.getElementById("es-medcert").value || null,
-                        notes:
-                          document.getElementById("es-notes").value || null,
+                        birth_date: document.getElementById("es-birth").value || null,
+                        birth_place: document.getElementById("es-birthplace").value || null,
+                        residence_address: document.getElementById("es-resaddr").value || null,
+                        residence_city: document.getElementById("es-rescity").value || null,
+                        phone: document.getElementById("es-phone").value || null,
+                        email: document.getElementById("es-email").value || null,
+                        fiscal_code: document.getElementById("es-fiscal").value?.toUpperCase() || null,
+                        identity_document: document.getElementById("es-doc").value || null,
+                        medical_cert_expires_at: document.getElementById("es-medcert").value || null,
+                        notes: document.getElementById("es-notes").value || null,
                         team_ids: o,
-                      }),
-                        l.close(),
-                        UI.toast("Membro staff aggiornato", "success"),
-                        Store.invalidate("list", "staff"),
-                        Store.invalidate("get", "staff"),
-                        (t = await Store.get("list", "staff").catch(() => t)),
-                        d(e.id));
-                    } catch (e) {
-                      ((s.textContent = e.message),
-                        s.classList.remove("hidden"),
-                        (r.disabled = !1),
-                        (r.textContent = "SALVA MODIFICHE"));
+                      });
+                      if(showSuccessToast) {
+                          UI.toast("Auto-Salvataggio completato", "success");
+                          const activeEl = document.activeElement;
+                          if (activeEl && ['INPUT', 'SELECT', 'TEXTAREA'].includes(activeEl.tagName)) {
+                              const originalBorder = activeEl.style.borderColor;
+                              activeEl.style.borderColor = "var(--color-success)";
+                              setTimeout(() => activeEl.style.borderColor = originalBorder, 1500);
+                          }
+                      }
+                      Store.invalidate("list", "staff");
+                      Store.invalidate("get", "staff");
+                      
+                      // Aggiorna lo store t se necessario
+                      t = await Store.get("list", "staff").catch(() => t);
+                      
+                      if(closeOnSuccess) {
+                          l.close();
+                          d(e.id);
+                      }
+                    } catch (err) {
+                      s.textContent = err.message;
+                      s.classList.remove("hidden");
+                    } finally {
+                      r.disabled = !1; r.textContent = "SALVA MODIFICHE";
                     }
-                  }));
+                };
+
+                document.getElementById("es-cancel")?.addEventListener("click", () => l.close());
+                document.getElementById("es-save")?.addEventListener("click", () => performSave(true, true));
+                
+                // Attach blur listener to all inputs in the modal body for Auto-save (T3, T5)
+                setTimeout(() => {
+                    const modalWrapper = document.getElementById("es-fname")?.closest('.fusion-modal-body');
+                    if(modalWrapper) {
+                        modalWrapper.addEventListener('focusout', (ev) => {
+                            if(['INPUT', 'SELECT', 'TEXTAREA'].includes(ev.target.tagName)) {
+                                performSave(true, false);
+                            }
+                        });
+                    }
+                }, 100);
             })(p),
           { signal: e.signal },
         ),

@@ -64,7 +64,7 @@ const Scouting = (() => {
         });
 
         document.getElementById('scouting-add-btn')?.addEventListener('click', () => {
-            openAddModal();
+            openSidePanel();
         });
 
         document.getElementById('scouting-sync-btn')?.addEventListener('click', () => {
@@ -79,7 +79,7 @@ const Scouting = (() => {
                     const id = parseInt(btn.dataset.id, 10);
                     const athlete = athletes.find(a => a.id === id);
                     if (athlete) {
-                        openAddModal(athlete);
+                        openSidePanel(athlete);
                     }
                 }
             });
@@ -161,13 +161,20 @@ const Scouting = (() => {
         }
     }
 
-    function openAddModal(athlete = null) {
+    function openSidePanel(athlete = null) {
         const isEdit = athlete !== null;
+        const panel = document.getElementById('scouting-side-panel');
+        if (!panel) return;
         
-        const modal = UI.modal({
-            title: isEdit ? "Modifica Atleta" : "Nuovo Atleta Scouting",
-            body: `
-                ${isEdit ? '<div class="banner banner-warning" style="margin-bottom:var(--sp-4);font-size:12px;display:flex;align-items:center;gap:8px"><i class="ph ph-warning-circle" style="font-size:16px"></i> Salvando le modifiche, questo record verrà bloccato e non sarà più sovrascritto dalla sincronizzazione di Cognito Forms.</div>' : ''}
+        panel.innerHTML = `
+            <div style="padding:var(--sp-3) var(--sp-4); border-bottom:1px solid var(--color-border); display:flex; justify-content:space-between; align-items:center; background:var(--color-bg);">
+                <h3 style="margin:0; font-size:16px; font-weight:600;">${isEdit ? "Modifica Atleta" : "Nuovo Atleta"}</h3>
+                <button class="btn btn-icon btn-ghost btn-sm" id="sc-cancel-panel" title="Chiudi">
+                    <i class="ph ph-x"></i>
+                </button>
+            </div>
+            <div style="padding:var(--sp-4); flex-grow:1; overflow-y:auto;">
+                ${isEdit ? '<div class="banner banner-warning" style="margin-bottom:var(--sp-4);font-size:12px;display:flex;align-items:center;gap:8px"><i class="ph ph-warning-circle" style="font-size:16px"></i> Salvando le modifiche questo record verrà bloccato e non sarà più sovrascritto dalla sync di Cognito.</div>' : ''}
                 <div class="form-grid">
                     <div class="form-group">
                         <label class="form-label" for="sc-nome">Nome *</label>
@@ -180,41 +187,49 @@ const Scouting = (() => {
                 </div>
                 <div class="form-grid">
                     <div class="form-group">
-                        <label class="form-label" for="sc-societa">Società di Appartenenza</label>
+                        <label class="form-label" for="sc-societa">Società</label>
                         <input id="sc-societa" class="form-input" type="text" value="${isEdit ? Utils.escapeHtml(athlete.societa_appartenenza || '') : ''}">
                     </div>
                     <div class="form-group">
-                        <label class="form-label" for="sc-anno">Anno di Nascita</label>
+                        <label class="form-label" for="sc-anno">Nascita</label>
                         <input id="sc-anno" class="form-input" type="number" min="1990" max="2020" value="${isEdit ? (athlete.anno_nascita || '') : ''}">
                     </div>
                 </div>
                 <div class="form-grid">
                     <div class="form-group">
                         <label class="form-label" for="sc-rilevatore">Rilevatore</label>
-                        <input id="sc-rilevatore" class="form-input" type="text" placeholder="Nome di chi l'ha rilevato" value="${isEdit ? Utils.escapeHtml(athlete.rilevatore || '') : ''}">
+                        <input id="sc-rilevatore" class="form-input" type="text" placeholder="Nome" value="${isEdit ? Utils.escapeHtml(athlete.rilevatore || '') : ''}">
                     </div>
                     <div class="form-group">
-                        <label class="form-label" for="sc-data">Data Rilevazione</label>
+                        <label class="form-label" for="sc-data">Data</label>
                         <input id="sc-data" class="form-input" type="date" value="${isEdit && athlete.data_rilevazione ? athlete.data_rilevazione : new Date().toISOString().substring(0,10)}">
                     </div>
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="sc-note">Note</label>
-                    <textarea id="sc-note" class="form-input" rows="3">${isEdit ? Utils.escapeHtml(athlete.note || '') : ''}</textarea>
+                    <textarea id="sc-note" class="form-input" rows="4">${isEdit ? Utils.escapeHtml(athlete.note || '') : ''}</textarea>
                 </div>
                 <div id="sc-error" class="form-error hidden"></div>
-            `,
-            footer: `
-                <button class="btn btn-ghost btn-sm" id="sc-cancel" type="button">Annulla</button>
-                <button class="btn btn-primary btn-sm" id="sc-save" type="button">SALVA</button>
-            `
-        });
+            </div>
+            <div style="padding:var(--sp-3) var(--sp-4); border-top:1px solid var(--color-border); background:var(--color-bg); display:flex; justify-content:flex-end; gap:var(--sp-2);">
+                <button class="btn btn-ghost btn-sm" id="sc-cancel-panel-btn" type="button">Annulla</button>
+                <button class="btn btn-primary btn-sm" id="sc-save-panel" type="button"><i class="ph ph-floppy-disk"></i> SALVA</button>
+            </div>
+        `;
+        
+        panel.style.display = 'flex';
 
-        document.getElementById('sc-cancel')?.addEventListener('click', () => modal.close());
+        const closeModal = () => {
+            panel.style.display = 'none';
+            panel.innerHTML = '';
+        };
 
-        document.getElementById('sc-save')?.addEventListener('click', async () => {
+        document.getElementById('sc-cancel-panel')?.addEventListener('click', closeModal);
+        document.getElementById('sc-cancel-panel-btn')?.addEventListener('click', closeModal);
+
+        document.getElementById('sc-save-panel')?.addEventListener('click', async () => {
             const errorDiv = document.getElementById('sc-error');
-            const saveBtn = document.getElementById('sc-save');
+            const saveBtn = document.getElementById('sc-save-panel');
             
             const payload = {
                 id: isEdit ? athlete.id : undefined,
@@ -235,7 +250,7 @@ const Scouting = (() => {
 
             try {
                 saveBtn.disabled = true;
-                saveBtn.textContent = 'Salvataggio...';
+                saveBtn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Salvataggio...';
                 
                 if (isEdit) {
                     await Store.api('updateEntry', 'scouting', payload);
@@ -245,13 +260,13 @@ const Scouting = (() => {
 
                 Store.invalidate('scouting');
                 UI.toast(isEdit ? "Modifiche salvate con successo" : "Atleta salvato con successo", "success");
-                modal.close();
+                closeModal();
                 await refreshData();
             } catch (err) {
                 errorDiv.textContent = err.message || 'Errore durante il salvataggio.';
                 errorDiv.classList.remove('hidden');
                 saveBtn.disabled = false;
-                saveBtn.textContent = 'SALVA';
+                saveBtn.innerHTML = '<i class="ph ph-floppy-disk"></i> SALVA';
             }
         });
     }
