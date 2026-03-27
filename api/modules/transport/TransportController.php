@@ -11,6 +11,7 @@ namespace FusionERP\Modules\Transport;
 use FusionERP\Shared\Auth;
 use FusionERP\Shared\Audit;
 use FusionERP\Shared\Response;
+use FusionERP\Shared\AIService;
 use Mpdf\Mpdf;
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception as MailerException;
@@ -570,10 +571,7 @@ HTML;
             Response::error('Identificativo o dati di anteprima obbligatori', 400);
         }
 
-        $apiKey = $_ENV['GEMINI_API_KEY'] ?? $_SERVER['GEMINI_API_KEY'] ?? getenv('GEMINI_API_KEY') ?: '';
-        if (empty($apiKey)) {
-            Response::error('Chiave API Gemini non configurata. Impostare GEMINI_API_KEY nelle variabili d\'ambiente.', 500);
-        }
+
 
         if ($isPreview) {
             $preview = $body['previewData'];
@@ -651,52 +649,16 @@ HTML;
         $prompt .= "- Considera la viabilità e la facilità di accesso dei punti suggeriti.\n";
         $prompt .= "- Rispondi SOLO con il JSON, nessun altro testo.\n";
 
-        // Call Google Gemini API (same pattern as AdminController OCR)
-        // Request using gemini-2.5-flash
-        $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' . $apiKey;
-
-        $payload = json_encode([
-            'contents' => [[
-                'parts' => [
-                    ['text' => $prompt],
-                ],
-            ]],
-            'generationConfig' => [
+        // Call Google Gemini API
+        try {
+            $aiContent = AIService::generateContent($prompt, [
                 'maxOutputTokens'  => 8192,
                 'temperature'      => 0.3,
                 'responseMimeType' => 'application/json',
-            ],
-        ]);
-
-        $ch = curl_init($url);
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST           => true,
-            CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
-            CURLOPT_POSTFIELDS     => $payload,
-            CURLOPT_TIMEOUT        => 60,
-            CURLOPT_CONNECTTIMEOUT => 10,
-        ]);
-
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $curlError = curl_error($ch);
-        curl_close($ch);
-
-        if ($response === false) {
-            error_log('[AI_TRANSPORT] Curl error: ' . $curlError);
-            Response::error('Errore di connessione a Gemini: ' . $curlError, 500);
+            ]);
+        } catch (\Exception $e) {
+            Response::error($e->getMessage(), 500);
         }
-
-        $responseData = json_decode($response, true);
-        if ($httpCode !== 200 || !$responseData) {
-            $keyUsed = substr($apiKey, 0, 8) . '...';
-            $errMsg = $responseData['error']['message'] ?? 'Risposta non valida da Gemini (HTTP ' . $httpCode . ')';
-            error_log('[AI_TRANSPORT] Gemini API error (' . $keyUsed . '): ' . $response);
-            Response::error('Errore Gemini [' . $keyUsed . ']: ' . $errMsg, 500);
-        }
-
-        $aiContent = trim($responseData['candidates'][0]['content']['parts'][0]['text'] ?? '');
 
         // Robust JSON extraction
         if (preg_match('/\{[\s\S]*\}/', $aiContent, $matches)) {

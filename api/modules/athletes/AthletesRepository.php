@@ -19,6 +19,14 @@ class AthletesRepository
         $this->db = Database::getInstance();
     }
 
+    public function getTeamIdForSeason(string $seasonId): ?string
+    {
+        $stmt = $this->db->prepare('SELECT team_id FROM team_seasons WHERE id = :id');
+        $stmt->execute([':id' => $seasonId]);
+        $val = $stmt->fetchColumn();
+        return $val !== false ? (string)$val : null;
+    }
+
     public function listAthletes(string $teamSeasonId = '', bool $includeInactive = false): array
     {
         $sql = 'SELECT DISTINCT a.id, a.team_id, a.full_name, a.jersey_number, a.role, a.birth_date,

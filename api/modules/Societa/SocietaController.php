@@ -86,7 +86,8 @@ class SocietaController
             $relPath = $this->service->uploadLogo($_FILES['logo'], TenantContext::id());
             Response::success(['logo_path' => $relPath], 201);
         } catch (\Exception $e) {
-            Response::error($e->getMessage(), 400);
+            error_log('Upload Logo Error: ' . $e->getMessage());
+            Response::error('Errore durante il caricamento del logo.', 500);
         }
     }
 
@@ -263,7 +264,8 @@ class SocietaController
             Audit::log('UPDATE', 'societa_members', $id, ['photo_path' => $member['photo_path'] ?? null], ['photo_path' => $relPath]);
             Response::success(['photo_path' => $relPath]);
         } catch (\Exception $e) {
-            Response::error($e->getMessage(), 400);
+            error_log('Upload Member Photo Error: ' . $e->getMessage());
+            Response::error('Errore durante il caricamento della foto.', 500);
         }
     }
 
@@ -279,9 +281,9 @@ class SocietaController
     {
         Auth::requireRole('social media manager');
 
-        $category = $_POST['category'] ?? 'altro';
-        $expiryDate = $_POST['expiry_date'] ?? null;
-        $notes = $_POST['notes'] ?? null;
+        $category = filter_input(INPUT_POST, 'category', FILTER_SANITIZE_SPECIAL_CHARS) ?: 'altro';
+        $expiryDate = filter_input(INPUT_POST, 'expiry_date', FILTER_SANITIZE_SPECIAL_CHARS) ?: null;
+        $notes = filter_input(INPUT_POST, 'notes', FILTER_SANITIZE_SPECIAL_CHARS) ?: null;
 
         if (empty($_FILES['file'])) {
             Response::error('Errore upload file mancante', 400);
@@ -308,7 +310,8 @@ class SocietaController
 
             Response::success(['id' => $docId, 'file_path' => $uploaded['file_path']], 201);
         } catch (\Exception $e) {
-            Response::error($e->getMessage(), 400);
+            error_log('Upload Document Error: ' . $e->getMessage());
+            Response::error('Errore durante il caricamento del documento.', 500);
         }
     }
 
@@ -521,7 +524,7 @@ class SocietaController
     {
         Auth::requireRole('social media manager');
 
-        $sponsorId = $_POST['sponsor_id'] ?? '';
+        $sponsorId = filter_input(INPUT_POST, 'sponsor_id', FILTER_SANITIZE_SPECIAL_CHARS) ?: '';
         if (empty($sponsorId)) {
             Response::error('sponsor_id obbligatorio', 400);
         }
@@ -541,7 +544,8 @@ class SocietaController
             Audit::log('UPDATE', 'societa_sponsors', $sponsorId, ['logo_path' => $sponsor['logo_path']], ['logo_path' => $relPath]);
             Response::success(['logo_path' => $relPath], 200);
         } catch (\Exception $e) {
-            Response::error($e->getMessage(), 400);
+            error_log('Upload Sponsor Logo Error: ' . $e->getMessage());
+            Response::error('Errore durante il caricamento del logo sponsor.', 500);
         }
     }
 
@@ -601,7 +605,8 @@ class SocietaController
         try {
             $this->repo->createTitolo($data);
         } catch (\Exception $e) {
-            Response::error('PHP_ERROR: ' . $e->getMessage(), 500);
+            error_log('Create Titolo Error: ' . $e->getMessage());
+            Response::error('Errore durante la creazione del titolo.', 500);
         }
         
         Audit::log('INSERT', 'societa_titoli', $id, null, $body);
@@ -768,7 +773,8 @@ class SocietaController
             Audit::log('INSERT', 'foresteria_expenses', $processed['id'], null, $body);
             Response::success(['id' => $processed['id'], 'receipt_path' => $processed['receipt_path']], 201);
         } catch (\Exception $e) {
-            Response::error($e->getMessage(), 400);
+            error_log('Add Expense Error: ' . $e->getMessage());
+            Response::error('Errore tecnico durante il salvataggio della spesa.', 500);
         }
     }
 
@@ -793,7 +799,9 @@ class SocietaController
 
         $tid = TenantContext::id();
         try {
-            $media = $this->service->uploadForesteriaMedia($_FILES['file'], $tid, $_POST['title'] ?? null, $_POST['description'] ?? null);
+            $title = filter_input(INPUT_POST, 'title', FILTER_SANITIZE_SPECIAL_CHARS) ?: null;
+            $description = filter_input(INPUT_POST, 'description', FILTER_SANITIZE_SPECIAL_CHARS) ?: null;
+            $media = $this->service->uploadForesteriaMedia($_FILES['file'], $tid, $title, $description);
             
             $this->repo->insertForesteriaMedia([
                 ':id'          => $media['id'],
@@ -807,7 +815,8 @@ class SocietaController
             Audit::log('INSERT', 'foresteria_media', $media['id'], null, ['file_path' => $media['file_path'], 'type' => $media['type']]);
             Response::success($media, 201);
         } catch (\Exception $e) {
-             Response::error($e->getMessage(), 400);
+             error_log('Upload Foresteria Media Error: ' . $e->getMessage());
+             Response::error('Errore durante il caricamento del media.', 500);
         }
     }
 
@@ -833,7 +842,8 @@ class SocietaController
             Audit::log('INSERT', 'foresteria_media', $media['id'], null, ['url' => $media['file_path'], 'type' => 'youtube']);
             Response::success($media, 201);
         } catch (\Exception $e) {
-            Response::error($e->getMessage(), 400);
+            error_log('Add Foresteria Youtube Link Error: ' . $e->getMessage());
+            Response::error('Errore durante il salvataggio del link.', 500);
         }
     }
 

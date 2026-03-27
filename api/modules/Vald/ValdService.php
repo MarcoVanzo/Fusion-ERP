@@ -10,6 +10,7 @@ namespace FusionERP\Modules\Vald;
 
 use FusionERP\Shared\Database;
 use FusionERP\Shared\TenantContext;
+use FusionERP\Shared\AIService;
 
 class ValdService
 {
@@ -325,37 +326,12 @@ PROMPT;
 
     public function callGeminiSingle(string $prompt): string
     {
-        $apiKey = $_ENV['GEMINI_API_KEY'] ?? getenv('GEMINI_API_KEY') ?: ($_SERVER['GEMINI_API_KEY'] ?? '');
-        if (empty($apiKey)) {
-            return 'Configurare GEMINI_API_KEY per abilitare l\'analisi AI.';
-        }
-
-        $url = 'https://generativelanguage.googleapis.com/v1alpha/models/gemini-2.5-flash:generateContent?key=' . $apiKey;
-        $payload = json_encode([
-            'contents' => [['parts' => [['text' => $prompt]]]],
-            'generationConfig' => ['temperature' => 0.4, 'maxOutputTokens' => 1500, 'thinkingConfig' => ['thinkingBudget' => 0]],
-        ]);
-
-        $ch = curl_init($url);
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => $payload,
-            CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
-            CURLOPT_TIMEOUT => 55,
-            CURLOPT_FOLLOWLOCATION => true,
-        ]);
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-
-        if ($httpCode !== 200 || !$response) {
-            error_log("[VALD GEMINI SINGLE] HTTP {$httpCode}");
+        try {
+            return trim(AIService::generateContent($prompt, ['temperature' => 0.4, 'maxOutputTokens' => 1500]));
+        } catch (\Exception $e) {
+            error_log("[VALD GEMINI SINGLE] Error: " . $e->getMessage());
             return 'Analisi AI temporaneamente non disponibile.';
         }
-
-        $data = json_decode($response, true);
-        return trim($data['candidates'][0]['content']['parts'][0]['text'] ?? '');
     }
 
     /** ─── SYNC ──────────────────────────────────────────────────────────── */

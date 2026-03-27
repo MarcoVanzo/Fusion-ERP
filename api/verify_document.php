@@ -10,6 +10,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 use FusionERP\Shared\Auth;
 use FusionERP\Shared\Response;
+use FusionERP\Shared\AIService;
 
 $dotenv = Dotenv\Dotenv::createImmutable(dirname(__DIR__));
 $dotenv->safeLoad();
@@ -57,19 +58,6 @@ if (!in_array($side, ['fronte', 'retro'])) {
     Response::error('Lato non valido', 400);
 }
 
-$geminiKey = getenv('GEMINI_API_KEY') ?: ($_ENV['GEMINI_API_KEY'] ?? '');
-if (empty($geminiKey)) {
-    // If no key, skip verification successfully so upload isn't blocked completely
-    echo json_encode([
-        'success' => true,
-        'data' => [
-            'verified' => true,
-            'message' => 'Verifica AI saltata (chiave non configurata).'
-        ]
-    ]);
-    exit;
-}
-
 // Clean Base64 format if header exists
 $rawBase64 = $imageBase64;
 $mimeType = 'image/jpeg';
@@ -114,73 +102,46 @@ $responseSchema = [
     'required' => ['verified', 'document_type_detected', 'document_type_match', 'document_side_match', 'message']
 ];
 
-$requestBody = json_encode([
-    'contents' => [[
-        'parts' => [
-            ['text' => $prompt],
-            ['inline_data' => ['mime_type' => $mimeType, 'data' => $rawBase64]]
-        ]
-    ]],
-    'generationConfig' => [
-        'temperature' => 0.1,
-        'responseMimeType' => 'application/json',
-        'responseSchema' => $responseSchema
-    ]
-]);
+$promptParts = [
+    ['text' => $prompt],
+    ['inline_data' => ['mime_type' => $mimeType, 'data' => $rawBase64]]
+];
+
+$options = [
+    'temperature' => 0.1,
+    'responseMimeType' => 'application/json',
+    'responseSchema' => $responseSchema
+];
 
 $models = ['gemini-2.5-flash', 'gemini-2.5-pro'];
-$response = '';
-$httpCode = 0;
-
-$caBundle = dirname(__DIR__) . '/api/Modules/Shared/cacert.pem'; // In Fusion ERP
-$sslVerify = file_exists($caBundle);
+$rawText = null;
 
 foreach ($models as $idx => $mdl) {
-    $ch = curl_init("https://generativelanguage.googleapis.com/v1beta/models/{$mdl}:generateContent?key={$geminiKey}");
-    $curlOpts = [
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_POST => true,
-        CURLOPT_POSTFIELDS => $requestBody,
-        CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
-        CURLOPT_TIMEOUT => 30,
-        CURLOPT_CONNECTTIMEOUT => 10,
-        CURLOPT_SSL_VERIFYPEER => $sslVerify,
-        CURLOPT_SSL_VERIFYHOST => 2,
-    ];
-    if ($sslVerify) {
-        $curlOpts[CURLOPT_CAINFO] = $caBundle;
-    }
-    curl_setopt_array($ch, $curlOpts);
-
-    $response = curl_exec($ch);
-    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    @curl_close($ch);
-
-    if ($httpCode === 200) {
-        break;
-    }
-    if ($idx < count($models) - 1) {
-        usleep(1000000); // 1s cooldown
+    try {
+        $rawText = AIService::generateContent($promptParts, $options, $mdl);
+        break; // Sucess
+    } catch (\Exception $e) {
+        if ($idx < count($models) - 1) {
+            usleep(1000000); // 1s cooldown
+        } else {
+            $msg = 'Verifica AI saltata (servizio non disponibile: ' . $e->getMessage() .').';
+            if (str_contains($e->getMessage(), 'Chiave API Gemini non configurata')) {
+                $msg = 'Verifica AI saltata (chiave non configurata).';
+            }
+            // AI failed after all retries or missing key, skip verification
+            echo json_encode([
+                'success' => true,
+                'data' => [
+                    'verified' => true,
+                    'message' => $msg
+                ]
+            ]);
+            exit;
+        }
     }
 }
 
-if ($httpCode !== 200) {
-    // AI failed, skip verification to avoid blocking the user
-    echo json_encode([
-        'success' => true,
-        'data' => [
-            'verified' => true,
-            'message' => 'Verifica AI saltata (servizio non disponibile).'
-        ]
-    ]);
-    exit;
-}
-
-$data = json_decode($response, true);
-$rawText = $data['candidates'][0]['content']['parts'][0]['text'] ?? '';
-$rawText = trim(preg_replace(['/^```json\s*/i', '/^```\s*/i', '/\s*```$/i'], '', $rawText));
-
-$aiResult = json_decode($rawText, true);
+$aiResult = AIService::extractJson($rawText) ?? json_decode(trim(preg_replace(['/^```json\s*/i', '/^```\s*/i', '/\s*```$/i'], '', $rawText)), true);
 
 if (!$aiResult || !isset($aiResult['verified'])) {
     Response::error('Risposta AI non valida.');

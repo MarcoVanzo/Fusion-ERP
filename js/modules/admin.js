@@ -1817,6 +1817,10 @@ const Admin = (() => {
                             })()));
         })(e));
     },
+    destroy: function() {
+      t.abort();
+      t = new AbortController();
+    }
   };
 })();
 window.Admin = Admin;
