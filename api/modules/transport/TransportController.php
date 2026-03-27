@@ -656,8 +656,9 @@ HTML;
                 ],
             ]],
             'generationConfig' => [
-                'maxOutputTokens' => 2000,
-                'temperature'     => 0.3,
+                'maxOutputTokens'  => 2000,
+                'temperature'      => 0.3,
+                'responseMimeType' => 'application/json',
             ],
         ]);
 
@@ -690,14 +691,14 @@ HTML;
 
         $aiContent = trim($responseData['candidates'][0]['content']['parts'][0]['text'] ?? '');
 
-        // Strip markdown code fences if present
-        if (str_starts_with($aiContent, '```')) {
-            $aiContent = preg_replace('/^```(?:json)?\s*/i', '', $aiContent);
-            $aiContent = preg_replace('/\s*```$/', '', $aiContent);
+        // Robust JSON extraction
+        if (preg_match('/\{[\s\S]*\}/', $aiContent, $matches)) {
+            $aiContent = $matches[0];
         }
 
         $aiJson = json_decode($aiContent, true);
         if (!$aiJson) {
+            error_log('[AI_TRANSPORT] Invalid JSON: ' . $aiContent);
             // If parsing fails, wrap raw text as consigli
             $aiJson = [
                 'consigli'         => $aiContent,
