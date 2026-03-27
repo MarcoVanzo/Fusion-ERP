@@ -1105,28 +1105,32 @@ const Transport = (() => {
       document
         .getElementById("nt-ai-btn")
         ?.addEventListener("click", () => {
-          // Gather preview data from current form state
-          const destName = document.getElementById("nt-dest-name")?.value || "";
-          const destAddr = document.getElementById("nt-dest-address")?.value || "";
-          const depAddr = document.getElementById("nt-dep-address")?.value || "";
-          const date = document.getElementById("nt-date")?.value || "";
-          const time = document.getElementById("nt-time")?.value || "";
-          
-          handleAiAnalysis(null, {
-            destination_name: destName,
-            destination_address: destAddr,
-            departure_address: depAddr,
-            transport_date: date,
-            arrival_time: time,
-            timeline: e,
-            athletes: e.filter(step => step.tipo === "raccolta" && step.atleta_id).map(step => ({ 
-              id: step.atleta_id, 
-              full_name: step.atleta_name || step.nota.replace("Raccolta ", ""), 
-              address: step.luogo 
-            })),
-            stats: n
-          });
-        }, { signal: t.signal }),
+          try {
+            const destName = document.getElementById("nt-dest-name")?.value || "";
+            const destAddr = document.getElementById("nt-dest-address")?.value || "";
+            const depAddr = document.getElementById("nt-dep-address")?.value || "";
+            const date = document.getElementById("nt-date")?.value || "";
+            const time = document.getElementById("nt-time")?.value || "";
+            
+            handleAiAnalysis(null, {
+              destination_name: destName,
+              destination_address: destAddr,
+              departure_address: depAddr,
+              transport_date: date,
+              arrival_time: time,
+              timeline: e,
+              athletes: e.filter(step => step.tipo === "raccolta" && step.atleta_id).map(step => ({ 
+                id: step.atleta_id, 
+                full_name: step.atleta_name || (step.nota ? step.nota.replace("Raccolta ", "") : ""), 
+                address: step.luogo 
+              })),
+              stats: n
+            });
+          } catch (err) {
+            console.error("AI Button Error:", err);
+            UI.toast("Errore apertura AI: " + err.message, "error");
+          }
+        }),
       o.scrollIntoView({ behavior: "smooth", block: "start" }),
       i)
     )
