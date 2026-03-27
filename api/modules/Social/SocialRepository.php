@@ -206,12 +206,6 @@ class SocialRepository
         return '';
     }
 
-    /** @deprecated */
-    public function decodeOAuthState(string $state): string
-    {
-        return $this->resolveOAuthToken($state);
-    }
-
     /**
      * Exchange authorization code for a short-lived token, then for a long-lived one.
      */

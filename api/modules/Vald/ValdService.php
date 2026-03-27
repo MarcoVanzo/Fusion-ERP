@@ -126,20 +126,6 @@ class ValdService
     }
 
     /**
-     * @deprecated Use getAthletes() instead.
-     * Kept for backward compatibility with the sync cron.
-     */
-    public function getProfiles(): ?array
-    {
-        $teams = $this->getTeams();
-        if (empty($teams)) {
-            return null;
-        }
-        $teamId = $teams[0]['id'] ?? $this->orgId;
-        return $this->getAthletes($teamId);
-    }
-
-    /**
      * Fetch ForceDecks Test Results for a specific team.
      * @param string $modifiedSince Optional ISO date to fetch only new results
      * @param string $teamId Optional team ID (defaults to orgId)

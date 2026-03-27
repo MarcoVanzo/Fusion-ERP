@@ -20,22 +20,19 @@ use PDO;
 class ResultsController
 {
     private const BASE_URL = 'https://venezia.portalefipav.net';
-    private const MOBILE_URL = self::BASE_URL . '/mobile/risultati.asp?menu=no';
-    private const DESKTOP_URL = self::BASE_URL . '/risultati-classifiche.aspx?PId=7269';
-    private const CACHE_TTL = 900; // 15 minutes
 
     // Highlight these team name fragments as "our team"
     private const OUR_TEAM_KEYWORDS = ['fusion', 'team volley', 'fusionteam'];
 
     /**
-     * Portals that this controller can scrape/sync.
-     * Used to validate user-provided URLs (must belong to at least one of these domains).
+     * Allowed portal domains for URL validation and SSRF mitigation.
      */
     private const ALLOWED_DOMAINS = [
-        'fipav', // venezia.portalefipav.net, fipavveneto.net, etc.
-        'federvolley.it', // FIPAV national portal (B2, A1, A2…)
-        'legavolley.it', // Lega Volley serie A
-        'fipavonline.it', // Alternative FIPAV portal
+        'portalefipav.net',
+        'fipavveneto.net',
+        'federvolley.it',
+        'legavolley.it',
+        'fipavonline.it',
     ];
 
     /**
@@ -97,6 +94,50 @@ class ResultsController
             ");
             $stmt->execute([':tid' => $tenantId]);
             $campionati = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // ── 1b. Fallback: if tenant-scoped query is empty, try without tenant filter ──
+            // This auto-heals cases where championships were stored with a different tenant_id
+            if (empty($campionati)) {
+                $stmtAll = $pdo->prepare("
+                    SELECT
+                        fc.*,
+                        CASE WHEN (
+                            EXISTS (
+                                SELECT 1 FROM federation_standings fs
+                                WHERE fs.championship_id = fc.id
+                                  AND (
+                                    LOWER(fs.team) LIKE '%fusion%'
+                                    OR LOWER(fs.team) LIKE '%team volley%'
+                                    OR LOWER(fs.team) LIKE '%fusionteam%'
+                                  )
+                            )
+                            OR EXISTS (
+                                SELECT 1 FROM federation_matches fm
+                                WHERE fm.championship_id = fc.id
+                                  AND (
+                                    LOWER(fm.home_team) LIKE '%fusion%'
+                                    OR LOWER(fm.away_team) LIKE '%fusion%'
+                                    OR LOWER(fm.home_team) LIKE '%team volley%'
+                                    OR LOWER(fm.away_team) LIKE '%team volley%'
+                                    OR LOWER(fm.home_team) LIKE '%fusionteam%'
+                                    OR LOWER(fm.away_team) LIKE '%fusionteam%'
+                                  )
+                            )
+                        ) THEN 1 ELSE 0 END AS has_our_team
+                    FROM federation_championships fc
+                    WHERE fc.is_active = 1
+                    ORDER BY fc.label ASC
+                ");
+                $stmtAll->execute();
+                $campionati = $stmtAll->fetchAll(PDO::FETCH_ASSOC);
+
+                // Auto-heal: update mismatched tenant_id to current session tenant
+                if (!empty($campionati)) {
+                    error_log("[Results] getCampionati: found " . count($campionati) . " championships with wrong tenant_id, auto-healing to '{$tenantId}'");
+                    $fixStmt = $pdo->prepare("UPDATE federation_championships SET tenant_id = :tid WHERE is_active = 1 AND tenant_id != :tid2");
+                    $fixStmt->execute([':tid' => $tenantId, ':tid2' => $tenantId]);
+                }
+            }
 
             // Cast has_our_team to bool
             foreach ($campionati as &$c) {
@@ -214,10 +255,10 @@ class ResultsController
             SELECT m.*, c.url as source_url, c.last_synced_at
             FROM federation_matches m
             JOIN federation_championships c ON m.championship_id = c.id
-            WHERE c.id = :cid AND c.tenant_id = :tid
+            WHERE c.id = :cid AND c.is_active = 1
             ORDER BY m.match_date ASC
         ");
-        $stmt->execute([':cid' => $campionatoId, ':tid' => $tenantId]);
+        $stmt->execute([':cid' => $campionatoId]);
         $matches = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         if (!empty($matches)) {
@@ -282,10 +323,10 @@ class ResultsController
                 SELECT s.*, c.last_synced_at
                 FROM federation_standings s
                 JOIN federation_championships c ON s.championship_id = c.id
-                WHERE c.id = :cid AND c.tenant_id = :tid
+                WHERE c.id = :cid AND c.is_active = 1
                 ORDER BY s.position ASC
             ");
-            $stmt->execute([':cid' => $campionatoId, ':tid' => $tenantId]);
+            $stmt->execute([':cid' => $campionatoId]);
             $standings = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             if (!empty($standings)) {
@@ -301,8 +342,8 @@ class ResultsController
             }
 
             // ── 2. No standings in DB — check if championship was ever synced
-            $champStmt = $pdo->prepare("SELECT last_synced_at FROM federation_championships WHERE id = :cid AND tenant_id = :tid");
-            $champStmt->execute([':cid' => $campionatoId, ':tid' => $tenantId]);
+            $champStmt = $pdo->prepare("SELECT last_synced_at FROM federation_championships WHERE id = :cid AND is_active = 1");
+            $champStmt->execute([':cid' => $campionatoId]);
             $champRow = $champStmt->fetch(PDO::FETCH_ASSOC);
             $lastSynced = $champRow['last_synced_at'] ?? null;
 
@@ -359,15 +400,8 @@ class ResultsController
         // Accept any configured portal domain
         $host = parse_url($url, PHP_URL_HOST);
         $hostLower = $host ? strtolower($host) : '';
-        $allowedDomains = [
-            'portalefipav.net',
-            'fipavveneto.net',
-            'federvolley.it',
-            'legavolley.it',
-            'fipavonline.it'
-        ];
         $allowed = false;
-        foreach ($allowedDomains as $domain) {
+        foreach (self::ALLOWED_DOMAINS as $domain) {
             if ($hostLower === $domain || str_ends_with($hostLower, '.' . $domain)) {
                 $allowed = true;
                 break;
@@ -408,8 +442,8 @@ class ResultsController
         }
 
         $pdo = Database::getInstance();
-        $stmt = $pdo->prepare("DELETE FROM federation_championships WHERE id = :id AND tenant_id = :tid");
-        $stmt->execute([':id' => $id, ':tid' => TenantContext::id()]);
+        $stmt = $pdo->prepare("DELETE FROM federation_championships WHERE id = :id");
+        $stmt->execute([':id' => $id]);
 
         if ($stmt->rowCount() === 0) {
             Response::error('Campionato non trovato', 404);
@@ -513,8 +547,8 @@ class ResultsController
 
         // Basic Rate Limiting preventing DoS loops (A04:2021)
         $pdo = Database::getInstance();
-        $stmt = $pdo->prepare("SELECT last_synced_at FROM federation_championships WHERE id = :id AND tenant_id = :tid");
-        $stmt->execute([':id' => $id, ':tid' => TenantContext::id()]);
+        $stmt = $pdo->prepare("SELECT last_synced_at FROM federation_championships WHERE id = :id AND is_active = 1");
+        $stmt->execute([':id' => $id]);
         $camp = $stmt->fetch(\PDO::FETCH_ASSOC);
         if ($camp && !empty($camp['last_synced_at'])) {
             if (time() - strtotime($camp['last_synced_at']) < 60) {
@@ -602,14 +636,7 @@ class ResultsController
         // Check if URL is an allowed domain for SSRF mitigation
         $isAllowedDomain = false;
         $parsedHost = parse_url($url, PHP_URL_HOST) ?? '';
-        $allowedDomains = [
-            'portalefipav.net',
-            'fipavveneto.net',
-            'federvolley.it',
-            'legavolley.it',
-            'fipavonline.it'
-        ];
-        foreach ($allowedDomains as $domain) {
+        foreach (self::ALLOWED_DOMAINS as $domain) {
             if ($parsedHost === $domain || str_ends_with($parsedHost, '.' . $domain)) {
                 $isAllowedDomain = true;
                 break;
@@ -1464,18 +1491,7 @@ class ResultsController
 
     /**
      * Fetch standings for federvolley.it via the classifica.php endpoint.
-     */
-    /**
-     * Fetch standings for federvolley.it via the classifica.php endpoint.
-     * Real response format: { "classifica": "<html div string>" } — unwrap JSON then parse HTML.
-     */
-    /**
-     * Fetch standings for federvolley.it via the classifica.php endpoint.
-     * Real response: { "classifica": "<html div>" } — unwrap JSON then parse HTML.
-     */
-    /**
-     * Fetch standings for federvolley.it via the classifica.php endpoint.
-     * Real response: { "classifica": "<html div>" } — unwrap JSON then parse HTML manually 
+     * Real response: { "classifica": "<html div>" } — unwrap JSON then parse HTML manually
      * because the HTML contains malformed tags and asymmetrical divs that break DOMDocument.
      */
     private function _parseStandingsFedervolley(array $p, int $giornata): array
@@ -1660,31 +1676,6 @@ class ResultsController
         return $standings;
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // PRIVATE — CACHE
-    // ─────────────────────────────────────────────────────────────────────────
-
-    private function _cacheFile(string $key): string
-    {
-        $cacheDir = __DIR__ . '/../../../../cache';
-        if (!is_dir($cacheDir))
-            @mkdir($cacheDir, 0755, true);
-        return $cacheDir . '/fusion_results_' . md5($key) . '.json';
-    }
-
-    private function _getCache(string $key): ?array
-    {
-        $file = $this->_cacheFile($key);
-        if (!file_exists($file) || (time() - filemtime($file)) > self::CACHE_TTL)
-            return null;
-        $decoded = json_decode((string)@file_get_contents($file), true);
-        return is_array($decoded) ? $decoded : null;
-    }
-
-    private function _setCache(string $key, array $data): void
-    {
-        @file_put_contents($this->_cacheFile($key), json_encode($data, JSON_UNESCAPED_UNICODE), LOCK_EX);
-    }
 
     // ─────────────────────────────────────────────────────────────────────────
     // PRIVATE — HELPERS
@@ -1714,8 +1705,8 @@ class ResultsController
         $pdo = Database::getInstance();
         $tenantId = TenantContext::id();
 
-        $stmt = $pdo->prepare("SELECT * FROM federation_championships WHERE id = :id AND tenant_id = :tid");
-        $stmt->execute([':id' => $id, ':tid' => $tenantId]);
+        $stmt = $pdo->prepare("SELECT * FROM federation_championships WHERE id = :id AND is_active = 1");
+        $stmt->execute([':id' => $id]);
         $champ = $stmt->fetch(PDO::FETCH_ASSOC);
         if (!$champ)
             return ['success' => false, 'error' => 'Not found'];
