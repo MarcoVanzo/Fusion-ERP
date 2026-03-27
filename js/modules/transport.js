@@ -61,26 +61,31 @@ const Transport = (() => {
           ${stats.vehicle_name ? `<span><i class="ph ph-bus"></i> ${Utils.escapeHtml(stats.vehicle_name)}</span>` : ""}
         </div>
         <div class="st-card-athletes"><i class="ph ph-users" style="margin-right:4px;"></i>${ath.map(a => Utils.escapeHtml(a.name || a.full_name || "")).join(", ") || "Nessuna atleta"}</div>
+        <div style="margin-top:12px; padding-top:12px; border-top:1px dashed rgba(255,255,255,0.1);">
+          <button class="btn-dash ai-consult-btn" data-transport-id="${Utils.escapeHtml(tr.id)}" type="button" style="background:linear-gradient(135deg, rgba(139,92,246,0.15), rgba(236,72,153,0.15)); border-color:rgba(139,92,246,0.4); color:#a78bfa; padding:8px 16px; font-size:11px;">
+            <i class="ph ph-brain" style="font-size:16px;"></i> CONSULTA AI
+          </button>
+        </div>
       </div>`;
     }
-    ((n.innerHTML = `                <div class="transport-dashboard">        <div class="dash-top-bar">          <div>            <h1 class="dash-title">Gestione <span style="color:var(--accent-pink);">Trasporti</span></h1>            <p class="dash-subtitle">${o} eventi nel sistema</p>          </div>          <div style="display:flex; gap:12px; flex-wrap:wrap;">            <button class="btn-dash" id="storico-btn" type="button"><i class="ph ph-clock-counter-clockwise" style="font-size:18px;"></i> STORICO</button>            <button class="btn-dash" id="autisti-btn" type="button"><i class="ph ph-steering-wheel" style="font-size:18px;"></i> AUTISTI</button>            <button class="btn-dash" id="mezzi-btn" type="button"><i class="ph ph-bus" style="font-size:18px;"></i> GESTIONE MEZZI</button>            <button class="btn-dash pink" id="nuovo-trasporto-btn" type="button"><i class="ph ph-van" style="font-size:18px;"></i> NUOVO TRASPORTO</button>            ${i ? '<button class="btn-dash primary" id="new-event-btn" type="button"><i class="ph ph-plus-circle" style="font-size:20px;"></i> NUOVO EVENTO</button>' : ""}          </div>        </div>        <div class="dash-stat-grid">          <div class="dash-stat-card">            <div class="dash-stat-title">Totale Eventi <div class="dash-stat-icon"><i class="ph ph-calendar-blank"></i></div></div>            <div class="dash-stat-value">${o}</div>          </div>          <div class="dash-stat-card cyan">            <div class="dash-stat-title">In Programma <div class="dash-stat-icon"><i class="ph ph-clock"></i></div></div>            <div class="dash-stat-value">${s}</div>          </div>          <div class="dash-stat-card">            <div class="dash-stat-title">Trasferte <div class="dash-stat-icon"><i class="ph ph-bus"></i></div></div>            <div class="dash-stat-value">${l}</div>          </div>          <div class="dash-stat-card cyan">            <div class="dash-stat-title">Allenamenti <div class="dash-stat-icon"><i class="ph ph-barbell"></i></div></div>            <div class="dash-stat-value">${e.filter((t) => "training" === t.type).length}</div>          </div>        </div>        <div style="display:flex; flex-direction:column; gap:28px;">          <div class="dash-card cyan">            <div class="dash-card-header">              <div class="dash-card-title"><i class="ph ph-road-horizon" style="color:var(--accent-cyan); margin-right:8px;"></i>PROSSIMI VIAGGI</div>              <div class="dash-card-dots"><i class="ph ph-dots-three-bold"></i></div>            </div>            <div id="upcoming-trips-list" style="max-height:420px; overflow-y:auto; padding-right:4px;">              ${upcoming.length === 0 ? '<div style="text-align:center; padding:40px 20px; color:rgba(255,255,255,0.4);"><i class="ph ph-van" style="font-size:48px; display:block; margin-bottom:12px; opacity:0.3;"></i><p style="font-family:var(--font-display); font-size:15px; font-weight:700; text-transform:uppercase; letter-spacing:1px;">Nessun viaggio in programma</p><p style="margin-top:8px; font-size:13px;">Crea un nuovo trasporto per vederlo qui.</p></div>' : upcoming.map(tr => renderTripCard(tr)).join("")}            </div>          </div>          <div class="dash-card">            <div class="dash-card-header">              <div class="dash-card-title"><i class="ph ph-clock-counter-clockwise" style="color:var(--accent-pink); margin-right:8px;"></i>STORICO VIAGGI</div>              <div class="dash-card-dots"><i class="ph ph-dots-three-bold"></i></div>            </div>            <div id="past-trips-list" style="max-height:420px; overflow-y:auto; padding-right:4px;">              ${past.length === 0 ? '<div style="text-align:center; padding:40px 20px; color:rgba(255,255,255,0.4);"><i class="ph ph-archive" style="font-size:48px; display:block; margin-bottom:12px; opacity:0.3;"></i><p style="font-family:var(--font-display); font-size:15px; font-weight:700; text-transform:uppercase; letter-spacing:1px;">Nessun viaggio passato</p></div>' : past.map(tr => renderTripCard(tr)).join("")}            </div>          </div>        </div>      </div>`),
+    ((n.innerHTML = `                <div class="transport-dashboard">        <div class="dash-top-bar">          <div>            <h1 class="dash-title">Gestione <span style="color:var(--accent-pink);">Trasporti</span></h1>            <p class="dash-subtitle">${o} eventi nel sistema</p>          </div>          <div style="display:flex; gap:12px; flex-wrap:wrap;">            <button class="btn-dash pink" id="nuovo-trasporto-btn" type="button"><i class="ph ph-van" style="font-size:18px;"></i> NUOVO TRASPORTO</button>            ${i ? '<button class="btn-dash primary" id="new-event-btn" type="button"><i class="ph ph-plus-circle" style="font-size:20px;"></i> NUOVO EVENTO</button>' : ""}          </div>        </div>        <div class="dash-stat-grid">          <div class="dash-stat-card">            <div class="dash-stat-title">Totale Eventi <div class="dash-stat-icon"><i class="ph ph-calendar-blank"></i></div></div>            <div class="dash-stat-value">${o}</div>          </div>          <div class="dash-stat-card cyan">            <div class="dash-stat-title">In Programma <div class="dash-stat-icon"><i class="ph ph-clock"></i></div></div>            <div class="dash-stat-value">${s}</div>          </div>          <div class="dash-stat-card">            <div class="dash-stat-title">Trasferte <div class="dash-stat-icon"><i class="ph ph-bus"></i></div></div>            <div class="dash-stat-value">${l}</div>          </div>          <div class="dash-stat-card cyan">            <div class="dash-stat-title">Allenamenti <div class="dash-stat-icon"><i class="ph ph-barbell"></i></div></div>            <div class="dash-stat-value">${e.filter((t) => "training" === t.type).length}</div>          </div>        </div>        <div style="display:flex; flex-direction:column; gap:28px;">          <div class="dash-card cyan">            <div class="dash-card-header">              <div class="dash-card-title"><i class="ph ph-road-horizon" style="color:var(--accent-cyan); margin-right:8px;"></i>PROSSIMI VIAGGI</div>              <div class="dash-card-dots"><i class="ph ph-dots-three-bold"></i></div>            </div>            <div id="upcoming-trips-list" style="max-height:420px; overflow-y:auto; padding-right:4px;">              ${upcoming.length === 0 ? '<div style="text-align:center; padding:40px 20px; color:rgba(255,255,255,0.4);"><i class="ph ph-van" style="font-size:48px; display:block; margin-bottom:12px; opacity:0.3;"></i><p style="font-family:var(--font-display); font-size:15px; font-weight:700; text-transform:uppercase; letter-spacing:1px;">Nessun viaggio in programma</p><p style="margin-top:8px; font-size:13px;">Crea un nuovo trasporto per vederlo qui.</p></div>' : upcoming.map(tr => renderTripCard(tr)).join("")}            </div>          </div>          <div class="dash-card">            <div class="dash-card-header">              <div class="dash-card-title"><i class="ph ph-clock-counter-clockwise" style="color:var(--accent-pink); margin-right:8px;"></i>STORICO VIAGGI</div>              <div class="dash-card-dots"><i class="ph ph-dots-three-bold"></i></div>            </div>            <div id="past-trips-list" style="max-height:420px; overflow-y:auto; padding-right:4px;">              ${past.length === 0 ? '<div style="text-align:center; padding:40px 20px; color:rgba(255,255,255,0.4);"><i class="ph ph-archive" style="font-size:48px; display:block; margin-bottom:12px; opacity:0.3;"></i><p style="font-family:var(--font-display); font-size:15px; font-weight:700; text-transform:uppercase; letter-spacing:1px;">Nessun viaggio passato</p></div>' : past.map(tr => renderTripCard(tr)).join("")}            </div>          </div>        </div>      </div>`),
       document
         .getElementById("new-event-btn")
         ?.addEventListener("click", () => f(), { signal: t.signal }),
       document
-        .getElementById("nuovo-trasporto-btn")
-        ?.addEventListener("click", () => x(), { signal: t.signal }),
-      document
-        .getElementById("storico-btn")
-        ?.addEventListener("click", () => L(), { signal: t.signal }),
-      document
-        .getElementById("autisti-btn")
-        ?.addEventListener("click", () => B(), { signal: t.signal }),
-      document
         .getElementById("mezzi-btn")
         ?.addEventListener("click", () => Router.navigate("transport-fleet"), {
           signal: t.signal,
-        }));
+        }),
+      document.querySelectorAll(".ai-consult-btn").forEach(btn => {
+        btn.addEventListener("click", (ev) => {
+          ev.stopPropagation();
+          handleAiAnalysis(btn.dataset.transportId);
+        }, { signal: t.signal });
+      }),
+      document
+        .getElementById("nuovo-trasporto-btn")
+        ?.addEventListener("click", () => x(), { signal: t.signal }));
   }
   function g(t, e) {
     if (0 === t.length)
@@ -740,7 +745,10 @@ const Transport = (() => {
     const e = window.GOOGLE_MAPS_API_KEY;
     if (!e) return;
     if (document.querySelector("script[data-gmaps-places]")) {
+      let _pollCount = 0;
       const e = setInterval(() => {
+        _pollCount++;
+        if (_pollCount > 150) { clearInterval(e); console.warn('[Transport] Google Maps Places timeout'); return; }
         "undefined" != typeof google &&
           google.maps?.places &&
           (clearInterval(e), I(), t());
@@ -1120,7 +1128,10 @@ const Transport = (() => {
                   document.head.appendChild(t));
               }
               if (document.getElementById("leaflet-js")) {
+                let _pollCount = 0;
                 const e = setInterval(() => {
+                  _pollCount++;
+                  if (_pollCount > 150) { clearInterval(e); console.warn('[Transport] Leaflet load timeout'); return; }
                   window.L && (clearInterval(e), t());
                 }, 100);
               } else {
@@ -1186,7 +1197,10 @@ const Transport = (() => {
       (function (t) {
         if (window.Sortable) t();
         else if (document.getElementById("sortable-js")) {
+          let _pollCount = 0;
           const e = setInterval(() => {
+            _pollCount++;
+            if (_pollCount > 150) { clearInterval(e); console.warn('[Transport] SortableJS load timeout'); return; }
             window.Sortable && (clearInterval(e), t());
           }, 100);
         } else {
@@ -1438,7 +1452,7 @@ const Transport = (() => {
                         month: "long",
                       })
                     : "";
-                  return `            <div class="st-card">              <div class="st-card-title"><i class="ph ph-map-pin" style="margin-right:8px;"></i>${Utils.escapeHtml(t.destination_name)}</div>              <div class="st-card-meta">                <span><i class="ph ph-calendar-blank"></i> ${Utils.escapeHtml(a)}</span>                <span><i class="ph ph-clock"></i> Arrivo: ${Utils.escapeHtml(t.arrival_time || "")}</span>                ${t.departure_time ? `<span><i class="ph ph-van"></i> Partenza: ${Utils.escapeHtml(t.departure_time)}</span>` : ""}                ${n.durata ? `<span><i class="ph ph-timer"></i> ${Utils.escapeHtml(n.durata)}</span>` : ""}                ${n.distanza ? `<span><i class="ph ph-navigation-arrow"></i> ${Utils.escapeHtml(n.distanza)}</span>` : ""}                ${n.driver_name ? `<span><i class="ph ph-steering-wheel"></i> ${Utils.escapeHtml(n.driver_name)}</span>` : ""}                ${n.vehicle_name ? `<span><i class="ph ph-bus"></i> ${Utils.escapeHtml(n.vehicle_name)}</span>` : ""}              </div>              <div class="st-card-athletes">                <i class="ph ph-users" style="margin-right:4px;"></i>                ${e.map((t) => Utils.escapeHtml(t.name || t.full_name || "")).join(", ") || "Nessuna atleta"}              </div>            </div>`;
+                  return `            <div class="st-card">              <div class="st-card-title"><i class="ph ph-map-pin" style="margin-right:8px;"></i>${Utils.escapeHtml(t.destination_name)}</div>              <div class="st-card-meta">                <span><i class="ph ph-calendar-blank"></i> ${Utils.escapeHtml(a)}</span>                <span><i class="ph ph-clock"></i> Arrivo: ${Utils.escapeHtml(t.arrival_time || "")}</span>                ${t.departure_time ? `<span><i class="ph ph-van"></i> Partenza: ${Utils.escapeHtml(t.departure_time)}</span>` : ""}                ${n.durata ? `<span><i class="ph ph-timer"></i> ${Utils.escapeHtml(n.durata)}</span>` : ""}                ${n.distanza ? `<span><i class="ph ph-navigation-arrow"></i> ${Utils.escapeHtml(n.distanza)}</span>` : ""}                ${n.driver_name ? `<span><i class="ph ph-steering-wheel"></i> ${Utils.escapeHtml(n.driver_name)}</span>` : ""}                ${n.vehicle_name ? `<span><i class="ph ph-bus"></i> ${Utils.escapeHtml(n.vehicle_name)}</span>` : ""}              </div>              <div class="st-card-athletes">                <i class="ph ph-users" style="margin-right:4px;"></i>                ${e.map((t) => Utils.escapeHtml(t.name || t.full_name || "")).join(", ") || "Nessuna atleta"}              </div>              <div style="margin-top:16px; padding-top:16px; border-top:1px dashed rgba(255,255,255,0.1); display:flex; gap:10px; flex-wrap:wrap;">                <button class="btn-dash ai-consult-btn" data-transport-id="${Utils.escapeHtml(t.id)}" type="button" style="background:linear-gradient(135deg, rgba(139,92,246,0.15), rgba(236,72,153,0.15)); border-color:rgba(139,92,246,0.4); color:#a78bfa;">                  <i class="ph ph-brain" style="font-size:18px;"></i> CONSULTA AI                </button>              </div>            </div>`;
                 })
                 .join("")
         }      </div>`),
@@ -1447,7 +1461,13 @@ const Transport = (() => {
           ?.addEventListener("click", () => c(), { signal: t.signal }),
         document
           .getElementById("st-nuovo-btn")
-          ?.addEventListener("click", () => x(), { signal: t.signal }));
+          ?.addEventListener("click", () => x(), { signal: t.signal }),
+        document.querySelectorAll(".ai-consult-btn").forEach(btn => {
+          btn.addEventListener("click", (ev) => {
+            ev.stopPropagation();
+            handleAiAnalysis(btn.dataset.transportId);
+          }, { signal: t.signal });
+        }));
     } catch (n) {
       ((e.innerHTML = `<div style="padding:40px;text-align:center;"><p style="color:rgba(255,255,255,0.5);margin-bottom:24px;">Errore: ${Utils.escapeHtml(n.message)}</p><button class="btn btn-ghost" id="st-err-back" type="button"><i class="ph ph-arrow-left"></i> Torna indietro</button></div>`),
         document
@@ -1601,6 +1621,131 @@ const Transport = (() => {
           .getElementById("drv-err-back")
           ?.addEventListener("click", () => c(), { signal: t.signal }),
         UI.toast("Errore: " + n.message, "error"));
+    }
+  }
+  async function handleAiAnalysis(transportId) {
+    // Create overlay
+    const overlay = document.createElement("div");
+    overlay.className = "ai-overlay";
+    overlay.innerHTML = `
+      <div class="ai-modal">
+        <div class="ai-modal-header">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div class="ai-modal-icon"><i class="ph ph-brain"></i></div>
+            <div>
+              <h2 class="ai-modal-title">Analisi AI Percorso</h2>
+              <p class="ai-modal-subtitle">Ottimizzazione punti di raccolta</p>
+            </div>
+          </div>
+          <button class="ai-modal-close" id="ai-close-btn" type="button"><i class="ph ph-x"></i></button>
+        </div>
+        <div class="ai-modal-body" id="ai-modal-body">
+          <div class="ai-loading">
+            <div class="ai-loading-orb"></div>
+            <p class="ai-loading-text">L'intelligenza artificiale sta analizzando il percorso...</p>
+            <p class="ai-loading-sub">Questo potrebbe richiedere qualche secondo</p>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    requestAnimationFrame(() => overlay.classList.add("visible"));
+
+    const closeOverlay = () => {
+      overlay.classList.remove("visible");
+      setTimeout(() => overlay.remove(), 300);
+    };
+    document.getElementById("ai-close-btn").addEventListener("click", closeOverlay);
+    overlay.addEventListener("click", (e) => { if (e.target === overlay) closeOverlay(); });
+
+    try {
+      const result = await Store.api("analyzeTransportAI", "transport", { transportId });
+      const body = document.getElementById("ai-modal-body");
+      if (!body) return;
+
+      let html = "";
+
+      // Consigli generali
+      if (result.consigli) {
+        html += `
+          <div class="ai-section">
+            <div class="ai-section-header">
+              <i class="ph ph-lightbulb" style="color:#fbbf24;"></i>
+              <span>Consigli Generali</span>
+            </div>
+            <p class="ai-section-text">${Utils.escapeHtml(result.consigli)}</p>
+          </div>`;
+      }
+
+      // Punti di raccolta
+      if (result.punti_raccolta && result.punti_raccolta.length) {
+        html += `
+          <div class="ai-section">
+            <div class="ai-section-header">
+              <i class="ph ph-map-pin" style="color:#00e5ff;"></i>
+              <span>Punti di Raccolta Suggeriti</span>
+              <span class="ai-badge">${result.punti_raccolta.length}</span>
+            </div>`;
+        result.punti_raccolta.forEach((pr, idx) => {
+          const atlete = (pr.atlete || []).map(a => Utils.escapeHtml(a)).join(", ");
+          html += `
+            <div class="ai-pickup-card">
+              <div class="ai-pickup-num">${idx + 1}</div>
+              <div class="ai-pickup-content">
+                <div class="ai-pickup-name">${Utils.escapeHtml(pr.nome || "Punto " + (idx + 1))}</div>
+                <div class="ai-pickup-addr"><i class="ph ph-map-pin"></i> ${Utils.escapeHtml(pr.indirizzo || "")}</div>
+                ${atlete ? `<div class="ai-pickup-athletes"><i class="ph ph-users"></i> ${atlete}</div>` : ""}
+                ${pr.motivo ? `<div class="ai-pickup-reason"><i class="ph ph-info"></i> ${Utils.escapeHtml(pr.motivo)}</div>` : ""}
+              </div>
+            </div>`;
+        });
+        html += `</div>`;
+      }
+
+      // Fuori percorso
+      if (result.fuori_percorso && result.fuori_percorso.length) {
+        html += `
+          <div class="ai-section warning">
+            <div class="ai-section-header">
+              <i class="ph ph-warning" style="color:#ff6b6b;"></i>
+              <span>Atlete Fuori Percorso</span>
+              <span class="ai-badge danger">${result.fuori_percorso.length}</span>
+            </div>`;
+        result.fuori_percorso.forEach(fp => {
+          html += `
+            <div class="ai-warning-item">
+              <strong>${Utils.escapeHtml(fp.nome || "")}</strong>
+              <span>${Utils.escapeHtml(fp.motivo || "")}</span>
+            </div>`;
+        });
+        html += `</div>`;
+      }
+
+      // Risparmio stimato
+      if (result.risparmio_stimato) {
+        html += `
+          <div class="ai-section savings">
+            <div class="ai-section-header">
+              <i class="ph ph-trend-up" style="color:#00e676;"></i>
+              <span>Risparmio Stimato</span>
+            </div>
+            <p class="ai-savings-text">${Utils.escapeHtml(result.risparmio_stimato)}</p>
+          </div>`;
+      }
+
+      body.innerHTML = html || '<p style="color:rgba(255,255,255,0.5); text-align:center; padding:40px;">Nessun suggerimento disponibile per questo percorso.</p>';
+
+    } catch (err) {
+      const body = document.getElementById("ai-modal-body");
+      if (body) {
+        body.innerHTML = `
+          <div style="text-align:center; padding:40px;">
+            <i class="ph ph-warning-circle" style="font-size:48px; color:#ff6b6b; display:block; margin-bottom:16px;"></i>
+            <p style="color:rgba(255,255,255,0.7); font-size:15px; font-weight:600; margin-bottom:8px;">Errore nell'analisi AI</p>
+            <p style="color:rgba(255,255,255,0.4); font-size:13px;">${Utils.escapeHtml(err.message)}</p>
+          </div>`;
+      }
+      UI.toast("Errore AI: " + err.message, "error");
     }
   }
   return {

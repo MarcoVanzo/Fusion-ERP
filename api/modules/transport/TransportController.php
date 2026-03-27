@@ -556,4 +556,143 @@ HTML;
         Audit::log('UPDATE', 'drivers', $id, null, ['is_active' => $active]);
         Response::success(['message' => 'Stato aggiornato']);
     }
+
+    // ─── AI ANALYSIS ─────────────────────────────────────────────────────────
+
+    public function analyzeTransportAI(): void
+    {
+        Auth::requireWrite('transport');
+        $body = Response::jsonBody();
+        $transportId = $body['transportId'] ?? '';
+        if (empty($transportId)) {
+            Response::error('transportId obbligatorio', 400);
+        }
+
+        $transport = $this->repo->getTransportById($transportId);
+        if (!$transport) {
+            Response::error('Trasporto non trovato', 404);
+        }
+
+        $apiKey = getenv('GEMINI_API_KEY') ?: '';
+        if (empty($apiKey)) {
+            Response::error('Chiave API Gemini non configurata. Impostare GEMINI_API_KEY nelle variabili d\'ambiente.', 500);
+        }
+
+        // Parse stored JSON fields
+        $timeline = json_decode($transport['timeline_json'] ?? '[]', true) ?: [];
+        $athletes = json_decode($transport['athletes_json'] ?? '[]', true) ?: [];
+        $stats    = json_decode($transport['stats_json'] ?? '{}', true) ?: [];
+
+        // Build readable route description for the AI
+        $stopDescriptions = [];
+        foreach ($timeline as $i => $stop) {
+            $tipo   = $stop['tipo'] ?? 'sconosciuto';
+            $luogo  = $stop['luogo'] ?? 'N/A';
+            $orario = $stop['orario'] ?? '';
+            $nota   = $stop['nota'] ?? '';
+            $lat    = $stop['coord']['lat'] ?? null;
+            $lng    = $stop['coord']['lng'] ?? null;
+            $coordStr = ($lat && $lng) ? " (lat: {$lat}, lng: {$lng})" : '';
+            $stopDescriptions[] = "Tappa {$i}: [{$tipo}] {$luogo}{$coordStr} — ore {$orario} — {$nota}";
+        }
+
+        $athleteDescriptions = [];
+        foreach ($athletes as $ath) {
+            $name    = $ath['name'] ?? $ath['full_name'] ?? 'N/A';
+            $address = $ath['address'] ?? 'indirizzo sconosciuto';
+            $athleteDescriptions[] = "- {$name}: {$address}";
+        }
+
+        $prompt = "Sei un esperto di logistica sportiva. Analizza il seguente viaggio di trasporto e suggerisci se alcune tappe di raccolta possono essere accorpate in PUNTI DI RACCOLTA comuni per ottimizzare il percorso.\n\n";
+        $prompt .= "DESTINAZIONE: {$transport['destination_name']} ({$transport['destination_address']})\n";
+        $prompt .= "PARTENZA: {$transport['departure_address']}\n";
+        $prompt .= "DATA: {$transport['transport_date']}\n";
+        $prompt .= "ORARIO ARRIVO: {$transport['arrival_time']}\n";
+        $prompt .= "DURATA TOTALE: " . ($stats['durata'] ?? 'N/A') . "\n";
+        $prompt .= "DISTANZA TOTALE: " . ($stats['distanza'] ?? 'N/A') . "\n\n";
+        $prompt .= "TAPPE DEL PERCORSO:\n" . implode("\n", $stopDescriptions) . "\n\n";
+        $prompt .= "ATLETE E INDIRIZZI:\n" . implode("\n", $athleteDescriptions) . "\n\n";
+
+        $prompt .= "Analizza il percorso e rispondi ESCLUSIVAMENTE in JSON valido con questa struttura:\n";
+        $prompt .= "{\n";
+        $prompt .= "  \"consigli\": \"Testo con i consigli generali sull'ottimizzazione del percorso\",\n";
+        $prompt .= "  \"punti_raccolta\": [\n";
+        $prompt .= "    { \"nome\": \"Nome del punto di raccolta suggerito\", \"indirizzo\": \"Indirizzo del punto\", \"atlete\": [\"Nome atleta 1\", \"Nome atleta 2\"], \"motivo\": \"Perché questo punto è ottimale\" }\n";
+        $prompt .= "  ],\n";
+        $prompt .= "  \"fuori_percorso\": [\n";
+        $prompt .= "    { \"nome\": \"Nome atleta\", \"motivo\": \"Perché è fuori dal percorso ottimale\" }\n";
+        $prompt .= "  ],\n";
+        $prompt .= "  \"risparmio_stimato\": \"Stima del tempo/distanza risparmiato con le modifiche suggerite\"\n";
+        $prompt .= "}\n\n";
+        $prompt .= "REGOLE:\n";
+        $prompt .= "- Se due o più atlete abitano vicine (meno di 1-2 km), suggerisci un punto di raccolta comune (parcheggio, piazza, incrocio noto)\n";
+        $prompt .= "- Considera la viabilità e la facilità di accesso dei punti suggeriti\n";
+        $prompt .= "- Se un'atleta abita molto lontana dal percorso principale, segnalala come 'fuori_percorso'\n";
+        $prompt .= "- Rispondi SOLO con il JSON, nessun altro testo\n";
+
+        // Call Google Gemini API (same pattern as AdminController OCR)
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={$apiKey}";
+
+        $payload = json_encode([
+            'contents' => [[
+                'parts' => [
+                    ['text' => $prompt],
+                ],
+            ]],
+            'generationConfig' => [
+                'maxOutputTokens' => 2000,
+                'temperature'     => 0.3,
+            ],
+        ]);
+
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST           => true,
+            CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
+            CURLOPT_POSTFIELDS     => $payload,
+            CURLOPT_TIMEOUT        => 60,
+            CURLOPT_CONNECTTIMEOUT => 10,
+        ]);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
+        curl_close($ch);
+
+        if ($response === false) {
+            Response::error('Errore di connessione a Gemini: ' . $curlError, 502);
+        }
+
+        $responseData = json_decode($response, true);
+        if ($httpCode !== 200 || !$responseData) {
+            $errMsg = $responseData['error']['message'] ?? 'Risposta non valida da Gemini (HTTP ' . $httpCode . ')';
+            Response::error('Errore Gemini: ' . $errMsg, 502);
+        }
+
+        $aiContent = trim($responseData['candidates'][0]['content']['parts'][0]['text'] ?? '');
+
+        // Strip markdown code fences if present
+        if (str_starts_with($aiContent, '```')) {
+            $aiContent = preg_replace('/^```(?:json)?\s*/i', '', $aiContent);
+            $aiContent = preg_replace('/\s*```$/', '', $aiContent);
+        }
+
+        $aiJson = json_decode($aiContent, true);
+        if (!$aiJson) {
+            // If parsing fails, wrap raw text as consigli
+            $aiJson = [
+                'consigli'         => $aiContent,
+                'punti_raccolta'   => [],
+                'fuori_percorso'   => [],
+                'risparmio_stimato' => '',
+            ];
+        }
+
+        // Persist the AI response
+        $this->repo->updateTransportAiResponse($transportId, json_encode($aiJson));
+
+        Audit::log('AI_ANALYSIS', 'transports', $transportId, null, ['model' => 'gemini-2.0-flash']);
+        Response::success($aiJson);
+    }
 }
