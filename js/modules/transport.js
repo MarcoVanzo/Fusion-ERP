@@ -1684,6 +1684,90 @@ const Transport = (() => {
       overlay.classList.remove("visible");
       setTimeout(() => overlay.remove(), 300);
     };
+
+    const applyAiSuggestions = async (result, previewData) => {
+      if (!previewData || !previewData.team_id) {
+        UI.toast("Errore: Impossibile creare viaggi da un trasporto già salvato o senza dati.", "error");
+        return;
+      }
+      
+      const tripsToCreate = [];
+      const originalAthletes = previewData.athletes || [];
+
+      // Helper to map names back to athlete objects
+      const findAthleteByName = (name) => {
+        const cleanName = name.trim().toLowerCase();
+        return originalAthletes.find(a => {
+          const aName = (a.name || a.full_name || "").trim().toLowerCase();
+          return aName.includes(cleanName) || cleanName.includes(aName);
+        });
+      };
+
+      if (result.viaggi_multipli && result.viaggi_multipli.length > 0) {
+        // Multi-trip proposal
+        result.viaggi_multipli.forEach(vm => {
+          const tripAthletes = [];
+          (vm.atlete || []).forEach(name => {
+            const match = findAthleteByName(name);
+            if (match) tripAthletes.push({ id: match.id || match.atleta_id });
+          });
+          if (tripAthletes.length > 0) {
+            tripsToCreate.push({
+              team_id: previewData.team_id,
+              destination_name: previewData.destName + " (" + (vm.nome_viaggio || "Extra") + ")",
+              destination_address: previewData.destAddr,
+              departure_address: previewData.depAddr,
+              transport_date: previewData.date,
+              arrival_time: previewData.time,
+              athletes_json: tripAthletes,
+              ai_response: result
+            });
+          }
+        });
+      } else {
+        // Single trip proposal
+        // Filter out fuori_percorso athletes unless they have a meeting point
+        const fuoriNomi = (result.fuori_percorso || []).map(fp => fp.nome.trim().toLowerCase());
+        const validAthletes = originalAthletes.filter(a => {
+            const aName = (a.name || a.full_name || "").trim().toLowerCase();
+            return !fuoriNomi.some(fn => aName.includes(fn) || fn.includes(aName));
+        }).map(a => ({ id: a.id || a.atleta_id }));
+
+        if (validAthletes.length > 0) {
+          tripsToCreate.push({
+              team_id: previewData.team_id,
+              destination_name: previewData.destName + " (Ottimizzato AI)",
+              destination_address: previewData.destAddr,
+              departure_address: previewData.depAddr,
+              transport_date: previewData.date,
+              arrival_time: previewData.time,
+              athletes_json: validAthletes,
+              ai_response: result
+          });
+        }
+      }
+
+      if (tripsToCreate.length === 0) {
+        UI.toast("Nessun atleta valido associato ai suggerimenti. Le atlete escluse non possono creare un viaggio vuoto.", "warning");
+        return;
+      }
+
+      UI.confirm(`Stai per creare automaticamente ${tripsToCreate.length} viaggi in base ai suggerimenti dell'AI. Ogni viaggio sarà salvato come 'In bozza/Senza percorso calcolato', potrai poi calcolarne i tempi singolarmente modificandoli dalla dashboard. Vuoi procedere?`, async () => {
+        closeOverlay();
+        UI.loading(true);
+        try {
+          for (const trip of tripsToCreate) {
+             await Store.api("saveTransport", "transport", trip);
+          }
+          UI.toast("Viaggi creati con successo! Controlla la dashboard.", "success");
+          Router.navigate("transport");
+        } catch (err) {
+          UI.toast("Errore durante la creazione: " + err.message, "error");
+        } finally {
+          UI.loading(false);
+        }
+      });
+    };
     document.getElementById("ai-close-btn").addEventListener("click", closeOverlay);
     overlay.addEventListener("click", (e) => { if (e.target === overlay) closeOverlay(); });
 
@@ -1787,7 +1871,25 @@ const Transport = (() => {
           </div>`;
       }
 
+      if (previewData) {
+        html += `
+          <div style="margin-top:24px; text-align:center;">
+            <button class="btn primary" id="ai-apply-btn" type="button" style="width:100%; border-radius:12px; font-weight:700; height:48px; background:linear-gradient(135deg, #a78bfa, #ec4899); box-shadow:0 4px 15px rgba(236,72,153,0.3); border:none; cursor:pointer; color:#fff;">
+              <i class="ph ph-check-circle" style="font-size:20px; margin-right:8px; vertical-align:middle;"></i> <span style="vertical-align:middle;">Accetta Suggerimenti e Crea Viaggi/o</span>
+            </button>
+          </div>`;
+      }
+
       body.innerHTML = html || '<p style="color:rgba(255,255,255,0.5); text-align:center; padding:40px;">Nessun suggerimento disponibile per questo percorso.</p>';
+
+      if (previewData) {
+        const applyBtn = document.getElementById("ai-apply-btn");
+        if (applyBtn) {
+          applyBtn.addEventListener("click", () => {
+            applyAiSuggestions(result, previewData);
+          });
+        }
+      }
 
     } catch (err) {
       const body = document.getElementById("ai-modal-body");

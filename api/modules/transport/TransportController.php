@@ -644,8 +644,9 @@ HTML;
         $prompt .= "}\n\n";
         $prompt .= "REGOLE:\n";
         $prompt .= "- NON LASCIARE MAI A PIEDI NESSUNO. Se una ragazza è scomoda, dalle un punto di ritrovo in 'punto_ritrovo_consigliato'.\n";
+        $prompt .= "- IMPORTANTE: Ogni nuovo punto di raccolta e ogni punto di ritrovo suggerito DEVE trovarsi al massimo a 5 km dall'indirizzo originale dell'atleta o dal percorso.\n";
         $prompt .= "- Suggerisci 'viaggi_multipli' solo se ha senso usare più di un furgone.\n";
-        $prompt .= "- Se due o più atlete abitano vicine (meno di 1-2 km), suggerisci un punto di raccolta comune (parcheggio, piazza, incrocio noto).\n";
+        $prompt .= "- Se due o più atlete abitano vicine, suggerisci un punto di raccolta comune (parcheggio, piazza, incrocio noto), sempre entro il limite dei 5 km.\n";
         $prompt .= "- Considera la viabilità e la facilità di accesso dei punti suggeriti.\n";
         $prompt .= "- Rispondi SOLO con il JSON, nessun altro testo.\n";
 
