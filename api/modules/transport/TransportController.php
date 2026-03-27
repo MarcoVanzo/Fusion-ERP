@@ -676,13 +676,15 @@ HTML;
         curl_close($ch);
 
         if ($response === false) {
-            Response::error('Errore di connessione a Gemini: ' . $curlError, 502);
+            error_log('[AI_TRANSPORT] Curl error: ' . $curlError);
+            Response::error('Errore di connessione a Gemini: ' . $curlError, 500);
         }
 
         $responseData = json_decode($response, true);
         if ($httpCode !== 200 || !$responseData) {
             $errMsg = $responseData['error']['message'] ?? 'Risposta non valida da Gemini (HTTP ' . $httpCode . ')';
-            Response::error('Errore Gemini: ' . $errMsg, 502);
+            error_log('[AI_TRANSPORT] Gemini API error: ' . $response);
+            Response::error('Errore Gemini: ' . $errMsg, 500);
         }
 
         $aiContent = trim($responseData['candidates'][0]['content']['parts'][0]['text'] ?? '');
