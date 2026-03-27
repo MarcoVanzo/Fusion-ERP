@@ -1119,7 +1119,11 @@ const Transport = (() => {
             transport_date: date,
             arrival_time: time,
             timeline: e,
-            athletes: athletesToPickUp || [], // Use the global athletesToPickUp array
+            athletes: e.filter(step => step.tipo === "raccolta" && step.atleta_id).map(step => ({ 
+              id: step.atleta_id, 
+              full_name: step.atleta_name || step.nota.replace("Raccolta ", ""), 
+              address: step.luogo 
+            })),
             stats: n
           });
         }, { signal: t.signal }),
