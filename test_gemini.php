@@ -1,5 +1,5 @@
 <?php
-$apiKey = 'AIzaSyBkJwC4OWNGx6mFPN6CKR_MSd54ChsHKPM';
+$apiKey = 'AIzaSyDrQyhRHRgkuKUZiCcihTAwKXy4JMOUzUk';
 
 $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' . $apiKey;
 
