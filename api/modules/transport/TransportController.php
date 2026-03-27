@@ -564,13 +564,10 @@ HTML;
         Auth::requireWrite('transport');
         $body = Response::jsonBody();
         $transportId = $body['transportId'] ?? '';
-        if (empty($transportId)) {
-            Response::error('transportId obbligatorio', 400);
-        }
+        $isPreview = !empty($body['previewData']);
 
-        $transport = $this->repo->getTransportById($transportId);
-        if (!$transport) {
-            Response::error('Trasporto non trovato', 404);
+        if (empty($transportId) && !$isPreview) {
+            Response::error('Identificativo o dati di anteprima obbligatori', 400);
         }
 
         $apiKey = getenv('GEMINI_API_KEY') ?: '';
@@ -578,10 +575,28 @@ HTML;
             Response::error('Chiave API Gemini non configurata. Impostare GEMINI_API_KEY nelle variabili d\'ambiente.', 500);
         }
 
-        // Parse stored JSON fields
-        $timeline = json_decode($transport['timeline_json'] ?? '[]', true) ?: [];
-        $athletes = json_decode($transport['athletes_json'] ?? '[]', true) ?: [];
-        $stats    = json_decode($transport['stats_json'] ?? '{}', true) ?: [];
+        if ($isPreview) {
+            $preview = $body['previewData'];
+            $transport = [
+                'destination_name'    => $preview['destination_name'] ?? 'Destinazione Sconosciuta',
+                'destination_address' => $preview['destination_address'] ?? 'N/A',
+                'departure_address'   => $preview['departure_address'] ?? 'N/A',
+                'transport_date'      => $preview['transport_date'] ?? 'N/A',
+                'arrival_time'        => $preview['arrival_time'] ?? 'N/A',
+            ];
+            $timeline = $preview['timeline'] ?? [];
+            $athletes = $preview['athletes'] ?? [];
+            $stats    = $preview['stats'] ?? [];
+        } else {
+            $transportRow = $this->repo->getTransportById($transportId);
+            if (!$transportRow) {
+                Response::error('Trasporto non trovato', 404);
+            }
+            $transport = $transportRow;
+            $timeline = json_decode($transportRow['timeline_json'] ?? '[]', true) ?: [];
+            $athletes = json_decode($transportRow['athletes_json'] ?? '[]', true) ?: [];
+            $stats    = json_decode($transportRow['stats_json'] ?? '{}', true) ?: [];
+        }
 
         // Build readable route description for the AI
         $stopDescriptions = [];

@@ -1098,10 +1098,31 @@ const Transport = (() => {
     const o = document.getElementById("nt-results");
     if (
       ((o.style.display = "block"),
-      (o.innerHTML = `      <div class="nt-stats-grid">        <div class="nt-stat"><div class="nt-stat-val">${Utils.escapeHtml(n.durata)}</div><div class="nt-stat-lbl">Durata Stimata</div></div>        <div class="nt-stat"><div class="nt-stat-val">${Utils.escapeHtml(n.distanza)}</div><div class="nt-stat-lbl">Distanza</div></div>        <div class="nt-stat"><div class="nt-stat-val">${n.tappe}</div><div class="nt-stat-lbl">Tappe</div></div>      </div>      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; margin-bottom: 24px; align-items: stretch;">                \x3c!-- Left Column: Route map --\x3e        <div style="display:flex; flex-direction:column; gap:24px;">          \x3c!-- Route map --\x3e          <div class="nt-step" style="padding:0; overflow:hidden; margin:0; flex: 1; display:flex; flex-direction:column;">            <div id="nt-route-map" style="width:100%; flex:1; min-height: 320px; background:#0a0a0c; display:flex; align-items:center; justify-content:center;">              <div style="text-align:center; color:rgba(255,255,255,0.3);">                <div class="spinner" style="margin:0 auto 12px;"></div>                <p style="font-size:13px; font-family:var(--font-display); text-transform:uppercase; letter-spacing:1px;">Caricamento mappa...</p>              </div>            </div>          </div>        </div>        \x3c!-- Right Column: Timeline --\x3e        <div class="nt-step" style="margin:0; height: 100%; display:flex; flex-direction:column;">          <span class="nt-step-num" style="background:rgba(255,255,255,0.1); color:#fff; border-color:rgba(255,255,255,0.2);"><i class="ph ph-clock"></i></span>          <h3 class="nt-step-title">Timeline Percorso</h3>          <div class="nt-timeline" style="margin-top:24px; flex: 1; overflow-y: auto;">            ${e.map((t) => `              <div class="nt-tl-item ${t.tipo}">                <div class="nt-tl-time">${Utils.escapeHtml(t.orario)}</div>                <div class="nt-tl-note">${Utils.escapeHtml(t.nota)}</div>                <div class="nt-tl-place"><i class="ph ph-map-pin"></i> ${Utils.escapeHtml(t.luogo)}</div>              </div>`).join("")}          </div>        </div>      </div>      <div style="display:flex; gap:16px; flex-wrap:wrap;">        <button class="nt-save-btn" id="nt-save-btn" type="button"><i class="ph ph-floppy-disk" style="font-size:20px;"></i> Salva Trasporto</button>        <button class="btn-dash ghost" onclick="window.print()" type="button"><i class="ph ph-printer"></i> Stampa</button>      </div>`),
+      (o.innerHTML = `      <div class="nt-stats-grid">        <div class="nt-stat"><div class="nt-stat-val">${Utils.escapeHtml(n.durata)}</div><div class="nt-stat-lbl">Durata Stimata</div></div>        <div class="nt-stat"><div class="nt-stat-val">${Utils.escapeHtml(n.distanza)}</div><div class="nt-stat-lbl">Distanza</div></div>        <div class="nt-stat"><div class="nt-stat-val">${n.tappe}</div><div class="nt-stat-lbl">Tappe</div></div>      </div>      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; margin-bottom: 24px; align-items: stretch;">                \x3c!-- Left Column: Route map --\x3e        <div style="display:flex; flex-direction:column; gap:24px;">          \x3c!-- Route map --\x3e          <div class="nt-step" style="padding:0; overflow:hidden; margin:0; flex: 1; display:flex; flex-direction:column;">            <div id="nt-route-map" style="width:100%; flex:1; min-height: 320px; background:#0a0a0c; display:flex; align-items:center; justify-content:center;">              <div style="text-align:center; color:rgba(255,255,255,0.3);">                <div class="spinner" style="margin:0 auto 12px;"></div>                <p style="font-size:13px; font-family:var(--font-display); text-transform:uppercase; letter-spacing:1px;">Caricamento mappa...</p>              </div>            </div>          </div>        </div>        \x3c!-- Right Column: Timeline --\x3e        <div class="nt-step" style="margin:0; height: 100%; display:flex; flex-direction:column;">          <span class="nt-step-num" style="background:rgba(255,255,255,0.1); color:#fff; border-color:rgba(255,255,255,0.2);"><i class="ph ph-clock"></i></span>          <h3 class="nt-step-title">Timeline Percorso</h3>          <div class="nt-timeline" style="margin-top:24px; flex: 1; overflow-y: auto;">            ${e.map((t) => `              <div class="nt-tl-item ${t.tipo}">                <div class="nt-tl-time">${Utils.escapeHtml(t.orario)}</div>                <div class="nt-tl-note">${Utils.escapeHtml(t.nota)}</div>                <div class="nt-tl-place"><i class="ph ph-map-pin"></i> ${Utils.escapeHtml(t.luogo)}</div>              </div>`).join("")}          </div>        </div>      </div>      <div style="display:flex; gap:16px; flex-wrap:wrap;">        <button class="nt-save-btn" id="nt-save-btn" type="button"><i class="ph ph-floppy-disk" style="font-size:20px;"></i> Salva Trasporto</button>        <button class="btn-dash ghost" onclick="window.print()" type="button"><i class="ph ph-printer"></i> Stampa</button>        <button class="btn-dash" id="nt-ai-btn" type="button" style="background:linear-gradient(135deg, rgba(139,92,246,0.15), rgba(236,72,153,0.15)); border-color:rgba(139,92,246,0.4); color:#a78bfa;"><i class="ph ph-brain" style="font-size:18px;"></i> Consulta AI</button>      </div>`),
       document
         .getElementById("nt-save-btn")
         ?.addEventListener("click", S, { signal: t.signal }),
+      document
+        .getElementById("nt-ai-btn")
+        ?.addEventListener("click", () => {
+          // Gather preview data from current form state
+          const destName = document.getElementById("nt-dest-name")?.value || "";
+          const destAddr = document.getElementById("nt-dest-address")?.value || "";
+          const depAddr = document.getElementById("nt-dep-address")?.value || "";
+          const date = document.getElementById("nt-date")?.value || "";
+          const time = document.getElementById("nt-time")?.value || "";
+          
+          handleAiAnalysis(null, {
+            destination_name: destName,
+            destination_address: destAddr,
+            departure_address: depAddr,
+            transport_date: date,
+            arrival_time: time,
+            timeline: e,
+            athletes: athletesToPickUp || [], // Use the global athletesToPickUp array
+            stats: n
+          });
+        }, { signal: t.signal }),
       o.scrollIntoView({ behavior: "smooth", block: "start" }),
       i)
     )
@@ -1623,7 +1644,7 @@ const Transport = (() => {
         UI.toast("Errore: " + n.message, "error"));
     }
   }
-  async function handleAiAnalysis(transportId) {
+  async function handleAiAnalysis(transportId, previewData = null) {
     // Create overlay
     const overlay = document.createElement("div");
     overlay.className = "ai-overlay";
@@ -1659,7 +1680,8 @@ const Transport = (() => {
     overlay.addEventListener("click", (e) => { if (e.target === overlay) closeOverlay(); });
 
     try {
-      const result = await Store.api("analyzeTransportAI", "transport", { transportId });
+      const payload = transportId ? { transportId } : { previewData };
+      const result = await Store.api("analyzeTransportAI", "transport", payload);
       const body = document.getElementById("ai-modal-body");
       if (!body) return;
 
