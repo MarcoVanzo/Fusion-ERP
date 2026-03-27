@@ -511,6 +511,21 @@ class ResultsController
             Response::error('id campionato obbligatorio', 400);
         }
 
+        // Basic Rate Limiting preventing DoS loops (A04:2021)
+        $pdo = Database::getInstance();
+        $stmt = $pdo->prepare("SELECT last_synced_at FROM federation_championships WHERE id = :id AND tenant_id = :tid");
+        $stmt->execute([':id' => $id, ':tid' => TenantContext::id()]);
+        $camp = $stmt->fetch(\PDO::FETCH_ASSOC);
+        if ($camp && !empty($camp['last_synced_at'])) {
+            if (time() - strtotime($camp['last_synced_at']) < 60) {
+                Response::success([
+                    'success' => false,
+                    'error' => 'Sincronizzazione troppo frequente. Attendi almeno 1 minuto prima di riprovare.'
+                ]);
+                return;
+            }
+        }
+
         $result = $this->_syncChampionshipData($id);
         Response::success($result);
     }
@@ -562,10 +577,12 @@ class ResultsController
             curl_setopt_array($ch, [
                 CURLOPT_RETURNTRANSFER => true,
                 CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
+                CURLOPT_REDIR_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
                 CURLOPT_TIMEOUT => 20,
                 CURLOPT_CONNECTTIMEOUT => 8,
-                CURLOPT_SSL_VERIFYPEER => false,
-                CURLOPT_SSL_VERIFYHOST => 0,
+                CURLOPT_SSL_VERIFYPEER => true,
+                CURLOPT_SSL_VERIFYHOST => 2,
             ]);
             $proxyHtml = curl_exec($ch);
             $proxyCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -606,7 +623,7 @@ class ResultsController
         $sslAttempts = [
             ['verify' => true, 'cainfo' => dirname(__DIR__, 2) . '/Shared/cacert.pem'],
             ['verify' => true, 'cainfo' => null], // Use system default CA bundle
-            ['verify' => false, 'cainfo' => null], // Last resort: skip verification
+            // OWASP A02:2021 - Removed insecure fallback (verify => false)
         ];
 
         $html = false;
@@ -619,6 +636,8 @@ class ResultsController
             $opts = [
                 CURLOPT_RETURNTRANSFER => true,
                 CURLOPT_FOLLOWLOCATION => $isAllowedDomain,
+                CURLOPT_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
+                CURLOPT_REDIR_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
                 CURLOPT_MAXREDIRS => 5,
                 CURLOPT_TIMEOUT => 15,
                 CURLOPT_CONNECTTIMEOUT => 5,
@@ -685,6 +704,8 @@ class ResultsController
                 curl_setopt_array($chProxy, [
                     CURLOPT_RETURNTRANSFER => true,
                     CURLOPT_FOLLOWLOCATION => true,
+                    CURLOPT_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
+                    CURLOPT_REDIR_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
                     CURLOPT_TIMEOUT => 15,
                     CURLOPT_CONNECTTIMEOUT => 5,
                     CURLOPT_USERAGENT => $userAgent,
@@ -1790,6 +1811,20 @@ class ResultsController
             }
         }
 
+
+        // Sanitize scraped HTML variables (A03:2021)
+        foreach ($matches as &$m) {
+            if (isset($m['home'])) $m['home'] = strip_tags((string)$m['home']);
+            if (isset($m['away'])) $m['away'] = strip_tags((string)$m['away']);
+            if (isset($m['score'])) $m['score'] = strip_tags((string)$m['score']);
+            if (isset($m['round'])) $m['round'] = strip_tags((string)$m['round']);
+            if (isset($m['status'])) $m['status'] = strip_tags((string)$m['status']);
+        }
+        unset($m);
+        foreach ($standings as &$s) {
+            if (isset($s['team'])) $s['team'] = strip_tags((string)$s['team']);
+        }
+        unset($s);
 
         try {
             $pdo->beginTransaction();

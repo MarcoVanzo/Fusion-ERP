@@ -18,7 +18,7 @@ use FusionERP\Shared\Response;
 // createImmutable: does NOT overwrite variables already set in the environment
 // (e.g. via Apache SetEnv in .htaccess). This lets server-level env vars take
 // precedence over .env file values, which is important for VALD credentials.
-$dotenv = Dotenv\Dotenv::createImmutable(dirname(__DIR__));
+$dotenv = Dotenv\Dotenv::createMutable(dirname(__DIR__));
 $dotenv->safeLoad();
 
 // Global Error Handler to ensure JSON responses on fatal errors

@@ -570,10 +570,7 @@ HTML;
             Response::error('Identificativo o dati di anteprima obbligatori', 400);
         }
 
-        // Forza la rilettura dal file .env per bypassare eventuali variabili di sistema obsolete in PHP-FPM
-        // Hardcoded per emergenza: bypassa completamente i problemi di cache e lettura dell'ambiente di produzione
-        $apiKey = 'AIzaSyC2xB9EPeVG9Yoj7SjvNlZ07zzwm3fIxj4';
-        
+        $apiKey = $_ENV['GEMINI_API_KEY'] ?? $_SERVER['GEMINI_API_KEY'] ?? getenv('GEMINI_API_KEY') ?: '';
         if (empty($apiKey)) {
             Response::error('Chiave API Gemini non configurata. Impostare GEMINI_API_KEY nelle variabili d\'ambiente.', 500);
         }
