@@ -1707,6 +1707,29 @@ const Transport = (() => {
           </div>`;
       }
 
+      // Viaggi Multipli
+      if (result.viaggi_multipli && result.viaggi_multipli.length) {
+        html += `
+          <div class="ai-section">
+            <div class="ai-section-header">
+              <i class="ph ph-git-branch" style="color:#a78bfa;"></i>
+              <span>Proposta Viaggi Multipli</span>
+              <span class="ai-badge">${result.viaggi_multipli.length}</span>
+            </div>`;
+        result.viaggi_multipli.forEach((vm) => {
+          const atlete = (vm.atlete || []).map(a => Utils.escapeHtml(a)).join(", ");
+          html += `
+            <div class="ai-pickup-card" style="border-left-color: #a78bfa;">
+              <div class="ai-pickup-content" style="padding-left:12px;">
+                <div class="ai-pickup-name">${Utils.escapeHtml(vm.nome_viaggio || "Viaggio alternativo")}</div>
+                ${atlete ? `<div class="ai-pickup-athletes"><i class="ph ph-users"></i> ${atlete}</div>` : ""}
+                ${vm.motivo ? `<div class="ai-pickup-reason"><i class="ph ph-info"></i> ${Utils.escapeHtml(vm.motivo)}</div>` : ""}
+              </div>
+            </div>`;
+        });
+        html += `</div>`;
+      }
+
       // Punti di raccolta
       if (result.punti_raccolta && result.punti_raccolta.length) {
         html += `
@@ -1738,7 +1761,7 @@ const Transport = (() => {
           <div class="ai-section warning">
             <div class="ai-section-header">
               <i class="ph ph-warning" style="color:#ff6b6b;"></i>
-              <span>Atlete Fuori Percorso</span>
+              <span>Atlete Fuori Percorso / Punti di Ritrovo</span>
               <span class="ai-badge danger">${result.fuori_percorso.length}</span>
             </div>`;
         result.fuori_percorso.forEach(fp => {
@@ -1746,6 +1769,7 @@ const Transport = (() => {
             <div class="ai-warning-item">
               <strong>${Utils.escapeHtml(fp.nome || "")}</strong>
               <span>${Utils.escapeHtml(fp.motivo || "")}</span>
+              ${fp.punto_ritrovo_consigliato ? `<div style="margin-top:8px; padding:8px; background:rgba(0,229,255,0.1); border-radius:6px; color:#00e5ff; font-size:13px;"><i class="ph ph-map-pin"></i> <strong>Ritrovo suggerito:</strong> ${Utils.escapeHtml(fp.punto_ritrovo_consigliato)}</div>` : ""}
             </div>`;
         });
         html += `</div>`;

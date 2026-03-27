@@ -628,22 +628,26 @@ HTML;
         $prompt .= "TAPPE DEL PERCORSO:\n" . implode("\n", $stopDescriptions) . "\n\n";
         $prompt .= "ATLETE E INDIRIZZI:\n" . implode("\n", $athleteDescriptions) . "\n\n";
 
-        $prompt .= "Analizza il percorso e rispondi ESCLUSIVAMENTE in JSON valido con questa struttura:\n";
+        $prompt .= "Analizza il percorso e rispondi ESCLUSIVAMENTE in JSON valido con questa struttura. Se ritieni utile suddividere il trasporto in più viaggi (es. due pulmini separati) per ottimizzare la logistica, compila l'array 'viaggi_multipli'. Per le atlete fuori percorso, NON escluderle, ma proponi SEMPRE un punto di ritrovo intermedio ragionevole.\n";
         $prompt .= "{\n";
         $prompt .= "  \"consigli\": \"Testo con i consigli generali sull'ottimizzazione del percorso\",\n";
+        $prompt .= "  \"viaggi_multipli\": [\n";
+        $prompt .= "    { \"nome_viaggio\": \"Nome descrittivo (es. Pulmino Nord)\", \"atlete\": [\"Nome atleta 1\"], \"motivo\": \"Perché conviene questo viaggio separato\" }\n";
+        $prompt .= "  ],\n";
         $prompt .= "  \"punti_raccolta\": [\n";
         $prompt .= "    { \"nome\": \"Nome del punto di raccolta suggerito\", \"indirizzo\": \"Indirizzo del punto\", \"atlete\": [\"Nome atleta 1\", \"Nome atleta 2\"], \"motivo\": \"Perché questo punto è ottimale\" }\n";
         $prompt .= "  ],\n";
         $prompt .= "  \"fuori_percorso\": [\n";
-        $prompt .= "    { \"nome\": \"Nome atleta\", \"motivo\": \"Perché è fuori dal percorso ottimale\" }\n";
+        $prompt .= "    { \"nome\": \"Nome atleta\", \"motivo\": \"Perché è fuori dal percorso ottimale\", \"punto_ritrovo_consigliato\": \"Indirizzo del punto di incontro alternativo suggerito\" }\n";
         $prompt .= "  ],\n";
         $prompt .= "  \"risparmio_stimato\": \"Stima del tempo/distanza risparmiato con le modifiche suggerite\"\n";
         $prompt .= "}\n\n";
         $prompt .= "REGOLE:\n";
-        $prompt .= "- Se due o più atlete abitano vicine (meno di 1-2 km), suggerisci un punto di raccolta comune (parcheggio, piazza, incrocio noto)\n";
-        $prompt .= "- Considera la viabilità e la facilità di accesso dei punti suggeriti\n";
-        $prompt .= "- Se un'atleta abita molto lontana dal percorso principale, segnalala come 'fuori_percorso'\n";
-        $prompt .= "- Rispondi SOLO con il JSON, nessun altro testo\n";
+        $prompt .= "- NON LASCIARE MAI A PIEDI NESSUNO. Se una ragazza è scomoda, dalle un punto di ritrovo in 'punto_ritrovo_consigliato'.\n";
+        $prompt .= "- Suggerisci 'viaggi_multipli' solo se ha senso usare più di un furgone.\n";
+        $prompt .= "- Se due o più atlete abitano vicine (meno di 1-2 km), suggerisci un punto di raccolta comune (parcheggio, piazza, incrocio noto).\n";
+        $prompt .= "- Considera la viabilità e la facilità di accesso dei punti suggeriti.\n";
+        $prompt .= "- Rispondi SOLO con il JSON, nessun altro testo.\n";
 
         // Call Google Gemini API (same pattern as AdminController OCR)
         // Request using gemini-2.5-flash
@@ -702,6 +706,7 @@ HTML;
             // If parsing fails, wrap raw text as consigli
             $aiJson = [
                 'consigli'         => $aiContent,
+                'viaggi_multipli'  => [],
                 'punti_raccolta'   => [],
                 'fuori_percorso'   => [],
                 'risparmio_stimato' => '',
