@@ -30,8 +30,21 @@ class Auth
             $sessionName = getenv('SESSION_NAME') ?: 'fusion_session';
             session_name($sessionName);
 
+            // Use a long-lasting session: 30 days (2592000 seconds)
+            $sessionLifetime = 2592000;
+
+            // Increase session lifetime on server (Garbage Collector)
+            ini_set('session.gc_maxlifetime', (string)$sessionLifetime);
+            ini_set('session.cookie_lifetime', (string)$sessionLifetime);
+
+            // Isolate session storage if allowed (prevents automatic cleanup on shared hosting)
+            $localSessionPath = __DIR__ . '/../sessions';
+            if (is_dir($localSessionPath) && is_writable($localSessionPath)) {
+                session_save_path($localSessionPath);
+            }
+
             session_set_cookie_params([
-                'lifetime' => 0,
+                'lifetime' => $sessionLifetime,
                 'path' => '/',
                 'domain' => '',
                 'secure' => (getenv('APP_ENV') === 'production'),

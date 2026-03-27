@@ -108,6 +108,7 @@ try {
             'network' => dispatch('Network', $action),
             'scouting' => dispatch('Scouting', $action),
             'esignature' => dispatch('ESignature', $action),
+            'tenant' => dispatch('Tenant', $action),
             'whatsapp' => dispatchWebhook($action),
             default => Response::error("Modulo '{$module}' non trovato", 404),
         };
@@ -123,8 +124,16 @@ catch (\Throwable $e) {
 
     Response::error($clientMessage, 500);
 } finally {
+    // Robustness: Force database disconnection and trigger garbage collection
     if (class_exists('FusionERP\\Shared\\Database')) {
         \FusionERP\Shared\Database::disconnect();
+    }
+    
+    // Cleanup: help PHP release memory from large result sets or circular references
+    gc_collect_cycles();
+    
+    if (ob_get_level() > 0) {
+        ob_end_flush();
     }
 }
 
