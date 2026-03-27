@@ -1,8 +1,15 @@
 <?php
-$content = file_get_contents(__DIR__ . '/api/Modules/Scouting/ScoutingController.php');
-// Print lines 20-40 where getEnvVar is
-$lines = explode("\n", $content);
-echo "--- Server ScoutingController.php lines 20-50 ---\n";
-foreach (array_slice($lines, 19, 31) as $line) {
-    echo $line . "\n";
+header('Content-Type: text/plain');
+$content = file_get_contents(__DIR__ . '/api/Modules/Transport/TransportController.php');
+if (strpos($content, 'preg_match(\'/^GEMINI_API_KEY=(.*)$/m\'') !== false) {
+    echo "NEW CODE IS DEPLOYED\n";
+} else {
+    echo "OLD CODE IS RUNNING\n";
+}
+echo "Key Prefix output snippet:\n";
+$pos = strpos($content, '$keyUsed');
+if ($pos !== false) {
+    echo substr($content, $pos - 40, 300);
+} else {
+    echo "NO keyUsed Variable found\n";
 }
