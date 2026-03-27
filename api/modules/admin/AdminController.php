@@ -137,8 +137,8 @@ class AdminController
         }
 
         $imageData = base64_encode(file_get_contents($imagePath));
-        // Eseguire la richiesta a Gemini 1.5 Flash
-        $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={$apiKey}";
+        // Eseguire la richiesta a Gemini 2.5 Flash
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={$apiKey}";
 
         $payload = json_encode([
             'contents' => [[
