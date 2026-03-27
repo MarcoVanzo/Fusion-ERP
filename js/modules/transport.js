@@ -1697,10 +1697,12 @@ const Transport = (() => {
 
       // Helper to map names back to athlete objects
       const findAthleteByName = (name) => {
+        if (!name || typeof name !== 'string') return null;
         const cleanName = name.trim().toLowerCase();
+        if (!cleanName) return null;
         return originalAthletes.find(a => {
           const aName = (a.name || a.full_name || "").trim().toLowerCase();
-          return aName.includes(cleanName) || cleanName.includes(aName);
+          return aName && (aName.includes(cleanName) || cleanName.includes(aName));
         });
       };
 
@@ -1733,8 +1735,10 @@ const Transport = (() => {
         // Single trip proposal
         // Get names of athletes that are completely fuori_percorso with NO punto di ritrovo
         const fuoriSenzaRitrovoNomi = (result.fuori_percorso || [])
-            .filter(fp => !fp.punto_ritrovo_consigliato || fp.punto_ritrovo_consigliato.trim() === '')
-            .map(fp => fp.nome.trim().toLowerCase());
+            .filter(fp => !fp.punto_ritrovo_consigliato || (typeof fp.punto_ritrovo_consigliato === 'string' && fp.punto_ritrovo_consigliato.trim() === ''))
+            .filter(fp => fp && fp.nome && typeof fp.nome === 'string')
+            .map(fp => fp.nome.trim().toLowerCase())
+            .filter(n => n !== '');
 
         const validAthletes = [];
         originalAthletes.forEach(a => {
@@ -1742,7 +1746,7 @@ const Transport = (() => {
             const isSenzaRitrovo = fuoriSenzaRitrovoNomi.some(fn => aName.includes(fn) || fn.includes(aName));
             
             const id = a.id || a.atleta_id;
-            if (!isSenzaRitrovo) {
+            if (id && !isSenzaRitrovo) {
                 validAthletes.push({ id });
                 mappedAthleteIds.add(String(id));
             }
