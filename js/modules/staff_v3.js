@@ -29,7 +29,7 @@ const Staff = (() => {
   }
   function o(e, t, a) {
     const n = a || "var(--color-white)";
-    return `\n        <div style="display:flex;flex-direction:column;gap:2px;">\n          <span style="font-size:11px;color:var(--color-silver);text-transform:uppercase;font-weight:600;letter-spacing:0.04em;">${Utils.escapeHtml(e)}</span>\n          <span style="font-size:14px;font-weight:500;color:${n};">${t ? Utils.escapeHtml(String(t)) : '<span style="color:var(--color-text-muted);">—</span>'}</span>\n        </div>`;
+    return `\n <div style="display:flex;flex-direction:column;gap:2px;">\n <span style="font-size:11px;color:var(--color-silver);text-transform:uppercase;font-weight:600;letter-spacing:0.04em;">${Utils.escapeHtml(e)}</span>\n <span style="font-size:14px;font-weight:500;color:${n};">${t ? Utils.escapeHtml(String(t)) : '<span style="color:var(--color-text-muted);">—</span>'}</span>\n </div>`;
   }
   function r() {
     const n = document.getElementById("app");
@@ -37,51 +37,7 @@ const Staff = (() => {
     const l = App.getUser(),
       o = ["admin", "manager", "operator"].includes(l?.role),
       c = [...new Set(t.map((e) => e.role).filter(Boolean))].sort();
-    ((n.innerHTML = `\n            <div class="transport-dashboard">
-    <div class="dash-top-bar" style="border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 24px; margin-bottom: 24px;">
-        <div>
-            <h1 class="dash-title">Gestione <span style="color:var(--accent-pink);">Staff</span></h1>
-            <p class="dash-subtitle">${t.length} membro${1 !== t.length ? "i" : ""} nel sistema</p>
-        </div>
-        <div style="display:flex;gap:12px; flex-wrap:wrap; align-items:center;">
-            <div class="input-wrapper" style="position:relative;min-width:220px;">
-                <i class="ph ph-magnifying-glass" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,0.4);font-size:16px;"></i>
-                <input type="text" id="staff-search" class="form-input" placeholder="Cerca membro staff..." style="padding-left:36px;height:42px;font-size:13px;background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.1);color:#fff;">
-            </div>
-            ${o ? '<button class="btn-dash pink" id="new-staff-btn" type="button"><i class="ph ph-plus-circle" style="font-size:18px;"></i> NUOVO MEMBRO</button>' : ""}
-        </div>
-    </div>
-    <div class="dash-filters" id="staff-role-filter" style="margin-bottom:24px;">\n                <button class="dash-filter active" data-role="" type="button">Tutti</button>\n                ${c.map((e) => `<button class="dash-filter" data-role="${Utils.escapeHtml(e.toLowerCase())}" type="button">${Utils.escapeHtml(e)}</button>`).join("")}\n            </div>\n\n            <div class="dash-stat-grid" id="staff-grid">\n                ${
-      0 === t.length
-        ? Utils.emptyState(
-            "Nessun membro staff",
-            "Aggiungi il primo membro con il pulsante in alto.",
-          )
-        : t
-            .map((e) =>
-              (function (e) {
-                const t = s(e.full_name),
-                  n = Utils.initials(e.full_name),
-                  l = new Date(),
-                  o =
-                    e.medical_cert_expires_at &&
-                    new Date(e.medical_cert_expires_at) < l,
-                  r =
-                    e.team_names ||
-                    (e.team_season_ids && e.team_season_ids.length > 0
-                      ? e.team_season_ids
-                          .map((e) => {
-                            const t = a.find((t) => String(t.id) === String(e));
-                            return t ? i(t.category, t.name) : "";
-                          })
-                          .filter(Boolean)
-                          .join(", ")
-                      : "");
-                return `\n        <div class="dash-stat-card" style="cursor:pointer;position:relative;overflow:hidden;padding:16px;" data-staff-id="${Utils.escapeHtml(e.id)}"\n             data-name="${Utils.escapeHtml((e.full_name || "").toLowerCase())}"\n             data-role="${Utils.escapeHtml((e.role || "").toLowerCase())}">\n            ${o ? '<div style="position:absolute;top:var(--sp-2);right:var(--sp-2);width:8px;height:8px;border-radius:50%;background:var(--color-pink);box-shadow:0 0 6px var(--color-pink);"></div>' : ""}\n            <div style="display:flex;align-items:flex-start;gap:var(--sp-2);">\n                <div style="width:48px;height:48px;background:${t};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--font-display);font-weight:700;font-size:1.3rem;color:#000;border-radius:8px;position:relative;overflow:hidden;">\n                    ${e.photo_path ? `<img src="${e.photo_path}" style="width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;z-index:1;">` : ""}\n                    ${Utils.escapeHtml(n)}\n                </div>\n                <div style="overflow:hidden;flex:1;">\n                    <div style="font-family:var(--font-display);font-weight:700;font-size:1.1rem;">${Utils.escapeHtml(e.full_name)}</div>\n                    <div style="font-size:12px;color:var(--color-text-muted);">${Utils.escapeHtml(e.role || "—")}</div>\n                    <div style="font-size:12px;color:var(--color-text-muted);">${Utils.escapeHtml(r)}</div>\n                    ${e.phone ? `<div style="font-size:12px;color:var(--color-text-muted);margin-top:2px;"><i class="ph ph-phone" style="font-size:11px;"></i> ${Utils.escapeHtml(e.phone)}</div>` : ""}\n                </div>\n            </div>\n        </div>`;
-              })(e),
-            )
-            .join("")
-    }\n            </div></div>\n        `),
+    ((n.innerHTML = `\n <div class="transport-dashboard"><div class="dash-top-bar" style="border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 24px; margin-bottom: 24px;"><div><h1 class="dash-title">Gestione <span style="color:var(--accent-pink);">Staff</span></h1><p class="dash-subtitle">${t.length} membro${1 !== t.length ? "i" : ""} nel sistema</p></div><div style="display:flex;gap:12px; flex-wrap:wrap; align-items:center;"><div class="input-wrapper" style="position:relative;min-width:220px;"><i class="ph ph-magnifying-glass" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,0.4);font-size:16px;"></i><input type="text" id="staff-search" class="form-input" placeholder="Cerca membro staff..." style="padding-left:36px;height:42px;font-size:13px;background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.1);color:#fff;"></div> ${o ? '<button class="btn-dash pink" id="new-staff-btn" type="button"><i class="ph ph-plus-circle" style="font-size:18px;"></i> NUOVO MEMBRO</button>' : ""} </div></div><div class="dash-filters" id="staff-role-filter" style="margin-bottom:24px;">\n <button class="dash-filter active" data-role="" type="button">Tutti</button>\n ${c.map((e) =>`<button class="dash-filter" data-role="${Utils.escapeHtml(e.toLowerCase())}" type="button">${Utils.escapeHtml(e)}</button>`).join("")}\n </div>\n\n <div class="dash-stat-grid" id="staff-grid">\n ${ 0 === t.length ? Utils.emptyState( "Nessun membro staff", "Aggiungi il primo membro con il pulsante in alto.", ) : t .map((e) => (function (e) { const t = s(e.full_name), n = Utils.initials(e.full_name), l = new Date(), o = e.medical_cert_expires_at && new Date(e.medical_cert_expires_at) < l, r = e.team_names || (e.team_season_ids && e.team_season_ids.length > 0 ? e.team_season_ids .map((e) => { const t = a.find((t) => String(t.id) === String(e)); return t ? i(t.category, t.name) : ""; }) .filter(Boolean) .join(", ") : ""); return`\n        <div class="dash-stat-card" style="cursor:pointer;position:relative;overflow:hidden;padding:16px;" data-staff-id="${Utils.escapeHtml(e.id)}"\n             data-name="${Utils.escapeHtml((e.full_name || "").toLowerCase())}"\n             data-role="${Utils.escapeHtml((e.role || "").toLowerCase())}">\n            ${o ? '<div style="position:absolute;top:var(--sp-2);right:var(--sp-2);width:8px;height:8px;border-radius:50%;background:var(--color-pink);box-shadow:0 0 6px var(--color-pink);"></div>' : ""}\n            <div style="display:flex;align-items:flex-start;gap:var(--sp-2);">\n                <div style="width:48px;height:48px;background:${t};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--font-display);font-weight:700;font-size:1.3rem;color:#000;border-radius:8px;position:relative;overflow:hidden;">\n                    ${e.photo_path ? `<img src="${e.photo_path}" style="width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;z-index:1;">` : ""}\n                    ${Utils.escapeHtml(n)}\n                </div>\n                <div style="overflow:hidden;flex:1;">\n                    <div style="font-family:var(--font-display);font-weight:700;font-size:1.1rem;">${Utils.escapeHtml(e.full_name)}</div>\n                    <div style="font-size:12px;color:var(--color-text-muted);">${Utils.escapeHtml(e.role || "—")}</div>\n                    <div style="font-size:12px;color:var(--color-text-muted);">${Utils.escapeHtml(r)}</div>\n                    ${e.phone ? `<div style="font-size:12px;color:var(--color-text-muted);margin-top:2px;"><i class="ph ph-phone" style="font-size:11px;"></i> ${Utils.escapeHtml(e.phone)}</div>` : ""}\n                </div>\n            </div>\n        </div>`; })(e), ) .join("") }\n </div></div>\n`),
       document.getElementById("staff-search")?.addEventListener(
         "input",
         (e) => {
@@ -132,7 +88,7 @@ const Staff = (() => {
             let s = 1;
             const o = {},
               d = [
-                `<div class="form-grid">\n                <div class="form-group"><label class="form-label" for="ns-fname">Nome *</label><input id="ns-fname" class="form-input" type="text" placeholder="Marco" required></div>\n                <div class="form-group"><label class="form-label" for="ns-lname">Cognome *</label><input id="ns-lname" class="form-input" type="text" placeholder="Rossi" required></div>\n            </div>\n            <div class="form-grid">\n                <div class="form-group"><label class="form-label" for="ns-role">Ruolo / Qualifica</label>\n                    <select id="ns-role" class="form-select">\n                        <option value="">Seleziona...</option>\n                        <option>Primo Allenatore</option><option>Secondo Allenatore</option><option>Preparatore Atletico</option>\n                        <option>Medico</option><option>Fisioterapista</option><option>Segreteria</option><option>Direttore Tecnico</option><option>Dirigente</option><option>Addetta Stampa</option><option>Altro</option>\n                    </select>\n                </div>\n                <div class="form-group"><label class="form-label" for="ns-birth">Data di Nascita</label><input id="ns-birth" class="form-input" type="date"></div>\n            </div>\n            <div class="form-group"><label class="form-label">Squadre (Opzionale)</label><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;max-height:120px;overflow-y:auto;padding:8px;border:1px solid var(--color-border);border-radius:6px;background:rgba(0,0,0,0.2);">${n}</div></div>\n            <div class="form-grid">\n                <div class="form-group"><label class="form-label" for="ns-birthplace">Luogo di Nascita</label><input id="ns-birthplace" class="form-input" type="text" placeholder="Roma"></div>\n                <div class="form-group"><label class="form-label" for="ns-rescity">Città di Residenza</label><input id="ns-rescity" class="form-input" type="text" placeholder="Milano"></div>\n            </div>`,
+                `<div class="form-grid">\n <div class="form-group"><label class="form-label" for="ns-fname">Nome *</label><input id="ns-fname" class="form-input" type="text" placeholder="Marco" required></div>\n <div class="form-group"><label class="form-label" for="ns-lname">Cognome *</label><input id="ns-lname" class="form-input" type="text" placeholder="Rossi" required></div>\n </div>\n <div class="form-grid">\n <div class="form-group"><label class="form-label" for="ns-role">Ruolo / Qualifica</label>\n <select id="ns-role" class="form-select">\n <option value="">Seleziona...</option>\n <option>Primo Allenatore</option><option>Secondo Allenatore</option><option>Preparatore Atletico</option>\n <option>Medico</option><option>Fisioterapista</option><option>Segreteria</option><option>Direttore Tecnico</option><option>Dirigente</option><option>Addetta Stampa</option><option>Altro</option>\n </select>\n </div>\n <div class="form-group"><label class="form-label" for="ns-birth">Data di Nascita</label><input id="ns-birth" class="form-input" type="date"></div>\n </div>\n <div class="form-group"><label class="form-label">Squadre (Opzionale)</label><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;max-height:120px;overflow-y:auto;padding:8px;border:1px solid var(--color-border);border-radius:6px;background:rgba(0,0,0,0.2);">${n}</div></div>\n <div class="form-grid">\n <div class="form-group"><label class="form-label" for="ns-birthplace">Luogo di Nascita</label><input id="ns-birthplace" class="form-input" type="text" placeholder="Roma"></div>\n <div class="form-group"><label class="form-label" for="ns-rescity">Città di Residenza</label><input id="ns-rescity" class="form-input" type="text" placeholder="Milano"></div>\n </div>`,
                 '<div class="form-grid">\n                <div class="form-group"><label class="form-label" for="ns-phone">Cellulare</label><input id="ns-phone" class="form-input" type="tel" placeholder="+39 333 1234567"></div>\n                <div class="form-group"><label class="form-label" for="ns-email">E-Mail</label><input id="ns-email" class="form-input" type="email" placeholder="nome@email.com"></div>\n            </div>\n            <div class="form-grid">\n                <div class="form-group"><label class="form-label" for="ns-fiscal">Codice Fiscale</label><input id="ns-fiscal" class="form-input" type="text" placeholder="RSSMRC90A01H501Z" maxlength="16" style="text-transform:uppercase;"></div>\n                <div class="form-group"><label class="form-label" for="ns-doc">Documento d\'Identità</label><input id="ns-doc" class="form-input" type="text" placeholder="CI / Passaporto"></div>\n            </div>\n            <div class="form-grid">\n                <div class="form-group"><label class="form-label" for="ns-medcert">Scadenza Cert. Medico</label><input id="ns-medcert" class="form-input" type="date"></div>\n            </div>\n            <div class="form-group"><label class="form-label" for="ns-notes">Note</label><textarea id="ns-notes" class="form-input" rows="2" placeholder="Note aggiuntive..." style="resize:vertical;"></textarea></div>',
               ],
               c = () => {
@@ -154,7 +110,7 @@ const Staff = (() => {
               p = () => {
                 const e = document.getElementById("staff-wizard-body");
                 if (!e) return;
-                ((e.innerHTML = `\n                <div style="display:flex;align-items:center;gap:0;margin-bottom:20px;">\n                    ${[1, 2].map((e) => `\n                        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;">\n                            <div style="width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;\n                                ${e < s ? "background:var(--color-success);color:#000;" : e === s ? "background:var(--color-pink);color:#fff;" : "background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.4);"}">\n                                ${e < s ? "✓" : e}\n                            </div>\n                            <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;color:${e === s ? "var(--color-white)" : "rgba(255,255,255,0.35)"};">${l[e - 1]}</div>\n                        </div>\n                        ${e < 2 ? `<div style="flex:0.5;height:2px;background:${e < s ? "var(--color-success)" : "rgba(255,255,255,0.1)"};margin-bottom:20px;"></div>` : ""}\n                    `).join("")}\n                </div>\n                <div id="ns-step-content">${d[s - 1]}</div>\n                <div id="ns-error" class="form-error hidden"></div>\n            `),
+                ((e.innerHTML = `\n <div style="display:flex;align-items:center;gap:0;margin-bottom:20px;">\n ${[1, 2].map((e) =>`\n                        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;">\n                            <div style="width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;\n                                ${e < s ? "background:var(--color-success);color:#000;" : e === s ? "background:var(--color-pink);color:#fff;" : "background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.4);"}">\n                                ${e < s ? "✓" : e}\n                            </div>\n                            <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;color:${e === s ? "var(--color-white)" : "rgba(255,255,255,0.35)"};">${l[e - 1]}</div>\n                        </div>\n                        ${e < 2 ? `<div style="flex:0.5;height:2px;background:${e < s ? "var(--color-success)" : "rgba(255,255,255,0.1)"};margin-bottom:20px;"></div>` : ""}\n                    `).join("")}\n </div>\n <div id="ns-step-content">${d[s - 1]}</div>\n <div id="ns-error" class="form-error hidden"></div>\n`),
                   requestAnimationFrame(() => {
                     (Object.entries(o).forEach(([e, t]) => {
                       if ("ns-teams" === e || "ns-teams-touched" === e) return;
@@ -274,130 +230,12 @@ const Staff = (() => {
                 .filter(Boolean)
                 .join(", ")
             : "");
-      ((c.innerHTML = `
-        <div class="transport-dashboard" style="min-height:100vh;">
-
-          <!-- BREADCRUMB NAV -->
-          <div style="display:flex;align-items:center;gap:var(--sp-2);padding:0 var(--sp-4);">
-            <button class="btn btn-ghost btn-sm" id="staff-back" style="color:var(--color-text-muted);border:none;padding:0;display:flex;align-items:center;gap:6px;font-size:12px;text-transform:uppercase;letter-spacing:0.06em;" type="button">
-              <i class="ph ph-arrow-left" style="font-size:16px;"></i> Staff
-            </button>
-            <div style="flex:1;"></div>
-            ${f ? '<button class="btn btn-primary btn-sm" id="staff-edit-btn" type="button" style="margin-right:8px;"><i class="ph ph-pencil-simple"></i> MODIFICA</button>' : ""}
-            ${f ? '<button class="btn btn-default btn-sm" id="staff-delete-btn" type="button" style="color:var(--color-pink);border-color:rgba(255,0,122,0.3);"><i class="ph ph-trash"></i></button>' : ""}
-          </div>
-
-          <!-- HEADER STAFF -->
-          <div style="display:flex; align-items:center; gap:var(--sp-4); padding:0 var(--sp-4); margin-top:var(--sp-2);">
-            <div style="display:flex; flex-direction:column;">
-              <h2 style="font-size:2.5rem; font-weight:800; margin:0; line-height:1.1; font-family:var(--font-display); text-transform:uppercase; letter-spacing:-0.5px;">${Utils.escapeHtml(p.first_name || "")} <span style="font-weight:300; color:var(--color-text-muted);">${Utils.escapeHtml(p.last_name || "")}</span></h2>
-              <div style="font-size:15px; color:var(--color-white); margin-top:8px; display:flex; gap:12px; align-items:center;">
-                ${p.role ? `<span style="background:rgba(255,255,255,0.1); padding:4px 10px; border-radius:6px; font-weight:600; font-size:13px; letter-spacing:0.5px; text-transform:uppercase;">${Utils.escapeHtml(p.role)}</span>` : ""}
-                ${v ? `<span style="color:var(--color-text-muted); font-weight:500;">${Utils.escapeHtml(v)}</span>` : ""}
-              </div>
-            </div>
-          </div>
-
-          <!-- TAB BAR -->
-          <div style="position:relative;margin:0 calc(var(--sp-4) * -1);padding:0 var(--sp-4);border-bottom:1px solid var(--color-border);margin-bottom:var(--sp-4);">
-            <div id="staff-tab-bar" class="fusion-tabs-container" style="display:flex;gap:0;overflow-x:auto;scrollbar-width:none;position:relative;z-index:2;padding-bottom:1px;">
-              <button class="athlete-tab-btn fusion-tab active" data-stab="anagrafica" type="button" style="flex-shrink:0;white-space:nowrap;">
-                  <i class="ph ph-identification-card"></i> Anagrafica
-              </button>
-              <button class="athlete-tab-btn fusion-tab" data-stab="documenti" type="button" style="flex-shrink:0;white-space:nowrap;">
-                  <i class="ph ph-file-text"></i> Documenti
-              </button>
-            </div>
-            <div id="tab-scroll-indicator" style="position:absolute;top:0;right:0;bottom:0;width:48px;background:linear-gradient(to left, var(--color-black) 20%, transparent 100%);pointer-events:none;z-index:3;transition:opacity 0.3s;opacity:0.8;"></div>
-          </div>
-
-          <!-- TAB: ANAGRAFICA -->
-          <div id="stab-panel-anagrafica" class="athlete-tab-panel" style="display:flex;flex-direction:column;gap:var(--sp-4);padding:0 var(--sp-4);">
-            <div style="display:flex;flex-direction:row;align-items:flex-start;gap:var(--sp-4);">
-              <!-- FOTO PERSONALE -->
-              <div style="width:280px;flex-shrink:0;">
-                <p class="section-label" style="text-align:center;">Foto Personale</p>
-                <div class="dash-card" style="padding:var(--sp-3);">
-                  <div style="display:flex;flex-direction:column;align-items:center;gap:var(--sp-3);">
-                    <div id="staff-photo-preview" style="width:240px;height:240px;border-radius:16px;overflow:hidden;flex-shrink:0;border:2px solid var(--color-border);background:${s(p.full_name)};display:flex;align-items:center;justify-content:center;">
-                      ${p.photo_path ? `<img src="${Utils.escapeHtml(p.photo_path)}" alt="Foto staff" style="width:100%;height:100%;object-fit:cover;object-position:center">` : `<span style="font-family:var(--font-display);font-size:4.5rem;font-weight:700;color:#000;">${Utils.initials(p.full_name)}</span>`}
-                    </div>
-                    <div style="display:flex;flex-direction:column;align-items:center;gap:8px;width:100%;">
-                      <div style="font-size:13px;color:var(--color-text-muted);text-align:center;">
-                        ${p.photo_path ? "Foto caricata" : "Nessuna foto caricata"}
-                      </div>
-                      ${
-                        f
-                          ? `
+      ((c.innerHTML = ` <div class="transport-dashboard" style="min-height:100vh;"><!-- BREADCRUMB NAV --><div style="display:flex;align-items:center;gap:var(--sp-2);padding:0 var(--sp-4);"><button class="btn btn-ghost btn-sm" id="staff-back" style="color:var(--color-text-muted);border:none;padding:0;display:flex;align-items:center;gap:6px;font-size:12px;text-transform:uppercase;letter-spacing:0.06em;" type="button"><i class="ph ph-arrow-left" style="font-size:16px;"></i> Staff </button><div style="flex:1;"></div> ${f ? '<button class="btn btn-primary btn-sm" id="staff-edit-btn" type="button" style="margin-right:8px;"><i class="ph ph-pencil-simple"></i> MODIFICA</button>' : ""} ${f ? '<button class="btn btn-default btn-sm" id="staff-delete-btn" type="button" style="color:var(--color-pink);border-color:rgba(255,0,122,0.3);"><i class="ph ph-trash"></i></button>' : ""} </div><!-- HEADER STAFF --><div style="display:flex; align-items:center; gap:var(--sp-4); padding:0 var(--sp-4); margin-top:var(--sp-2);"><div style="display:flex; flex-direction:column;"><h2 style="font-size:2.5rem; font-weight:800; margin:0; line-height:1.1; font-family:var(--font-display); text-transform:uppercase; letter-spacing:-0.5px;">${Utils.escapeHtml(p.first_name || "")} <span style="font-weight:300; color:var(--color-text-muted);">${Utils.escapeHtml(p.last_name || "")}</span></h2><div style="font-size:15px; color:var(--color-white); margin-top:8px; display:flex; gap:12px; align-items:center;"> ${p.role ?`<span style="background:rgba(255,255,255,0.1); padding:4px 10px; border-radius:6px; font-weight:600; font-size:13px; letter-spacing:0.5px; text-transform:uppercase;">${Utils.escapeHtml(p.role)}</span>`: ""} ${v ?`<span style="color:var(--color-text-muted); font-weight:500;">${Utils.escapeHtml(v)}</span>`: ""} </div></div></div><!-- TAB BAR --><div style="position:relative;margin:0 calc(var(--sp-4) * -1);padding:0 var(--sp-4);border-bottom:1px solid var(--color-border);margin-bottom:var(--sp-4);"><div id="staff-tab-bar" class="fusion-tabs-container" style="display:flex;gap:0;overflow-x:auto;scrollbar-width:none;position:relative;z-index:2;padding-bottom:1px;"><button class="athlete-tab-btn fusion-tab active" data-stab="anagrafica" type="button" style="flex-shrink:0;white-space:nowrap;"><i class="ph ph-identification-card"></i> Anagrafica </button><button class="athlete-tab-btn fusion-tab" data-stab="documenti" type="button" style="flex-shrink:0;white-space:nowrap;"><i class="ph ph-file-text"></i> Documenti </button></div><div id="tab-scroll-indicator" style="position:absolute;top:0;right:0;bottom:0;width:48px;background:linear-gradient(to left, var(--color-black) 20%, transparent 100%);pointer-events:none;z-index:3;transition:opacity 0.3s;opacity:0.8;"></div></div><!-- TAB: ANAGRAFICA --><div id="stab-panel-anagrafica" class="athlete-tab-panel" style="display:flex;flex-direction:column;gap:var(--sp-4);padding:0 var(--sp-4);"><div style="display:flex;flex-direction:row;align-items:flex-start;gap:var(--sp-4);"><!-- FOTO PERSONALE --><div style="width:280px;flex-shrink:0;"><p class="section-label" style="text-align:center;">Foto Personale</p><div class="dash-card" style="padding:var(--sp-3);"><div style="display:flex;flex-direction:column;align-items:center;gap:var(--sp-3);"><div id="staff-photo-preview" style="width:240px;height:240px;border-radius:16px;overflow:hidden;flex-shrink:0;border:2px solid var(--color-border);background:${s(p.full_name)};display:flex;align-items:center;justify-content:center;"> ${p.photo_path ?`<img src="${Utils.escapeHtml(p.photo_path)}" alt="Foto staff" style="width:100%;height:100%;object-fit:cover;object-position:center">`:`<span style="font-family:var(--font-display);font-size:4.5rem;font-weight:700;color:#000;">${Utils.initials(p.full_name)}</span>`} </div><div style="display:flex;flex-direction:column;align-items:center;gap:8px;width:100%;"><div style="font-size:13px;color:var(--color-text-muted);text-align:center;"> ${p.photo_path ? "Foto caricata" : "Nessuna foto caricata"} </div> ${ f ?`
                       <label for="staff-photo-upload" class="btn btn-default btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;width:100%;justify-content:center;">
                         <i class="ph ph-camera"></i> ${p.photo_path ? "Cambia foto" : "Carica foto"}
                       </label>
                       <input id="staff-photo-upload" type="file" accept="image/jpeg,image/png,image/webp" style="display:none;" data-staff-id="${p.id}">
-                      <div id="staff-photo-status" style="font-size:12px;color:var(--color-text-muted);text-align:center;"></div>`
-                          : ""
-                      }
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div style="flex:1;">
-                <p class="section-label">Dati Anagrafici e Contatti</p>
-                <div class="dash-card" style="padding:var(--sp-3);">
-                  <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-3);">
-                      ${o("Nome", p.first_name)}
-                      ${o("Cognome", p.last_name)}
-                      ${o("Ruolo / Qualifica", p.role)}
-                      ${o("Squadre", v)}
-                      ${o("Data di Nascita", p.birth_date ? Utils.formatDate(p.birth_date) : null)}
-                      ${o("Luogo di Nascita", p.birth_place)}
-                      ${o("Città di Residenza", p.residence_city)}
-                      ${o("Via di Residenza", p.residence_address)}
-                      ${o("Cellulare", p.phone)}
-                      ${o("E-Mail", p.email)}
-                  </div>
-                  ${p.notes ? `<div style="margin-top:var(--sp-2);padding-top:var(--sp-2);border-top:1px solid var(--color-border);"><span style="font-size:11px;color:var(--color-silver);text-transform:uppercase;font-weight:600;">Note</span><p style="font-size:14px;margin-top:4px;line-height:1.6;">${Utils.escapeHtml(p.notes)}</p></div>` : ""}
-                </div>
-              </div>
-            </div>
-
-            <!-- DOCUMENTI (in Anagrafica) -->
-            <div>
-              <p class="section-label">Matricola e Documenti</p>
-              <div class="dash-card" style="padding:var(--sp-3);">
-                <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:var(--sp-3);">
-                  ${o("Documento d'Identità", p.identity_document)}
-                  ${o("Codice Fiscale", p.fiscal_code)}
-                  ${o("Scadenza Cert. Medico", p.medical_cert_expires_at ? Utils.formatDate(p.medical_cert_expires_at) : null, b ? "var(--color-pink)" : null)}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- TAB: DOCUMENTI -->
-          <div id="stab-panel-documenti" class="athlete-tab-panel" style="display:none;flex-direction:column;gap:var(--sp-4);padding:0 var(--sp-4);">
-              <div>
-                  <p class="section-label">Matricola e Dati</p>
-                  <div class="dash-card" style="padding:var(--sp-3);">
-                      <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3);">
-                          ${o("Codice Fiscale", p.fiscal_code)}
-                          ${o("Documento d'Identità", p.identity_document)}
-                          ${o("Scadenza Cert. Medico", p.medical_cert_expires_at ? Utils.formatDate(p.medical_cert_expires_at) : null, b ? "var(--color-pink)" : null)}
-                      </div>
-                  </div>
-              </div>
-              <div>
-                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-                      <p class="section-label" style="margin-bottom:0;">Contratto di Collaborazione</p>
-                      ${f && p.email ? `<button class="btn btn-primary btn-sm" id="generate-contract-btn" style="font-size:11px;padding:4px 10px;">+ NUOVO</button>` : !p.email ? '<span style="font-size:11px;color:var(--color-pink);">Email mancante per contratto</span>' : ""}
-                  </div>
-                  <div class="dash-card" style="padding:var(--sp-3);">
-                      ${
-                        !p.contract_status
-                          ? Utils.emptyState(
-                              "Nessun contratto attivo",
-                              "Genera un nuovo contratto per questo membro.",
-                            )
-                          : `
+                      <div id="staff-photo-status" style="font-size:12px;color:var(--color-text-muted);text-align:center;"></div>` : "" } </div></div></div></div><div style="flex:1;"><p class="section-label">Dati Anagrafici e Contatti</p><div class="dash-card" style="padding:var(--sp-3);"><div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-3);"> ${o("Nome", p.first_name)} ${o("Cognome", p.last_name)} ${o("Ruolo / Qualifica", p.role)} ${o("Squadre", v)} ${o("Data di Nascita", p.birth_date ? Utils.formatDate(p.birth_date) : null)} ${o("Luogo di Nascita", p.birth_place)} ${o("Città di Residenza", p.residence_city)} ${o("Via di Residenza", p.residence_address)} ${o("Cellulare", p.phone)} ${o("E-Mail", p.email)} </div> ${p.notes ?`<div style="margin-top:var(--sp-2);padding-top:var(--sp-2);border-top:1px solid var(--color-border);"><span style="font-size:11px;color:var(--color-silver);text-transform:uppercase;font-weight:600;">Note</span><p style="font-size:14px;margin-top:4px;line-height:1.6;">${Utils.escapeHtml(p.notes)}</p></div>`: ""} </div></div></div><!-- DOCUMENTI (in Anagrafica) --><div><p class="section-label">Matricola e Documenti</p><div class="dash-card" style="padding:var(--sp-3);"><div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:var(--sp-3);"> ${o("Documento d'Identità", p.identity_document)} ${o("Codice Fiscale", p.fiscal_code)} ${o("Scadenza Cert. Medico", p.medical_cert_expires_at ? Utils.formatDate(p.medical_cert_expires_at) : null, b ? "var(--color-pink)" : null)} </div></div></div></div><!-- TAB: DOCUMENTI --><div id="stab-panel-documenti" class="athlete-tab-panel" style="display:none;flex-direction:column;gap:var(--sp-4);padding:0 var(--sp-4);"><div><p class="section-label">Matricola e Dati</p><div class="dash-card" style="padding:var(--sp-3);"><div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3);"> ${o("Codice Fiscale", p.fiscal_code)} ${o("Documento d'Identità", p.identity_document)} ${o("Scadenza Cert. Medico", p.medical_cert_expires_at ? Utils.formatDate(p.medical_cert_expires_at) : null, b ? "var(--color-pink)" : null)} </div></div></div><div><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;"><p class="section-label" style="margin-bottom:0;">Contratto di Collaborazione</p> ${f && p.email ?`<button class="btn btn-primary btn-sm" id="generate-contract-btn" style="font-size:11px;padding:4px 10px;">+ NUOVO</button>`: !p.email ? '<span style="font-size:11px;color:var(--color-pink);">Email mancante per contratto</span>' : ""} </div><div class="dash-card" style="padding:var(--sp-3);"> ${ !p.contract_status ? Utils.emptyState( "Nessun contratto attivo", "Genera un nuovo contratto per questo membro.", ) :`
                       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
                           <div><span style="font-size:12px;color:var(--color-text-muted);">Stato:</span> <strong style="color:${p.contract_status === "firmato" ? "var(--color-success)" : p.contract_status === "inviato" ? "var(--color-info)" : "var(--color-white)"};text-transform:uppercase;font-size:12px;letter-spacing:1px;">${p.contract_status}</strong></div>
                           ${p.contract_signed_at ? `<div style="font-size:12px;color:var(--color-text-muted);">Firmato il: ${Utils.formatDateTime(p.contract_signed_at)}</div>` : ""}
@@ -411,131 +249,12 @@ const Staff = (() => {
                           ${p.contract_status === "firmato" && p.contract_signed_pdf_path ? `<a href="api/router.php?module=staff&action=downloadContract&id=${p.id}" target="_blank" class="btn btn-default btn-sm"><i class="ph ph-download"></i> SCARICA FIRMATO</a>` : ""}
                           ${p.contract_status === "inviato" && f ? `<button class="btn btn-default btn-sm" id="check-contract-btn" data-id="${p.id}"><i class="ph ph-arrows-clockwise"></i> VERIFICA STATO</button>` : ""}
                       </div>
-                      `
-                      }
-                  </div>
-              </div>
-
-              <!-- ALLEGATI -->
-              <div>
-                  <p class="section-label">Allegati</p>
-                  <div style="display:flex;flex-direction:column;gap:var(--sp-3);">
-
-                      <!-- Contratto (file) -->
-                      <div class="dash-card" style="padding:var(--sp-3);">
-                          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);">
-                              <div style="display:flex;align-items:center;gap:10px;">
-                                  <i class="ph ph-file-pdf" style="font-size:24px;color:var(--color-pink);flex-shrink:0;"></i>
-                                  <div>
-                                      <div style="font-size:13px;font-weight:600;">Contratto</div>
-                                      <div style="font-size:11px;color:var(--color-text-muted);">${p.contract_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(p.contract_file_path.split("/").pop()) : "Nessun file caricato"}</div>
-                                  </div>
-                              </div>
-                              <div style="display:flex;gap:var(--sp-2);align-items:center;">
-                                  ${p.contract_file_path ? `<a href="api/router.php?module=staff&action=downloadDoc&field=contract_file_path&id=${p.id}" target="_blank" class="btn btn-default btn-sm" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ""}
-                                  ${
-                                    f
-                                      ? `<button class="btn btn-primary btn-sm" id="upload-contract-file-btn" type="button" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-upload-simple"></i> Carica</button>
-                                  <input type="file" id="upload-contract-file-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">`
-                                      : ""
-                                  }
-                              </div>
-                          </div>
-                      </div>
-
-                      <!-- CI Fronte -->
-                      <div class="dash-card" style="padding:var(--sp-3);">
-                          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);">
-                              <div style="display:flex;align-items:center;gap:10px;">
-                                  <i class="ph ph-identification-badge" style="font-size:24px;color:var(--color-info);flex-shrink:0;"></i>
-                                  <div>
-                                      <div style="font-size:13px;font-weight:600;">CI Fronte</div>
-                                      <div style="font-size:11px;color:var(--color-text-muted);">${p.id_doc_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(p.id_doc_file_path.split("/").pop()) : "Nessun file caricato"}</div>
-                                  </div>
-                              </div>
-                              <div style="display:flex;gap:var(--sp-2);align-items:center;">
-                                  ${p.id_doc_file_path ? `<a href="api/router.php?module=staff&action=downloadDoc&field=id_doc_file_path&id=${p.id}" target="_blank" class="btn btn-default btn-sm" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ""}
-                                  ${
-                                    f
-                                      ? `<button class="btn btn-primary btn-sm" id="upload-id-doc-btn" type="button" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-upload-simple"></i> Carica</button>
-                                  <input type="file" id="upload-id-doc-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">`
-                                      : ""
-                                  }
-                              </div>
-                          </div>
-                      </div>
-
-                      <!-- CI Retro -->
-                      <div class="dash-card" style="padding:var(--sp-3);">
-                          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);">
-                              <div style="display:flex;align-items:center;gap:10px;">
-                                  <i class="ph ph-identification-card" style="font-size:24px;color:var(--color-info);flex-shrink:0;"></i>
-                                  <div>
-                                      <div style="font-size:13px;font-weight:600;">CI Retro</div>
-                                      <div style="font-size:11px;color:var(--color-text-muted);">${p.id_doc_back_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(p.id_doc_back_file_path.split("/").pop()) : "Nessun file caricato"}</div>
-                                  </div>
-                              </div>
-                              <div style="display:flex;gap:var(--sp-2);align-items:center;">
-                                  ${p.id_doc_back_file_path ? `<a href="api/router.php?module=staff&action=downloadDoc&field=id_doc_back_file_path&id=${p.id}" target="_blank" class="btn btn-default btn-sm" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ""}
-                                  ${
-                                    f
-                                      ? `<button class="btn btn-primary btn-sm" id="upload-id-doc-back-btn" type="button" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-upload-simple"></i> Carica</button>
-                                  <input type="file" id="upload-id-doc-back-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">`
-                                      : ""
-                                  }
-                              </div>
-                          </div>
-                      </div>
-
-                      <!-- CF Fronte -->
-                      <div class="dash-card" style="padding:var(--sp-3);">
-                          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);">
-                              <div style="display:flex;align-items:center;gap:10px;">
-                                  <i class="ph ph-credit-card" style="font-size:24px;color:var(--color-success);flex-shrink:0;"></i>
-                                  <div>
-                                      <div style="font-size:13px;font-weight:600;">CF Fronte</div>
-                                      <div style="font-size:11px;color:var(--color-text-muted);">${p.cf_doc_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(p.cf_doc_file_path.split("/").pop()) : "Nessun file caricato"}</div>
-                                  </div>
-                              </div>
-                              <div style="display:flex;gap:var(--sp-2);align-items:center;">
-                                  ${p.cf_doc_file_path ? `<a href="api/router.php?module=staff&action=downloadDoc&field=cf_doc_file_path&id=${p.id}" target="_blank" class="btn btn-default btn-sm" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ""}
-                                  ${
-                                    f
-                                      ? `<button class="btn btn-primary btn-sm" id="upload-cf-doc-btn" type="button" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-upload-simple"></i> Carica</button>
-                                  <input type="file" id="upload-cf-doc-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">`
-                                      : ""
-                                  }
-                              </div>
-                          </div>
-                      </div>
-
-                      <!-- CF Retro -->
-                      <div class="dash-card" style="padding:var(--sp-3);">
-                          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);">
-                              <div style="display:flex;align-items:center;gap:10px;">
-                                  <i class="ph ph-credit-card" style="font-size:24px;color:var(--color-success);flex-shrink:0;"></i>
-                                  <div>
-                                      <div style="font-size:13px;font-weight:600;">CF Retro</div>
-                                      <div style="font-size:11px;color:var(--color-text-muted);">${p.cf_doc_back_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(p.cf_doc_back_file_path.split("/").pop()) : "Nessun file caricato"}</div>
-                                  </div>
-                              </div>
-                              <div style="display:flex;gap:var(--sp-2);align-items:center;">
-                                  ${p.cf_doc_back_file_path ? `<a href="api/router.php?module=staff&action=downloadDoc&field=cf_doc_back_file_path&id=${p.id}" target="_blank" class="btn btn-default btn-sm" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-arrow-square-out"></i> Apri</a>` : ""}
-                                  ${
-                                    f
-                                      ? `<button class="btn btn-primary btn-sm" id="upload-cf-doc-back-btn" type="button" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-upload-simple"></i> Carica</button>
-                                  <input type="file" id="upload-cf-doc-back-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">`
-                                      : ""
-                                  }
-                              </div>
-                          </div>
-                      </div>
-
-                  </div>
-              </div>
-          </div>
-        </div>
-            `),
+                      ` } </div></div><!-- ALLEGATI --><div><p class="section-label">Allegati</p><div style="display:flex;flex-direction:column;gap:var(--sp-3);"><!-- Contratto (file) --><div class="dash-card" style="padding:var(--sp-3);"><div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);"><div style="display:flex;align-items:center;gap:10px;"><i class="ph ph-file-pdf" style="font-size:24px;color:var(--color-pink);flex-shrink:0;"></i><div><div style="font-size:13px;font-weight:600;">Contratto</div><div style="font-size:11px;color:var(--color-text-muted);">${p.contract_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(p.contract_file_path.split("/").pop()) : "Nessun file caricato"}</div></div></div><div style="display:flex;gap:var(--sp-2);align-items:center;"> ${p.contract_file_path ?`<a href="api/router.php?module=staff&action=downloadDoc&field=contract_file_path&id=${p.id}" target="_blank" class="btn btn-default btn-sm" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-arrow-square-out"></i> Apri</a>`: ""} ${ f ?`<button class="btn btn-primary btn-sm" id="upload-contract-file-btn" type="button" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-upload-simple"></i> Carica</button>
+                                  <input type="file" id="upload-contract-file-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">` : "" } </div></div></div><!-- CI Fronte --><div class="dash-card" style="padding:var(--sp-3);"><div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);"><div style="display:flex;align-items:center;gap:10px;"><i class="ph ph-identification-badge" style="font-size:24px;color:var(--color-info);flex-shrink:0;"></i><div><div style="font-size:13px;font-weight:600;">CI Fronte</div><div style="font-size:11px;color:var(--color-text-muted);">${p.id_doc_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(p.id_doc_file_path.split("/").pop()) : "Nessun file caricato"}</div></div></div><div style="display:flex;gap:var(--sp-2);align-items:center;"> ${p.id_doc_file_path ?`<a href="api/router.php?module=staff&action=downloadDoc&field=id_doc_file_path&id=${p.id}" target="_blank" class="btn btn-default btn-sm" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-arrow-square-out"></i> Apri</a>`: ""} ${ f ?`<button class="btn btn-primary btn-sm" id="upload-id-doc-btn" type="button" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-upload-simple"></i> Carica</button>
+                                  <input type="file" id="upload-id-doc-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">` : "" } </div></div></div><!-- CI Retro --><div class="dash-card" style="padding:var(--sp-3);"><div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);"><div style="display:flex;align-items:center;gap:10px;"><i class="ph ph-identification-card" style="font-size:24px;color:var(--color-info);flex-shrink:0;"></i><div><div style="font-size:13px;font-weight:600;">CI Retro</div><div style="font-size:11px;color:var(--color-text-muted);">${p.id_doc_back_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(p.id_doc_back_file_path.split("/").pop()) : "Nessun file caricato"}</div></div></div><div style="display:flex;gap:var(--sp-2);align-items:center;"> ${p.id_doc_back_file_path ?`<a href="api/router.php?module=staff&action=downloadDoc&field=id_doc_back_file_path&id=${p.id}" target="_blank" class="btn btn-default btn-sm" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-arrow-square-out"></i> Apri</a>`: ""} ${ f ?`<button class="btn btn-primary btn-sm" id="upload-id-doc-back-btn" type="button" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-upload-simple"></i> Carica</button>
+                                  <input type="file" id="upload-id-doc-back-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">` : "" } </div></div></div><!-- CF Fronte --><div class="dash-card" style="padding:var(--sp-3);"><div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);"><div style="display:flex;align-items:center;gap:10px;"><i class="ph ph-credit-card" style="font-size:24px;color:var(--color-success);flex-shrink:0;"></i><div><div style="font-size:13px;font-weight:600;">CF Fronte</div><div style="font-size:11px;color:var(--color-text-muted);">${p.cf_doc_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(p.cf_doc_file_path.split("/").pop()) : "Nessun file caricato"}</div></div></div><div style="display:flex;gap:var(--sp-2);align-items:center;"> ${p.cf_doc_file_path ?`<a href="api/router.php?module=staff&action=downloadDoc&field=cf_doc_file_path&id=${p.id}" target="_blank" class="btn btn-default btn-sm" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-arrow-square-out"></i> Apri</a>`: ""} ${ f ?`<button class="btn btn-primary btn-sm" id="upload-cf-doc-btn" type="button" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-upload-simple"></i> Carica</button>
+                                  <input type="file" id="upload-cf-doc-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">` : "" } </div></div></div><!-- CF Retro --><div class="dash-card" style="padding:var(--sp-3);"><div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);"><div style="display:flex;align-items:center;gap:10px;"><i class="ph ph-credit-card" style="font-size:24px;color:var(--color-success);flex-shrink:0;"></i><div><div style="font-size:13px;font-weight:600;">CF Retro</div><div style="font-size:11px;color:var(--color-text-muted);">${p.cf_doc_back_file_path ? '<i class="ph ph-check-circle" style="color:var(--color-success);"></i> ' + Utils.escapeHtml(p.cf_doc_back_file_path.split("/").pop()) : "Nessun file caricato"}</div></div></div><div style="display:flex;gap:var(--sp-2);align-items:center;"> ${p.cf_doc_back_file_path ?`<a href="api/router.php?module=staff&action=downloadDoc&field=cf_doc_back_file_path&id=${p.id}" target="_blank" class="btn btn-default btn-sm" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-arrow-square-out"></i> Apri</a>`: ""} ${ f ?`<button class="btn btn-primary btn-sm" id="upload-cf-doc-back-btn" type="button" style="display:inline-flex;align-items:center;gap:6px;"><i class="ph ph-upload-simple"></i> Carica</button>
+                                  <input type="file" id="upload-cf-doc-back-input" accept=".pdf,image/jpeg,image/png,image/webp" style="display:none;">` : "" } </div></div></div></div></div></div></div> `),
         document.querySelectorAll("[data-stab]").forEach((t) => {
           t.addEventListener(
             "click",
@@ -612,18 +331,8 @@ const Staff = (() => {
           () => {
             const m = UI.modal({
               title: "Genera Contratto di Collaborazione",
-              body: `
-                    <div class="form-grid">
-                        <div class="form-group"><label class="form-label" for="cg-from">Valido dal *</label><input type="date" id="cg-from" class="form-input" required></div>
-                        <div class="form-group"><label class="form-label" for="cg-to">Valido al *</label><input type="date" id="cg-to" class="form-input" required></div>
-                    </div>
-                    <div class="form-group"><label class="form-label" for="cg-fee">Compenso Mensile (€) (Opzionale)</label><input type="number" id="cg-fee" step="0.01" class="form-input" placeholder="Es. 150.00"></div>
-                    <div id="cg-error" class="form-error hidden"></div>
-                 `,
-              footer: `
-                    <button class="btn btn-ghost btn-sm" id="cg-cancel" type="button">Annulla</button>
-                    <button class="btn btn-primary btn-sm" id="cg-save" type="button">GENERA E INVIA</button>
-                 `,
+              body: ` <div class="form-grid"><div class="form-group"><label class="form-label" for="cg-from">Valido dal *</label><input type="date" id="cg-from" class="form-input" required></div><div class="form-group"><label class="form-label" for="cg-to">Valido al *</label><input type="date" id="cg-to" class="form-input" required></div></div><div class="form-group"><label class="form-label" for="cg-fee">Compenso Mensile (€) (Opzionale)</label><input type="number" id="cg-fee" step="0.01" class="form-input" placeholder="Es. 150.00"></div><div id="cg-error" class="form-error hidden"></div> `,
+              footer: ` <button class="btn btn-ghost btn-sm" id="cg-cancel" type="button">Annulla</button><button class="btn btn-primary btn-sm" id="cg-save" type="button">GENERA E INVIA</button> `,
             });
 
             document
@@ -777,7 +486,7 @@ const Staff = (() => {
                   .join(""),
                 l = UI.modal({
                   title: "Modifica Membro Staff",
-                  body: `\n                <div class="form-grid">\n                    <div class="form-group"><label class="form-label" for="es-fname">Nome *</label><input id="es-fname" class="form-input" type="text" value="${Utils.escapeHtml(e.first_name || "")}" required></div>\n                    <div class="form-group"><label class="form-label" for="es-lname">Cognome *</label><input id="es-lname" class="form-input" type="text" value="${Utils.escapeHtml(e.last_name || "")}" required></div>\n                </div>\n                <div class="form-grid">\n                    <div class="form-group"><label class="form-label" for="es-role">Ruolo / Qualifica</label>\n                        <select id="es-role" class="form-select">\n                            <option value="">Seleziona...</option>\n                            ${["Primo Allenatore", "Secondo Allenatore", "Preparatore Atletico", "Medico", "Fisioterapista", "Segreteria", "Direttore Tecnico", "Dirigente", "Addetta Stampa", "Altro"].map((t) => `<option ${e.role === t ? "selected" : ""}>${t}</option>`).join("")}\n                        </select>\n                    </div>\n                    <div class="form-group"><label class="form-label" for="es-birth">Data di Nascita</label><input id="es-birth" class="form-input" type="date" value="${e.birth_date ? e.birth_date.substring(0, 10) : ""}"></div>\n                </div>\n                <div class="form-group"><label class="form-label">Squadre (Opzionale)</label><div id="es-teams-wrapper" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;max-height:120px;overflow-y:auto;padding:8px;border:1px solid var(--color-border);border-radius:6px;background:rgba(0,0,0,0.2);">${n}</div></div>\n                <div class="form-grid">\n                    <div class="form-group"><label class="form-label" for="es-birthplace">Luogo di Nascita</label><input id="es-birthplace" class="form-input" type="text" value="${Utils.escapeHtml(e.birth_place || "")}"></div>\n                    <div class="form-group"><label class="form-label" for="es-rescity">Città di Residenza</label><input id="es-rescity" class="form-input" type="text" value="${Utils.escapeHtml(e.residence_city || "")}"></div>\n                </div>\n                <div class="form-group"><label class="form-label" for="es-resaddr">Via di Residenza</label><input id="es-resaddr" class="form-input" type="text" value="${Utils.escapeHtml(e.residence_address || "")}"></div>\n                <div class="form-grid">\n                    <div class="form-group"><label class="form-label" for="es-phone">Cellulare</label><input id="es-phone" class="form-input" type="tel" value="${Utils.escapeHtml(e.phone || "")}"></div>\n                    <div class="form-group"><label class="form-label" for="es-email">E-Mail</label><input id="es-email" class="form-input" type="email" value="${Utils.escapeHtml(e.email || "")}"></div>\n                </div>\n                <div class="form-grid">\n                    <div class="form-group"><label class="form-label" for="es-fiscal">Codice Fiscale</label><input id="es-fiscal" class="form-input" type="text" value="${Utils.escapeHtml(e.fiscal_code || "")}" maxlength="16" style="text-transform:uppercase;"></div>\n                    <div class="form-group"><label class="form-label" for="es-doc">Documento d'Identità</label><input id="es-doc" class="form-input" type="text" value="${Utils.escapeHtml(e.identity_document || "")}"></div>\n                </div>\n                <div class="form-grid">\n                    <div class="form-group"><label class="form-label" for="es-medcert">Scadenza Cert. Medico</label><input id="es-medcert" class="form-input" type="date" value="${e.medical_cert_expires_at ? e.medical_cert_expires_at.substring(0, 10) : ""}"></div>\n                </div>\n                <div class="form-group"><label class="form-label" for="es-notes">Note</label><textarea id="es-notes" class="form-input" rows="2" style="resize:vertical;">${Utils.escapeHtml(e.notes || "")}</textarea></div>\n                <div id="es-error" class="form-error hidden"></div>\n            `,
+                  body: `\n <div class="form-grid">\n <div class="form-group"><label class="form-label" for="es-fname">Nome *</label><input id="es-fname" class="form-input" type="text" value="${Utils.escapeHtml(e.first_name || "")}" required></div>\n <div class="form-group"><label class="form-label" for="es-lname">Cognome *</label><input id="es-lname" class="form-input" type="text" value="${Utils.escapeHtml(e.last_name || "")}" required></div>\n </div>\n <div class="form-grid">\n <div class="form-group"><label class="form-label" for="es-role">Ruolo / Qualifica</label>\n <select id="es-role" class="form-select">\n <option value="">Seleziona...</option>\n ${["Primo Allenatore", "Secondo Allenatore", "Preparatore Atletico", "Medico", "Fisioterapista", "Segreteria", "Direttore Tecnico", "Dirigente", "Addetta Stampa", "Altro"].map((t) =>`<option ${e.role === t ? "selected" : ""}>${t}</option>`).join("")}\n </select>\n </div>\n <div class="form-group"><label class="form-label" for="es-birth">Data di Nascita</label><input id="es-birth" class="form-input" type="date" value="${e.birth_date ? e.birth_date.substring(0, 10) : ""}"></div>\n </div>\n <div class="form-group"><label class="form-label">Squadre (Opzionale)</label><div id="es-teams-wrapper" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;max-height:120px;overflow-y:auto;padding:8px;border:1px solid var(--color-border);border-radius:6px;background:rgba(0,0,0,0.2);">${n}</div></div>\n <div class="form-grid">\n <div class="form-group"><label class="form-label" for="es-birthplace">Luogo di Nascita</label><input id="es-birthplace" class="form-input" type="text" value="${Utils.escapeHtml(e.birth_place || "")}"></div>\n <div class="form-group"><label class="form-label" for="es-rescity">Città di Residenza</label><input id="es-rescity" class="form-input" type="text" value="${Utils.escapeHtml(e.residence_city || "")}"></div>\n </div>\n <div class="form-group"><label class="form-label" for="es-resaddr">Via di Residenza</label><input id="es-resaddr" class="form-input" type="text" value="${Utils.escapeHtml(e.residence_address || "")}"></div>\n <div class="form-grid">\n <div class="form-group"><label class="form-label" for="es-phone">Cellulare</label><input id="es-phone" class="form-input" type="tel" value="${Utils.escapeHtml(e.phone || "")}"></div>\n <div class="form-group"><label class="form-label" for="es-email">E-Mail</label><input id="es-email" class="form-input" type="email" value="${Utils.escapeHtml(e.email || "")}"></div>\n </div>\n <div class="form-grid">\n <div class="form-group"><label class="form-label" for="es-fiscal">Codice Fiscale</label><input id="es-fiscal" class="form-input" type="text" value="${Utils.escapeHtml(e.fiscal_code || "")}" maxlength="16" style="text-transform:uppercase;"></div>\n <div class="form-group"><label class="form-label" for="es-doc">Documento d'Identità</label><input id="es-doc" class="form-input" type="text" value="${Utils.escapeHtml(e.identity_document || "")}"></div>\n </div>\n <div class="form-grid">\n <div class="form-group"><label class="form-label" for="es-medcert">Scadenza Cert. Medico</label><input id="es-medcert" class="form-input" type="date" value="${e.medical_cert_expires_at ? e.medical_cert_expires_at.substring(0, 10) : ""}"></div>\n </div>\n <div class="form-group"><label class="form-label" for="es-notes">Note</label><textarea id="es-notes" class="form-input" rows="2" style="resize:vertical;">${Utils.escapeHtml(e.notes || "")}</textarea></div>\n <div id="es-error" class="form-error hidden"></div>\n`,
                   footer:
                     '\n                <button class="btn btn-ghost btn-sm" id="es-cancel" type="button">Annulla</button>\n                <button class="btn btn-primary btn-sm" id="es-save" type="button">SALVA MODIFICHE</button>\n            ',
                 });
@@ -965,56 +674,11 @@ const Staff = (() => {
           contractStatusHtml = '<span class="badge">Nessuno</span>';
         }
 
-        return `<tr style="cursor:pointer;" data-staff-id="${Utils.escapeHtml(p.id)}">
-            <td><strong>${Utils.escapeHtml(p.full_name)}</strong></td>
-            <td>${Utils.escapeHtml(p.role || "—")}</td>
-            <td style="color:${isExpired ? "var(--color-pink)" : isExpiring ? "var(--color-warning)" : "var(--color-text)"}">
-                ${certDate ? Utils.formatDate(p.medical_cert_expires_at) : '<span style="color:var(--color-text-muted)">—</span>'}
-            </td>
-            <td>${statusHtml}</td>
-            <td>${Utils.escapeHtml(p.identity_document || "—")}</td>
-            <td>${Utils.escapeHtml(p.fiscal_code || "—")}</td>
-            <td>${contractStatusHtml}</td>
-        </tr>`;
+        return `<tr style="cursor:pointer;" data-staff-id="${Utils.escapeHtml(p.id)}"><td><strong>${Utils.escapeHtml(p.full_name)}</strong></td><td>${Utils.escapeHtml(p.role || "—")}</td><td style="color:${isExpired ? "var(--color-pink)" : isExpiring ? "var(--color-warning)" : "var(--color-text)"}"> ${certDate ? Utils.formatDate(p.medical_cert_expires_at) : '<span style="color:var(--color-text-muted)">—</span>'} </td><td>${statusHtml}</td><td>${Utils.escapeHtml(p.identity_document || "—")}</td><td>${Utils.escapeHtml(p.fiscal_code || "—")}</td><td>${contractStatusHtml}</td></tr>`;
       })
       .join("");
 
-    c.innerHTML = `
-        <div class="transport-dashboard">
-          <div class="dash-top-bar" style="border-bottom:1px solid rgba(255,255,255,0.05);padding-bottom:24px;margin-bottom:24px;">
-              <div>
-                  <h1 class="dash-title">Documenti <span style="color:var(--accent-pink);">Staff</span></h1>
-                  <p class="dash-subtitle">Stato dei documenti e contratti dello staff</p>
-              </div>
-          </div>
-
-          <p class="section-label">Stato Certificati Medici</p>
-          <div class="dash-stat-grid" style="margin-bottom:var(--sp-4);">
-              <div class="dash-stat-card"><span class="stat-label">Validi</span><span class="stat-value" style="color:var(--color-success)">${medCertStats.valid}</span></div>
-              <div class="dash-stat-card"><span class="stat-label">In scadenza (60gg)</span><span class="stat-value" style="color:var(--color-warning)">${medCertStats.expiring}</span></div>
-              <div class="dash-stat-card"><span class="stat-label">Scaduti o Mancanti</span><span class="stat-value" style="color:var(--color-pink)">${medCertStats.expired + medCertStats.missing}</span></div>
-          </div>
-
-          <div class="table-wrapper" style="background:var(--color-black);border:1px solid rgba(255,255,255,0.05);border-radius:12px;overflow:hidden;">
-              <table class="table">
-                  <thead style="background:rgba(255,255,255,0.02);border-bottom:1px solid rgba(255,255,255,0.05);">
-                      <tr>
-                          <th style="color:var(--color-silver);font-weight:600;font-size:12px;letter-spacing:1px;text-transform:uppercase;padding:16px;">Membro</th>
-                          <th style="color:var(--color-silver);font-weight:600;font-size:12px;letter-spacing:1px;text-transform:uppercase;padding:16px;">Ruolo</th>
-                          <th style="color:var(--color-silver);font-weight:600;font-size:12px;letter-spacing:1px;text-transform:uppercase;padding:16px;">Scadenza Cert. Medico</th>
-                          <th style="color:var(--color-silver);font-weight:600;font-size:12px;letter-spacing:1px;text-transform:uppercase;padding:16px;">Stato Cert.</th>
-                          <th style="color:var(--color-silver);font-weight:600;font-size:12px;letter-spacing:1px;text-transform:uppercase;padding:16px;">Doc. Identità</th>
-                          <th style="color:var(--color-silver);font-weight:600;font-size:12px;letter-spacing:1px;text-transform:uppercase;padding:16px;">Cod. Fiscale</th>
-                          <th style="color:var(--color-silver);font-weight:600;font-size:12px;letter-spacing:1px;text-transform:uppercase;padding:16px;">Contratto</th>
-                      </tr>
-                  </thead>
-                  <tbody>
-                      ${certRows.length > 0 ? certRows : `<tr><td colspan="7" style="text-align:center;color:var(--color-text-muted);padding:var(--sp-4);">Nessun membro presente</td></tr>`}
-                  </tbody>
-              </table>
-          </div>
-        </div>
-    `;
+    c.innerHTML = ` <div class="transport-dashboard"><div class="dash-top-bar" style="border-bottom:1px solid rgba(255,255,255,0.05);padding-bottom:24px;margin-bottom:24px;"><div><h1 class="dash-title">Documenti <span style="color:var(--accent-pink);">Staff</span></h1><p class="dash-subtitle">Stato dei documenti e contratti dello staff</p></div></div><p class="section-label">Stato Certificati Medici</p><div class="dash-stat-grid" style="margin-bottom:var(--sp-4);"><div class="dash-stat-card"><span class="stat-label">Validi</span><span class="stat-value" style="color:var(--color-success)">${medCertStats.valid}</span></div><div class="dash-stat-card"><span class="stat-label">In scadenza (60gg)</span><span class="stat-value" style="color:var(--color-warning)">${medCertStats.expiring}</span></div><div class="dash-stat-card"><span class="stat-label">Scaduti o Mancanti</span><span class="stat-value" style="color:var(--color-pink)">${medCertStats.expired + medCertStats.missing}</span></div></div><div class="table-wrapper" style="background:var(--color-black);border:1px solid rgba(255,255,255,0.05);border-radius:12px;overflow:hidden;"><table class="table"><thead style="background:rgba(255,255,255,0.02);border-bottom:1px solid rgba(255,255,255,0.05);"><tr><th style="color:var(--color-silver);font-weight:600;font-size:12px;letter-spacing:1px;text-transform:uppercase;padding:16px;">Membro</th><th style="color:var(--color-silver);font-weight:600;font-size:12px;letter-spacing:1px;text-transform:uppercase;padding:16px;">Ruolo</th><th style="color:var(--color-silver);font-weight:600;font-size:12px;letter-spacing:1px;text-transform:uppercase;padding:16px;">Scadenza Cert. Medico</th><th style="color:var(--color-silver);font-weight:600;font-size:12px;letter-spacing:1px;text-transform:uppercase;padding:16px;">Stato Cert.</th><th style="color:var(--color-silver);font-weight:600;font-size:12px;letter-spacing:1px;text-transform:uppercase;padding:16px;">Doc. Identità</th><th style="color:var(--color-silver);font-weight:600;font-size:12px;letter-spacing:1px;text-transform:uppercase;padding:16px;">Cod. Fiscale</th><th style="color:var(--color-silver);font-weight:600;font-size:12px;letter-spacing:1px;text-transform:uppercase;padding:16px;">Contratto</th></tr></thead><tbody> ${certRows.length > 0 ? certRows :`<tr><td colspan="7" style="text-align:center;color:var(--color-text-muted);padding:var(--sp-4);">Nessun membro presente</td></tr>`} </tbody></table></div></div> `;
 
     document.querySelectorAll("[data-staff-id]").forEach((t) => {
       t.addEventListener("click", () => d(t.dataset.staffId), {

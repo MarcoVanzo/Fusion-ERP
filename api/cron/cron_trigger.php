@@ -24,10 +24,10 @@ if (!hash_equals($expectedToken, $providedToken)) {
 header('Content-Type: application/json; charset=utf-8');
 
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
-$rootDir = __DIR__;
-require_once $rootDir . '/vendor/autoload.php';
+$baseDir = dirname(__DIR__, 2);
+require_once $baseDir . '/vendor/autoload.php';
 
-$dotenv = Dotenv\Dotenv::createUnsafeImmutable($rootDir);
+$dotenv = Dotenv\Dotenv::createUnsafeImmutable($baseDir);
 $dotenv->load();
 
 // ── Database ──────────────────────────────────────────────────────────────────

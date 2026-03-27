@@ -7,7 +7,8 @@ const Athletes = (() => {
     s = "anagrafica",
     l = null,
     i = new Set(),
-    r = !1;
+    r = !1,
+    _activeIntervals = [];
   function o() {
     "undefined" != typeof FilterState &&
       (FilterState.save("athletes", "team", n),
@@ -1434,29 +1435,30 @@ const Athletes = (() => {
       l = `\n      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;" aria-hidden="true">\n        <defs>\n          <filter id="glow-back">\n            <feGaussianBlur stdDeviation="1.5" result="blur"/>\n            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>\n          </filter>\n        </defs>\n        <g filter="url(#glow-back)" opacity="0.82">\n          \x3c!-- Thoracic (upper back) --\x3e\n          <ellipse id="svgm-thoracic" class="muscle-default" cx="50" cy="28" rx="12" ry="7" />\n          \x3c!-- Lumbar --\x3e\n          <ellipse id="svgm-lumbar" class="${a("svgm-lumbar")}" cx="50" cy="40" rx="8" ry="6" />\n          \x3c!-- Glutes SX --\x3e\n          <ellipse id="svgm-glutes-l" class="${a("svgm-glutes-l")}" cx="44" cy="52" rx="8" ry="7" />\n          \x3c!-- Glutes DX --\x3e\n          <ellipse id="svgm-glutes-r" class="${a("svgm-glutes-r")}" cx="56" cy="52" rx="8" ry="7" />\n          \x3c!-- Hamstrings SX --\x3e\n          <ellipse id="svgm-hamstrings-l" class="${a("svgm-hamstrings-l")}" cx="43" cy="66" rx="7" ry="10" />\n          \x3c!-- Hamstrings DX --\x3e\n          <ellipse id="svgm-hamstrings-r" class="${a("svgm-hamstrings-r")}" cx="57" cy="66" rx="7" ry="10" />\n          \x3c!-- Calves SX --\x3e\n          <ellipse id="svgm-calves-l" class="${a("svgm-calves-l")}" cx="43" cy="83" rx="4.5" ry="7" />\n          \x3c!-- Calves DX --\x3e\n          <ellipse id="svgm-calves-r" class="${a("svgm-calves-r")}" cx="57" cy="83" rx="4.5" ry="7" />\n        </g>\n      </svg>`;
     return `<div style="position:relative;width:100%;">\n      <img src="${n}" alt="Corpo femminile vista ${"front" === e ? "frontale" : "posteriore"}"\n        style="width:100%;height:auto;display:block;border-radius:8px;object-fit:cover;"\n        onerror="this.style.display='none'">\n      ${"front" === e ? s : l}\n    </div>`;
   }
-  function _(e) {
+  function _(callback) {
     if ("undefined" != typeof google && google.maps && google.maps.places)
-      return (w(), void e());
-    const t = window.GOOGLE_MAPS_API_KEY;
-    if (!t) return;
+      return (w(), void callback());
+    const gmapsKey = window.GOOGLE_MAPS_API_KEY;
+    if (!gmapsKey) return;
     if (document.querySelector("script[data-gmaps-places]")) {
-      const t = setInterval(() => {
+      const pollInterval = setInterval(() => {
         "undefined" != typeof google &&
           google.maps?.places &&
-          (clearInterval(t), w(), e());
+          (clearInterval(pollInterval), _activeIntervals = _activeIntervals.filter(i => i !== pollInterval), w(), callback());
       }, 100);
+      _activeIntervals.push(pollInterval);
       return;
     }
-    const a = "__gmPlaces_" + Date.now();
-    window[a] = () => {
-      (delete window[a], w(), e());
+    const callbackName = "__gmPlaces_" + Date.now();
+    window[callbackName] = () => {
+      (delete window[callbackName], w(), callback());
     };
-    const n = document.createElement("script");
-    ((n.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(t)}&libraries=places&callback=${a}`),
-      (n.async = !0),
-      (n.defer = !0),
-      (n.dataset.gmapsPlaces = "1"),
-      document.head.appendChild(n));
+    const scriptEl = document.createElement("script");
+    ((scriptEl.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(gmapsKey)}&libraries=places&callback=${callbackName}`),
+      (scriptEl.async = !0),
+      (scriptEl.defer = !0),
+      (scriptEl.dataset.gmapsPlaces = "1"),
+      document.head.appendChild(scriptEl));
   }
   function w() {
     if (document.getElementById("gm-pac-styles")) return;
@@ -1468,14 +1470,16 @@ const Athletes = (() => {
   }
   return {
     destroy: function () {
-      (e.abort(),
-        (e = new AbortController()),
-        i.clear(),
-        (r = !1),
-        (t = []),
-        (a = []),
-        (l = null),
-        (n = ""));
+      e.abort();
+      e = new AbortController();
+      _activeIntervals.forEach(clearInterval);
+      _activeIntervals = [];
+      i.clear();
+      r = !1;
+      t = [];
+      a = [];
+      l = null;
+      n = "";
       const el = document.getElementById("athlete-bulk-bar");
       el && el.remove();
     },

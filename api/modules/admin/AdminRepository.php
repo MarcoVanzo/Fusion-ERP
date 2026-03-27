@@ -14,9 +14,9 @@ class AdminRepository
 {
     private \PDO $db;
 
-    public function __construct()
+    public function __construct(?\PDO $db = null)
     {
-        $this->db = Database::getInstance();
+        $this->db = $db ?: Database::getInstance();
     }
 
     // ─── MEDICAL CERTIFICATES ─────────────────────────────────────────────────

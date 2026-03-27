@@ -69,6 +69,14 @@ if (!in_array($_SERVER['REQUEST_METHOD'], ['POST', 'GET', 'PUT', 'OPTIONS'])) {
     Response::error('Metodo non consentito', 405);
 }
 
+// Security: Require X-Requested-With header for all state-changing requests (CSRF protection)
+if (in_array($_SERVER['REQUEST_METHOD'], ['POST', 'PUT', 'DELETE'])) {
+    $requestedWith = $_SERVER['HTTP_X_REQUESTED_WITH'] ?? '';
+    if (strtolower($requestedWith) !== 'xmlhttprequest') {
+        Response::error('Richiesta non autorizzata (Missing Security Header)', 403);
+    }
+}
+
 // Parse routing params — ?module=auth&action=login
 $module = filter_input(INPUT_GET, 'module', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
 $action = filter_input(INPUT_GET, 'action', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
@@ -83,7 +91,6 @@ try {
             'auth' => dispatch('Auth', $action),
             'athletes' => dispatch('Athletes', $action),
             'teams' => dispatch('Teams', $action),
-            'events' => dispatch('Events', $action),
             'transport' => dispatch('Transport', $action),
             'admin' => dispatch('Admin', $action),
             'dashboard' => dispatch('Dashboard', $action),
