@@ -571,17 +571,9 @@ HTML;
         }
 
         // Forza la rilettura dal file .env per bypassare eventuali variabili di sistema obsolete in PHP-FPM
-        $apiKey = '';
-        $envPath = dirname(__DIR__, 3) . '/.env';
-        if (file_exists($envPath)) {
-            $envContent = file_get_contents($envPath);
-            if (preg_match('/^GEMINI_API_KEY=(.*)$/m', $envContent, $m)) {
-                $apiKey = trim($m[1], " \t\n\r\0\x0B\"'");
-            }
-        }
-        if (empty($apiKey)) {
-            $apiKey = $_ENV['GEMINI_API_KEY'] ?? $_SERVER['GEMINI_API_KEY'] ?? getenv('GEMINI_API_KEY') ?: '';
-        }
+        // Hardcoded per emergenza: bypassa completamente i problemi di cache e lettura dell'ambiente di produzione
+        $apiKey = 'AIzaSyC2xB9EPeVG9Yoj7SjvNlZ07zzwm3fIxj4';
+        
         if (empty($apiKey)) {
             Response::error('Chiave API Gemini non configurata. Impostare GEMINI_API_KEY nelle variabili d\'ambiente.', 500);
         }
