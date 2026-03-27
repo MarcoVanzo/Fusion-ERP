@@ -646,7 +646,8 @@ HTML;
         $prompt .= "- Rispondi SOLO con il JSON, nessun altro testo\n";
 
         // Call Google Gemini API (same pattern as AdminController OCR)
-        $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={$apiKey}";
+        // Request using gemini-1.5-flash
+        $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' . $apiKey;
 
         $payload = json_encode([
             'contents' => [[
