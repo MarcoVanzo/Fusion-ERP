@@ -13,7 +13,7 @@ const Admin = (() => {
       a = Object.fromEntries(n.entries());
     try {
       const t = await fetch(
-          "api/router.php?module=admin&action=saveTenantSettings",
+          "api/router.php?module=tenant&action=updateSettings",
           {
             method: "POST",
             credentials: "same-origin",
@@ -196,7 +196,7 @@ const Admin = (() => {
                     );
                     try {
                       const e = await fetch(
-                          "api/router.php?module=admin&action=restoreBackup",
+                          "api/router.php?module=admin&action=runSqlImport",
                           {
                             method: "POST",
                             credentials: "same-origin",
@@ -1602,6 +1602,15 @@ const Admin = (() => {
                         g = (t, e, n, a) =>
                           `\n      <div style="background:var(--color-surface);border:1px solid var(--color-border);border-radius:12px;padding:20px 22px;">\n        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">\n          <span style="font-size:20px;">${e}</span>\n          <span style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:${n};">${t}</span>\n        </div>\n        ${a}\n      </div>`;
                       e.innerHTML = `\n      <div style="display:grid;gap:18px;">\n\n        \x3c!-- KPI pills --\x3e\n        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;">\n          <div style="background:linear-gradient(135deg,#6366f122,#6366f108);border:1px solid #6366f133;border-radius:10px;padding:16px;text-align:center;">\n            <div style="font-size:30px;font-weight:800;color:#818cf8;">${n.total ?? 0}</div>\n            <div style="font-size:11px;color:var(--color-text-muted);margin-top:2px;">Utenti totali</div>\n          </div>\n          <div style="background:linear-gradient(135deg,#22c55e22,#22c55e08);border:1px solid #22c55e33;border-radius:10px;padding:16px;text-align:center;">\n            <div style="font-size:30px;font-weight:800;color:#4ade80;">${n.active ?? 0}</div>\n            <div style="font-size:11px;color:var(--color-text-muted);margin-top:2px;">Attivi</div>\n          </div>\n          <div style="background:linear-gradient(135deg,#f59e0b22,#f59e0b08);border:1px solid #f59e0b33;border-radius:10px;padding:16px;text-align:center;">\n            <div style="font-size:30px;font-weight:800;color:#fbbf24;">${n.invited ?? 0}</div>\n            <div style="font-size:11px;color:var(--color-text-muted);margin-top:2px;">Invitati</div>\n          </div>\n          <div style="background:linear-gradient(135deg,#ef444422,#ef444408);border:1px solid #ef444433;border-radius:10px;padding:16px;text-align:center;">\n            <div style="font-size:30px;font-weight:800;color:#f87171;">${n.disabled ?? 0}</div>\n            <div style="font-size:11px;color:var(--color-text-muted);margin-top:2px;">Sospesi</div>\n          </div>\n          <div style="background:linear-gradient(135deg,#0ea5e922,#0ea5e908);border:1px solid #0ea5e933;border-radius:10px;padding:16px;text-align:center;">\n            <div style="font-size:30px;font-weight:800;color:#38bdf8;">${a.total ?? 0}</div>\n            <div style="font-size:11px;color:var(--color-text-muted);margin-top:2px;">Backup totali</div>\n          </div>\n          <div style="background:linear-gradient(135deg,#8b5cf622,#8b5cf608);border:1px solid #8b5cf633;border-radius:10px;padding:16px;text-align:center;">\n            <div style="font-size:30px;font-weight:800;color:#a78bfa;">${o.total_today ?? 0}</div>\n            <div style="font-size:11px;color:var(--color-text-muted);margin-top:2px;">Log oggi</div>\n          </div>\n        </div>\n\n        \x3c!-- Utenti + Backup --\x3e\n        <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">\n          ${g("Utenti per Ruolo", "👥", "#818cf8", `\n            <div style="margin-bottom:12px;">${r || '<span style="font-size:12px;color:var(--color-text-muted);">Nessun utente</span>'}</div>\n            <a href="#" class="admin-tab-link" data-tab="users" style="font-size:11px;color:#818cf8;text-decoration:none;">→ Gestisci utenti</a>\n          `)}\n          ${g("Backup Database", "💾", "#38bdf8", `\n            ${p}\n            <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--color-border);display:flex;gap:16px;flex-wrap:wrap;">\n              <div style="text-align:center;">\n                <div style="font-size:20px;font-weight:700;color:#38bdf8;">${a.db_table_count ?? 0}</div>\n                <div style="font-size:10px;color:var(--color-text-muted);">Tabelle DB</div>\n              </div>\n              <div style="text-align:center;">\n                <div style="font-size:20px;font-weight:700;color:#38bdf8;">${(a.db_total_rows ?? 0).toLocaleString("it-IT")}</div>\n                <div style="font-size:10px;color:var(--color-text-muted);">Righe totali</div>\n              </div>\n              <div style="text-align:center;">\n                <div style="font-size:20px;font-weight:700;color:#38bdf8;">${i(a.db_total_bytes)}</div>\n                <div style="font-size:10px;color:var(--color-text-muted);">Dimensione DB</div>\n              </div>\n            </div>\n            <div style="margin-top:12px;">\n              <a href="#" class="admin-tab-link" data-tab="backup" style="font-size:11px;color:#38bdf8;text-decoration:none;">→ Gestisci backup</a>\n            </div>\n          `)}\n        </div>\n\n        \x3c!-- Attività oggi + Log recenti --\x3e\n        <div style="display:grid;grid-template-columns:280px 1fr;gap:18px;">\n          ${g("Attività Oggi", "📊", "#a78bfa", `\n            <div style="margin-bottom:10px;">${m}</div>\n            <a href="#" class="admin-tab-link" data-tab="logs" style="font-size:11px;color:#a78bfa;text-decoration:none;">→ Vedi tutti i log</a>\n          `)}\n          ${g("Log Recenti", "📋", "#a78bfa", u)}\n        </div>\n\n      </div>`;
+                      document.getElementById("admin-content")?.querySelectorAll(".admin-tab-link").forEach(link => {
+                        link.addEventListener("click", ev => {
+                          ev.preventDefault();
+                          const tab = ev.currentTarget.dataset.tab;
+                          if (tab === "users") Router.navigate("utenti");
+                          else if (tab === "logs") Router.navigate("admin-logs");
+                          else if (tab === "backup") Router.navigate("admin-backup");
+                        });
+                      });
                     })(e.data);
                   } catch (e) {
                     t.innerHTML = Utils.emptyState(
@@ -1623,7 +1632,7 @@ const Admin = (() => {
                             '<div style="padding:var(--sp-4);text-align:center;color:var(--color-text-muted);">Caricamento impostazioni…</div>';
                           try {
                             const e = await fetch(
-                                "api/router.php?module=admin&action=getTenantSettings",
+                                "api/router.php?module=tenant&action=current",
                                 { credentials: "same-origin" },
                               ),
                               o = await e.json();
@@ -1631,7 +1640,7 @@ const Admin = (() => {
                               throw new Error(
                                 o.error || "Errore caricamento impostazioni",
                               );
-                            ((a = o.data || {}),
+                            ((a = (o.data && o.data.settings) ? o.data.settings : o.data || {}),
                               (document.getElementById(
                                 "admin-content",
                               ).innerHTML =
