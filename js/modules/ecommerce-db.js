@@ -48,8 +48,16 @@ const EcommerceDB = (() => {
     }
   }
 
-  // Attempt migration immediately but asynchronously
-  setTimeout(ensureMigrated, 1000);
+  // Attempt migration only if logged in
+  function tryMigration() {
+      if (window.App && typeof App.getUser === 'function' && App.getUser()) {
+          ensureMigrated();
+      } else {
+          // Retry later when user might be logged in
+          setTimeout(tryMigration, 3000);
+      }
+  }
+  setTimeout(tryMigration, 1000);
 
   return {
     getArticoli: async function () {
