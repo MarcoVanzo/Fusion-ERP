@@ -312,7 +312,7 @@ const Results = (() => {
     destroy: function () {
       e.abort();
       e = new AbortController();
-      s.length = 0;
+      s = [];
       t = null;
     },
     _switchView(e) {

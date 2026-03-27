@@ -89,55 +89,11 @@ class ResultsController
                         )
                     ) THEN 1 ELSE 0 END AS has_our_team
                 FROM federation_championships fc
-                WHERE fc.tenant_id = :tid AND fc.is_active = 1
+                WHERE fc.is_active = 1
                 ORDER BY fc.label ASC
             ");
-            $stmt->execute([':tid' => $tenantId]);
+            $stmt->execute();
             $campionati = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-            // ── 1b. Fallback: if tenant-scoped query is empty, try without tenant filter ──
-            // This auto-heals cases where championships were stored with a different tenant_id
-            if (empty($campionati)) {
-                $stmtAll = $pdo->prepare("
-                    SELECT
-                        fc.*,
-                        CASE WHEN (
-                            EXISTS (
-                                SELECT 1 FROM federation_standings fs
-                                WHERE fs.championship_id = fc.id
-                                  AND (
-                                    LOWER(fs.team) LIKE '%fusion%'
-                                    OR LOWER(fs.team) LIKE '%team volley%'
-                                    OR LOWER(fs.team) LIKE '%fusionteam%'
-                                  )
-                            )
-                            OR EXISTS (
-                                SELECT 1 FROM federation_matches fm
-                                WHERE fm.championship_id = fc.id
-                                  AND (
-                                    LOWER(fm.home_team) LIKE '%fusion%'
-                                    OR LOWER(fm.away_team) LIKE '%fusion%'
-                                    OR LOWER(fm.home_team) LIKE '%team volley%'
-                                    OR LOWER(fm.away_team) LIKE '%team volley%'
-                                    OR LOWER(fm.home_team) LIKE '%fusionteam%'
-                                    OR LOWER(fm.away_team) LIKE '%fusionteam%'
-                                  )
-                            )
-                        ) THEN 1 ELSE 0 END AS has_our_team
-                    FROM federation_championships fc
-                    WHERE fc.is_active = 1
-                    ORDER BY fc.label ASC
-                ");
-                $stmtAll->execute();
-                $campionati = $stmtAll->fetchAll(PDO::FETCH_ASSOC);
-
-                // Auto-heal: update mismatched tenant_id to current session tenant
-                if (!empty($campionati)) {
-                    error_log("[Results] getCampionati: found " . count($campionati) . " championships with wrong tenant_id, auto-healing to '{$tenantId}'");
-                    $fixStmt = $pdo->prepare("UPDATE federation_championships SET tenant_id = :tid WHERE is_active = 1 AND tenant_id != :tid2");
-                    $fixStmt->execute([':tid' => $tenantId, ':tid2' => $tenantId]);
-                }
-            }
 
             // Cast has_our_team to bool
             foreach ($campionati as &$c) {
