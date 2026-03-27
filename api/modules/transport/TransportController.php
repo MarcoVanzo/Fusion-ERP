@@ -570,7 +570,7 @@ HTML;
             Response::error('Identificativo o dati di anteprima obbligatori', 400);
         }
 
-        $apiKey = getenv('GEMINI_API_KEY') ?: '';
+        $apiKey = $_ENV['GEMINI_API_KEY'] ?? $_SERVER['GEMINI_API_KEY'] ?? getenv('GEMINI_API_KEY') ?: '';
         if (empty($apiKey)) {
             Response::error('Chiave API Gemini non configurata. Impostare GEMINI_API_KEY nelle variabili d\'ambiente.', 500);
         }
