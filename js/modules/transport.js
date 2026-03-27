@@ -1693,6 +1693,7 @@ const Transport = (() => {
       
       const tripsToCreate = [];
       const originalAthletes = previewData.athletes || [];
+      const mappedAthleteIds = new Set();
 
       // Helper to map names back to athlete objects
       const findAthleteByName = (name) => {
@@ -1709,7 +1710,11 @@ const Transport = (() => {
           const tripAthletes = [];
           (vm.atlete || []).forEach(name => {
             const match = findAthleteByName(name);
-            if (match) tripAthletes.push({ id: match.id || match.atleta_id });
+            if (match) {
+              const id = match.id || match.atleta_id;
+              tripAthletes.push({ id });
+              mappedAthleteIds.add(String(id));
+            }
           });
           if (tripAthletes.length > 0) {
             tripsToCreate.push({
@@ -1726,12 +1731,22 @@ const Transport = (() => {
         });
       } else {
         // Single trip proposal
-        // Filter out fuori_percorso athletes unless they have a meeting point
-        const fuoriNomi = (result.fuori_percorso || []).map(fp => fp.nome.trim().toLowerCase());
-        const validAthletes = originalAthletes.filter(a => {
+        // Get names of athletes that are completely fuori_percorso with NO punto di ritrovo
+        const fuoriSenzaRitrovoNomi = (result.fuori_percorso || [])
+            .filter(fp => !fp.punto_ritrovo_consigliato || fp.punto_ritrovo_consigliato.trim() === '')
+            .map(fp => fp.nome.trim().toLowerCase());
+
+        const validAthletes = [];
+        originalAthletes.forEach(a => {
             const aName = (a.name || a.full_name || "").trim().toLowerCase();
-            return !fuoriNomi.some(fn => aName.includes(fn) || fn.includes(aName));
-        }).map(a => ({ id: a.id || a.atleta_id }));
+            const isSenzaRitrovo = fuoriSenzaRitrovoNomi.some(fn => aName.includes(fn) || fn.includes(aName));
+            
+            const id = a.id || a.atleta_id;
+            if (!isSenzaRitrovo) {
+                validAthletes.push({ id });
+                mappedAthleteIds.add(String(id));
+            }
+        });
 
         if (validAthletes.length > 0) {
           tripsToCreate.push({
@@ -1745,6 +1760,21 @@ const Transport = (() => {
               ai_response: result
           });
         }
+      }
+
+      // SAFETY NET: Any athletes not mapped to a trip MUST be put in an extra dedicated trip
+      const leftoverAthletes = originalAthletes.filter(a => !mappedAthleteIds.has(String(a.id || a.atleta_id))).map(a => ({ id: a.id || a.atleta_id }));
+      if (leftoverAthletes.length > 0) {
+          tripsToCreate.push({
+              team_id: previewData.team_id,
+              destination_name: previewData.destName + " (Viaggio Dedicato Fuori Percorso)",
+              destination_address: previewData.destAddr,
+              departure_address: previewData.depAddr,
+              transport_date: previewData.date,
+              arrival_time: previewData.time,
+              athletes_json: leftoverAthletes,
+              ai_response: null
+          });
       }
 
       if (tripsToCreate.length === 0) {
