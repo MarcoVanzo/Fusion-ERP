@@ -1940,7 +1940,17 @@ const Transport = (() => {
   }
   return {
     destroy: function () {
-      (t.abort(), (t = new AbortController()));
+      t.abort();
+      t = new AbortController();
+      e.length = 0;
+      n.length = 0;
+      a.length = 0;
+      i.length = 0;
+      s.length = 0;
+      r = null;
+      o = null;
+      l = null;
+      d.clear();
     },
     init: p,
     handleAttendeeStatusChange: async function (t, e, n) {

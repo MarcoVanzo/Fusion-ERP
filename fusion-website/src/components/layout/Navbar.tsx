@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Menu, X, User } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -45,7 +45,7 @@ const Navbar = () => {
         fetchHubLogo();
 
         return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
+    }, [isMobileMenuOpen]);
 
     type NavLink = {
         name: string;

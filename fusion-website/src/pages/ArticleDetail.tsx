@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Calendar, ChevronLeft, ArrowLeft } from 'lucide-react';
+import { Calendar, ArrowLeft } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import { Seo } from '../components/Seo';
 import { SponsorBanner } from '../components/SponsorBanner';
@@ -46,7 +46,7 @@ const ArticleDetail = () => {
                 } else {
                     setError(data.message || 'Articolo non trovato.');
                 }
-            } catch (err) {
+            } catch {
                 setError('Errore di connessione al server ERP.');
             } finally {
                 setLoading(false);

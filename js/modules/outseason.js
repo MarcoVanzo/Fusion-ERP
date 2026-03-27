@@ -591,6 +591,8 @@ const OutSeason = (() => {
   return {
     destroy: function () {
       n.abort();
+      t.clear();
+      e.length = 0;
     },
     init: async function () {
       (n.abort(),

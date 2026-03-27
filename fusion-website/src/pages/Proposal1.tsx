@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react';
-import { ChevronRight, Calendar } from 'lucide-react';
+
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 
@@ -10,10 +9,7 @@ const recentMatches = [
     { id: 3, home: 'FUSION VOLLEY', away: 'TEAM D', sets_home: 3, sets_away: 2, date: '05 Nov', championship_label: 'U16 ECCELLENZA' },
 ];
 
-const news = [
-    { id: 1, title: 'Grande vittoria contro la capolista in U18', category_name: 'Giovanili', published_at: '2026-11-12' },
-    { id: 2, title: 'Iscrizioni aperte per la stagione 2027', category_name: 'Club', published_at: '2026-11-10' },
-];
+
 
 const Proposal1 = () => {
     return (

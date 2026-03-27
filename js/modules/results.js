@@ -310,7 +310,10 @@ const Results = (() => {
         await a());
     },
     destroy: function () {
-      (e.abort(), (e = new AbortController()));
+      e.abort();
+      e = new AbortController();
+      s.length = 0;
+      t = null;
     },
     _switchView(e) {
       ((n = e), d(), i());

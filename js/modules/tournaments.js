@@ -274,6 +274,8 @@ const Tournaments = (() => {
     },
     destroy: function () {
       t.abort();
+      e.length = 0;
+      n = null;
     },
   };
 })();

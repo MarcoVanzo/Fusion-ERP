@@ -21,6 +21,9 @@ class Response
         header('Pragma: no-cache');
         header('Content-Type: application/json; charset=UTF-8');
         echo json_encode(['success' => true, 'data' => $data], JSON_UNESCAPED_UNICODE);
+        if (class_exists('FusionERP\\Shared\\Database')) {
+            \FusionERP\Shared\Database::disconnect();
+        }
         exit;
     }
 
@@ -40,6 +43,9 @@ class Response
         header('Pragma: no-cache');
         header('Content-Type: application/json; charset=UTF-8');
         echo json_encode(['success' => false, 'error' => $message], JSON_UNESCAPED_UNICODE);
+        if (class_exists('FusionERP\\Shared\\Database')) {
+            \FusionERP\Shared\Database::disconnect();
+        }
         exit;
     }
 
@@ -93,6 +99,9 @@ class Response
 
         if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
             http_response_code(204);
+            if (class_exists('FusionERP\\Shared\\Database')) {
+                \FusionERP\Shared\Database::disconnect();
+            }
             exit;
         }
     }

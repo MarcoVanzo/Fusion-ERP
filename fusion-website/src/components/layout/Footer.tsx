@@ -48,7 +48,7 @@ const Footer = () => {
                 setStatus('error');
                 setMessage(data.error || 'Errore durante l\'iscrizione. Riprova più tardi.');
             }
-        } catch (error) {
+        } catch {
             setStatus('error');
             setMessage('Errore di connessione. Riprova più tardi.');
         }
