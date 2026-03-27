@@ -11,6 +11,7 @@ namespace FusionERP\Modules\Transport;
 use FusionERP\Shared\Auth;
 use FusionERP\Shared\Audit;
 use FusionERP\Shared\Response;
+use FusionERP\Shared\AIService;
 use Mpdf\Mpdf;
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception as MailerException;
@@ -555,5 +556,132 @@ HTML;
         $this->repo->setDriverActive($id, $active);
         Audit::log('UPDATE', 'drivers', $id, null, ['is_active' => $active]);
         Response::success(['message' => 'Stato aggiornato']);
+    }
+
+    // ─── AI ANALYSIS ─────────────────────────────────────────────────────────
+
+    public function analyzeTransportAI(): void
+    {
+        Auth::requireWrite('transport');
+        $body = Response::jsonBody();
+        $transportId = $body['transportId'] ?? '';
+        $isPreview = !empty($body['previewData']);
+
+        if (empty($transportId) && !$isPreview) {
+            Response::error('Identificativo o dati di anteprima obbligatori', 400);
+        }
+
+
+
+        if ($isPreview) {
+            $preview = $body['previewData'];
+            $transport = [
+                'destination_name'    => $preview['destination_name'] ?? 'Destinazione Sconosciuta',
+                'destination_address' => $preview['destination_address'] ?? 'N/A',
+                'departure_address'   => $preview['departure_address'] ?? 'N/A',
+                'transport_date'      => $preview['transport_date'] ?? 'N/A',
+                'arrival_time'        => $preview['arrival_time'] ?? 'N/A',
+            ];
+            $timeline = $preview['timeline'] ?? [];
+            $athletes = $preview['athletes'] ?? [];
+            $stats    = $preview['stats'] ?? [];
+        } else {
+            $transportRow = $this->repo->getTransportById($transportId);
+            if (!$transportRow) {
+                Response::error('Trasporto non trovato', 404);
+            }
+            $transport = $transportRow;
+            $timeline = json_decode($transportRow['timeline_json'] ?? '[]', true) ?: [];
+            $athletes = json_decode($transportRow['athletes_json'] ?? '[]', true) ?: [];
+            $stats    = json_decode($transportRow['stats_json'] ?? '{}', true) ?: [];
+        }
+
+        // Build readable route description for the AI
+        $stopDescriptions = [];
+        foreach ($timeline as $i => $stop) {
+            $tipo   = $stop['tipo'] ?? 'sconosciuto';
+            $luogo  = $stop['luogo'] ?? 'N/A';
+            $orario = $stop['orario'] ?? '';
+            $nota   = $stop['nota'] ?? '';
+            $lat    = $stop['coord']['lat'] ?? null;
+            $lng    = $stop['coord']['lng'] ?? null;
+            $coordStr = ($lat && $lng) ? " (lat: {$lat}, lng: {$lng})" : '';
+            $stopDescriptions[] = "Tappa {$i}: [{$tipo}] {$luogo}{$coordStr} — ore {$orario} — {$nota}";
+        }
+
+        $athleteDescriptions = [];
+        foreach ($athletes as $ath) {
+            $name    = $ath['name'] ?? $ath['full_name'] ?? 'N/A';
+            $address = $ath['address'] ?? 'indirizzo sconosciuto';
+            $athleteDescriptions[] = "- {$name}: {$address}";
+        }
+
+        $prompt = "Sei un esperto di logistica sportiva. Analizza il seguente viaggio di trasporto e suggerisci se alcune tappe di raccolta possono essere accorpate in PUNTI DI RACCOLTA comuni per ottimizzare il percorso.\n\n";
+        $prompt .= "DESTINAZIONE: {$transport['destination_name']} ({$transport['destination_address']})\n";
+        $prompt .= "PARTENZA: {$transport['departure_address']}\n";
+        $prompt .= "DATA: {$transport['transport_date']}\n";
+        $prompt .= "ORARIO ARRIVO: {$transport['arrival_time']}\n";
+        $prompt .= "DURATA TOTALE: " . ($stats['durata'] ?? 'N/A') . "\n";
+        $prompt .= "DISTANZA TOTALE: " . ($stats['distanza'] ?? 'N/A') . "\n\n";
+        $prompt .= "TAPPE DEL PERCORSO:\n" . implode("\n", $stopDescriptions) . "\n\n";
+        $prompt .= "ATLETE E INDIRIZZI:\n" . implode("\n", $athleteDescriptions) . "\n\n";
+
+        $prompt .= "Analizza il percorso e rispondi ESCLUSIVAMENTE in JSON valido con questa struttura. Se ritieni utile suddividere il trasporto in più viaggi (es. due pulmini separati) per ottimizzare la logistica, compila l'array 'viaggi_multipli'. Per le atlete fuori percorso, NON escluderle, ma proponi SEMPRE un punto di ritrovo intermedio ragionevole.\n";
+        $prompt .= "{\n";
+        $prompt .= "  \"consigli\": \"Testo con i consigli generali sull'ottimizzazione del percorso\",\n";
+        $prompt .= "  \"viaggi_multipli\": [\n";
+        $prompt .= "    { \"nome_viaggio\": \"Nome descrittivo (es. Pulmino Nord)\", \"atlete\": [\"Nome atleta 1\"], \"motivo\": \"Perché conviene questo viaggio separato\" }\n";
+        $prompt .= "  ],\n";
+        $prompt .= "  \"punti_raccolta\": [\n";
+        $prompt .= "    { \"nome\": \"Nome del punto di raccolta suggerito\", \"indirizzo\": \"Indirizzo del punto\", \"atlete\": [\"Nome atleta 1\", \"Nome atleta 2\"], \"motivo\": \"Perché questo punto è ottimale\" }\n";
+        $prompt .= "  ],\n";
+        $prompt .= "  \"fuori_percorso\": [\n";
+        $prompt .= "    { \"nome\": \"Nome atleta\", \"motivo\": \"Perché è fuori dal percorso ottimale\", \"punto_ritrovo_consigliato\": \"Indirizzo del punto di incontro alternativo suggerito\" }\n";
+        $prompt .= "  ],\n";
+        $prompt .= "  \"risparmio_stimato\": \"Stima del tempo/distanza risparmiato con le modifiche suggerite\"\n";
+        $prompt .= "}\n\n";
+        $prompt .= "REGOLE:\n";
+        $prompt .= "- NESSUNA ATLETA PUÒ ESSERE ELIMINATA DAL SERVIZIO. Tutti i nomi forniti in input devono essere gestiti.\n";
+        $prompt .= "- Se una ragazza è scomoda, dalle un punto di ritrovo in 'punto_ritrovo_consigliato'. Se è troppo lontana anche per un ritrovo, DEVI OBBLIGATORIAMENTE creare un viaggio dedicato per lei in 'viaggi_multipli'.\n";
+        $prompt .= "- IMPORTANTE: Ogni nuovo punto di raccolta e ogni punto di ritrovo suggerito DEVE trovarsi al massimo a 5 km dall'indirizzo originale dell'atleta o dal percorso.\n";
+        $prompt .= "- Suggerisci 'viaggi_multipli' solo se ha senso usare più di un furgone.\n";
+        $prompt .= "- Se due o più atlete abitano vicine, suggerisci un punto di raccolta comune (parcheggio, piazza, incrocio noto), sempre entro il limite dei 5 km.\n";
+        $prompt .= "- Considera la viabilità e la facilità di accesso dei punti suggeriti.\n";
+        $prompt .= "- Rispondi SOLO con il JSON, nessun altro testo.\n";
+
+        // Call Google Gemini API
+        try {
+            $aiContent = AIService::generateContent($prompt, [
+                'maxOutputTokens'  => 8192,
+                'temperature'      => 0.3,
+                'responseMimeType' => 'application/json',
+            ]);
+        } catch (\Exception $e) {
+            Response::error($e->getMessage(), 500);
+        }
+
+        // Robust JSON extraction
+        if (preg_match('/\{[\s\S]*\}/', $aiContent, $matches)) {
+            $aiContent = $matches[0];
+        }
+
+        $aiJson = json_decode($aiContent, true);
+        if (!$aiJson) {
+            error_log('[AI_TRANSPORT] Invalid JSON: ' . $aiContent);
+            // If parsing fails, wrap raw text as consigli
+            $aiJson = [
+                'consigli'         => $aiContent,
+                'viaggi_multipli'  => [],
+                'punti_raccolta'   => [],
+                'fuori_percorso'   => [],
+                'risparmio_stimato' => '',
+            ];
+        }
+
+        // Persist the AI response
+        $this->repo->updateTransportAiResponse($transportId, json_encode($aiJson));
+
+        Audit::log('AI_ANALYSIS', 'transports', $transportId, null, ['model' => 'gemini-2.0-flash']);
+        Response::success($aiJson);
     }
 }

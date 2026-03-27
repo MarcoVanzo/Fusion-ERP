@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useLocation, useNavigate } from 'react-router-dom';
-import { ChevronLeft } from 'lucide-react';
 import { Seo } from '../components/Seo';
 
 interface Athlete {
@@ -249,7 +248,7 @@ const TeamDetail = () => {
         };
 
         if (slug || stateTeamId) fetchTeamData();
-    }, [slug, stateTeamId]);
+    }, [slug, stateTeamId, navigate]);
 
     if (loading) {
         return (

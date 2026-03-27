@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react';
-import { ChevronRight, Calendar } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 
@@ -8,10 +7,7 @@ const recentMatches = [
     { id: 2, home: 'TEAM C', away: 'FUSION VOLLEY', sets_home: 0, sets_away: 3, date: '10 Nov', championship_label: 'SERIE C' },
 ];
 
-const news = [
-    { id: 1, title: 'Grande vittoria contro la capolista in U18', category_name: 'Giovanili', published_at: '2026-11-12' },
-    { id: 2, title: 'Iscrizioni aperte per la stagione 2027', category_name: 'Club', published_at: '2026-11-10' },
-];
+
 
 const Proposal2 = () => {
     return (
@@ -71,7 +67,7 @@ const Proposal2 = () => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-white/5 border border-white/5">
-                    {recentMatches.map((match, i) => (
+                    {recentMatches.map((match) => (
                         <div key={match.id} className="bg-[#050505] p-10 flex flex-col hover:bg-[#0A0A0A] transition-colors group">
                             <span className="text-zinc-600 text-xs tracking-[0.2em] uppercase mb-8">{match.championship_label}</span>
                             <div className="flex justify-between items-center mb-8">

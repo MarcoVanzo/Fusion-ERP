@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Globe, Instagram, Facebook, Youtube, Diamond } from 'lucide-react';
+import { Globe, Instagram, Facebook, Diamond } from 'lucide-react';
 import { Seo } from '../components/Seo';
 
 const ERP_BASE = 'https://www.fusionteamvolley.it/ERP';
@@ -145,7 +145,7 @@ const Sponsors = () => {
                     </motion.div>
                 ) : (
                     <div className="space-y-32">
-                        {sortedGroups.map((group, groupIdx) => (
+                        {sortedGroups.map((group) => (
                             <div key={group}>
                                 {/* Group Header */}
                                 <motion.div
@@ -173,7 +173,7 @@ const Sponsors = () => {
                                         'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
                                     }`}
                                 >
-                                    {groupedSponsors[group].map((sponsor, idx) => {
+                                    {groupedSponsors[group].map((sponsor) => {
                                         const isMain = group === 'Main Sponsor';
                                         return (
                                         <motion.div

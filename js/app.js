@@ -848,14 +848,14 @@ const App = (() => {
         const titleEl = document.getElementById('page-title');
         if (titleEl) {
             const _routeObserver = new MutationObserver(() => {
-                const current = Router.current?.() ?? '';
+                const current = (typeof Router.getCurrentRoute === 'function' ? Router.getCurrentRoute() : '') ?? '';
                 _setActive(current);
             });
             _routeObserver.observe(titleEl, { childList: true, characterData: true, subtree: true });
         }
 
         // Set initial active state
-        const initialRoute = Router.current?.() ?? 'dashboard';
+        const initialRoute = (typeof Router.getCurrentRoute === 'function' ? Router.getCurrentRoute() : 'dashboard') ?? 'dashboard';
         _setActive(initialRoute);
     }
 
@@ -1153,6 +1153,18 @@ const App = (() => {
     return { init, getUser, renderForgotPassword };
 })();
 
+// ─── Global Error Handlers (Stability) ──────────────────────────────────────
+window.onerror = function (message, source, lineno, colno, error) {
+    console.error('[FusionERP] Uncaught error:', message, 'at', source, lineno, colno, error);
+    // Avoid crashing the entire app on a single uncaught error
+    return true;
+};
+window.addEventListener('unhandledrejection', function (event) {
+    console.error('[FusionERP] Unhandled promise rejection:', event.reason);
+    // Prevent the default browser behavior of logging to console + potential crash
+    event.preventDefault();
+});
+
 // ─── Bootstrap ──────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
     App.init().then(() => {
@@ -1166,6 +1178,8 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             // _initPageTransitions is called from _bootApp, but also safe to retry here
         } catch { }
-    }).catch(() => { });
+    }).catch((err) => {
+        console.error('[FusionERP] Critical boot failure:', err);
+    });
 });
 

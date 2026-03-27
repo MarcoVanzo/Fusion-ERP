@@ -1,19 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Menu, X, Instagram, Facebook, Youtube } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const MenuProposal2 = () => {
     const [isExpanded, setIsExpanded] = useState(false);
-    const [isScrolled, setIsScrolled] = useState(false);
 
-    useEffect(() => {
-        const handleScroll = () => {
-            setIsScrolled(window.scrollY > 50);
-        };
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
+
 
     const mainLinks = [
         { name: 'IL CLUB', path: '/club' },

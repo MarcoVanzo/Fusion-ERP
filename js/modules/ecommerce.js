@@ -45,13 +45,6 @@ const Ecommerce = (() => {
     if (n) {
       !(async function () {
         try {
-          if (!(await EcommerceDB.getMeta("dedupArticles_v2"))) {
-            if ((await EcommerceDB.deduplicateArticoli()) > 0) {
-              const e = document.getElementById("ec-panel-articles");
-              e && "articles" === t && o(e);
-            }
-            await EcommerceDB.setMeta("dedupArticles_v2", !0);
-          }
           if (await EcommerceDB.getMeta("nanoBananaUpgradeAggressivo_v2"))
             return;
           const e = await EcommerceDB.getArticoli();
@@ -73,7 +66,7 @@ const Ecommerce = (() => {
                   n++);
               } catch (e) {}
           if (n > 0) {
-            console.log(`NanoBanana v2: upgraded ${n} legacy images.`);
+
             const e = document.getElementById("ec-panel-articles");
             e && "articles" === t && o(e);
           }

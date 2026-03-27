@@ -11,6 +11,7 @@ namespace FusionERP\Modules\Athletes;
 use FusionERP\Shared\Auth;
 use FusionERP\Shared\Audit;
 use FusionERP\Shared\Response;
+use FusionERP\Shared\AIService;
 
 class AthletesController
 {
@@ -140,10 +141,7 @@ class AthletesController
         // Actually, let's query the repo to get the team_id.
         // I'll leave team_id as empty or 'UNK' for now, but we'll fetch it from the DB.
         
-        $db = \FusionERP\Shared\Database::getInstance();
-        $stmt = $db->prepare('SELECT team_id FROM team_seasons WHERE id = :id');
-        $stmt->execute([':id' => $primaryTeamSeasonId]);
-        $primaryTeamId = $stmt->fetchColumn() ?: 'UNKNOWN';
+        $primaryTeamId = $this->repo->getTeamIdForSeason($primaryTeamSeasonId) ?: 'UNKNOWN';
 
         $data = [
             ':id' => $id,
@@ -209,10 +207,7 @@ class AthletesController
 
         $primaryTeamId = null;
         if ($primaryTeamSeasonId) {
-            $db = \FusionERP\Shared\Database::getInstance();
-            $stmt = $db->prepare('SELECT team_id FROM team_seasons WHERE id = :id');
-            $stmt->execute([':id' => $primaryTeamSeasonId]);
-            $primaryTeamId = $stmt->fetchColumn() ?: $before['team_id'];
+            $primaryTeamId = $this->repo->getTeamIdForSeason($primaryTeamSeasonId) ?? $before['team_id'];
         } else {
             $primaryTeamId = $before['team_id'] ?? null;
         }
@@ -517,7 +512,12 @@ class AthletesController
 
         // Build Gemini prompt
         $prompt = $this->buildGeminiPrompt($athlete, $history, $acwr, $notes);
-        $summary = $this->callGeminiApi($prompt);
+        
+        try {
+            $summary = AIService::generateContent($prompt, ['maxOutputTokens' => 512, 'temperature' => 0.3]);
+        } catch (\Exception $e) {
+            $summary = 'Impossibile generare il riepilogo AI al momento. Riprovare più tardi.';
+        }
 
         // Save to DB
         $periodStart = date('Y-m-d', strtotime('-30 days'));
@@ -645,51 +645,6 @@ Genera un breve riepilogo (max 200 parole) in italiano, chiaro e professionale, 
 IMPORTANTE: Questo testo è un supporto informativo per l'allenatore. Non fornire diagnosi mediche né decisioni tecniche autonome.
 PROMPT;
     }
-
-    private function callGeminiApi(string $prompt): string
-    {
-        $apiKey = getenv('GEMINI_API_KEY');
-        if (empty($apiKey)) {
-            return 'Gemini API key non configurata. Configurare GEMINI_API_KEY nel file .env.';
-        }
-
-        $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={$apiKey}";
-        $payload = json_encode([
-            'contents' => [
-                ['parts' => [['text' => $prompt]]]
-            ],
-            'safetySettings' => [
-                ['category' => 'HARM_CATEGORY_DANGEROUS_CONTENT', 'threshold' => 'BLOCK_NONE'],
-            ],
-            'generationConfig' => [
-                'maxOutputTokens' => 512,
-                'temperature' => 0.3,
-            ],
-        ]);
-
-        $ch = curl_init($url);
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => $payload,
-            CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
-            CURLOPT_TIMEOUT => 30,
-        ]);
-
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-
-        if ($httpCode !== 200 || $response === false) {
-            error_log("[GEMINI] API call failed. HTTP {$httpCode}");
-            return 'Impossibile generare il riepilogo AI al momento. Riprovare più tardi.';
-        }
-
-        $data = json_decode($response, true);
-        return $data['candidates'][0]['content']['parts'][0]['text']
-            ?? 'Riepilogo non disponibile.';
-    }
-
     // ─── PUBLIC ENDPOINTS FOR WEBSITE ──────────────────────────────────────────────
     public function getPublicTeams(): void
     {

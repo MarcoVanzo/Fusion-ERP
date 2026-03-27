@@ -21,11 +21,6 @@ const EcommerceDB = (() => {
 
       const count = await e().articoli.count();
       if (count > 0) {
-        console.log(
-          "EcommerceDB: Trovati " +
-            count +
-            " articoli locali, migrazione in MySQL in corso (a lotti)...",
-        );
         const localArticles = await e().articoli.toArray();
 
         // Chunk size of 5 to avoid post_max_size (8M) limits on Base64 payloads
@@ -33,12 +28,8 @@ const EcommerceDB = (() => {
         for (let i = 0; i < localArticles.length; i += chunkSize) {
           const chunk = localArticles.slice(i, i + chunkSize);
           await Store.api("bulkSaveProdotti", "ecommerce", { prodotti: chunk });
-          console.log(
-            `EcommerceDB: Migrati articoli ${i} a ${i + chunk.length}`,
-          );
         }
 
-        console.log("EcommerceDB: Migrazione completata!");
         await e().articoli.clear(); // Remove local items once successfully uploaded
       }
       await e().metadati.put({ chiave: "ec_migrated_v2", valore: 1 });
@@ -48,8 +39,16 @@ const EcommerceDB = (() => {
     }
   }
 
-  // Attempt migration immediately but asynchronously
-  setTimeout(ensureMigrated, 1000);
+  // Attempt migration only if logged in
+  function tryMigration() {
+      if (window.App && typeof App.getUser === 'function' && App.getUser()) {
+          ensureMigrated();
+      } else {
+          // Retry later when user might be logged in
+          setTimeout(tryMigration, 3000);
+      }
+  }
+  setTimeout(tryMigration, 1000);
 
   return {
     getArticoli: async function () {
@@ -101,9 +100,7 @@ const EcommerceDB = (() => {
         return 0;
       }
     },
-    deduplicateArticoli: async function () {
-      return 0; // No longer needed for MySQL
-    },
+
     // Legacy Dexie methods kept for other functionality
     getAllStatiOrdini: async function () {
       const t = await e().statiOrdini.toArray(),

@@ -4,16 +4,11 @@ import { initializeAnalytics } from '../utils/analytics';
 const COOKIE_CONSENT_KEY = 'fusion_cookie_consent';
 
 export const CookieBanner: React.FC = () => {
-    const [isVisible, setIsVisible] = useState(false);
+    const [isVisible, setIsVisible] = useState(() => !localStorage.getItem(COOKIE_CONSENT_KEY));
 
     useEffect(() => {
         // Attiva sempre totalmente l'analytics al caricamento a prescindere
         initializeAnalytics();
-        
-        const consent = localStorage.getItem(COOKIE_CONSENT_KEY);
-        if (!consent) {
-            setIsVisible(true);
-        }
     }, []);
 
     const handleAccept = () => {

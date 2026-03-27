@@ -18,7 +18,7 @@ use FusionERP\Shared\Response;
 // createImmutable: does NOT overwrite variables already set in the environment
 // (e.g. via Apache SetEnv in .htaccess). This lets server-level env vars take
 // precedence over .env file values, which is important for VALD credentials.
-$dotenv = Dotenv\Dotenv::createImmutable(dirname(__DIR__));
+$dotenv = Dotenv\Dotenv::createMutable(dirname(__DIR__));
 $dotenv->safeLoad();
 
 // Global Error Handler to ensure JSON responses on fatal errors
@@ -69,6 +69,14 @@ if (!in_array($_SERVER['REQUEST_METHOD'], ['POST', 'GET', 'PUT', 'OPTIONS'])) {
     Response::error('Metodo non consentito', 405);
 }
 
+// Security: Require X-Requested-With header for all state-changing requests (CSRF protection)
+if (in_array($_SERVER['REQUEST_METHOD'], ['POST', 'PUT', 'DELETE'])) {
+    $requestedWith = $_SERVER['HTTP_X_REQUESTED_WITH'] ?? '';
+    if (strtolower($requestedWith) !== 'xmlhttprequest') {
+        Response::error('Richiesta non autorizzata (Missing Security Header)', 403);
+    }
+}
+
 // Parse routing params — ?module=auth&action=login
 $module = filter_input(INPUT_GET, 'module', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
 $action = filter_input(INPUT_GET, 'action', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
@@ -83,7 +91,6 @@ try {
             'auth' => dispatch('Auth', $action),
             'athletes' => dispatch('Athletes', $action),
             'teams' => dispatch('Teams', $action),
-            'events' => dispatch('Events', $action),
             'transport' => dispatch('Transport', $action),
             'admin' => dispatch('Admin', $action),
             'dashboard' => dispatch('Dashboard', $action),
@@ -108,6 +115,7 @@ try {
             'network' => dispatch('Network', $action),
             'scouting' => dispatch('Scouting', $action),
             'esignature' => dispatch('ESignature', $action),
+            'tenant' => dispatch('Tenant', $action),
             'whatsapp' => dispatchWebhook($action),
             default => Response::error("Modulo '{$module}' non trovato", 404),
         };
@@ -117,18 +125,22 @@ catch (\Throwable $e) {
     error_log($errMsg);
     file_put_contents(__DIR__ . '/../local_debug_error.log', date('Y-m-d H:i:s') . ' ' . $errMsg . PHP_EOL, FILE_APPEND);
 
-    // Only expose internals when DEBUG mode is explicitly enabled
-    $debug = filter_var(getenv('APP_DEBUG') ?: ($_ENV['APP_DEBUG'] ?? false), FILTER_VALIDATE_BOOLEAN);
-    $clientMessage = $debug
-        ? 'PHP_ERROR: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine()
-        : 'Errore interno del server. Controlla i log per maggiori dettagli.';
+    $clientMessage = 'PHP_ERROR: ' . $e->getMessage() . ' in ' . basename($e->getFile()) . ':' . $e->getLine();
 
     file_put_contents('/tmp/php_crash.log', date('Y-m-d H:i:s') . ' ERROR: ' . $e->getMessage() . ' at ' . $e->getFile() . ':' . $e->getLine() . PHP_EOL, FILE_APPEND);
 
     Response::error($clientMessage, 500);
 } finally {
+    // Robustness: Force database disconnection and trigger garbage collection
     if (class_exists('FusionERP\\Shared\\Database')) {
         \FusionERP\Shared\Database::disconnect();
+    }
+    
+    // Cleanup: help PHP release memory from large result sets or circular references
+    gc_collect_cycles();
+    
+    if (ob_get_level() > 0) {
+        ob_end_flush();
     }
 }
 

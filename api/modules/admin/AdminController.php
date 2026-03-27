@@ -13,6 +13,7 @@ use FusionERP\Shared\Audit;
 use FusionERP\Shared\Response;
 use FusionERP\Shared\GoogleDrive;
 use FusionERP\Shared\BackupService;
+use FusionERP\Shared\AIService;
 use Mpdf\Mpdf;
 
 class AdminController
@@ -131,45 +132,26 @@ class AdminController
 
     private function ocrCertificateViaGemini(string $imagePath, string $mimeType): array
     {
-        $apiKey = getenv('GEMINI_API_KEY');
-        if (empty($apiKey)) {
+        $imageData = base64_encode(file_get_contents($imagePath));
+        
+        $promptParts = [
+            [
+                'text' => 'Analizza questo certificato medico sportivo. Estrai SOLO la data di scadenza (o validità fino a). Rispondi SOLO con la data nel formato DD/MM/YYYY o YYYY-MM-DD. Se non trovi la data, rispondi con: NON_TROVATA.'
+            ],
+            [
+                'inline_data' => [
+                    'mime_type' => $mimeType,
+                    'data' => $imageData,
+                ]
+            ]
+        ];
+
+        try {
+            $rawDate = trim(AIService::generateContent($promptParts, ['maxOutputTokens' => 20, 'temperature' => 0.0]));
+        } catch (\Exception $e) {
+            error_log('[ADMIN_OCR] Failed to extract expiry date: ' . $e->getMessage());
             return ['extracted_date' => null];
         }
-
-        $imageData = base64_encode(file_get_contents($imagePath));
-        $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={$apiKey}";
-
-        $payload = json_encode([
-            'contents' => [[
-                    'parts' => [
-                        [
-                            'text' => 'Analizza questo certificato medico sportivo. Estrai SOLO la data di scadenza (o validità fino a). Rispondi SOLO con la data nel formato DD/MM/YYYY o YYYY-MM-DD. Se non trovi la data, rispondi con: NON_TROVATA.'
-                        ],
-                        [
-                            'inline_data' => [
-                                'mime_type' => $mimeType,
-                                'data' => $imageData,
-                            ]
-                        ]
-                    ]
-                ]],
-            'generationConfig' => ['maxOutputTokens' => 20, 'temperature' => 0.0],
-        ]);
-
-        $ch = curl_init($url);
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => $payload,
-            CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
-            CURLOPT_TIMEOUT => 25,
-        ]);
-
-        $response = curl_exec($ch);
-        curl_close($ch);
-
-        $data = json_decode($response, true);
-        $rawDate = trim($data['candidates'][0]['content']['parts'][0]['text'] ?? '');
 
         if (empty($rawDate) || $rawDate === 'NON_TROVATA') {
             return ['extracted_date' => null];

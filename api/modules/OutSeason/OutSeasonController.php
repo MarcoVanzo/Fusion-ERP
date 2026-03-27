@@ -18,6 +18,7 @@ namespace FusionERP\Modules\OutSeason;
 use FusionERP\Shared\Auth;
 use FusionERP\Shared\Database;
 use FusionERP\Shared\Response;
+use FusionERP\Shared\AIService;
 
 class OutSeasonController
 {
@@ -273,11 +274,7 @@ class OutSeasonController
             Response::error('Nessuna iscritta con bonifico trovata nel DB. Esegui prima la sincronizzazione.', 422);
         }
 
-        // ── Gemini API key check ─────────────────────────────────────────
-        $apiKey = $_ENV['GEMINI_API_KEY'] ?? getenv('GEMINI_API_KEY');
-        if (empty($apiKey) || $apiKey === 'YOUR_GEMINI_API_KEY_HERE') {
-            Response::error('GEMINI_API_KEY non configurata.', 500);
-        }
+
 
         // ── Build prompt with dynamic entries ────────────────────────────
         // ── Determine amount per formula ──────────────────────────────────────────────────
@@ -345,81 +342,39 @@ PROMPT;
 
         // ── Send to Gemini API ──────────────────────────────────────────
         $pdfData = base64_encode((string)file_get_contents($file['tmp_name']));
-        $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={$apiKey}";
+        
+        $promptParts = [
+            ['text' => $prompt],
+            ['inline_data' => ['mime_type' => 'application/pdf', 'data' => $pdfData]],
+        ];
 
-        $payload = json_encode([
-            'contents' => [[
-                    'parts' => [
-                        ['text' => $prompt],
-                        ['inline_data' => ['mime_type' => 'application/pdf', 'data' => $pdfData]],
-                    ],
-                ]],
-            'generationConfig' => [
+        try {
+            $rawText = AIService::generateContent($promptParts, [
                 'maxOutputTokens' => 65536,
                 'temperature' => 0.0,
                 'responseMimeType' => 'application/json',
                 'thinkingConfig' => ['thinkingBudget' => 1024],
-            ],
-        ]);
-
-        $ch = curl_init($url);
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => $payload,
-            CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
-            CURLOPT_TIMEOUT => 120,
-        ]);
-        $response = curl_exec($ch);
-        $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $curlError = curl_error($ch);
-        curl_close($ch);
-
-        if ($response === false || !empty($curlError)) {
-            Response::error('Errore di connessione a Gemini AI: ' . $curlError, 502);
+            ]);
+        } catch (\Exception $e) {
+            Response::error('Errore di connessione a Gemini AI: ' . $e->getMessage(), 502);
         }
-        if ($httpCode !== 200) {
-            error_log('[OutSeason] Gemini API error — HTTP ' . $httpCode . ': ' . $response);
-            Response::error('Errore dall\'API Gemini (HTTP ' . $httpCode . '). Riprovare.', 502);
-        }
-
-        // ── Parse Gemini response ────────────────────────────────────────
-        $geminiData = json_decode((string)$response, true);
-        $finishReason = $geminiData['candidates'][0]['finishReason'] ?? 'STOP';
-
-        $parts = $geminiData['candidates'][0]['content']['parts'] ?? [];
-        $rawText = '';
-        foreach ($parts as $part) {
-            if (isset($part['text'])) {
-                $rawText = $part['text'];
-            }
-        }
-        $rawText = trim($rawText);
 
         if (empty($rawText)) {
             Response::error('Gemini non ha restituito risultati. Riprovare.', 422);
         }
 
-        $cleanJson = $rawText;
-        if (str_contains($cleanJson, '```')) {
-            $cleanJson = preg_replace('/^```(?:json)?\s*/m', '', $cleanJson);
-            $cleanJson = preg_replace('/\s*```\s*$/m', '', $cleanJson);
-        }
-        $cleanJson = trim($cleanJson);
-        $parsed = json_decode($cleanJson, true);
+        $parsed = AIService::extractJson($rawText);
 
-        if (!is_array($parsed) && $finishReason === 'MAX_TOKENS') {
-            $repaired = self::repairTruncatedJson($cleanJson);
-            $parsed = json_decode($repaired, true);
+        if (!is_array($parsed)) {
+            $repaired = self::repairTruncatedJson($rawText);
+            $parsed = AIService::extractJson($repaired) ?? json_decode($repaired, true);
         }
 
         if (!is_array($parsed)) {
             Response::success([
                 'parsed' => false,
                 'raw_response' => mb_substr($rawText, 0, 2000),
-                'message' => $finishReason === 'MAX_TOKENS'
-                ? 'Risposta AI troncata (troppo lunga). Riprovare.'
-                : 'L\'AI ha risposto ma il formato non è JSON valido. Riprovare.',
+                'message' => 'L\'AI ha risposto ma il formato JSON era troncato o non valido. Riprovare.',
             ]);
             return;
         }

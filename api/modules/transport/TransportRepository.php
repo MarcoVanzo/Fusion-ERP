@@ -337,6 +337,14 @@ class TransportRepository
         return $stmt->fetch() ?: null;
     }
 
+    public function updateTransportAiResponse(string $id, string $json): void
+    {
+        $stmt = $this->db->prepare(
+            'UPDATE transports SET ai_response = :ai_response WHERE id = :id'
+        );
+        $stmt->execute([':ai_response' => $json, ':id' => $id]);
+    }
+
     // ─── DRIVERS ─────────────────────────────────────────────────────────────
 
     public function listDrivers(): array

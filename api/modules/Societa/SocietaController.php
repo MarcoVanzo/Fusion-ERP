@@ -24,6 +24,7 @@ require_once $_societaShared . 'Response.php';
 require_once $_societaShared . 'TenantContext.php';
 unset($_societaShared);
 require_once __DIR__ . '/SocietaRepository.php';
+require_once __DIR__ . '/SocietaService.php';
 
 use FusionERP\Shared\Auth;
 use FusionERP\Shared\Audit;
@@ -33,21 +34,12 @@ use FusionERP\Shared\TenantContext;
 class SocietaController
 {
     private SocietaRepository $repo;
-
-    /** Max upload size: 10 MB */
-    private const MAX_FILE_SIZE = 10 * 1024 * 1024;
-
-    /** Allowed MIME types for document upload */
-    private const ALLOWED_MIMES = [
-        'application/pdf',
-        'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'image/jpeg', 'image/jpg', 'image/png', 'image/webp',
-    ];
+    private SocietaService $service;
 
     public function __construct()
     {
         $this->repo = new SocietaRepository();
+        $this->service = new SocietaService($this->repo);
     }
 
     // ─── PROFILE ──────────────────────────────────────────────────────────────
@@ -86,38 +78,17 @@ class SocietaController
     {
         Auth::requireRole('social media manager');
 
-        if (!isset($_FILES['logo']) || $_FILES['logo']['error'] !== UPLOAD_ERR_OK) {
-            Response::error('Errore upload logo', 400);
+        if (!isset($_FILES['logo'])) {
+            Response::error('Errore upload logo (file mancante)', 400);
         }
 
-        $file = $_FILES['logo'];
-
-        if ($file['size'] > self::MAX_FILE_SIZE) {
-            Response::error('File troppo grande (max 10 MB)', 400);
+        try {
+            $relPath = $this->service->uploadLogo($_FILES['logo'], TenantContext::id());
+            Response::success(['logo_path' => $relPath], 201);
+        } catch (\Exception $e) {
+            error_log('Upload Logo Error: ' . $e->getMessage());
+            Response::error('Errore durante il caricamento del logo.', 500);
         }
-
-        $finfo = new \finfo(FILEINFO_MIME_TYPE);
-        $mime = $finfo->file($file['tmp_name']);
-        if (!in_array($mime, ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/svg+xml'], true)) {
-            Response::error('Tipo file non consentito. Accettati: JPG, PNG, WEBP, SVG', 400);
-        }
-
-        $tenantId = TenantContext::id();
-        $uploadDir = dirname(__DIR__, 3) . '/uploads/societa/' . $tenantId;
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0755, true);
-        }
-
-        $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
-        $fileName = 'logo_' . date('Ymd_His') . '.' . $ext;
-        $destPath = $uploadDir . '/' . $fileName;
-
-        if (!move_uploaded_file($file['tmp_name'], $destPath)) {
-            Response::error('Errore nel salvataggio del logo', 500);
-        }
-
-        $relPath = 'uploads/societa/' . $tenantId . '/' . $fileName;
-        Response::success(['logo_path' => $relPath], 201);
     }
 
     // ─── ROLES ────────────────────────────────────────────────────────────────
@@ -256,21 +227,19 @@ class SocietaController
     {
         Auth::requireRole('social media manager');
         $body = Response::jsonBody();
-        $id = $body['id'] ?? '';
-        if (empty($id)) {
-            Response::error('id obbligatorio', 400);
-        }
+        Response::requireFields($body, ['id']);
+        $id = $body['id'];
+
         $before = $this->repo->getMemberById($id);
         if (!$before) {
             Response::error('Membro non trovato', 404);
         }
+
         $this->repo->deleteMember($id);
         Audit::log('DELETE', 'societa_members', $id, $before, null);
         Response::success(['message' => 'Membro rimosso']);
     }
 
-    // ─── MEMBER PHOTO UPLOAD ──────────────────────────────────────────────────
-    
     public function uploadMemberPhoto(): void
     {
         Auth::requireRole('social media manager');
@@ -285,50 +254,19 @@ class SocietaController
             Response::error('Membro non trovato', 404);
         }
 
-        if (empty($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
-            Response::error('File non caricato o errore upload', 400);
+        if (empty($_FILES['file'])) {
+            Response::error('File non caricato', 400);
         }
 
-        $file = $_FILES['file'];
-        if ($file['size'] > self::MAX_FILE_SIZE) {
-            Response::error('File troppo grande (max 10 MB)', 400);
+        try {
+            $relPath = $this->service->uploadMemberPhoto($id, $_FILES['file'], TenantContext::id(), $member['photo_path'] ?? null);
+            $this->repo->updateMemberPhoto($id, $relPath);
+            Audit::log('UPDATE', 'societa_members', $id, ['photo_path' => $member['photo_path'] ?? null], ['photo_path' => $relPath]);
+            Response::success(['photo_path' => $relPath]);
+        } catch (\Exception $e) {
+            error_log('Upload Member Photo Error: ' . $e->getMessage());
+            Response::error('Errore durante il caricamento della foto.', 500);
         }
-
-        $finfo = new \finfo(FILEINFO_MIME_TYPE);
-        $mimeType = $finfo->file($file['tmp_name']);
-        
-        if (!in_array($mimeType, ['image/jpeg', 'image/png', 'image/webp'], true)) {
-            Response::error('Formato non supportato (solo JPG, PNG, WEBP)', 415);
-        }
-
-        $tenantId = TenantContext::id();
-        $uploadDir = dirname(__DIR__, 3) . '/uploads/societa/' . $tenantId . '/members';
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0755, true);
-        }
-
-        $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
-        $safeFilename = 'member_' . $id . '_' . time() . '.' . strtolower($ext);
-        $fullPath = $uploadDir . '/' . $safeFilename;
-
-        if (!move_uploaded_file($file['tmp_name'], $fullPath)) {
-            Response::error('Errore salvataggio foto', 500);
-        }
-
-        $relPath = 'uploads/societa/' . $tenantId . '/members/' . $safeFilename;
-
-        // Delete old photo if exists
-        if (!empty($member['photo_path'])) {
-            $oldPath = dirname(__DIR__, 3) . '/' . $member['photo_path'];
-            if (file_exists($oldPath)) {
-                unlink($oldPath);
-            }
-        }
-
-        $this->repo->updateMemberPhoto($id, $relPath);
-        
-        Audit::log('UPDATE', 'societa_members', $id, ['photo_path' => $member['photo_path'] ?? null], ['photo_path' => $relPath]);
-        Response::success(['photo_path' => $relPath]);
     }
 
     // ─── DOCUMENTS ────────────────────────────────────────────────────────────
@@ -343,65 +281,38 @@ class SocietaController
     {
         Auth::requireRole('social media manager');
 
-        $category = $_POST['category'] ?? 'altro';
-        $expiryDate = $_POST['expiry_date'] ?? null;
-        $notes = $_POST['notes'] ?? null;
+        $category = filter_input(INPUT_POST, 'category', FILTER_SANITIZE_SPECIAL_CHARS) ?: 'altro';
+        $expiryDate = filter_input(INPUT_POST, 'expiry_date', FILTER_SANITIZE_SPECIAL_CHARS) ?: null;
+        $notes = filter_input(INPUT_POST, 'notes', FILTER_SANITIZE_SPECIAL_CHARS) ?: null;
 
-        $validCategories = ['statuto', 'affiliazione', 'licenza', 'assicurazione', 'altro'];
-        if (!in_array($category, $validCategories, true)) {
-            Response::error("Categoria non valida: {$category}", 400);
+        if (empty($_FILES['file'])) {
+            Response::error('Errore upload file mancante', 400);
         }
 
-        if (!isset($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
-            $errorCode = $_FILES['file']['error'] ?? -1;
-            Response::error("Errore upload file (codice: {$errorCode})", 400);
+        try {
+            $uploaded = $this->service->uploadDocument($category, $_FILES['file'], TenantContext::id());
+            $docId = 'SDC_' . bin2hex(random_bytes(4));
+
+            $this->repo->insertDocument([
+                ':id' => $docId,
+                ':tenant_id' => TenantContext::id(),
+                ':category' => $category,
+                ':file_path' => $uploaded['file_path'],
+                ':file_name' => $uploaded['file_name'],
+                ':expiry_date' => $expiryDate ?: null,
+                ':notes' => $notes,
+            ]);
+
+            Audit::log('INSERT', 'societa_documents', $docId, null, [
+                'category' => $category,
+                'file_name' => $uploaded['file_name'],
+            ]);
+
+            Response::success(['id' => $docId, 'file_path' => $uploaded['file_path']], 201);
+        } catch (\Exception $e) {
+            error_log('Upload Document Error: ' . $e->getMessage());
+            Response::error('Errore durante il caricamento del documento.', 500);
         }
-
-        $file = $_FILES['file'];
-
-        if ($file['size'] > self::MAX_FILE_SIZE) {
-            Response::error('File troppo grande (max 10 MB)', 400);
-        }
-
-        $finfo = new \finfo(FILEINFO_MIME_TYPE);
-        $mime = $finfo->file($file['tmp_name']);
-        if (!in_array($mime, self::ALLOWED_MIMES, true)) {
-            Response::error("Tipo file non consentito: {$mime}. Accettati: PDF, DOC, DOCX, JPG, PNG, WEBP", 400);
-        }
-
-        $tenantId = TenantContext::id();
-        $uploadDir = dirname(__DIR__, 3) . '/uploads/societa/' . $tenantId . '/docs';
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0755, true);
-        }
-
-        $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
-        $fileName = $category . '_' . date('Ymd_His') . '_' . bin2hex(random_bytes(3)) . '.' . $ext;
-        $destPath = $uploadDir . '/' . $fileName;
-
-        if (!move_uploaded_file($file['tmp_name'], $destPath)) {
-            Response::error('Errore nel salvataggio del file', 500);
-        }
-
-        $relPath = 'uploads/societa/' . $tenantId . '/docs/' . $fileName;
-        $docId = 'SDC_' . bin2hex(random_bytes(4));
-
-        $this->repo->insertDocument([
-            ':id' => $docId,
-            ':tenant_id' => $tenantId,
-            ':category' => $category,
-            ':file_path' => $relPath,
-            ':file_name' => $file['name'],
-            ':expiry_date' => $expiryDate ?: null,
-            ':notes' => $notes,
-        ]);
-
-        Audit::log('INSERT', 'societa_documents', $docId, null, [
-            'category' => $category,
-            'file_name' => $file['name'],
-        ]);
-
-        Response::success(['id' => $docId, 'file_path' => $relPath], 201);
     }
 
     public function downloadDocument(): void
@@ -437,14 +348,14 @@ class SocietaController
     {
         Auth::requireRole('social media manager');
         $body = Response::jsonBody();
-        $docId = $body['id'] ?? '';
-        if (empty($docId)) {
-            Response::error('id obbligatorio', 400);
-        }
+        Response::requireFields($body, ['id']);
+        
+        $docId = $body['id'];
         $doc = $this->repo->getDocumentById($docId);
         if (!$doc) {
             Response::error('Documento non trovato', 404);
         }
+        
         $this->repo->deleteDocument($docId);
         Audit::log('DELETE', 'societa_documents', $docId, $doc, null);
         Response::success(['message' => 'Documento eliminato']);
@@ -522,14 +433,14 @@ class SocietaController
     {
         Auth::requireRole('social media manager');
         $body = Response::jsonBody();
-        $id = $body['id'] ?? '';
-        if (empty($id)) {
-            Response::error('id obbligatorio', 400);
-        }
+        Response::requireFields($body, ['id']);
+        
+        $id = $body['id'];
         $before = $this->repo->getDeadlineById($id);
         if (!$before) {
             Response::error('Scadenza non trovata', 404);
         }
+        
         $this->repo->deleteDeadline($id);
         Audit::log('DELETE', 'societa_deadlines', $id, $before, null);
         Response::success(['message' => 'Scadenza eliminata']);
@@ -613,7 +524,7 @@ class SocietaController
     {
         Auth::requireRole('social media manager');
 
-        $sponsorId = $_POST['sponsor_id'] ?? '';
+        $sponsorId = filter_input(INPUT_POST, 'sponsor_id', FILTER_SANITIZE_SPECIAL_CHARS) ?: '';
         if (empty($sponsorId)) {
             Response::error('sponsor_id obbligatorio', 400);
         }
@@ -623,54 +534,33 @@ class SocietaController
             Response::error('Sponsor non trovato', 404);
         }
 
-        if (!isset($_FILES['logo']) || $_FILES['logo']['error'] !== UPLOAD_ERR_OK) {
-            Response::error('Errore upload logo', 400);
+        if (empty($_FILES['logo'])) {
+            Response::error('Errore upload logo mancante', 400);
         }
 
-        $file = $_FILES['logo'];
-
-        if ($file['size'] > self::MAX_FILE_SIZE) {
-            Response::error('File troppo grande (max 10 MB)', 400);
+        try {
+            $relPath = $this->service->uploadSponsorLogo($sponsorId, $_FILES['logo'], TenantContext::id());
+            $this->repo->updateSponsorLogo($sponsorId, $relPath);
+            Audit::log('UPDATE', 'societa_sponsors', $sponsorId, ['logo_path' => $sponsor['logo_path']], ['logo_path' => $relPath]);
+            Response::success(['logo_path' => $relPath], 200);
+        } catch (\Exception $e) {
+            error_log('Upload Sponsor Logo Error: ' . $e->getMessage());
+            Response::error('Errore durante il caricamento del logo sponsor.', 500);
         }
-
-        $finfo = new \finfo(FILEINFO_MIME_TYPE);
-        $mime  = $finfo->file($file['tmp_name']);
-        if (!in_array($mime, ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/svg+xml'], true)) {
-            Response::error('Tipo file non consentito. Accettati: JPG, PNG, WEBP, SVG', 400);
-        }
-
-        $tenantId  = TenantContext::id();
-        $uploadDir = dirname(__DIR__, 3) . '/uploads/societa/' . $tenantId . '/sponsors';
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0755, true);
-        }
-
-        $ext      = pathinfo($file['name'], PATHINFO_EXTENSION);
-        $fileName = 'sponsor_' . $sponsorId . '_' . date('Ymd_His') . '.' . $ext;
-        $destPath = $uploadDir . '/' . $fileName;
-
-        if (!move_uploaded_file($file['tmp_name'], $destPath)) {
-            Response::error('Errore nel salvataggio del logo', 500);
-        }
-
-        $relPath = 'uploads/societa/' . $tenantId . '/sponsors/' . $fileName;
-        $this->repo->updateSponsorLogo($sponsorId, $relPath);
-        Audit::log('UPDATE', 'societa_sponsors', $sponsorId, ['logo_path' => $sponsor['logo_path']], ['logo_path' => $relPath]);
-        Response::success(['logo_path' => $relPath], 200);
     }
 
     public function deleteSponsor(): void
     {
         Auth::requireRole('social media manager');
         $body = Response::jsonBody();
-        $id = $body['id'] ?? '';
-        if (empty($id)) {
-            Response::error('id obbligatorio', 400);
-        }
+        Response::requireFields($body, ['id']);
+        
+        $id = $body['id'];
         $before = $this->repo->getSponsorById($id);
         if (!$before) {
             Response::error('Sponsor non trovato', 404);
         }
+        
         $this->repo->deleteSponsor($id);
         Audit::log('DELETE', 'societa_sponsors', $id, $before, null);
         Response::success(['message' => 'Sponsor eliminato']);
@@ -715,8 +605,10 @@ class SocietaController
         try {
             $this->repo->createTitolo($data);
         } catch (\Exception $e) {
-            Response::error('PHP_ERROR: ' . $e->getMessage(), 500);
+            error_log('Create Titolo Error: ' . $e->getMessage());
+            Response::error('Errore durante la creazione del titolo.', 500);
         }
+        
         Audit::log('INSERT', 'societa_titoli', $id, null, $body);
         Response::success(['id' => $id], 201);
     }
@@ -760,14 +652,14 @@ class SocietaController
     {
         Auth::requireRole('social media manager');
         $body = Response::jsonBody();
-        $id = $body['id'] ?? '';
-        if (empty($id)) {
-            Response::error('id obbligatorio', 400);
-        }
+        Response::requireFields($body, ['id']);
+        
+        $id = $body['id'];
         $before = $this->repo->getTitoloById($id);
         if (!$before) {
             Response::error('Titolo non trovato', 404);
         }
+        
         $this->repo->deleteTitolo($id);
         Audit::log('DELETE', 'societa_titoli', $id, $before, null);
         Response::success(['message' => 'Titolo eliminato']);
@@ -775,17 +667,11 @@ class SocietaController
 
     // ─── PUBLIC ENDPOINTS FOR WEBSITE ─────────────────────────────────────────
 
-    /** GET  ?module=societa&action=getPublicProfile — profilo pubblico per il sito web */
     public function getPublicProfile(): void
     {
-        // NO Auth required. Used by the external website SPA.
-        $db = \FusionERP\Shared\Database::getInstance();
-
-        $stmt = $db->query('SELECT mission, vision, `values`, founded_year, logo_path, primary_color, secondary_color FROM societa_profile LIMIT 1');
-        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
-
-        if (!$row) {
-            $row = [
+        $profile = $this->repo->getProfile();
+        if (!$profile) {
+            $profile = [
                 'mission'         => null,
                 'vision'          => null,
                 'values'          => null,
@@ -795,14 +681,11 @@ class SocietaController
                 'secondary_color' => null,
             ];
         }
-
-        Response::success($row);
+        Response::success($profile);
     }
 
-    /** GET  ?module=societa&action=getPublicSponsors — lista sponsor pubblica per il sito */
     public function getPublicSponsors(): void
     {
-        // NO Auth required. Used by the external website SPA.
         $db = \FusionERP\Shared\Database::getInstance();
         $stmt = $db->query(
             "SELECT id, name, tipo, description, logo_path, website_url, 
@@ -816,290 +699,163 @@ class SocietaController
 
     // ─── FORESTERIA ────────────────────────────────────────────────────────────
 
-    /** GET  ?module=societa&action=getPublicForesteria — info e media pubblici per il sito web */
     public function getPublicForesteria(): void
     {
-        // NO Auth required. Used by the external website SPA.
-        // Public endpoints often resolve to TNT_default depending on the URL.
-        // Since there is only one "Foresteria" per club (and usually only one active club 
-        // in the database), we fetch the first available configuration to avoid empty results.
-        $db  = \FusionERP\Shared\Database::getInstance();
+        $tenantId = null; 
         
-        $info = $db->query('SELECT * FROM foresteria_info LIMIT 1');
-        $infoRow = $info->fetch(\PDO::FETCH_ASSOC);
-
+        // Cerca info di foresteria per il sito publico (non autenticato)
+        $infoRow = $this->repo->getForesteriaInfo(null);
+        
         if (!$infoRow) {
-            // Fallback structure if completely empty
             $infoRow = [
                 'description' => '',
                 'address'     => 'Via Bazzera 16, 30030 Martellago (VE)',
                 'lat'         => 45.5440000,
                 'lng'         => 12.1580000,
             ];
-            $realTenantId = 'TNT_default';
+            $tenantId = 'TNT_default';
         } else {
-            $realTenantId = $infoRow['tenant_id'];
+            $tenantId = $infoRow['tenant_id'];
         }
 
-        // Fetch media using the actual tenant ID where the info was saved
-        $media = $db->prepare(
-            'SELECT * FROM foresteria_media
-             WHERE tenant_id = ? AND is_deleted = 0
-             ORDER BY uploaded_at DESC LIMIT 200'
-        );
-        $media->execute([$realTenantId]);
+        $media = $this->repo->getForesteriaMedia($tenantId);
 
         Response::success([
             'info'  => $infoRow,
-            'media' => $media->fetchAll(\PDO::FETCH_ASSOC),
+            'media' => $media,
         ]);
     }
 
-    /** GET  ?module=societa&action=getForesteria — tutto in uno (info + spese + media) */
     public function getForesteria(): void
     {
         Auth::requireRole('operator');
-        $db  = \FusionERP\Shared\Database::getInstance();
         $tid = TenantContext::id();
 
-        // Info singleton
-        $info = $db->prepare('SELECT * FROM foresteria_info WHERE tenant_id = ? LIMIT 1');
-        $info->execute([$tid]);
-        $infoRow = $info->fetch(\PDO::FETCH_ASSOC) ?: [
-            'description' => '',
-            'address'     => 'Via Bazzera 16, 30030 Martellago (VE)',
-            'lat'         => 45.5440000,
-            'lng'         => 12.1580000,
-        ];
-
-        // Spese (ultimi 100, più recenti prima)
-        $expenses = $db->prepare(
-            'SELECT * FROM foresteria_expenses
-             WHERE tenant_id = ? AND is_deleted = 0
-             ORDER BY expense_date DESC LIMIT 100'
-        );
-        $expenses->execute([$tid]);
-
-        // Media
-        $media = $db->prepare(
-            'SELECT * FROM foresteria_media
-             WHERE tenant_id = ? AND is_deleted = 0
-             ORDER BY uploaded_at DESC LIMIT 200'
-        );
-        $media->execute([$tid]);
-
         Response::success([
-            'info'     => $infoRow,
-            'expenses' => $expenses->fetchAll(\PDO::FETCH_ASSOC),
-            'media'    => $media->fetchAll(\PDO::FETCH_ASSOC),
+            'info'     => $this->service->getForesteriaFallbackInfo($tid),
+            'expenses' => $this->repo->getForesteriaExpenses($tid),
+            'media'    => $this->repo->getForesteriaMedia($tid),
         ]);
     }
 
-    /** POST ?module=societa&action=saveForesteria — salva descrizione */
     public function saveForesteria(): void
     {
         Auth::requireRole('social media manager');
         $body = Response::jsonBody();
-        $db   = \FusionERP\Shared\Database::getInstance();
-        $tid  = TenantContext::id();
-
-        $id = 'FOR_' . bin2hex(random_bytes(4));
+        $tid = TenantContext::id();
         $desc = $body['description'] ?? null;
 
-        $db->prepare(
-            'INSERT INTO foresteria_info (id, tenant_id, description)
-             VALUES (?, ?, ?)
-             ON DUPLICATE KEY UPDATE description = VALUES(description)'
-        )->execute([$id, $tid, $desc]);
+        $this->repo->upsertForesteriaInfo([
+            ':id' => 'FOR_' . bin2hex(random_bytes(4)),
+            ':tenant_id' => $tid,
+            ':description' => $desc
+        ]);
 
         Audit::log('UPSERT', 'foresteria_info', $tid, null, ['description' => $desc]);
         Response::success(['message' => 'Descrizione salvata']);
     }
 
-    /** POST ?module=societa&action=addExpense — aggiunge spesa */
     public function addExpense(): void
     {
         Auth::requireRole('social media manager');
         
         $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
-        if (strpos($contentType, 'application/json') !== false) {
-            $body = Response::jsonBody();
-        } else {
-            $body = $_POST;
-        }
-        
+        $body = (strpos($contentType, 'application/json') !== false) ? Response::jsonBody() : $_POST;
         Response::requireFields($body, ['description', 'amount', 'expense_date']);
 
-        $db  = \FusionERP\Shared\Database::getInstance();
         $tid = TenantContext::id();
-        $id  = 'FEX_' . bin2hex(random_bytes(4));
+        $user = Auth::requireAuth();
 
-        $receiptPath = null;
-        if (isset($_FILES['receipt']) && $_FILES['receipt']['error'] === UPLOAD_ERR_OK) {
-            $uploadDir = __DIR__ . '/../../../public/uploads/' . $tid . '/foresteria/';
-            if (!is_dir($uploadDir)) {
-                mkdir($uploadDir, 0777, true);
-            }
-            $ext = pathinfo($_FILES['receipt']['name'], PATHINFO_EXTENSION);
-            if (!$ext) $ext = 'jpg';
-            $filename = 'receipt_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
-            if (move_uploaded_file($_FILES['receipt']['tmp_name'], $uploadDir . $filename)) {
-                $receiptPath = 'uploads/' . $tid . '/foresteria/' . $filename;
-            }
+        try {
+            $processed = $this->service->processForesteriaExpense($body, $_FILES['receipt'] ?? null, $tid, $user['id']);
+            $this->repo->insertForesteriaExpense($processed['data']);
+            
+            Audit::log('INSERT', 'foresteria_expenses', $processed['id'], null, $body);
+            Response::success(['id' => $processed['id'], 'receipt_path' => $processed['receipt_path']], 201);
+        } catch (\Exception $e) {
+            error_log('Add Expense Error: ' . $e->getMessage());
+            Response::error('Errore tecnico durante il salvataggio della spesa.', 500);
         }
-
-        $db->prepare(
-            'INSERT INTO foresteria_expenses
-             (id, tenant_id, description, amount, category, expense_date, receipt_path, notes, created_by)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
-        )->execute([
-            $id,
-            $tid,
-            htmlspecialchars(trim($body['description']), ENT_QUOTES, 'UTF-8'),
-            (float)$body['amount'],
-            $body['category'] ?? null,
-            $body['expense_date'],
-            $receiptPath,
-            $body['notes'] ?? null,
-            Auth::requireAuth()['id'] ?? null,
-        ]);
-
-        Audit::log('INSERT', 'foresteria_expenses', $id, null, $body);
-        Response::success(['id' => $id, 'receipt_path' => $receiptPath], 201);
     }
 
-    /** POST ?module=societa&action=deleteExpense — soft-delete spesa */
     public function deleteExpense(): void
     {
         Auth::requireRole('social media manager');
         $body = Response::jsonBody();
-        $id   = $body['id'] ?? '';
-        if (empty($id)) Response::error('id obbligatorio', 400);
-
-        $db  = \FusionERP\Shared\Database::getInstance();
-        $tid = TenantContext::id();
-
-        $db->prepare(
-            'UPDATE foresteria_expenses SET is_deleted = 1 WHERE id = ? AND tenant_id = ?'
-        )->execute([$id, $tid]);
-
-        Audit::log('DELETE', 'foresteria_expenses', $id, null, null);
+        Response::requireFields($body, ['id']);
+        
+        $this->repo->deleteForesteriaExpense($body['id'], TenantContext::id());
+        Audit::log('DELETE', 'foresteria_expenses', $body['id'], null, null);
         Response::success(['message' => 'Spesa rimossa']);
     }
 
-    /** POST ?module=societa&action=uploadForesteriaMedia — upload foto/video */
     public function uploadForesteriaMedia(): void
     {
         Auth::requireRole('social media manager');
 
-        if (empty($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
+        if (empty($_FILES['file'])) {
             Response::error('File non caricato', 400);
         }
 
-        $file  = $_FILES['file'];
-        $finfo = new \finfo(FILEINFO_MIME_TYPE);
-        $mime  = $finfo->file($file['tmp_name']);
+        $tid = TenantContext::id();
+        try {
+            $title = filter_input(INPUT_POST, 'title', FILTER_SANITIZE_SPECIAL_CHARS) ?: null;
+            $description = filter_input(INPUT_POST, 'description', FILTER_SANITIZE_SPECIAL_CHARS) ?: null;
+            $media = $this->service->uploadForesteriaMedia($_FILES['file'], $tid, $title, $description);
+            
+            $this->repo->insertForesteriaMedia([
+                ':id'          => $media['id'],
+                ':tenant_id'   => $tid,
+                ':type'        => $media['type'],
+                ':file_path'   => $media['file_path'],
+                ':title'       => $media['title'],
+                ':description' => $media['description']
+            ]);
 
-        $allowedImage = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-        $allowedVideo = ['video/mp4', 'video/webm', 'video/quicktime', 'video/avi'];
-        $isImage = in_array($mime, $allowedImage, true);
-        $isVideo = in_array($mime, $allowedVideo, true);
-
-        if (!$isImage && !$isVideo) {
-            Response::error('Formato non supportato. Accettati: JPG, PNG, WEBP, MP4, WEBM, MOV', 415);
+            Audit::log('INSERT', 'foresteria_media', $media['id'], null, ['file_path' => $media['file_path'], 'type' => $media['type']]);
+            Response::success($media, 201);
+        } catch (\Exception $e) {
+             error_log('Upload Foresteria Media Error: ' . $e->getMessage());
+             Response::error('Errore durante il caricamento del media.', 500);
         }
-
-        $tid      = TenantContext::id();
-        $mediaDir = dirname(__DIR__, 3) . '/uploads/societa/' . $tid . '/foresteria';
-        if (!is_dir($mediaDir)) mkdir($mediaDir, 0755, true);
-
-        $ext      = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-        $filename = ($isVideo ? 'video' : 'photo') . '_' . date('Ymd_His') . '_' . bin2hex(random_bytes(3)) . '.' . $ext;
-        $destPath = $mediaDir . '/' . $filename;
-
-        if (!move_uploaded_file($file['tmp_name'], $destPath)) {
-            Response::error('Errore salvataggio file', 500);
-        }
-
-        $relPath = 'uploads/societa/' . $tid . '/foresteria/' . $filename;
-        $id      = 'FMD_' . bin2hex(random_bytes(4));
-        $type    = $isVideo ? 'video' : 'photo';
-        $title   = $_POST['title'] ?? null;
-        $desc    = $_POST['description'] ?? null;
-
-        $db = \FusionERP\Shared\Database::getInstance();
-        $db->prepare(
-            'INSERT INTO foresteria_media (id, tenant_id, type, file_path, title, description)
-             VALUES (?, ?, ?, ?, ?, ?)'
-        )->execute([$id, $tid, $type, $relPath, $title, $desc]);
-
-        Audit::log('INSERT', 'foresteria_media', $id, null, ['file_path' => $relPath, 'type' => $type]);
-        Response::success(['id' => $id, 'file_path' => $relPath, 'type' => $type], 201);
     }
 
-    /** POST ?module=societa&action=addForesteriaYoutubeLink — aggiunge link YouTube */
     public function addForesteriaYoutubeLink(): void
     {
         Auth::requireRole('social media manager');
-        $body  = Response::jsonBody();
-        $url   = trim($body['url'] ?? '');
-        $title = trim($body['title'] ?? '');
+        $body = Response::jsonBody();
+        Response::requireFields($body, ['url']);
 
-        if (empty($url)) {
-            Response::error('url obbligatorio', 400);
+        try {
+            $media = $this->service->parseForesteriaYoutubeLink($body['url'], $body['title'] ?? null);
+            $media['tenant_id'] = TenantContext::id();
+
+            $this->repo->insertForesteriaMedia([
+                ':id'          => $media['id'],
+                ':tenant_id'   => $media['tenant_id'],
+                ':type'        => $media['type'],
+                ':file_path'   => $media['file_path'],
+                ':title'       => $media['title'],
+                ':description' => $media['description']
+            ]);
+
+            Audit::log('INSERT', 'foresteria_media', $media['id'], null, ['url' => $media['file_path'], 'type' => 'youtube']);
+            Response::success($media, 201);
+        } catch (\Exception $e) {
+            error_log('Add Foresteria Youtube Link Error: ' . $e->getMessage());
+            Response::error('Errore durante il salvataggio del link.', 500);
         }
-
-        // Estrai l'ID video da vari formati YouTube
-        $videoId = null;
-        $patterns = [
-            '/(?:youtube\.com\/watch\?(?:.*&)?v=)([a-zA-Z0-9_-]{11})/',
-            '/(?:youtu\.be\/)([a-zA-Z0-9_-]{11})/',
-            '/(?:youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/',
-            '/(?:youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/',
-            '/(?:youtube\.com\/v\/)([a-zA-Z0-9_-]{11})/',
-        ];
-        foreach ($patterns as $pattern) {
-            if (preg_match($pattern, $url, $matches)) {
-                $videoId = $matches[1];
-                break;
-            }
-        }
-
-        if (!$videoId) {
-            Response::error('URL YouTube non valido. Incolla il link di un video dal canale YouTube di Fusion.', 400);
-        }
-
-        $db  = \FusionERP\Shared\Database::getInstance();
-        $tid = TenantContext::id();
-        $id  = 'FMD_' . bin2hex(random_bytes(4));
-
-        // Salva l'URL canonico del video
-        $canonicalUrl = 'https://www.youtube.com/watch?v=' . $videoId;
-
-        $db->prepare(
-            'INSERT INTO foresteria_media (id, tenant_id, type, file_path, title, description)
-             VALUES (?, ?, ?, ?, ?, ?)'
-        )->execute([$id, $tid, 'youtube', $canonicalUrl, $title ?: $canonicalUrl, null]);
-
-        Audit::log('INSERT', 'foresteria_media', $id, null, ['url' => $canonicalUrl, 'type' => 'youtube']);
-        Response::success(['id' => $id, 'file_path' => $canonicalUrl, 'type' => 'youtube'], 201);
     }
 
-    /** POST ?module=societa&action=deleteForesteriaMedia — soft-delete media */
     public function deleteForesteriaMedia(): void
     {
         Auth::requireRole('social media manager');
         $body = Response::jsonBody();
-        $id   = $body['id'] ?? '';
-        if (empty($id)) Response::error('id obbligatorio', 400);
+        Response::requireFields($body, ['id']);
 
-        $db  = \FusionERP\Shared\Database::getInstance();
-        $tid = TenantContext::id();
-
-        $db->prepare(
-            'UPDATE foresteria_media SET is_deleted = 1 WHERE id = ? AND tenant_id = ?'
-        )->execute([$id, $tid]);
-
+        $id = $body['id'];
+        $this->repo->deleteForesteriaMedia($id, TenantContext::id());
+        
         Audit::log('DELETE', 'foresteria_media', $id, null, null);
         Response::success(['message' => 'Media rimosso']);
     }

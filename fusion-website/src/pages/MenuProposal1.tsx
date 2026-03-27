@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Menu, X, Instagram, Facebook, Youtube } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const MenuProposal1 = () => {
     const [isOpen, setIsOpen] = useState(false);
-    const location = useLocation();
+
 
     // Prevent scrolling when menu is open
     useEffect(() => {

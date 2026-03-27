@@ -70,6 +70,13 @@ class VehiclesRepository
 
     public function updateVehicle(string $id, array $params): bool
     {
+        // First check if vehicle exists
+        $check = $this->db->prepare("SELECT COUNT(*) FROM vehicles WHERE id = :id");
+        $check->execute([':id' => $id]);
+        if ((int)$check->fetchColumn() === 0) {
+            return false;
+        }
+
         $params[':id'] = $id;
         $sql = "UPDATE vehicles SET
                     name = :name,
@@ -82,7 +89,7 @@ class VehiclesRepository
                 WHERE id = :id";
         $stmt = $this->db->prepare($sql);
         $stmt->execute($params);
-        return $stmt->rowCount() > 0;
+        return true;
     }
 
     public function deleteVehicle(string $id): bool

@@ -18,7 +18,7 @@ interface ForesteriaMedia {
     description?: string;
 }
 
-const ERP_BASE = 'https://www.fusionteamvolley.it/ERP';
+const ERP_BASE = import.meta.env.VITE_API_BASE_URL || 'https://www.fusionteamvolley.it/ERP';
 const getImgUrl = (url?: string): string | undefined => {
     if (!url) return undefined;
     if (url.startsWith('http')) return url;
@@ -53,11 +53,12 @@ const Foresteria = () => {
     const [info, setInfo] = useState<ForesteriaInfo | null>(null);
     const [media, setMedia] = useState<ForesteriaMedia[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchForesteriaData = async () => {
             try {
-                const apiUrl = 'https://www.fusionteamvolley.it/ERP/api/router.php?module=societa&action=getPublicForesteria';
+                const apiUrl = `${ERP_BASE}/api/router.php?module=societa&action=getPublicForesteria`;
                     
                 const res = await fetch(apiUrl);
                 const data = await res.json();
@@ -66,8 +67,9 @@ const Foresteria = () => {
                     setInfo(data.data?.info || null);
                     setMedia(data.data?.media || []);
                 }
-            } catch (error) {
-                console.error('Failed to fetch foresteria data:', error);
+            } catch (err) {
+                console.error('Failed to fetch foresteria data:', err);
+                setError('Impossibile caricare le informazioni al momento. Riprova più tardi.');
             } finally {
                 setLoading(false);
             }
@@ -135,18 +137,31 @@ const Foresteria = () => {
                             ) : info?.description ? (
                                 <div className="mt-6 whitespace-pre-wrap break-words font-sans text-sm md:text-base text-zinc-300 leading-[1.8] font-light tracking-wide lowercase">
                                     {info.description.split('\n').map((line, i) => {
-                                        if (line.trim().startsWith('-')) {
-                                            const parts = line.split(':');
+                                        const trimmed = line.trim();
+                                        if (trimmed.startsWith('-')) {
+                                            const parts = trimmed.substring(1).split(':');
                                             if (parts.length > 1) {
                                                 return (
                                                     <p key={i} className="mb-4 pl-4 border-l-2 border-brand-500/50">
-                                                        <span className="font-bold text-white capitalize">{parts[0]}</span>:{parts.slice(1).join(':')}
+                                                        <span className="font-bold text-white capitalize">{parts[0].trim()}</span>:{parts.slice(1).join(':')}
+                                                    </p>
+                                                );
+                                            } else {
+                                                return (
+                                                    <p key={i} className="mb-3 pl-4 border-l-2 border-zinc-700/50 flex items-start text-zinc-400">
+                                                        <span className="mr-2 text-brand-500">•</span>
+                                                        <span>{trimmed.substring(1).trim()}</span>
                                                     </p>
                                                 );
                                             }
                                         }
+                                        if (trimmed === '') return null;
                                         return <p key={i} className="mb-4">{line}</p>;
                                     })}
+                                </div>
+                            ) : error ? (
+                                <div className="mt-6 p-4 rounded bg-red-950/20 border border-red-900/50 text-red-400 text-sm">
+                                    <p>{error}</p>
                                 </div>
                             ) : (
                                 <p className="mt-6 text-zinc-500 italic">Nessuna descrizione disponibile al momento.</p>

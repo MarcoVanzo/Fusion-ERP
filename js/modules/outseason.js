@@ -100,7 +100,7 @@ const OutSeason = (() => {
     try {
       const f = await fetch(
           `api/router.php?module=outseason&action=getEntries&season_key=${i}`,
-          { method: "POST", credentials: "same-origin", cache: "no-store" },
+          { method: "GET", credentials: "same-origin", cache: "no-store" },
         ),
         m = await f.json();
       if (!m.success) throw new Error(m.error || "Errore caricamento entries");
@@ -212,6 +212,9 @@ const OutSeason = (() => {
                                   method: "POST",
                                   body: n,
                                   credentials: "same-origin",
+                                  headers: {
+                                    "X-Requested-With": "XMLHttpRequest",
+                                  },
                                 },
                               ),
                               o = await e.json();
@@ -316,6 +319,7 @@ const OutSeason = (() => {
                                           credentials: "same-origin",
                                           headers: {
                                             "Content-Type": "application/json",
+                                            "X-Requested-With": "XMLHttpRequest",
                                           },
                                           body: JSON.stringify({
                                             season_key: i,
@@ -371,7 +375,7 @@ const OutSeason = (() => {
             const n = await fetch(
                 `api/router.php?module=outseason&action=getVerification&season_key=${i}`,
                 {
-                  method: "POST",
+                  method: "GET",
                   credentials: "same-origin",
                   cache: "no-store",
                 },
@@ -428,7 +432,13 @@ const OutSeason = (() => {
     try {
       const n = await fetch(
           "api/router.php?module=outseason&action=syncFromCognito",
-          { method: "POST", credentials: "same-origin" },
+          {
+            method: "POST",
+            credentials: "same-origin",
+            headers: {
+              "X-Requested-With": "XMLHttpRequest",
+            },
+          },
         ),
         e = await n.json();
       if (!e.success)
@@ -591,6 +601,8 @@ const OutSeason = (() => {
   return {
     destroy: function () {
       n.abort();
+      t.clear();
+      e.length = 0;
     },
     init: async function () {
       (n.abort(),
