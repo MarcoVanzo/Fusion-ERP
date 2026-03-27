@@ -701,9 +701,10 @@ HTML;
 
         $responseData = json_decode($response, true);
         if ($httpCode !== 200 || !$responseData) {
+            $keyUsed = substr($apiKey, 0, 8) . '...';
             $errMsg = $responseData['error']['message'] ?? 'Risposta non valida da Gemini (HTTP ' . $httpCode . ')';
-            error_log('[AI_TRANSPORT] Gemini API error: ' . $response);
-            Response::error('Errore Gemini: ' . $errMsg, 500);
+            error_log('[AI_TRANSPORT] Gemini API error (' . $keyUsed . '): ' . $response);
+            Response::error('Errore Gemini [' . $keyUsed . ']: ' . $errMsg, 500);
         }
 
         $aiContent = trim($responseData['candidates'][0]['content']['parts'][0]['text'] ?? '');
