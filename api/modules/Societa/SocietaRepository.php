@@ -441,4 +441,79 @@ class SocietaRepository
             'UPDATE societa_titoli SET is_deleted = 1 WHERE id = :id AND tenant_id = :tid'
         )->execute([':id' => $id, ':tid' => $tenantId]);
     }
+    // ─── FORESTERIA ────────────────────────────────────────────────────────────
+
+    public function getForesteriaInfo(?string $tenantId = null): ?array
+    {
+        if ($tenantId) {
+            $stmt = $this->db->prepare('SELECT * FROM foresteria_info WHERE tenant_id = :tid LIMIT 1');
+            $stmt->execute([':tid' => $tenantId]);
+        } else {
+            // For public endpoint
+            $stmt = $this->db->query('SELECT * FROM foresteria_info LIMIT 1');
+        }
+        return $stmt->fetch(\PDO::FETCH_ASSOC) ?: null;
+    }
+
+    public function getForesteriaMedia(string $tenantId): array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT * FROM foresteria_media
+             WHERE tenant_id = :tid AND is_deleted = 0
+             ORDER BY uploaded_at DESC LIMIT 200'
+        );
+        $stmt->execute([':tid' => $tenantId]);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function getForesteriaExpenses(string $tenantId): array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT * FROM foresteria_expenses
+             WHERE tenant_id = :tid AND is_deleted = 0
+             ORDER BY expense_date DESC LIMIT 100'
+        );
+        $stmt->execute([':tid' => $tenantId]);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function upsertForesteriaInfo(array $data): void
+    {
+        $this->db->prepare(
+            'INSERT INTO foresteria_info (id, tenant_id, description)
+             VALUES (:id, :tenant_id, :description)
+             ON DUPLICATE KEY UPDATE description = VALUES(description)'
+        )->execute($data);
+    }
+
+    public function insertForesteriaExpense(array $data): void
+    {
+        $this->db->prepare(
+            'INSERT INTO foresteria_expenses
+             (id, tenant_id, description, amount, category, expense_date, receipt_path, notes, created_by)
+             VALUES (:id, :tenant_id, :description, :amount, :category, :expense_date, :receipt_path, :notes, :created_by)'
+        )->execute($data);
+    }
+
+    public function deleteForesteriaExpense(string $id, string $tenantId): void
+    {
+        $this->db->prepare(
+            'UPDATE foresteria_expenses SET is_deleted = 1 WHERE id = :id AND tenant_id = :tid'
+        )->execute([':id' => $id, ':tid' => $tenantId]);
+    }
+
+    public function insertForesteriaMedia(array $data): void
+    {
+        $this->db->prepare(
+            'INSERT INTO foresteria_media (id, tenant_id, type, file_path, title, description)
+             VALUES (:id, :tenant_id, :type, :file_path, :title, :description)'
+        )->execute($data);
+    }
+
+    public function deleteForesteriaMedia(string $id, string $tenantId): void
+    {
+        $this->db->prepare(
+            'UPDATE foresteria_media SET is_deleted = 1 WHERE id = :id AND tenant_id = :tid'
+        )->execute([':id' => $id, ':tid' => $tenantId]);
+    }
 }

@@ -218,7 +218,7 @@ const Athletes = (() => {
                     a = document.getElementById("na-save");
                   ((a.disabled = !0), (a.textContent = "Creazione..."));
                   try {
-                    (await Store.api("create", "athletes", {
+                    (await AthletesAPI.create({
                       first_name: r["na-fname"] || "",
                       last_name: r["na-lname"] || "",
                       team_season_ids: r.team_season_ids || [],
@@ -238,7 +238,7 @@ const Athletes = (() => {
                       weight_kg: r["na-weight"] || null,
                       parent_contact: r["na-parent"] || null,
                     }),
-                      (t = await Store.get("listLight", "athletes").catch(
+                      (t = await AthletesAPI.getLightList().catch(
                         () => t,
                       )),
                       (s = "anagrafica"),
@@ -581,7 +581,7 @@ const Athletes = (() => {
         window.scrollTo({ top: 0, left: 0 }));
       try {
         const [r, o, c] = await Promise.all([
-            Store.get("get", "athletes", { id: n }),
+            AthletesAPI.getById(n),
             Store.get("getPlan", "payments", { id: n }).then(res => res ? res.installments || [] : []).catch(() => []),
             Store.get("getMetricsSummary", "biometrics", { id: n }).catch(
               () => [],
@@ -692,7 +692,7 @@ const Athletes = (() => {
                       const o = document.getElementById("ea-save");
                       ((o.disabled = !0), (o.textContent = "Salvataggio..."));
                       try {
-                        (await Store.api("update", "athletes", {
+                        (await AthletesAPI.update({
                           id: s.id,
                           first_name: e,
                           last_name: a,
@@ -733,7 +733,7 @@ const Athletes = (() => {
                             document.getElementById("ea-parent").value || null,
                         }),
                           Store.clearCache(),
-                          await Store.get("listLight", "athletes")
+                          await AthletesAPI.getLightList()
                             .then((e) => {
                               t = e;
                             })
@@ -819,14 +819,8 @@ const Athletes = (() => {
               s &&
                 ((s.style.opacity = "0.5"), (s.style.pointerEvents = "none")));
             try {
-              const a = new FormData();
-              (a.append("id", n), a.append("photo", e));
-              const s = await fetch(
-                  "api/router.php?module=athletes&action=uploadPhoto",
-                  { method: "POST", credentials: "same-origin", body: a },
-                ),
-                l = await s.json();
-              if (!s.ok) throw new Error(l.message || "Errore upload");
+              const l = await AthletesAPI.uploadPhoto(n, e);
+              if (!l || !l.success) throw new Error(l.error || l.message || "Errore upload");
               (t &&
                 ((t.textContent = "✓ Foto salvata"),
                 (t.style.color = "var(--color-success)")),
@@ -866,102 +860,18 @@ const Athletes = (() => {
                   const file = ev.target.files[0];
                   if (!file) return;
 
-                  const formData = new FormData();
-                  formData.append("id", n);
-                  formData.append("file", file);
-
-                  let action = "";
-                  if (type === "contract-file") action = "uploadContractFile";
-                  else if (type === "id-doc-front") action = "uploadIdDocFront";
-                  else if (type === "id-doc-back") action = "uploadIdDocBack";
-                  else if (type === "cf-doc-front") action = "uploadCfDocFront";
-                  else if (type === "cf-doc-back") action = "uploadCfDocBack";
-                  else if (type === "med-cert") action = "uploadMedicalCert";
-
-                  UI.toast("Caricamento documento in corso...", "info");
+                  UI.toast("Caricamento in corso...", "info");
                   btn.disabled = true;
                   try {
-                    const response = await fetch(
-                      `api/router.php?module=athletes&action=${action}`,
-                      {
-                        method: "POST",
-                        body: formData,
-                      },
-                    );
-                    const res = await response.json();
-                    if (!response.ok || !res.success)
-                      throw new Error(res.error || "Errore di caricamento");
+                    const res = await AthletesAPI.uploadDocument(n, type, file);
+                    if (res && res.error) throw new Error(res.error);
 
                     UI.toast("Documento caricato con successo", "success");
                     Store.invalidate("listLight/athletes");
                     Store.invalidate("get/athletes");
                     f(n, "documenti");
                   } catch (err) {
-                    UI.toast(err.message, "error");
-                    btn.disabled = false;
-                  } finally {
-                    input.value = "";
-                  }
-                },
-                { signal: e.signal },
-              );
-            }
-          });
-        }
-
-        if (u) {
-          [
-            "contract-file",
-            "id-doc-front",
-            "id-doc-back",
-            "cf-doc-front",
-            "cf-doc-back",
-            "med-cert",
-          ].forEach((type) => {
-            const btn = document.getElementById(`upload-${type}-btn`);
-            const input = document.getElementById(`upload-${type}-input`);
-            if (btn && input) {
-              btn.addEventListener("click", () => input.click(), {
-                signal: e.signal,
-              });
-              input.addEventListener(
-                "change",
-                async (ev) => {
-                  const file = ev.target.files[0];
-                  if (!file) return;
-
-                  const formData = new FormData();
-                  formData.append("id", n);
-                  formData.append("file", file);
-
-                  let action = "";
-                  if (type === "contract-file") action = "uploadContractFile";
-                  else if (type === "id-doc-front") action = "uploadIdDocFront";
-                  else if (type === "id-doc-back") action = "uploadIdDocBack";
-                  else if (type === "cf-doc-front") action = "uploadCfDocFront";
-                  else if (type === "cf-doc-back") action = "uploadCfDocBack";
-                  else if (type === "med-cert") action = "uploadMedicalCert";
-
-                  UI.toast("Caricamento documento in corso...", "info");
-                  btn.disabled = true;
-                  try {
-                    const response = await fetch(
-                      `api/router.php?module=athletes&action=${action}`,
-                      {
-                        method: "POST",
-                        body: formData,
-                      },
-                    );
-                    const res = await response.json();
-                    if (!response.ok || !res.success)
-                      throw new Error(res.error || "Errore di caricamento");
-
-                    UI.toast("Documento caricato con successo", "success");
-                    Store.invalidate("listLight/athletes");
-                    Store.invalidate("get/athletes");
-                    f(n, "documenti");
-                  } catch (err) {
-                    UI.toast(err.message, "error");
+                    UI.toast(err.message || "Errore di caricamento", "error");
                     btn.disabled = false;
                   } finally {
                     input.value = "";
@@ -1587,14 +1497,14 @@ const Athletes = (() => {
       try {
         if ("atleta" === i?.role && i.athleteId)
           return (
-            (a = await Store.get("teams", "athletes")),
+            (a = await AthletesAPI.getTeams()),
             (l = i.athleteId),
             void (await f(i.athleteId, "anagrafica"))
           );
         if (
           (([a, t] = await Promise.all([
-            Store.get("teams", "athletes"),
-            Store.get("listLight", "athletes"),
+            AthletesAPI.getTeams(),
+            AthletesAPI.getLightList(),
           ])),
           o[r])
         )

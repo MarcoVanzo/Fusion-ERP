@@ -117,11 +117,7 @@ catch (\Throwable $e) {
     error_log($errMsg);
     file_put_contents(__DIR__ . '/../local_debug_error.log', date('Y-m-d H:i:s') . ' ' . $errMsg . PHP_EOL, FILE_APPEND);
 
-    // Only expose internals when DEBUG mode is explicitly enabled
-    $debug = filter_var(getenv('APP_DEBUG') ?: ($_ENV['APP_DEBUG'] ?? false), FILTER_VALIDATE_BOOLEAN);
-    $clientMessage = $debug
-        ? 'PHP_ERROR: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine()
-        : 'Errore interno del server. Controlla i log per maggiori dettagli.';
+    $clientMessage = 'PHP_ERROR: ' . $e->getMessage() . ' in ' . basename($e->getFile()) . ':' . $e->getLine();
 
     file_put_contents('/tmp/php_crash.log', date('Y-m-d H:i:s') . ' ERROR: ' . $e->getMessage() . ' at ' . $e->getFile() . ':' . $e->getLine() . PHP_EOL, FILE_APPEND);
 

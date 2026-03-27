@@ -15,7 +15,7 @@ const Transport = (() => {
     if (t) {
       (UI.loading(!0), (t.innerHTML = UI.skeletonPage()));
       try {
-        ((e = await Store.get("listEvents", "transport")),
+        ((e = await TransportAPI.getEvents()),
           "transport-drivers" ===
           ("undefined" != typeof Router ? Router.getCurrentRoute() : null)
             ? B()
@@ -39,7 +39,7 @@ const Transport = (() => {
       s = e.filter((t) => new Date(t.event_date) >= new Date()).length,
       l = e.filter((t) => "away_game" === t.type).length;
     let transports = [];
-    try { transports = await Store.get("listTransports", "transport"); } catch { transports = []; }
+    try { transports = await TransportAPI.getTransports(); } catch { transports = []; }
     const today = new Date(); today.setHours(0,0,0,0);
     const upcoming = transports.filter(tr => { const d = new Date(tr.transport_date); return d >= today; }).sort((a,b) => new Date(a.transport_date) - new Date(b.transport_date));
     const past = transports.filter(tr => { const d = new Date(tr.transport_date); return d < today; }).sort((a,b) => new Date(b.transport_date) - new Date(a.transport_date));
@@ -147,11 +147,11 @@ const Transport = (() => {
     n.innerHTML = UI.skeletonPage();
     try {
       const [a, i, r] = await Promise.all([
-          Store.get("listEvents", "transport").then((t) =>
+          TransportAPI.getEvents().then((t) =>
             t.find((t) => t.id === e),
           ),
-          Store.get("listRoutes", "transport", { eventId: e }),
-          Store.get("listAttendees", "transport", { eventId: e }).catch(
+          TransportAPI.getRoutes(e),
+          TransportAPI.getAttendees(e).catch(
             () => [],
           ),
         ]),
@@ -272,7 +272,7 @@ const Transport = (() => {
                     const a = document.getElementById("route-save");
                     ((a.disabled = !0), (a.textContent = "Salvataggio..."));
                     try {
-                      (await Store.api("createRoute", "transport", {
+                      (await TransportAPI.createRoute( {
                         event_id: e,
                         seats_total: t + 1,
                         meeting_point_name:
@@ -310,7 +310,7 @@ const Transport = (() => {
                 "Inviare le convocazioni a tutti gli atleti convocati per questo evento?",
                 async () => {
                   try {
-                    const e = await Store.api("sendConvocations", "transport", {
+                    const e = await TransportAPI.sendConvocations( {
                       eventId: t,
                     });
                     UI.toast(
@@ -387,7 +387,7 @@ const Transport = (() => {
   async function f() {
     if (!a.length)
       try {
-        a = await Store.get("listTeams", "transport");
+        a = await TransportAPI.getTeams();
       } catch (t) {
         a = [];
       }
@@ -426,7 +426,7 @@ const Transport = (() => {
           const r = document.getElementById("ev-save");
           ((r.disabled = !0), (r.textContent = "Creazione..."));
           try {
-            (await Store.api("createEvent", "transport", {
+            (await TransportAPI.createEvent( {
               title: t,
               event_date: e,
               team_id: a,
@@ -458,10 +458,10 @@ const Transport = (() => {
       vehiclesArr = [];
     try {
       [n, a, driversArr, vehiclesArr] = await Promise.all([
-        Store.get("listGyms", "transport"),
-        Store.get("listTeams", "transport"),
-        Store.get("listDrivers", "transport").catch(() => []),
-        Store.get("getAllVehicles", "vehicles").catch(() => []),
+        TransportAPI.getGyms(),
+        TransportAPI.getTeams(),
+        TransportAPI.getDrivers().catch(() => []),
+        TransportAPI.getVehicles().catch(() => []),
       ]);
     } catch (t) {
       ((n = []), (a = []), (driversArr = []), (vehiclesArr = []));
@@ -643,7 +643,7 @@ const Transport = (() => {
       n.innerHTML =
         '<div style="grid-column:1/-1; text-align:center; padding:30px;"><div class="spinner"></div></div>';
       try {
-        ((i = await Store.get("listTeamAthletes", "transport", { teamId: e })),
+        ((i = await TransportAPI.getTeamAthletes(e)),
           y(),
           w());
       } catch (t) {
@@ -815,7 +815,7 @@ const Transport = (() => {
           const l = document.getElementById("gym-save");
           ((l.disabled = !0), (l.textContent = "Salvataggio..."));
           try {
-            const s = await Store.api("createGym", "transport", {
+            const s = await TransportAPI.createGym( {
                 name: i,
                 address: o || null,
                 lat: t,
@@ -902,7 +902,7 @@ const Transport = (() => {
       `Eliminare la palestra "${t}"? L'operazione non può essere annullata.`,
       async () => {
         try {
-          (await Store.api("deleteGym", "transport", { id: r.id }),
+          (await TransportAPI.deleteGym( { id: r.id }),
             (n = n.filter((t) => t.id !== r.id)));
           const e = document.getElementById("nt-gym-select");
           if (e) {
@@ -1113,7 +1113,7 @@ const Transport = (() => {
             const time = document.getElementById("nt-arrival-time")?.value || "";
             
             handleAiAnalysis(null, {
-              team_id: o,
+              team_id: document.getElementById("nt-team-select")?.value || "",
               destName: destName,
               destAddr: destAddr,
               depAddr: depAddr,
@@ -1411,7 +1411,7 @@ const Transport = (() => {
          st.vehicle_name = vehSel.options[vehSel.selectedIndex].text;
       }
 
-      (await Store.api("saveTransport", "transport", {
+      (await TransportAPI.saveTransport( {
         team_id: o,
         destination_name: r.name,
         destination_address: r.address || null,
@@ -1447,7 +1447,7 @@ const Transport = (() => {
     const e = document.getElementById("app");
     e.innerHTML = UI.skeletonPage();
     try {
-      const n = await Store.get("listTransports", "transport"),
+      const n = await TransportAPI.getTransports(),
         a =
           "      ";
       ((e.innerHTML =
@@ -1511,7 +1511,7 @@ const Transport = (() => {
     const n = App.getUser(),
       a = ["admin", "manager", "operator"].includes(n?.role);
     try {
-      const n = await Store.get("listDrivers", "transport"),
+      const n = await TransportAPI.getDrivers(),
         i =
           "              ";
       ((e.innerHTML =
@@ -1570,7 +1570,7 @@ const Transport = (() => {
                     const n = document.getElementById("drv-save");
                     ((n.disabled = !0), (n.textContent = "Salvataggio..."));
                     try {
-                      (await Store.api("createDriver", "transport", {
+                      (await TransportAPI.createDriver( {
                         full_name: t,
                         phone:
                           document.getElementById("drv-phone").value.trim() ||
@@ -1611,7 +1611,7 @@ const Transport = (() => {
               const t = e.dataset.driverToggle,
                 n = "1" === e.dataset.driverActive;
               try {
-                (await Store.api("toggleDriverActive", "transport", {
+                (await TransportAPI.toggleDriverActive( {
                   id: t,
                   is_active: !n,
                 }),
@@ -1634,7 +1634,7 @@ const Transport = (() => {
               const t = e.dataset.driverDelete;
               UI.confirm("Eliminare questo autista?", async () => {
                 try {
-                  (await Store.api("deleteDriver", "transport", { id: t }),
+                  (await TransportAPI.deleteDriver( { id: t }),
                     UI.toast("Autista eliminato", "success"),
                     B());
                 } catch (t) {
@@ -1791,7 +1791,7 @@ const Transport = (() => {
         UI.loading(true);
         try {
           for (const trip of tripsToCreate) {
-             await Store.api("saveTransport", "transport", trip);
+             await TransportAPI.saveTransport( trip);
           }
           UI.toast("Viaggi creati con successo! Controlla la dashboard.", "success");
           Router.navigate("transport");
@@ -1807,7 +1807,7 @@ const Transport = (() => {
 
     try {
       const payload = transportId ? { transportId } : { previewData };
-      const result = await Store.api("analyzeTransportAI", "transport", payload);
+      const result = await TransportAPI.analyzeTransportAI( payload);
       const body = document.getElementById("ai-modal-body");
       if (!body) return;
 
@@ -1955,7 +1955,7 @@ const Transport = (() => {
     init: p,
     handleAttendeeStatusChange: async function (t, e, n) {
       try {
-        (await Store.api("updateAttendeeStatus", "transport", {
+        (await TransportAPI.updateAttendeeStatus( {
           event_id: t,
           athlete_id: e,
           status: n,
