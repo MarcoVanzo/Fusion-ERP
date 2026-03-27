@@ -1106,11 +1106,11 @@ const Transport = (() => {
         .getElementById("nt-ai-btn")
         ?.addEventListener("click", () => {
           try {
-            const destName = document.getElementById("nt-dest-name")?.value || "";
-            const destAddr = document.getElementById("nt-dest-address")?.value || "";
-            const depAddr = document.getElementById("nt-dep-address")?.value || "";
-            const date = document.getElementById("nt-date")?.value || "";
-            const time = document.getElementById("nt-time")?.value || "";
+            const destName = r ? r.name : "";
+            const destAddr = r ? (r.address || "") : "";
+            const depAddr = document.getElementById("nt-departure-addr")?.value || "";
+            const date = document.getElementById("nt-transport-date")?.value || new Date().toISOString().slice(0, 10);
+            const time = document.getElementById("nt-arrival-time")?.value || "";
             
             handleAiAnalysis(null, {
               team_id: o,
