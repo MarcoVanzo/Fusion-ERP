@@ -656,7 +656,7 @@ HTML;
                 ],
             ]],
             'generationConfig' => [
-                'maxOutputTokens'  => 2000,
+                'maxOutputTokens'  => 8192,
                 'temperature'      => 0.3,
                 'responseMimeType' => 'application/json',
             ],
