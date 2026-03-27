@@ -1113,11 +1113,12 @@ const Transport = (() => {
             const time = document.getElementById("nt-time")?.value || "";
             
             handleAiAnalysis(null, {
-              destination_name: destName,
-              destination_address: destAddr,
-              departure_address: depAddr,
-              transport_date: date,
-              arrival_time: time,
+              team_id: o,
+              destName: destName,
+              destAddr: destAddr,
+              depAddr: depAddr,
+              date: date,
+              time: time,
               timeline: e,
               athletes: e.filter(step => step.tipo === "raccolta" && step.atleta_id).map(step => ({ 
                 id: step.atleta_id, 
@@ -1707,14 +1708,13 @@ const Transport = (() => {
       };
 
       if (result.viaggi_multipli && result.viaggi_multipli.length > 0) {
-        // Multi-trip proposal
         result.viaggi_multipli.forEach(vm => {
           const tripAthletes = [];
           (vm.atlete || []).forEach(name => {
             const match = findAthleteByName(name);
             if (match) {
               const id = match.id || match.atleta_id;
-              tripAthletes.push({ id });
+              tripAthletes.push({ id, name: match.name || match.full_name, address: match.address || match.residence_address });
               mappedAthleteIds.add(String(id));
             }
           });
@@ -1747,7 +1747,7 @@ const Transport = (() => {
             
             const id = a.id || a.atleta_id;
             if (id && !isSenzaRitrovo) {
-                validAthletes.push({ id });
+                validAthletes.push({ id, name: a.name || a.full_name, address: a.address || a.residence_address });
                 mappedAthleteIds.add(String(id));
             }
         });
@@ -1767,7 +1767,7 @@ const Transport = (() => {
       }
 
       // SAFETY NET: Any athletes not mapped to a trip MUST be put in an extra dedicated trip
-      const leftoverAthletes = originalAthletes.filter(a => !mappedAthleteIds.has(String(a.id || a.atleta_id))).map(a => ({ id: a.id || a.atleta_id }));
+      const leftoverAthletes = originalAthletes.filter(a => !mappedAthleteIds.has(String(a.id || a.atleta_id))).map(a => ({ id: a.id || a.atleta_id, name: a.name || a.full_name, address: a.address || a.residence_address }));
       if (leftoverAthletes.length > 0) {
           tripsToCreate.push({
               team_id: previewData.team_id,
