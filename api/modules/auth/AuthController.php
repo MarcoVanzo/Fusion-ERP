@@ -343,7 +343,7 @@ class AuthController
     public function listUsers(): void
     {
         Auth::requireRole('admin');
-        $role = filter_input(INPUT_GET, 'role', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        $role = filter_input(INPUT_GET, 'role', FILTER_DEFAULT) ?? '';
         $users = $this->repo->listUsers($role);
         Response::success($users);
     }

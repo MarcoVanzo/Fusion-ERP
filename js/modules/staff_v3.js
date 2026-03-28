@@ -302,6 +302,8 @@ const Staff = (() => {
                     "api/router.php?module=staff&action=uploadPhoto",
                     {
                       method: "POST",
+                      credentials: "same-origin",
+                      headers: { "X-Requested-With": "XMLHttpRequest" },
                       body: formData,
                     },
                   );
@@ -448,6 +450,8 @@ const Staff = (() => {
                     `api/router.php?module=staff&action=${action}`,
                     {
                       method: "POST",
+                      credentials: "same-origin",
+                      headers: { "X-Requested-With": "XMLHttpRequest" },
                       body: formData,
                     },
                   );

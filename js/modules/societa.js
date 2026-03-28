@@ -24,8 +24,10 @@ const Societa = (() => {
     );
   }
   function d() {
-    const e = document.getElementById("soc-tab-content");
-    if (!e) return;
+    e.abort();
+    e = new AbortController();
+    const el = document.getElementById("soc-tab-content");
+    if (!el) return;
     const a = {
       identita: c,
       organigramma: p,
@@ -37,11 +39,11 @@ const Societa = (() => {
       newsletter: renderNewsletterTab,
       foresteria: renderForesteria,
     }[t];
-    a && a(e);
+    a && a(el);
     if (t === "identita") {
       const docWrapper = document.createElement("div");
       docWrapper.id = "soc-docs-inline";
-      e.appendChild(docWrapper);
+      el.appendChild(docWrapper);
       v(docWrapper);
     }
   }

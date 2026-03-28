@@ -7,6 +7,7 @@ const Tournaments = (() => {
     try {
       const n = await fetch(
           "api/router.php?module=tournaments&action=getTournaments",
+          { credentials: "same-origin", headers: { "X-Requested-With": "XMLHttpRequest" } }
         ),
         a = await n.json();
       if (!a.success) throw new Error(a.error);
@@ -44,6 +45,7 @@ const Tournaments = (() => {
     try {
       const a = await fetch(
           `api/router.php?module=tournaments&action=getTournament&id=${e}`,
+          { credentials: "same-origin", headers: { "X-Requested-With": "XMLHttpRequest" } }
         ),
         o = await a.json();
       if (!o.success) throw new Error(o.error);
@@ -119,7 +121,8 @@ const Tournaments = (() => {
           "api/router.php?module=tournaments&action=updateRoster",
           {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            credentials: "same-origin",
+            headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
             body: JSON.stringify({ event_id: n.tournament.id, attendees: e }),
           },
         ),
@@ -133,7 +136,7 @@ const Tournaments = (() => {
     }
   }
   function s(t = null) {
-    fetch("api/router.php?module=athletes&action=teams")
+    fetch("api/router.php?module=athletes&action=teams", { credentials: "same-origin", headers: { "X-Requested-With": "XMLHttpRequest" } })
       .then((t) => t.json())
       .then((e) => {
         const i = (Array.isArray(e.data) ? e.data : e.data?.teams || [])
@@ -179,7 +182,8 @@ const Tournaments = (() => {
                       "api/router.php?module=tournaments&action=saveTournament",
                       {
                         method: "POST",
-                        headers: { "Content-Type": "application/json" },
+                        credentials: "same-origin",
+                        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
                         body: JSON.stringify(t),
                       },
                     ),
@@ -242,7 +246,8 @@ const Tournaments = (() => {
                   "api/router.php?module=tournaments&action=saveMatch",
                   {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
+                    credentials: "same-origin",
+                    headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
                     body: JSON.stringify(t),
                   },
                 ),

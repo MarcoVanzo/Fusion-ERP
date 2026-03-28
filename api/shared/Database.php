@@ -14,6 +14,8 @@ use PDOException;
 class Database
 {
     private static ?PDO $instance = null;
+    /** @var bool Prevents running the keepalive ping more than once per request */
+    private static bool $pingChecked = false;
     private static int $maxRetries = 2;
     private static int $retryDelayMs = 500;
     private static int $connectTimeout = 5; // seconds
@@ -30,10 +32,15 @@ class Database
     public static function getInstance(): PDO
     {
         if (self::$instance !== null) {
-            // Keepalive: verify the existing connection is still usable
-            if (!self::ping()) {
-                error_log('[DB] Stale connection detected, reconnecting...');
-                self::$instance = null;
+            // Keepalive: verify the connection is still alive, but only once per PHP request.
+            // On short-lived HTTP requests the connection cannot go stale mid-request;
+            // the ping is really useful only in long-running processes (CLI, workers).
+            if (!self::$pingChecked) {
+                self::$pingChecked = true;
+                if (!self::ping()) {
+                    error_log('[DB] Stale connection detected, reconnecting...');
+                    self::$instance = null;
+                }
             }
         }
 
@@ -122,6 +129,7 @@ class Database
     public static function reconnect(): void
     {
         self::$instance = null;
+        self::$pingChecked = false;
     }
 
     /**
@@ -130,6 +138,7 @@ class Database
     public static function disconnect(): void
     {
         self::$instance = null;
+        self::$pingChecked = false;
     }
 
     // Prevent cloning and unserialization

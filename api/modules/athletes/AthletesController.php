@@ -26,7 +26,7 @@ class AthletesController
     public function list(): void
     {
         Auth::requireRead('athletes');
-        $teamId = filter_input(INPUT_GET, 'teamId', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        $teamId = filter_input(INPUT_GET, 'teamId', FILTER_DEFAULT) ?? '';
         Response::success($this->repo->listAthletes($teamId));
     }
 
@@ -36,7 +36,7 @@ class AthletesController
     public function listLight(): void
     {
         Auth::requireRead('athletes');
-        $teamId = filter_input(INPUT_GET, 'teamId', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        $teamId = filter_input(INPUT_GET, 'teamId', FILTER_DEFAULT) ?? '';
         Response::success($this->repo->listAthletesLight($teamId));
     }
 
@@ -45,7 +45,7 @@ class AthletesController
     public function get(): void
     {
         Auth::requireRead('athletes');
-        $id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        $id = filter_input(INPUT_GET, 'id', FILTER_DEFAULT) ?? '';
         $athlete = $this->repo->getAthleteById($id);
         if (!$athlete) {
             Response::error('Atleta non trovato', 404);
@@ -133,42 +133,36 @@ class AthletesController
         $id = 'ATH_' . bin2hex(random_bytes(4));
         $primaryTeamSeasonId = $teamSeasonIds[0];
         
-        // Find the base team_id of this team season (to maintain backward compatibility in the `athletes` table)
-        // Usually, this should be sent from the frontend, but we can extract it or bypass adding team_id completely since the 
-        // repo function gets it if we supply it. I'll just supply null and not update base team_id in the table since 
-        // we'll rely on the junction table. Wait no, we have to insert something into athletes because team_id is NOT NULL in athletes table.
-        // I will temporarily extract it from the id e.g `TS_xxxx` -> wait we can't do that.
-        // Actually, let's query the repo to get the team_id.
-        // I'll leave team_id as empty or 'UNK' for now, but we'll fetch it from the DB.
-        
+        // Derive the base team_id from the primary team_season for backward compatibility
+        // (athletes table still requires team_id; junction table athlete_team_seasons holds multi-team assignments)
         $primaryTeamId = $this->repo->getTeamIdForSeason($primaryTeamSeasonId) ?: 'UNKNOWN';
 
         $data = [
-            ':id' => $id,
-            ':user_id' => $body['user_id'] ?? null,
-            ':team_id' => $primaryTeamId,
-            ':first_name' => htmlspecialchars(trim($body['first_name']), ENT_QUOTES, 'UTF-8'),
-            ':last_name' => htmlspecialchars(trim($body['last_name']), ENT_QUOTES, 'UTF-8'),
-            ':jersey_number' => isset($body['jersey_number']) ? (int)$body['jersey_number'] : null,
-            ':role' => $body['role'] ?? null,
-            ':birth_date' => $body['birth_date'] ?? null,
-            ':birth_place' => $body['birth_place'] ?? null,
-            ':height_cm' => isset($body['height_cm']) ? (int)$body['height_cm'] : null,
-            ':weight_kg' => isset($body['weight_kg']) ? (float)$body['weight_kg'] : null,
-            ':photo_path' => null,
-            ':residence_address' => $body['residence_address'] ?? null,
-            ':residence_city' => $body['residence_city'] ?? null,
-            ':phone' => $body['phone'] ?? null,
-            ':email' => $body['email'] ?? null,
-            ':identity_document' => $body['identity_document'] ?? null,
-            ':fiscal_code' => $body['fiscal_code'] ?? null,
-            ':medical_cert_type' => $body['medical_cert_type'] ?? null,
+            ':id'                      => $id,
+            ':user_id'                 => $body['user_id'] ?? null,
+            ':team_id'                 => $primaryTeamId,
+            ':first_name'              => trim($body['first_name']),
+            ':last_name'               => trim($body['last_name']),
+            ':jersey_number'           => isset($body['jersey_number']) ? (int)$body['jersey_number'] : null,
+            ':role'                    => $body['role'] ?? null,
+            ':birth_date'              => $body['birth_date'] ?? null,
+            ':birth_place'             => $body['birth_place'] ?? null,
+            ':height_cm'               => isset($body['height_cm']) ? (int)$body['height_cm'] : null,
+            ':weight_kg'               => isset($body['weight_kg']) ? (float)$body['weight_kg'] : null,
+            ':photo_path'              => null,
+            ':residence_address'       => $body['residence_address'] ?? null,
+            ':residence_city'          => $body['residence_city'] ?? null,
+            ':phone'                   => $body['phone'] ?? null,
+            ':email'                   => $body['email'] ?? null,
+            ':identity_document'       => $body['identity_document'] ?? null,
+            ':fiscal_code'             => $body['fiscal_code'] ?? null,
+            ':medical_cert_type'       => $body['medical_cert_type'] ?? null,
             ':medical_cert_expires_at' => $body['medical_cert_expires_at'] ?? null,
-            ':federal_id' => $body['federal_id'] ?? null,
-            ':shirt_size' => $body['shirt_size'] ?? null,
-            ':shoe_size' => $body['shoe_size'] ?? null,
-            ':parent_contact' => $body['parent_contact'] ?? null,
-            ':parent_phone' => $body['parent_phone'] ?? null,
+            ':federal_id'              => $body['federal_id'] ?? null,
+            ':shirt_size'              => $body['shirt_size'] ?? null,
+            ':shoe_size'               => $body['shoe_size'] ?? null,
+            ':parent_contact'          => $body['parent_contact'] ?? null,
+            ':parent_phone'            => $body['parent_phone'] ?? null,
         ];
 
         $this->repo->createAthlete($data);
@@ -216,8 +210,8 @@ class AthletesController
         $val = fn($k) => array_key_exists($k, $body) ? $body[$k] : ($before[$k] ?? null);
 
         $this->repo->updateAthlete($body['id'], [
-            ':first_name' => htmlspecialchars(trim($body['first_name']), ENT_QUOTES, 'UTF-8'),
-            ':last_name' => htmlspecialchars(trim($body['last_name']), ENT_QUOTES, 'UTF-8'),
+            ':first_name'              => trim($body['first_name']),
+            ':last_name'               => trim($body['last_name']),
             ':jersey_number' => $val('jersey_number'),
             ':role' => $val('role'),
             ':birth_date' => $val('birth_date'),
@@ -336,7 +330,7 @@ class AthletesController
     {
         Auth::requireWrite('athletes');
 
-        $id = filter_input(INPUT_POST, 'id', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        $id = filter_input(INPUT_POST, 'id', FILTER_DEFAULT) ?? '';
         if (empty($id)) {
             Response::error('ID atleta mancante', 400);
         }
@@ -399,8 +393,8 @@ class AthletesController
     public function downloadDoc(): void
     {
         Auth::requireRead('athletes');
-        $id    = filter_input(INPUT_GET, 'id',    FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
-        $field = filter_input(INPUT_GET, 'field',  FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        $id    = filter_input(INPUT_GET, 'id',    FILTER_DEFAULT) ?? '';
+        $field = filter_input(INPUT_GET, 'field',  FILTER_DEFAULT) ?? '';
 
         $allowed = [
             'contract_file_path',
@@ -482,7 +476,7 @@ class AthletesController
     public function acwr(): void
     {
         Auth::requireRead('athletes');
-        $id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        $id = filter_input(INPUT_GET, 'id', FILTER_DEFAULT) ?? '';
         Response::success($this->calcACWR($id));
     }
 
@@ -541,7 +535,7 @@ class AthletesController
     public function aiSummary(): void
     {
         Auth::requireRead('athletes');
-        $id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        $id = filter_input(INPUT_GET, 'id', FILTER_DEFAULT) ?? '';
         $summary = $this->repo->getLatestAiSummary($id);
         Response::success($summary);
     }
@@ -550,7 +544,7 @@ class AthletesController
     public function activityLog(): void
     {
         Auth::requireRead('athletes');
-        $id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        $id = filter_input(INPUT_GET, 'id', FILTER_DEFAULT) ?? '';
         if (empty($id)) {
             Response::error('id obbligatorio', 400);
         }
@@ -653,7 +647,7 @@ PROMPT;
 
     public function getPublicTeamAthletes(): void
     {
-        $teamId = filter_input(INPUT_GET, 'teamId', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        $teamId = filter_input(INPUT_GET, 'teamId', FILTER_DEFAULT) ?? '';
         Response::success($this->repo->listPublicAthletes($teamId));
     }
 }

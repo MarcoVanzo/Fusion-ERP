@@ -35,10 +35,8 @@ class ESignatureController
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $rawBody = file_get_contents('php://input');
-            error_log('[ESIGNATURE] webhook raw body: ' . substr($rawBody, 0, 500));
             $postData = json_decode($rawBody, true) ?: [];
 
-            // Wrap logic for OpenAPI data object
             $callbackData = $postData['data'] ?? $postData;
             $documentId = $documentId ?: ($callbackData['id'] ?? $postData['document_id'] ?? '');
             $callbackStatus = $callbackStatus ?: ($callbackData['state'] ?? $callbackData['status'] ?? $postData['status'] ?? '');
@@ -50,7 +48,6 @@ class ESignatureController
             exit();
         }
 
-        error_log("[ESIGNATURE] callback received: doc={$documentId} status={$callbackStatus}");
 
         // Handle cancellations
         if (in_array(strtolower($callbackStatus), ['cancelled', 'canceled', 'cancel'])) {
@@ -100,13 +97,24 @@ class ESignatureController
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
 
         if ($row) {
-            $stmt = $this->db->prepare("UPDATE staff_members SET contract_status = ?, contract_signed_at = IF(? = 'firmato', NOW(), contract_signed_at) WHERE contract_esign_document_id = ?");
-            $stmt->execute([$status, $status, $documentId]);
-            
+            $stmt = $this->db->prepare(
+                "UPDATE staff_members
+                 SET contract_status = :status,
+                     contract_signed_at = IF(:s2 = 'firmato', NOW(), contract_signed_at)
+                 WHERE contract_esign_document_id = :doc_id
+                   AND tenant_id = :tenant_id"
+            );
+            $stmt->execute([
+                ':status'    => $status,
+                ':s2'        => $status,
+                ':doc_id'    => $documentId,
+                ':tenant_id' => $row['tenant_id'],
+            ]);
+
             Audit::log('UPDATE', 'staff_members', (string)$row['id'], null, [
-                'contract_status' => $status,
-                'contract_esign_document_id' => $documentId,
-                'reason' => 'ESignature Webhook'
+                'contract_status'             => $status,
+                'contract_esign_document_id'  => $documentId,
+                'reason'                      => 'ESignature Webhook',
             ]);
         }
     }

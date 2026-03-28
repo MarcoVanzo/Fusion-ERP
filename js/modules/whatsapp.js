@@ -235,11 +235,12 @@ const WhatsApp = (() => {
                                   UI.toast("Analisi file in corso...", "info"));
                                 try {
                                   const t = await fetch(
-                                    "api/?module=whatsapp&action=importContacts&preview=1",
+                                    "api/router.php?module=whatsapp&action=importContacts&preview=1",
                                     {
                                       method: "POST",
                                       body: e,
                                       credentials: "same-origin",
+                                      headers: { "X-Requested-With": "XMLHttpRequest" },
                                     },
                                   );
                                   if (!t.ok) throw new Error("Errore upload");

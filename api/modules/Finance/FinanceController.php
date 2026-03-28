@@ -173,9 +173,9 @@ class FinanceController
         Auth::requireRead('finance');
         $tid = TenantContext::id();
 
-        $from = filter_input(INPUT_GET, 'from', FILTER_SANITIZE_SPECIAL_CHARS) ?: null;
-        $to = filter_input(INPUT_GET, 'to', FILTER_SANITIZE_SPECIAL_CHARS) ?: null;
-        $cat = filter_input(INPUT_GET, 'category', FILTER_SANITIZE_SPECIAL_CHARS) ?: null;
+        $from = filter_input(INPUT_GET, 'from', FILTER_DEFAULT) ?: null;
+        $to = filter_input(INPUT_GET, 'to', FILTER_DEFAULT) ?: null;
+        $cat = filter_input(INPUT_GET, 'category', FILTER_DEFAULT) ?: null;
         $page = max(1, (int)(filter_input(INPUT_GET, 'page') ?? '1'));
         $limit = 30;
         $offset = ($page - 1) * $limit;
@@ -233,7 +233,7 @@ class FinanceController
     public function getEntry(): void
     {
         Auth::requireRead('finance');
-        $id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        $id = filter_input(INPUT_GET, 'id', FILTER_DEFAULT) ?? '';
         $tid = TenantContext::id();
 
         $stmt = $this->db->prepare(
@@ -476,7 +476,7 @@ class FinanceController
     {
         $tid = TenantContext::id();
 
-        $fyId = filter_input(INPUT_GET, 'fiscal_year_id', FILTER_SANITIZE_SPECIAL_CHARS) ?: null;
+        $fyId = filter_input(INPUT_GET, 'fiscal_year_id', FILTER_DEFAULT) ?: null;
 
         // Get fiscal year
         if ($fyId) {
@@ -639,7 +639,7 @@ class FinanceController
         Auth::requireRead('finance');
         $tid = TenantContext::id();
 
-        $status = filter_input(INPUT_GET, 'status', FILTER_SANITIZE_SPECIAL_CHARS) ?: null;
+        $status = filter_input(INPUT_GET, 'status', FILTER_DEFAULT) ?: null;
         $page = max(1, (int)(filter_input(INPUT_GET, 'page') ?? '1'));
         $limit = 30;
         $offset = ($page - 1) * $limit;
@@ -762,7 +762,7 @@ class FinanceController
     public function getInvoice(): void
     {
         Auth::requireRead('finance');
-        $id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        $id = filter_input(INPUT_GET, 'id', FILTER_DEFAULT) ?? '';
         $tid = TenantContext::id();
 
         $stmt = $this->db->prepare(

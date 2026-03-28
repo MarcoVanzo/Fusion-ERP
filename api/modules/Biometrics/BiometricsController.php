@@ -99,7 +99,7 @@ class BiometricsController
     public function getBiometrics(): void
     {
         Auth::requireRead('biometrics');
-        $athleteId = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        $athleteId = filter_input(INPUT_GET, 'id', FILTER_DEFAULT) ?? '';
         if (empty($athleteId)) {
             Response::error('id atleta obbligatorio', 400);
         }
@@ -158,8 +158,8 @@ class BiometricsController
     public function getMetrics(): void
     {
         Auth::requireRead('biometrics');
-        $athleteId = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
-        $type = filter_input(INPUT_GET, 'type', FILTER_SANITIZE_SPECIAL_CHARS);
+        $athleteId = filter_input(INPUT_GET, 'id', FILTER_DEFAULT) ?? '';
+        $type = filter_input(INPUT_GET, 'type', FILTER_DEFAULT);
 
         if (empty($athleteId)) {
             Response::error('id atleta obbligatorio', 400);
@@ -177,7 +177,7 @@ class BiometricsController
     public function getMetricsSummary(): void
     {
         Auth::requireRead('biometrics');
-        $athleteId = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        $athleteId = filter_input(INPUT_GET, 'id', FILTER_DEFAULT) ?? '';
         if (empty($athleteId)) {
             Response::error('id atleta obbligatorio', 400);
         }
@@ -199,7 +199,7 @@ class BiometricsController
     {
         Auth::requireRead('biometrics');
         $tenantId = TenantContext::id();
-        $teamId = filter_input(INPUT_GET, 'team_id', FILTER_SANITIZE_SPECIAL_CHARS) ?: null;
+        $teamId = filter_input(INPUT_GET, 'team_id', FILTER_DEFAULT) ?: null;
 
         $data = $this->repo->getGroupMetrics($tenantId, $teamId);
         Response::success($data);

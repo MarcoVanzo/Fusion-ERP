@@ -45,7 +45,7 @@ class StaffController
     public function get(): void
     {
         Auth::requireRole('operator');
-        $id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        $id = filter_input(INPUT_GET, 'id', FILTER_DEFAULT) ?? '';
         if (empty($id)) {
             Response::error('id obbligatorio', 400);
         }
@@ -148,7 +148,7 @@ class StaffController
     public function uploadPhoto(): void
     {
         Auth::requireRole('operator');
-        $id = filter_input(INPUT_POST, 'id', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        $id = filter_input(INPUT_POST, 'id', FILTER_DEFAULT) ?? '';
 
         try {
             $result = $this->service->handleFileUpload(
@@ -187,7 +187,7 @@ class StaffController
     public function checkContractStatus(): void
     {
         Auth::requireRole('social media manager');
-        $id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        $id = filter_input(INPUT_GET, 'id', FILTER_DEFAULT) ?? '';
         if (empty($id)) {
             Response::error('id obbligatorio', 400);
         }
@@ -203,7 +203,7 @@ class StaffController
     public function downloadContract(): void
     {
         Auth::requireRole('social media manager');
-        $id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        $id = filter_input(INPUT_GET, 'id', FILTER_DEFAULT) ?? '';
         if (empty($id)) {
             Response::error('id obbligatorio', 400);
         }
@@ -233,7 +233,7 @@ class StaffController
     private function uploadStaffDocument(string $dbField): void
     {
         Auth::requireRole('operator');
-        $id = filter_input(INPUT_POST, 'id', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        $id = filter_input(INPUT_POST, 'id', FILTER_DEFAULT) ?? '';
 
         try {
             $result = $this->service->handleFileUpload(
@@ -277,8 +277,8 @@ class StaffController
     public function downloadDoc(): void
     {
         Auth::requireRole('operator');
-        $id    = filter_input(INPUT_GET, 'id',    FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
-        $field = filter_input(INPUT_GET, 'field',  FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        $id    = filter_input(INPUT_GET, 'id',    FILTER_DEFAULT) ?? '';
+        $field = filter_input(INPUT_GET, 'field',  FILTER_DEFAULT) ?? '';
 
         $allowed = ['contract_file_path', 'id_doc_file_path', 'id_doc_back_file_path', 'cf_doc_file_path', 'cf_doc_back_file_path'];
         if (empty($id) || !in_array($field, $allowed, true)) {
@@ -308,7 +308,7 @@ class StaffController
     public function getPublicStaff(): void
     {
         // Nessun controllo auth per la vista pubblica
-        $teamId = filter_input(INPUT_GET, 'teamId', FILTER_SANITIZE_SPECIAL_CHARS);
+        $teamId = filter_input(INPUT_GET, 'teamId', FILTER_DEFAULT);
         if ($teamId) {
             Response::success($this->repo->getPublicStaffByTeam($teamId));
         }

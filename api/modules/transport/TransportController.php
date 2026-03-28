@@ -30,8 +30,8 @@ class TransportController
     public function listEvents(): void
     {
         Auth::requireRead('transport');
-        $teamId = filter_input(INPUT_GET, 'teamId', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
-        $type = filter_input(INPUT_GET, 'type', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        $teamId = filter_input(INPUT_GET, 'teamId', FILTER_DEFAULT) ?? '';
+        $type = filter_input(INPUT_GET, 'type', FILTER_DEFAULT) ?? '';
         Response::success($this->repo->listEvents($teamId, $type));
     }
 
@@ -81,7 +81,7 @@ class TransportController
     public function listRoutes(): void
     {
         Auth::requireRead('transport');
-        $eventId = filter_input(INPUT_GET, 'eventId', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        $eventId = filter_input(INPUT_GET, 'eventId', FILTER_DEFAULT) ?? '';
         if (empty($eventId)) {
             Response::error('eventId obbligatorio', 400);
         }
@@ -447,7 +447,7 @@ HTML;
     public function listTeamAthletes(): void
     {
         Auth::requireRead('transport');
-        $teamId = filter_input(INPUT_GET, 'teamId', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        $teamId = filter_input(INPUT_GET, 'teamId', FILTER_DEFAULT) ?? '';
         if (empty($teamId)) {
             Response::error('teamId obbligatorio', 400);
         }
@@ -488,7 +488,7 @@ HTML;
     public function listTransports(): void
     {
         Auth::requireRead('transport');
-        $teamId = filter_input(INPUT_GET, 'teamId', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        $teamId = filter_input(INPUT_GET, 'teamId', FILTER_DEFAULT) ?? '';
         Response::success($this->repo->listTransports($teamId));
     }
 

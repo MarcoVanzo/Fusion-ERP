@@ -49,7 +49,7 @@ class OutSeasonController
         Auth::requireRead('outseason');
 
         $seasonKey = trim((string)(
-            filter_input(INPUT_GET, 'season_key', FILTER_SANITIZE_SPECIAL_CHARS)
+            filter_input(INPUT_GET, 'season_key', FILTER_DEFAULT)
             ?? self::seasonKey()
             ));
 
@@ -484,7 +484,7 @@ PROMPT;
     {
         Auth::requireRead('outseason');
 
-        $seasonKey = trim((string)filter_input(INPUT_GET, 'season_key', FILTER_SANITIZE_SPECIAL_CHARS));
+        $seasonKey = trim((string)filter_input(INPUT_GET, 'season_key', FILTER_DEFAULT));
 
         if (empty($seasonKey)) {
             Response::error('Parametro season_key mancante.', 400);

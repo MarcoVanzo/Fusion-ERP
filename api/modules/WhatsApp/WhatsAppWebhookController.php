@@ -87,9 +87,9 @@ class WhatsAppWebhookController
                     $this->processIncomingMessage($message, $value);
                 }
 
-                // Aggiornamenti di stato (delivered, read) — loggati ma non salvati
+                // Aggiornamenti di stato (delivered, read) — ignorati silenziosamente
                 foreach ($value['statuses'] ?? [] as $status) {
-                    error_log('[WhatsApp] Status update: ' . ($status['id'] ?? '') . ' → ' . ($status['status'] ?? ''));
+                    // Rate-limited by Meta; skip DB save, just acknowledge
                 }
             }
         }
@@ -183,7 +183,6 @@ class WhatsAppWebhookController
             error_log('[WhatsApp] markAsRead failed: ' . $e->getMessage());
         }
 
-        error_log("[WhatsApp] Messaggio ricevuto da {$fromPhone} ({$type}): " . ($body ?? '[media]'));
     }
 
     /**
@@ -226,8 +225,14 @@ class WhatsAppWebhookController
         $appSecret = $_ENV['WHATSAPP_APP_SECRET'] ?? '';
 
         if (empty($appSecret)) {
-            // Se non configurato, skippa la validazione (solo in dev)
-            error_log('[WhatsApp] ATTENZIONE: WHATSAPP_APP_SECRET non configurato, firma non verificata!');
+            // In produzione la firma HMAC è obbligatoria — rifiuta la richiesta.
+            // In sviluppo (APP_DEBUG=true) il controllo viene saltato per facilitare i test locali.
+            $isDebug = filter_var(getenv('APP_DEBUG') ?: ($_ENV['APP_DEBUG'] ?? false), FILTER_VALIDATE_BOOLEAN);
+            if (!$isDebug) {
+                return false; // 403 verrà restituito dal chiamante
+            }
+            // debug only — mai in produzione
+            error_log('[WhatsApp] ATTENZIONE: WHATSAPP_APP_SECRET non configurato (solo dev/debug).');
             return true;
         }
 

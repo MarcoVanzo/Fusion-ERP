@@ -101,9 +101,9 @@ class FederationController
         Auth::requireRead('federation');
         $tid = TenantContext::id();
 
-        $season = filter_input(INPUT_GET, 'season', FILTER_SANITIZE_SPECIAL_CHARS) ?: null;
-        $status = filter_input(INPUT_GET, 'status', FILTER_SANITIZE_SPECIAL_CHARS) ?: null;
-        $federation = filter_input(INPUT_GET, 'federation', FILTER_SANITIZE_SPECIAL_CHARS) ?: null;
+        $season = filter_input(INPUT_GET, 'season', FILTER_DEFAULT) ?: null;
+        $status = filter_input(INPUT_GET, 'status', FILTER_DEFAULT) ?: null;
+        $federation = filter_input(INPUT_GET, 'federation', FILTER_DEFAULT) ?: null;
 
         $where = 'fc.tenant_id = :tid';
         $params = [':tid' => $tid];
@@ -228,9 +228,9 @@ class FederationController
         Auth::requireRead('federation');
         $tid = TenantContext::id();
 
-        $season = filter_input(INPUT_GET, 'season', FILTER_SANITIZE_SPECIAL_CHARS) ?: '';
-        $federation = filter_input(INPUT_GET, 'federation', FILTER_SANITIZE_SPECIAL_CHARS) ?: '';
-        $status = filter_input(INPUT_GET, 'status', FILTER_SANITIZE_SPECIAL_CHARS) ?: 'pending';
+        $season = filter_input(INPUT_GET, 'season', FILTER_DEFAULT) ?: '';
+        $federation = filter_input(INPUT_GET, 'federation', FILTER_DEFAULT) ?: '';
+        $status = filter_input(INPUT_GET, 'status', FILTER_DEFAULT) ?: 'pending';
 
         $where = 'fc.tenant_id = :tid';
         $params = [':tid' => $tid];

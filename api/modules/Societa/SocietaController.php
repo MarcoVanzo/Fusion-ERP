@@ -56,15 +56,15 @@ class SocietaController
         $body = Response::jsonBody();
 
         $data = [
-            ':mission' => $body['mission'] ?? null,
-            ':vision' => $body['vision'] ?? null,
-            ':values' => $body['values'] ?? null,
+            ':mission' => isset($body['mission']) ? htmlspecialchars(trim($body['mission']), ENT_QUOTES, 'UTF-8') : null,
+            ':vision' => isset($body['vision']) ? htmlspecialchars(trim($body['vision']), ENT_QUOTES, 'UTF-8') : null,
+            ':values' => isset($body['values']) ? htmlspecialchars(trim($body['values']), ENT_QUOTES, 'UTF-8') : null,
             ':founded_year' => isset($body['founded_year']) ? (int)$body['founded_year'] : null,
-            ':primary_color' => $body['primary_color'] ?? null,
-            ':secondary_color' => $body['secondary_color'] ?? null,
+            ':primary_color' => isset($body['primary_color']) ? htmlspecialchars(trim($body['primary_color']), ENT_QUOTES, 'UTF-8') : null,
+            ':secondary_color' => isset($body['secondary_color']) ? htmlspecialchars(trim($body['secondary_color']), ENT_QUOTES, 'UTF-8') : null,
             ':logo_path' => $body['logo_path'] ?? null,
-            ':legal_address' => $body['legal_address'] ?? null,
-            ':operative_address' => $body['operative_address'] ?? null,
+            ':legal_address' => isset($body['legal_address']) ? htmlspecialchars(trim($body['legal_address']), ENT_QUOTES, 'UTF-8') : null,
+            ':operative_address' => isset($body['operative_address']) ? htmlspecialchars(trim($body['operative_address']), ENT_QUOTES, 'UTF-8') : null,
         ];
 
         $this->repo->upsertProfile($data);
@@ -244,7 +244,7 @@ class SocietaController
     {
         Auth::requireRole('social media manager');
         
-        $id = filter_input(INPUT_POST, 'id', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        $id = filter_input(INPUT_POST, 'id', FILTER_DEFAULT) ?? '';
         if (empty($id)) {
             Response::error('ID membro mancante', 400);
         }
@@ -281,9 +281,9 @@ class SocietaController
     {
         Auth::requireRole('social media manager');
 
-        $category = filter_input(INPUT_POST, 'category', FILTER_SANITIZE_SPECIAL_CHARS) ?: 'altro';
-        $expiryDate = filter_input(INPUT_POST, 'expiry_date', FILTER_SANITIZE_SPECIAL_CHARS) ?: null;
-        $notes = filter_input(INPUT_POST, 'notes', FILTER_SANITIZE_SPECIAL_CHARS) ?: null;
+        $category = filter_input(INPUT_POST, 'category', FILTER_DEFAULT) ?: 'altro';
+        $expiryDate = filter_input(INPUT_POST, 'expiry_date', FILTER_DEFAULT) ?: null;
+        $notes = filter_input(INPUT_POST, 'notes', FILTER_DEFAULT) ?: null;
 
         if (empty($_FILES['file'])) {
             Response::error('Errore upload file mancante', 400);
@@ -318,7 +318,7 @@ class SocietaController
     public function downloadDocument(): void
     {
         Auth::requireRole('operator');
-        $docId = filter_input(INPUT_GET, 'docId', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        $docId = filter_input(INPUT_GET, 'docId', FILTER_DEFAULT) ?? '';
         if (empty($docId)) {
             Response::error('docId obbligatorio', 400);
         }
@@ -524,7 +524,7 @@ class SocietaController
     {
         Auth::requireRole('social media manager');
 
-        $sponsorId = filter_input(INPUT_POST, 'sponsor_id', FILTER_SANITIZE_SPECIAL_CHARS) ?: '';
+        $sponsorId = filter_input(INPUT_POST, 'sponsor_id', FILTER_DEFAULT) ?: '';
         if (empty($sponsorId)) {
             Response::error('sponsor_id obbligatorio', 400);
         }
@@ -748,7 +748,7 @@ class SocietaController
         $this->repo->upsertForesteriaInfo([
             ':id' => 'FOR_' . bin2hex(random_bytes(4)),
             ':tenant_id' => $tid,
-            ':description' => $desc
+            ':description' => isset($desc) ? htmlspecialchars(trim($desc), ENT_QUOTES, 'UTF-8') : null
         ]);
 
         Audit::log('UPSERT', 'foresteria_info', $tid, null, ['description' => $desc]);
@@ -799,8 +799,8 @@ class SocietaController
 
         $tid = TenantContext::id();
         try {
-            $title = filter_input(INPUT_POST, 'title', FILTER_SANITIZE_SPECIAL_CHARS) ?: null;
-            $description = filter_input(INPUT_POST, 'description', FILTER_SANITIZE_SPECIAL_CHARS) ?: null;
+            $title = filter_input(INPUT_POST, 'title', FILTER_DEFAULT) ?: null;
+            $description = filter_input(INPUT_POST, 'description', FILTER_DEFAULT) ?: null;
             $media = $this->service->uploadForesteriaMedia($_FILES['file'], $tid, $title, $description);
             
             $this->repo->insertForesteriaMedia([

@@ -64,7 +64,7 @@ class HealthController
     public function getCertificateStatus(): void
     {
         Auth::requireRead('health');
-        $athleteId = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        $athleteId = filter_input(INPUT_GET, 'id', FILTER_DEFAULT) ?? '';
         if (empty($athleteId)) {
             Response::error('id atleta obbligatorio', 400);
         }
@@ -120,7 +120,7 @@ class HealthController
     public function getInjuries(): void
     {
         Auth::requireRead('health');
-        $athleteId = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        $athleteId = filter_input(INPUT_GET, 'id', FILTER_DEFAULT) ?? '';
         if (empty($athleteId)) {
             Response::error('id atleta obbligatorio', 400);
         }

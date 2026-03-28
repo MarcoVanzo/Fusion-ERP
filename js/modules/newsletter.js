@@ -18,6 +18,9 @@ const Newsletter = (() => {
 
   // ─── RENDER SHELL ─────────────────────────────────────────────────────────
   function render() {
+    _controller.abort();
+    _controller = new AbortController();
+    
     const app = document.getElementById("app");
     if (!app) return;
 

@@ -48,7 +48,7 @@ class TournamentsController
     public function getTournament(): void
     {
         Auth::requireRead('tournaments');
-        $id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_SPECIAL_CHARS);
+        $id = filter_input(INPUT_GET, 'id', FILTER_DEFAULT);
 
         if (!$id) {
             Response::error('Invalid tournament ID.', 400);
