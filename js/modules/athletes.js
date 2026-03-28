@@ -203,15 +203,46 @@ const Athletes = (() => {
             case 'anagrafica':
                 panel.innerHTML = AthletesView.tabAnagrafica(athlete);
                 break;
+            case 'pagamenti':
+                panel.innerHTML = AthletesView.tabPagamenti(athlete);
+                break;
             case 'documenti':
                 panel.innerHTML = AthletesView.tabDocumenti(athlete, true);
-                this._addDocumentListeners(athlete);
+                addDocumentListeners(athlete);
                 break;
             case 'metrics':
                 await AthletesMetrics.render(panel, athlete.id);
                 break;
             // Add other tabs here...
         }
+    }
+
+    function addDocumentListeners(athlete) {
+        const docTypes = ['contract-file', 'id-doc-front', 'id-doc-back', 'cf-doc-front', 'cf-doc-back', 'med-cert'];
+        docTypes.forEach(type => {
+            const btn = document.getElementById(`upload-${type}-btn`);
+            const input = document.getElementById(`upload-${type}-input`);
+            if (btn && input) {
+                btn.onclick = () => input.click();
+                input.onchange = async (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+
+                    UI.loading(true);
+                    try {
+                        await AthletesAPI.uploadDocument(athlete.id, type, file);
+                        UI.toast("Documento caricato con successo!", "success");
+                        // Ricarica i dati dell'atleta e aggiorna il tab
+                        const updatedAthlete = await AthletesAPI.getById(athlete.id);
+                        switchTab(currentTab, updatedAthlete);
+                    } catch (err) {
+                        UI.toast(err.message || "Errore durante l'upload", "error");
+                    } finally {
+                        UI.loading(false);
+                    }
+                };
+            }
+        });
     }
 
     async function refreshData() {

@@ -163,6 +163,17 @@ export const AthletesView = {
     `,
 
     /**
+     * Tab: Pagamenti
+     */
+    tabPagamenti: (athlete) => `
+        <div class="card p-6" style="text-align:center;color:var(--color-text-muted);">
+            <i class="ph ph-currency-eur" style="font-size:3rem;margin-bottom:1rem;color:var(--color-text-muted);"></i>
+            <h3>Modulo Pagamenti in arrivo</h3>
+            <p>Lo storico dei pagamenti e delle rate sarà disponibile prossimamente.</p>
+        </div>
+    `,
+
+    /**
      * Tab: Documenti
      */
     tabDocumenti: (athlete, canUpload = false) => {
