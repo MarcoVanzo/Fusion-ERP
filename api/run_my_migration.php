@@ -1,6 +1,6 @@
 <?php
 require __DIR__ . '/../vendor/autoload.php';
-$dotenv = Dotenv\Dotenv::createMutable(dirname(__DIR__), '.env.prod');
+$dotenv = Dotenv\Dotenv::createMutable(dirname(__DIR__), '.env');
 $dotenv->safeLoad();
 
 $host = $_ENV['DB_HOST'] ?? '127.0.0.1';
@@ -10,6 +10,7 @@ $pass = $_ENV['DB_PASS'] ?? '';
 $charset = 'utf8mb4';
 
 $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
+echo "Attempting to connect to $host with DB $db\n";
 $options = [
     PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
