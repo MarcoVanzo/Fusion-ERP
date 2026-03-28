@@ -81,7 +81,7 @@ const Router = (() => {
         { path: 'whatsapp-contacts',    file: 'js/modules/whatsapp.js',            permission: 'read', module: 'WhatsApp'          },
         // Website & Newsletter
         { path: 'website',              file: 'js/modules/website.js',             permission: 'read', module: 'Website'           },
-        { path: 'website-analytics',    file: 'js/modules/web_analytics.js',       permission: 'read', module: 'WebAnalytics'      },
+        { path: 'website-analytics',    file: 'js/modules/site_stats.js',          permission: 'read', module: 'WebAnalytics'      },
         { path: 'newsletter',           file: 'js/modules/newsletter.js',          permission: 'read', module: 'Newsletter'        },
         // Societa
         { path: 'societa',              file: 'js/modules/societa.js',             permission: 'read', module: 'Societa'           },

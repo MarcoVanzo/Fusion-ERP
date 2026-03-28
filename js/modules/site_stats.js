@@ -87,7 +87,7 @@ window.WebAnalytics = (() => {
                 <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; font-family:var(--font-body); color:var(--text-muted); background:var(--bg-body); text-align:center; padding:2rem;">
                     <i class="ph ph-chart-line-up" style="font-size:64px; color:var(--color-primary); margin-bottom:1rem; opacity:0.5;"></i>
                     <h3 style="margin:0 0 0.5rem 0; font-weight:600; color:var(--text-main); font-size:1.25rem;">Dashboard non collegata</h3>
-                    <p style="margin:0 0 1.5rem 0; font-size:15px; max-width:450px; line-height:1.5;">Per visualizzare i dati in questa scheda, crea o apri un report su <b>Google Looker Studio</b>, genera il link per l'incorporamento (embed) e incollalo all'interno del file <code>js/modules/web_analytics.js</code> alla variabile <code>url</code> del sito corrispondente.</p>
+                    <p style="margin:0 0 1.5rem 0; font-size:15px; max-width:450px; line-height:1.5;">Per visualizzare i dati in questa scheda, crea o apri un report su <b>Google Looker Studio</b>, genera il link per l'incorporamento (embed) e incollalo all'interno del file <code>js/modules/site_stats.js</code> alla variabile <code>url</code> del sito corrispondente.</p>
                 </div>
             `;
     }
