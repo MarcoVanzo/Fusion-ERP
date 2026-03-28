@@ -5,6 +5,9 @@ $dotenv->safeLoad();
 
 use FusionERP\Shared\Database;
 
+$host = $_ENV['DB_HOST'] ?? getenv('DB_HOST');
+echo "Resolved DB_HOST is: " . $host . "\n";
+
 try {
     $pdo = Database::getInstance();
     
