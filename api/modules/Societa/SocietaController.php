@@ -741,11 +741,19 @@ class SocietaController
         Auth::requireRole('operator');
         $tid = TenantContext::id();
 
-        Response::success([
-            'info'     => $this->service->getForesteriaFallbackInfo($tid),
-            'expenses' => $this->repo->getForesteriaExpenses($tid),
-            'media'    => $this->repo->getForesteriaMedia($tid),
-        ]);
+        try {
+            Response::success([
+                'info'     => $this->service->getForesteriaFallbackInfo($tid),
+                'expenses' => $this->repo->getForesteriaExpenses($tid),
+                'media'    => $this->repo->getForesteriaMedia($tid),
+            ]);
+        } catch (\PDOException $e) {
+            error_log("[SocietaController] getForesteria DB Error: " . $e->getMessage() . " (TID: $tid)");
+            Response::error("Errore nel recupero dei dati Foresteria ($tid). Verifica le tabelle DB.", 500);
+        } catch (\Throwable $e) {
+            error_log("[SocietaController] getForesteria Fatal Error: " . $e->getMessage());
+            Response::error("Errore imprevisto durante il caricamento Foresteria.", 500);
+        }
     }
 
     public function saveForesteria(): void

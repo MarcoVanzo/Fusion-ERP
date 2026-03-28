@@ -17,7 +17,10 @@ class AIService
      */
     public static function generateContent(string|array $prompt, array $options = [], string $model = self::DEFAULT_MODEL): string
     {
-        $apiKey = $_ENV['GEMINI_TOKEN'] ?? $_SERVER['GEMINI_TOKEN'] ?? getenv('GEMINI_TOKEN') ?: '';
+        // Use getenv() first as it's more reliable on some servers, then fallback to $_SERVER/$_ENV
+        // and finally to the hardcoded AIConfig::GEMINI_TOKEN for maximum stability.
+        $apiKey = (getenv('GEMINI_TOKEN') ?: ($_SERVER['GEMINI_TOKEN'] ?? $_ENV['GEMINI_TOKEN'] ?? '')) ?: AIConfig::GEMINI_TOKEN;
+
         if (empty($apiKey)) {
             throw new \Exception('Chiave API Gemini non configurata. Impostare GEMINI_TOKEN.');
         }

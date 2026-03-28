@@ -428,7 +428,10 @@ const Finance = (() => {
     t.innerHTML = UI.skeletonPage();
     try {
       const _forestData = await Store.get("getForesteria", "societa").catch(
-        () => ({ expenses: [] }),
+        (err) => {
+          console.error("[FORESTERIA] Store.get failed:", err);
+          return { expenses: [] };
+        },
       );
       const expenses = _forestData?.expenses || [];
       const isAdmin = ["admin", "manager"].includes(App.getUser()?.role);
@@ -563,15 +566,14 @@ const Finance = (() => {
           const dataByMonth = {};
           months.forEach((m) => (dataByMonth[m] = {}));
           expenses.forEach((x) => {
-            if (!x.expense_date) return;
+            if (!x.expense_date || typeof x.expense_date !== "string") return;
             const dParts = x.expense_date.split("-");
-            if (dParts.length >= 2) {
-              const m = dParts[1];
-              if (months.includes(m)) {
-                const c = x.category || "altro";
-                dataByMonth[m][c] =
-                  (dataByMonth[m][c] || 0) + parseFloat(x.amount || 0);
-              }
+            if (dParts.length < 2) return;
+            const m = dParts[1];
+            if (months.includes(m)) {
+              const c = x.category || "altro";
+              dataByMonth[m][c] =
+                (dataByMonth[m][c] || 0) + parseFloat(x.amount || 0);
             }
           });
           const datasets = [];
