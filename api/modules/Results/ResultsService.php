@@ -26,9 +26,10 @@ class ResultsService
         $this->parserService = new FipavParserService([$this, 'isOurTeam']);
     }
 
-    public function isOurTeam(string ...$names): bool
+    public function isOurTeam(?string ...$names): bool
     {
         foreach ($names as $name) {
+            if ($name === null) continue;
 
             $lower = strtolower($name);
             if (preg_match('/a\.?\s?p\.?\s?v\.?/i', $lower))

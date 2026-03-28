@@ -60,9 +60,9 @@ const Router = (() => {
         { path: 'social-analytics',     file: 'js/modules/social.js',              permission: 'read', module: 'Social'            },
         { path: 'social-gallery',       file: 'js/modules/social.js',              permission: 'read', module: 'Social'            },
         // Results
-        { path: 'results',              file: 'js/modules/results.js',             permission: 'read', module: 'Results'           },
-        { path: 'results-matches',      file: 'js/modules/results.js',             permission: 'read', module: 'Results'           },
-        { path: 'results-standings',    file: 'js/modules/results.js',             permission: 'read', module: 'Results'           },
+        { path: 'results',              file: 'js/modules/results.js',             permission: 'read', module: 'Results', type: 'module' },
+        { path: 'results-matches',      file: 'js/modules/results.js',             permission: 'read', module: 'Results', type: 'module' },
+        { path: 'results-standings',    file: 'js/modules/results.js',             permission: 'read', module: 'Results', type: 'module' },
         // Tasks & Staff
         { path: 'tasks',                file: 'js/modules/tasks.js',               permission: 'read', module: 'Tasks'             },
         { path: 'staff',                file: 'js/modules/staff.js',               permission: 'read', module: 'Staff', type: 'module' },
@@ -101,8 +101,7 @@ const Router = (() => {
         // Squadre & Scouting
         { path: 'squadre',              file: 'js/modules/squadre.js',             permission: 'read', module: 'Squadre', type: 'module' },
         { path: 'squadre-stagioni',     file: 'js/modules/squadre.js',             permission: 'read', module: 'Squadre', type: 'module' },
-        { path: 'results',              file: 'js/modules/results.js',             permission: 'read', module: 'Results', type: 'module' },
-        { path: 'results-standings',    file: 'js/modules/results.js',             permission: 'read', module: 'Results', type: 'module' },
+
         { path: 'scouting-database',    file: 'js/modules/scouting/Scouting.js',            permission: 'read', module: 'Scouting', type: 'module' },
     ];
 
