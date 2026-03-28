@@ -58,7 +58,7 @@ class WebsiteController
     public function getArticle(): void
     {
         // NO Auth required for public articles (or check auth if private)
-        $idOrSlug = filter_input(INPUT_GET, 'id_or_slug', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        $idOrSlug = filter_input(INPUT_GET, 'id_or_slug', FILTER_DEFAULT) ?? '';
 
         if (empty($idOrSlug)) {
             Response::error('Identificativo articolo mancante.', 400);

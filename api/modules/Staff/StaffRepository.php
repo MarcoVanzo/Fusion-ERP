@@ -47,8 +47,8 @@ class StaffRepository
         $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
         foreach ($rows as &$row) {
             $row['team_season_ids'] = $row['team_season_ids'] ? explode(',', $row['team_season_ids']) : [];
-            unset($row['team_ids']); // Provide fallback or clean up
         }
+        unset($row); // break reference from foreach
         return $rows;
     }
 
@@ -70,7 +70,6 @@ class StaffRepository
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
         if ($row) {
             $row['team_season_ids'] = $row['team_season_ids'] ? explode(',', $row['team_season_ids']) : [];
-            unset($row['team_ids']);
         }
         return $row ?: null;
     }
@@ -93,7 +92,6 @@ class StaffRepository
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
         if ($row) {
             $row['team_season_ids'] = $row['team_season_ids'] ? explode(',', $row['team_season_ids']) : [];
-            unset($row['team_ids']);
         }
         return $row ?: null;
     }
@@ -158,15 +156,11 @@ class StaffRepository
             $this->db->prepare("DELETE FROM staff_teams WHERE staff_id = :staff_id")->execute([':staff_id' => $id]);
 
             if (!empty($teamIds)) {
-                error_log("Inserting teams for staff $id: " . json_encode($teamIds));
                 $sqlTeams = "INSERT INTO staff_teams (staff_id, team_season_id) VALUES (:staff_id, :team_season_id)";
                 $stmtTeams = $this->db->prepare($sqlTeams);
                 foreach ($teamIds as $tid) {
                     $stmtTeams->execute([':staff_id' => $id, ':team_season_id' => $tid]);
                 }
-            }
-            else {
-                error_log("No teams provided for staff $id during update. Deleting existing.");
             }
 
             $this->db->commit();

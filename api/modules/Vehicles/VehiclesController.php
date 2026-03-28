@@ -34,7 +34,7 @@ class VehiclesController
     public function getVehicleById(): void
     {
         Auth::requireRead('transport');
-        $id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        $id = filter_input(INPUT_GET, 'id', FILTER_DEFAULT) ?? '';
         if (empty($id)) {
             Response::error('ID veicolo obbligatorio', 400);
             return;

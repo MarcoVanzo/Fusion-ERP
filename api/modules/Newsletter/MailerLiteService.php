@@ -172,13 +172,14 @@ class MailerLiteService
     }
 
     /**
-     * Exports all active subscribers as CSV string.
+     * Streams all active subscribers as CSV directly to output.
      */
-    public function exportCsv(): string
+    public function streamCsv(): void
     {
         if (!$this->configured) throw new \RuntimeException('MailerLite non configurato');
 
-        $rows   = [['Email', 'Nome', 'Cognome', 'Stato', 'Iscritto il']];
+        $fh = fopen('php://output', 'w');
+        fputcsv($fh, ['Email', 'Nome', 'Cognome', 'Stato', 'Iscritto il']);
         $cursor = null;
 
         do {
@@ -187,23 +188,19 @@ class MailerLiteService
                 $fields  = $sub['fields'] ?? [];
                 $name    = $this->getField($fields, 'name');
                 $last    = $this->getField($fields, 'last_name');
-                $rows[]  = [
+                fputcsv($fh, [
                     $sub['email']        ?? '',
                     $name,
                     $last,
                     $sub['status']       ?? '',
                     substr($sub['created_at'] ?? '', 0, 10),
-                ];
+                ]);
             }
             // Extract next cursor from links
             $cursor = $this->extractNextCursor($page['links']['next'] ?? '');
         } while ($cursor);
 
-        ob_start();
-        $fh = fopen('php://output', 'w');
-        foreach ($rows as $row) fputcsv($fh, $row);
         fclose($fh);
-        return ob_get_clean();
     }
 
     // ─── GROUPS ──────────────────────────────────────────────────────────────

@@ -8,6 +8,8 @@
 const App = (() => {
     let _currentUser = null;
     let _navConfig = null; // Stored for global header titles
+    let _abortAuth = new AbortController();
+    let _abortApp = new AbortController();
 
     async function init() {
         // Try to resume existing session
@@ -28,15 +30,12 @@ const App = (() => {
         }
     }
 
-    function _initSplashScreen() {
-        // Splash screen rimosso su richiesta dell'utente
-        const splash = document.getElementById('splash-screen');
-        if (splash) splash.remove();
-    }
-
 
 
     function _showAuthScreen() {
+        _abortAuth.abort();
+        _abortAuth = new AbortController();
+
         document.getElementById('auth-screen').classList.remove('hidden');
         document.getElementById('app-shell').classList.add('hidden');
         document.getElementById('reset-screen').classList.add('hidden');
@@ -51,7 +50,7 @@ const App = (() => {
                 const isPassword = passwordInput.type === 'password';
                 passwordInput.type = isPassword ? 'text' : 'password';
                 toggleBtn.textContent = isPassword ? '🙈' : '👁️';
-            });
+            }, { signal: _abortAuth.signal });
         }
 
         // UX #10: Inline email validation
@@ -72,7 +71,7 @@ const App = (() => {
                     emailHint.style.color = 'var(--color-success)';
                     emailInput.style.borderColor = 'var(--color-success) !important';
                 }
-            });
+            }, { signal: _abortAuth.signal });
         }
 
         form.addEventListener('submit', async (e) => {
@@ -166,6 +165,8 @@ const App = (() => {
     }
 
     async function _bootApp(user) {
+        _abortApp.abort();
+        _abortApp = new AbortController();
         _currentUser = user;
 
         try {
@@ -197,52 +198,50 @@ const App = (() => {
             const userDropdown = document.getElementById('user-dropdown');
 
             if (userMenuBtn && userDropdown) {
-                userMenuBtn.onclick = (e) => {
+                userMenuBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
                     userDropdown.classList.toggle('hidden');
-                };
+                }, { signal: _abortApp.signal });
 
-                // FIX: usa addEventListener invece di document.onclick
-                // (document.onclick sovrascrive altri handler globali — bug potenziale)
                 const _closeDropdown = (e) => {
                     if (!userMenuBtn.contains(e.target) && !userDropdown.contains(e.target)) {
                         userDropdown.classList.add('hidden');
                     }
                 };
-                document.addEventListener('click', _closeDropdown);
-                // Cleanup al destroy dell'app (navigazione fuori) per prevenire memory leak
-                window.__cleanupUserMenu = () => document.removeEventListener('click', _closeDropdown);
+                document.addEventListener('click', _closeDropdown, { signal: _abortApp.signal });
 
                 const profileBtn = document.getElementById('profile-btn');
                 if (profileBtn) {
-                    profileBtn.onclick = (e) => {
+                    profileBtn.addEventListener('click', (e) => {
                         e.stopPropagation();
                         userDropdown.classList.add('hidden');
                         _showUserProfileModal(user);
-                    };
+                    }, { signal: _abortApp.signal });
                 }
 
                 const logoutBtn = document.getElementById('logout-btn');
                 if (logoutBtn) {
-                    logoutBtn.onclick = async (e) => {
+                    logoutBtn.addEventListener('click', async (e) => {
                         e.stopPropagation();
                         userDropdown.classList.add('hidden');
                         try {
                             await Store.api('logout', 'auth');
+                            Store.clearCache(); // explicit cache flush before reload
                             UI.toast('Logout effettuato', 'info');
                             setTimeout(() => window.location.reload(), 800);
                         } catch {
+                            Store.clearCache();
                             window.location.reload();
                         }
-                    };
+                    }, { signal: _abortApp.signal });
                 }
 
                 userDropdown.querySelectorAll('.dropdown-item[data-route]').forEach(item => {
-                    item.onclick = (e) => {
+                    item.addEventListener('click', (e) => {
                         e.stopPropagation();
                         userDropdown.classList.add('hidden');
                         Router.navigate(item.dataset.route);
-                    };
+                    }, { signal: _abortApp.signal });
                 });
             }
 
@@ -261,13 +260,12 @@ const App = (() => {
                     toggleBtn.setAttribute('aria-expanded', String(!isCollapsed));
                     localStorage.setItem(COLLAPSED_KEY, isCollapsed ? '1' : '0');
                 });
-                // Keyboard shortcut: Ctrl+B
-                document.addEventListener('keydown', (e) => {
-                    if (e.ctrlKey && e.key === 'b') {
-                        e.preventDefault();
-                        toggleBtn.click();
-                    }
-                });
+                // Keyboard shortcut: Ctrl+B — tracked for cleanup
+                const _kbSidebar = (e) => {
+                    if (e.ctrlKey && e.key === 'b') { e.preventDefault(); toggleBtn.click(); }
+                };
+                document.addEventListener('keydown', _kbSidebar);
+                (window._appKbHandlers ??= []).push([_kbSidebar]);
             }
 
             // Initialize notifications (resiliently)
@@ -325,8 +323,7 @@ const App = (() => {
             // ── Enhancement: OLED Toggle in sidebar (G#10) ───────────────
             try { _initOledToggle(); } catch (err) { console.error('[App] OLED toggle:', err); }
 
-            // ── Enhancement: 3D Hover on Cards (G#2) ─────────────────────
-            try { _init3DCardHover(); } catch (err) { console.error('[App] 3D hover:', err); }
+            // ── Enhancement: 3D Hover on Cards (G#2) — disabled per request ──────
 
             // ── Enhancement: Jersey Backdrop (G#3) ───────────────────────
             try { _initJerseyBackdrop(); } catch (err) { console.error('[App] Jersey backdrop:', err); }
@@ -440,7 +437,7 @@ const App = (() => {
 
                             const expanded = group.classList.toggle('expanded');
                             parentBtn.setAttribute('aria-expanded', String(expanded));
-                        });
+                        }, { signal: _abortApp.signal });
 
                         group.appendChild(parentBtn);
 
@@ -461,7 +458,7 @@ const App = (() => {
                             childBtn.addEventListener('click', () => {
                                 if (childIsComingSoon) { UI.toast(`${child.title}: in arrivo`, 'info', 2000); return; }
                                 Router.navigate(child.path);
-                            });
+                            }, { signal: _abortApp.signal });
 
                             submenu.appendChild(childBtn);
                         });
@@ -478,9 +475,9 @@ const App = (() => {
                         if (isComingSoon) {
                             btn.style.opacity = '0.4';
                             btn.setAttribute('title', 'In arrivo');
-                            btn.addEventListener('click', () => UI.toast(`${item.title}: sezione in arrivo`, 'info', 2500));
+                            btn.addEventListener('click', () => UI.toast(`${item.title}: sezione in arrivo`, 'info', 2500), { signal: _abortApp.signal });
                         } else {
-                            btn.addEventListener('click', () => Router.navigate(item.path));
+                            btn.addEventListener('click', () => Router.navigate(item.path), { signal: _abortApp.signal });
                         }
 
                         btn.innerHTML = `
@@ -511,7 +508,7 @@ const App = (() => {
                     btn.appendChild(icon);
                     btn.appendChild(label);
 
-                    btn.addEventListener('click', () => Router.navigate(item.path));
+                    btn.addEventListener('click', () => Router.navigate(item.path), { signal: _abortApp.signal });
                     mobileContainer.appendChild(btn);
                 }
             });
@@ -714,14 +711,16 @@ const App = (() => {
             if (item?.dataset.id) _navigate(item.dataset.id);
         });
 
-        // Keyboard shortcut ⌘K / Ctrl+K
-        document.addEventListener('keydown', (e) => {
+        // Keyboard shortcut ⌘K / Ctrl+K — tracked for cleanup
+        const _kbSearch = (e) => {
             if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
                 e.preventDefault();
                 input.focus();
                 input.select();
             }
-        });
+        };
+        document.addEventListener('keydown', _kbSearch);
+        (window._appKbHandlers ??= []).push([_kbSearch]);
 
         // Close on click outside
         document.addEventListener('click', (e) => {
@@ -891,12 +890,7 @@ const App = (() => {
         });
     }
 
-    // ── G#2: 3D Card Hover Tilt ──────────────────────────────────────────────
-    // Applies a subtle perspective tilt effect to cards on mousemove.
-    // Cards with class .no-tilt are excluded from the effect.
-    function _init3DCardHover() {
-        // Disabled per request: eliminate movement-based animation effects on cards
-    }
+    // ── G#2: 3D Card Hover Tilt — disabled per design decision ─────────────────
 
     // ── G#6: Generative Gradient Avatar ──────────────────────────────────────
     // Returns a gradient CSS class index (0-6) based on name hash.
@@ -997,7 +991,6 @@ const App = (() => {
 
         // Lazy-load staff index and merge when available
         let _staffIndex = null;
-        const _origFocus = input.onfocus;
 
         input.addEventListener('focus', async () => {
             if (_staffIndex) return;
@@ -1064,7 +1057,8 @@ const App = (() => {
     // ── UX#9: Additional Keyboard Shortcuts ─────────────────────────────────
     // Alt+A → Atleti, Alt+T → Trasferte, Alt+R → Risultati, Alt+N → "Nuovo"
     function _initExtraKeyboardShortcuts() {
-        document.addEventListener('keydown', (e) => {
+        // Track handler for cleanup
+        const _kbShortcuts = (e) => {
             // Skip if user is typing in an input
             if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) return;
 
@@ -1084,7 +1078,6 @@ const App = (() => {
                         break;
                     case 'n': {
                         e.preventDefault();
-                        // Click the first visible "+ NEW" / "NUOVO" button in the current view
                         const newBtn = document.querySelector(
                             '[id$="-btn"][class*="btn-primary"], button.btn-primary, #new-athlete-btn, #new-staff-btn'
                         );
@@ -1103,7 +1096,9 @@ const App = (() => {
                     if (closeBtn) closeBtn.click();
                 }
             }
-        });
+        };
+        document.addEventListener('keydown', _kbShortcuts);
+        (window._appKbHandlers ??= []).push([_kbShortcuts]);
     }
 
     // ── UX#4: Persist Active Filter State ───────────────────────────────────
@@ -1146,12 +1141,23 @@ const App = (() => {
         });
 
         obs.observe(appEl, { childList: true, subtree: false });
+        // Expose for cleanup (called on logout / full reload)
+        window.__jerseyObserver = obs;
     }
 
     function getUser() { return _currentUser; }
 
-    return { init, getUser, renderForgotPassword };
+    // ── Cleanup: called on logout to release global listeners & observers ────
+    function _cleanup() {
+        if (window.__cleanupUserMenu)   { window.__cleanupUserMenu();   delete window.__cleanupUserMenu; }
+        if (window.__jerseyObserver)    { window.__jerseyObserver.disconnect(); delete window.__jerseyObserver; }
+        if (window._appKbHandlers)      { window._appKbHandlers.forEach(([h]) => document.removeEventListener('keydown', h)); delete window._appKbHandlers; }
+    }
+
+    return { init, getUser, renderForgotPassword, cleanup: _cleanup };
 })();
+window.App = App;
+
 
 // ─── Global Error Handlers (Stability) ──────────────────────────────────────
 window.onerror = function (message, source, lineno, colno, error) {
@@ -1167,18 +1173,7 @@ window.addEventListener('unhandledrejection', function (event) {
 
 // ─── Bootstrap ──────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-    App.init().then(() => {
-        // Post-init: wire up all the visual enhancements that need app to be running
-        // These are called after App.init() to ensure the DOM is ready
-
-        // G#2: 3D tilt on cards (use internal helper exposed via window)
-        try { window._init3DCardHover && window._init3DCardHover(); } catch { }
-
-        // G#9: Page transitions — patch router
-        try {
-            // _initPageTransitions is called from _bootApp, but also safe to retry here
-        } catch { }
-    }).catch((err) => {
+    App.init().catch((err) => {
         console.error('[FusionERP] Critical boot failure:', err);
     });
 });

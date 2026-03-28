@@ -61,7 +61,7 @@ class ValdController
     public function results(): void
     {
         Auth::requireRead('athletes');
-        $athleteId = filter_input(INPUT_GET, 'athleteId', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        $athleteId = filter_input(INPUT_GET, 'athleteId', FILTER_DEFAULT) ?? '';
 
         if (empty($athleteId)) {
             Response::error('athleteId obbligatorio', 400);
@@ -83,7 +83,7 @@ class ValdController
     {
         try {
             Auth::requireRead('athletes');
-            $athleteId = filter_input(INPUT_GET, 'athleteId', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+            $athleteId = filter_input(INPUT_GET, 'athleteId', FILTER_DEFAULT) ?? '';
 
             if (empty($athleteId)) {
                 Response::error('athleteId obbligatorio', 400);
@@ -147,8 +147,8 @@ class ValdController
         try {
             set_time_limit(120);
             Auth::requireRead('athletes');
-            $athleteId = filter_input(INPUT_GET, 'athleteId', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
-            $part      = filter_input(INPUT_GET, 'part', FILTER_SANITIZE_SPECIAL_CHARS) ?? 'diagnosis';
+            $athleteId = filter_input(INPUT_GET, 'athleteId', FILTER_DEFAULT) ?? '';
+            $part      = filter_input(INPUT_GET, 'part', FILTER_DEFAULT) ?? 'diagnosis';
 
             if (empty($athleteId)) { Response::error('athleteId obbligatorio', 400); return; }
 
@@ -181,7 +181,7 @@ class ValdController
             set_time_limit(120);
             Auth::requireRead('athletes');
             $body      = json_decode(file_get_contents('php://input'), true) ?? [];
-            $athleteId = filter_var($body['athleteId'] ?? '', FILTER_SANITIZE_SPECIAL_CHARS);
+            $athleteId = filter_var($body['athleteId'] ?? '', FILTER_DEFAULT);
             $question  = trim($body['question'] ?? '');
             $context   = trim($body['context'] ?? '');
 

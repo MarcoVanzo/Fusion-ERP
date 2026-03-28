@@ -377,7 +377,7 @@ class BiometricsRepository
             $val = $sum / $counts[$type];
             $averages[$type] = [
                 'value' => round($val, $type === 'CMJ_RSIMOD' ? 3 : 1),
-                'unit' => $allMetricTypes[$type] ?? '',
+                'unit' => $allMetricTypes[$type],
                 'count' => $counts[$type],
             ];
         }

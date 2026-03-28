@@ -284,7 +284,7 @@ class AdminRepository
 
     /**
      * Returns user counts broken down by status and by role.
-     * @return array{total:int, by_status:array, by_role:array}
+     * @return array{total:int, active:int, invited:int, disabled:int, by_role:array}
      */
     public function getUsersSummary(): array
     {

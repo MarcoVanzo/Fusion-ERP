@@ -32,10 +32,10 @@ class TasksController
     {
         Auth::requireAuth();
 
-        $status = filter_input(INPUT_GET, 'status', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
-        $priority = filter_input(INPUT_GET, 'priority', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
-        $assignedTo = filter_input(INPUT_GET, 'assigned_to', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
-        $search = filter_input(INPUT_GET, 'search', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        $status = filter_input(INPUT_GET, 'status', FILTER_DEFAULT) ?? '';
+        $priority = filter_input(INPUT_GET, 'priority', FILTER_DEFAULT) ?? '';
+        $assignedTo = filter_input(INPUT_GET, 'assigned_to', FILTER_DEFAULT) ?? '';
+        $search = filter_input(INPUT_GET, 'search', FILTER_DEFAULT) ?? '';
         $limit = max(1, min(500, (int)(filter_input(INPUT_GET, 'limit', FILTER_VALIDATE_INT) ?: 100)));
         $offset = max(0, (int)(filter_input(INPUT_GET, 'offset', FILTER_VALIDATE_INT) ?: 0));
 
@@ -71,7 +71,7 @@ class TasksController
             $attachment ?: null
         );
 
-        Audit::log('INSERT', 'tasks', $id, null, ['title' => $title, 'status' => $status], 'crud');
+        Audit::log('INSERT', 'tasks', $id, null, ['title' => $title, 'status' => $status]);
         Response::success(['id' => $id], 201);
     }
 
@@ -94,7 +94,7 @@ class TasksController
 
         $this->repo->updateTask($id, $body);
 
-        Audit::log('UPDATE', 'tasks', $id, $before, $this->repo->getTask($id), 'crud');
+        Audit::log('UPDATE', 'tasks', $id, $before, $this->repo->getTask($id));
         Response::success(['id' => $id]);
     }
 
@@ -117,7 +117,7 @@ class TasksController
 
         $this->repo->deleteTask($id);
 
-        Audit::log('DELETE', 'tasks', $id, $before, null, 'crud');
+        Audit::log('DELETE', 'tasks', $id, $before, null);
         Response::success(['deleted' => true]);
     }
 
@@ -130,7 +130,7 @@ class TasksController
     {
         Auth::requireAuth();
 
-        $taskId = filter_input(INPUT_GET, 'task_id', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        $taskId = filter_input(INPUT_GET, 'task_id', FILTER_DEFAULT) ?? '';
         if ($taskId === '')
             Response::error('task_id obbligatorio', 422);
 

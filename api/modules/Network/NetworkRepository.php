@@ -365,13 +365,10 @@ class NetworkRepository
 
     // ─── Scouting hook (defensive) ────────────────────────────────────────────
 
-    /**
-     * Check whether the scouting table exists (scouting module may not be deployed yet).
-     */
     public function scoutingTableExists(): bool
     {
         try {
-            $stmt = $this->db->query("SELECT 1 FROM scouting_profiles LIMIT 1");
+            $stmt = $this->db->query("SELECT 1 FROM scouting_athletes LIMIT 1");
             return $stmt !== false;
         }
         catch (\Throwable) {
@@ -382,12 +379,19 @@ class NetworkRepository
     public function insertScoutingProfile(array $data): string
     {
         $stmt = $this->db->prepare(
-            'INSERT INTO scouting_profiles
-                (id, tenant_id, first_name, last_name, birth_date, nationality, position, origin_club, notes)
+            'INSERT INTO scouting_athletes
+                (tenant_id, nome, cognome, anno_nascita, societa_appartenenza, note, source)
              VALUES
-                (:id, :tenant_id, :first_name, :last_name, :birth_date, :nationality, :position, :origin_club, :notes)'
+                (:tenant_id, :first_name, :last_name, :birth_date, :origin_club, :notes, \'network\')'
         );
-        $stmt->execute($data);
-        return $data[':id'];
+        $stmt->execute([
+            ':tenant_id' => $data[':tenant_id'],
+            ':first_name' => $data[':first_name'],
+            ':last_name' => $data[':last_name'],
+            ':birth_date' => $data[':birth_date'] ? (int)date('Y', strtotime($data[':birth_date'])) : null,
+            ':origin_club' => $data[':origin_club'],
+            ':notes' => $data[':notes'] . "\nRuolo: " . ($data[':position'] ?? 'N/D') . "\nNazionalità: " . ($data[':nationality'] ?? 'N/D')
+        ]);
+        return (string)$this->db->lastInsertId();
     }
 }

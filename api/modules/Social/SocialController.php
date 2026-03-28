@@ -76,13 +76,12 @@ class SocialController
         $appId = $_ENV['META_APP_ID'] ?? $_SERVER['META_APP_ID'] ?? getenv('META_APP_ID');
         if (empty($appId) || $appId === 'YOUR_META_APP_ID') {
             Response::error('Meta App non configurata. Aggiungere META_APP_ID e META_APP_SECRET nel file .env', 500);
+            return;
         }
 
         // Store token → userId in DB (with file fallback), get short hex token for state
         $stateToken = $this->repo->storeOAuthToken((string)$user['id']);
         $oauthUrl = $this->repo->getOAuthUrl($stateToken);
-
-        error_log('[SOCIAL] connect: userId=' . $user['id'] . ', stateToken=' . $stateToken);
 
         header('Location: ' . $oauthUrl);
         exit;
@@ -96,55 +95,26 @@ class SocialController
      */
     public function callback(): void
     {
-        $returnUrl = $_ENV['APP_URL'] ?? $_SERVER['APP_URL'] ?? getenv('APP_URL') ?: 'https://www.fusionteamvolley.it/ERP';
+        $baseReturnUrl = $_ENV['APP_URL'] ?? $_SERVER['APP_URL'] ?? getenv('APP_URL') ?: 'https://www.fusionteamvolley.it/ERP';
 
-        $code = filter_input(INPUT_GET, 'code', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
-        $error = filter_input(INPUT_GET, 'error', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
-
-        // Read state directly from $_GET — no filter that might mangle characters
-        $state = $_GET['state'] ?? '';
-
-        // Log ALL GET params to DB for debugging
-        $allParams = json_encode($_GET);
-        error_log('[SOCIAL] callback params: ' . $allParams);
-        try {
-            $this->repo->getDb()->prepare(
-                "INSERT INTO meta_oauth_states (token, user_id, expires_at)
-                 VALUES (:token, 0, DATE_ADD(NOW(), INTERVAL 1 HOUR))
-                 ON DUPLICATE KEY UPDATE user_id = 0"
-            )->execute([':token' => 'LOG:' . substr(md5($allParams . microtime()), 0, 50)]);
-        }
-        catch (\Throwable $ignored) {
-        }
-
-        // Log the raw state for debugging
-        error_log('[SOCIAL] callback: state=' . $state . '(len=' . strlen($state) . ') code=' . (empty($code) ? 'EMPTY' : 'SET(len=' . strlen($code) . ')') . ' error=' . $error);
+        // Log ALL GET params to DB for debugging — removed in production
+        $code  = filter_input(INPUT_GET, 'code', FILTER_DEFAULT) ?? '';
+        $error = filter_input(INPUT_GET, 'error', FILTER_DEFAULT) ?? '';
+        $state = filter_input(INPUT_GET, 'state', FILTER_DEFAULT) ?? '';
 
         // Resolve userId from DB-stored token
         $userId = $this->repo->resolveOAuthToken($state);
 
         if (!$userId) {
-            error_log('[SOCIAL] OAuth callback: resolveOAuthToken FAILED for state=' . $state);
-            // Log what's currently in the DB for debugging
-            try {
-                $rows = $this->repo->getDb()
-                    ->query("SELECT token, user_id, expires_at, created_at FROM meta_oauth_states ORDER BY created_at DESC LIMIT 5")
-                    ->fetchAll(\PDO::FETCH_ASSOC);
-                error_log('[SOCIAL] DB meta_oauth_states most recent: ' . json_encode($rows));
-            }
-            catch (\Throwable $ignored) {
-            }
-
-            header('Location: ' . $returnUrl . '#social?error=' . urlencode('Errore di autenticazione. Riprova il collegamento.'));
+            header('Location: ' . $baseReturnUrl . '#social?error=' . urlencode('Errore di autenticazione. Riprova il collegamento.'));
             exit;
         }
 
-        $returnUrl = $_SESSION['meta_oauth_return'] ?? ($_ENV['APP_URL'] ?? $_SERVER['APP_URL'] ?? getenv('APP_URL') ?: 'https://www.fusionteamvolley.it/ERP');
+        $returnUrl = $_SESSION['meta_oauth_return'] ?? $baseReturnUrl;
         unset($_SESSION['meta_oauth_return']);
 
         if ($error || empty($code)) {
-            $errorDesc = filter_input(INPUT_GET, 'error_description', FILTER_SANITIZE_SPECIAL_CHARS) ?? 'Autorizzazione negata';
-            error_log('[SOCIAL] OAuth error: ' . $errorDesc);
+            $errorDesc = filter_input(INPUT_GET, 'error_description', FILTER_DEFAULT) ?? 'Autorizzazione negata';
             header('Location: ' . $returnUrl . '#social?error=' . urlencode($errorDesc));
             exit;
         }
@@ -225,36 +195,6 @@ class SocialController
         Response::success($result);
     }
 
-    // ─── GET /api/?module=social&action=lastCallback ────────────────────────
-    /**
-     * Diagnostic: shows what's in meta_oauth_states (last 10 entries).
-     * Remove after debugging.
-     */
-    public function lastCallback(): void
-    {
-        Auth::requireRead('social');
-
-        try {
-            $rows = $this->repo->getDb()
-                ->query("SELECT LEFT(token,16) as tok_prefix, user_id, expires_at, created_at FROM meta_oauth_states ORDER BY created_at DESC LIMIT 10")
-                ->fetchAll(\PDO::FETCH_ASSOC);
-
-            $now = time();
-            foreach ($rows as &$r) {
-                $r['expired'] = strtotime($r['expires_at']) < $now;
-            }
-
-            Response::success([
-                'now' => date('Y-m-d H:i:s'),
-                'rows' => $rows,
-                'count' => count($rows),
-            ]);
-        }
-        catch (\Throwable $e) {
-            Response::error('DB error: ' . $e->getMessage(), 500);
-        }
-    }
-
     // ─── POST /api/?module=social&action=disconnect ──────────────────────────
     /**
      * Removes the Meta token / disconnects the account.
@@ -306,8 +246,7 @@ class SocialController
                     $fbInsights = $this->repo->getFbPageInsights($token['page_id'], $token['access_token'], $days);
                 }
                 catch (\Throwable $fbError) {
-                    error_log('[SOCIAL] Solo Facebook Insights fallito: ' . $fbError->getMessage());
-                // Proseguiamo mostrando instagram
+                    // Facebook Insights may fail if page permissions are revoked; continue with Instagram
                 }
             }
 
@@ -331,9 +270,7 @@ class SocialController
             ]);
         }
         catch (\Throwable $e) {
-            error_log('[SOCIAL] Insights fetch error: ' . $e->getMessage());
-
-            // Fallback to mock data on API error
+            error_log('[SOCIAL] Insights API error: ' . $e->getMessage());
             $mockData = $this->repo->getMockData($days);
             $mockData['error'] = 'Errore nel recupero dati da Meta. Mostrati dati di esempio.';
             Response::success($mockData);
@@ -363,7 +300,7 @@ class SocialController
             Response::success($posts);
         }
         catch (\Throwable $e) {
-            error_log('[SOCIAL] Posts fetch error: ' . $e->getMessage());
+            error_log('[SOCIAL] Posts API error: ' . $e->getMessage());
             $mock = $this->repo->getMockData(28);
             Response::success($mock['posts']);
         }
@@ -405,44 +342,5 @@ class SocialController
         }
 
         return array_values($daily);
-    }
-
-    /**
-     * Transform FB Page insights into a summary object.
-     */
-    private function transformFbInsights(array $rawInsights): array
-    {
-        $result = [
-            'page_views' => 0,
-            'engaged_users' => 0,
-            'post_engagements' => 0,
-            'page_fans' => 0,
-        ];
-
-        $keyMap = [
-            'page_views_total' => 'page_views',
-            'page_engaged_users' => 'engaged_users',
-            'page_post_engagements' => 'post_engagements',
-            'page_fans' => 'page_fans',
-        ];
-
-        foreach ($rawInsights as $metric) {
-            $name = $metric['name'] ?? '';
-            if (isset($keyMap[$name])) {
-                $values = $metric['values'] ?? [];
-                $total = 0;
-                foreach ($values as $v) {
-                    $total += (int)($v['value'] ?? 0);
-                }
-                // For page_fans, take the last value (it's a lifetime metric)
-                if ($name === 'page_fans' && !empty($values)) {
-                    $lastVal = end($values);
-                    $total = (int)($lastVal['value'] ?? 0);
-                }
-                $result[$keyMap[$name]] = $total;
-            }
-        }
-
-        return $result;
     }
 }

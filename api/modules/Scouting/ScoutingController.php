@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 namespace FusionERP\Modules\Scouting;
 
 use PDO;
@@ -21,33 +24,11 @@ class ScoutingController
      * ───────────────────────────────────────────────────────────────────── */
     private static function getEnvVar(string $key): ?string
     {
-        // 1. Force manual generic parse of .env to bypass ANY caching (Dotenv immutability, OPcache, etc.)
-        // Using dirname to avoid relative path realpath() issues on restricted servers like Aruba
-        $envFile = dirname(__DIR__, 3) . '/.env';
-
-        if (file_exists($envFile)) {
-            $lines = @file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-            if ($lines !== false) {
-                foreach ($lines as $line) {
-                    $line = trim($line);
-                    if ($line === '' || $line[0] === '#') continue;
-                    $parts = explode('=', $line, 2);
-                    if (count($parts) === 2 && trim($parts[0]) === $key) {
-                        return trim($parts[1], " \t\n\r\0\x0B\"'");
-                    }
-                }
-            }
-        } else {
-            error_log("ScoutingController getEnvVar: Missing .env at path ($envFile). Falling back to ENV.");
+        // Standard precedence: $_ENV (populated by Dotenv at bootstrap) → OS env vars
+        $val = $_ENV[$key] ?? getenv($key);
+        if ($val !== false && $val !== null && $val !== '') {
+            return (string)$val;
         }
-
-        // 2. Fallback to standard environment variables
-        $envVal = $_ENV[$key] ?? $_SERVER[$key] ?? getenv($key);
-        if ($envVal !== false && $envVal !== null && $envVal !== '') {
-            return (string)$envVal;
-        }
-
-        error_log("ScoutingController getEnvVar: Key '$key' not found.");
         return null;
     }
 
@@ -77,20 +58,25 @@ class ScoutingController
      * ───────────────────────────────────────────────────────────────────── */
     public function listDatabase(): void
     {
-        Auth::requireRole('allenatore');
+        $user = Auth::requireRole('allenatore');
+        $tenantId = \FusionERP\Shared\TenantContext::id();
 
-        // Security Filter (T6): Limita a 250 record recenti per non appesantire il caricamento mobile iniziale
+        // Security: limit to current tenant's records, ordered by recency
         $stmt = $this->db->prepare("
             SELECT id, nome, cognome, societa_appartenenza, anno_nascita, note, rilevatore, data_rilevazione, source, is_locked_edit
             FROM scouting_athletes
+            WHERE tenant_id = :tenant_id
             ORDER BY created_at DESC
             LIMIT 250
         ");
-        $stmt->execute();
+        $stmt->execute([':tenant_id' => $tenantId]);
         $athletes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // Last sync time
-        $syncStmt = $this->db->query("SELECT MAX(synced_at) FROM scouting_athletes WHERE cognito_id IS NOT NULL");
+        // Last sync time for this tenant
+        $syncStmt = $this->db->prepare(
+            "SELECT MAX(synced_at) FROM scouting_athletes WHERE cognito_id IS NOT NULL AND tenant_id = :tenant_id"
+        );
+        $syncStmt->execute([':tenant_id' => $tenantId]);
         $lastSync = $syncStmt->fetchColumn();
 
         Response::success([
@@ -106,7 +92,8 @@ class ScoutingController
      * ───────────────────────────────────────────────────────────────────── */
     public function addManualEntry(): void
     {
-        Auth::requireRole('allenatore');
+        $user = Auth::requireRole('allenatore');
+        $tenantId = \FusionERP\Shared\TenantContext::id();
 
         $data = json_decode(file_get_contents('php://input'), true);
         if (!$data || empty($data['nome']) || empty($data['cognome'])) {
@@ -114,18 +101,19 @@ class ScoutingController
         }
 
         $stmt = $this->db->prepare("
-            INSERT INTO scouting_athletes (nome, cognome, societa_appartenenza, anno_nascita, note, rilevatore, data_rilevazione, source)
-            VALUES (:nome, :cognome, :societa, :anno, :note, :rilevatore, :data_ril, 'manual')
+            INSERT INTO scouting_athletes (tenant_id, nome, cognome, societa_appartenenza, anno_nascita, note, rilevatore, data_rilevazione, source)
+            VALUES (:tenant_id, :nome, :cognome, :societa, :anno, :note, :rilevatore, :data_ril, 'manual')
         ");
-        
+
         $stmt->execute([
-            ':nome' => $data['nome'] ?? '',
-            ':cognome' => $data['cognome'] ?? '',
-            ':societa' => $data['societa_appartenenza'] ?? null,
-            ':anno' => !empty($data['anno_nascita']) ? (int)$data['anno_nascita'] : null,
-            ':note' => $data['note'] ?? null,
-            ':rilevatore' => $data['rilevatore'] ?? null,
-            ':data_ril' => $data['data_rilevazione'] ?? date('Y-m-d')
+            ':tenant_id' => $tenantId,
+            ':nome'      => $data['nome'] ?? '',
+            ':cognome'   => $data['cognome'] ?? '',
+            ':societa'   => $data['societa_appartenenza'] ?? null,
+            ':anno'      => !empty($data['anno_nascita']) ? (int)$data['anno_nascita'] : null,
+            ':note'      => $data['note'] ?? null,
+            ':rilevatore'=> $data['rilevatore'] ?? null,
+            ':data_ril'  => $data['data_rilevazione'] ?? date('Y-m-d'),
         ]);
 
         Response::success(['success' => true, 'id' => $this->db->lastInsertId()]);
@@ -137,7 +125,8 @@ class ScoutingController
      * ───────────────────────────────────────────────────────────────────── */
     public function updateEntry(): void
     {
-        Auth::requireRole('allenatore');
+        $user = Auth::requireRole('allenatore');
+        $tenantId = \FusionERP\Shared\TenantContext::id();
 
         $data = json_decode(file_get_contents('php://input'), true);
         if (!$data || empty($data['id']) || empty($data['nome']) || empty($data['cognome'])) {
@@ -145,7 +134,7 @@ class ScoutingController
         }
 
         $stmt = $this->db->prepare("
-            UPDATE scouting_athletes 
+            UPDATE scouting_athletes
             SET
                 nome = :nome,
                 cognome = :cognome,
@@ -155,24 +144,24 @@ class ScoutingController
                 rilevatore = :rilevatore,
                 data_rilevazione = :data_ril,
                 is_locked_edit = 1
-            WHERE id = :id
+            WHERE id = :id AND tenant_id = :tenant_id
         ");
-        
+
         $stmt->execute([
-            ':id' => (int)$data['id'],
-            ':nome' => $data['nome'],
-            ':cognome' => $data['cognome'],
-            ':societa' => $data['societa_appartenenza'] ?? null,
-            ':anno' => !empty($data['anno_nascita']) ? (int)$data['anno_nascita'] : null,
-            ':note' => $data['note'] ?? null,
+            ':id'         => (int)$data['id'],
+            ':tenant_id'  => $tenantId,
+            ':nome'       => $data['nome'],
+            ':cognome'    => $data['cognome'],
+            ':societa'    => $data['societa_appartenenza'] ?? null,
+            ':anno'       => !empty($data['anno_nascita']) ? (int)$data['anno_nascita'] : null,
+            ':note'       => $data['note'] ?? null,
             ':rilevatore' => $data['rilevatore'] ?? null,
-            ':data_ril' => $data['data_rilevazione'] ?? date('Y-m-d')
+            ':data_ril'   => $data['data_rilevazione'] ?? date('Y-m-d'),
         ]);
 
         if ($stmt->rowCount() === 0) {
-            // Check if ID exists
-            $check = $this->db->prepare("SELECT id FROM scouting_athletes WHERE id = ?");
-            $check->execute([(int)$data['id']]);
+            $check = $this->db->prepare("SELECT id FROM scouting_athletes WHERE id = ? AND tenant_id = ?");
+            $check->execute([(int)$data['id'], $tenantId]);
             if (!$check->fetchColumn()) {
                 Response::error('Atleta non trovato', 404);
             }
@@ -280,6 +269,7 @@ class ScoutingController
         $response = curl_exec($ch);
         $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $curlError = curl_error($ch);
+        curl_close($ch);
 
         if ($response === false || !empty($curlError)) {
             return ['success' => false, 'error' => 'Errore cURL Cognito: ' . $curlError];
@@ -309,10 +299,10 @@ class ScoutingController
 
         $sql = "
             INSERT INTO scouting_athletes
-                (cognito_id, cognito_form, nome, cognome, societa_appartenenza, anno_nascita,
+                (tenant_id, cognito_id, cognito_form, nome, cognome, societa_appartenenza, anno_nascita,
                  note, rilevatore, data_rilevazione, source, synced_at)
             VALUES
-                (:cog_id, :cog_form, :nome, :cognome, :societa, :anno,
+                (:tenant_id, :cog_id, :cog_form, :nome, :cognome, :societa, :anno,
                  :note, :rilevatore, :data_ril, :source, NOW())
             ON DUPLICATE KEY UPDATE
                 nome                  = IF(is_locked_edit = 1, nome, VALUES(nome)),
@@ -342,6 +332,7 @@ class ScoutingController
             $dataRil = !empty($rawDate) ? date('Y-m-d', (int)strtotime((string)$rawDate)) : date('Y-m-d');
 
             $stmt->execute([
+                ':tenant_id' => 'TNT_default', // Assuming TNT_default for automated imports per system default
                 ':cog_id' => (int)$e['Id'],
                 ':cog_form' => $source,
                 ':nome' => (string)$nome,

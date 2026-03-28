@@ -72,6 +72,7 @@ const AdminLogs = (() => {
         });
         const a = await fetch(`api/router.php?${urlParams.toString()}`, {
           credentials: "same-origin",
+          headers: { "X-Requested-With": "XMLHttpRequest" },
           signal: abortController.signal
         });
         const m = await a.json();

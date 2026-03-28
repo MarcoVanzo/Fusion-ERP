@@ -30,17 +30,18 @@ set_error_handler(function($severity, $message, $file, $line) {
 set_exception_handler(function(\Throwable $e) {
     $errMsg = '[ROUTER FATAL] ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine();
     error_log($errMsg);
-    if (!empty($_ENV['APP_DEBUG']) || getenv('APP_DEBUG') === 'true') {
+
+    $debug = filter_var(getenv('APP_DEBUG') ?: ($_ENV['APP_DEBUG'] ?? false), FILTER_VALIDATE_BOOLEAN);
+    if ($debug) {
+        // Write extended logs only in debug mode — avoid information-disclosure in production
         file_put_contents(__DIR__ . '/../local_debug_error.log', date('Y-m-d H:i:s') . ' ' . $errMsg . PHP_EOL, FILE_APPEND);
     }
-    
+    file_put_contents(__DIR__ . '/../ai_debug.log', date('Y-m-d H:i:s') . ' (HANDLER) ' . $errMsg . PHP_EOL, FILE_APPEND);
+
     if (ob_get_level() > 0) ob_clean();
     http_response_code(500);
     header('Content-Type: application/json; charset=UTF-8');
-    
-    file_put_contents('/tmp/php_crash.log', date('Y-m-d H:i:s') . ' EXCEPTION: ' . $e->getMessage() . ' at ' . $e->getFile() . ':' . $e->getLine() . PHP_EOL, FILE_APPEND);
 
-    $debug = filter_var(getenv('APP_DEBUG') ?: ($_ENV['APP_DEBUG'] ?? false), FILTER_VALIDATE_BOOLEAN);
     $clientMessage = $debug ? $errMsg : 'Errore interno del server.';
     echo json_encode(['success' => false, 'error' => $clientMessage]);
     exit;
@@ -65,7 +66,7 @@ header('Pragma: no-cache');
 header('Vary: Cookie');
 
 // Only accept POST (or OPTIONS for CORS preflight, GET for lists, PUT for updates)
-if (!in_array($_SERVER['REQUEST_METHOD'], ['POST', 'GET', 'PUT', 'OPTIONS'])) {
+if (!in_array($_SERVER['REQUEST_METHOD'], ['POST', 'GET', 'PUT', 'DELETE', 'OPTIONS'])) {
     Response::error('Metodo non consentito', 405);
 }
 
@@ -78,8 +79,8 @@ if (in_array($_SERVER['REQUEST_METHOD'], ['POST', 'PUT', 'DELETE'])) {
 }
 
 // Parse routing params — ?module=auth&action=login
-$module = filter_input(INPUT_GET, 'module', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
-$action = filter_input(INPUT_GET, 'action', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+$module = filter_input(INPUT_GET, 'module', FILTER_DEFAULT) ?? '';
+$action = filter_input(INPUT_GET, 'action', FILTER_DEFAULT) ?? '';
 
 if (empty($module) || empty($action)) {
     Response::error('Parametri di routing mancanti', 400);
@@ -123,11 +124,17 @@ try {
 catch (\Throwable $e) {
     $errMsg = '[ROUTER] Unhandled exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine();
     error_log($errMsg);
-    file_put_contents(__DIR__ . '/../local_debug_error.log', date('Y-m-d H:i:s') . ' ' . $errMsg . PHP_EOL, FILE_APPEND);
 
-    $clientMessage = 'PHP_ERROR: ' . $e->getMessage() . ' in ' . basename($e->getFile()) . ':' . $e->getLine();
+    // Security: Only expose full error detail in DEBUG mode — avoid information-disclosure in production.
+    $isDebug = filter_var(getenv('APP_DEBUG') ?: ($_ENV['APP_DEBUG'] ?? false), FILTER_VALIDATE_BOOLEAN);
+    if ($isDebug) {
+        file_put_contents(__DIR__ . '/../local_debug_error.log', date('Y-m-d H:i:s') . ' ' . $errMsg . PHP_EOL, FILE_APPEND);
+    }
+    file_put_contents(__DIR__ . '/../ai_debug.log', date('Y-m-d H:i:s') . ' (CATCH) ' . $errMsg . PHP_EOL, FILE_APPEND);
 
-    file_put_contents('/tmp/php_crash.log', date('Y-m-d H:i:s') . ' ERROR: ' . $e->getMessage() . ' at ' . $e->getFile() . ':' . $e->getLine() . PHP_EOL, FILE_APPEND);
+    $clientMessage = $isDebug
+        ? 'PHP_ERROR: ' . $e->getMessage() . ' in ' . basename($e->getFile()) . ':' . $e->getLine()
+        : 'Errore interno del server. Contattare l\'amministratore.';
 
     Response::error($clientMessage, 500);
 } finally {

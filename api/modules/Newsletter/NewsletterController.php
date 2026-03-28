@@ -71,10 +71,10 @@ class NewsletterController
     {
         Auth::requireRole('operator');
 
-        $cursor = filter_input(INPUT_GET, 'cursor', FILTER_SANITIZE_SPECIAL_CHARS) ?? null;
+        $cursor = filter_input(INPUT_GET, 'cursor', FILTER_DEFAULT) ?? null;
         $limit  = (int)(filter_input(INPUT_GET, 'limit', FILTER_VALIDATE_INT) ?? 25);
-        $status = filter_input(INPUT_GET, 'status', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
-        $search = filter_input(INPUT_GET, 'search', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        $status = filter_input(INPUT_GET, 'status', FILTER_DEFAULT) ?? '';
+        $search = filter_input(INPUT_GET, 'search', FILTER_DEFAULT) ?? '';
 
         $validStatuses = ['', 'active', 'unsubscribed', 'bounced', 'unconfirmed', 'junk'];
         if (!in_array($status, $validStatuses, true)) {
@@ -174,12 +174,10 @@ class NewsletterController
     {
         Auth::requireRole('social media manager');
 
-        $csv = $this->ml->exportCsv();
-
         header('Content-Type: text/csv; charset=utf-8');
         header('Content-Disposition: attachment; filename="newsletter_iscritti_' . date('Ymd') . '.csv"');
-        header('Content-Length: ' . strlen($csv));
-        echo $csv;
+        
+        $this->ml->streamCsv();
         exit;
     }
 }

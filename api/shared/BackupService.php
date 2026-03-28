@@ -55,7 +55,7 @@ class BackupService
 
         $storagePath = null;
         foreach ($candidates as $candidate) {
-            if (empty($candidate)) {
+            if ($candidate === '') {
                 continue;
             }
             if (!is_dir($candidate)) {

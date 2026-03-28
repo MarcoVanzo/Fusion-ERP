@@ -17,8 +17,11 @@ class AIService
      */
     public static function generateContent(string|array $prompt, array $options = [], string $model = self::DEFAULT_MODEL): string
     {
-        $apiKey = $_ENV['GEMINI_TOKEN'] ?? $_SERVER['GEMINI_TOKEN'] ?? getenv('GEMINI_TOKEN') ?: '';
-        if (empty($apiKey)) {
+        // Use getenv() first as it's more reliable on some servers, then fallback to $_SERVER/$_ENV
+        // and finally to the hardcoded AIConfig::GEMINI_TOKEN for maximum stability.
+        $apiKey = (getenv('GEMINI_TOKEN') ?: ($_SERVER['GEMINI_TOKEN'] ?? $_ENV['GEMINI_TOKEN'] ?? '')) ?: AIConfig::GEMINI_TOKEN;
+
+        if ($apiKey === '' || $apiKey === null) {
             throw new \Exception('Chiave API Gemini non configurata. Impostare GEMINI_TOKEN.');
         }
 
@@ -42,23 +45,35 @@ class AIService
         ];
 
         $ch = curl_init($url);
-        curl_setopt_array($ch, [
+        $cacertPath = __DIR__ . '/cacert.pem';
+        
+        $curlOptions = [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_POST => true,
             CURLOPT_POSTFIELDS => json_encode($payload),
             CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
             CURLOPT_TIMEOUT => 60,
             CURLOPT_CONNECTTIMEOUT => 10,
-        ]);
+            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_SSL_VERIFYHOST => 2,
+        ];
+
+        if (file_exists($cacertPath)) {
+            $curlOptions[CURLOPT_CAINFO] = $cacertPath;
+        }
+
+        curl_setopt_array($ch, $curlOptions);
 
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $curlError = curl_error($ch);
+        $curlErr = curl_error($ch);
         curl_close($ch);
-
+        
         if ($response === false) {
-            error_log('[AI_SERVICE] Curl error: ' . $curlError);
-            throw new \Exception('Errore di connessione al servizio AI: ' . $curlError);
+            $logMsg = date('Y-m-d H:i:s') . " [AI_SERVICE] cURL error on model $model: $curlErr" . PHP_EOL;
+            file_put_contents(__DIR__ . '/../ai_debug.log', $logMsg, FILE_APPEND);
+            error_log('[AI_SERVICE] cURL error: ' . $curlErr);
+            throw new \Exception('Errore di connessione AI: ' . $curlErr);
         }
 
         $responseData = json_decode($response, true);
@@ -66,7 +81,9 @@ class AIService
         if ($httpCode !== 200 || empty($responseData)) {
             $keyUsed = substr($apiKey, 0, 8) . '...';
             $errMsg = $responseData['error']['message'] ?? 'Risposta non valida dall\'AI (HTTP ' . $httpCode . ')';
-            error_log('[AI_SERVICE] API error (' . $keyUsed . '): ' . $response);
+            $logMsg = date('Y-m-d H:i:s') . " [AI_SERVICE] API error ($keyUsed) on model $model: " . $response . PHP_EOL;
+            file_put_contents(__DIR__ . '/../ai_debug.log', $logMsg, FILE_APPEND);
+            error_log('[AI_SERVICE] API error (' . $keyUsed . ') on model ' . $model . ': ' . $response);
             throw new \Exception('Errore AI: ' . $errMsg);
         }
 

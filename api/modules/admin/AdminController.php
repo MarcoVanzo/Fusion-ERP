@@ -30,7 +30,7 @@ class AdminController
     public function listCertificates(): void
     {
         Auth::requireRole('operator');
-        $athleteId = filter_input(INPUT_GET, 'athleteId', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        $athleteId = filter_input(INPUT_GET, 'athleteId', FILTER_DEFAULT) ?? '';
         $expiringSoon = filter_input(INPUT_GET, 'expiringSoon', FILTER_VALIDATE_BOOLEAN) ?: false;
         Response::success($this->repo->listCertificates($athleteId, $expiringSoon));
     }
@@ -165,7 +165,7 @@ class AdminController
     public function listContracts(): void
     {
         Auth::requireRole('social media manager');
-        $userId = filter_input(INPUT_GET, 'userId', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        $userId = filter_input(INPUT_GET, 'userId', FILTER_DEFAULT) ?? '';
         Response::success($this->repo->listContracts($userId));
     }
 
@@ -419,17 +419,17 @@ HTML;
     {
         Auth::requireRole('social media manager');
 
-        $action = filter_input(INPUT_GET, 'action', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
-        $tableName = filter_input(INPUT_GET, 'table_name', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
-        $dateFrom = filter_input(INPUT_GET, 'date_from', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
-        $dateTo = filter_input(INPUT_GET, 'date_to', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
-        $search = filter_input(INPUT_GET, 'search', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        $action = filter_input(INPUT_GET, 'action', FILTER_DEFAULT) ?? '';
+        $tableName = filter_input(INPUT_GET, 'table_name', FILTER_DEFAULT) ?? '';
+        $dateFrom = filter_input(INPUT_GET, 'date_from', FILTER_DEFAULT) ?? '';
+        $dateTo = filter_input(INPUT_GET, 'date_to', FILTER_DEFAULT) ?? '';
+        $search = filter_input(INPUT_GET, 'search', FILTER_DEFAULT) ?? '';
         $limit = max(1, min(500, (int)(filter_input(INPUT_GET, 'limit', FILTER_VALIDATE_INT) ?: 200)));
         $offset = max(0, (int)(filter_input(INPUT_GET, 'offset', FILTER_VALIDATE_INT) ?: 0));
 
         // The 'action' GET param is also used by the router; for this endpoint the
         // filter action is passed as 'action_filter' to avoid collision.
-        $actionFilter = filter_input(INPUT_GET, 'action_filter', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        $actionFilter = filter_input(INPUT_GET, 'action_filter', FILTER_DEFAULT) ?? '';
 
         $logs = $this->repo->listLogs(
             $actionFilter,
@@ -528,7 +528,7 @@ HTML;
     {
         Auth::requireRole('admin');
 
-        $id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        $id = filter_input(INPUT_GET, 'id', FILTER_DEFAULT) ?? '';
         if (empty($id)) {
             Response::error('ID backup mancante', 400);
         }

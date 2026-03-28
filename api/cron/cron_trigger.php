@@ -49,7 +49,9 @@ try {
         throw new \RuntimeException('Dump fallito: ' . ($result['error'] ?? 'errore sconosciuto'));
     }
 
-    $log[] = "✅ Dump: {$result['filename']} ({$result['table_count']} tabelle, {$result['total_rows']} righe)";
+    $tc = count($result['table_names'] ?? []);
+    $tr = $result['total_rows'] ?? 0;
+    $log[] = "✅ Dump: {$result['filename']} ({$tc} tabelle, {$tr} righe)";
 
     // ── 2. Upload su Google Drive ────────────────────────────────────────────
     $driveFileId = null;
@@ -73,7 +75,7 @@ try {
 
     // ── 3. Sync Scouting da Cognito Forms ────────────────────────────────────
     try {
-        require_once $rootDir . '/api/Modules/Scouting/ScoutingController.php';
+        require_once $baseDir . '/api/Modules/Scouting/ScoutingController.php';
         $scoutingResult = \FusionERP\Modules\Scouting\ScoutingController::_doSync();
         if ($scoutingResult['success']) {
             $fus = $scoutingResult['fusion_upserted'] ?? 0;

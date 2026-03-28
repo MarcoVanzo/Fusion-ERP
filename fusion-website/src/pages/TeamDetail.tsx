@@ -177,11 +177,11 @@ const TeamDetail = () => {
                 if (teamData.status === 'success' || teamData.success === true) {
                     if (!targetTeamId) {
                         // Try matching by slug first (SEO-friendly URL)
-                        let t = teamData.data.find((t: any) => generateSlug(t.name) === slug);
+                        let t = teamData.data.find((t: { id: string | number; name: string }) => generateSlug(t.name) === slug);
                         
                         // Fallback: match by raw team_season_id (e.g. /teams/TS_03bf1a12676b50d)
                         if (!t && slug) {
-                            t = teamData.data.find((t: any) => t.id.toString() === slug);
+                            t = teamData.data.find((t: { id: string | number; name: string }) => t.id.toString() === slug);
                         }
                         
                         if (t) {
@@ -196,7 +196,7 @@ const TeamDetail = () => {
                             }
                         }
                     } else {
-                        const t = teamData.data.find((t: any) => t.id.toString() === targetTeamId.toString());
+                        const t = teamData.data.find((t: { id: string | number; name: string }) => t.id.toString() === targetTeamId.toString());
                         if (t) setTeamName(t.name);
                     }
                 }
@@ -217,7 +217,7 @@ const TeamDetail = () => {
                 const staffRes = await fetch(`/ERP/api/router.php?module=staff&action=getPublicStaff&teamId=${targetTeamId}`);
                 const staffData = await staffRes.json();
                 if (staffData.status === 'success' || staffData.success === true) {
-                    const sortedStaff = (staffData.data || []).sort((a: any, b: any) => {
+                    const sortedStaff = (staffData.data || []).sort((a: { role?: string }, b: { role?: string }) => {
                         const roleOrder = [
                             'primo allenatore',
                             'secondo allenatore',

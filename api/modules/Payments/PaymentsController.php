@@ -93,7 +93,7 @@ class PaymentsController
     public function getPlan(): void
     {
         Auth::requireRead('payments');
-        $athleteId = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        $athleteId = filter_input(INPUT_GET, 'id', FILTER_DEFAULT) ?? '';
         if (empty($athleteId)) {
             Response::error('id atleta obbligatorio', 400);
         }
@@ -101,7 +101,6 @@ class PaymentsController
         $plan = $this->repo->getActivePlan($athleteId);
         if (!$plan) {
             Response::success(['plan' => null, 'installments' => []]);
-            return;
         }
 
         $installments = $this->repo->getInstallments($plan['id']);
@@ -270,7 +269,7 @@ class PaymentsController
     {
         Auth::requireRead('payments');
         $tenantId = TenantContext::id();
-        $teamId = filter_input(INPUT_GET, 'team_id', FILTER_SANITIZE_SPECIAL_CHARS) ?: null;
+        $teamId = filter_input(INPUT_GET, 'team_id', FILTER_DEFAULT) ?: null;
         $data = $this->repo->getSquadSummary($tenantId, $teamId);
         Response::success($data);
     }

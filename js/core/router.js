@@ -1,1 +1,312 @@
-"use strict";const Router=(()=>{const e={},s=document.querySelector('meta[name="app-version"]')?.content||Date.now();let t=null,a={};function o(e){const s={},t=new URLSearchParams(e);for(const[e,a]of t.entries())s[e]=a;return s}const r={dashboard:"js/modules/dashboard.js",athletes:"js/modules/athletes.js","athlete-profile":"js/modules/athletes.js","athlete-payments":"js/modules/athletes.js","athlete-metrics":"js/modules/athletes.js","athlete-documents":"js/modules/athletes.js",transport:"js/modules/transport.js","transport-drivers":"js/modules/transport.js","transport-fleet":"js/modules/vehicles.js",admin:"js/modules/admin.js","admin-backup":"js/modules/admin.js","admin-logs":"js/modules/admin/AdminLogs.js",users:"js/modules/admin/AdminUsers.js",utenti:"js/modules/admin/AdminUsers.js",outseason:"js/modules/outseason.js","outseason-camps":"js/modules/outseason.js","outseason-tournaments":"js/modules/tournaments.js",social:"js/modules/social.js","social-analytics":"js/modules/social.js","social-gallery":"js/modules/social.js",results:"js/modules/results.js","results-matches":"js/modules/results.js","results-standings":"js/modules/results.js",tasks:"js/modules/tasks.js",staff:"js/modules/staff_v3.js","staff-documents":"js/modules/staff_v3.js",ecommerce:"js/modules/ecommerce.js","ecommerce-articles":"js/modules/ecommerce.js","ecommerce-orders":"js/modules/ecommerce.js",finance:"js/modules/finance.js","finance-invoices":"js/modules/finance.js","finance-74ter":"js/modules/finance.js","finance-foresteria":"js/modules/finance.js",tournaments:"js/modules/tournaments.js","whatsapp-inbox":"js/modules/whatsapp.js","whatsapp-contacts":"js/modules/whatsapp.js",website:"js/modules/website.js","website-analytics":"js/modules/web_analytics.js",newsletter:"js/modules/newsletter.js",societa:"js/modules/societa.js","societa-identita":"js/modules/societa.js","societa-organigramma":"js/modules/societa.js","societa-membri":"js/modules/societa.js","societa-documenti":"js/modules/societa.js","societa-scadenze":"js/modules/societa.js","societa-sponsor":"js/modules/societa.js","societa-titoli":"js/modules/societa.js","societa-foresteria":"js/modules/societa.js",network:"js/modules/network.js","network-collaborazioni":"js/modules/network.js","network-prove":"js/modules/network.js","network-attivita":"js/modules/network.js",squadre:"js/modules/squadre.js","squadre-stagioni":"js/modules/squadre.js","scouting-database":"js/modules/scouting.js"},n={athletes:"read","athlete-profile":"read","athlete-payments":"read","athlete-metrics":"read","athlete-documents":"read",teams:"read",results:"read","results-matches":"read","results-standings":"read",transport:"read","transport-drivers":"read","transport-fleet":"read",outseason:"read","outseason-camps":"read","outseason-tournaments":"read",tournaments:"read",social:"read","social-analytics":"read","social-gallery":"read",finance:"read",admin:"read","admin-backup":"read","admin-logs":"read",users:"read",utenti:"read",tasks:"read",staff:"read","staff-documents":"read",ecommerce:"read","ecommerce-articles":"read","ecommerce-orders":"read",finance:"read","finance-invoices":"read","finance-74ter":"read","finance-foresteria":"read","whatsapp-inbox":"read","whatsapp-contacts":"read",website:"read","website-analytics":"read",newsletter:"read",societa:"read","societa-identita":"read","societa-organigramma":"read","societa-membri":"read","societa-documenti":"read","societa-scadenze":"read","societa-sponsor":"read","societa-titoli":"read","societa-foresteria":"read",network:"read","network-collaborazioni":"read","network-prove":"read","network-attivita":"read",squadre:"read","squadre-stagioni":"read","scouting-database":"read"};function i(e){Utils.qsa("[data-route]").forEach(s=>{const t=s.dataset.route===e;s.classList.toggle("active",t),s.setAttribute("aria-current",t?"page":"false")}),Utils.qsa(".nav-group").forEach(e=>{if(e.querySelector(".submenu-item.active")){e.classList.add("expanded");const s=e.querySelector(".nav-item");s&&(s.setAttribute("aria-expanded","true"),s.classList.add("nav-item--parent-active"))}else{const s=e.querySelector(".nav-item");s&&s.classList.remove("nav-item--parent-active")}})}return{navigate:async function c(l,d={}){if(a=d,t===l&&0===Object.keys(d).length)return;let u=l;if(l.includes("?")){const[e,s]=l.split("?");u=e,a={...a,...o("?"+s)}}if(u.includes(".html")||u.startsWith("http"))return void(window.location.href=l);if("dashboard"!==u&&!function(e){const s=n[e];if(!s)return!0;const t=App.getUser();if(!t)return!1;if("admin"===t.role)return!0;const a=t.permissions;if(!a||Array.isArray(a)||0===Object.keys(a).length)return!0;if(a[e]){const p=a[e];return"read"===s?"read"===p||"write"===p:"write"===s&&"write"===p}const o=function(e){return e.startsWith("athlete")?"athletes":e.startsWith("results")?"results":e.startsWith("admin")||"utenti"===e||"users"===e?"admin":e.startsWith("transport")?"transport":"outseason-tournaments"===e||"tournaments"===e?"outseason-tournaments":"outseason-camps"===e||e.startsWith("outseason")?"outseason":e.startsWith("social")?"social":e.startsWith("website")?"website":e.startsWith("scouting")?"scouting":e.startsWith("ecommerce")?"ecommerce":e.startsWith("finance")?"finance":e.startsWith("whatsapp")?"whatsapp":e.startsWith("staff")?"staff":e.startsWith("newsletter")?"newsletter":e.startsWith("societa")?"societa":e.startsWith("network")?"network":e==="squadre"||e==="squadre-stagioni"?"teams":e}(e),r=a[o]||"none";return"read"===s?"read"===r||"write"===r:"write"===s&&"write"===r}(u))return UI.toast("Permessi insufficienti per accedere a questa sezione","error",3500),void("dashboard"!==t&&c("dashboard"));const m={dashboard:"Dashboard",athletes:"Athletes","athlete-profile":"Athletes","athlete-payments":"Athletes","athlete-metrics":"Athletes","athlete-documents":"Athletes",transport:"Transport","transport-drivers":"Transport","transport-fleet":"Vehicles",admin:"Admin","admin-backup":"Admin","admin-logs":"AdminLogs",users:"AdminUsers",utenti:"AdminUsers",outseason:"OutSeason","outseason-camps":"OutSeason","outseason-tournaments":"Tournaments",tournaments:"Tournaments",social:"Social","social-analytics":"Social","social-gallery":"Social",results:"Results","results-matches":"Results","results-standings":"Results",tasks:"Tasks",staff:"Staff","staff-documents":"Staff",ecommerce:"Ecommerce","ecommerce-articles":"Ecommerce","ecommerce-orders":"Ecommerce",finance:"Finance","finance-invoices":"Finance","finance-74ter":"Finance","finance-foresteria":"Finance","whatsapp-inbox":"WhatsApp","whatsapp-contacts":"WhatsApp",website:"Website","website-analytics":"WebAnalytics",newsletter:"Newsletter",societa:"Societa","societa-identita":"Societa","societa-organigramma":"Societa","societa-membri":"Societa","societa-documenti":"Societa","societa-scadenze":"Societa","societa-sponsor":"Societa","societa-titoli":"Societa","societa-foresteria":"Societa",network:"Network","network-collaborazioni":"Network","network-prove":"Network","network-attivita":"Network",squadre:"Squadre","squadre-stagioni":"Squadre","scouting-database":"Scouting"};if(t){const e=m[t];if(e&&window[e]&&"function"==typeof window[e].destroy)try{window[e].destroy()}catch(e){console.error("[Router] Error during module destroy:",e)}}t=u;const j=Object.keys(a).length?"?"+new URLSearchParams(a).toString():"";window.location.hash=u+j,i(u);const h=document.getElementById("app");if(h){h.innerHTML=UI.skeletonPage();try{if(!e[u]){if(!r[u])return void(h.innerHTML=Utils.emptyState("Sezione in arrivo","Questa funzionalità è in fase di sviluppo.","Torna alla Dashboard","dashboard"));await(p=r[u],new Promise((e,t)=>{if(document.querySelector(`script[src^="${p}"]`))return void e();const a=document.createElement("script");a.src=p+"?v="+s,a.async=!0,a.onload=e,a.onerror=()=>t(new Error(`Impossibile caricare il modulo: ${p}`)),document.head.appendChild(a)})),e[u]=!0}const t=m[u];window[t]&&"function"==typeof window[t].init&&await window[t].init()}catch(e){console.error("[Router] Navigation error:",e),h.innerHTML=Utils.emptyState("Errore nel caricamento della sezione",e.message),UI.toast("Errore nel caricare la sezione","error")}var p}},getCurrentRoute:function(){return t},getParams:function(){return a},updateHash:function(e,s={}){a=s;const t=Object.keys(s).length?"?"+new URLSearchParams(s).toString():"";window.location.hash=e+t},updateNavActive:i,_appVersion:s}})();
+'use strict';
+
+/**
+ * Router — SPA Client-Side Navigation
+ * Fusion ERP v1.0
+ *
+ * Route registry: single source of truth.
+ * Each entry defines path, JS file to lazy-load, required permission, global module class name, and optionally type (e.g. 'module').
+ * Adding a new route requires ONE change here only.
+ *
+ * @typedef {{ path: string, file: string, permission: string|null, module: string|null, type?: string }} RouteConfig
+ */
+
+const Router = (() => {
+    /** @type {Record<string, boolean>} Tracks which module scripts have already been injected */
+    const _loaded = {};
+
+    /** App version for cache-busting lazy-loaded modules */
+    const _appVersion = document.querySelector('meta[name="app-version"]')?.content || Date.now();
+
+    /** @type {string|null} Currently active route */
+    let _currentRoute = null;
+
+    /** @type {Record<string, string>} Current route params */
+    let _params = {};
+
+    // ─── Single Route Registry ──────────────────────────────────────────────────
+    // permission: null = public route (no check), 'read'/'write' = auth required
+    /** @type {RouteConfig[]} */
+    const ROUTES = [
+        // Core
+        { path: 'dashboard',            file: 'js/modules/dashboard.js',           permission: null,   module: 'Dashboard'         },
+        // Athletes
+        { path: 'athletes',             file: 'js/modules/athletes.js',            permission: 'read', module: 'Athletes', type: 'module' },
+        { path: 'athlete-profile',      file: 'js/modules/athletes.js',            permission: 'read', module: 'Athletes', type: 'module' },
+        { path: 'athlete-payments',     file: 'js/modules/athletes.js',            permission: 'read', module: 'Athletes', type: 'module' },
+        { path: 'athlete-metrics',      file: 'js/modules/athletes.js',            permission: 'read', module: 'Athletes', type: 'module' },
+        { path: 'athlete-documents',    file: 'js/modules/athletes.js',            permission: 'read', module: 'Athletes', type: 'module' },
+        // Transport & Vehicles
+        { path: 'transport',            file: 'js/modules/transport.js',           permission: 'read', module: 'Transport', type: 'module' },
+        { path: 'transport-drivers',    file: 'js/modules/transport.js',           permission: 'read', module: 'Transport', type: 'module' },
+        { path: 'transport-fleet',      file: 'js/modules/vehicles/Vehicles.js',            permission: 'read', module: 'Vehicles', type: 'module' },
+        // Admin
+        { path: 'admin',                file: 'js/modules/admin/AdminDashboard.js', permission: 'read', module: 'AdminDashboard'   },
+        { path: 'admin-backup',         file: 'js/modules/admin/AdminBackup.js',   permission: 'read', module: 'AdminBackup'       },
+        { path: 'admin-logs',           file: 'js/modules/admin/AdminLogs.js',     permission: 'read', module: 'AdminLogs'         },
+        { path: 'admin-settings',       file: 'js/modules/admin/AdminSettings.js', permission: 'read', module: 'AdminSettings'    },
+        { path: 'admin-certs',          file: 'js/modules/admin/AdminCertificates.js', permission: 'read', module: 'AdminCertificates' },
+        { path: 'admin-contracts',      file: 'js/modules/admin/AdminContracts.js', permission: 'read', module: 'AdminContracts'  },
+        { path: 'admin-tasks',          file: 'js/modules/admin/AdminTasks.js',    permission: 'read', module: 'AdminTasks'        },
+        { path: 'users',                file: 'js/modules/admin/AdminUsers.js',    permission: 'read', module: 'AdminUsers'        },
+        { path: 'utenti',               file: 'js/modules/admin/AdminUsers.js',    permission: 'read', module: 'AdminUsers'        }, // legacy alias — keep until nav migrates fully
+        // Out-of-Season & Tournaments
+        { path: 'outseason',            file: 'js/modules/outseason.js',           permission: 'read', module: 'OutSeason'         },
+        { path: 'outseason-camps',      file: 'js/modules/outseason.js',           permission: 'read', module: 'OutSeason'         },
+        { path: 'outseason-tournaments', file: 'js/modules/tournaments.js',        permission: 'read', module: 'Tournaments', type: 'module' },
+        { path: 'tournaments',          file: 'js/modules/tournaments.js',         permission: 'read', module: 'Tournaments', type: 'module' },
+        // Social
+        { path: 'social',               file: 'js/modules/social.js',              permission: 'read', module: 'Social'            },
+        { path: 'social-analytics',     file: 'js/modules/social.js',              permission: 'read', module: 'Social'            },
+        { path: 'social-gallery',       file: 'js/modules/social.js',              permission: 'read', module: 'Social'            },
+        // Results
+        { path: 'results',              file: 'js/modules/results.js',             permission: 'read', module: 'Results', type: 'module' },
+        { path: 'results-matches',      file: 'js/modules/results.js',             permission: 'read', module: 'Results', type: 'module' },
+        { path: 'results-standings',    file: 'js/modules/results.js',             permission: 'read', module: 'Results', type: 'module' },
+        // Tasks & Staff
+        { path: 'tasks',                file: 'js/modules/tasks.js',               permission: 'read', module: 'Tasks'             },
+        { path: 'staff',                file: 'js/modules/staff.js',               permission: 'read', module: 'Staff', type: 'module' },
+        { path: 'staff-documents',      file: 'js/modules/staff.js',               permission: 'read', module: 'Staff', type: 'module' },
+        // Ecommerce
+        { path: 'ecommerce',            file: 'js/modules/ecommerce.js',           permission: 'read', module: 'Ecommerce', type: 'module' },
+        { path: 'ecommerce-articles',   file: 'js/modules/ecommerce.js',           permission: 'read', module: 'Ecommerce', type: 'module' },
+        { path: 'ecommerce-orders',     file: 'js/modules/ecommerce.js',           permission: 'read', module: 'Ecommerce', type: 'module' },
+        // Finance
+        { path: 'finance',              file: 'js/modules/finance.js',             permission: 'admin', module: 'Finance', type: 'module' },
+        { path: 'finance-invoices',     file: 'js/modules/finance.js',             permission: 'admin', module: 'Finance', type: 'module' },
+        { path: 'finance-bank',         file: 'js/modules/finance.js',             permission: 'admin', module: 'Finance', type: 'module' },
+        { path: 'finance-foresteria',   file: 'js/modules/finance.js',             permission: 'read', module: 'Finance'           },
+        // WhatsApp
+        { path: 'whatsapp-inbox',       file: 'js/modules/whatsapp.js',            permission: 'read', module: 'WhatsApp'          },
+        { path: 'whatsapp-contacts',    file: 'js/modules/whatsapp.js',            permission: 'read', module: 'WhatsApp'          },
+        // Website & Newsletter
+        { path: 'website',              file: 'js/modules/website.js',             permission: 'read', module: 'Website'           },
+        { path: 'website-analytics',    file: 'js/modules/site_stats.js',          permission: 'read', module: 'WebAnalytics'      },
+        { path: 'newsletter',           file: 'js/modules/newsletter.js',          permission: 'read', module: 'Newsletter', type: 'module' },
+        // Societa
+        { path: 'societa',              file: 'js/modules/societa.js',             permission: 'read', module: 'Societa', type: 'module' },
+        { path: 'societa-identita',     file: 'js/modules/societa.js',             permission: 'read', module: 'Societa', type: 'module' },
+        { path: 'societa-organigramma', file: 'js/modules/societa.js',             permission: 'read', module: 'Societa', type: 'module' },
+        { path: 'societa-membri',       file: 'js/modules/societa.js',             permission: 'read', module: 'Societa', type: 'module' },
+        { path: 'societa-documenti',    file: 'js/modules/societa.js',             permission: 'read', module: 'Societa', type: 'module' },
+        { path: 'societa-scadenze',     file: 'js/modules/societa.js',             permission: 'read', module: 'Societa', type: 'module' },
+        { path: 'societa-sponsor',      file: 'js/modules/societa.js',             permission: 'read', module: 'Societa', type: 'module' },
+        { path: 'societa-titoli',       file: 'js/modules/societa.js',             permission: 'read', module: 'Societa', type: 'module' },
+        { path: 'societa-foresteria',   file: 'js/modules/societa.js',             permission: 'read', module: 'Societa', type: 'module' },
+        // Network
+        { path: 'network',              file: 'js/modules/network/Network.js',             permission: 'read', module: 'Network', type: 'module' },
+        { path: 'network-collaborazioni', file: 'js/modules/network/Network.js',           permission: 'read', module: 'Network', type: 'module' },
+        { path: 'network-prove',        file: 'js/modules/network/Network.js',             permission: 'read', module: 'Network', type: 'module' },
+        { path: 'network-attivita',     file: 'js/modules/network/Network.js',             permission: 'read', module: 'Network', type: 'module' },
+        // Squadre & Scouting
+        { path: 'squadre',              file: 'js/modules/squadre.js',             permission: 'read', module: 'Squadre', type: 'module' },
+        { path: 'squadre-stagioni',     file: 'js/modules/squadre.js',             permission: 'read', module: 'Squadre', type: 'module' },
+
+        { path: 'scouting-database',    file: 'js/modules/scouting/Scouting.js',            permission: 'read', module: 'Scouting', type: 'module' },
+    ];
+
+    // Build lookup maps from the single registry (computed once at startup)
+    const _fileMap       = Object.fromEntries(ROUTES.map(r => [r.path, r.file]));
+    const _permissionMap = Object.fromEntries(ROUTES.filter(r => r.permission).map(r => [r.path, r.permission]));
+    const _moduleMap     = Object.fromEntries(ROUTES.filter(r => r.module).map(r => [r.path, r.module]));
+    const _typeMap       = Object.fromEntries(ROUTES.filter(r => r.type).map(r => [r.path, r.type]));
+
+    // ─── URL Params Parser ──────────────────────────────────────────────────────
+    function _parseQueryString(qs) {
+        const out = {};
+        for (const [k, v] of new URLSearchParams(qs).entries()) out[k] = v;
+        return out;
+    }
+
+    // ─── Permission Check ───────────────────────────────────────────────────────
+    /**
+     * Returns true if the current user is allowed to access the given route.
+     * Falls back to parent-route permission for sub-routes (e.g. athlete-profile → athletes).
+     */
+    function _canAccess(route) {
+        const required = _permissionMap[route];
+        if (!required) return true; // public route
+
+        const user = App.getUser();
+        if (!user) return false;
+        if (user.role === 'admin') return true;
+
+        const perms = user.permissions;
+        if (!perms || Array.isArray(perms) || Object.keys(perms).length === 0) return true;
+
+        // Direct permission check
+        const directPerm = perms[route];
+        if (directPerm) {
+            return required === 'read'
+                ? directPerm === 'read' || directPerm === 'write'
+                : directPerm === 'write';
+        }
+
+        // Fallback to parent permission
+        const _parentOf = (r) => {
+            if (r.startsWith('athlete'))      return 'athletes';
+            if (r.startsWith('results'))      return 'results';
+            if (r.startsWith('admin') || r === 'utenti' || r === 'users') return 'admin';
+            if (r.startsWith('transport'))    return 'transport';
+            if (r === 'outseason-tournaments' || r === 'tournaments') return 'outseason-tournaments';
+            if (r === 'outseason-camps' || r.startsWith('outseason')) return 'outseason';
+            if (r.startsWith('social'))       return 'social';
+            if (r.startsWith('website'))      return 'website';
+            if (r.startsWith('scouting'))     return 'scouting';
+            if (r.startsWith('ecommerce'))    return 'ecommerce';
+            if (r.startsWith('finance'))      return 'finance';
+            if (r.startsWith('whatsapp'))     return 'whatsapp';
+            if (r.startsWith('staff'))        return 'staff';
+            if (r.startsWith('newsletter'))   return 'newsletter';
+            if (r.startsWith('societa'))      return 'societa';
+            if (r.startsWith('network'))      return 'network';
+            if (r === 'squadre' || r === 'squadre-stagioni') return 'teams';
+            return r;
+        };
+
+        const parentPerm = perms[_parentOf(route)] || 'none';
+        return required === 'read'
+            ? parentPerm === 'read' || parentPerm === 'write'
+            : parentPerm === 'write';
+    }
+
+    // ─── Nav Active State ───────────────────────────────────────────────────────
+    function _updateNavActive(route) {
+        Utils.qsa('[data-route]').forEach(el => {
+            const isActive = el.dataset.route === route;
+            el.classList.toggle('active', isActive);
+            el.setAttribute('aria-current', isActive ? 'page' : 'false');
+        });
+        Utils.qsa('.nav-group').forEach(group => {
+            if (group.querySelector('.submenu-item.active')) {
+                group.classList.add('expanded');
+                const btn = group.querySelector('.nav-item');
+                if (btn) {
+                    btn.setAttribute('aria-expanded', 'true');
+                    btn.classList.add('nav-item--parent-active');
+                }
+            } else {
+                const btn = group.querySelector('.nav-item');
+                if (btn) btn.classList.remove('nav-item--parent-active');
+            }
+        });
+    }
+
+    // ─── Lazy-load a module script ──────────────────────────────────────────────
+    function _loadScript(filePath, isModule = false) {
+        return new Promise((resolve, reject) => {
+            // Skip if already injected into the DOM
+            if (document.querySelector(`script[src^="${filePath}"]`)) {
+                resolve();
+                return;
+            }
+            const script = document.createElement('script');
+            if (isModule) {
+                script.type = 'module';
+            }
+            script.src = filePath + '?v=' + _appVersion;
+            script.async = true;
+            script.onload = resolve;
+            script.onerror = () => reject(new Error(`Impossibile caricare il modulo: ${filePath}`));
+            document.head.appendChild(script);
+        });
+    }
+
+    // ─── Public API ─────────────────────────────────────────────────────────────
+    return {
+        /**
+         * Navigate to a route, lazy-loading its module if needed.
+         * @param {string} route
+         * @param {Record<string, string>} [params]
+         */
+        navigate: async function _navigate(route, params = {}) {
+            _params = params;
+
+            // Prevent re-navigating to the same route with no params change
+            if (_currentRoute === route && Object.keys(params).length === 0) return;
+
+            let path = route;
+
+            // Support ?query in route string
+            if (route.includes('?')) {
+                const [base, qs] = route.split('?');
+                path = base;
+                _params = { ..._params, ..._parseQueryString('?' + qs) };
+            }
+
+            // External or static HTML redirect
+            if (path.includes('.html') || path.startsWith('http')) {
+                window.location.href = route;
+                return;
+            }
+
+            // Permission gate
+            if (path !== 'dashboard' && !_canAccess(path)) {
+                UI.toast('Permessi insufficienti per accedere a questa sezione', 'error', 3500);
+                if (_currentRoute !== 'dashboard') _navigate('dashboard');
+                return;
+            }
+
+            // Destroy the previous module (memory cleanup)
+            if (_currentRoute) {
+                const prevModuleName = _moduleMap[_currentRoute];
+                if (prevModuleName && window[prevModuleName] && typeof window[prevModuleName].destroy === 'function') {
+                    try { window[prevModuleName].destroy(); } catch (e) { console.error('[Router] Error during module destroy:', e); }
+                }
+            }
+
+            _currentRoute = path;
+
+            // Update URL hash and nav highlights
+            const qs = Object.keys(_params).length ? '?' + new URLSearchParams(_params).toString() : '';
+            window.location.hash = path + qs;
+            _updateNavActive(path);
+
+            const appEl = document.getElementById('app');
+            if (!appEl) return;
+
+            appEl.innerHTML = UI.skeletonPage();
+
+            try {
+                // Lazy-load the module script (once per session)
+                if (!_loaded[path]) {
+                    const filePath = _fileMap[path];
+                    if (!filePath) {
+                        appEl.innerHTML = Utils.emptyState(
+                            'Sezione in arrivo',
+                            'Questa funzionalità è in fase di sviluppo.',
+                            'Torna alla Dashboard',
+                            'dashboard'
+                        );
+                        return;
+                    }
+                    await _loadScript(filePath, _typeMap[path] === 'module');
+                    _loaded[path] = true;
+                }
+
+                // Initialize the module
+                const moduleName = _moduleMap[path];
+                if (moduleName && window[moduleName] && typeof window[moduleName].init === 'function') {
+                    await window[moduleName].init();
+                }
+            } catch (err) {
+                console.error('[Router] Navigation error:', err);
+                appEl.innerHTML = Utils.emptyState('Errore nel caricamento della sezione', err.message);
+                UI.toast('Errore nel caricare la sezione', 'error');
+            }
+        },
+
+        getCurrentRoute: () => _currentRoute,
+        getParams:       () => _params,
+
+        updateHash(route, params = {}) {
+            _params = params;
+            const qs = Object.keys(params).length ? '?' + new URLSearchParams(params).toString() : '';
+            window.location.hash = route + qs;
+        },
+
+        updateNavActive: _updateNavActive,
+        _appVersion,
+    };
+})();
+window.Router = Router;

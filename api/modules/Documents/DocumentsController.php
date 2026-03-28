@@ -133,8 +133,8 @@ class DocumentsController
     {
         Auth::requireRead('documents');
         $user = Auth::user();
-        $athleteId = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
-        $docType = filter_input(INPUT_GET, 'type', FILTER_SANITIZE_SPECIAL_CHARS);
+        $athleteId = filter_input(INPUT_GET, 'id', FILTER_DEFAULT) ?? '';
+        $docType = filter_input(INPUT_GET, 'type', FILTER_DEFAULT);
 
         if (empty($athleteId)) {
             Response::error('id atleta obbligatorio', 400);
@@ -163,7 +163,7 @@ class DocumentsController
     public function download(): void
     {
         Auth::requireRead('documents');
-        $docId = filter_input(INPUT_GET, 'docId', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        $docId = filter_input(INPUT_GET, 'docId', FILTER_DEFAULT) ?? '';
 
         if (empty($docId)) {
             Response::error('docId obbligatorio', 400);

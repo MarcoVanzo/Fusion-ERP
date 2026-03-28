@@ -352,12 +352,10 @@ class ResultsRepository
         }
         $errors = 0;
         foreach (array_filter(array_map('trim', explode(';', $sql))) as $statement) {
-            if (!empty($statement)) {
-                try {
-                    $this->pdo->exec($statement);
-                } catch (\PDOException $e) {
-                    $errors++;
-                }
+            try {
+                $this->pdo->exec($statement);
+            } catch (\PDOException $e) {
+                $errors++;
             }
         }
     }

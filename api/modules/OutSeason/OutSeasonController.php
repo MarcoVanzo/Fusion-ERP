@@ -49,7 +49,7 @@ class OutSeasonController
         Auth::requireRead('outseason');
 
         $seasonKey = trim((string)(
-            filter_input(INPUT_GET, 'season_key', FILTER_SANITIZE_SPECIAL_CHARS)
+            filter_input(INPUT_GET, 'season_key', FILTER_DEFAULT)
             ?? self::seasonKey()
             ));
 
@@ -376,7 +376,6 @@ PROMPT;
                 'raw_response' => mb_substr($rawText, 0, 2000),
                 'message' => 'L\'AI ha risposto ma il formato JSON era troncato o non valido. Riprovare.',
             ]);
-            return;
         }
 
         $results = $parsed['results'] ?? $parsed;
@@ -386,7 +385,6 @@ PROMPT;
                 'raw_response' => mb_substr($rawText, 0, 2000),
                 'message' => 'Nessun risultato trovato nella risposta AI.',
             ]);
-            return;
         }
 
         Response::success([
@@ -484,7 +482,7 @@ PROMPT;
     {
         Auth::requireRead('outseason');
 
-        $seasonKey = trim((string)filter_input(INPUT_GET, 'season_key', FILTER_SANITIZE_SPECIAL_CHARS));
+        $seasonKey = trim((string)filter_input(INPUT_GET, 'season_key', FILTER_DEFAULT));
 
         if (empty($seasonKey)) {
             Response::error('Parametro season_key mancante.', 400);

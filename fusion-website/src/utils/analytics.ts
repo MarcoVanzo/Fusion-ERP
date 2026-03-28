@@ -4,8 +4,8 @@ export const GTM_ID = 'GTM-XXXXXXX';
 
 declare global {
     interface Window {
-        dataLayer: any[];
-        gtag: (...args: any[]) => void;
+        dataLayer: unknown[];
+        gtag: (...args: unknown[]) => void;
     }
 }
 
@@ -19,6 +19,7 @@ export const initializeAnalytics = () => {
     if (isGtmInitialized) return;
     
     window.dataLayer = window.dataLayer || [];
+    // eslint-disable-next-line prefer-rest-params
     window.gtag = window.gtag || function() { window.dataLayer.push(arguments); };
     
     // Aggiorna lo stato del consenso per GA4
@@ -39,6 +40,7 @@ export const initializeAnalytics = () => {
  */
 export const trackPageView = (url: string) => {
     window.dataLayer = window.dataLayer || [];
+    // eslint-disable-next-line prefer-rest-params
     window.gtag = window.gtag || function() { window.dataLayer.push(arguments); };
     
     window.gtag('event', 'page_view', {

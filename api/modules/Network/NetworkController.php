@@ -228,7 +228,7 @@ class NetworkController
     public function listColDocuments(): void
     {
         Auth::requireRole('operator');
-        $collabId = filter_input(INPUT_GET, 'collaboration_id', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        $collabId = filter_input(INPUT_GET, 'collaboration_id', FILTER_DEFAULT) ?? '';
         if (empty($collabId)) {
             Response::error('collaboration_id obbligatorio', 400);
         }
@@ -308,7 +308,7 @@ class NetworkController
     public function downloadColDocument(): void
     {
         Auth::requireRole('operator');
-        $docId = filter_input(INPUT_GET, 'docId', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        $docId = filter_input(INPUT_GET, 'docId', FILTER_DEFAULT) ?? '';
         if (empty($docId)) {
             Response::error('docId obbligatorio', 400);
         }
@@ -445,7 +445,7 @@ class NetworkController
     public function listEvaluations(): void
     {
         Auth::requireRole('operator');
-        $trialId = filter_input(INPUT_GET, 'trial_id', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+        $trialId = filter_input(INPUT_GET, 'trial_id', FILTER_DEFAULT) ?? '';
         if (empty($trialId)) {
             Response::error('trial_id obbligatorio', 400);
         }
@@ -514,9 +514,7 @@ class NetworkController
             Response::error('Il modulo Scouting non è ancora attivo su questo sistema. Eseguire prima la migrazione relativa.', 503);
         }
 
-        $scoutingId = 'SCT_' . bin2hex(random_bytes(4));
-        $this->repo->insertScoutingProfile([
-            ':id' => $scoutingId,
+        $scoutingId = $this->repo->insertScoutingProfile([
             ':tenant_id' => TenantContext::id(),
             ':first_name' => $trial['athlete_first_name'],
             ':last_name' => $trial['athlete_last_name'],

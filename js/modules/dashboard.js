@@ -59,7 +59,7 @@ const Dashboard = (() => {
   // ── Render KPI card ───────────────────────────────────────────────────────
   function kpiCard({ icon, label, value, color, route, sub }) {
     const nav = route
-      ? `onclick="Router.navigate('${route}')" style="cursor:pointer;"`
+      ? `data-route="${route}" style="cursor:pointer;"`
       : "";
     return `
       <div class="dash-kpi-card" ${nav}>
@@ -154,6 +154,9 @@ const Dashboard = (() => {
 
   // ── Render full page ──────────────────────────────────────────────────────
   function render(data) {
+    _abort.abort();
+    _abort = new AbortController();
+
     const el = document.getElementById("app");
     if (!el) return;
 
@@ -163,7 +166,7 @@ const Dashboard = (() => {
     const alerts = data?.alerts ?? [];
 
     el.innerHTML = `
-      <div class="dash-wrap">
+      <div class="dash-wrap" id="dash-main-container">
 
         <div class="dash-header">
           <div>
@@ -187,7 +190,7 @@ const Dashboard = (() => {
           <div class="dash-widget">
             <div class="dash-widget-header">
               <span class="dash-widget-title"><i class="ph-fill ph-calendar-check" style="color:#2563EB"></i> Partite questa settimana</span>
-              <button class="btn btn-ghost btn-sm" onclick="Router.navigate('results-matches')">Vedi tutte</button>
+              <button class="btn btn-ghost btn-sm" data-route="results-matches">Vedi tutte</button>
             </div>
             <div class="dash-widget-body">${renderMatches(matches)}</div>
           </div>
@@ -204,7 +207,7 @@ const Dashboard = (() => {
           <div class="dash-widget dash-widget--full">
             <div class="dash-widget-header">
               <span class="dash-widget-title"><i class="ph-fill ph-warning-circle" style="color:#FF3B30"></i> Alert Scadenze</span>
-              <button class="btn btn-ghost btn-sm" onclick="Router.navigate('athlete-profile')">Vedi atleti</button>
+              <button class="btn btn-ghost btn-sm" data-route="athlete-profile">Vedi atleti</button>
             </div>
             <div class="dash-widget-body dash-alert-list">${renderAlerts(alerts)}</div>
           </div>
@@ -284,6 +287,14 @@ const Dashboard = (() => {
         .dash-empty i { font-size:32px; }
       </style>
     `;
+
+    // Delegation for data-route
+    document.getElementById("dash-main-container")?.addEventListener("click", (e) => {
+      const target = e.target.closest("[data-route]");
+      if (target) {
+        Router.navigate(target.dataset.route);
+      }
+    }, { signal: _abort.signal });
   }
 
   return {

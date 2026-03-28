@@ -480,9 +480,9 @@ class SocietaRepository
     public function upsertForesteriaInfo(array $data): void
     {
         $this->db->prepare(
-            'INSERT INTO foresteria_info (id, tenant_id, description)
-             VALUES (:id, :tenant_id, :description)
-             ON DUPLICATE KEY UPDATE description = VALUES(description)'
+            'INSERT INTO foresteria_info (id, tenant_id, description, address, lat, lng)
+             VALUES (:id, :tenant_id, :description, :address, :lat, :lng)
+             ON DUPLICATE KEY UPDATE description = VALUES(description), address = VALUES(address), lat = VALUES(lat), lng = VALUES(lng)'
         )->execute($data);
     }
 

@@ -1,11 +1,17 @@
 Options -Indexes
 
-# Force HTTPS in production (uncomment when SSL is active)
-# RewriteCond %{HTTPS} off
-# RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+# Force HTTPS — works both with direct SSL and behind CDN/proxy (Cloudflare)
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    # Direct SSL termination
+    RewriteCond %{HTTPS} off
+    # OR: proxy / CDN passes X-Forwarded-Proto (Cloudflare, Nginx, etc.)
+    RewriteCond %{HTTP:X-Forwarded-Proto} !https
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</IfModule>
 
 # Protect sensitive files
-<FilesMatch "^\.env|composer\.(json|lock)|\.gitignore">
+<FilesMatch "(^\.env|composer\.(json|lock)|\.gitignore)">
     Require all denied
 </FilesMatch>
 
@@ -13,13 +19,10 @@ Options -Indexes
     Require all denied
 </FilesMatch>
 
-# Protect uploads directory from execution
-<Directory "uploads">
-    Options -ExecCGI
-    AddHandler cgi-script .php .pl .py .jsp .asp .htm .shtml .sh .cgi
-    php_flag engine off
-    Require all denied
-</Directory>
+# Block PHP execution in uploads directory
+# NOTE: FilesMatch with relative paths does NOT reliably block subdirectories in .htaccess.
+# A dedicated uploads/.htaccess (php_flag engine off) is the correct approach.
+# See: uploads/.htaccess
 
 # Security headers
 <IfModule mod_headers.c>
@@ -27,6 +30,7 @@ Options -Indexes
     Header always set X-Frame-Options "SAMEORIGIN"
     Header always set X-XSS-Protection "1; mode=block"
     Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com https://maps.googleapis.com https://maps.gstatic.com https://fonts.googleapis.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com https://cdn.jsdelivr.net; img-src 'self' data: blob: https://maps.googleapis.com https://maps.gstatic.com https://streetviewpixels-pa.googleapis.com https://unpkg.com https://*.basemaps.cartocdn.com; font-src 'self' https://fonts.gstatic.com https://unpkg.com https://cdn.jsdelivr.net; connect-src 'self'; frame-src 'self' https://lookerstudio.google.com https://maps.google.com https://www.google.com https://www.youtube.com https://youtube.com https://youtu.be; frame-ancestors 'none';"
 </IfModule>
 
 # Gzip compression
