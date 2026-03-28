@@ -709,16 +709,13 @@ class SocietaController
         if (!$infoRow) {
             $infoRow = [
                 'description' => '',
-                'address'     => 'Via Bazzera 16, 30030 Martellago (VE)',
+                'address'     => 'Via Bazzera 18, 30030 Martellago (VE)',
                 'lat'         => 45.5440000,
                 'lng'         => 12.1580000,
             ];
             $tenantId = null;
         } else {
             $tenantId = $infoRow['tenant_id'];
-            $infoRow['address'] = 'Via Bazzera 16, 30030 Martellago (VE)';
-            $infoRow['lat'] = 45.5440000;
-            $infoRow['lng'] = 12.1580000;
         }
 
         // Se tenantId è null (non ha ancora salvato info), proviamo a prendere la prima foresteria_media o bypassare il tenant.
@@ -762,15 +759,19 @@ class SocietaController
         $body = Response::jsonBody();
         $tid = TenantContext::id();
         $desc = $body['description'] ?? null;
+        $address = $body['address'] ?? 'Via Bazzera 18, 30030 Martellago (VE)';
 
         $this->repo->upsertForesteriaInfo([
             ':id' => 'FOR_' . bin2hex(random_bytes(4)),
             ':tenant_id' => $tid,
-            ':description' => isset($desc) ? htmlspecialchars(trim($desc), ENT_QUOTES, 'UTF-8') : null
+            ':description' => isset($desc) ? htmlspecialchars(trim($desc), ENT_QUOTES, 'UTF-8') : null,
+            ':address'     => htmlspecialchars(trim($address), ENT_QUOTES, 'UTF-8'),
+            ':lat'         => 45.5440000,
+            ':lng'         => 12.1580000
         ]);
 
-        Audit::log('UPSERT', 'foresteria_info', $tid, null, ['description' => $desc]);
-        Response::success(['message' => 'Descrizione salvata']);
+        Audit::log('UPSERT', 'foresteria_info', $tid, null, ['description' => $desc, 'address' => $address]);
+        Response::success(['message' => 'Dati salvati']);
     }
 
     public function addExpense(): void
