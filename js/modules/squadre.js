@@ -5,7 +5,7 @@ const Squadre = (() => {
   let _teams = [];
   let _currentTab = "squadre"; // 'squadre' | 'stagioni'
 
-  function _getSignal() {
+  function sig() {
     return { signal: _abortController.signal };
   }
 
@@ -160,7 +160,7 @@ const Squadre = (() => {
             (t) => String(t.id) === btn.dataset.editTeam,
           );
           if (team) _openTeamModal(team);
-        });
+        }, sig());
       });
 
       container.querySelectorAll("[data-add-season]").forEach((btn) => {
@@ -169,7 +169,7 @@ const Squadre = (() => {
             (t) => String(t.id) === btn.dataset.addSeason,
           );
           if (team) _openSeasonModal(team);
-        });
+        }, sig());
       });
 
       container.querySelectorAll("[data-toggle-season]").forEach((btn) => {
@@ -197,7 +197,7 @@ const Squadre = (() => {
             btn.disabled = false;
             btn.innerHTML = origHtml;
           }
-        });
+        }, sig());
       });
     }
   }
@@ -213,17 +213,17 @@ const Squadre = (() => {
     // Build a map: seasonName → [{ team, teamSeasonId, is_active }]
     const seasonMap = {};
     _teams.forEach((team) => {
-      (team.seasons || []).forEach((s) => {
-        if (!seasonMap[s.season]) {
-          seasonMap[s.season] = [];
+      (team.seasons || []).forEach((season) => {
+        if (!seasonMap[season.season]) {
+          seasonMap[season.season] = [];
         }
-        seasonMap[s.season].push({
+        seasonMap[season.season].push({
           teamId: team.id,
           teamName: team.name,
           teamCategory: team.category,
           teamColorHex: team.color_hex,
-          teamSeasonId: s.id,
-          is_active: parseInt(s.is_active),
+          teamSeasonId: season.id,
+          is_active: parseInt(season.is_active),
         });
       });
     });
@@ -284,18 +284,18 @@ const Squadre = (() => {
                         <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:${inactiveEntries.length > 0 ? "var(--sp-3)" : "0"};">
                             ${activeEntries
                               .map(
-                                (e) => `
-                                <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--color-surface);border:1px solid var(--color-border);border-radius:8px;border-left:3px solid ${e.teamColorHex || "var(--color-primary)"};">
+                                (entry) => `
+                                <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--color-surface);border:1px solid var(--color-border);border-radius:8px;border-left:3px solid ${entry.teamColorHex || "var(--color-primary)"};">
                                     <div>
-                                        <div style="font-weight:600;font-size:14px;">${Utils.escapeHtml(e.teamName)}</div>
-                                        ${e.teamCategory ? `<div style="font-size:11px;color:var(--color-text-muted);">${Utils.escapeHtml(e.teamCategory)}</div>` : ""}
+                                        <div style="font-weight:600;font-size:14px;">${Utils.escapeHtml(entry.teamName)}</div>
+                                        ${entry.teamCategory ? `<div style="font-size:11px;color:var(--color-text-muted);">${Utils.escapeHtml(entry.teamCategory)}</div>` : ""}
                                     </div>
                                     ${
                                       isAdmin
                                         ? `
                                     <div style="display:flex;gap:4px;margin-left:8px;">
-                                        <button class="btn-dash ghost icon-only" data-toggle-season="${e.teamSeasonId}" data-action="0" title="Disattiva" style="padding:6px;color:var(--color-warning);"><i class="ph ph-eye-slash" style="font-size:14px;"></i></button>
-                                        <button class="btn-dash ghost icon-only" data-del-season="${e.teamSeasonId}" data-team-name="${Utils.escapeHtml(e.teamName)}" data-season-name="${Utils.escapeHtml(seasonName)}" title="Rimuovi" style="padding:6px;color:var(--color-pink);"><i class="ph ph-trash" style="font-size:14px;"></i></button>
+                                        <button class="btn-dash ghost icon-only" data-toggle-season="${entry.teamSeasonId}" data-action="0" title="Disattiva" style="padding:6px;color:var(--color-warning);"><i class="ph ph-eye-slash" style="font-size:14px;"></i></button>
+                                        <button class="btn-dash ghost icon-only" data-del-season="${entry.teamSeasonId}" data-team-name="${Utils.escapeHtml(entry.teamName)}" data-season-name="${Utils.escapeHtml(seasonName)}" title="Rimuovi" style="padding:6px;color:var(--color-pink);"><i class="ph ph-trash" style="font-size:14px;"></i></button>
                                     </div>
                                     `
                                         : ""
@@ -316,18 +316,18 @@ const Squadre = (() => {
                         <div style="display:flex;flex-wrap:wrap;gap:8px;opacity:0.6;">
                             ${inactiveEntries
                               .map(
-                                (e) => `
-                                <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--color-surface);border:1px solid var(--color-border);border-radius:8px;border-left:3px solid ${e.teamColorHex || "var(--color-text-muted)"};">
+                                (entry) => `
+                                <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--color-surface);border:1px solid var(--color-border);border-radius:8px;border-left:3px solid ${entry.teamColorHex || "var(--color-text-muted)"};">
                                     <div>
-                                        <div style="font-weight:500;font-size:14px;">${Utils.escapeHtml(e.teamName)}</div>
-                                        ${e.teamCategory ? `<div style="font-size:11px;color:var(--color-text-muted);">${Utils.escapeHtml(e.teamCategory)}</div>` : ""}
+                                        <div style="font-weight:500;font-size:14px;">${Utils.escapeHtml(entry.teamName)}</div>
+                                        ${entry.teamCategory ? `<div style="font-size:11px;color:var(--color-text-muted);">${Utils.escapeHtml(entry.teamCategory)}</div>` : ""}
                                     </div>
                                     ${
                                       isAdmin
                                         ? `
                                     <div style="display:flex;gap:4px;margin-left:8px;">
-                                        <button class="btn-dash ghost icon-only" data-toggle-season="${e.teamSeasonId}" data-action="1" title="Riattiva" style="padding:6px;"><i class="ph ph-eye" style="font-size:14px;"></i></button>
-                                        <button class="btn-dash ghost icon-only" data-del-season="${e.teamSeasonId}" data-team-name="${Utils.escapeHtml(e.teamName)}" data-season-name="${Utils.escapeHtml(seasonName)}" title="Rimuovi" style="padding:6px;color:var(--color-pink);"><i class="ph ph-trash" style="font-size:14px;"></i></button>
+                                        <button class="btn-dash ghost icon-only" data-toggle-season="${entry.teamSeasonId}" data-action="1" title="Riattiva" style="padding:6px;"><i class="ph ph-eye" style="font-size:14px;"></i></button>
+                                        <button class="btn-dash ghost icon-only" data-del-season="${entry.teamSeasonId}" data-team-name="${Utils.escapeHtml(entry.teamName)}" data-season-name="${Utils.escapeHtml(seasonName)}" title="Rimuovi" style="padding:6px;color:var(--color-pink);"><i class="ph ph-trash" style="font-size:14px;"></i></button>
                                     </div>
                                     `
                                         : ""
@@ -376,7 +376,7 @@ const Squadre = (() => {
             btn.disabled = false;
             btn.innerHTML = origHtml;
           }
-        });
+        }, sig());
       });
 
       container.querySelectorAll("[data-del-season]").forEach((btn) => {
@@ -405,14 +405,14 @@ const Squadre = (() => {
             btn.disabled = false;
             btn.innerHTML = origHtml;
           }
-        });
+        }, sig());
       });
 
       container.querySelectorAll("[data-add-team-to-season]").forEach((btn) => {
         btn.addEventListener("click", () => {
           const seasonName = btn.dataset.addTeamToSeason;
           _openAddTeamToSeasonModal(seasonName);
-        });
+        }, sig());
       });
     }
   }
@@ -487,7 +487,7 @@ const Squadre = (() => {
 
     document
       .getElementById("team-cancel")
-      ?.addEventListener("click", () => modal.close());
+      ?.addEventListener("click", () => modal.close(), sig());
 
     // Toggle new season input when "+ Nuova stagione..." is selected
     if (!isEdit) {
@@ -501,7 +501,7 @@ const Squadre = (() => {
               document.getElementById("team-new-season-name")?.focus();
             }
           }
-        });
+        }, sig());
     }
 
     document
@@ -570,7 +570,7 @@ const Squadre = (() => {
           btn.disabled = false;
           btn.textContent = isEdit ? "SALVA" : "CREA SQUADRA";
         }
-      });
+      }, sig());
   }
 
   function _openSeasonModal(team) {
@@ -595,7 +595,7 @@ const Squadre = (() => {
 
     document
       .getElementById("season-cancel")
-      ?.addEventListener("click", () => modal.close());
+      ?.addEventListener("click", () => modal.close(), sig());
 
     document
       .getElementById("season-save")
@@ -634,7 +634,7 @@ const Squadre = (() => {
           btn.disabled = false;
           btn.textContent = "AGGIUNGI STAGIONE";
         }
-      });
+      }, sig());
   }
 
   // ─── NEW: Bulk create season for multiple teams ─────────────────────────────
@@ -691,18 +691,18 @@ const Squadre = (() => {
         document
           .querySelectorAll(".bulk-team-cb")
           .forEach((cb) => (cb.checked = true));
-      });
+      }, sig());
     document
       .getElementById("bulk-deselect-all")
       ?.addEventListener("click", () => {
         document
           .querySelectorAll(".bulk-team-cb")
           .forEach((cb) => (cb.checked = false));
-      });
+      }, sig());
 
     document
       .getElementById("bulk-season-cancel")
-      ?.addEventListener("click", () => modal.close());
+      ?.addEventListener("click", () => modal.close(), sig());
 
     document
       .getElementById("bulk-season-save")
@@ -765,7 +765,7 @@ const Squadre = (() => {
 
         await _loadData();
         modal.close();
-      });
+      }, sig());
   }
 
   // ─── NEW: Add existing team to an existing season ───────────────────────────
@@ -820,7 +820,7 @@ const Squadre = (() => {
 
     document
       .getElementById("add-team-cancel")
-      ?.addEventListener("click", () => modal.close());
+      ?.addEventListener("click", () => modal.close(), sig());
 
     document
       .getElementById("add-team-save")
@@ -864,7 +864,7 @@ const Squadre = (() => {
         );
         await _loadData();
         modal.close();
-      });
+      }, sig());
   }
 
   // ─── PUBLIC INTERFACE ───────────────────────────────────────────────────────
@@ -931,16 +931,16 @@ const Squadre = (() => {
           container.querySelectorAll(".squadre-tab-btn").forEach((b) => {
             b.classList.toggle("active", b.dataset.tab === btn.dataset.tab);
           });
-        });
+        }, sig());
       });
 
       if (isAdmin) {
         document
           .getElementById("btn-add-team")
-          ?.addEventListener("click", () => _openTeamModal());
+          ?.addEventListener("click", () => _openTeamModal(), sig());
         document
           .getElementById("btn-add-season-bulk")
-          ?.addEventListener("click", () => _openNewSeasonBulkModal());
+          ?.addEventListener("click", () => _openNewSeasonBulkModal(), sig());
       }
 
       await _loadData();

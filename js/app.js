@@ -8,6 +8,8 @@
 const App = (() => {
     let _currentUser = null;
     let _navConfig = null; // Stored for global header titles
+    let _abortAuth = new AbortController();
+    let _abortApp = new AbortController();
 
     async function init() {
         // Try to resume existing session
@@ -31,6 +33,9 @@ const App = (() => {
 
 
     function _showAuthScreen() {
+        _abortAuth.abort();
+        _abortAuth = new AbortController();
+
         document.getElementById('auth-screen').classList.remove('hidden');
         document.getElementById('app-shell').classList.add('hidden');
         document.getElementById('reset-screen').classList.add('hidden');
@@ -45,7 +50,7 @@ const App = (() => {
                 const isPassword = passwordInput.type === 'password';
                 passwordInput.type = isPassword ? 'text' : 'password';
                 toggleBtn.textContent = isPassword ? '🙈' : '👁️';
-            });
+            }, { signal: _abortAuth.signal });
         }
 
         // UX #10: Inline email validation
@@ -66,7 +71,7 @@ const App = (() => {
                     emailHint.style.color = 'var(--color-success)';
                     emailInput.style.borderColor = 'var(--color-success) !important';
                 }
-            });
+            }, { signal: _abortAuth.signal });
         }
 
         form.addEventListener('submit', async (e) => {
@@ -160,6 +165,8 @@ const App = (() => {
     }
 
     async function _bootApp(user) {
+        _abortApp.abort();
+        _abortApp = new AbortController();
         _currentUser = user;
 
         try {
@@ -191,34 +198,30 @@ const App = (() => {
             const userDropdown = document.getElementById('user-dropdown');
 
             if (userMenuBtn && userDropdown) {
-                userMenuBtn.onclick = (e) => {
+                userMenuBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
                     userDropdown.classList.toggle('hidden');
-                };
+                }, { signal: _abortApp.signal });
 
-                // FIX: usa addEventListener invece di document.onclick
-                // (document.onclick sovrascrive altri handler globali — bug potenziale)
                 const _closeDropdown = (e) => {
                     if (!userMenuBtn.contains(e.target) && !userDropdown.contains(e.target)) {
                         userDropdown.classList.add('hidden');
                     }
                 };
-                document.addEventListener('click', _closeDropdown);
-                // Cleanup al destroy dell'app (navigazione fuori) per prevenire memory leak
-                window.__cleanupUserMenu = () => document.removeEventListener('click', _closeDropdown);
+                document.addEventListener('click', _closeDropdown, { signal: _abortApp.signal });
 
                 const profileBtn = document.getElementById('profile-btn');
                 if (profileBtn) {
-                    profileBtn.onclick = (e) => {
+                    profileBtn.addEventListener('click', (e) => {
                         e.stopPropagation();
                         userDropdown.classList.add('hidden');
                         _showUserProfileModal(user);
-                    };
+                    }, { signal: _abortApp.signal });
                 }
 
                 const logoutBtn = document.getElementById('logout-btn');
                 if (logoutBtn) {
-                    logoutBtn.onclick = async (e) => {
+                    logoutBtn.addEventListener('click', async (e) => {
                         e.stopPropagation();
                         userDropdown.classList.add('hidden');
                         try {
@@ -230,15 +233,15 @@ const App = (() => {
                             Store.clearCache();
                             window.location.reload();
                         }
-                    };
+                    }, { signal: _abortApp.signal });
                 }
 
                 userDropdown.querySelectorAll('.dropdown-item[data-route]').forEach(item => {
-                    item.onclick = (e) => {
+                    item.addEventListener('click', (e) => {
                         e.stopPropagation();
                         userDropdown.classList.add('hidden');
                         Router.navigate(item.dataset.route);
-                    };
+                    }, { signal: _abortApp.signal });
                 });
             }
 
@@ -434,7 +437,7 @@ const App = (() => {
 
                             const expanded = group.classList.toggle('expanded');
                             parentBtn.setAttribute('aria-expanded', String(expanded));
-                        });
+                        }, { signal: _abortApp.signal });
 
                         group.appendChild(parentBtn);
 
@@ -455,7 +458,7 @@ const App = (() => {
                             childBtn.addEventListener('click', () => {
                                 if (childIsComingSoon) { UI.toast(`${child.title}: in arrivo`, 'info', 2000); return; }
                                 Router.navigate(child.path);
-                            });
+                            }, { signal: _abortApp.signal });
 
                             submenu.appendChild(childBtn);
                         });
@@ -472,9 +475,9 @@ const App = (() => {
                         if (isComingSoon) {
                             btn.style.opacity = '0.4';
                             btn.setAttribute('title', 'In arrivo');
-                            btn.addEventListener('click', () => UI.toast(`${item.title}: sezione in arrivo`, 'info', 2500));
+                            btn.addEventListener('click', () => UI.toast(`${item.title}: sezione in arrivo`, 'info', 2500), { signal: _abortApp.signal });
                         } else {
-                            btn.addEventListener('click', () => Router.navigate(item.path));
+                            btn.addEventListener('click', () => Router.navigate(item.path), { signal: _abortApp.signal });
                         }
 
                         btn.innerHTML = `
@@ -505,7 +508,7 @@ const App = (() => {
                     btn.appendChild(icon);
                     btn.appendChild(label);
 
-                    btn.addEventListener('click', () => Router.navigate(item.path));
+                    btn.addEventListener('click', () => Router.navigate(item.path), { signal: _abortApp.signal });
                     mobileContainer.appendChild(btn);
                 }
             });

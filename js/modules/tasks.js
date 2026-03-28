@@ -1,675 +1,828 @@
 "use strict";
+
 const Tasks = (() => {
-  let t = new AbortController();
-  const e = [
-      { value: "Interno", label: "Interno", icon: "🔧", color: "#8b5cf6" },
-      { value: "Atleta", label: "Atleta", icon: "🏃", color: "#3b82f6" },
-      { value: "Evento", label: "Evento", icon: "🎯", color: "#f59e0b" },
-      { value: "Marketing", label: "Marketing", icon: "📣", color: "#ec4899" },
-      {
-        value: "Amministrativo",
-        label: "Amministrativo",
-        icon: "📋",
-        color: "#14b8a6",
-      },
-      { value: "Altro", label: "Altro", icon: "📌", color: "#6b7280" },
-    ],
-    a = [
-      { value: "Alta", label: "Alta", color: "#ef4444", icon: "ph-arrow-up" },
-      { value: "Media", label: "Media", color: "#f59e0b", icon: "ph-minus" },
-      {
-        value: "Bassa",
-        label: "Bassa",
-        color: "#6ee7b7",
-        icon: "ph-arrow-down",
-      },
-    ],
-    s = [
-      { value: "Da fare", label: "Da fare", color: "#8892a4" },
-      { value: "In corso", label: "In corso", color: "#3b82f6" },
-      { value: "In attesa", label: "In attesa", color: "#6b7280" },
-      { value: "Completato", label: "Completato", color: "#22c55e" },
-      { value: "Annullato", label: "Annullato", color: "#ef4444" },
-    ],
-    l = [
-      "Non ha risposto",
-      "Interessato",
-      "Richiamare",
-      "Confermato",
-      "Non interessato",
-      "In attesa",
-      "Altro",
-    ],
-    n = {
-      Interessato: "#22c55e",
-      Confermato: "#22c55e",
-      Richiamare: "#f59e0b",
-      "Non ha risposto": "#8892a4",
-      "Non interessato": "#ef4444",
-      "In attesa": "#6b7280",
-      Altro: "#6366f1",
-    };
-  let i = [],
-    o = [],
-    r = null,
-    c = "mine",
-    d = "",
-    u = "",
-    p = "",
-    v = null;
-  function m(t) {
-    return e.find((e) => e.value === t) || e[0];
+  let _abort = new AbortController();
+  
+  const CATEGORIES = [
+    { value: "Interno", label: "Interno", icon: "🔧", color: "#8b5cf6" },
+    { value: "Atleta", label: "Atleta", icon: "🏃", color: "#3b82f6" },
+    { value: "Evento", label: "Evento", icon: "🎯", color: "#f59e0b" },
+    { value: "Marketing", label: "Marketing", icon: "📣", color: "#ec4899" },
+    { value: "Amministrativo", label: "Amministrativo", icon: "📋", color: "#14b8a6" },
+    { value: "Altro", label: "Altro", icon: "📌", color: "#6b7280" },
+  ];
+
+  const PRIORITIES = [
+    { value: "Alta", label: "Alta", color: "#ef4444", icon: "ph-arrow-up" },
+    { value: "Media", label: "Media", color: "#f59e0b", icon: "ph-minus" },
+    { value: "Bassa", label: "Bassa", color: "#6ee7b7", icon: "ph-arrow-down" },
+  ];
+
+  const STATUSES = [
+    { value: "Da fare", label: "Da fare", color: "#8892a4" },
+    { value: "In corso", label: "In corso", color: "#3b82f6" },
+    { value: "In attesa", label: "In attesa", color: "#6b7280" },
+    { value: "Completato", label: "Completato", color: "#22c55e" },
+    { value: "Annullato", label: "Annullato", color: "#ef4444" },
+  ];
+
+  const OUTCOMES = [
+    "Non ha risposto",
+    "Interessato",
+    "Richiamare",
+    "Confermato",
+    "Non interessato",
+    "In attesa",
+    "Altro",
+  ];
+
+  const OUTCOME_COLORS = {
+    Interessato: "#22c55e",
+    Confermato: "#22c55e",
+    Richiamare: "#f59e0b",
+    "Non ha risposto": "#8892a4",
+    "Non interessato": "#ef4444",
+    "In attesa": "#6b7280",
+    Altro: "#6366f1",
+  };
+
+  let _tasks = [];
+  let _users = [];
+  let _currentUserId = null;
+  let _currentView = "mine"; // "mine" or "team"
+  let _filterCategory = "";
+  let _filterStatus = "";
+  let _searchQuery = "";
+  let _currentTaskId = null; // null = list view
+
+  /**
+   * HELPERS
+   */
+  function sig() { return { signal: _abort.signal }; }
+  
+  function getCategory(val) { return CATEGORIES.find(c => c.value === val) || CATEGORIES[0]; }
+  function getPriority(val) { return PRIORITIES.find(p => p.value === val) || PRIORITIES[1]; }
+  function getStatus(val) { return STATUSES.find(s => s.value === val) || STATUSES[0]; }
+  
+  function renderBadge(label, color, fill = true) {
+    return `<span class="task-badge" style="background:${fill ? color : "transparent"};color:${fill ? "#fff" : color};border:1px solid ${color};">${Utils.escapeHtml(label)}</span>`;
   }
-  function g(t) {
-    return a.find((e) => e.value === t) || a[1];
+
+  function getUserName(id) {
+    if (!id) return "—";
+    const u = _users.find(u => u.id === id);
+    return u?.full_name || id;
   }
-  function b(t) {
-    return s.find((e) => e.value === t) || s[0];
+
+  function isOverdue(task) {
+    if (!task.due_date) return false;
+    if (["Completato", "Annullato"].includes(task.status)) return false;
+    return new Date(task.due_date) < new Date();
   }
-  function f(t, e, a = !0) {
-    return `<span class="task-badge" style="background:${a ? e : "transparent"};color:${a ? "#fff" : e};border:1px solid ${e};">${Utils.escapeHtml(t)}</span>`;
+
+  async function readFileAsBase64(file) {
+    if (file.size > 5 * 1024 * 1024) {
+      UI.toast("Il file non può superare i 5 MB", "warning");
+      return null;
+    }
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = e => resolve(e.target.result);
+      reader.onerror = () => reject(new Error("Lettura file fallita"));
+      reader.readAsDataURL(file);
+    });
   }
-  function h(t) {
-    return t ? o.find((e) => e.id === t)?.full_name || t : "—";
+
+  /**
+   * MAIN RENDERER
+   */
+  function render() {
+    const container = document.getElementById("app");
+    if (!container) return;
+
+    if (_currentTaskId) {
+      renderTaskDetail(container);
+    } else {
+      renderTaskList(container);
+    }
   }
-  function y(t) {
-    return (
-      t.due_date &&
-      !["Completato", "Annullato"].includes(t.status) &&
-      new Date(t.due_date) < new Date()
-    );
-  }
-  async function k(t) {
-    return t.size > 5242880
-      ? (UI.toast("Il file non può superare i 5 MB", "warning"), null)
-      : new Promise((e, a) => {
-          const s = new FileReader();
-          ((s.onload = (t) => e(t.target.result)),
-            (s.onerror = () => a(new Error("Lettura file fallita"))),
-            s.readAsDataURL(t));
-        });
-  }
-  function $(e) {
-    v
-      ? (async function (e) {
-          const r = i.find((t) => t.id === v);
-          if (!r) return ((v = null), void x(e));
-          const c = m(r.category),
-            d = g(r.priority),
-            u = b(r.status),
-            p = y(r),
-            L = s
-              .map(
-                (t) =>
-                  `<option value="${t.value}"${r.status === t.value ? " selected" : ""}>${t.label}</option>`,
-              )
-              .join(""),
-            _ = a
-              .map(
-                (t) =>
-                  `<option value="${t.value}"${r.priority === t.value ? " selected" : ""}>${t.label}</option>`,
-              )
-              .join(""),
-            q = o
-              .map(
-                (t) =>
-                  `<option value="${t.id}"${r.assigned_to === t.id ? " selected" : ""}>${Utils.escapeHtml(t.full_name)}</option>`,
-              )
-              .join("");
-          let E = [];
+
+  /**
+   * VIEW: TASK DETAIL
+   */
+  async function renderTaskDetail(container) {
+    const task = _tasks.find(t => t.id === _currentTaskId);
+    if (!task) {
+      _currentTaskId = null;
+      renderTaskList(container);
+      return;
+    }
+
+    const catInfo = getCategory(task.category);
+    const prioInfo = getPriority(task.priority);
+    const statInfo = getStatus(task.status);
+    const overdue = isOverdue(task);
+    
+    // Preparation for dropdowns
+    const statusOpts = STATUSES.map(s => `<option value="${s.value}"${task.status === s.value ? " selected" : ""}>${s.label}</option>`).join("");
+    const prioOpts = PRIORITIES.map(p => `<option value="${p.value}"${task.priority === p.value ? " selected" : ""}>${p.label}</option>`).join("");
+    const userOpts = _users.map(u => `<option value="${u.id}"${task.assigned_to === u.id ? " selected" : ""}>${Utils.escapeHtml(u.full_name)}</option>`).join("");
+    
+    // Fetch logs (using cache if possible or fresh fetch)
+    let logs = [];
+    try {
+      const res = await Store.get("listTaskLogs", "tasks", { task_id: _currentTaskId });
+      logs = res?.logs || [];
+    } catch (err) { console.error("[Tasks] Logs load error:", err); }
+
+    const outcomeOpts = ["", ...OUTCOMES].map(o => `<option value="${o}">${o || "— Seleziona esito —"}</option>`).join("");
+    
+    const logsHtml = logs.length > 0
+      ? logs.map(l => {
+          const outcome = l.esito || l.outcome || "";
+          const color = OUTCOME_COLORS[outcome] || "#6366f1";
+          return `
+            <div class="task-log-entry">
+                <div class="task-log-dot"></div>
+                <div class="task-log-content">
+                    <div class="task-log-header">
+                        <span class="task-log-date">${new Date(l.interaction_date || l.created_at).toLocaleString("it-IT", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
+                        ${outcome ? renderBadge(outcome, color, true) : ""}
+                        <button class="btn btn-ghost btn-xs btn-delete-log" data-id="${Utils.escapeHtml(l.id)}" title="Elimina" type="button">
+                            <i class="ph ph-trash" style="color:var(--color-danger);font-size:13px;"></i>
+                        </button>
+                    </div>
+                    ${l.notes ? `<p class="task-log-notes">${Utils.escapeHtml(l.notes)}</p>` : ""}
+                    ${l.schedule_followup && l.followup_date ? `<div class="task-log-followup"><i class="ph ph-calendar-check"></i> Richiamata: <strong>${new Date(l.followup_date).toLocaleDateString("it-IT")}</strong></div>` : ""}
+                    ${l.attachment ? `
+                        <div class="task-log-attachment">
+                            <i class="ph ph-paperclip"></i>
+                            <button class="btn btn-ghost btn-sm btn-view-log-att" data-id="${Utils.escapeHtml(l.id)}" type="button">Visualizza allegato</button>
+                        </div>` : ""}
+                </div>
+            </div>`;
+        }).join("")
+      : '<p style="color:var(--text-muted);font-size:13px;text-align:center;padding:var(--sp-2) 0;">Nessun log ancora. Aggiungi il primo aggiornamento.</p>';
+
+    const dueDateFormatted = task.due_date ? new Date(task.due_date).toLocaleDateString("it-IT", { day: "2-digit", month: "long", year: "numeric"}) : null;
+
+    container.innerHTML = `
+        <div class="transport-dashboard" style="min-height:100vh;">
+            <button class="btn btn-ghost btn-sm" id="btn-back-list" type="button" style="margin-bottom:var(--sp-2);">
+                <i class="ph ph-arrow-left"></i> Torna alla lista
+            </button>
+
+            <div class="dash-card">
+                <div class="task-detail-header">
+                    <span class="task-cat-icon" style="background:${catInfo.color}20;color:${catInfo.color};font-size:1.5rem;width:48px;height:48px;">${catInfo.icon}</span>
+                    <div style="flex:1;">
+                        <h2 class="task-detail-title">${Utils.escapeHtml(task.title)}</h2>
+                        <div class="task-card-badges" style="margin-top:6px;">
+                            ${renderBadge(catInfo.label, catInfo.color, false)}
+                            ${renderBadge(prioInfo.label, prioInfo.color, true)}
+                            ${renderBadge(statInfo.label, statInfo.color, true)}
+                            ${overdue ? renderBadge("⚠ SCADUTO", "#ef4444", true) : ""}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="task-detail-meta">
+                    <div class="task-detail-meta-item">
+                        <span class="task-detail-meta-label">Creato da</span>
+                        <span>${Utils.escapeHtml(getUserName(task.user_id))}</span>
+                    </div>
+                    <div class="task-detail-meta-item">
+                        <span class="task-detail-meta-label">Assegnato a</span>
+                        <span>${Utils.escapeHtml(getUserName(task.assigned_to || task.user_id))}</span>
+                    </div>
+                    ${dueDateFormatted ? `<div class="task-detail-meta-item"><span class="task-detail-meta-label">Scadenza</span><span${overdue ? ' style="color:var(--color-danger);"' : ""}>${dueDateFormatted}</span></div>` : ""}
+                </div>
+
+                ${task.notes ? `<div class="task-detail-notes">${Utils.escapeHtml(task.notes)}</div>` : ""}
+
+                ${task.attachment ? `
+                <div class="task-detail-attachment">
+                    <i class="ph ph-paperclip"></i>
+                    <button class="btn btn-ghost btn-sm" id="btn-view-task-att" type="button">Visualizza allegato</button>
+                    <button class="btn btn-ghost btn-sm" id="btn-remove-task-att" type="button" style="color:var(--color-danger);">Rimuovi</button>
+                </div>` : ""}
+
+                <div class="task-detail-actions">
+                    <label class="task-inline-field">
+                        <span>Stato</span>
+                        <select id="qk-status">${statusOpts}</select>
+                    </label>
+                    <label class="task-inline-field">
+                        <span>Priorità</span>
+                        <select id="qk-priority">${prioOpts}</select>
+                    </label>
+                    <label class="task-inline-field">
+                        <span>Assegnato a</span>
+                        <select id="qk-assignee">${userOpts}</select>
+                    </label>
+                    <button class="btn-dash" id="btn-edit-task" type="button" style="padding:6px 12px;font-size:12px;"><i class="ph ph-pencil"></i> Modifica</button>
+                    <button class="btn btn-ghost btn-sm" id="btn-delete-task" type="button" style="color:var(--color-danger);"><i class="ph ph-trash"></i></button>
+                </div>
+            </div>
+
+            <div class="dash-card" style="margin-top:24px;">
+                <h3 class="task-section-title"><i class="ph ph-plus-circle"></i> Aggiungi Aggiornamento</h3>
+                <form id="task-log-form">
+                    <div class="task-log-form-row">
+                        <div class="form-group" style="margin:0;flex:1;">
+                            <label class="form-label">Data interazione</label>
+                            <input type="datetime-local" id="log-date" class="form-input" value="${new Date().toISOString().slice(0, 16)}" required>
+                        </div>
+                        <div class="form-group" style="margin:0;flex:1;">
+                            <label class="form-label">Esito</label>
+                            <select id="log-esito" class="form-input">${outcomeOpts}</select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Note</label>
+                        <textarea id="log-notes" class="form-input" rows="3" placeholder="Cosa è stato fatto o detto..."></textarea>
+                    </div>
+                    <div class="task-callback-row">
+                        <label class="task-switch-label">
+                            <span><i class="ph ph-calendar-check"></i> Pianifica Richiamata</span>
+                            <div class="task-switch">
+                                <input type="checkbox" id="log-callback-toggle">
+                                <span class="task-switch-slider"></span>
+                            </div>
+                        </label>
+                        <div id="log-callback-date-wrap" class="hidden">
+                            <div class="form-group" style="margin:0;margin-top:var(--sp-1);">
+                                <label class="form-label">Data Richiamata</label>
+                                <input type="datetime-local" id="log-callback-date" class="form-input">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label"><i class="ph ph-paperclip"></i> Allegato</label>
+                        <input type="file" id="log-file" class="form-input" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt" style="padding:8px;">
+                    </div>
+                    <div id="log-error" class="form-error hidden"></div>
+                    <button type="submit" class="btn btn-primary" id="log-submit-btn"><i class="ph ph-floppy-disk"></i> Salva Aggiornamento</button>
+                </form>
+            </div>
+
+            <div class="task-logs-section">
+                <h3 class="task-section-title"><i class="ph ph-clock-clockwise"></i> Cronologia (${logs.length})</h3>
+                <div class="task-log-timeline" id="task-log-timeline">${logsHtml}</div>
+            </div>
+        </div>`;
+
+    // --- Detail Event Handlers ---
+    container.querySelector("#btn-back-list")?.addEventListener("click", () => { _currentTaskId = null; render(); }, sig());
+    
+    container.querySelector("#qk-status")?.addEventListener("change", async (e) => {
+      try {
+        await Store.api("updateTask", "tasks", { id: task.id, status: e.target.value });
+        task.status = e.target.value;
+        UI.toast("Stato aggiornato", "success");
+        if (task.status === "Completato") UI.toast("🎉 Task completata!", "success");
+        render();
+      } catch (err) { UI.toast(err.message, "error"); }
+    }, sig());
+
+    container.querySelector("#qk-priority")?.addEventListener("change", async (e) => {
+      try {
+        await Store.api("updateTask", "tasks", { id: task.id, priority: e.target.value });
+        task.priority = e.target.value;
+        UI.toast("Priorità aggiornata", "success");
+        render();
+      } catch (err) { UI.toast(err.message, "error"); }
+    }, sig());
+
+    container.querySelector("#qk-assignee")?.addEventListener("change", async (e) => {
+      try {
+        await Store.api("updateTask", "tasks", { id: task.id, assigned_to: e.target.value || null });
+        task.assigned_to = e.target.value || null;
+        UI.toast("Assegnatario aggiornato", "success");
+        render();
+      } catch (err) { UI.toast(err.message, "error"); }
+    }, sig());
+
+    container.querySelector("#btn-edit-task")?.addEventListener("click", () => openTaskModal(task.id), sig());
+
+    container.querySelector("#btn-delete-task")?.addEventListener("click", () => {
+      UI.confirm(`Eliminare la task "${task.title}"?`, async () => {
+        try {
+          await Store.api("deleteTask", "tasks", { id: task.id });
+          _tasks = _tasks.filter(t => t.id !== task.id);
+          _currentTaskId = null;
+          UI.toast("Task eliminata", "info");
+          render();
+        } catch (err) { UI.toast(err.message, "error"); }
+      });
+    }, sig());
+
+    if (task.attachment) {
+      container.querySelector("#btn-view-task-att")?.addEventListener("click", () => previewFile(task.attachment, task.title), sig());
+      container.querySelector("#btn-remove-task-att")?.addEventListener("click", () => {
+        UI.confirm("Rimuovere l'allegato?", async () => {
           try {
-            const t = await Store.get("listTaskLogs", "tasks", { task_id: v });
-            E = t?.logs || [];
-          } catch (t) {}
-          const I = ["", ...l]
-              .map(
-                (t) =>
-                  `<option value="${t}">${t || "— Seleziona esito —"}</option>`,
-              )
-              .join(""),
-            T =
-              E.length > 0
-                ? E.map((t) => {
-                    const e = t.esito || t.outcome || "",
-                      a = n[e] || "#6366f1";
-                    return `\n                <div class="task-log-entry">\n                    <div class="task-log-dot"></div>\n                    <div class="task-log-content">\n                        <div class="task-log-header">\n                            <span class="task-log-date">${new Date(t.interaction_date || t.created_at).toLocaleString("it-IT", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>\n                            ${e ? f(e, a, !0) : ""}\n                            <button class="btn btn-ghost btn-xs task-log-delete" data-log-id="${Utils.escapeHtml(t.id)}" title="Elimina" type="button">\n                                <i class="ph ph-trash" style="color:var(--color-danger);font-size:13px;"></i>\n                            </button>\n                        </div>\n                        ${t.notes ? `<p class="task-log-notes">${Utils.escapeHtml(t.notes)}</p>` : ""}\n                        ${t.schedule_followup && t.followup_date ? `<div class="task-log-followup"><i class="ph ph-calendar-check"></i> Richiamata: <strong>${new Date(t.followup_date).toLocaleDateString("it-IT")}</strong></div>` : ""}\n                        ${t.attachment ? `\n                            <div class="task-log-attachment">\n                                <i class="ph ph-paperclip"></i>\n                                <button class="btn btn-ghost btn-sm task-log-view-att" data-att="${Utils.escapeHtml(t.id)}" type="button">Visualizza allegato</button>\n                            </div>` : ""}\n                    </div>\n                </div>`;
-                  }).join("")
-                : '<p style="color:var(--text-muted);font-size:13px;text-align:center;padding:var(--sp-2) 0;">Nessun log ancora. Aggiungi il primo aggiornamento.</p>',
-            U = r.due_date
-              ? new Date(r.due_date).toLocaleDateString("it-IT", {
-                  day: "2-digit",
-                  month: "long",
-                  year: "numeric",
-                })
-              : null;
-          ((e.innerHTML = `\n            <div class="transport-dashboard" style="min-height:100vh;">\n                \x3c!-- Back button --\x3e\n                <button class="btn btn-ghost btn-sm" id="btn-back-list" class="btn btn-ghost btn-sm" type="button" style="margin-bottom:var(--sp-2);">\n                    <i class="ph ph-arrow-left"></i> Torna alla lista\n                </button>\n\n                \x3c!-- Task card detail --\x3e\n                <div class="dash-card">\n                    <div class="task-detail-header">\n                        <span class="task-cat-icon" style="background:${c.color}20;color:${c.color};font-size:1.5rem;width:48px;height:48px;">${c.icon}</span>\n                        <div style="flex:1;">\n                            <h2 class="task-detail-title">${Utils.escapeHtml(r.title)}</h2>\n                            <div class="task-card-badges" style="margin-top:6px;">\n                                ${f(c.label, c.color, !1)}\n                                ${f(d.label, d.color, !0)}\n                                ${f(u.label, u.color, !0)}\n                                ${p ? f("⚠ SCADUTO", "#ef4444", !0) : ""}\n                            </div>\n                        </div>\n                    </div>\n\n                    \x3c!-- Meta --\x3e\n                    <div class="task-detail-meta">\n                        <div class="task-detail-meta-item">\n                            <span class="task-detail-meta-label">Creato da</span>\n                            <span>${Utils.escapeHtml(h(r.user_id))}</span>\n                        </div>\n                        <div class="task-detail-meta-item">\n                            <span class="task-detail-meta-label">Assegnato a</span>\n                            <span>${Utils.escapeHtml(h(r.assigned_to || r.user_id))}</span>\n                        </div>\n                        ${U ? `<div class="task-detail-meta-item"><span class="task-detail-meta-label">Scadenza</span><span${p ? ' style="color:var(--color-danger);"' : ""}>${U}</span></div>` : ""}\n                    </div>\n\n                    ${r.notes ? `<div class="task-detail-notes">${Utils.escapeHtml(r.notes)}</div>` : ""}\n\n                    ${r.attachment ? '\n                    <div class="task-detail-attachment">\n                        <i class="ph ph-paperclip"></i>\n                        <button class="btn btn-ghost btn-sm" id="btn-view-task-att" type="button">Visualizza allegato</button>\n                        <button class="btn btn-ghost btn-sm" id="btn-remove-task-att" type="button" style="color:var(--color-danger);">Rimuovi</button>\n                    </div>' : ""}\n\n                    \x3c!-- Quick update --\x3e\n                    <div class="task-detail-actions">\n                        <label class="task-inline-field">\n                            <span>Stato</span>\n                            <select id="qk-status">${L}</select>\n                        </label>\n                        <label class="task-inline-field">\n                            <span>Priorità</span>\n                            <select id="qk-priority">${_}</select>\n                        </label>\n                        <label class="task-inline-field">\n                            <span>Assegnato a</span>\n                            <select id="qk-assignee">${q}</select>\n                        </label>\n                        <button class="btn-dash" id="btn-edit-task" type="button" style="padding:6px 12px;font-size:12px;">\n                            <i class="ph ph-pencil"></i> Modifica\n                        </button>\n                        <button class="btn btn-ghost btn-sm" id="btn-delete-task" type="button" style="color:var(--color-danger);">\n                            <i class="ph ph-trash"></i>\n                        </button>\n                    </div>\n                </div>\n\n                \x3c!-- Add log form --\x3e\n                <div class="dash-card" style="margin-top:24px;">\n                    <h3 class="task-section-title"><i class="ph ph-plus-circle"></i> Aggiungi Aggiornamento</h3>\n                    <form id="task-log-form">\n                        <div class="task-log-form-row">\n                            <div class="form-group" style="margin:0;flex:1;">\n                                <label class="form-label">Data interazione</label>\n                                <input type="datetime-local" id="log-date" class="form-input"\n                                    value="${new Date().toISOString().slice(0, 16)}" required>\n                            </div>\n                            <div class="form-group" style="margin:0;flex:1;">\n                                <label class="form-label">Esito</label>\n                                <select id="log-esito" class="form-input">${I}</select>\n                            </div>\n                        </div>\n                        <div class="form-group">\n                            <label class="form-label">Note</label>\n                            <textarea id="log-notes" class="form-input" rows="3" placeholder="Cosa è stato fatto o detto..."></textarea>\n                        </div>\n                        \x3c!-- Toggle richiamata --\x3e\n                        <div class="task-callback-row">\n                            <label class="task-switch-label">\n                                <span><i class="ph ph-calendar-check"></i> Pianifica Richiamata</span>\n                                <div class="task-switch">\n                                    <input type="checkbox" id="log-callback-toggle">\n                                    <span class="task-switch-slider"></span>\n                                </div>\n                            </label>\n                            <div id="log-callback-date-wrap" class="hidden">\n                                <div class="form-group" style="margin:0;margin-top:var(--sp-1);">\n                                    <label class="form-label">Data Richiamata</label>\n                                    <input type="datetime-local" id="log-callback-date" class="form-input">\n                                </div>\n                            </div>\n                        </div>\n                        \x3c!-- Allegato --\x3e\n                        <div class="form-group">\n                            <label class="form-label"><i class="ph ph-paperclip"></i> Allegato</label>\n                            <input type="file" id="log-file" class="form-input" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt" style="padding:8px;">\n                        </div>\n                        <div id="log-error" class="form-error hidden" aria-live="polite"></div>\n                        <button type="submit" class="btn btn-primary" id="log-submit-btn">\n                            <i class="ph ph-floppy-disk"></i> Salva Aggiornamento\n                        </button>\n                    </form>\n                </div>\n\n                \x3c!-- Log timeline --\x3e\n                <div class="task-logs-section">\n                    <h3 class="task-section-title"><i class="ph ph-clock-clockwise"></i> Cronologia (${E.length})</h3>\n                    <div class="task-log-timeline" id="task-log-timeline">\n                        ${T}\n                    </div>\n                </div>\n            </div>`),
-            (function (e, a, s) {
-              const l = document.getElementById("app");
-              if (!l) return;
-              const n = { signal: t.signal };
-              (l.querySelector("#btn-back-list")?.addEventListener(
-                "click",
-                () => {
-                  ((v = null), $(l));
-                },
-                n,
-              ),
-                l.querySelector("#qk-status")?.addEventListener(
-                  "change",
-                  async (t) => {
-                    try {
-                      await Store.api("updateTask", "tasks", {
-                        id: a.id,
-                        status: t.target.value,
-                      });
-                      const e = i.find((t) => t.id === a.id);
-                      (e && (e.status = t.target.value),
-                        UI.toast("Stato aggiornato", "success"),
-                        "Completato" === t.target.value &&
-                          UI.toast("🎉 Task completata!", "success"));
-                    } catch (t) {
-                      UI.toast(t.message || "Errore", "error");
-                    }
-                  },
-                  n,
-                ),
-                l.querySelector("#qk-priority")?.addEventListener(
-                  "change",
-                  async (t) => {
-                    try {
-                      await Store.api("updateTask", "tasks", {
-                        id: a.id,
-                        priority: t.target.value,
-                      });
-                      const e = i.find((t) => t.id === a.id);
-                      (e && (e.priority = t.target.value),
-                        UI.toast("Priorità aggiornata", "success"));
-                    } catch (t) {
-                      UI.toast(t.message || "Errore", "error");
-                    }
-                  },
-                  n,
-                ),
-                l.querySelector("#qk-assignee")?.addEventListener(
-                  "change",
-                  async (t) => {
-                    try {
-                      await Store.api("updateTask", "tasks", {
-                        id: a.id,
-                        assigned_to: t.target.value || null,
-                      });
-                      const e = i.find((t) => t.id === a.id);
-                      (e && (e.assigned_to = t.target.value || null),
-                        UI.toast("Assegnato aggiornato", "success"));
-                    } catch (t) {
-                      UI.toast(t.message || "Errore", "error");
-                    }
-                  },
-                  n,
-                ),
-                l
-                  .querySelector("#btn-edit-task")
-                  ?.addEventListener("click", () => w(a.id), n),
-                l.querySelector("#btn-delete-task")?.addEventListener(
-                  "click",
-                  () => {
-                    UI.confirm(
-                      `Eliminare la task "${a.title}"? L'operazione è irreversibile.`,
-                      async () => {
-                        try {
-                          (await Store.api("deleteTask", "tasks", { id: a.id }),
-                            (i = i.filter((t) => t.id !== a.id)),
-                            (v = null),
-                            UI.toast("Task eliminata", "info"),
-                            $(l));
-                        } catch (t) {
-                          UI.toast(t.message || "Errore", "error");
-                        }
-                      },
-                    );
-                  },
-                  n,
-                ),
-                l.querySelector("#btn-view-task-att")?.addEventListener(
-                  "click",
-                  () => {
-                    S(a.attachment, `allegato_${a.title.substring(0, 20)}`);
-                  },
-                  n,
-                ),
-                l.querySelector("#btn-remove-task-att")?.addEventListener(
-                  "click",
-                  () => {
-                    UI.confirm("Rimuovere l'allegato dal task?", async () => {
-                      await Store.api("updateTask", "tasks", {
-                        id: a.id,
-                        attachment: null,
-                      });
-                      const t = i.find((t) => t.id === a.id);
-                      (t && (t.attachment = null),
-                        UI.toast("Allegato rimosso", "info"),
-                        (v = a.id),
-                        $(l));
-                    });
-                  },
-                  n,
-                ),
-                l.querySelector("#log-callback-toggle")?.addEventListener(
-                  "change",
-                  (t) => {
-                    l.querySelector(
-                      "#log-callback-date-wrap",
-                    )?.classList.toggle("hidden", !t.target.checked);
-                  },
-                  n,
-                ),
-                l.querySelector("#task-log-form")?.addEventListener(
-                  "submit",
-                  async (t) => {
-                    t.preventDefault();
-                    const e = l.querySelector("#log-error"),
-                      s = l.querySelector("#log-submit-btn"),
-                      n = l.querySelector("#log-date").value;
-                    if (!n)
-                      return (
-                        (e.textContent = "La data è obbligatoria"),
-                        void e.classList.remove("hidden")
-                      );
-                    const o = l.querySelector("#log-callback-toggle").checked,
-                      r = {
-                        task_id: a.id,
-                        interaction_date: n.replace("T", " ") + ":00",
-                        notes:
-                          l.querySelector("#log-notes").value.trim() || null,
-                        esito: l.querySelector("#log-esito").value || null,
-                        outcome: l.querySelector("#log-esito").value || null,
-                        schedule_followup: o ? 1 : 0,
-                        followup_date:
-                          (o && l.querySelector("#log-callback-date").value) ||
-                          null,
-                      },
-                      c = l.querySelector("#log-file");
-                    if (
-                      !(c?.files.length > 0) ||
-                      ((r.attachment = await k(c.files[0])), r.attachment)
-                    ) {
-                      ((s.disabled = !0),
-                        (s.innerHTML =
-                          '<i class="ph ph-circle-notch ph-spin"></i> Salvataggio...'),
-                        e.classList.add("hidden"));
-                      try {
-                        if (
-                          (await Store.api("createTaskLog", "tasks", r),
-                          o && r.followup_date)
-                        ) {
-                          await Store.api("updateTask", "tasks", {
-                            id: a.id,
-                            due_date: r.followup_date,
-                          });
-                          const t = i.find((t) => t.id === a.id);
-                          t && (t.due_date = r.followup_date);
-                        }
-                        (UI.toast("Aggiornamento salvato!", "success"), $(l));
-                      } catch (t) {
-                        ((e.textContent = t.message || "Errore"),
-                          e.classList.remove("hidden"),
-                          (s.disabled = !1),
-                          (s.innerHTML =
-                            '<i class="ph ph-floppy-disk"></i> Salva Aggiornamento'));
-                      }
-                    }
-                  },
-                  n,
-                ),
-                l.querySelectorAll(".task-log-delete").forEach((t) => {
-                  t.addEventListener("click", async () => {
-                    try {
-                      (await Store.api("deleteTaskLog", "tasks", {
-                        id: t.dataset.logId,
-                      }),
-                        UI.toast("Log eliminato", "info"),
-                        $(l));
-                    } catch (t) {
-                      UI.toast(t.message || "Errore", "error");
-                    }
-                  });
-                }),
-                l.querySelectorAll(".task-log-view-att").forEach((t) => {
-                  t.addEventListener("click", () => {
-                    const e = s.find((e) => e.id === t.dataset.att);
-                    e?.attachment && S(e.attachment, `log_${e.id}`);
-                  });
-                }));
-            })(0, r, E));
-        })(e)
-      : x(e);
+            await Store.api("updateTask", "tasks", { id: task.id, attachment: null });
+            task.attachment = null;
+            UI.toast("Allegato rimosso", "info");
+            render();
+          } catch (err) { UI.toast(err.message, "error"); }
+        });
+      }, sig());
+    }
+
+    container.querySelector("#log-callback-toggle")?.addEventListener("change", (e) => {
+      container.querySelector("#log-callback-date-wrap")?.classList.toggle("hidden", !e.target.checked);
+    }, sig());
+
+    container.querySelector("#task-log-form")?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const errEl = container.querySelector("#log-error");
+      const btn = container.querySelector("#log-submit-btn");
+      const date = container.querySelector("#log-date").value;
+      if (!date) {
+        errEl.textContent = "Data obbligatoria";
+        errEl.classList.remove("hidden");
+        return;
+      }
+
+      const isCallback = container.querySelector("#log-callback-toggle").checked;
+      const logData = {
+        task_id: task.id,
+        interaction_date: date.replace("T", " ") + ":00",
+        notes: container.querySelector("#log-notes").value.trim() || null,
+        esito: container.querySelector("#log-esito").value || null,
+        outcome: container.querySelector("#log-esito").value || null,
+        schedule_followup: isCallback ? 1 : 0,
+        followup_date: (isCallback && container.querySelector("#log-callback-date").value) || null
+      };
+
+      const fileInput = container.querySelector("#log-file");
+      if (fileInput?.files.length > 0) {
+        logData.attachment = await readFileAsBase64(fileInput.files[0]);
+        if (!logData.attachment) return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="ph ph-circle-notch ph-spin"></i> Salvataggio...';
+      errEl.classList.add("hidden");
+
+      try {
+        await Store.api("createTaskLog", "tasks", logData);
+        if (isCallback && logData.followup_date) {
+           await Store.api("updateTask", "tasks", { id: task.id, due_date: logData.followup_date });
+           task.due_date = logData.followup_date;
+        }
+        UI.toast("Aggiornamento salvato!", "success");
+        render();
+      } catch (err) {
+        errEl.textContent = err.message;
+        errEl.classList.remove("hidden");
+        btn.disabled = false;
+        btn.innerHTML = '<i class="ph ph-floppy-disk"></i> Salva Aggiornamento';
+      }
+    }, sig());
+
+    // Event delegation for logs actions
+    const timeline = container.querySelector("#task-log-timeline");
+    if (timeline) {
+      timeline.addEventListener("click", (e) => {
+        const delBtn = e.target.closest(".btn-delete-log");
+        if (delBtn) {
+          const logId = delBtn.dataset.id;
+          UI.confirm("Eliminare questo log?", async () => {
+             try {
+               await Store.api("deleteTaskLog", "tasks", { id: logId });
+               UI.toast("Log eliminato", "info");
+               render();
+             } catch (err) { UI.toast(err.message, "error"); }
+          });
+          return;
+        }
+
+        const viewBtn = e.target.closest(".btn-view-log-att");
+        if (viewBtn) {
+          const logId = viewBtn.dataset.id;
+          const log = logs.find(l => l.id === logId);
+          if (log?.attachment) previewFile(log.attachment, `log_${logId}`);
+        }
+      }, sig());
+    }
   }
-  function x(a) {
-    new Date();
-    let l = [...i];
-    if (
-      ((l =
-        "mine" === c
-          ? l.filter((t) => t.user_id === r || t.assigned_to === r)
-          : l.filter((t) => t.user_id !== r && t.assigned_to !== r)),
-      p)
-    ) {
-      const t = p.toLowerCase();
-      l = l.filter(
-        (e) =>
-          (e.title || "").toLowerCase().includes(t) ||
-          (e.category || "").toLowerCase().includes(t) ||
-          (e.notes || "").toLowerCase().includes(t) ||
-          h(e.assigned_to || e.user_id)
-            .toLowerCase()
-            .includes(t),
+
+  /**
+   * VIEW: TASK LIST
+   */
+  function renderTaskList(container) {
+    let filtered = _tasks.filter(t => {
+      const isMine = t.user_id === _currentUserId || t.assigned_to === _currentUserId;
+      return _currentView === "mine" ? isMine : !isMine;
+    });
+
+    if (_searchQuery) {
+      const q = _searchQuery.toLowerCase();
+      filtered = filtered.filter(t => 
+        (t.title || "").toLowerCase().includes(q) || 
+        (t.category || "").toLowerCase().includes(q) || 
+        (t.notes || "").toLowerCase().includes(q) ||
+        getUserName(t.assigned_to || t.user_id).toLowerCase().includes(q)
       );
     }
-    (d && (l = l.filter((t) => t.category === d)),
-      u && (l = l.filter((t) => t.status === u)));
-    const n = {
-        "In corso": 0,
-        "Da fare": 1,
-        "In attesa": 2,
-        Completato: 3,
-        Annullato: 4,
-      },
-      o = { Alta: 0, Media: 1, Bassa: 2 };
-    l.sort((t, e) => {
-      const a = (n[t.status] ?? 2) - (n[e.status] ?? 2);
-      if (0 !== a) return a;
-      const s = (o[t.priority] ?? 1) - (o[e.priority] ?? 1);
-      return 0 !== s
-        ? s
-        : (t.due_date ? new Date(t.due_date).getTime() : 1 / 0) -
-            (e.due_date ? new Date(e.due_date).getTime() : 1 / 0);
+
+    if (_filterCategory) filtered = filtered.filter(t => t.category === _filterCategory);
+    if (_filterStatus) filtered = filtered.filter(t => t.status === _filterStatus);
+
+    // Sorting
+    const statusOrder = { "In corso": 0, "Da fare": 1, "In attesa": 2, "Completato": 3, "Annullato": 4 };
+    const priorityOrder = { Alta: 0, Media: 1, Bassa: 2 };
+    
+    filtered.sort((a, b) => {
+      const sDiff = (statusOrder[a.status] ?? 2) - (statusOrder[b.status] ?? 2);
+      if (sDiff !== 0) return sDiff;
+      const pDiff = (priorityOrder[a.priority] ?? 1) - (priorityOrder[b.priority] ?? 1);
+      if (pDiff !== 0) return pDiff;
+      return (a.due_date ? new Date(a.due_date).getTime() : 1e15) - (b.due_date ? new Date(b.due_date).getTime() : 1e15);
     });
-    const k = i.filter((t) => t.user_id === r || t.assigned_to === r).length,
-      x = i.filter((t) => t.user_id !== r && t.assigned_to !== r).length;
-    let S = [...i];
-    S =
-      "mine" === c
-        ? S.filter((t) => t.user_id === r || t.assigned_to === r)
-        : S.filter((t) => t.user_id !== r && t.assigned_to !== r);
-    const L = S.length,
-      _ = S.filter((t) => "Da fare" === t.status).length,
-      q = S.filter((t) => "In corso" === t.status).length,
-      E = S.filter((t) => "Completato" === t.status).length,
-      I = S.filter((t) => y(t)).length,
-      T = e
-        .map((t) => {
-          const e = d === t.value;
-          return `<button class="dash-filter${e ? " active" : ""}" data-cat="${t.value}" style="${e ? `color:${t.color};border-color:${t.color};` : ""}">${t.icon} ${t.label}</button>`;
-        })
-        .join(""),
-      U = s
-        .map((t) => {
-          const e = u === t.value;
-          return `<button class="dash-filter${e ? " active" : ""}" data-status="${t.value}" style="${e ? `color:${t.color};border-color:${t.color};` : ""}">${Utils.escapeHtml(t.label)}</button>`;
-        })
-        .join(""),
-      A =
-        l.length > 0
-          ? l
-              .map((t) => {
-                const e = m(t.category),
-                  a = g(t.priority),
-                  s = b(t.status),
-                  l = y(t),
-                  n = ["Completato", "Annullato"].includes(t.status),
-                  i = t.assigned_to || t.user_id,
-                  o = (function (t) {
-                    const e = h(t);
-                    return "—" === e
-                      ? "?"
-                      : e
-                          .split(" ")
-                          .map((t) => t[0])
-                          .join("")
-                          .toUpperCase()
-                          .substring(0, 2);
-                  })(i),
-                  c = i === r,
-                  d = t.due_date
-                    ? new Date(t.due_date).toLocaleDateString("it-IT", {
-                        day: "2-digit",
-                        month: "short",
-                      })
-                    : null;
-                return `\n                <div class="dash-card${n ? " completed" : ""}${l ? " overdue" : ""}" data-id="${Utils.escapeHtml(t.id)}" style="--card-border:${s.color}; cursor:pointer;" tabindex="0" role="button" aria-label="Apri task: ${Utils.escapeHtml(t.title)}">\n                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">\n                        <div style="display:flex; align-items:center; gap:8px;">\n                            <span style="background:${e.color}20;color:${e.color}; width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:16px;">${e.icon}</span>\n                            <div>\n                                <div style="font-size:14px; font-weight:600; color:#fff;">${Utils.escapeHtml(t.title)}</div>\n                                <div style="display:flex; gap:6px; margin-top:4px;">\n                                    ${f(e.label, e.color, !1)}\n                                    ${f(a.label, a.color, !0)}\n                                </div>\n                            </div>\n                        </div>\n                        ${f(s.label, s.color, !0)}\n                    </div>\n                    <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--color-border); padding-top:12px;">\n                        <div style="display:flex; gap:12px; font-size:12px;">\n                            ${d ? `<span style="color:${l ? "var(--color-pink)" : "var(--color-text-muted)"}"><i class="ph ph-calendar-blank"></i> ${d}${l ? ' <i class="ph ph-warning-circle"></i>' : ""}</span>` : ""}\n                            ${t.attachment ? '<span title="Allegato" style="color:var(--color-text-muted);"><i class="ph ph-paperclip"></i></span>' : ""}\n                        </div>\n                        <div title="${Utils.escapeHtml(h(i))}">\n                            <span style="width:24px; height:24px; border-radius:50%; background:var(--color-bg-alt); color:var(--color-text-muted); display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:600; ${c ? "border:1px solid var(--color-pink); color:var(--color-pink);" : ""}">${o}</span>\n                        </div>\n                    </div>\n                </div>`;
-              })
-              .join("")
-          : `\n            <div class="tasks-empty">\n                <i class="ph ph-check-square" style="font-size:48px;opacity:0.15;"></i>\n                <p>${"mine" === c ? "Nessun task personale" : "Nessun task del team"}</p>\n            </div>`;
-    ((a.innerHTML = `\n            <div class="tasks-page">\n\n                \x3c!-- Tab mine/team --\x3e\n                <div class="todo-tabs fusion-tabs-container">\n                    <button class="todo-tab fusion-tab${"mine" === c ? " active" : ""}" data-tab="mine">\n                        <i class="ph ph-user"></i> I miei task <span class="todo-tab-count">${k}</span>\n                    </button>\n                    <button class="todo-tab fusion-tab${"team" === c ? " active" : ""}" data-tab="team">\n                        <i class="ph ph-users"></i> Team <span class="todo-tab-count">${x}</span>\n                    </button>\n                </div>\n\n                \x3c!-- Stats --\x3e\n                <div class="todo-stats-row">\n                    <div class="todo-stat"><div class="todo-stat-value">${L}</div><div class="todo-stat-label">Totali</div></div>\n                    <div class="todo-stat"><div class="todo-stat-value" style="color:#8892a4">${_}</div><div class="todo-stat-label">Da fare</div></div>\n                    <div class="todo-stat"><div class="todo-stat-value" style="color:#3b82f6">${q}</div><div class="todo-stat-label">In corso</div></div>\n                    <div class="todo-stat"><div class="todo-stat-value" style="color:#22c55e">${E}</div><div class="todo-stat-label">Completati</div></div>\n                    ${I > 0 ? `<div class="todo-stat"><div class="todo-stat-value" style="color:#ef4444">⚠ ${I}</div><div class="todo-stat-label">Scaduti</div></div>` : ""}\n                </div>\n\n                \x3c!-- Toolbar --\x3e\n                <div class="tasks-title-row" style="margin-bottom:0;">\n                    <h1 class="page-title" style="display:flex;align-items:center;gap:10px;">\n                        <i class="ph ph-check-square" style="color:var(--color-primary);"></i>\n                        Task &amp; Attività\n                    </h1>\n                    <button class="btn btn-primary" id="btn-new-task" type="button">\n                        <i class="ph ph-plus"></i> Nuova Task\n                    </button>\n                </div>\n\n                \x3c!-- Search --\x3e\n                <div class="tasks-filter-row" style="margin-top:var(--sp-2);">\n                    <div class="search-input-wrapper" style="flex:1;max-width:340px;">\n                        <i class="ph ph-magnifying-glass search-icon"></i>\n                        <input type="search" id="tasks-search" class="form-input" placeholder="Cerca task..."\n                            value="${Utils.escapeHtml(p)}" style="padding-left:36px;">\n                    </div>\n                </div>\n\n                \x3c!-- Chip filters --\x3e\n                <div class="todo-filter-group" style="margin-bottom:var(--sp-1);">\n                    <span class="todo-filter-label">Categoria:</span>\n                    ${T}\n                </div>\n                <div class="todo-filter-group">\n                    <span class="todo-filter-label">Stato:</span>\n                    ${U}\n                </div>\n\n                \x3c!-- Cards --\x3e\n                <div class="todo-cards-list" id="tasks-cards">\n                    ${A}\n                </div>\n            </div>`),
-      (function () {
-        const e = document.getElementById("app");
-        if (!e) return;
-        const a = { signal: t.signal };
-        (e
-          .querySelector("#btn-new-task")
-          ?.addEventListener("click", () => w(null), a),
-          e.querySelector("#tasks-search")?.addEventListener(
-            "input",
-            (t) => {
-              ((p = t.target.value.trim().toLowerCase()), $(e));
-            },
-            a,
-          ),
-          e.querySelectorAll(".todo-tab").forEach((t) => {
-            t.addEventListener(
-              "click",
-              () => {
-                ((c = t.dataset.tab), (p = ""), (d = ""), (u = ""), $(e));
-              },
-              a,
-            );
-          }),
-          e.querySelectorAll("[data-cat]").forEach((t) => {
-            t.addEventListener(
-              "click",
-              () => {
-                ((d = d === t.dataset.cat ? "" : t.dataset.cat), $(e));
-              },
-              a,
-            );
-          }),
-          e.querySelectorAll("[data-status]").forEach((t) => {
-            t.addEventListener(
-              "click",
-              () => {
-                ((u = u === t.dataset.status ? "" : t.dataset.status), $(e));
-              },
-              a,
-            );
-          }),
-          e.querySelector("#tasks-cards")?.addEventListener(
-            "click",
-            (t) => {
-              const a = t.target.closest(".task-card");
-              a && ((v = a.dataset.id), $(e));
-            },
-            a,
-          ),
-          e.querySelector("#tasks-cards")?.addEventListener(
-            "keydown",
-            (t) => {
-              if ("Enter" === t.key) {
-                const a = t.target.closest(".task-card");
-                a && ((v = a.dataset.id), $(e));
-              }
-            },
-            a,
-          ));
-      })());
-  }
-  function w(t) {
-    const l = t ? i.find((e) => e.id === t) : null,
-      n = !!l,
-      c = e
-        .map(
-          (t) =>
-            `<option value="${t.value}"${(l?.category || "Interno") === t.value ? " selected" : ""}>${t.icon} ${t.label}</option>`,
-        )
-        .join(""),
-      d = a
-        .map(
-          (t) =>
-            `<option value="${t.value}"${(l?.priority || "Media") === t.value ? " selected" : ""}>${t.label}</option>`,
-        )
-        .join(""),
-      u = s
-        .map(
-          (t) =>
-            `<option value="${t.value}"${(l?.status || "Da fare") === t.value ? " selected" : ""}>${t.label}</option>`,
-        )
-        .join(""),
-      p =
-        '<option value="">— Nessuno —</option>' +
-        o
-          .map(
-            (t) =>
-              `<option value="${t.id}"${l?.assigned_to === t.id ? " selected" : ""}>${Utils.escapeHtml(t.full_name)}</option>`,
-          )
-          .join(""),
-      v = document.createElement("div");
-    ((v.style.cssText = "display:flex;flex-direction:column;gap:var(--sp-2);"),
-      (v.innerHTML = `\n            <form id="task-modal-form" style="display:flex;flex-direction:column;gap:var(--sp-2);">\n                <div class="form-group" style="margin:0;">\n                    <label class="form-label">Titolo *</label>\n                    <input type="text" id="tf-title" class="form-input" required\n                        value="${Utils.escapeHtml(l?.title || "")}" placeholder="Titolo della task">\n                </div>\n                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--sp-2);">\n                    <div class="form-group" style="margin:0;">\n                        <label class="form-label">Categoria</label>\n                        <select id="tf-category" class="form-input">${c}</select>\n                    </div>\n                    <div class="form-group" style="margin:0;">\n                        <label class="form-label">Priorità</label>\n                        <select id="tf-priority" class="form-input">${d}</select>\n                    </div>\n                    <div class="form-group" style="margin:0;">\n                        <label class="form-label">Stato</label>\n                        <select id="tf-status" class="form-input">${u}</select>\n                    </div>\n                </div>\n                <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-2);">\n                    <div class="form-group" style="margin:0;">\n                        <label class="form-label">Assegnata a</label>\n                        <select id="tf-assigned" class="form-input">${p}</select>\n                    </div>\n                    <div class="form-group" style="margin:0;">\n                        <label class="form-label">Scadenza</label>\n                        <input type="date" id="tf-due" class="form-input"\n                            value="${l?.due_date ? l.due_date.split("T")[0] : ""}">\n                    </div>\n                </div>\n                <div class="form-group" style="margin:0;">\n                    <label class="form-label">Note</label>\n                    <textarea id="tf-notes" class="form-input" rows="3" style="resize:vertical;">${Utils.escapeHtml(l?.notes || "")}</textarea>\n                </div>\n                <div class="form-group" style="margin:0;">\n                    <label class="form-label"><i class="ph ph-paperclip"></i> Allegato ${l?.attachment ? '<span style="color:var(--color-success);font-size:0.7rem;">✓ già presente</span>' : ""}</label>\n                    <input type="file" id="tf-attachment" class="form-input" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt" style="padding:8px;">\n                    ${l?.attachment ? '<div style="font-size:0.7rem;color:var(--text-muted);margin-top:2px;">Seleziona file per sostituire, oppure lascia vuoto per mantenere il corrente.</div>' : ""}\n                </div>\n                <div id="tf-error" class="form-error hidden" aria-live="polite"></div>\n                <button type="submit" class="btn btn-primary" id="tf-submit">\n                    ${n ? '<i class="ph ph-floppy-disk"></i> Salva Modifiche' : '<i class="ph ph-plus"></i> Crea Task'}\n                </button>\n            </form>`));
-    const m = UI.modal({
-      title: n ? `Modifica: ${l.title}` : "Nuova Task",
-      body: v,
-      size: "lg",
+
+    const totalCount = _tasks.filter(t => {
+      const isMine = t.user_id === _currentUserId || t.assigned_to === _currentUserId;
+      return _currentView === "mine" ? isMine : !isMine;
+    }).length;
+
+    const stats = {
+      total: totalCount,
+      todo: filtered.filter(t => t.status === "Da fare").length,
+      doing: filtered.filter(t => t.status === "In corso").length,
+      done: filtered.filter(t => t.status === "Completato").length,
+      overdue: filtered.filter(t => isOverdue(t)).length
+    };
+
+    const mineCount = _tasks.filter(t => t.user_id === _currentUserId || t.assigned_to === _currentUserId).length;
+    const teamCount = _tasks.length - mineCount;
+
+    container.innerHTML = `
+        <div class="tasks-page">
+            <div class="todo-tabs fusion-tabs-container">
+                <button class="todo-tab fusion-tab ${_currentView === "mine" ? "active" : ""}" data-tab="mine">
+                    <i class="ph ph-user"></i> I miei task <span class="todo-tab-count">${mineCount}</span>
+                </button>
+                <button class="todo-tab fusion-tab ${_currentView === "team" ? "active" : ""}" data-tab="team">
+                    <i class="ph ph-users"></i> Team <span class="todo-tab-count">${teamCount}</span>
+                </button>
+            </div>
+
+            <div class="todo-stats-row">
+                <div class="todo-stat"><div class="todo-stat-value">${stats.total}</div><div class="todo-stat-label">Totali</div></div>
+                <div class="todo-stat"><div class="todo-stat-value" style="color:#8892a4">${stats.todo}</div><div class="todo-stat-label">Da fare</div></div>
+                <div class="todo-stat"><div class="todo-stat-value" style="color:#3b82f6">${stats.doing}</div><div class="todo-stat-label">In corso</div></div>
+                <div class="todo-stat"><div class="todo-stat-value" style="color:#22c55e">${stats.done}</div><div class="todo-stat-label">Completati</div></div>
+                ${stats.overdue > 0 ? `<div class="todo-stat"><div class="todo-stat-value" style="color:#ef4444">⚠ ${stats.overdue}</div><div class="todo-stat-label">Scaduti</div></div>` : ""}
+            </div>
+
+            <div class="tasks-title-row">
+                <h1 class="page-title"><i class="ph ph-check-square"></i> Task & Attività</h1>
+                <button class="btn btn-primary" id="btn-new-task" type="button"><i class="ph ph-plus"></i> Nuova Task</button>
+            </div>
+
+            <div class="tasks-filter-row">
+                <div class="search-input-wrapper" style="flex:1;max-width:340px;">
+                    <i class="ph ph-magnifying-glass search-icon"></i>
+                    <input type="search" id="tasks-search" class="form-input" placeholder="Cerca task..." value="${Utils.escapeHtml(_searchQuery)}" style="padding-left:36px;">
+                </div>
+            </div>
+
+            <div class="todo-filter-group">
+                <span class="todo-filter-label">Categoria:</span>
+                ${CATEGORIES.map(c => {
+                    const active = _filterCategory === c.value;
+                    return `<button class="dash-filter ${active ? "active" : ""}" data-cat="${c.value}" style="${active ? `color:${c.color};border-color:${c.color};` : ""}">${c.icon} ${c.label}</button>`;
+                }).join("")}
+            </div>
+            <div class="todo-filter-group">
+                <span class="todo-filter-label">Stato:</span>
+                ${STATUSES.map(s => {
+                    const active = _filterStatus === s.value;
+                    return `<button class="dash-filter ${active ? "active" : ""}" data-status="${s.value}" style="${active ? `color:${s.color};border-color:${s.color};` : ""}">${Utils.escapeHtml(s.label)}</button>`;
+                }).join("")}
+            </div>
+
+            <div class="todo-cards-list" id="tasks-cards">
+                ${filtered.length > 0 ? filtered.map(t => {
+                    const cInfo = getCategory(t.category);
+                    const pInfo = getPriority(t.priority);
+                    const sInfo = getStatus(t.status);
+                    const overdue = isOverdue(t);
+                    const isCompleted = ["Completato", "Annullato"].includes(t.status);
+                    const assigneeId = t.assigned_to || t.user_id;
+                    const initials = getUserName(assigneeId).split(" ").map(w => w[0]).join("").toUpperCase().substring(0, 2);
+                    const isAssigneeMe = assigneeId === _currentUserId;
+                    const dateStr = t.due_date ? new Date(t.due_date).toLocaleDateString("it-IT", { day: "2-digit", month: "short" }) : null;
+
+                    return `
+                        <div class="dash-card ${isCompleted ? "completed" : ""} ${overdue ? "overdue" : ""}" data-id="${Utils.escapeHtml(t.id)}" style="--card-border:${pInfo.color}; cursor:pointer;" tabindex="0" role="button">
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
+                                <div style="display:flex; align-items:center; gap:8px;">
+                                    <span style="background:${cInfo.color}20;color:${cInfo.color}; width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:16px;">${cInfo.icon}</span>
+                                    <div>
+                                        <div style="font-size:14px; font-weight:600; color:#fff;">${Utils.escapeHtml(t.title)}</div>
+                                        <div style="display:flex; gap:6px; margin-top:4px;">
+                                            ${renderBadge(cInfo.label, cInfo.color, false)}
+                                            ${renderBadge(pInfo.label, pInfo.color, true)}
+                                        </div>
+                                    </div>
+                                </div>
+                                ${renderBadge(sInfo.label, sInfo.color, true)}
+                            </div>
+                            <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--color-border); padding-top:12px;">
+                                <div style="display:flex; gap:12px; font-size:12px;">
+                                    ${dateStr ? `<span style="color:${overdue ? "var(--color-pink)" : "var(--color-text-muted)"}"><i class="ph ph-calendar-blank"></i> ${dateStr}${overdue ? ' <i class="ph ph-warning-circle"></i>' : ""}</span>` : ""}
+                                    ${t.attachment ? '<span title="Allegato" style="color:var(--color-text-muted);"><i class="ph ph-paperclip"></i></span>' : ""}
+                                </div>
+                                <div title="${Utils.escapeHtml(getUserName(assigneeId))}">
+                                    <span style="width:24px; height:24px; border-radius:50%; background:var(--color-bg-alt); color:var(--color-text-muted); display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:600; ${isAssigneeMe ? "border:1px solid var(--color-pink); color:var(--color-pink);" : ""}">${initials || "?"}</span>
+                                </div>
+                            </div>
+                        </div>`;
+                }).join("") : `
+                    <div class="tasks-empty">
+                        <i class="ph ph-check-square" style="font-size:48px;opacity:0.15;"></i>
+                        <p>${_currentView === "mine" ? "Nessun task personale" : "Nessun task del team"}</p>
+                    </div>`}
+            </div>
+        </div>`;
+
+    // --- List Event Handlers ---
+    container.querySelector("#btn-new-task")?.addEventListener("click", () => openTaskModal(null), sig());
+    
+    container.querySelector("#tasks-search")?.addEventListener("input", (e) => {
+      _searchQuery = e.target.value.trim();
+      render();
+    }, sig());
+
+    container.querySelectorAll(".todo-tab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        _currentView = tab.dataset.tab;
+        _filterCategory = "";
+        _filterStatus = "";
+        _searchQuery = "";
+        render();
+      }, sig());
     });
-    v.querySelector("#task-modal-form").addEventListener(
-      "submit",
-      async (e) => {
-        e.preventDefault();
-        const a = v.querySelector("#tf-error"),
-          s = v.querySelector("#tf-submit"),
-          o = v.querySelector("#tf-title").value.trim();
-        if (!o)
-          return (
-            (a.textContent = "Il titolo è obbligatorio"),
-            void a.classList.remove("hidden")
-          );
-        const c = {
-            title: o,
-            category: v.querySelector("#tf-category").value,
-            priority: v.querySelector("#tf-priority").value,
-            status: v.querySelector("#tf-status").value,
-            due_date: v.querySelector("#tf-due").value || null,
-            notes: v.querySelector("#tf-notes").value.trim() || null,
-            assigned_to: v.querySelector("#tf-assigned").value || null,
-          },
-          d = v.querySelector("#tf-attachment");
-        if (d.files.length > 0) {
-          if (((c.attachment = await k(d.files[0])), !c.attachment)) return;
-        } else (n && l.attachment) || (c.attachment = null);
-        ((s.disabled = !0), a.classList.add("hidden"));
-        try {
-          if (n) {
-            await Store.api("updateTask", "tasks", { id: t, ...c });
-            const e = i.findIndex((e) => e.id === t);
-            (-1 !== e && (i[e] = { ...i[e], ...c }),
-              UI.toast("Task aggiornata!", "success"));
-          } else {
-            const t = await Store.api("createTask", "tasks", c);
-            (i.unshift({
-              ...c,
-              id: t.id,
-              user_id: r,
-              created_at: new Date().toISOString(),
-            }),
-              UI.toast("Task creata!", "success"));
-          }
-          ($(document.getElementById("app")), m.close());
-        } catch (t) {
-          ((a.textContent = t.message || "Errore durante il salvataggio"),
-            a.classList.remove("hidden"),
-            (s.disabled = !1));
+
+    container.querySelectorAll("[data-cat]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        _filterCategory = (_filterCategory === btn.dataset.cat) ? "" : btn.dataset.cat;
+        render();
+      }, sig());
+    });
+
+    container.querySelectorAll("[data-status]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        _filterStatus = (_filterStatus === btn.dataset.status) ? "" : btn.dataset.status;
+        render();
+      }, sig());
+    });
+
+    const cardsArea = container.querySelector("#tasks-cards");
+    if (cardsArea) {
+      cardsArea.addEventListener("click", (e) => {
+        const card = e.target.closest(".dash-card");
+        if (card) {
+          _currentTaskId = card.dataset.id;
+          render();
         }
-      },
-    );
+      }, sig());
+      
+      cardsArea.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+           const card = e.target.closest(".dash-card");
+           if (card) {
+             _currentTaskId = card.dataset.id;
+             render();
+           }
+        }
+      }, sig());
+    }
   }
-  function S(t, e) {
-    if (!t) return;
-    const a = t.match(/^data:([^;]+);/);
-    if (!a) return void UI.toast("Formato non supportato", "error");
-    const s = a[1];
-    let l = "",
-      n = null;
-    if ("application/pdf" === s) {
-      const e = atob(t.split(",")[1]),
-        a = new Uint8Array(e.length);
-      for (let t = 0; t < e.length; t++) a[t] = e.charCodeAt(t);
-      ((n = URL.createObjectURL(new Blob([a], { type: "application/pdf" }))),
-        (l = `<iframe src="${n}" style="width:100%;height:100%;border:none;border-radius:8px;"></iframe>`));
-    } else
-      l = s.startsWith("image/")
-        ? `<img src="${t}" style="max-width:100%;max-height:85vh;object-fit:contain;border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,0.5);">`
-        : '<div style="text-align:center;padding:60px 30px;">\n                <div style="font-size:4rem;margin-bottom:16px;">📄</div>\n                <p style="color:#9ca3af;font-size:1rem;margin-bottom:20px;">Anteprima non disponibile per questo formato.</p>\n                <button id="att-dl-alt" class="btn btn-primary" style="padding:10px 24px;">⬇️ Scarica File</button>\n            </div>';
-    const i = document.createElement("div");
-    ((i.style.cssText =
-      "position:fixed;top:0;left:0;width:100%;height:100%;z-index:10000;background:rgba(0,0,0,0.88);backdrop-filter:blur(6px);display:flex;flex-direction:column;align-items:center;justify-content:center;animation:fadeIn 0.2s ease;"),
-      (i.innerHTML = `\n            <div style="position:absolute;top:16px;right:20px;display:flex;gap:10px;z-index:10001;">\n                <button id="att-dl" style="background:rgba(255,255,255,0.12);border:none;color:#fff;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:0.8rem;">⬇️ SCARICA</button>\n                <button id="att-close" style="background:rgba(255,255,255,0.12);border:none;color:#fff;width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:1.2rem;">✕</button>\n            </div>\n            <div style="width:90%;height:85%;display:flex;align-items:center;justify-content:center;">${l}</div>`),
-      document.body.appendChild(i));
-    const o = () => {
-      ((i.style.opacity = "0"),
-        setTimeout(() => {
-          (i.remove(), n && URL.revokeObjectURL(n));
-        }, 200));
+
+  /**
+   * MODALS & FILE PREVIEW
+   */
+  function openTaskModal(id) {
+    const task = id ? _tasks.find(t => t.id === id) : null;
+    const isEdit = !!task;
+
+    const catOpts = CATEGORIES.map(c => `<option value="${c.value}"${(task?.category || "Interno") === c.value ? " selected" : ""}>${c.icon} ${c.label}</option>`).join("");
+    const prioOpts = PRIORITIES.map(p => `<option value="${p.value}"${(task?.priority || "Media") === p.value ? " selected" : ""}>${p.label}</option>`).join("");
+    const statOpts = STATUSES.map(s => `<option value="${s.value}"${(task?.status || "Da fare") === s.value ? " selected" : ""}>${s.label}</option>`).join("");
+    const userOpts = '<option value="">— Nessuno —</option>' + _users.map(u => `<option value="${u.id}"${task?.assigned_to === u.id ? " selected" : ""}>${Utils.escapeHtml(u.full_name)}</option>`).join("");
+
+    const modalBody = document.createElement("div");
+    modalBody.style.cssText = "display:flex;flex-direction:column;gap:var(--sp-2);";
+    modalBody.innerHTML = `
+        <form id="task-modal-form" style="display:flex;flex-direction:column;gap:var(--sp-2);">
+            <div class="form-group" style="margin:0;">
+                <label class="form-label">Titolo *</label>
+                <input type="text" id="tf-title" class="form-input" required value="${Utils.escapeHtml(task?.title || "")}" placeholder="Titolo della task">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--sp-2);">
+                <div class="form-group" style="margin:0;">
+                    <label class="form-label">Categoria</label>
+                    <select id="tf-category" class="form-input">${catOpts}</select>
+                </div>
+                <div class="form-group" style="margin:0;">
+                    <label class="form-label">Priorità</label>
+                    <select id="tf-priority" class="form-input">${prioOpts}</select>
+                </div>
+                <div class="form-group" style="margin:0;">
+                    <label class="form-label">Stato</label>
+                    <select id="tf-status" class="form-input">${statOpts}</select>
+                </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-2);">
+                <div class="form-group" style="margin:0;">
+                    <label class="form-label">Assegnata a</label>
+                    <select id="tf-assigned" class="form-input">${userOpts}</select>
+                </div>
+                <div class="form-group" style="margin:0;">
+                    <label class="form-label">Scadenza</label>
+                    <input type="date" id="tf-due" class="form-input" value="${task?.due_date ? task.due_date.split("T")[0] : ""}">
+                </div>
+            </div>
+            <div class="form-group" style="margin:0;">
+                <label class="form-label">Note</label>
+                <textarea id="tf-notes" class="form-input" rows="3" style="resize:vertical;">${Utils.escapeHtml(task?.notes || "")}</textarea>
+            </div>
+            <div class="form-group" style="margin:0;">
+                <label class="form-label"><i class="ph ph-paperclip"></i> Allegato ${task?.attachment ? '<span style="color:var(--color-success);font-size:0.7rem;">✓ già presente</span>' : ""}</label>
+                <input type="file" id="tf-attachment" class="form-input" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt" style="padding:8px;">
+                ${task?.attachment ? '<div style="font-size:0.7rem;color:var(--text-muted);margin-top:2px;">Seleziona file per sostituire, altrimenti mantieni il corrente.</div>' : ""}
+            </div>
+            <div id="tf-error" class="form-error hidden"></div>
+            <button type="submit" class="btn btn-primary" id="tf-submit">${isEdit ? '<i class="ph ph-floppy-disk"></i> Salva Modifiche' : '<i class="ph ph-plus"></i> Crea Task'}</button>
+        </form>`;
+
+    const modal = UI.modal({ title: isEdit ? `Modifica Task` : "Nuova Task", body: modalBody, size: "lg" });
+
+    modalBody.querySelector("#task-modal-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const errEl = modalBody.querySelector("#tf-error");
+      const btn = modalBody.querySelector("#tf-submit");
+      const title = modalBody.querySelector("#tf-title").value.trim();
+      if (!title) {
+        errEl.textContent = "Il titolo è obbligatorio";
+        errEl.classList.remove("hidden");
+        return;
+      }
+
+      const data = {
+        title,
+        category: modalBody.querySelector("#tf-category").value,
+        priority: modalBody.querySelector("#tf-priority").value,
+        status: modalBody.querySelector("#tf-status").value,
+        due_date: modalBody.querySelector("#tf-due").value || null,
+        notes: modalBody.querySelector("#tf-notes").value.trim() || null,
+        assigned_to: modalBody.querySelector("#tf-assigned").value || null
+      };
+
+      const fileInput = modalBody.querySelector("#tf-attachment");
+      if (fileInput.files.length > 0) {
+        data.attachment = await readFileAsBase64(fileInput.files[0]);
+        if (!data.attachment) return;
+      } else if (isEdit && task.attachment) {
+        data.attachment = task.attachment;
+      }
+
+      btn.disabled = true;
+      errEl.classList.add("hidden");
+
+      try {
+        if (isEdit) {
+          await Store.api("updateTask", "tasks", { id: task.id, ...data });
+          Object.assign(task, data);
+          UI.toast("Task aggiornata!", "success");
+        } else {
+          const res = await Store.api("createTask", "tasks", data);
+          _tasks.unshift({ ...data, id: res.id, user_id: _currentUserId, created_at: new Date().toISOString() });
+          UI.toast("Task creata!", "success");
+        }
+        render();
+        modal.close();
+      } catch (err) {
+        errEl.textContent = err.message;
+        errEl.classList.remove("hidden");
+        btn.disabled = false;
+      }
+    });
+  }
+
+  function previewFile(data, title) {
+    if (!data) return;
+    const match = data.match(/^data:([^;]+);/);
+    if (!match) { UI.toast("Formato non supportato", "error"); return; }
+    const mime = match[1];
+
+    let contentHtml = "";
+    let blobUrl = null;
+
+    if (mime === "application/pdf") {
+      const b64 = data.split(",")[1];
+      const binary = atob(b64);
+      const array = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) array[i] = binary.charCodeAt(i);
+      blobUrl = URL.createObjectURL(new Blob([array], { type: "application/pdf" }));
+      contentHtml = `<iframe src="${blobUrl}" style="width:100%;height:100%;border:none;border-radius:8px;"></iframe>`;
+    } else if (mime.startsWith("image/")) {
+      contentHtml = `<img src="${data}" style="max-width:100%;max-height:85vh;object-fit:contain;border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,0.5);">`;
+    } else {
+      contentHtml = `
+        <div style="text-align:center;padding:60px 30px;">
+            <div style="font-size:4rem;margin-bottom:16px;">📄</div>
+            <p style="color:#9ca3af;font-size:1rem;margin-bottom:20px;">Anteprima non disponibile per questo formato.</p>
+            <button id="att-dl-alt" class="btn btn-primary" style="padding:10px 24px;">⬇️ Scarica File</button>
+        </div>`;
+    }
+
+    const overlay = document.createElement("div");
+    overlay.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;z-index:10000;background:rgba(0,0,0,0.88);backdrop-filter:blur(6px);display:flex;flex-direction:column;align-items:center;justify-content:center;animation:fadeIn 0.2s ease;";
+    overlay.innerHTML = `
+        <div style="position:absolute;top:16px;right:20px;display:flex;gap:10px;z-index:10001;">
+            <button id="att-dl" style="background:rgba(255,255,255,0.12);border:none;color:#fff;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:0.8rem;">⬇️ SCARICA</button>
+            <button id="att-close" style="background:rgba(255,255,255,0.12);border:none;color:#fff;width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:1.2rem;">✕</button>
+        </div>
+        <div style="width:90%;height:85%;display:flex;align-items:center;justify-content:center;">${contentHtml}</div>`;
+    
+    document.body.appendChild(overlay);
+
+    const closeOverlay = () => {
+      overlay.style.opacity = "0";
+      setTimeout(() => { overlay.remove(); if (blobUrl) URL.revokeObjectURL(blobUrl); }, 200);
     };
-    (i.querySelector("#att-close").addEventListener("click", o),
-      i.addEventListener("click", (t) => {
-        t.target === i && o();
-      }));
-    const r = () => {
+
+    overlay.querySelector("#att-close").addEventListener("click", closeOverlay);
+    overlay.addEventListener("click", (e) => { if (e.target === overlay) closeOverlay(); });
+
+    const download = () => {
       const a = document.createElement("a");
-      ((a.href = t), (a.download = e || "allegato"), a.click());
+      a.href = data;
+      a.download = title || "allegato";
+      a.click();
     };
-    i.querySelector("#att-dl").addEventListener("click", r);
-    const c = i.querySelector("#att-dl-alt");
-    c && c.addEventListener("click", r);
-    const d = (t) => {
-      "Escape" === t.key && (o(), document.removeEventListener("keydown", d));
+
+    overlay.querySelector("#att-dl").addEventListener("click", download);
+    overlay.querySelector("#att-dl-alt")?.addEventListener("click", download);
+    
+    const escHandler = (e) => {
+      if (e.key === "Escape") { closeOverlay(); document.removeEventListener("keydown", escHandler); }
     };
-    document.addEventListener("keydown", d);
+    document.addEventListener("keydown", escHandler);
   }
+
+  /**
+   * INTERFACE
+   */
   return {
     async init() {
-      ((t = new AbortController()),
-        (v = null),
-        (c = "mine"),
-        (p = ""),
-        (d = ""),
-        (u = ""));
-      const e = document.getElementById("app");
-      if (e) {
-        e.innerHTML = UI.skeletonPage();
-        try {
-          const [t, a, s] = await Promise.all([
-            Store.get("listTasks", "tasks"),
-            Store.get("listUsers", "auth").catch(() => ({ users: [] })),
-            Store.get("me", "auth").catch(() => null),
-          ]);
-          ((i = t?.tasks || []),
-            (o = a?.users || a || []),
-            (r = s?.user?.id || s?.id || null),
-            $(e));
-        } catch (t) {
-          (console.error("[Tasks] Init error:", t),
-            (e.innerHTML = Utils.emptyState(
-              "Errore nel caricamento",
-              t.message,
-              "Riprova",
-              null,
-              () => this.init(),
-            )));
-        }
+      _abort = new AbortController();
+      _currentTaskId = null;
+      _currentView = "mine";
+      _searchQuery = "";
+      _filterCategory = "";
+      _filterStatus = "";
+
+      const app = document.getElementById("app");
+      if (!app) return;
+
+      UI.loading(true);
+      app.innerHTML = UI.skeletonPage();
+
+      try {
+        const [tasksRes, usersRes, meRes] = await Promise.all([
+          Store.get("listTasks", "tasks").catch(() => ({ tasks: [] })),
+          Store.get("listUsers", "auth").catch(() => []),
+          Store.get("me", "auth").catch(() => null)
+        ]);
+
+        _tasks = tasksRes?.tasks || [];
+        _users = Array.isArray(usersRes) ? usersRes : (usersRes?.users || []);
+        _currentUserId = meRes?.user?.id || meRes?.id || null;
+
+        render();
+      } catch (err) {
+        console.error("[Tasks] Init error:", err);
+        app.innerHTML = Utils.emptyState("Errore nel caricamento", err.message, "Riprova", null, () => this.init());
+      } finally {
+        UI.loading(false);
       }
     },
+
     destroy() {
-      (t.abort(), (i = []), (o = []));
-    },
+      _abort.abort();
+      _tasks = [];
+      _users = [];
+      _currentTaskId = null;
+    }
   };
 })();
+
 window.Tasks = Tasks;

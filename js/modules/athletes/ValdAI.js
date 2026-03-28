@@ -20,6 +20,8 @@ window.__valdAi = async function (athleteId, part) {
   const btnId =
     (part === "plan" ? "vald-ai-pl-btn-" : "vald-ai-dx-btn-") + athleteId;
   const btn = document.getElementById(btnId);
+  if (btn && btn.disabled) return; // Prevent double-triggering during processing
+  
   let resultEl = document.getElementById(resultId);
 
   // Create slot if missing

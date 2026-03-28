@@ -472,7 +472,7 @@ const Finance = (() => {
         });
         document
           .getElementById("fex-cancel")
-          ?.addEventListener("click", () => modal.close());
+          ?.addEventListener("click", () => modal.close(), { signal: n.signal });
         document
           .getElementById("fex-save")
           ?.addEventListener("click", async () => {
@@ -526,7 +526,7 @@ const Finance = (() => {
           } catch (err) {
             UI.toast("Errore: " + err.message, "error");
           }
-        }),
+        }, { signal: n.signal }),
       );
       if (expenses.length > 0) {
         await loadChartJsFex();
@@ -689,7 +689,12 @@ const Finance = (() => {
   return {
     init: o,
     destroy: function () {
-      (n.abort(), (t = null), (e = []), (a = []));
+      n.abort();
+      if (window._fexChartInstance) {
+        window._fexChartInstance.destroy();
+        window._fexChartInstance = null;
+      }
+      (t = null), (e = []), (a = []);
     },
   };
 })();

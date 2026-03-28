@@ -75,19 +75,19 @@ const Scouting = (() => {
         }
         const countBadge = document.getElementById("scouting-count");
         if (countBadge) countBadge.textContent = `${filtered.length} atleti`;
-      });
+      }, { signal: abortController.signal });
 
     document
       .getElementById("scouting-add-btn")
       ?.addEventListener("click", () => {
         openSidePanel();
-      });
+      }, { signal: abortController.signal });
 
     document
       .getElementById("scouting-sync-btn")
       ?.addEventListener("click", () => {
         doSync();
-      });
+      }, { signal: abortController.signal });
 
     const tbody = document.getElementById("scouting-tbody");
     if (tbody) {
@@ -100,7 +100,7 @@ const Scouting = (() => {
             openSidePanel(athlete);
           }
         }
-      });
+      }, { signal: abortController.signal });
     }
   }
 
@@ -273,10 +273,10 @@ const Scouting = (() => {
 
     document
       .getElementById("sc-cancel-panel")
-      ?.addEventListener("click", closeModal);
+      ?.addEventListener("click", closeModal, { signal: abortController.signal });
     document
       .getElementById("sc-cancel-panel-btn")
-      ?.addEventListener("click", closeModal);
+      ?.addEventListener("click", closeModal, { signal: abortController.signal });
 
     document
       .getElementById("sc-save-panel")
@@ -388,6 +388,8 @@ const Scouting = (() => {
     destroy() {
       abortController.abort();
       abortController = new AbortController();
+      athletes = [];
+      lastSync = null;
     },
   };
 })();
