@@ -310,3 +310,4 @@ const Router = (() => {
         _appVersion,
     };
 })();
+window.Router = Router;

@@ -1156,6 +1156,7 @@ const App = (() => {
 
     return { init, getUser, renderForgotPassword, cleanup: _cleanup };
 })();
+window.App = App;
 
 
 // ─── Global Error Handlers (Stability) ──────────────────────────────────────

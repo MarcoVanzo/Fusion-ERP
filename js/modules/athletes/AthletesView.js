@@ -48,8 +48,18 @@ export const AthletesView = {
             ? `<img src="${Utils.escapeHtml(athlete.photo_path)}" alt="${Utils.escapeHtml(athlete.full_name)}" class="athlete-photo-img">`
             : `<div class="athlete-photo-placeholder"><span>${initials}</span></div>`;
         
-        const medicalStatus = Utils.getMedicalStatus(athlete.medical_cert_expires_at);
-        const medicalColor = medicalStatus === 'expired' ? 'var(--color-pink)' : (medicalStatus === 'warning' ? 'var(--color-yellow)' : 'var(--color-success)');
+        let medicalStatus = 'expired';
+        let medicalColor = 'var(--color-pink)';
+        if (athlete.medical_cert_expires_at) {
+            const days = Utils.daysUntil(athlete.medical_cert_expires_at);
+            if (days > 30) {
+                medicalStatus = 'valid';
+                medicalColor = 'var(--color-success)';
+            } else if (days >= 0) {
+                medicalStatus = 'warning';
+                medicalColor = 'var(--color-yellow)';
+            }
+        }
 
         return `
             <div class="athlete-card ${isSelected ? 'selected' : ''}" data-id="${athlete.id}">
