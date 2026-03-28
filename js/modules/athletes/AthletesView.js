@@ -35,7 +35,20 @@ export const AthletesView = {
             </div>
         </div>
 
-        <div id="athletes-grid" class="athletes-grid"></div>
+        <div class="table-wrapper" style="background:var(--color-black);border:1px solid rgba(255,255,255,0.05);border-radius:12px;overflow:hidden;margin-top:24px;">
+            <table class="table" style="width:100%;text-align:left;border-collapse:collapse;">
+                <thead style="background:rgba(255,255,255,0.02);border-bottom:1px solid rgba(255,255,255,0.05);">
+                    <tr>
+                        <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;">Atleta</th>
+                        <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;">Ruolo</th>
+                        <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;">Squadra</th>
+                        <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;">Data Nascita</th>
+                        <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;">Certificato Medico</th>
+                    </tr>
+                </thead>
+                <tbody id="athletes-grid"></tbody>
+            </table>
+        </div>
         <div id="athlete-bulk-bar" class="bulk-action-bar" style="display:none;"></div>
     `,
 
@@ -44,47 +57,41 @@ export const AthletesView = {
      */
     athleteCard: (athlete, isSelected = false) => {
         const initials = Utils.initials(athlete.full_name);
+        const color = `hsl(${Array.from(athlete.full_name).reduce((acc, char) => acc + char.charCodeAt(0), 0) % 360}, 70%, 50%)`;
         const photo = athlete.photo_path 
-            ? `<img src="${Utils.escapeHtml(athlete.photo_path)}" alt="${Utils.escapeHtml(athlete.full_name)}" class="athlete-photo-img">`
-            : `<div class="athlete-photo-placeholder"><span>${initials}</span></div>`;
+            ? `<img src="${Utils.escapeHtml(athlete.photo_path)}" alt="${Utils.escapeHtml(athlete.full_name)}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;">`
+            : `<div style="width:36px;height:36px;border-radius:50%;background:${color};display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;color:#fff;flex-shrink:0;">${initials}</div>`;
         
-        let medicalStatus = 'expired';
-        let medicalColor = 'var(--color-pink)';
+        let medicalStatusHtml = '<span style="color:var(--color-text-muted)">—</span>';
         if (athlete.medical_cert_expires_at) {
             const days = Utils.daysUntil(athlete.medical_cert_expires_at);
+            const dateStr = Utils.formatDate(athlete.medical_cert_expires_at);
             if (days > 30) {
-                medicalStatus = 'valid';
-                medicalColor = 'var(--color-success)';
+                medicalStatusHtml = `<span style="color:var(--color-success)">${dateStr} <i class="ph ph-check-circle"></i></span>`;
             } else if (days >= 0) {
-                medicalStatus = 'warning';
-                medicalColor = 'var(--color-yellow)';
+                medicalStatusHtml = `<span style="color:var(--color-warning)">${dateStr} <i class="ph ph-warning"></i></span>`;
+            } else {
+                medicalStatusHtml = `<span style="color:var(--color-pink)">${dateStr} <i class="ph ph-x-circle"></i></span>`;
             }
         }
 
         return `
-            <div class="athlete-card ${isSelected ? 'selected' : ''}" data-id="${athlete.id}">
-                <div class="card-selection-check ${isSelected ? 'active' : ''}">
-                    <i class="ph ph-check-circle"></i>
-                </div>
-                <div class="athlete-card-header">
-                    <div class="athlete-photo-container">${photo}</div>
-                    <div class="athlete-card-info">
-                        <h3 class="athlete-card-name">${Utils.escapeHtml(athlete.full_name)}</h3>
-                        <div class="athlete-card-meta">
-                            <span class="meta-item"><i class="ph ph-hashtag"></i> ${athlete.jersey_number || '—'}</span>
-                            <span class="meta-item"><i class="ph ph-shield"></i> ${Utils.escapeHtml(athlete.role || '—')}</span>
+            <tr class="athlete-card ${isSelected ? 'selected' : ''}" data-id="${athlete.id}" style="cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.05);transition:background 0.2s;">
+                <td style="padding:12px 16px;">
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        ${isSelected ? '<div style="color:var(--color-primary);"><i class="ph ph-check-circle" style="font-size:18px;"></i></div>' : ''}
+                        ${photo}
+                        <div>
+                            <div style="font-weight:600;font-size:14px;color:var(--color-white);">${Utils.escapeHtml(athlete.full_name)}</div>
+                            <div style="font-size:11px;color:var(--color-text-muted);"><i class="ph ph-hashtag"></i> ${athlete.jersey_number || '—'}</div>
                         </div>
                     </div>
-                </div>
-                <div class="athlete-card-footer">
-                    <div class="athlete-card-team">
-                        <i class="ph ph-shield-star"></i> ${Utils.escapeHtml(athlete.team_name)}
-                    </div>
-                    <div class="medical-badge" title="Scadenza certificato: ${Utils.formatDate(athlete.medical_cert_expires_at) || 'N/A'}" style="color:${medicalColor}">
-                        <i class="ph ph-activity"></i>
-                    </div>
-                </div>
-            </div>
+                </td>
+                <td style="padding:12px 16px;font-size:13px;color:var(--color-silver);">${Utils.escapeHtml(athlete.role || '—')}</td>
+                <td style="padding:12px 16px;font-size:13px;color:var(--color-silver);"><i class="ph ph-shield-star"></i> ${Utils.escapeHtml(athlete.team_name)}</td>
+                <td style="padding:12px 16px;font-size:13px;color:var(--color-silver);">${athlete.birth_date ? Utils.formatDate(athlete.birth_date) : '<span style="color:var(--color-text-muted)">—</span>'}</td>
+                <td style="padding:12px 16px;font-size:13px;">${medicalStatusHtml}</td>
+            </tr>
         `;
     },
 

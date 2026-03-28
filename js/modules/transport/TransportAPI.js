@@ -5,109 +5,91 @@
 
 const TransportAPI = {
     getEvents: async (teamId = '', type = '') => {
-        return Store.fetchAPI(`/transport/events?teamId=${teamId}&type=${type}`);
+        return await Store.get("listEvents", "transport", { teamId, type });
     },
 
     createEvent: async (data) => {
-        return Store.fetchAPI('/transport/events', {
-            method: 'POST',
-            body: JSON.stringify(data)
-        });
+        return await Store.api("createEvent", "transport", data);
     },
 
     getRoutes: async (eventId) => {
-        return Store.fetchAPI(`/transport/routes?eventId=${eventId}`);
+        return await Store.get("listRoutes", "transport", { eventId });
     },
 
     createRoute: async (data) => {
-        return Store.fetchAPI('/transport/routes', {
-            method: 'POST',
-            body: JSON.stringify(data)
-        });
+        return await Store.api("createRoute", "transport", data);
     },
 
     getAttendees: async (eventId) => {
-        return Store.fetchAPI(`/transport/attendees?eventId=${eventId}`);
+        return await Store.get("listAttendees", "transport", { eventId });
     },
 
     addPassenger: async (data) => {
-        return Store.fetchAPI('/transport/passengers', {
-            method: 'POST',
-            body: JSON.stringify(data)
-        });
+        return await Store.api("addPassenger", "transport", data);
     },
 
     confirmPassenger: async (data) => {
-        return Store.fetchAPI('/transport/passengers/confirm', {
-            method: 'POST',
-            body: JSON.stringify(data)
-        });
+        return await Store.api("confirmPassenger", "transport", data);
     },
 
     getGyms: async () => {
-        return Store.fetchAPI('/transport/gyms');
+        return await Store.get("listGyms", "transport");
     },
 
     createGym: async (data) => {
-        return Store.fetchAPI('/transport/gyms', {
-            method: 'POST',
-            body: JSON.stringify(data)
-        });
+        return await Store.api("createGym", "transport", data);
     },
 
     deleteGym: async (data) => {
-        return Store.fetchAPI('/transport/gyms/delete', {
-            method: 'POST',
-            body: JSON.stringify(data)
-        });
+        return await Store.api("deleteGym", "transport", data);
     },
 
     getTeams: async () => {
-        return Store.fetchAPI('/transport/teams');
+        return await Store.get("listTeams", "transport");
     },
 
     getTeamAthletes: async (teamId) => {
-        return Store.fetchAPI(`/transport/athletes?teamId=${teamId}`);
+        return await Store.get("listTeamAthletes", "transport", { teamId });
     },
 
     saveTransport: async (data) => {
-        return Store.fetchAPI('/transport/save', {
-            method: 'POST',
-            body: JSON.stringify(data)
-        });
+        return await Store.api("saveTransport", "transport", data);
     },
 
     getTransports: async (teamId = '') => {
-        return Store.fetchAPI(`/transport/list?teamId=${teamId}`);
+        return await Store.get("listTransports", "transport", { teamId });
     },
 
     getDrivers: async () => {
-        return Store.fetchAPI('/transport/drivers');
+        return await Store.get("listDrivers", "transport");
+    },
+
+    createDriver: async (data) => {
+        return await Store.api("createDriver", "transport", data);
+    },
+
+    toggleDriverActive: async (data) => {
+        return await Store.api("toggleDriverActive", "transport", data);
+    },
+
+    deleteDriver: async (data) => {
+        return await Store.api("deleteDriver", "transport", data);
     },
 
     getVehicles: async () => {
-        return Store.fetchAPI('/fleet/list'); // Assuming vehicles come from fleet module
+        return await Store.get("listVehicles", "vehicles");
     },
 
     sendConvocations: async (data) => {
-        return Store.fetchAPI('/transport/convocations', {
-            method: 'POST',
-            body: JSON.stringify(data)
-        });
+        return await Store.api("sendConvocations", "transport", data);
     },
 
     generateReimbursement: async (data) => {
-        return Store.fetchAPI('/transport/reimbursements', {
-            method: 'POST',
-            body: JSON.stringify(data)
-        });
+        return await Store.api("generateReimbursement", "transport", data);
     },
 
     analyzeAI: async (data) => {
-        return Store.fetchAPI('/transport/ai-analyze', {
-            method: 'POST',
-            body: JSON.stringify(data)
-        });
+        return await Store.api("analyzeTransportAI", "transport", data);
     }
 };
 

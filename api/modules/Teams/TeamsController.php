@@ -36,7 +36,9 @@ class TeamsController
                 Response::success($this->service->$method());
             }
         } catch (\Exception $e) {
-            Response::error($e->getMessage(), (int)$e->getCode() ?: 500);
+            $code = $e->getCode();
+            $httpCode = (is_int($code) && $code >= 400 && $code <= 599) ? $code : 500;
+            Response::error($e->getMessage(), $httpCode);
         }
     }
 

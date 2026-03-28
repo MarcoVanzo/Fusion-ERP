@@ -107,6 +107,57 @@ const TransportView = {
             <p style="font-family:var(--font-display); font-size:15px; font-weight:700; text-transform:uppercase; letter-spacing:1px;">Nessun viaggio passato</p>
         </div>`,
 
+    driversDashboard: (drivers, isAdmin) => {
+        return `
+            <div class="drv-page">
+                <div class="drv-top">
+                    <div class="drv-title">
+                        <button class="btn-dash" id="drv-back" type="button" style="padding:10px; -webkit-text-fill-color:unset; font-size:14px;"><i class="ph ph-arrow-left" style="font-size:20px;"></i></button>
+                        Gestione <span style="color:#00e5ff;">Autisti</span>
+                    </div>
+                    ${isAdmin ? '<button class="btn-dash primary" id="drv-add-btn" type="button"><i class="ph ph-plus-circle" style="font-size:18px;"></i> AGGIUNGI AUTISTA</button>' : ""}
+                </div>
+                <div id="drv-list">
+                    ${drivers.length === 0 ? 
+                        Utils.emptyState("Nessun autista registrato", "Aggiungi il primo autista per iniziare.") : 
+                        '<div class="drv-grid">' + drivers.map(d => TransportView.renderDriverCard(d, isAdmin)).join("") + '</div>'
+                    }
+                </div>
+            </div>`;
+    },
+
+    renderDriverCard: (t, isAdmin) => {
+        const isActive = !!t.is_active;
+        return `
+            <div class="drv-card ${isActive ? "" : "inactive"}" data-driver-id="${Utils.escapeHtml(t.id)}">
+                <div style="display:flex; gap:16px; align-items:flex-start;">
+                    <div class="drv-avatar"><i class="ph ph-steering-wheel"></i></div>
+                    <div style="flex:1; min-width:0;">
+                        <div class="drv-name">${Utils.escapeHtml(t.full_name)}</div>
+                        <div class="drv-meta">
+                            ${t.phone ? `<span><i class="ph ph-phone"></i>${Utils.escapeHtml(t.phone)}</span>` : ""}
+                            ${t.license_number ? `<span><i class="ph ph-identification-card"></i>Patente: ${Utils.escapeHtml(t.license_number)}</span>` : ""}
+                            ${t.hourly_rate ? `<span><i class="ph ph-currency-eur"></i>${Utils.formatCurrency(t.hourly_rate)}/h</span>` : ""}
+                            ${t.notes ? `<span style="margin-top:4px; color:rgba(255,255,255,0.35); font-size:12px;"><i class="ph ph-note"></i>${Utils.escapeHtml(t.notes)}</span>` : ""}
+                        </div>
+                        <span class="drv-badge ${isActive ? "active" : "inactive"}">
+                            <i class="ph ${isActive ? "ph-check-circle" : "ph-pause-circle"}"></i>
+                            ${isActive ? "Attivo" : "Non Attivo"}
+                        </span>
+                    </div>
+                </div>
+                ${isAdmin ? `
+                <div class="drv-actions">
+                    <button class="btn-drv" data-driver-toggle="${Utils.escapeHtml(t.id)}" data-driver-active="${isActive ? "1" : "0"}" type="button">
+                        <i class="ph ${isActive ? "ph-pause" : "ph-play"}"></i> ${isActive ? "Disattiva" : "Attiva"}
+                    </button>
+                    <button class="btn-drv danger" data-driver-delete="${Utils.escapeHtml(t.id)}" type="button">
+                        <i class="ph ph-trash"></i> Elimina
+                    </button>
+                </div>` : ""}
+            </div>`;
+    },
+
     renderNewTransport: (gymOptions, teamOptions, driverOptions, vehicleOptions) => {
         return `
             <div class="transport-dashboard">

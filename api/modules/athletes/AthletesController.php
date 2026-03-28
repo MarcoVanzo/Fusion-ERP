@@ -32,8 +32,9 @@ class AthletesController
             $result = $callback();
             Response::success($result);
         } catch (\Exception $e) {
-            $code = $e->getCode() ?: 500;
-            Response::error($e->getMessage(), (int)$code);
+            $code = $e->getCode();
+            $httpCode = (is_int($code) && $code >= 400 && $code <= 599) ? $code : 500;
+            Response::error($e->getMessage(), $httpCode);
         }
     }
 

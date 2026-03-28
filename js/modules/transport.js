@@ -63,6 +63,131 @@ const Transport = {
     },
 
     /**
+     * Drivers Management View
+     */
+    renderDrivers: async function() {
+        const app = document.getElementById("app");
+        app.innerHTML = UI.skeletonPage();
+        const user = App.getUser();
+        const isAdmin = ["admin", "manager", "operator"].includes(user?.role);
+        try {
+            const drivers = await TransportAPI.getDrivers();
+            app.innerHTML = TransportView.driversDashboard(drivers, isAdmin);
+            this.attachDriversEvents(isAdmin);
+        } catch (error) {
+            app.innerHTML = Utils.emptyState("Errore nel caricamento", error.message);
+            document.getElementById("err-back-btn")?.addEventListener("click", () => this.renderDashboard(), { signal: this.abortController.signal });
+            UI.toast("Errore: " + error.message, "error");
+        }
+    },
+
+    attachDriversEvents: function(isAdmin) {
+        document.getElementById("drv-back")?.addEventListener("click", () => this.renderDashboard(), { signal: this.abortController.signal });
+        
+        if (isAdmin) {
+            document.getElementById("drv-add-btn")?.addEventListener("click", () => this.showDriverModal(), { signal: this.abortController.signal });
+            
+            Utils.qsa("[data-driver-toggle]").forEach(btn => {
+                btn.addEventListener("click", async () => {
+                    const id = btn.dataset.driverToggle;
+                    const isActive = btn.dataset.driverActive === "1";
+                    try {
+                        await TransportAPI.toggleDriverActive({ id: id, is_active: !isActive });
+                        UI.toast(isActive ? "Autista disattivato" : "Autista attivato", "success");
+                        this.renderDrivers();
+                    } catch (err) {
+                        UI.toast("Errore: " + err.message, "error");
+                    }
+                }, { signal: this.abortController.signal });
+            });
+            
+            Utils.qsa("[data-driver-delete]").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    const id = btn.dataset.driverDelete;
+                    UI.confirm("Eliminare questo autista?", async () => {
+                        try {
+                            await TransportAPI.deleteDriver({ id });
+                            UI.toast("Autista eliminato", "success");
+                            this.renderDrivers();
+                        } catch (err) {
+                            UI.toast("Errore: " + err.message, "error");
+                        }
+                    });
+                }, { signal: this.abortController.signal });
+            });
+        }
+    },
+
+    showDriverModal: function() {
+        const modal = UI.modal({
+            title: "Aggiungi Autista",
+            body: `
+                <div class="form-group">
+                    <label class="form-label" for="drv-name">Nome completo *</label>
+                    <input id="drv-name" class="form-input" type="text" placeholder="Mario Rossi" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="drv-phone">Telefono</label>
+                    <input id="drv-phone" class="form-input" type="tel" placeholder="+39 340 1234567">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="drv-license">Numero Patente</label>
+                    <input id="drv-license" class="form-input" type="text" placeholder="AB1234567">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="drv-rate">Tariffa oraria (€/h)</label>
+                    <input id="drv-rate" class="form-input" type="number" min="0" step="0.5" placeholder="15.00">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="drv-notes">Note</label>
+                    <textarea id="drv-notes" class="form-textarea" placeholder="Disponibilità, preferenze..." style="min-height:60px;"></textarea>
+                </div>
+                <div id="drv-error" class="form-error hidden"></div>
+            `,
+            footer: `
+                <button class="btn btn-ghost btn-sm" id="drv-cancel" type="button">Annulla</button>
+                <button class="btn btn-primary btn-sm" id="drv-save" type="button">SALVA AUTISTA</button>
+            `
+        });
+
+        document.getElementById("drv-cancel")?.addEventListener("click", () => modal.close(), { signal: this.abortController.signal });
+        
+        document.getElementById("drv-save")?.addEventListener("click", async () => {
+            const name = document.getElementById("drv-name").value.trim();
+            const errEl = document.getElementById("drv-error");
+            
+            if (!name) {
+                errEl.textContent = "Il nome è obbligatorio";
+                errEl.classList.remove("hidden");
+                return;
+            }
+            
+            const btn = document.getElementById("drv-save");
+            btn.disabled = true;
+            btn.textContent = "Salvataggio...";
+            
+            try {
+                await TransportAPI.createDriver({
+                    full_name: name,
+                    phone: document.getElementById("drv-phone").value.trim() || null,
+                    license_number: document.getElementById("drv-license").value.trim() || null,
+                    hourly_rate: parseFloat(document.getElementById("drv-rate").value) || null,
+                    notes: document.getElementById("drv-notes").value.trim() || null
+                });
+                
+                UI.toast("Autista aggiunto!", "success");
+                await this.renderDrivers();
+                modal.close();
+            } catch (err) {
+                errEl.textContent = err.message;
+                errEl.classList.remove("hidden");
+                btn.disabled = false;
+                btn.textContent = "SALVA AUTISTA";
+            }
+        }, { signal: this.abortController.signal });
+    },
+
+    /**
      * Dashboard View
      */
     renderDashboard: async function() {

@@ -36,6 +36,7 @@ set_exception_handler(function(\Throwable $e) {
         // Write extended logs only in debug mode — avoid information-disclosure in production
         file_put_contents(__DIR__ . '/../local_debug_error.log', date('Y-m-d H:i:s') . ' ' . $errMsg . PHP_EOL, FILE_APPEND);
     }
+    file_put_contents(__DIR__ . '/../ai_debug.log', date('Y-m-d H:i:s') . ' (HANDLER) ' . $errMsg . PHP_EOL, FILE_APPEND);
 
     if (ob_get_level() > 0) ob_clean();
     http_response_code(500);
@@ -129,6 +130,7 @@ catch (\Throwable $e) {
     if ($isDebug) {
         file_put_contents(__DIR__ . '/../local_debug_error.log', date('Y-m-d H:i:s') . ' ' . $errMsg . PHP_EOL, FILE_APPEND);
     }
+    file_put_contents(__DIR__ . '/../ai_debug.log', date('Y-m-d H:i:s') . ' (CATCH) ' . $errMsg . PHP_EOL, FILE_APPEND);
 
     $clientMessage = $isDebug
         ? 'PHP_ERROR: ' . $e->getMessage() . ' in ' . basename($e->getFile()) . ':' . $e->getLine()

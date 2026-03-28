@@ -39,7 +39,9 @@ class SocietaController
             Response::success($result ?: ['message' => 'Operazione completata con successo'], $successCode);
         } catch (\Exception $e) {
             error_log('SocietaController Error: ' . $e->getMessage());
-            Response::error($e->getMessage(), $e->getCode() ?: 500);
+            $code = $e->getCode();
+            $httpCode = (is_int($code) && $code >= 400 && $code <= 599) ? $code : 500;
+            Response::error($e->getMessage(), $httpCode);
         }
     }
 

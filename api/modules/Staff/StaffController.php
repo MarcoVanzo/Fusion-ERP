@@ -160,7 +160,9 @@ class StaffController
             );
             Response::success(['photo_path' => $result['path']]);
         } catch (\Exception $e) {
-            Response::error($e->getMessage(), $e->getCode() ?: 500);
+            $code = $e->getCode();
+            $httpCode = (is_int($code) && $code >= 400 && $code <= 599) ? $code : 500;
+            Response::error($e->getMessage(), $httpCode);
         }
     }
 
@@ -180,7 +182,9 @@ class StaffController
             );
             Response::success($result);
         } catch (\Exception $e) {
-            Response::error('Errore generazione contratto: ' . $e->getMessage(), $e->getCode() ?: 500);
+            $code = $e->getCode();
+            $httpCode = (is_int($code) && $code >= 400 && $code <= 599) ? $code : 500;
+            Response::error('Errore generazione contratto: ' . $e->getMessage(), $httpCode);
         }
     }
 
@@ -196,7 +200,9 @@ class StaffController
             $result = $this->service->checkContractStatus($id);
             Response::success($result);
         } catch (\Exception $e) {
-            Response::error($e->getMessage(), $e->getCode() ?: 500);
+            $code = $e->getCode();
+            $httpCode = (is_int($code) && $code >= 400 && $code <= 599) ? $code : 500;
+            Response::error($e->getMessage(), $httpCode);
         }
     }
 
@@ -245,7 +251,9 @@ class StaffController
             );
             Response::success($result);
         } catch (\Exception $e) {
-            Response::error($e->getMessage(), $e->getCode() ?: 500);
+            $code = $e->getCode();
+            $httpCode = (is_int($code) && $code >= 400 && $code <= 599) ? $code : 500;
+            Response::error($e->getMessage(), $httpCode);
         }
     }
 
