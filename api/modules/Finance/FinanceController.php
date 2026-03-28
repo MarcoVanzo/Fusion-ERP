@@ -25,23 +25,23 @@ class FinanceController
     {
         try {
             Response::success($callback());
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             error_log("[Finance] API Error: " . $e->getMessage());
             Response::error($e->getMessage(), 500);
         }
     }
 
-    public function getDashboard(): void
+    public function dashboard(): void
     {
         $this->handleServiceCall(fn() => $this->service->getDashboardData());
     }
 
-    public function getCategories(): void
+    public function categories(): void
     {
         $this->handleServiceCall(fn() => ['categories' => $this->repository->getCategories()]);
     }
 
-    public function getChartOfAccounts(): void
+    public function chartOfAccounts(): void
     {
         $this->handleServiceCall(fn() => $this->repository->getChartOfAccounts());
     }
