@@ -514,9 +514,7 @@ class NetworkController
             Response::error('Il modulo Scouting non è ancora attivo su questo sistema. Eseguire prima la migrazione relativa.', 503);
         }
 
-        $scoutingId = 'SCT_' . bin2hex(random_bytes(4));
-        $this->repo->insertScoutingProfile([
-            ':id' => $scoutingId,
+        $scoutingId = $this->repo->insertScoutingProfile([
             ':tenant_id' => TenantContext::id(),
             ':first_name' => $trial['athlete_first_name'],
             ':last_name' => $trial['athlete_last_name'],
