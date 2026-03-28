@@ -56,7 +56,7 @@ class ScoutingController
     public function listDatabase(): void
     {
         $user = Auth::requireRole('allenatore');
-        $tenantId = (int)($user['tenant_id'] ?? 0);
+        $tenantId = \FusionERP\Shared\TenantContext::id();
 
         // Security: limit to current tenant's records, ordered by recency
         $stmt = $this->db->prepare("
@@ -90,7 +90,7 @@ class ScoutingController
     public function addManualEntry(): void
     {
         $user = Auth::requireRole('allenatore');
-        $tenantId = (int)($user['tenant_id'] ?? 0);
+        $tenantId = \FusionERP\Shared\TenantContext::id();
 
         $data = json_decode(file_get_contents('php://input'), true);
         if (!$data || empty($data['nome']) || empty($data['cognome'])) {
@@ -123,7 +123,7 @@ class ScoutingController
     public function updateEntry(): void
     {
         $user = Auth::requireRole('allenatore');
-        $tenantId = (int)($user['tenant_id'] ?? 0);
+        $tenantId = \FusionERP\Shared\TenantContext::id();
 
         $data = json_decode(file_get_contents('php://input'), true);
         if (!$data || empty($data['id']) || empty($data['nome']) || empty($data['cognome'])) {
@@ -296,10 +296,10 @@ class ScoutingController
 
         $sql = "
             INSERT INTO scouting_athletes
-                (cognito_id, cognito_form, nome, cognome, societa_appartenenza, anno_nascita,
+                (tenant_id, cognito_id, cognito_form, nome, cognome, societa_appartenenza, anno_nascita,
                  note, rilevatore, data_rilevazione, source, synced_at)
             VALUES
-                (:cog_id, :cog_form, :nome, :cognome, :societa, :anno,
+                (:tenant_id, :cog_id, :cog_form, :nome, :cognome, :societa, :anno,
                  :note, :rilevatore, :data_ril, :source, NOW())
             ON DUPLICATE KEY UPDATE
                 nome                  = IF(is_locked_edit = 1, nome, VALUES(nome)),
@@ -329,6 +329,7 @@ class ScoutingController
             $dataRil = !empty($rawDate) ? date('Y-m-d', (int)strtotime((string)$rawDate)) : date('Y-m-d');
 
             $stmt->execute([
+                ':tenant_id' => 'TNT_default', // Assuming TNT_default for automated imports per system default
                 ':cog_id' => (int)$e['Id'],
                 ':cog_form' => $source,
                 ':nome' => (string)$nome,

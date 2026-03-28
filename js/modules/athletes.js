@@ -1612,7 +1612,7 @@ window.__valdAi = async function (athleteId, part) {
           }
           if (tRows.length) {
             html +=
-              '<table style="width:100%;border-collapse:collapse;font-size:12px;margin:6px 0;">';
+              '<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:12px;margin:6px 0;">';
             tRows.forEach((row, ri) => {
               const tag = ri === 0 ? "th" : "td";
               html +=
@@ -1625,7 +1625,7 @@ window.__valdAi = async function (athleteId, part) {
                   .join("") +
                 "</tr>";
             });
-            html += "</table>";
+            html += "</table></div>";
           }
           continue;
         }
@@ -1667,7 +1667,7 @@ window.__valdAi = async function (athleteId, part) {
           html += "</ul>";
           inList = false;
         }
-        html += `<span style="font-size:13px;line-height:1.65;">${Utils.escapeHtml(line)}</span><br>`;
+        html += `<span style="font-size:13px;line-height:1.65;word-break:break-word;overflow-wrap:break-word;">${Utils.escapeHtml(line)}</span><br>`;
         i++;
       }
       if (inList) html += "</ul>";
@@ -1693,7 +1693,7 @@ window.__valdAi = async function (athleteId, part) {
       part +
       "-text-" +
       athleteId +
-      '" style="color:var(--color-text);margin:0 0 10px;">' +
+      '" style="color:var(--color-text);margin:0 0 10px;word-break:break-word;overflow-wrap:break-word;">' +
       renderAiMarkdown(text) +
       "</div>" +
       // Chat section
@@ -1775,7 +1775,7 @@ window.__valdChat = async function (athleteId, part) {
   // AI thinking bubble
   const aiDiv = document.createElement("div");
   aiDiv.style.cssText =
-    "background:rgba(100,80,255,0.08);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--color-text-muted);align-self:flex-start;max-width:90%;white-space:pre-line;";
+    "background:rgba(100,80,255,0.08);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--color-text-muted);align-self:flex-start;max-width:90%;white-space:pre-wrap;word-break:break-word;overflow-wrap:break-word;";
   aiDiv.textContent = "Sto elaborando\u2026";
   history.appendChild(aiDiv);
   history.scrollTop = history.scrollHeight;

@@ -330,7 +330,7 @@ PROMPT;
             return trim(AIService::generateContent($prompt, ['temperature' => 0.4, 'maxOutputTokens' => 1500]));
         } catch (\Exception $e) {
             error_log("[VALD GEMINI SINGLE] Error: " . $e->getMessage());
-            return 'Analisi AI temporaneamente non disponibile.';
+            return 'Analisi AI temporaneamente non disponibile. Errore: ' . $e->getMessage();
         }
     }
 
