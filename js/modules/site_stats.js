@@ -80,9 +80,7 @@ window.WebAnalytics = (() => {
 
     const activeData = state.sites[state.activeSite];
 
-    if (activeData.url) {
-      container.innerHTML = `<iframe src="${activeData.url}" style="width:100%; height:100%; border:none; display:block;" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>`;
-    } else {
+      container.innerHTML = `<iframe src="${activeData.url}" style="width:100%; height:100%; border:none; display:block;" allowfullscreen></iframe>`;
       container.innerHTML = `
                 <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; font-family:var(--font-body); color:var(--text-muted); background:var(--bg-body); text-align:center; padding:2rem;">
                     <i class="ph ph-chart-line-up" style="font-size:64px; color:var(--color-primary); margin-bottom:1rem; opacity:0.5;"></i>

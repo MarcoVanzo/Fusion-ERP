@@ -740,7 +740,7 @@ class SocietaController
 
     public function saveForesteria(): void
     {
-        Auth::requireRole('social media manager');
+        Auth::requireRole('operator');
         $body = Response::jsonBody();
         $tid = TenantContext::id();
         $desc = $body['description'] ?? null;
@@ -757,7 +757,7 @@ class SocietaController
 
     public function addExpense(): void
     {
-        Auth::requireRole('social media manager');
+        Auth::requireRole('operator');
         
         $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
         $body = (strpos($contentType, 'application/json') !== false) ? Response::jsonBody() : $_POST;
@@ -780,7 +780,7 @@ class SocietaController
 
     public function deleteExpense(): void
     {
-        Auth::requireRole('social media manager');
+        Auth::requireRole('operator');
         $body = Response::jsonBody();
         Response::requireFields($body, ['id']);
         
@@ -791,7 +791,7 @@ class SocietaController
 
     public function uploadForesteriaMedia(): void
     {
-        Auth::requireRole('social media manager');
+        Auth::requireRole('operator');
 
         if (empty($_FILES['file'])) {
             Response::error('File non caricato', 400);
@@ -822,7 +822,7 @@ class SocietaController
 
     public function addForesteriaYoutubeLink(): void
     {
-        Auth::requireRole('social media manager');
+        Auth::requireRole('operator');
         $body = Response::jsonBody();
         Response::requireFields($body, ['url']);
 
@@ -849,7 +849,7 @@ class SocietaController
 
     public function deleteForesteriaMedia(): void
     {
-        Auth::requireRole('social media manager');
+        Auth::requireRole('operator');
         $body = Response::jsonBody();
         Response::requireFields($body, ['id']);
 
