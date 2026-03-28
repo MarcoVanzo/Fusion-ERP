@@ -334,7 +334,7 @@ const Results = (() => {
       e && (e.classList.add("loading"), (e.disabled = !0));
       try {
         UI.toast("Sincronizzazione in corso...", "info", 3e3);
-        const e = await Store.api("sync", "results", { id: t.id });
+        const e = await Store.api("syncCampionato", "results", { id: t.id });
         if (!e.success) throw new Error(e.error || "Errore sconosciuto");
         (e.standings > 0
           ? UI.toast(
