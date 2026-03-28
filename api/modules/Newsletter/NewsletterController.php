@@ -174,12 +174,10 @@ class NewsletterController
     {
         Auth::requireRole('social media manager');
 
-        $csv = $this->ml->exportCsv();
-
         header('Content-Type: text/csv; charset=utf-8');
         header('Content-Disposition: attachment; filename="newsletter_iscritti_' . date('Ymd') . '.csv"');
-        header('Content-Length: ' . strlen($csv));
-        echo $csv;
+        
+        $this->ml->streamCsv();
         exit;
     }
 }

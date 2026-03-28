@@ -76,6 +76,7 @@ class SocialController
         $appId = $_ENV['META_APP_ID'] ?? $_SERVER['META_APP_ID'] ?? getenv('META_APP_ID');
         if (empty($appId) || $appId === 'YOUR_META_APP_ID') {
             Response::error('Meta App non configurata. Aggiungere META_APP_ID e META_APP_SECRET nel file .env', 500);
+            return;
         }
 
         // Store token → userId in DB (with file fallback), get short hex token for state
@@ -94,22 +95,22 @@ class SocialController
      */
     public function callback(): void
     {
-        $returnUrl = $_ENV['APP_URL'] ?? $_SERVER['APP_URL'] ?? getenv('APP_URL') ?: 'https://www.fusionteamvolley.it/ERP';
+        $baseReturnUrl = $_ENV['APP_URL'] ?? $_SERVER['APP_URL'] ?? getenv('APP_URL') ?: 'https://www.fusionteamvolley.it/ERP';
 
         // Log ALL GET params to DB for debugging — removed in production
         $code  = filter_input(INPUT_GET, 'code', FILTER_DEFAULT) ?? '';
         $error = filter_input(INPUT_GET, 'error', FILTER_DEFAULT) ?? '';
-        $state = $_GET['state'] ?? '';
+        $state = filter_input(INPUT_GET, 'state', FILTER_DEFAULT) ?? '';
 
         // Resolve userId from DB-stored token
         $userId = $this->repo->resolveOAuthToken($state);
 
         if (!$userId) {
-            header('Location: ' . $returnUrl . '#social?error=' . urlencode('Errore di autenticazione. Riprova il collegamento.'));
+            header('Location: ' . $baseReturnUrl . '#social?error=' . urlencode('Errore di autenticazione. Riprova il collegamento.'));
             exit;
         }
 
-        $returnUrl = $_SESSION['meta_oauth_return'] ?? ($_ENV['APP_URL'] ?? $_SERVER['APP_URL'] ?? getenv('APP_URL') ?: 'https://www.fusionteamvolley.it/ERP');
+        $returnUrl = $_SESSION['meta_oauth_return'] ?? $baseReturnUrl;
         unset($_SESSION['meta_oauth_return']);
 
         if ($error || empty($code)) {
@@ -341,44 +342,5 @@ class SocialController
         }
 
         return array_values($daily);
-    }
-
-    /**
-     * Transform FB Page insights into a summary object.
-     */
-    private function transformFbInsights(array $rawInsights): array
-    {
-        $result = [
-            'page_views' => 0,
-            'engaged_users' => 0,
-            'post_engagements' => 0,
-            'page_fans' => 0,
-        ];
-
-        $keyMap = [
-            'page_views_total' => 'page_views',
-            'page_engaged_users' => 'engaged_users',
-            'page_post_engagements' => 'post_engagements',
-            'page_fans' => 'page_fans',
-        ];
-
-        foreach ($rawInsights as $metric) {
-            $name = $metric['name'] ?? '';
-            if (isset($keyMap[$name])) {
-                $values = $metric['values'] ?? [];
-                $total = 0;
-                foreach ($values as $v) {
-                    $total += (int)($v['value'] ?? 0);
-                }
-                // For page_fans, take the last value (it's a lifetime metric)
-                if ($name === 'page_fans' && !empty($values)) {
-                    $lastVal = end($values);
-                    $total = (int)($lastVal['value'] ?? 0);
-                }
-                $result[$keyMap[$name]] = $total;
-            }
-        }
-
-        return $result;
     }
 }

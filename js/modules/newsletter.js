@@ -743,9 +743,7 @@ const Newsletter = (() => {
           _subscribers = [];
           _nextCursor = null;
           await loadSubscribers(false);
-          [_stats] = await Promise.all([
-            Store.get("getStats", "newsletter").catch(() => _stats),
-          ]);
+          _stats = await Store.get("getStats", "newsletter").catch(() => _stats);
           UI.toast("Iscritto aggiunto con successo", "success");
           render();
           modal.close();
