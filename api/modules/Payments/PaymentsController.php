@@ -101,7 +101,6 @@ class PaymentsController
         $plan = $this->repo->getActivePlan($athleteId);
         if (!$plan) {
             Response::success(['plan' => null, 'installments' => []]);
-            return;
         }
 
         $installments = $this->repo->getInstallments($plan['id']);

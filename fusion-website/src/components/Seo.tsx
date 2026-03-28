@@ -8,7 +8,7 @@ interface SeoProps {
     image?: string;
     pathname?: string;
     type?: 'website' | 'article';
-    structuredData?: Record<string, any> | Record<string, any>[];
+    structuredData?: Record<string, unknown> | Record<string, unknown>[];
     children?: React.ReactNode;
 }
 

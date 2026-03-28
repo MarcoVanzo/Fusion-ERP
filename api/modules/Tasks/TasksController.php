@@ -71,7 +71,7 @@ class TasksController
             $attachment ?: null
         );
 
-        Audit::log('INSERT', 'tasks', $id, null, ['title' => $title, 'status' => $status], 'crud');
+        Audit::log('INSERT', 'tasks', $id, null, ['title' => $title, 'status' => $status]);
         Response::success(['id' => $id], 201);
     }
 
@@ -94,7 +94,7 @@ class TasksController
 
         $this->repo->updateTask($id, $body);
 
-        Audit::log('UPDATE', 'tasks', $id, $before, $this->repo->getTask($id), 'crud');
+        Audit::log('UPDATE', 'tasks', $id, $before, $this->repo->getTask($id));
         Response::success(['id' => $id]);
     }
 
@@ -117,7 +117,7 @@ class TasksController
 
         $this->repo->deleteTask($id);
 
-        Audit::log('DELETE', 'tasks', $id, $before, null, 'crud');
+        Audit::log('DELETE', 'tasks', $id, $before, null);
         Response::success(['deleted' => true]);
     }
 

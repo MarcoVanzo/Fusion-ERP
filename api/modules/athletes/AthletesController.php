@@ -11,15 +11,30 @@ namespace FusionERP\Modules\Athletes;
 use FusionERP\Shared\Auth;
 use FusionERP\Shared\Audit;
 use FusionERP\Shared\Response;
-use FusionERP\Shared\AIService;
 
 class AthletesController
 {
     private AthletesRepository $repo;
+    private AthletesService $service;
 
     public function __construct()
     {
         $this->repo = new AthletesRepository();
+        $this->service = new AthletesService();
+    }
+
+    /**
+     * Helper to handle service calls with standard error handling.
+     */
+    private function handleServiceCall(callable $callback): void
+    {
+        try {
+            $result = $callback();
+            Response::success($result);
+        } catch (\Exception $e) {
+            $code = $e->getCode() ?: 500;
+            Response::error($e->getMessage(), (int)$code);
+        }
     }
 
     // ─── GET /api/?module=athletes&action=list ────────────────────────────────
@@ -31,8 +46,6 @@ class AthletesController
     }
 
     // ─── GET /api/?module=athletes&action=listLight ───────────────────────────
-    // PERF: Returns only the fields needed for the athlete card (~75% less payload).
-    // Full data is fetched on-demand via action=get when opening a single profile.
     public function listLight(): void
     {
         Auth::requireRead('athletes');
@@ -46,66 +59,14 @@ class AthletesController
     {
         Auth::requireRead('athletes');
         $id = filter_input(INPUT_GET, 'id', FILTER_DEFAULT) ?? '';
-        $athlete = $this->repo->getAthleteById($id);
-        if (!$athlete) {
-            Response::error('Atleta non trovato', 404);
-        }
-
-        // Append ACWR
-        $acwr = $this->calcACWR($id);
-        $athlete['acwr'] = $acwr;
-
-        // Append metrics history (30 days)
-        $athlete['metrics'] = $this->repo->getMetricsHistory($id, 30);
-
-        Response::success($athlete);
+        $this->handleServiceCall(fn() => $this->service->getProfile($id));
     }
 
     // ─── GET /api/?module=athletes&action=myProfile ───────────────────────────
     public function myProfile(): void
     {
         $user = Auth::requireAuth();
-        $email = $user['email'] ?? '';
-
-        if (empty($email)) {
-            Response::error('Email utente non disponibile nella sessione.', 400);
-        }
-
-        // 1. Try to find an athlete with this email
-        $athlete = $this->repo->getAthleteByEmail($email);
-        
-        if ($athlete) {
-            $athlete['profile_type'] = 'athlete';
-            $athlete['api_module'] = 'athletes';
-            // Append ACWR
-            $athlete['acwr'] = $this->calcACWR($athlete['id']);
-            // Append metrics history (30 days)
-            $athlete['metrics'] = $this->repo->getMetricsHistory($athlete['id'], 30);
-
-            Response::success($athlete);
-        }
-
-        // 2. Try to find a staff member with this email
-        $staffRepo = new \FusionERP\Modules\Staff\StaffRepository();
-        $staff = $staffRepo->getByEmail($email);
-
-        if ($staff) {
-            $staff['profile_type'] = 'staff';
-            $staff['api_module'] = 'staff';
-            
-            // Map staff fields to match the frontend expectations in renderProfilo()
-            $staff['team_name'] = $staff['team_names'] ?? 'Staff FTV';
-            $staff['id_doc_front_file_path'] = $staff['id_doc_file_path'] ?? null;
-            $staff['id_doc_back_file_path'] = $staff['id_doc_back_file_path'] ?? null;
-            $staff['cf_doc_front_file_path'] = $staff['cf_doc_file_path'] ?? null;
-            $staff['cf_doc_back_file_path'] = $staff['cf_doc_back_file_path'] ?? null;
-            // medical_cert_file_path doesn't normally exist for staff in the DB, leave null unless handled
-            $staff['medical_cert_file_path'] = null; 
-
-            Response::success($staff);
-        }
-
-        Response::error('Nessun profilo anagrafico trovato per questa email.', 404);
+        $this->handleServiceCall(fn() => $this->service->getMyProfile($user));
     }
 
     // ─── POST /api/?module=athletes&action=create ─────────────────────────────
@@ -113,65 +74,7 @@ class AthletesController
     {
         Auth::requireWrite('athletes');
         $body = Response::jsonBody();
-        // team_season_ids (array) takes priority over legacy team_id
-        if (!empty($body['team_season_ids']) && is_array($body['team_season_ids'])) {
-            $teamSeasonIds = array_values(array_filter($body['team_season_ids']));
-        }
-        elseif (!empty($body['team_season_id'])) {
-            $teamSeasonIds = [$body['team_season_id']];
-        }
-        else {
-            $teamSeasonIds = [];
-        }
-
-        if (empty($teamSeasonIds)) {
-            Response::error('Selezionare almeno una stagione/squadra', 400);
-        }
-
-        Response::requireFields($body, ['first_name', 'last_name']);
-
-        $id = 'ATH_' . bin2hex(random_bytes(4));
-        $primaryTeamSeasonId = $teamSeasonIds[0];
-        
-        // Derive the base team_id from the primary team_season for backward compatibility
-        // (athletes table still requires team_id; junction table athlete_team_seasons holds multi-team assignments)
-        $primaryTeamId = $this->repo->getTeamIdForSeason($primaryTeamSeasonId) ?: 'UNKNOWN';
-
-        $data = [
-            ':id'                      => $id,
-            ':user_id'                 => $body['user_id'] ?? null,
-            ':team_id'                 => $primaryTeamId,
-            ':first_name'              => trim($body['first_name']),
-            ':last_name'               => trim($body['last_name']),
-            ':jersey_number'           => isset($body['jersey_number']) ? (int)$body['jersey_number'] : null,
-            ':role'                    => $body['role'] ?? null,
-            ':birth_date'              => $body['birth_date'] ?? null,
-            ':birth_place'             => $body['birth_place'] ?? null,
-            ':height_cm'               => isset($body['height_cm']) ? (int)$body['height_cm'] : null,
-            ':weight_kg'               => isset($body['weight_kg']) ? (float)$body['weight_kg'] : null,
-            ':photo_path'              => null,
-            ':residence_address'       => $body['residence_address'] ?? null,
-            ':residence_city'          => $body['residence_city'] ?? null,
-            ':phone'                   => $body['phone'] ?? null,
-            ':email'                   => $body['email'] ?? null,
-            ':identity_document'       => $body['identity_document'] ?? null,
-            ':fiscal_code'             => $body['fiscal_code'] ?? null,
-            ':medical_cert_type'       => $body['medical_cert_type'] ?? null,
-            ':medical_cert_expires_at' => $body['medical_cert_expires_at'] ?? null,
-            ':federal_id'              => $body['federal_id'] ?? null,
-            ':shirt_size'              => $body['shirt_size'] ?? null,
-            ':shoe_size'               => $body['shoe_size'] ?? null,
-            ':parent_contact'          => $body['parent_contact'] ?? null,
-            ':parent_phone'            => $body['parent_phone'] ?? null,
-        ];
-
-        $this->repo->createAthlete($data);
-
-        // Sync junction table with all selected team seasons
-        $this->repo->setAthleteTeams($id, $teamSeasonIds, $primaryTeamId);
-
-        Audit::log('INSERT', 'athletes', $id, null, ['first_name' => $body['first_name'], 'last_name' => $body['last_name'], 'team_season_ids' => $teamSeasonIds]);
-        Response::success(['id' => $id], 201);
+        $this->handleServiceCall(fn() => $this->service->createAthlete($body));
     }
 
     // ─── POST /api/?module=athletes&action=update ─────────────────────────────
@@ -194,7 +97,6 @@ class AthletesController
             $teamSeasonIds = [$body['team_season_id']];
         }
         else {
-            // Legacy/fallback
             $teamSeasonIds = $before['team_season_ids'] ?? (isset($before['team_ids']) ? $before['team_ids'] : []);
         }
         $primaryTeamSeasonId = $teamSeasonIds[0] ?? null;
@@ -206,7 +108,6 @@ class AthletesController
             $primaryTeamId = $before['team_id'] ?? null;
         }
 
-        // Preserve existing values for fields not passed in the request
         $val = fn($k) => array_key_exists($k, $body) ? $body[$k] : ($before[$k] ?? null);
 
         $this->repo->updateAthlete($body['id'], [
@@ -234,7 +135,6 @@ class AthletesController
             ':team_id' => $primaryTeamId,
         ]);
 
-        // Sync junction table with all selected team seasons
         $this->repo->setAthleteTeams($body['id'], $teamSeasonIds, $primaryTeamId);
 
         Audit::log('UPDATE', 'athletes', $body['id'], $before, $body);
@@ -256,11 +156,10 @@ class AthletesController
         Response::success(['message' => 'Atleta rimosso']);
     }
 
-    // ─── POST /api/?module=athletes&action=uploadPhoto (multipart/form-data) ──
+    // ─── POST /api/?module=athletes&action=uploadPhoto ────────────────────────
     public function uploadPhoto(): void
     {
         Auth::requireWrite('athletes');
-
         $id = $_POST['id'] ?? '';
         if (empty($id)) {
             Response::error('id obbligatorio', 400);
@@ -289,17 +188,16 @@ class AthletesController
         }
 
         $ext = match ($mimeType) {
-                'image/jpeg' => 'jpg',
-                'image/png' => 'png',
-                'image/webp' => 'webp',
-            };
+            'image/jpeg' => 'jpg',
+            'image/png' => 'png',
+            'image/webp' => 'webp',
+        };
 
         $uploadDir = __DIR__ . '/../../../uploads/athlete_photos/';
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0755, true);
         }
 
-        // Remove old photo if it exists
         if (!empty($athlete['photo_path'])) {
             $oldFile = __DIR__ . '/../../../' . ltrim($athlete['photo_path'], '/');
             if (file_exists($oldFile)) {
@@ -323,13 +221,9 @@ class AthletesController
 
 
     // ─── DOCUMENT FILE UPLOADS ────────────────────────────────────────────────
-    /**
-     * Shared helper for all 6 athlete document uploads.
-     */
     private function uploadAthleteDocument(string $dbField): void
     {
         Auth::requireWrite('athletes');
-
         $id = filter_input(INPUT_POST, 'id', FILTER_DEFAULT) ?? '';
         if (empty($id)) {
             Response::error('ID atleta mancante', 400);
@@ -368,7 +262,6 @@ class AthletesController
 
         $relPath = 'storage/docs/athletes/' . $safeFilename;
 
-        // Delete old file if it exists
         $oldPath = $athlete[$dbField] ?? null;
         if ($oldPath) {
             $oldFullPath = dirname(__DIR__, 3) . '/' . $oldPath;
@@ -396,14 +289,7 @@ class AthletesController
         $id    = filter_input(INPUT_GET, 'id',    FILTER_DEFAULT) ?? '';
         $field = filter_input(INPUT_GET, 'field',  FILTER_DEFAULT) ?? '';
 
-        $allowed = [
-            'contract_file_path',
-            'id_doc_front_file_path',
-            'id_doc_back_file_path',
-            'cf_doc_front_file_path',
-            'cf_doc_back_file_path',
-            'medical_cert_file_path'
-        ];
+        $allowed = ['contract_file_path', 'id_doc_front_file_path', 'id_doc_back_file_path', 'cf_doc_front_file_path', 'cf_doc_back_file_path', 'medical_cert_file_path'];
         if (empty($id) || !in_array($field, $allowed, true)) {
             Response::error('Parametri non validi', 400);
         }
@@ -441,8 +327,6 @@ class AthletesController
 
         $metricId = 'MET_' . bin2hex(random_bytes(4));
 
-        // Insert the metric FIRST — ACWR must include the current session
-        // (previously it was calculated before insert, making all stored ACWR values lag by 1)
         $this->repo->insertMetric([
             ':id' => $metricId,
             ':athlete_id' => $athleteId,
@@ -451,20 +335,15 @@ class AthletesController
             ':duration_min' => $durationMin,
             ':rpe' => $rpe,
             ':load_value' => $loadValue,
-            ':acwr_score' => 0.0, // placeholder; updated below after recalculation
+            ':acwr_score' => 0.0,
             ':notes' => $body['notes'] ?? null,
         ]);
 
-        // Now calculate ACWR including the metric just inserted
-        $acwr = $this->calcACWR($athleteId);
-
-        // Update the acwr_score in the record we just inserted
+        $acwr = $this->service->calculateACWR($athleteId);
         $this->repo->updateMetricAcwr($metricId, $acwr['score']);
 
-        // Insert alert if ACWR is in risk zone (> 1.3)
-        $riskLevel = $acwr['risk'];
-        if ($riskLevel === 'high' || $riskLevel === 'extreme') {
-            $this->repo->insertAcwrAlert($athleteId, $acwr['score'], $riskLevel);
+        if ($acwr['risk'] === 'high' || $acwr['risk'] === 'extreme') {
+            $this->repo->insertAcwrAlert($athleteId, $acwr['score'], $acwr['risk']);
             Audit::log('ACWR_ALERT', 'acwr_alerts', $athleteId, null, $acwr);
         }
 
@@ -477,7 +356,7 @@ class AthletesController
     {
         Auth::requireRead('athletes');
         $id = filter_input(INPUT_GET, 'id', FILTER_DEFAULT) ?? '';
-        Response::success($this->calcACWR($id));
+        $this->handleServiceCall(fn() => $this->service->calculateACWR($id));
     }
 
     // ─── POST /api/?module=athletes&action=aiReport ───────────────────────────
@@ -485,50 +364,14 @@ class AthletesController
     {
         Auth::requireWrite('athletes');
 
-        // FIX: Rate Limiting basato su sessione (massimo 1 report ogni 10 secondi)
         if (isset($_SESSION['last_ai_report']) && (time() - $_SESSION['last_ai_report']) < 10) {
             Response::error('Troppe richieste AI in coda. Attendi qualche secondo.', 429);
         }
         $_SESSION['last_ai_report'] = time();
 
         $body = Response::jsonBody();
-        Response::requireFields($body, ['athlete_id']);
-
-        $athleteId = $body['athlete_id'];
-        $athlete = $this->repo->getAthleteById($athleteId);
-        if (!$athlete) {
-            Response::error('Atleta non trovato', 404);
-        }
-
-        $history = $this->repo->getMetricsHistory($athleteId, 30);
-        $acwr = $this->calcACWR($athleteId);
-        $notes = $this->repo->getCoachNotes($athleteId, 10);
-
-        // Build Gemini prompt
-        $prompt = $this->buildGeminiPrompt($athlete, $history, $acwr, $notes);
-        
-        try {
-            $summary = AIService::generateContent($prompt, ['maxOutputTokens' => 512, 'temperature' => 0.3]);
-        } catch (\Exception $e) {
-            $summary = 'Impossibile generare il riepilogo AI al momento. Riprovare più tardi.';
-        }
-
-        // Save to DB
-        $periodStart = date('Y-m-d', strtotime('-30 days'));
-        $periodEnd = date('Y-m-d');
-        $summaryId = 'SUM_' . bin2hex(random_bytes(4));
-
-        $this->repo->saveAiSummary([
-            ':id' => $summaryId,
-            ':athlete_id' => $athleteId,
-            ':period_start' => $periodStart,
-            ':period_end' => $periodEnd,
-            ':summary_text' => $summary,
-            ':model_version' => 'gemini-2.5-flash',
-        ]);
-
-        Audit::log('AI_REPORT', 'ai_summaries', $summaryId, null, ['athlete_id' => $athleteId]);
-        Response::success(['summary' => $summary, 'period' => ['start' => $periodStart, 'end' => $periodEnd]]);
+        $athleteId = $body['athlete_id'] ?? '';
+        $this->handleServiceCall(fn() => $this->service->generateAIReport($athleteId));
     }
 
     // ─── GET /api/?module=athletes&action=aiSummary&id=ATH_xxx ───────────────
@@ -536,8 +379,7 @@ class AthletesController
     {
         Auth::requireRead('athletes');
         $id = filter_input(INPUT_GET, 'id', FILTER_DEFAULT) ?? '';
-        $summary = $this->repo->getLatestAiSummary($id);
-        Response::success($summary);
+        Response::success($this->repo->getLatestAiSummary($id));
     }
 
     // ─── GET /api/?module=athletes&action=activityLog&id=ATH_xxx ─────────────
@@ -554,10 +396,9 @@ class AthletesController
     // ─── GET /api/?module=athletes&action=alerts ──────────────────────────────
     public function alerts(): void
     {
-        $user = Auth::requireRole('social media manager');
+        Auth::requireRole('social media manager');
         $tenantId = \FusionERP\Shared\TenantContext::id();
-        $alerts = $this->repo->getUnacknowledgedAlerts($tenantId);
-        Response::success($alerts);
+        Response::success($this->repo->getUnacknowledgedAlerts($tenantId));
     }
 
     // ─── GET /api/?module=athletes&action=teams ───────────────────────────────
@@ -567,79 +408,7 @@ class AthletesController
         Response::success($this->repo->listTeams());
     }
 
-    // ─── PRIVATE: ACWR Calculation ────────────────────────────────────────────
-    /**
-     * ACWR = W_acute / W_chronic
-     *   W_acute   = Sum of load in last 7 days
-     *   W_chronic = Average weekly load over last 28 days (total / 4)
-     *
-     * Risk zones:
-     *   < 0.8          → low (underdone)
-     *   0.8  – 1.3     → moderate (optimal)
-     *   1.3  – 1.5     → high (caution)
-     *   > 1.5          → extreme (danger)
-     */
-    private function calcACWR(string $athleteId): array
-    {
-        // PERF: single DB query instead of 2 (merged getAcuteLoad + getChronicLoad)
-        ['acute' => $acute, 'chronic' => $chronic] = $this->repo->getAcwrLoads($athleteId);
-
-        if ($chronic <= 0) {
-            return ['score' => 0.0, 'acute' => $acute, 'chronic' => 0.0, 'risk' => 'low'];
-        }
-
-        $score = round($acute / $chronic, 4);
-
-        $risk = match (true) {
-                $score < 0.8 => 'low',
-                $score <= 1.3 => 'moderate',
-                $score <= 1.5 => 'high',
-                default => 'extreme',
-            };
-
-        return [
-            'score' => $score,
-            'acute' => round($acute, 2),
-            'chronic' => round($chronic, 2),
-            'risk' => $risk,
-        ];
-    }
-
-    // ─── PRIVATE: Gemini API Call ─────────────────────────────────────────────
-    private function buildGeminiPrompt(array $athlete, array $history, array $acwr, array $notes): string
-    {
-        $historyText = '';
-        foreach ($history as $h) {
-            $historyText .= "- {$h['log_date']}: {$h['duration_min']}min, RPE {$h['rpe']}, Load {$h['load_value']}\n";
-        }
-
-        $notesText = '';
-        foreach ($notes as $n) {
-            $notesText .= "- {$n['log_date']}: {$n['notes']}\n";
-        }
-
-        return <<<PROMPT
-Sei un assistente tecnico sportivo per una squadra di basket giovanile.
-Ti vengono forniti i dati di carico di lavoro degli ultimi 30 giorni per l'atleta "{$athlete['full_name']}"
-(Squadra: {$athlete['team_name']}, Categoria: {$athlete['category']}, Ruolo: {$athlete['role']}).
-
-ACWR attuale: {$acwr['score']} (Carico acuto: {$acwr['acute']} | Carico cronico: {$acwr['chronic']}) → Livello rischio: {$acwr['risk']}
-
-STORICO ALLENAMENTI (ultimi 30 giorni):
-{$historyText}
-
-NOTE TECNICO/ALLENATORE:
-{$notesText}
-
-Genera un breve riepilogo (max 200 parole) in italiano, chiaro e professionale, che:
-1. Descriva l'andamento del carico di allenamento dell'atleta nel periodo.
-2. Commenti il valore ACWR e il suo significato per la prevenzione infortuni.
-3. Evidenzi eventuali trend positivi o aree di miglioramento.
-
-IMPORTANTE: Questo testo è un supporto informativo per l'allenatore. Non fornire diagnosi mediche né decisioni tecniche autonome.
-PROMPT;
-    }
-    // ─── PUBLIC ENDPOINTS FOR WEBSITE ──────────────────────────────────────────────
+    // ─── PUBLIC ENDPOINTS ───────────────────────────────────────────────────
     public function getPublicTeams(): void
     {
         Response::success($this->repo->listTeams());

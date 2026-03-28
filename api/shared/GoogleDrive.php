@@ -102,16 +102,14 @@ class GoogleDrive
                 return ['status' => 'error', 'error' => 'Autenticazione Google fallita (refresh token non valido?)'];
             }
 
-            $content = file_get_contents($filePath);
-            if ($content === false) {
-                return ['status' => 'error', 'error' => "File non leggibile: {$filePath}"];
+            // 2. HMAC signature
+            $hmac = hash_hmac_file('sha256', $filePath, $hmacSecret);
+            if ($hmac === false) {
+                return ['status' => 'error', 'error' => "Hash fallito per: {$filePath}"];
             }
 
-            // 2. HMAC signature
-            $hmac = hash_hmac('sha256', $content, $hmacSecret);
-
-            // 3. Upload
-            $fileId = $this->doUpload($filename, $content, $token);
+            // 3. Upload (Streams directly from disk to avoid memory leaks)
+            $fileId = $this->doUpload($filePath, $filename, $token);
             if (!$fileId) {
                 return ['status' => 'error', 'error' => 'Upload su Google Drive fallito'];
             }
@@ -182,13 +180,19 @@ class GoogleDrive
         return $this->accessToken;
     }
 
-    private function doUpload(string $filename, string $content, string $token): ?string
+    private function doUpload(string $filePath, string $filename, string $token): ?string
     {
         $mimeType = 'application/zip';
         if (str_ends_with($filename, '.sql')) {
             $mimeType = 'application/sql';
         }
 
+        $filesize = filesize($filePath);
+        if ($filesize === false) {
+            return null;
+        }
+
+        // STEP 1: Init Resumable Session
         $metadata = json_encode([
             'name' => $filename,
             'parents' => [$this->folderId],
@@ -196,39 +200,70 @@ class GoogleDrive
             'description' => 'Fusion ERP Automatic Backup — ' . date('d/m/Y H:i'),
         ]);
 
-        $boundary = 'fusion_backup_' . bin2hex(random_bytes(8));
-        $body = "--{$boundary}\r\n";
-        $body .= "Content-Type: application/json; charset=UTF-8\r\n\r\n";
-        $body .= $metadata . "\r\n";
-        $body .= "--{$boundary}\r\n";
-        $body .= "Content-Type: {$mimeType}\r\n\r\n";
-        $body .= $content . "\r\n";
-        $body .= "--{$boundary}--";
-
-        $ch = curl_init('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name');
-        curl_setopt_array($ch, [
+        $ch1 = curl_init('https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable');
+        curl_setopt_array($ch1, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => $body,
+            CURLOPT_POSTFIELDS => $metadata,
+            CURLOPT_HEADER => true,
             CURLOPT_HTTPHEADER => [
                 "Authorization: Bearer {$token}",
-                "Content-Type: multipart/related; boundary={$boundary}",
-                'Content-Length: ' . strlen($body),
+                "Content-Type: application/json; charset=UTF-8",
+                "X-Upload-Content-Type: {$mimeType}",
+                "X-Upload-Content-Length: {$filesize}"
             ],
             CURLOPT_SSL_VERIFYPEER => true,
-            CURLOPT_TIMEOUT => 120,
         ]);
 
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
+        $response1 = curl_exec($ch1);
+        $httpCode1 = curl_getinfo($ch1, CURLINFO_HTTP_CODE);
+        $headerSize = curl_getinfo($ch1, CURLINFO_HEADER_SIZE);
+        $headers = substr($response1, 0, $headerSize);
+        curl_close($ch1);
 
-        if ($httpCode !== 200) {
-            error_log('[FUSION-ERP] Drive upload failed: HTTP ' . $httpCode . ' — ' . $response);
+        if ($httpCode1 !== 200) {
+            error_log('[FUSION-ERP] Resumable upload init failed: HTTP ' . $httpCode1);
             return null;
         }
 
-        $data = json_decode($response, true);
+        $locationMatches = [];
+        if (!preg_match('/^Location:\s*(.*)$/mi', $headers, $locationMatches)) {
+            error_log('[FUSION-ERP] Resumable upload location missing');
+            return null;
+        }
+        $uploadUrl = trim($locationMatches[1]);
+
+        // STEP 2: Stream Data via PUT
+        $fh = fopen($filePath, 'r');
+        if (!$fh) {
+            return null;
+        }
+
+        $ch2 = curl_init($uploadUrl);
+        curl_setopt_array($ch2, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_PUT => true,
+            CURLOPT_INFILE => $fh,
+            CURLOPT_INFILESIZE => $filesize,
+            CURLOPT_HTTPHEADER => [
+                "Content-Length: {$filesize}",
+                "Content-Type: {$mimeType}"
+            ],
+            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_TIMEOUT => 300,
+        ]);
+
+        $response2 = curl_exec($ch2);
+        $httpCode2 = curl_getinfo($ch2, CURLINFO_HTTP_CODE);
+        fclose($fh);
+        curl_close($ch2);
+
+        if ($httpCode2 !== 200 && $httpCode2 !== 201) {
+            error_log('[FUSION-ERP] Drive resumable upload failed: HTTP ' . $httpCode2 . ' — ' . $response2);
+            return null;
+        }
+
+        $data = json_decode($response2, true);
         return $data['id'] ?? null;
     }
 

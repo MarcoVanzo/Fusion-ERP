@@ -48,7 +48,7 @@ foreach ($publicEndpoints as $ep) {
     
     $response = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
+    // curl_close($ch); // Deprecated in PHP 8.0, removed effect in 8.5
     
     $statusText = ($httpCode === 200) ? "✅ 200 OK" : "❌ $httpCode FAIL";
     

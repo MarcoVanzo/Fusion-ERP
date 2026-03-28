@@ -61,7 +61,7 @@ class ESignatureController
         $downloadedPath = null;
         $statusResult = ESignatureService::getStatus($documentId);
 
-        if ($statusResult['success'] && current($statusResult)['signed'] ?? false || $statusResult['signed'] ?? false) {
+        if (!empty($statusResult['success']) && !empty($statusResult['signed'])) {
             $this->updateStaffContractStatus($documentId, 'firmato');
             
             // Try downloading it

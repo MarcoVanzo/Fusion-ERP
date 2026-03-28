@@ -33,9 +33,10 @@ foreach ($tenants as $tenant) {
     echo "[VALD Cron] Sincronizzazione per tenant: {$tenant['name']} ({$tenant['id']})...\n";
 
     try {
-        // Reuse the shared performSync() logic from ValdController
-        $controller = new ValdController();
-        $stats = $controller->performSync();
+        // Use ValdService directly for backend sync logic
+        $repo = new \FusionERP\Modules\Vald\ValdRepository();
+        $service = new \FusionERP\Modules\Vald\ValdService($repo);
+        $stats = $service->performSync($tenant['id']);
 
         echo "[VALD Cron] ✔ Trovati: {$stats['found']}, Salvati: {$stats['synced']}, Saltati: {$stats['skipped']}\n";
 

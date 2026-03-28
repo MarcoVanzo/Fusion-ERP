@@ -243,7 +243,7 @@ class FederationController
             $where .= ' AND fc.federation = :federation';
             $params[':federation'] = $federation;
         }
-        if ($status) {
+        if ($status !== 'all') {
             $where .= ' AND fc.status = :status';
             $params[':status'] = $status;
         }

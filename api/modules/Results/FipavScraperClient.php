@@ -26,27 +26,15 @@ class FipavScraperClient
 
     private string $gasProxyUrl = 'https://script.google.com/macros/s/AKfycbyTnt-3_D9uJgYl1I1n9eH3f6Vl6-L9Z8H1R0Jz_mKkE_1JvG1xK2G5X5W5l1p1s-/exec';
 
-    /** Optional callback to match our teams */
-    private $isOurTeamCallback;
-
-    public function __construct(?callable $isOurTeamCallback = null)
+    public function __construct()
     {
-        $this->isOurTeamCallback = $isOurTeamCallback;
-    }
-
-    private function isOurTeam(string ...$names): bool
-    {
-        if ($this->isOurTeamCallback) {
-            return call_user_func($this->isOurTeamCallback, ...$names);
-        }
-        return false;
     }
 
     public function fetch(string $url, string&$errorDetails = ''): ?string
     {
         // ── Try GAS Proxy first (bypasses FIPAV WAF IP block on production server) ──
         // BUT skip GAS proxy for fipavveneto.net because they block Google IPs and return 403
-        if ($this->gasProxyUrl !== null && !str_contains($url, 'fipavveneto.net')) {
+        if (!str_contains($url, 'fipavveneto.net')) {
             $proxyUrl = $this->gasProxyUrl . '?url=' . urlencode($url);
             $ch = curl_init($proxyUrl);
             curl_setopt_array($ch, [
@@ -113,8 +101,8 @@ class FipavScraperClient
                 CURLOPT_USERAGENT => $userAgent,
                 CURLOPT_COOKIEJAR => $cookieJar,
                 CURLOPT_COOKIEFILE => $cookieJar,
-                CURLOPT_SSL_VERIFYPEER => $sslConfig['verify'],
-                CURLOPT_SSL_VERIFYHOST => $sslConfig['verify'] ? 2 : 0,
+                CURLOPT_SSL_VERIFYPEER => true,
+                CURLOPT_SSL_VERIFYHOST => 2,
                 CURLOPT_HTTPHEADER => [
                     'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
                     'Accept-Language: it-IT,it;q=0.9,en-US;q=0.8,en;q=0.7',

@@ -754,7 +754,12 @@ const Tasks = (() => {
     
     document.body.appendChild(overlay);
 
+    const escHandler = (e) => {
+      if (e.key === "Escape") { closeOverlay(); }
+    };
+
     const closeOverlay = () => {
+      document.removeEventListener("keydown", escHandler);
       overlay.style.opacity = "0";
       setTimeout(() => { overlay.remove(); if (blobUrl) URL.revokeObjectURL(blobUrl); }, 200);
     };
@@ -772,9 +777,6 @@ const Tasks = (() => {
     overlay.querySelector("#att-dl").addEventListener("click", download);
     overlay.querySelector("#att-dl-alt")?.addEventListener("click", download);
     
-    const escHandler = (e) => {
-      if (e.key === "Escape") { closeOverlay(); document.removeEventListener("keydown", escHandler); }
-    };
     document.addEventListener("keydown", escHandler);
   }
 

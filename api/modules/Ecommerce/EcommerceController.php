@@ -356,7 +356,6 @@ class EcommerceController
 
         if (!is_array($entries)) {
             Response::success(['message' => 'Nessun ordine trovato.']);
-            return;
         }
 
         $db = Database::getInstance();
@@ -736,7 +735,7 @@ class EcommerceController
         }
 
         $imageData = base64_decode($base64);
-        if ($imageData === false) {
+        if ($imageData === '') {
             http_response_code(500);
             echo "Invalid image data";
             exit;

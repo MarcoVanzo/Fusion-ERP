@@ -376,7 +376,6 @@ PROMPT;
                 'raw_response' => mb_substr($rawText, 0, 2000),
                 'message' => 'L\'AI ha risposto ma il formato JSON era troncato o non valido. Riprovare.',
             ]);
-            return;
         }
 
         $results = $parsed['results'] ?? $parsed;
@@ -386,7 +385,6 @@ PROMPT;
                 'raw_response' => mb_substr($rawText, 0, 2000),
                 'message' => 'Nessun risultato trovato nella risposta AI.',
             ]);
-            return;
         }
 
         Response::success([

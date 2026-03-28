@@ -24,6 +24,22 @@ class FipavParserService
     // PRIVATE — PARSERS
     // ─────────────────────────────────────────────────────────────────────────
 
+    private function fetch(string $url, string &$error): ?string
+    {
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 15);
+        $body = curl_exec($ch);
+        if ($body === false) {
+            $error = curl_error($ch);
+            curl_close($ch);
+            return null;
+        }
+        curl_close($ch);
+        return is_string($body) ? $body : null;
+    }
+
     /**
      * Parse the list of campionati from the mobile page.
      */
@@ -434,9 +450,12 @@ class FipavParserService
                 // Extract logo URL from <img> tags inside the cell
                 $imgs = $xpath->query('.//img', $cell);
                 if ($imgs && $imgs->length > 0) {
-                    $src = $imgs->item(0)->getAttribute('src');
-                    if ($src && !str_contains($src, 'no-image')) {
-                        $cellLogos[$ci] = $src;
+                    $imgNode = $imgs->item(0);
+                    if ($imgNode instanceof \DOMElement) {
+                        $src = $imgNode->getAttribute('src');
+                        if ($src && !str_contains($src, 'no-image')) {
+                            $cellLogos[$ci] = $src;
+                        }
                     }
                 }
             }

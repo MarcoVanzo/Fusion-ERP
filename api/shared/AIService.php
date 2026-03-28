@@ -21,7 +21,7 @@ class AIService
         // and finally to the hardcoded AIConfig::GEMINI_TOKEN for maximum stability.
         $apiKey = (getenv('GEMINI_TOKEN') ?: ($_SERVER['GEMINI_TOKEN'] ?? $_ENV['GEMINI_TOKEN'] ?? '')) ?: AIConfig::GEMINI_TOKEN;
 
-        if (empty($apiKey)) {
+        if ($apiKey === '' || $apiKey === null) {
             throw new \Exception('Chiave API Gemini non configurata. Impostare GEMINI_TOKEN.');
         }
 

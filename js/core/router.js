@@ -5,10 +5,10 @@
  * Fusion ERP v1.0
  *
  * Route registry: single source of truth.
- * Each entry defines path, JS file to lazy-load, required permission, and global module class name.
+ * Each entry defines path, JS file to lazy-load, required permission, global module class name, and optionally type (e.g. 'module').
  * Adding a new route requires ONE change here only.
  *
- * @typedef {{ path: string, file: string, permission: string|null, module: string|null }} RouteConfig
+ * @typedef {{ path: string, file: string, permission: string|null, module: string|null, type?: string }} RouteConfig
  */
 
 const Router = (() => {
@@ -31,15 +31,15 @@ const Router = (() => {
         // Core
         { path: 'dashboard',            file: 'js/modules/dashboard.js',           permission: null,   module: 'Dashboard'         },
         // Athletes
-        { path: 'athletes',             file: 'js/modules/athletes.js',            permission: 'read', module: 'Athletes'          },
-        { path: 'athlete-profile',      file: 'js/modules/athletes.js',            permission: 'read', module: 'Athletes'          },
-        { path: 'athlete-payments',     file: 'js/modules/athletes.js',            permission: 'read', module: 'Athletes'          },
-        { path: 'athlete-metrics',      file: 'js/modules/athletes.js',            permission: 'read', module: 'Athletes'          },
-        { path: 'athlete-documents',    file: 'js/modules/athletes.js',            permission: 'read', module: 'Athletes'          },
+        { path: 'athletes',             file: 'js/modules/athletes.js',            permission: 'read', module: 'Athletes', type: 'module' },
+        { path: 'athlete-profile',      file: 'js/modules/athletes.js',            permission: 'read', module: 'Athletes', type: 'module' },
+        { path: 'athlete-payments',     file: 'js/modules/athletes.js',            permission: 'read', module: 'Athletes', type: 'module' },
+        { path: 'athlete-metrics',      file: 'js/modules/athletes.js',            permission: 'read', module: 'Athletes', type: 'module' },
+        { path: 'athlete-documents',    file: 'js/modules/athletes.js',            permission: 'read', module: 'Athletes', type: 'module' },
         // Transport & Vehicles
-        { path: 'transport',            file: 'js/modules/transport.js',           permission: 'read', module: 'Transport'         },
-        { path: 'transport-drivers',    file: 'js/modules/transport.js',           permission: 'read', module: 'Transport'         },
-        { path: 'transport-fleet',      file: 'js/modules/vehicles.js',            permission: 'read', module: 'Vehicles'          },
+        { path: 'transport',            file: 'js/modules/transport.js',           permission: 'read', module: 'Transport', type: 'module' },
+        { path: 'transport-drivers',    file: 'js/modules/transport.js',           permission: 'read', module: 'Transport', type: 'module' },
+        { path: 'transport-fleet',      file: 'js/modules/vehicles/Vehicles.js',            permission: 'read', module: 'Vehicles', type: 'module' },
         // Admin
         { path: 'admin',                file: 'js/modules/admin/AdminDashboard.js', permission: 'read', module: 'AdminDashboard'   },
         { path: 'admin-backup',         file: 'js/modules/admin/AdminBackup.js',   permission: 'read', module: 'AdminBackup'       },
@@ -53,8 +53,8 @@ const Router = (() => {
         // Out-of-Season & Tournaments
         { path: 'outseason',            file: 'js/modules/outseason.js',           permission: 'read', module: 'OutSeason'         },
         { path: 'outseason-camps',      file: 'js/modules/outseason.js',           permission: 'read', module: 'OutSeason'         },
-        { path: 'outseason-tournaments', file: 'js/modules/tournaments.js',        permission: 'read', module: 'Tournaments'       },
-        { path: 'tournaments',          file: 'js/modules/tournaments.js',         permission: 'read', module: 'Tournaments'       },
+        { path: 'outseason-tournaments', file: 'js/modules/tournaments.js',        permission: 'read', module: 'Tournaments', type: 'module' },
+        { path: 'tournaments',          file: 'js/modules/tournaments.js',         permission: 'read', module: 'Tournaments', type: 'module' },
         // Social
         { path: 'social',               file: 'js/modules/social.js',              permission: 'read', module: 'Social'            },
         { path: 'social-analytics',     file: 'js/modules/social.js',              permission: 'read', module: 'Social'            },
@@ -65,16 +65,16 @@ const Router = (() => {
         { path: 'results-standings',    file: 'js/modules/results.js',             permission: 'read', module: 'Results'           },
         // Tasks & Staff
         { path: 'tasks',                file: 'js/modules/tasks.js',               permission: 'read', module: 'Tasks'             },
-        { path: 'staff',                file: 'js/modules/staff_v3.js',            permission: 'read', module: 'Staff'             },
-        { path: 'staff-documents',      file: 'js/modules/staff_v3.js',            permission: 'read', module: 'Staff'             },
+        { path: 'staff',                file: 'js/modules/staff.js',               permission: 'read', module: 'Staff', type: 'module' },
+        { path: 'staff-documents',      file: 'js/modules/staff.js',               permission: 'read', module: 'Staff', type: 'module' },
         // Ecommerce
-        { path: 'ecommerce',            file: 'js/modules/ecommerce.js',           permission: 'read', module: 'Ecommerce'         },
-        { path: 'ecommerce-articles',   file: 'js/modules/ecommerce.js',           permission: 'read', module: 'Ecommerce'         },
-        { path: 'ecommerce-orders',     file: 'js/modules/ecommerce.js',           permission: 'read', module: 'Ecommerce'         },
+        { path: 'ecommerce',            file: 'js/modules/ecommerce.js',           permission: 'read', module: 'Ecommerce', type: 'module' },
+        { path: 'ecommerce-articles',   file: 'js/modules/ecommerce.js',           permission: 'read', module: 'Ecommerce', type: 'module' },
+        { path: 'ecommerce-orders',     file: 'js/modules/ecommerce.js',           permission: 'read', module: 'Ecommerce', type: 'module' },
         // Finance
-        { path: 'finance',              file: 'js/modules/finance.js',             permission: 'read', module: 'Finance'           },
-        { path: 'finance-invoices',     file: 'js/modules/finance.js',             permission: 'read', module: 'Finance'           },
-        { path: 'finance-74ter',        file: 'js/modules/finance.js',             permission: 'read', module: 'Finance'           },
+        { path: 'finance',              file: 'js/modules/finance.js',             permission: 'admin', module: 'Finance', type: 'module' },
+        { path: 'finance-invoices',     file: 'js/modules/finance.js',             permission: 'admin', module: 'Finance', type: 'module' },
+        { path: 'finance-bank',         file: 'js/modules/finance.js',             permission: 'admin', module: 'Finance', type: 'module' },
         { path: 'finance-foresteria',   file: 'js/modules/finance.js',             permission: 'read', module: 'Finance'           },
         // WhatsApp
         { path: 'whatsapp-inbox',       file: 'js/modules/whatsapp.js',            permission: 'read', module: 'WhatsApp'          },
@@ -82,32 +82,35 @@ const Router = (() => {
         // Website & Newsletter
         { path: 'website',              file: 'js/modules/website.js',             permission: 'read', module: 'Website'           },
         { path: 'website-analytics',    file: 'js/modules/site_stats.js',          permission: 'read', module: 'WebAnalytics'      },
-        { path: 'newsletter',           file: 'js/modules/newsletter.js',          permission: 'read', module: 'Newsletter'        },
+        { path: 'newsletter',           file: 'js/modules/newsletter.js',          permission: 'read', module: 'Newsletter', type: 'module' },
         // Societa
-        { path: 'societa',              file: 'js/modules/societa.js',             permission: 'read', module: 'Societa'           },
-        { path: 'societa-identita',     file: 'js/modules/societa.js',             permission: 'read', module: 'Societa'           },
-        { path: 'societa-organigramma', file: 'js/modules/societa.js',             permission: 'read', module: 'Societa'           },
-        { path: 'societa-membri',       file: 'js/modules/societa.js',             permission: 'read', module: 'Societa'           },
-        { path: 'societa-documenti',    file: 'js/modules/societa.js',             permission: 'read', module: 'Societa'           },
-        { path: 'societa-scadenze',     file: 'js/modules/societa.js',             permission: 'read', module: 'Societa'           },
-        { path: 'societa-sponsor',      file: 'js/modules/societa.js',             permission: 'read', module: 'Societa'           },
-        { path: 'societa-titoli',       file: 'js/modules/societa.js',             permission: 'read', module: 'Societa'           },
-        { path: 'societa-foresteria',   file: 'js/modules/societa.js',             permission: 'read', module: 'Societa'           },
+        { path: 'societa',              file: 'js/modules/societa.js',             permission: 'read', module: 'Societa', type: 'module' },
+        { path: 'societa-identita',     file: 'js/modules/societa.js',             permission: 'read', module: 'Societa', type: 'module' },
+        { path: 'societa-organigramma', file: 'js/modules/societa.js',             permission: 'read', module: 'Societa', type: 'module' },
+        { path: 'societa-membri',       file: 'js/modules/societa.js',             permission: 'read', module: 'Societa', type: 'module' },
+        { path: 'societa-documenti',    file: 'js/modules/societa.js',             permission: 'read', module: 'Societa', type: 'module' },
+        { path: 'societa-scadenze',     file: 'js/modules/societa.js',             permission: 'read', module: 'Societa', type: 'module' },
+        { path: 'societa-sponsor',      file: 'js/modules/societa.js',             permission: 'read', module: 'Societa', type: 'module' },
+        { path: 'societa-titoli',       file: 'js/modules/societa.js',             permission: 'read', module: 'Societa', type: 'module' },
+        { path: 'societa-foresteria',   file: 'js/modules/societa.js',             permission: 'read', module: 'Societa', type: 'module' },
         // Network
-        { path: 'network',              file: 'js/modules/network.js',             permission: 'read', module: 'Network'           },
-        { path: 'network-collaborazioni', file: 'js/modules/network.js',           permission: 'read', module: 'Network'           },
-        { path: 'network-prove',        file: 'js/modules/network.js',             permission: 'read', module: 'Network'           },
-        { path: 'network-attivita',     file: 'js/modules/network.js',             permission: 'read', module: 'Network'           },
+        { path: 'network',              file: 'js/modules/network/Network.js',             permission: 'read', module: 'Network', type: 'module' },
+        { path: 'network-collaborazioni', file: 'js/modules/network/Network.js',           permission: 'read', module: 'Network', type: 'module' },
+        { path: 'network-prove',        file: 'js/modules/network/Network.js',             permission: 'read', module: 'Network', type: 'module' },
+        { path: 'network-attivita',     file: 'js/modules/network/Network.js',             permission: 'read', module: 'Network', type: 'module' },
         // Squadre & Scouting
-        { path: 'squadre',              file: 'js/modules/squadre.js',             permission: 'read', module: 'Squadre'           },
-        { path: 'squadre-stagioni',     file: 'js/modules/squadre.js',             permission: 'read', module: 'Squadre'           },
-        { path: 'scouting-database',    file: 'js/modules/scouting.js',            permission: 'read', module: 'Scouting'          },
+        { path: 'squadre',              file: 'js/modules/squadre.js',             permission: 'read', module: 'Squadre', type: 'module' },
+        { path: 'squadre-stagioni',     file: 'js/modules/squadre.js',             permission: 'read', module: 'Squadre', type: 'module' },
+        { path: 'results',              file: 'js/modules/results.js',             permission: 'read', module: 'Results', type: 'module' },
+        { path: 'results-standings',    file: 'js/modules/results.js',             permission: 'read', module: 'Results', type: 'module' },
+        { path: 'scouting-database',    file: 'js/modules/scouting/Scouting.js',            permission: 'read', module: 'Scouting', type: 'module' },
     ];
 
     // Build lookup maps from the single registry (computed once at startup)
     const _fileMap       = Object.fromEntries(ROUTES.map(r => [r.path, r.file]));
     const _permissionMap = Object.fromEntries(ROUTES.filter(r => r.permission).map(r => [r.path, r.permission]));
     const _moduleMap     = Object.fromEntries(ROUTES.filter(r => r.module).map(r => [r.path, r.module]));
+    const _typeMap       = Object.fromEntries(ROUTES.filter(r => r.type).map(r => [r.path, r.type]));
 
     // ─── URL Params Parser ──────────────────────────────────────────────────────
     function _parseQueryString(qs) {
@@ -191,7 +194,7 @@ const Router = (() => {
     }
 
     // ─── Lazy-load a module script ──────────────────────────────────────────────
-    function _loadScript(filePath) {
+    function _loadScript(filePath, isModule = false) {
         return new Promise((resolve, reject) => {
             // Skip if already injected into the DOM
             if (document.querySelector(`script[src^="${filePath}"]`)) {
@@ -199,6 +202,9 @@ const Router = (() => {
                 return;
             }
             const script = document.createElement('script');
+            if (isModule) {
+                script.type = 'module';
+            }
             script.src = filePath + '?v=' + _appVersion;
             script.async = true;
             script.onload = resolve;
@@ -275,7 +281,7 @@ const Router = (() => {
                         );
                         return;
                     }
-                    await _loadScript(filePath);
+                    await _loadScript(filePath, _typeMap[path] === 'module');
                     _loaded[path] = true;
                 }
 

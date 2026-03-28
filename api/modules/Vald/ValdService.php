@@ -346,7 +346,7 @@ PROMPT;
         $stats = ['found' => 0, 'synced' => 0, 'skipped' => 0, 'unlinkedAthletes' => []];
         $guardClientId     = (getenv('VALD_CLIENT_ID')     ?: $_SERVER['VALD_CLIENT_ID']     ?? '') ?: ValdCredentials::CLIENT_ID;
         $guardClientSecret = (getenv('VALD_CLIENT_SECRET') ?: $_SERVER['VALD_CLIENT_SECRET'] ?? '') ?: ValdCredentials::CLIENT_SECRET;
-        if (empty($guardClientId) || empty($guardClientSecret)) {
+        if ($guardClientId === '' || $guardClientSecret === '') {
             error_log('[VALD Sync] Credenziali non configurate.');
             return $stats;
         }

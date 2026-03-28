@@ -22,14 +22,14 @@ class ResultsService
     public function __construct(ResultsRepository $repository)
     {
         $this->repository = $repository;
-        $this->scraperClient = new FipavScraperClient([$this, 'isOurTeam']);
+        $this->scraperClient = new FipavScraperClient();
         $this->parserService = new FipavParserService([$this, 'isOurTeam']);
     }
 
     public function isOurTeam(string ...$names): bool
     {
         foreach ($names as $name) {
-            if ($name === null) continue;
+
             $lower = strtolower($name);
             if (preg_match('/a\.?\s?p\.?\s?v\.?/i', $lower))
                 continue;
@@ -66,23 +66,21 @@ class ResultsService
         if (empty($htmlM)) {
             return ['success' => false, 'error' => 'Errore di connessione al portale federale (WAF/Timeout): ' . $err];
         }
-        if (is_string($htmlM) && (str_contains($htmlM, 'Cloudflare') || str_contains($htmlM, 'Just a moment...'))) {
+        if (str_contains($htmlM, 'Cloudflare') || str_contains($htmlM, 'Just a moment...')) {
             return ['success' => false, 'error' => 'Il portale ha bloccato la richiesta (Cloudflare CAPTCHA). Riprova più tardi.'];
         }
 
         // Estrazione Partite (Matches)
         $matches = [];
-        if ($htmlM) {
-            if (str_contains($url, 'fipavveneto.net')) {
-                $matches = $this->parserService->parseMatchesFipavVeneto($htmlM);
-            } elseif (str_contains($url, 'federvolley.it')) {
-                // Inietta un fallback se il metodo originario restituiva "parsed=..."
-                // Utilizziamo un semplice alias o la wrapper se presente.
-                // Siccome il codice interno di FipavScraperClient chiamava _parseMatchesFedervolley(...), chiamiamolo.
-                $matches = $this->parserService->parseMatchesFedervolley($url, $htmlM);
-            } else {
-                $matches = $this->parserService->parseMatches($htmlM);
-            }
+        if (str_contains($url, 'fipavveneto.net')) {
+            $matches = $this->parserService->parseMatchesFipavVeneto($htmlM);
+        } elseif (str_contains($url, 'federvolley.it')) {
+            // Inietta un fallback se il metodo originario restituiva "parsed=..."
+            // Utilizziamo un semplice alias o la wrapper se presente.
+            // Siccome il codice interno di FipavScraperClient chiamava _parseMatchesFedervolley(...), chiamiamolo.
+            $matches = $this->parserService->parseMatchesFedervolley($url, $htmlM);
+        } else {
+            $matches = $this->parserService->parseMatches($htmlM);
         }
 
         // Safeguard se le partite parse sono zero ma sul DB ce n'erano

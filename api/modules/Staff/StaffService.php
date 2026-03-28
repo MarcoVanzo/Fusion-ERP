@@ -28,7 +28,7 @@ class StaffService
      * @param string $dbField  The repository field to update (e.g., photo_path, contract_file_path)
      * @param array $allowedMimes Array of allowed MIME types
      * @param string $subDir   Subdirectory inside storage (e.g., 'photos', 'docs/staff')
-     * @return array['path' => string, 'filename' => string]
+     * @return array{path: string, filename: string}
      * @throws Exception
      */
     public function handleFileUpload(string $id, array $fileData, string $dbField, array $allowedMimes, string $subDir): array

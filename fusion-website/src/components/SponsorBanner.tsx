@@ -54,8 +54,8 @@ export const SponsorBanner = ({ className = '', placement = 'generic' }: Sponsor
             if (entries[0].isIntersecting) {
                 setIsVisible(true);
                 // Invia evento a Google Analytics (se gtag è presente, che nel template base è disponibile globalmente)
-                if (typeof window !== 'undefined' && (window as any).gtag) {
-                    (window as any).gtag('event', 'view_sponsor_banner', {
+                if (typeof window !== 'undefined' && 'gtag' in window) {
+                    (window as unknown as { gtag: (...args: unknown[]) => void }).gtag('event', 'view_sponsor_banner', {
                         event_category: 'Sponsorship',
                         event_label: sponsor.name,
                         value: placement
@@ -74,8 +74,8 @@ export const SponsorBanner = ({ className = '', placement = 'generic' }: Sponsor
     }, [sponsor, placement]);
 
     const handleSponsorClick = () => {
-        if (typeof window !== 'undefined' && (window as any).gtag) {
-            (window as any).gtag('event', 'click_sponsor_banner', {
+        if (typeof window !== 'undefined' && 'gtag' in window) {
+            (window as unknown as { gtag: (...args: unknown[]) => void }).gtag('event', 'click_sponsor_banner', {
                 event_category: 'Sponsorship',
                 event_label: sponsor?.name,
                 value: placement

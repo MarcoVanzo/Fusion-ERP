@@ -74,7 +74,6 @@ class Database
         // PHP 8.5+ deprecates PDO::MYSQL_ATTR_INIT_COMMAND → use Pdo\Mysql constant
         $initCmd = "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci";
         if (class_exists('Pdo\\Mysql') && defined('Pdo\\Mysql::ATTR_INIT_COMMAND')) {
-            /** @phpstan-ignore-next-line */
             $opts[constant('Pdo\\Mysql::ATTR_INIT_COMMAND')] = $initCmd;
         } else {
             $opts[PDO::MYSQL_ATTR_INIT_COMMAND] = $initCmd;
