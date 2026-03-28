@@ -5,13 +5,13 @@ namespace FusionERP\Shared;
 
 class AIService
 {
-    private const DEFAULT_MODEL = 'gemini-1.5-flash';
+    private const DEFAULT_MODEL = 'gemini-2.5-flash';
     private const API_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models/';
 
     /**
      * @param string|array $prompt The text prompt or parts array to send to the model
      * @param array $options Optional generation config (temperature, maxOutputTokens, responseMimeType, etc.)
-     * @param string $model The model name (defaults to gemini-1.5-flash)
+     * @param string $model The model name (defaults to gemini-2.5-flash)
      * @return string The text response from the model
      * @throws \Exception
      */

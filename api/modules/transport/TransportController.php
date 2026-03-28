@@ -681,7 +681,7 @@ HTML;
         // Persist the AI response
         $this->repo->updateTransportAiResponse($transportId, json_encode($aiJson));
 
-        Audit::log('AI_ANALYSIS', 'transports', $transportId, null, ['model' => 'gemini-2.0-flash']);
+        Audit::log('AI_ANALYSIS', 'transports', $transportId, null, ['model' => 'gemini-2.5-flash']);
         Response::success($aiJson);
     }
 }
