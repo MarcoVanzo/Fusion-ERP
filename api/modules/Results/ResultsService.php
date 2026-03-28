@@ -9,11 +9,13 @@ declare(strict_types=1);
 namespace FusionERP\Modules\Results;
 
 use FusionERP\Shared\TenantContext;
+use FusionERP\Modules\Results\Services\FipavParserService;
 
 class ResultsService
 {
     private ResultsRepository $repository;
     private FipavScraperClient $scraperClient;
+    private FipavParserService $parserService;
 
     const OUR_TEAM_KEYWORDS = ['Fusion', 'Team Volley', 'Tmb', 'Olimpia', 'Vega', 'Ecodent'];
 
@@ -21,6 +23,7 @@ class ResultsService
     {
         $this->repository = $repository;
         $this->scraperClient = new FipavScraperClient([$this, 'isOurTeam']);
+        $this->parserService = new FipavParserService([$this, 'isOurTeam']);
     }
 
     public function isOurTeam(string ...$names): bool
@@ -71,14 +74,14 @@ class ResultsService
         $matches = [];
         if ($htmlM) {
             if (str_contains($url, 'fipavveneto.net')) {
-                $matches = $this->scraperClient->parseMatchesFipavVeneto($htmlM);
+                $matches = $this->parserService->parseMatchesFipavVeneto($htmlM);
             } elseif (str_contains($url, 'federvolley.it')) {
                 // Inietta un fallback se il metodo originario restituiva "parsed=..."
                 // Utilizziamo un semplice alias o la wrapper se presente.
                 // Siccome il codice interno di FipavScraperClient chiamava _parseMatchesFedervolley(...), chiamiamolo.
-                $matches = $this->scraperClient->parseMatchesFedervolley($url, $htmlM);
+                $matches = $this->parserService->parseMatchesFedervolley($url, $htmlM);
             } else {
-                $matches = $this->scraperClient->parseMatches($htmlM);
+                $matches = $this->parserService->parseMatches($htmlM);
             }
         }
 
@@ -98,7 +101,7 @@ class ResultsService
         $standingsUrlUsed = null;
 
         if (str_contains($url, 'federvolley.it')) {
-            $fvParams = $this->scraperClient->extractFedervolleyApiParams($url, $htmlM);
+            $fvParams = $this->parserService->extractFedervolleyApiParams($url, $htmlM);
             if ($fvParams && $fvParams['girone']) {
                 $errClassifica = '';
                 $giornateBody = $this->scraperClient->fetch(
@@ -108,7 +111,7 @@ class ResultsService
                 $giornateData = $giornateBody ? json_decode($giornateBody, true) : null;
                 $ultimaGiocata = (int)($giornateData['ultimagiornata'] ?? 1);
                 
-                $standings = $this->scraperClient->parseStandingsFedervolley($fvParams, $ultimaGiocata);
+                $standings = $this->parserService->parseStandingsFedervolley($fvParams, $ultimaGiocata);
                 
                 $g = (string)$ultimaGiocata;
                 $standingsUrlUsed = "{$fvParams['base']}/moduli/campionati/classifica/classifica.php"
@@ -129,8 +132,8 @@ class ResultsService
                 if (!$htmlS) continue;
 
                 $parsed = str_contains($sUrl, 'fipavveneto.net')
-                    ? $this->scraperClient->parseStandingsFipavVeneto($htmlS)
-                    : $this->scraperClient->parseStandings($htmlS);
+                    ? $this->parserService->parseStandingsFipavVeneto($htmlS)
+                    : $this->parserService->parseStandings($htmlS);
 
                 if (!empty($parsed)) {
                     $standings = $parsed;
