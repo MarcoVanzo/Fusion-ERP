@@ -1046,24 +1046,97 @@ const Societa = (() => {
     };
     const photos = media.filter((m) => m.type === "photo");
     const videos = media.filter((m) => m.type === "video");
-    el.innerHTML = `<div style="display:flex;flex-direction:column;gap:var(--sp-4)"><div class="dash-card" style="padding:var(--sp-4)"><p class="dash-card-title" style="margin-bottom:var(--sp-3)"><i class="ph ph-house-line"></i> La Foresteria</p><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px, 1fr));gap:var(--sp-3)"><div><div class="form-group"><label class="form-label">Descrizione</label><textarea id="for-desc" class="form-input" rows="5" placeholder="Descrizione della struttura..." style="resize:vertical">${Utils.escapeHtml(info.description || "")} </textarea></div><div class="form-group"><label class="form-label">Indirizzo</label><input class="form-input" type="text" id="for-address" value="${Utils.escapeHtml(info.address || "Via Bazzera 16, 30030 Martellago (VE)")}" style="background:var(--color-surface-elevated)"></div> ${isAdmin ? '<button class="btn-dash pink" id="for-save-desc" type="button"><i class="ph ph-floppy-disk"></i> SALVA DATI</button>' : ""} </div><div><iframe src="https://maps.google.com/maps?q=${encodeURIComponent(info.address || "Via Bazzera 16, 30030 Martellago (VE)")}&output=embed&z=15" width="100%" height="220" style="border:0;border-radius:12px" allowfullscreen loading="lazy"></iframe><p style="font-size:11px;color:var(--color-text-muted);margin-top:4px;text-align:center"><i class="ph ph-map-pin"></i> ${Utils.escapeHtml(info.address || "Via Bazzera 16, 30030 Martellago (VE)")}</p></div></div></div><div class="dash-card" style="padding:var(--sp-4)"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-3);flex-wrap:wrap;gap:var(--sp-2)"><p class="dash-card-title" style="margin:0"><i class="ph ph-images"></i> Foto, Video &amp; YouTube</p> ${isAdmin ?`<div style="display:flex;gap:var(--sp-2);flex-wrap:wrap"><label class="btn-dash pink" style="cursor:pointer"><i class="ph ph-upload-simple"></i> CARICA MEDIA<input type="file" id="for-media-input" accept="image/*,video/*" style="display:none" multiple></label><button class="btn-dash" id="for-add-youtube" type="button"><i class="ph ph-youtube-logo"></i> AGGIUNGI LINK YOUTUBE</button></div>`: ""} </div> ${media.length === 0 ? Utils.emptyState("Nessun media", "Carica foto, video o aggiungi un link YouTube della foresteria.") : ""} ${ photos.length > 0 ?`<p style="font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--color-text-muted);margin-bottom:var(--sp-2)">Foto (${photos.length})</p><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:var(--sp-2);margin-bottom:var(--sp-3)">${photos
+    el.innerHTML = `<div style="display:flex;flex-direction:column;gap:var(--sp-4)">
+      <div class="dash-card" style="padding:var(--sp-4)">
+        <p class="dash-card-title" style="margin-bottom:var(--sp-3)"><i class="ph ph-house-line"></i> La Foresteria</p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px, 1fr));gap:var(--sp-3)">
+          <div>
+            <div class="form-group">
+              <label class="form-label">Descrizione</label>
+              <textarea id="for-desc" class="form-input" rows="5" placeholder="Descrizione della struttura..." style="resize:vertical">${Utils.escapeHtml(info.description || "")} </textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Indirizzo</label>
+              <input class="form-input" type="text" id="for-address" value="${Utils.escapeHtml(info.address || "Via Bazzera 16, 30030 Martellago (VE)")}" style="background:var(--color-surface-elevated)">
+            </div> 
+            ${isAdmin ? '<button class="btn-dash pink" id="for-save-desc" type="button"><i class="ph ph-floppy-disk"></i> SALVA DATI</button>' : ""} 
+          </div>
+          <div>
+            <iframe src="https://maps.google.com/maps?q=${encodeURIComponent(info.address || "Via Bazzera 16, 30030 Martellago (VE)")}&output=embed&z=15" width="100%" height="220" style="border:0;border-radius:12px" allowfullscreen loading="lazy"></iframe>
+            <p style="font-size:11px;color:var(--color-text-muted);margin-top:4px;text-align:center"><i class="ph ph-map-pin"></i> ${Utils.escapeHtml(info.address || "Via Bazzera 16, 30030 Martellago (VE)")}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="dash-card" style="padding:var(--sp-4)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-3);flex-wrap:wrap;gap:var(--sp-2)">
+          <p class="dash-card-title" style="margin:0"><i class="ph ph-wallet"></i> Spese Foresteria</p>
+          ${isAdmin ? '<button class="btn-dash pink" id="for-add-expense" type="button"><i class="ph ph-plus"></i> AGGIUNGI SPESA</button>' : ""}
+        </div>
+        <div class="table-wrapper" style="overflow-x:auto">
+          <table class="data-table" style="width:100%;border-collapse:collapse;font-size:14px">
+            <thead>
+              <tr>
+                <th style="text-align:left;padding:10px 12px;border-bottom:1px solid var(--color-border);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:var(--color-text-muted)">Data</th>
+                <th style="text-align:left;padding:10px 12px;border-bottom:1px solid var(--color-border);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:var(--color-text-muted)">Descrizione</th>
+                <th style="text-align:left;padding:10px 12px;border-bottom:1px solid var(--color-border);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:var(--color-text-muted)">Categoria</th>
+                <th style="text-align:right;padding:10px 12px;border-bottom:1px solid var(--color-border);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:var(--color-text-muted)">Importo</th>
+                <th style="text-align:center;padding:10px 12px;border-bottom:1px solid var(--color-border);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:var(--color-text-muted)">Allegato</th>
+                ${isAdmin ? '<th style="padding:10px 12px;border-bottom:1px solid var(--color-border)"></th>' : ""}
+              </tr>
+            </thead>
+            <tbody>
+              ${expenses.length === 0 ? '<tr><td colspan="6" style="text-align:center;padding:var(--sp-4);color:var(--color-text-muted)">Nessuna spesa registrata</td></tr>' : expenses.map(ex => `
+                <tr>
+                  <td style="padding:10px 12px;border-bottom:1px solid var(--color-border)">${Utils.formatDate(ex.expense_date)}</td>
+                  <td style="padding:10px 12px;border-bottom:1px solid var(--color-border);font-weight:600">${Utils.escapeHtml(ex.description)}</td>
+                  <td style="padding:10px 12px;border-bottom:1px solid var(--color-border)">
+                    <span class="badge" style="background:var(--color-surface-elevated);color:var(--color-text);font-size:11px">
+                      ${Utils.escapeHtml(catLabel[ex.category] || ex.category || "Altro")}
+                    </span>
+                  </td>
+                  <td style="padding:10px 12px;border-bottom:1px solid var(--color-border);text-align:right;font-weight:700">€ ${parseFloat(ex.amount).toLocaleString('it-IT', { minimumFractionDigits: 2 })}</td>
+                  <td style="padding:10px 12px;border-bottom:1px solid var(--color-border);text-align:center">
+                    ${ex.receipt_path ? `<a href="${Utils.escapeHtml(ex.receipt_path)}" target="_blank" class="btn-dash" title="Vedi ricevuta"><i class="ph ph-file-text"></i></a>` : "—"}
+                  </td>
+                  ${isAdmin ? `<td style="padding:10px 12px;border-bottom:1px solid var(--color-border);text-align:right">
+                    <button class="btn-dash" data-del-expense="${Utils.escapeHtml(ex.id)}" style="color:var(--color-pink)" type="button"><i class="ph ph-trash"></i></button>
+                  </td>` : ""}
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="dash-card" style="padding:var(--sp-4)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-3);flex-wrap:wrap;gap:var(--sp-2)">
+          <p class="dash-card-title" style="margin:0"><i class="ph ph-images"></i> Foto, Video &amp; YouTube</p> 
+          ${isAdmin ?`<div style="display:flex;gap:var(--sp-2);flex-wrap:wrap"><label class="btn-dash pink" style="cursor:pointer"><i class="ph ph-upload-simple"></i> CARICA MEDIA<input type="file" id="for-media-input" accept="image/*,video/*" style="display:none" multiple></label><button class="btn-dash" id="for-add-youtube" type="button"><i class="ph ph-youtube-logo"></i> AGGIUNGI LINK YOUTUBE</button></div>`: ""} 
+        </div> 
+        ${media.length === 0 ? Utils.emptyState("Nessun media", "Carica foto, video o aggiungi un link YouTube della foresteria.") : ""} 
+        ${ photos.length > 0 ?`<p style="font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--color-text-muted);margin-bottom:var(--sp-2)">Foto (${photos.length})</p><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:var(--sp-2);margin-bottom:var(--sp-3)">${photos
                 .map(
                   (
                     ph,
                   ) => `<div style="position:relative;border-radius:10px;overflow:hidden;aspect-ratio:1"><img src="${Utils.escapeHtml(ph.file_path)}" alt="${Utils.escapeHtml(ph.title || "foto")}" style="width:100%;height:100%;object-fit:cover"> ${isAdmin ?`<button data-del-media="${Utils.escapeHtml(ph.id)}" class="btn-dash" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.7);color:#fff;padding:4px" type="button"><i class="ph ph-trash"></i></button>`: ""} </div>`,
                 )
-                .join("")}</div>` : "" } ${ videos.length > 0 ?`<p style="font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--color-text-muted);margin-bottom:var(--sp-2)">Video (${videos.length})</p><div style="display:flex;flex-direction:column;gap:var(--sp-2);margin-bottom:var(--sp-3)">${videos
+                .join("")}</div>` : "" } 
+        ${ videos.length > 0 ?`<p style="font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--color-text-muted);margin-bottom:var(--sp-2)">Video (${videos.length})</p><div style="display:flex;flex-direction:column;gap:var(--sp-2);margin-bottom:var(--sp-3)">${videos
                 .map(
                   (
                     v,
                   ) => `<div style="display:flex;align-items:center;gap:var(--sp-2);padding:var(--sp-2);background:var(--color-surface-elevated);border-radius:10px"><i class="ph ph-film-strip" style="font-size:24px;color:var(--color-info)"></i><div style="flex:1"><div style="font-size:13px;font-weight:600">${Utils.escapeHtml(v.title || "Video")}</div><div style="font-size:11px;color:var(--color-text-muted)">${Utils.escapeHtml(v.file_path?.split("/").pop() || "")} </div></div><a href="${Utils.escapeHtml(v.file_path)}" target="_blank" class="btn-dash"><i class="ph ph-play"></i></a> ${isAdmin ?`<button data-del-media="${Utils.escapeHtml(v.id)}" class="btn-dash" style="color:var(--color-pink)" type="button"><i class="ph ph-trash"></i></button>`: ""} </div>`,
                 )
-                .join("")}</div>` : "" } ${(() => { const youtubes = media.filter((m) => m.type === "youtube"); if (!youtubes.length) return ""; const getYTId = (url) => { if(!url)return null; const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/); return m ? m[1] : null; }; return`<p style="font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--color-text-muted);margin-bottom:var(--sp-2)">YouTube (${youtubes.length})</p><div style="display:flex;flex-direction:column;gap:var(--sp-3)">${youtubes
+                .join("")}</div>` : "" } 
+        ${(() => { const youtubes = media.filter((m) => m.type === "youtube"); if (!youtubes.length) return ""; const getYTId = (url) => { if(!url)return null; const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/); return m ? m[1] : null; }; return`<p style="font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--color-text-muted);margin-bottom:var(--sp-2)">YouTube (${youtubes.length})</p><div style="display:flex;flex-direction:column;gap:var(--sp-3)">${youtubes
             .map((yt) => {
               const vid = getYTId(yt.file_path);
               return `<div style="background:var(--color-surface-elevated);border-radius:12px;overflow:hidden"><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden">${vid ?`<iframe src="https://www.youtube.com/embed/${vid}" title="${Utils.escapeHtml(yt.title || "Video YouTube")}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen loading="lazy"></iframe>`:`<div style="position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--color-text-muted)">Video non disponibile</div>`}</div><div style="display:flex;align-items:center;gap:var(--sp-2);padding:var(--sp-2) var(--sp-3)"><i class="ph ph-youtube-logo" style="font-size:20px;color:#FF0000"></i><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${Utils.escapeHtml(yt.title || "Video YouTube")}</div><a href="${Utils.escapeHtml(yt.file_path)}" target="_blank" style="font-size:11px;color:var(--color-text-muted)">${Utils.escapeHtml(yt.file_path)}</a></div> ${isAdmin ?`<button data-del-media="${Utils.escapeHtml(yt.id)}" class="btn-dash" style="color:var(--color-pink)" type="button"><i class="ph ph-trash"></i></button>`: ""} </div></div>`;
             })
-            .join("")}</div>`; })()} </div></div>`;
+            .join("")}</div>`; })()} 
+      </div>
+    </div>`;
     document.getElementById("for-save-desc")?.addEventListener(
       "click",
       async () => {
@@ -1079,11 +1152,114 @@ const Societa = (() => {
           UI.toast("Errore: " + err.message, "error");
         } finally {
           btn.disabled = false;
-          btn.innerHTML = '<i class="ph ph-floppy-disk"></i> SALVA DESCRIZIONE';
+          btn.innerHTML = '<i class="ph ph-floppy-disk"></i> SALVA DATI';
         }
       },
       i(),
     );
+    document.getElementById("for-add-expense")?.addEventListener("click", () => {
+      const modal = UI.modal({
+        title: "Nuova Spesa Foresteria",
+        body: `
+          <div class="form-group">
+            <label class="form-label" for="ex-desc">Descrizione *</label>
+            <input id="ex-desc" class="form-input" type="text" placeholder="es. Spesa settimanale carrello">
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label" for="ex-amount">Importo (€) *</label>
+              <input id="ex-amount" class="form-input" type="number" step="0.01" placeholder="0.00">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="ex-date">Data Spesa *</label>
+              <input id="ex-date" class="form-input" type="date" value="${new Date().toISOString().substring(0, 10)}">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="ex-cat">Categoria</label>
+            <select id="ex-cat" class="form-select">
+              <option value="manutenzione">Manutenzione</option>
+              <option value="pulizie">Pulizie</option>
+              <option value="utenze">Utenze</option>
+              <option value="cibo" selected>Cibo/Spesa</option>
+              <option value="altro">Altro</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="ex-receipt">Ricevuta / Scontrino (PDF o Immagine)</label>
+            <input id="ex-receipt" type="file" class="form-input" accept=".pdf,image/*">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="ex-notes">Note</label>
+            <textarea id="ex-notes" class="form-input" rows="2" placeholder="Note aggiuntive..."></textarea>
+          </div>
+          <div id="ex-err" class="form-error hidden"></div>
+        `,
+        footer: `
+          <button class="btn-dash" id="ex-cancel" type="button">Annulla</button>
+          <button class="btn-dash pink" id="ex-save" type="button"><i class="ph ph-plus"></i> AGGIUNGI SPESA</button>
+        `
+      });
+      document.getElementById("ex-cancel")?.addEventListener("click", () => modal.close());
+      document.getElementById("ex-save")?.addEventListener("click", async () => {
+        const desc = document.getElementById("ex-desc")?.value.trim();
+        const amount = document.getElementById("ex-amount")?.value;
+        const date = document.getElementById("ex-date")?.value;
+        const errEl = document.getElementById("ex-err");
+
+        if (!desc || !amount || !date) {
+          errEl.textContent = "I campi con l'asterisco sono obbligatori";
+          errEl.classList.remove("hidden");
+          return;
+        }
+
+        const btn = document.getElementById("ex-save");
+        btn.disabled = true;
+        btn.textContent = "Salvataggio...";
+
+        try {
+          const fd = new FormData();
+          fd.append("description", desc);
+          fd.append("amount", amount);
+          fd.append("expense_date", date);
+          fd.append("category", document.getElementById("ex-cat")?.value || "altro");
+          fd.append("notes", document.getElementById("ex-notes")?.value || "");
+          
+          const fileInput = document.getElementById("ex-receipt");
+          if (fileInput.files?.length) {
+            fd.append("receipt", fileInput.files[0]);
+          }
+
+          await Store.api("addExpense", "societa", fd);
+          Store.invalidate("getForesteria");
+          _forestData = await Store.get("getForesteria", "societa").catch(() => _forestData);
+          UI.toast("Spesa registrata", "success");
+          d();
+          modal.close();
+        } catch (err) {
+          errEl.textContent = err.message;
+          errEl.classList.remove("hidden");
+          btn.disabled = false;
+          btn.innerHTML = '<i class="ph ph-plus"></i> AGGIUNGI SPESA';
+        }
+      });
+    }, i());
+
+    el.querySelectorAll("[data-del-expense]").forEach((btn) => 
+      btn.addEventListener("click", async () => {
+        if (!confirm("Sei sicuro di voler eliminare questa spesa?")) return;
+        try {
+          await Store.api("deleteExpense", "societa", { id: btn.dataset.delExpense });
+          Store.invalidate("getForesteria");
+          _forestData = await Store.get("getForesteria", "societa").catch(() => _forestData);
+          UI.toast("Spesa eliminata", "success");
+          d();
+        } catch (err) {
+          UI.toast("Errore: " + err.message, "error");
+        }
+      }, i())
+    );
+
     el.querySelectorAll("[data-del-media]").forEach((btn) =>
       btn.addEventListener(
         "click",
