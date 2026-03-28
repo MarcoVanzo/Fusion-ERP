@@ -140,6 +140,10 @@ class SocietaService
                 'lng'         => 12.1580000,
             ];
         }
+        // $info from DB lacks address, lat, and lng (they are fixed)
+        $info['address'] = 'Via Bazzera 16, 30030 Martellago (VE)';
+        $info['lat']     = 45.5440000;
+        $info['lng']     = 12.1580000;
         return $info;
     }
 

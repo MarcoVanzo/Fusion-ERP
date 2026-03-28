@@ -713,12 +713,22 @@ class SocietaController
                 'lat'         => 45.5440000,
                 'lng'         => 12.1580000,
             ];
-            $tenantId = 'TNT_default';
+            $tenantId = null;
         } else {
             $tenantId = $infoRow['tenant_id'];
+            $infoRow['address'] = 'Via Bazzera 16, 30030 Martellago (VE)';
+            $infoRow['lat'] = 45.5440000;
+            $infoRow['lng'] = 12.1580000;
         }
 
-        $media = $this->repo->getForesteriaMedia($tenantId);
+        // Se tenantId è null (non ha ancora salvato info), proviamo a prendere la prima foresteria_media o bypassare il tenant.
+        $db = \FusionERP\Shared\Database::getInstance();
+        if ($tenantId) {
+            $media = $this->repo->getForesteriaMedia($tenantId);
+        } else {
+            $stmt = $db->query("SELECT * FROM foresteria_media WHERE is_deleted = 0 ORDER BY created_at DESC");
+            $media = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        }
 
         Response::success([
             'info'  => $infoRow,
