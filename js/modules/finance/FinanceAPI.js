@@ -35,7 +35,12 @@ const FinanceAPI = {
 
     getFiscal74ter: async function() {
         return await Store.get("getFiscal74ter", "finance");
+    },
+
+    getInvoices: async function() {
+        return await Store.get("listInvoices", "finance");
     }
+
 };
 
 export default FinanceAPI;

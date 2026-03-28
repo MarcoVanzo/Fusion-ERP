@@ -317,16 +317,20 @@ export default {
                         <button class="btn-dash pink" id="forest-add-expense"><i class="ph ph-plus"></i></button>
                     </div>
                     <div style="display:flex; flex-direction:column; gap:10px">
-                        ${expenses.length === 0 ? '<div style="text-align:center; padding:20px; color:var(--color-text-muted)">Nessuna spesa</div>' : expenses.map(e => `
-                            <div class="forest-expense-item">
-                                <div style="flex:1">
-                                    <div style="font-weight:600; font-size:13px">${Utils.escapeHtml(e.description)}</div>
-                                    <div style="font-size:11px; color:var(--color-text-muted)">${Utils.formatDate(e.expense_date)}</div>
+                        ${expenses.length === 0 ? '<div style="text-align:center; padding:20px; color:var(--color-text-muted)">Nessuna spesa</div>' : expenses.map(e => {
+                            const amountFloat = parseFloat(e.amount || 0);
+                            const amountStr = isNaN(amountFloat) ? '0.00' : amountFloat.toFixed(2);
+                            return `
+                                <div class="forest-expense-item">
+                                    <div style="flex:1">
+                                        <div style="font-weight:600; font-size:13px">${Utils.escapeHtml(e.description)}</div>
+                                        <div style="font-size:11px; color:var(--color-text-muted)">${Utils.formatDate(e.expense_date)}</div>
+                                    </div>
+                                    <div style="font-weight:700; color:var(--color-pink)">€ ${amountStr}</div>
+                                    <button class="btn-dash" style="padding:4px" data-del-expense="${e.id}"><i class="ph ph-trash"></i></button>
                                 </div>
-                                <div style="font-weight:700; color:var(--color-pink)">€ ${parseFloat(e.amount).toFixed(2)}</div>
-                                <button class="btn-dash" style="padding:4px" data-del-expense="${e.id}"><i class="ph ph-trash"></i></button>
-                            </div>
-                        `).join('')}
+                            `;
+                        }).join('')}
                     </div>
                 </div>
             </div>

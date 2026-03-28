@@ -195,7 +195,21 @@ const Transport = {
         let transports = [];
         try { transports = await TransportAPI.getTransports(); } catch { transports = []; }
 
-        app.innerHTML = TransportView.dashboard(this.events, transports);
+        const user = App.getUser();
+        const isAdmin = user?.role === "admin" || user?.is_admin;
+        const now = new Date();
+        now.setHours(0, 0, 0, 0); // Start of today
+
+        const upcoming = transports.filter(t => new Date(t.transport_date) >= now);
+        const past = transports.filter(t => new Date(t.transport_date) < now);
+        
+        const stats = {
+            o: this.events.length,
+            s: upcoming.length,
+            l: transports.length
+        };
+
+        app.innerHTML = TransportView.renderDashboard(this.events, stats, isAdmin, upcoming, past);
         this.attachDashboardEvents();
     },
 
@@ -231,16 +245,12 @@ const Transport = {
                 TransportAPI.getAttendees(eventId).catch(() => [])
             ]);
 
-            app.innerHTML = TransportView.eventDetail(event, routes, attendees);
+            app.innerHTML = TransportView.renderEventDetail(event, routes, attendees);
             this.attachEventDetailActions(event, eventId);
 
             if (event?.location_lat && event?.location_lng) {
                 setTimeout(() => {
-                    TransportMap.initMiniMap("gmap", {
-                        lat: parseFloat(event.location_lat),
-                        lng: parseFloat(event.location_lng),
-                        title: event.location_name
-                    });
+                    TransportMap.renderMiniMap("gmap", parseFloat(event.location_lat), parseFloat(event.location_lng), event.location_name);
                 }, 100);
             }
         } catch (error) {
@@ -301,7 +311,7 @@ const Transport = {
             this.gyms = gyms;
             this.teams = teams;
 
-            app.innerHTML = TransportView.wizard(gyms, teams, drivers, vehicles);
+            app.innerHTML = TransportView.renderNewTransport(gyms, teams, drivers, vehicles);
             this.attachWizardEvents();
         } catch (error) {
             UI.toast("Errore caricamento wizard", "error");
@@ -358,7 +368,7 @@ const Transport = {
             TransportMap.initAutocomplete(depInput, (place) => {
                 this.addressCoords.set(place.address, { lat: place.lat, lng: place.lng });
                 localStorage.setItem("fusion_last_departure", place.address);
-                TransportMap.initMiniMap("nt-departure-map", place);
+                TransportMap.renderMiniMap("nt-departure-map", place.lat, place.lng, place.address);
             });
         }
 
@@ -368,7 +378,7 @@ const Transport = {
 
     renderAthletesGrid: function() {
         const grid = document.getElementById("nt-athletes-grid");
-        grid.innerHTML = TransportView.athletesGrid(this.athletes, this.selectedAthletes);
+        grid.innerHTML = TransportView.renderAthleteGrid(this.athletes, this.selectedAthletes);
         
         grid.querySelectorAll(".nt-athlete-card").forEach(card => {
             card.addEventListener("click", (e) => {
@@ -415,7 +425,7 @@ const Transport = {
             const destination = this.selectedGym.address || this.selectedGym.name;
             
             // 1. Get Directions from Google
-            const result = await TransportMap.getDirections(departureAddr, destination, waypoints, true);
+            const result = await TransportMap.getRoute(departureAddr, destination, waypoints, true);
             
             // 2. Apply Backward Planning Logic
             const trafficRatio = TransportLogic.estimateTrafficRatio(arrivalTime);
@@ -449,13 +459,14 @@ const Transport = {
     renderCalculateResults: function(plan, googleResult) {
         const resultsArea = document.getElementById("nt-results");
         resultsArea.style.display = "block";
-        resultsArea.innerHTML = TransportView.wizardResults(plan);
+        const timelineHtml = TransportLogic.generateTimelineHtml(plan.timeline);
+        resultsArea.innerHTML = TransportView.renderCalculationResult(plan.stats, timelineHtml, '<div id="nt-route-map" style="height:100%;"></div>');
         
         this.attachResultEvents();
         
         // Render Route Map
         setTimeout(() => {
-            TransportMap.renderRoute("nt-route-map", googleResult);
+            TransportMap.renderLeafletRoute("nt-route-map", googleResult);
         }, 100);
 
         resultsArea.scrollIntoView({ behavior: "smooth", block: "start" });

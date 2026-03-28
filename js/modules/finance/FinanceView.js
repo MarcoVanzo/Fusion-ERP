@@ -203,7 +203,71 @@ const FinanceView = {
         `;
     },
 
+    invoicesList: (data) => {
+        const list = data.invoices || [];
+        return `
+            <div class="transport-dashboard" style="min-height:100vh; padding: 24px;">
+                <div class="dash-top-bar" style="border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 24px; margin-bottom: 24px;">
+                    <div style="display:flex;justify-content:space-between;width:100%;align-items:center;flex-wrap:wrap;gap:12px;">
+                        <div>
+                            <h1 class="dash-title" style="display:flex;align-items:center;gap:10px;">
+                                <i class="ph ph-file-text" style="color:var(--accent-pink);"></i>
+                                Fatturazione
+                            </h1>
+                            <p style="color:var(--text-muted);font-size:13px;margin-top:4px;">Gestione fatture commerciali e proforma</p>
+                        </div>
+                        <div style="display:flex;gap:8px;">
+                            <button class="btn-dash" id="btn-back-dash"><i class="ph ph-arrow-left"></i> Dashboard</button>
+                            <button class="btn-dash pink" id="btn-new-invoice"><i class="ph ph-plus"></i> Nuova</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dash-card" style="padding:0; overflow:hidden;">
+                    <div class="table-responsive">
+                        <table class="finance-table" style="width:100%; border-collapse:collapse;">
+                            <thead>
+                                <tr style="background:rgba(255,255,255,0.02); text-align:left; font-size:11px; text-transform:uppercase; color:var(--text-muted); letter-spacing:0.5px;">
+                                    <th style="padding:16px;">Numero</th>
+                                    <th style="padding:16px;">Data</th>
+                                    <th style="padding:16px;">Cliente</th>
+                                    <th style="padding:16px;">Stato</th>
+                                    <th style="padding:16px; text-align:right;">Totale</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${list.length > 0 ? list.map(inv => `
+                                    <tr class="invoice-row" data-id="${inv.id}" style="border-bottom:1px solid rgba(255,255,255,0.05); cursor:pointer; font-size:14px;">
+                                        <td style="padding:16px; font-weight:600;">${Utils.escapeHtml(inv.invoice_number)}</td>
+                                        <td style="padding:16px;">${inv.invoice_date ? new Date(inv.invoice_date).toLocaleDateString('it-IT') : '—'}</td>
+                                        <td style="padding:16px;">${Utils.escapeHtml(inv.client_name || '—')}</td>
+                                        <td style="padding:16px;">
+                                            <span class="badge" style="padding:4px 8px; border-radius:4px; font-size:11px; font-weight:700; background:rgba(255,255,255,0.05); text-transform:uppercase;">
+                                                ${Utils.escapeHtml(inv.status)}
+                                            </span>
+                                        </td>
+                                        <td style="padding:16px; text-align:right; font-weight:700; color:var(--accent-pink);">
+                                            € ${FinanceView._formatCurrency(inv.total_amount)}
+                                        </td>
+                                    </tr>
+                                `).join('') : `
+                                    <tr>
+                                        <td colspan="5" style="padding:60px; text-align:center; color:var(--text-muted); font-size:14px;">
+                                            <i class="ph ph-folder-open" style="font-size:32px; display:block; margin-bottom:12px; opacity:0.3;"></i>
+                                            Nessuna fattura trovata
+                                        </td>
+                                    </tr>
+                                `}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
     _kpiCard: (label, value, icon, type) => {
+
         const isNum = typeof value === 'number';
         const color = type === 'positive' ? '#10b981' : (type === 'negative' ? '#ef4444' : 'inherit');
         return `

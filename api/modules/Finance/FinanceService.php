@@ -44,7 +44,7 @@ class FinanceService
     /**
      * Get entry detail
      */
-    public function getEntryDetail(int $id): array
+    public function getEntryDetail(string $id): array
     {
         $entry = $this->repository->getEntryById($id);
         if (!$entry) {
@@ -56,7 +56,7 @@ class FinanceService
     /**
      * Create a new double-entry record
      */
-    public function createEntry(array $data, int $userId): int
+    public function createEntry(array $data, string $userId): string
     {
         // Validation
         if (empty($data['description'])) throw new \Exception('Descrizione obbligatoria');
@@ -78,4 +78,18 @@ class FinanceService
         $data['created_by'] = $userId;
         return $this->repository->createEntry($data);
     }
+
+    /**
+     * Get invoices
+     */
+    public function getInvoices(int $limit = 50): array
+    {
+        $invoices = $this->repository->getInvoices($limit);
+        return array_map(function($inv) {
+            $inv['total_amount'] = (float)($inv['total_amount'] ?? 0);
+            return $inv;
+        }, $invoices);
+    }
 }
+
+

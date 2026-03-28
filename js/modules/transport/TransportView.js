@@ -331,6 +331,103 @@ const TransportView = {
                     </div>
                 </div>
             </div>`;
+    },
+
+    renderEventDetail: (event, routes, attendees) => {
+        const dateStr = event.event_date ? new Date(event.event_date).toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }) : "";
+        return `
+            <div class="transport-dashboard">
+                <div class="dash-top-bar">
+                    <div style="display:flex; align-items:center; gap:16px;">
+                        <button class="btn-dash icon-only" id="back-events" type="button" style="-webkit-text-fill-color:unset;"><i class="ph ph-arrow-left" style="font-size:20px;"></i></button>
+                        <div>
+                            <h1 class="dash-title">${Utils.escapeHtml(event.title)}</h1>
+                            <p class="dash-subtitle">${Utils.escapeHtml(dateStr)} • ${Utils.escapeHtml(event.location_name || "Nessuna location")}</p>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:12px;">
+                        <button class="btn-dash primary" id="send-convocations-btn" type="button"><i class="ph ph-paper-plane-tilt"></i> INVIA CONVOCAZIONI</button>
+                        <button class="btn-dash pink" id="add-route-btn" type="button"><i class="ph ph-plus"></i> OFFRI PASSAGGIO</button>
+                    </div>
+                </div>
+
+                <div class="dash-grid">
+                    <div class="dash-card cyan" style="grid-column: 1 / -1;">
+                        <div class="dash-card-header">
+                            <div class="dash-card-title"><i class="ph ph-map-trifold" style="color:var(--accent-cyan); margin-right:8px;"></i> MAPPA LOCATION</div>
+                        </div>
+                        <div id="gmap" style="height:300px; border-radius:12px; margin-top:16px; border:1px solid rgba(255,255,255,0.05);"></div>
+                    </div>
+
+                    <div class="dash-card" style="grid-column: 1 / 2;">
+                        <div class="dash-card-header">
+                            <div class="dash-card-title"><i class="ph ph-car-profile" style="color:var(--accent-pink); margin-right:8px;"></i> TRATTE DISPONIBILI (${routes.length})</div>
+                        </div>
+                        <div style="margin-top:16px; display:flex; flex-direction:column; gap:12px;">
+                            ${routes.length === 0 ? '<p style="text-align:center; padding:20px; color:rgba(255,255,255,0.3);">Nessun passaggio offerto per questo evento.</p>' : routes.map(r => TransportView.renderRouteCard(r)).join("")}
+                        </div>
+                    </div>
+
+                    <div class="dash-card pink" style="grid-column: 2 / -1;">
+                        <div class="dash-card-header">
+                            <div class="dash-card-title"><i class="ph ph-users-three" style="color:var(--accent-cyan); margin-right:8px;"></i> ATLETE CONVOCATE (${attendees.length})</div>
+                        </div>
+                        <table class="dash-table" style="margin-top:16px;">
+                            <thead>
+                                <tr>
+                                    <th>Atleta</th>
+                                    <th>Status</th>
+                                    <th>Passaggio</th>
+                                    <th>Azioni</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${attendees.length === 0 ? '<tr><td colspan="4" style="text-align:center; padding:20px; color:rgba(255,255,255,0.3);">Nessun partecipante convocato.</td></tr>' : attendees.map(a => TransportView.renderAttendeeRow(a)).join("")}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>`;
+    },
+
+    renderRouteCard: (r) => {
+        return `
+            <div class="st-card" style="border-left: 3px solid var(--accent-cyan); background:rgba(255,255,255,0.02);">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                    <div>
+                        <div style="font-weight:700; color:#fff;">${Utils.escapeHtml(r.driver_name)}</div>
+                        <div style="font-size:12px; color:rgba(255,255,255,0.5);">${Utils.escapeHtml(r.vehicle_name || "Auto privata")} • ${r.seats_available}/${r.seats_total} posti liberi</div>
+                    </div>
+                    <div style="font-family:var(--font-display); font-weight:800; color:var(--accent-cyan);">${Utils.escapeHtml(r.departure_time || "--:--")}</div>
+                </div>
+                ${r.notes ? `<div style="margin-top:8px; font-size:12px; font-style:italic; color:rgba(255,255,255,0.4);">"${Utils.escapeHtml(r.notes)}"</div>` : ""}
+            </div>`;
+    },
+
+    renderAttendeeRow: (a) => {
+        const hasCar = !!a.route_id;
+        const initials = (a.user_name || "??").substring(0, 2).toUpperCase();
+        return `
+            <tr>
+                <td>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div style="width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:rgba(255,255,255,0.6);">${initials}</div>
+                        <div>
+                            <div style="font-weight:600; font-size:13px;">${Utils.escapeHtml(a.user_name)}</div>
+                            <div style="font-size:11px; color:rgba(255,255,255,0.4);">${Utils.escapeHtml(a.user_email || "")}</div>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <span class="badge ${a.status === 'confirmed' ? 'active' : 'pending'}" style="font-size:10px; padding:2px 8px;">${a.status === 'confirmed' ? 'Confermata' : 'In attesa'}</span>
+                </td>
+                <td>
+                    ${hasCar ? `<span style="color:var(--accent-cyan); font-size:12px;"><i class="ph ph-car" style="margin-right:4px;"></i>${Utils.escapeHtml(a.driver_name)}</span>` : '<span style="color:var(--accent-pink); font-size:12px;"><i class="ph ph-warning" style="margin-right:4px;"></i>Senza passaggio</span>'}
+                </td>
+                <td>
+                    ${!hasCar ? `<button class="btn btn-ghost btn-xs" style="font-size:10px; padding:4px 8px;" onclick="Transport.showRequestPassageModal('${a.athlete_id}')">CHIEDI</button>` : ""}
+                </td>
+            </tr>`;
     }
 };
 

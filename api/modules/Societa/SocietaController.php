@@ -399,7 +399,7 @@ class SocietaController
         if ($tenantId) {
             $media = $this->repo->getForesteriaMedia($tenantId);
         } else {
-            $stmt = $db->query("SELECT * FROM foresteria_media WHERE is_deleted = 0 ORDER BY created_at DESC");
+            $stmt = $db->query("SELECT * FROM foresteria_media WHERE is_deleted = 0 ORDER BY uploaded_at DESC");
             $media = $stmt->fetchAll(\PDO::FETCH_ASSOC);
         }
 

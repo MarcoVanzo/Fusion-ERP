@@ -499,7 +499,7 @@ class SocietaService
             $ext = pathinfo($file['name'], PATHINFO_EXTENSION) ?: 'jpg';
             $fileName = 'receipt_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . strtolower($ext);
             
-            $uploadDir = dirname(__DIR__, 3) . '/uploads/' . $tenantId . '/foresteria';
+            $uploadDir = dirname(__DIR__, 3) . '/uploads/societa/' . $tenantId . '/foresteria';
             if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
             
             $destPath = $uploadDir . '/' . $fileName;

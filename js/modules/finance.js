@@ -20,12 +20,17 @@ const Finance = {
     },
 
     init: async function() {
+        this._abort = new AbortController();
         const appContainer = document.getElementById("app");
         if (!appContainer) return;
 
         appContainer.innerHTML = FinanceView.skeleton();
         
         try {
+            // Set view based on route
+            const currentRoute = typeof Router !== "undefined" ? Router.getCurrentRoute() : "finance";
+            this._currentView = currentRoute === "finance-invoices" ? "invoices" : "dashboard";
+
             // Load essential metadata
             this._categories = await FinanceAPI.getCategories();
             this._accounts = await FinanceAPI.getChartOfAccounts();
@@ -37,6 +42,7 @@ const Finance = {
         }
     },
 
+
     loadAndRender: async function() {
         const appContainer = document.getElementById("app");
         if (!appContainer) return;
@@ -47,6 +53,10 @@ const Finance = {
                 this._data = await FinanceAPI.getDashboard();
                 appContainer.innerHTML = FinanceView.dashboard(this._data, this._categories);
                 this.attachDashboardEvents(appContainer);
+            } else if (this._currentView === "invoices") {
+                const invoices = await FinanceAPI.getInvoices();
+                appContainer.innerHTML = FinanceView.invoicesList(invoices);
+                this.attachInvoicesEvents(appContainer);
             } else if (this._currentView === "accounts") {
                 appContainer.innerHTML = FinanceView.accountsList(this._accounts);
                 this.attachBasicEvents(appContainer);
@@ -93,6 +103,20 @@ const Finance = {
             this._currentView = "dashboard";
             this.loadAndRender();
         }, this.sig());
+    },
+
+    attachInvoicesEvents: function(container) {
+        container.querySelector("#btn-back-dash")?.addEventListener("click", () => {
+            this._currentView = "dashboard";
+            this.loadAndRender();
+        }, this.sig());
+
+        container.querySelectorAll(".invoice-row").forEach(row => {
+            row.addEventListener("click", () => {
+                const id = row.dataset.id;
+                UI.toast("Dettagli fattura " + id + " in arrivo...", "info");
+            }, this.sig());
+        });
     },
 
     openEntryModal: function() {

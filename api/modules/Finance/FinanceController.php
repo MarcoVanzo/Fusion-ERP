@@ -58,7 +58,7 @@ class FinanceController
 
     public function getEntry(): void
     {
-        $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+        $id = filter_input(INPUT_GET, 'id', FILTER_DEFAULT);
         if (!$id) {
             Response::error('ID registrazione non valido', 400);
         }
@@ -67,12 +67,19 @@ class FinanceController
 
     public function createEntry(): void
     {
+        $user = \FusionERP\Shared\Auth::requireAuth();
         $data = json_decode(file_get_contents('php://input'), true) ?? $_POST;
-        // User ID should come from Auth sessions in real ERP, but using a mocked constant for now
-        $userId = 1;
+        
         $this->handleServiceCall(fn() => [
-            'id' => $this->service->createEntry($data, $userId),
+            'id' => $this->service->createEntry($data, $user['id']),
             'message' => 'Registrazione salvata'
+        ]);
+    }
+
+    public function listInvoices(): void
+    {
+        $this->handleServiceCall(fn() => [
+            'invoices' => $this->service->getInvoices()
         ]);
     }
 }
