@@ -310,7 +310,7 @@ const SocietaView = {
                         <div class="forest-media-grid" id="forest-media-list">
                             ${safeMedia.map(m => `
                                 <div class="forest-media-item" data-id="${m.id}">
-                                    ${m.type === 'youtube' ? `<div class="forest-media-yt"><i class="ph ph-youtube-logo"></i></div>` : m.type === 'video' ? `<div class="forest-media-vid"><i class="ph ph-video"></i></div>` : `<img src="${m.file_path}" alt="">`}
+                                    ${m.type === 'youtube' ? `<iframe src="${Utils.escapeHtml(m.file_path.replace('watch?v=', 'embed/'))}" frameborder="0" allowfullscreen style="width:100%; height:100%;"></iframe>` : m.type === 'video' ? `<video src="${Utils.escapeHtml(m.file_path)}" controls style="width:100%; height:100%; object-fit:cover;"></video>` : `<img src="${Utils.escapeHtml(m.file_path)}" alt="">`}
                                     ${isAdmin ? `<button class="forest-media-del" data-id="${m.id}"><i class="ph ph-trash"></i></button>` : ''}
                                 </div>
                             `).join('')}
