@@ -92,70 +92,48 @@ const Societa = {
     },
 
     render: function() {
-        const contentEl = document.getElementById("soc-tab-content");
-        if (!contentEl) return;
+        const appContainer = document.getElementById("app");
+        if (!appContainer) return;
 
         const isAdmin = ["admin", "manager"].includes(App.getUser()?.role);
-        
-        const headerEl = document.getElementById("soc-tab-header");
-        if (headerEl) {
-            const titles = {
-                identita: { t: "Identità Club", s: "Gestione colori, loghi e info societarie" },
-                organigramma: { t: "Organigramma", s: "Struttura gerarchica e ruoli societari" },
-                membri: { t: "Membri", s: "Persone e staff assegnato ai vari ruoli" },
-                documenti: { t: "Documenti", s: "Archivio di statuti, affiliazioni e licenze" },
-                scadenze: { t: "Scadenze", s: "Scadenze federali e amministrative" },
-                sponsor: { t: "Sponsor", s: "Partnership e sponsorizzazioni del club" },
-                titoli: { t: "Palmarès", s: "Trofei e successi storici del club" },
-                foresteria: { t: "La Foresteria", s: "Informazioni, multimedia e mappa" }
-            };
-            const info = titles[this._currentTab] || { t: "Il Club", s: "Gestione societaria" };
-            headerEl.innerHTML = `
-                <div class="dash-top-bar" style="border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 24px; margin-bottom: 24px;">
-                    <div>
-                        <h1 class="dash-title">${info.t}</h1>
-                        <p class="dash-subtitle" style="margin-top:4px;">${info.s}</p>
-                    </div>
-                </div>`;
-        }
 
         switch (this._currentTab) {
             case 'identita':
-                contentEl.innerHTML = SocietaView.identity(this._data.profile, isAdmin);
-                this.attachIdentityEvents(contentEl, isAdmin);
+                appContainer.innerHTML = SocietaView.identity(this._data.profile, isAdmin);
+                this.attachIdentityEvents(appContainer, isAdmin);
                 break;
             case 'organigramma':
-                contentEl.innerHTML = SocietaView.orgChart(this._data.roles, isAdmin);
-                if (isAdmin) SocietaOrgChart.initDragAndDrop(contentEl, () => this.refreshTab(), this._abort.signal);
-                this.attachOrgEvents(contentEl, isAdmin);
+                appContainer.innerHTML = SocietaView.orgChart(this._data.roles, isAdmin);
+                if (isAdmin) SocietaOrgChart.initDragAndDrop(appContainer, () => this.refreshTab(), this._abort.signal);
+                this.attachOrgEvents(appContainer, isAdmin);
                 break;
             case 'membri':
-                contentEl.innerHTML = SocietaView.membersTable(this._data.members, isAdmin);
-                this.attachMembersEvents(contentEl, isAdmin);
+                appContainer.innerHTML = SocietaView.membersTable(this._data.members, isAdmin);
+                this.attachMembersEvents(appContainer, isAdmin);
                 break;
             case 'documenti':
-                contentEl.innerHTML = SocietaView.documentsGrid(this._data.documents, isAdmin);
-                this.attachDocumentsEvents(contentEl, isAdmin);
+                appContainer.innerHTML = SocietaView.documentsGrid(this._data.documents, isAdmin);
+                this.attachDocumentsEvents(appContainer, isAdmin);
                 break;
             case 'scadenze':
-                contentEl.innerHTML = SocietaView.deadlines(this._data.deadlines, isAdmin);
-                this.attachDeadlinesEvents(contentEl, isAdmin);
+                appContainer.innerHTML = SocietaView.deadlines(this._data.deadlines, isAdmin);
+                this.attachDeadlinesEvents(appContainer, isAdmin);
                 break;
             case 'sponsor':
-                contentEl.innerHTML = SocietaView.sponsorsGrid(this._data.sponsors, isAdmin);
-                this.attachSponsorsEvents(contentEl, isAdmin);
+                appContainer.innerHTML = SocietaView.sponsorsGrid(this._data.sponsors, isAdmin);
+                this.attachSponsorsEvents(appContainer, isAdmin);
                 break;
             case 'titoli':
-                contentEl.innerHTML = SocietaView.titoli(this._data.titles, isAdmin);
-                this.attachTitoliEvents(contentEl, isAdmin);
+                appContainer.innerHTML = SocietaView.titoli(this._data.titles, isAdmin);
+                this.attachTitoliEvents(appContainer, isAdmin);
                 break;
             case 'foresteria':
                 if (this._data.foresteria) {
-                   contentEl.innerHTML = SocietaView.foresteriaInfo(this._data.foresteria.info, this._data.foresteria.media, isAdmin);
-                   SocietaForesteria.attachInfoEvents(contentEl, this._data.foresteria.info, this._abort.signal);
-                   if (this._data.foresteria.info.lat) SocietaForesteria.initMap(this._data.foresteria.info);
+                   appContainer.innerHTML = SocietaView.foresteriaInfo(this._data.foresteria.info, this._data.foresteria.media, isAdmin);
+                   SocietaForesteria.attachInfoEvents(appContainer, this._data.foresteria.info, this._abort.signal);
+                   if (this._data.foresteria.info && this._data.foresteria.info.lat) SocietaForesteria.initMap(this._data.foresteria.info);
                 } else {
-                   contentEl.innerHTML = Utils.emptyState("Dati mancanti", "Impossibile caricare i dati della foresteria.");
+                   appContainer.innerHTML = Utils.emptyState("Dati mancanti", "Impossibile caricare i dati della foresteria.");
                 }
                 break;
         }
@@ -175,9 +153,9 @@ const Societa = {
 
     attachIdentityEvents: function(container, isAdmin) {
         if (!isAdmin) return;
-        
+
         container.querySelector("#soc-logo-btn")?.addEventListener("click", () => {
-            document.getElementById("soc-logo-input")?.click();
+            container.querySelector("#soc-logo-input")?.click();
         }, this.sig());
 
         container.querySelector("#soc-logo-input")?.addEventListener("change", async (e) => {
@@ -195,22 +173,26 @@ const Societa = {
             }
         }, this.sig());
 
+        // Salva profilo — pulsante ora nell'header (dash-top-bar)
         container.querySelector("#soc-save-profile")?.addEventListener("click", async () => {
+            const errEl = container.querySelector("#soc-profile-err");
             const body = {
-                mission: document.getElementById("soc-mission")?.value,
-                vision: document.getElementById("soc-vision")?.value,
-                values: document.getElementById("soc-values")?.value,
-                founded_year: document.getElementById("soc-founded")?.value,
-                primary_color: document.getElementById("soc-color-primary")?.value,
-                secondary_color: document.getElementById("soc-color-secondary")?.value,
-                legal_address: document.getElementById("soc-legal-addr")?.value,
-                operative_address: document.getElementById("soc-op-addr")?.value
+                mission: container.querySelector("#soc-mission")?.value,
+                vision: container.querySelector("#soc-vision")?.value,
+                values: container.querySelector("#soc-values")?.value,
+                founded_year: container.querySelector("#soc-founded")?.value,
+                primary_color: container.querySelector("#soc-color-primary")?.value,
+                secondary_color: container.querySelector("#soc-color-secondary")?.value,
+                legal_address: container.querySelector("#soc-legal-addr")?.value,
+                operative_address: container.querySelector("#soc-op-addr")?.value
             };
             try {
+                if (errEl) errEl.classList.add("hidden");
                 await SocietaAPI.saveProfile(body);
                 UI.toast("Profilo aggiornato", "success");
                 this.refreshTab();
             } catch (err) {
+                if (errEl) { errEl.textContent = err.message; errEl.classList.remove("hidden"); }
                 UI.toast(err.message, "error");
             }
         }, this.sig());

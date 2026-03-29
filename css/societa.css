@@ -1,55 +1,5 @@
 /* ─── Società Module — CSS ────────────────────────────────────────────────── */
 
-/* ─── Tab Bar ───────────────────────────────────────────────────────────────── */
-.soc-tabs {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-}
-.soc-tabs::-webkit-scrollbar {
-    display: none;
-}
-
-.soc-nav-item {
-    padding: var(--sp-2) 0;
-    color: var(--color-text-muted);
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border-bottom: 2px solid transparent;
-    white-space: nowrap;
-}
-
-.soc-nav-item:hover {
-    color: var(--color-text);
-}
-
-.soc-nav-item.active {
-    color: var(--color-pink);
-    border-bottom-color: var(--color-pink);
-    font-weight: 700;
-}
-
-/* ─── Layout ───────────────────────────────────────────────────────────────── */
-.module-wrapper {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-}
-
-.module-body {
-    display: flex;
-    flex: 1;
-    overflow: hidden;
-}
-
-.module-content {
-    flex: 1;
-    overflow-y: auto;
-    padding: var(--sp-5);
-    background: var(--color-bg);
-}
-
 /* ─── Color Swatch ──────────────────────────────────────────────────────────── */
 .soc-color-row {
     display: flex;
