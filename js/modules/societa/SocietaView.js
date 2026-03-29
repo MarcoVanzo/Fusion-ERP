@@ -323,36 +323,57 @@ const SocietaView = {
     foresteriaInfo: (info, media, isAdmin) => {
         const safeInfo = info || { address: '', description: '' };
         const safeMedia = Array.isArray(media) ? media : [];
+        const videoMedia = safeMedia.filter(m => m.type === 'youtube' || m.type === 'video');
+        const photoMedia = safeMedia.filter(m => m.type !== 'youtube' && m.type !== 'video');
+
+        const getYoutubeEmbed = (url) => {
+            if (!url) return '';
+            const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/);
+            return match && match[1] ? `https://www.youtube.com/embed/${match[1]}` : url;
+        };
+
         const contentHtml = `
             <div style="max-width:1400px">
-                <div style="display:grid; grid-template-columns: 1fr 400px; gap:var(--sp-4); align-items:start">
-                    <div style="display:flex; flex-direction:column; gap:var(--sp-4)">
-                        <div class="dash-card" style="padding:var(--sp-4)">
-                            ${safeInfo.address ? `<p style="font-size:13px; color:var(--color-text-muted); margin-bottom:var(--sp-3)">${Utils.escapeHtml(safeInfo.address)}</p>` : ''}
-                            <div style="font-size:14px; line-height:1.6; color:rgba(255,255,255,0.8)">
-                                ${safeInfo.description ? safeInfo.description.replace(/\n/g, '<br>') : 'Nessuna descrizione impostata.'}
-                            </div>
-                        </div>
-                        <div class="dash-card" style="padding:var(--sp-4)">
-                            <h3 class="dash-card-title" style="margin-bottom:var(--sp-3)">Galleria Multimedia</h3>
-                            ${isAdmin ? `
-                            <div style="display:flex; gap:10px; margin-bottom:var(--sp-3)">
-                                <button class="btn-dash" id="forest-upload-media"><i class="ph ph-upload"></i> Carica Foto/Video</button>
-                                <button class="btn-dash" id="forest-add-youtube"><i class="ph ph-youtube-logo"></i> Aggiungi Link YT</button>
-                            </div>
-                            ` : ''}
-                            <div class="forest-media-grid" id="forest-media-list">
-                                ${safeMedia.map(m => `
-                                    <div class="forest-media-item" data-id="${m.id}">
-                                        ${m.type === 'youtube' ? `<iframe src="${Utils.escapeHtml(m.file_path.replace('watch?v=', 'embed/'))}" frameborder="0" allowfullscreen style="width:100%; height:100%;"></iframe>` : m.type === 'video' ? `<video src="${Utils.escapeHtml(m.file_path)}" controls style="width:100%; height:100%; object-fit:cover;"></video>` : `<img src="${Utils.escapeHtml(m.file_path)}" alt="">`}
-                                        ${isAdmin ? `<button class="forest-media-del" data-id="${m.id}"><i class="ph ph-trash"></i></button>` : ''}
-                                    </div>
-                                `).join('')}
-                            </div>
+                <div style="display:flex; flex-direction:column; gap:var(--sp-4)">
+                    <div class="dash-card" style="padding:var(--sp-4)">
+                        ${safeInfo.address ? `<p style="font-size:13px; color:var(--color-text-muted); margin-bottom:var(--sp-3)"><i class="ph ph-map-pin"></i> ${Utils.escapeHtml(safeInfo.address)}</p>` : ''}
+                        <div style="font-size:14px; line-height:1.6; color:rgba(255,255,255,0.8)">
+                            ${safeInfo.description ? safeInfo.description.replace(/\n/g, '<br>') : 'Nessuna descrizione impostata.'}
                         </div>
                     </div>
-                    <div class="dash-card" style="padding:0; overflow:hidden; border:1px solid var(--color-border); aspect-ratio: 1/1">
-                        <div id="forest-map-container" style="width:100%; height:100%;"></div>
+
+                    ${(videoMedia.length > 0) ? `
+                    <div class="dash-card" style="padding:var(--sp-4)">
+                        <h3 class="dash-card-title" style="margin-bottom:var(--sp-3)">Video</h3>
+                        <div class="forest-media-grid" style="grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));">
+                            ${videoMedia.map(m => `
+                                <div class="forest-media-item" data-id="${m.id}" style="aspect-ratio: 16/9; width:100%; position:relative;">
+                                    ${m.type === 'youtube' ? `<iframe src="${getYoutubeEmbed(m.file_path)}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="width:100%; height:100%; position:absolute; top:0; left:0; border-radius:8px;"></iframe>` : `<video src="${Utils.escapeHtml(m.file_path)}" controls style="width:100%; height:100%; object-fit:cover; position:absolute; top:0; left:0; border-radius:8px;"></video>`}
+                                    ${isAdmin ? `<button class="forest-media-del" data-id="${m.id}" style="z-index: 10"><i class="ph ph-trash"></i></button>` : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    ` : ''}
+
+                    <div class="dash-card" style="padding:var(--sp-4)">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--sp-3); flex-wrap:wrap; gap:12px;">
+                            <h3 class="dash-card-title" style="margin-bottom:0">Galleria Fotografica</h3>
+                            ${isAdmin ? `
+                            <div style="display:flex; gap:10px;">
+                                <button class="btn-dash" id="forest-upload-media"><i class="ph ph-image"></i> Carica Foto/Video</button>
+                                <button class="btn-dash" id="forest-add-youtube"><i class="ph ph-youtube-logo"></i> Link YT</button>
+                            </div>
+                            ` : ''}
+                        </div>
+                        <div class="forest-media-grid" id="forest-media-list">
+                            ${photoMedia.length === 0 ? '<p style="color:var(--color-text-muted); font-size:13px;">Nessuna foto presente.</p>' : photoMedia.map(m => `
+                                <div class="forest-media-item" data-id="${m.id}">
+                                    <img src="${Utils.escapeHtml(m.file_path)}" alt="">
+                                    ${isAdmin ? `<button class="forest-media-del" data-id="${m.id}"><i class="ph ph-trash"></i></button>` : ''}
+                                </div>
+                            `).join('')}
+                        </div>
                     </div>
                 </div>
             </div>`;
