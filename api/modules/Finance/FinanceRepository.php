@@ -69,7 +69,7 @@ class FinanceRepository
     {
         $stmt = $this->db->prepare("
             SELECT e.*, 
-                   u.display_name as created_by_name
+                   u.full_name as created_by_name
             FROM journal_entries e
             LEFT JOIN users u ON e.created_by = u.id
             WHERE e.tenant_id = ? AND e.deleted_at IS NULL
@@ -88,7 +88,7 @@ class FinanceRepository
     public function getEntryById(string $id): ?array
     {
         $stmt = $this->db->prepare("
-            SELECT e.*, u.display_name as created_by_name
+            SELECT e.*, u.full_name as created_by_name
             FROM journal_entries e
             LEFT JOIN users u ON e.created_by = u.id
             WHERE e.id = ? AND e.tenant_id = ?

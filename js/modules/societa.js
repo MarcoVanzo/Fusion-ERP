@@ -62,31 +62,34 @@ const Societa = {
     },
 
     reloadData: async function() {
-        const promises = [
-            SocietaAPI.getProfile().catch(() => ({})),
-            SocietaAPI.listRoles().catch(() => []),
-            SocietaAPI.listMembers().catch(() => []),
-            SocietaAPI.listDocuments().catch(() => []),
-            SocietaAPI.listDeadlines().catch(() => []),
-            SocietaAPI.listSponsors().catch(() => []),
-            SocietaAPI.listTitoli().catch(() => [])
-        ];
+        const promises = {
+            profile: SocietaAPI.getProfile().catch(() => ({})),
+            roles: SocietaAPI.listRoles().catch(() => []),
+            members: SocietaAPI.listMembers().catch(() => []),
+            documents: SocietaAPI.listDocuments().catch(() => []),
+            deadlines: SocietaAPI.listDeadlines().catch(() => []),
+            sponsors: SocietaAPI.listSponsors().catch(() => []),
+            titles: SocietaAPI.listTitoli().catch(() => [])
+        };
 
         if (this._currentTab === 'foresteria') {
-            promises.push(SocietaAPI.getForesteria().catch(() => null));
+            promises.foresteria = SocietaAPI.getForesteria().catch(err => {
+                console.error("[Societa] Error fetching foresteria data:", err);
+                return null;
+            });
         }
 
-        const results = await Promise.all(promises);
-        this._data.profile = results[0];
-        this._data.roles = results[1];
-        this._data.members = results[2];
-        this._data.documents = results[3];
-        this._data.deadlines = results[4];
-        this._data.sponsors = results[5];
-        this._data.titles = results[6];
-        if (this._currentTab === 'foresteria') {
-            this._data.foresteria = results[7];
-        }
+        const keys = Object.keys(promises);
+        const results = await Promise.all(Object.values(promises));
+        
+        // Map results back to this._data using keys to avoid race condition index mismatches
+        keys.forEach((key, index) => {
+            if (key === 'titles') {
+                this._data.titles = results[index];
+            } else {
+                this._data[key] = results[index];
+            }
+        });
     },
 
     render: function() {

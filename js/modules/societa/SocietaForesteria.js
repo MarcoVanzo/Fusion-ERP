@@ -66,10 +66,10 @@ export default {
         });
     },
 
-    refresh: async function(container, signal) {
-        const data = await SocietaAPI.getForesteria();
-        // Here we trigger the main Societa orchestrator to re-render or do it locally
-        // container.dispatchEvent(new CustomEvent('forest-refresh'));
+    refresh: async function() {
+        if (window.Societa && typeof window.Societa.refreshTab === 'function') {
+            await window.Societa.refreshTab();
+        }
     },
 
     initMap: function(info) {
@@ -82,8 +82,7 @@ export default {
             zoom: 16,
             mapId: "fusion_premium_map",
             disableDefaultUI: false,
-            gestureHandling: 'cooperative',
-            styles: [/* Custom dark styles could go here */]
+            gestureHandling: 'cooperative'
         });
 
         new google.maps.Marker({
@@ -95,7 +94,45 @@ export default {
     },
 
     showAddExpenseModal: function(container, signal) {
-        // Modal logic
+        const modal = UI.modal({
+            title: "Aggiungi Spesa Foresteria",
+            body: `
+                <div class="form-group">
+                    <label class="form-label">Data Spesa</label>
+                    <input type="date" id="fe-date" class="form-input" value="${new Date().toISOString().split('T')[0]}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Descrizione</label>
+                    <input type="text" id="fe-desc" class="form-input" placeholder="Es. Bolletta Luce Gennaio">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Importo (€)</label>
+                    <input type="number" step="0.01" id="fe-amount" class="form-input" placeholder="0.00">
+                </div>
+            `,
+            footer: `<button class="btn-dash" id="fe-cancel">Annulla</button><button class="btn-dash pink" id="fe-save">Salva Spesa</button>`
+        });
+
+        document.getElementById("fe-cancel")?.addEventListener("click", () => modal.close());
+        document.getElementById("fe-save")?.addEventListener("click", async () => {
+            const data = {
+                expense_date: document.getElementById("fe-date")?.value,
+                description: document.getElementById("fe-desc")?.value,
+                amount: document.getElementById("fe-amount")?.value
+            };
+            if (!data.description || !data.amount) {
+                UI.toast("Inserire descrizione e importo", "warning");
+                return;
+            }
+            try {
+                await SocietaAPI.addExpense(data);
+                UI.toast("Spesa aggiunta", "success");
+                modal.close();
+                this.refresh();
+            } catch (err) {
+                UI.toast(err.message, "error");
+            }
+        });
     },
 
     showEditInfoModal: function(container, info, signal) {
@@ -104,7 +141,7 @@ export default {
             body: `
                 <div class="form-group">
                     <label class="form-label">Indirizzo</label>
-                    <input type="text" id="mf-address" class="form-input" value="${Utils.escapeHtml(info.address)}">
+                    <input type="text" id="mf-address" class="form-input" value="${Utils.escapeHtml(info.address || '')}">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Descrizione / Regolamento</label>
@@ -124,13 +161,72 @@ export default {
                 await SocietaAPI.saveForesteria(body);
                 UI.toast("Informazioni salvate", "success");
                 modal.close();
-                // Signal refresh
+                this.refresh();
             } catch (err) {
                 UI.toast(err.message, "error");
             }
         });
     },
 
-    showUploadMediaModal: function(container, signal) { /* Logic */ },
-    showAddYoutubeModal: function(container, signal) { /* Logic */ }
+    showUploadMediaModal: function(container, signal) {
+        const modal = UI.modal({
+            title: "Carica Media Foresteria",
+            body: `
+                <div class="form-group">
+                    <label class="form-label">Seleziona File (Immagine o Video)</label>
+                    <input type="file" id="fm-file" class="form-input" accept="image/*,video/*">
+                </div>
+            `,
+            footer: `<button class="btn-dash" id="fm-cancel">Annulla</button><button class="btn-dash pink" id="fm-upload">Carica</button>`
+        });
+
+        document.getElementById("fm-cancel")?.addEventListener("click", () => modal.close());
+        document.getElementById("fm-upload")?.addEventListener("click", async () => {
+            const fileInput = document.getElementById("fm-file");
+            if (!fileInput?.files[0]) {
+                UI.toast("Selezionare un file", "warning");
+                return;
+            }
+            const fd = new FormData();
+            fd.append("file", fileInput.files[0]);
+            try {
+                UI.loading(true);
+                await SocietaAPI.uploadForesteriaMedia(fd);
+                UI.toast("Media caricato", "success");
+                modal.close();
+                this.refresh();
+            } catch (err) {
+                UI.toast(err.message, "error");
+            } finally {
+                UI.loading(false);
+            }
+        });
+    },
+
+    showAddYoutubeModal: function(container, signal) {
+        const modal = UI.modal({
+            title: "Aggiungi Link YouTube",
+            body: `
+                <div class="form-group">
+                    <label class="form-label">URL Video YouTube</label>
+                    <input type="text" id="fy-url" class="form-input" placeholder="https://www.youtube.com/watch?v=...">
+                </div>
+            `,
+            footer: `<button class="btn-dash" id="fy-cancel">Annulla</button><button class="btn-dash pink" id="fy-save">Aggiungi</button>`
+        });
+
+        document.getElementById("fy-cancel")?.addEventListener("click", () => modal.close());
+        document.getElementById("fy-save")?.addEventListener("click", async () => {
+            const url = document.getElementById("fy-url")?.value;
+            if (!url) return;
+            try {
+                await SocietaAPI.addForesteriaYoutubeLink({ url });
+                UI.toast("Link aggiunto", "success");
+                modal.close();
+                this.refresh();
+            } catch (err) {
+                UI.toast(err.message, "error");
+            }
+        });
+    }
 };

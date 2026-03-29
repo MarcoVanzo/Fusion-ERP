@@ -88,6 +88,10 @@ const TransportAPI = {
         return await Store.api("generateReimbursement", "transport", data);
     },
 
+    getStats: async () => {
+        return await Store.get("getStats", "transport");
+    },
+
     analyzeAI: async (data) => {
         return await Store.api("analyzeTransportAI", "transport", data);
     }

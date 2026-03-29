@@ -1,7 +1,7 @@
 /**
  * Societa View Module
  */
-export default {
+const SocietaView = {
     skeleton: () => `
         <div class="soc-container">
             <div class="soc-profile-header">
@@ -277,7 +277,12 @@ export default {
             </div>
         </div>`,
 
-    foresteria: (info, expenses, media, isAdmin) => `
+    foresteria: (info, expenses, media, isAdmin) => {
+        const safeInfo = info || { address: '', description: '' };
+        const safeExpenses = Array.isArray(expenses) ? expenses : [];
+        const safeMedia = Array.isArray(media) ? media : [];
+
+        return `
         <div style="max-width:1400px">
             <div style="display:grid; grid-template-columns: 1fr 400px; gap:var(--sp-4); align-items:start">
                 <div style="display:flex; flex-direction:column; gap:var(--sp-4)">
@@ -285,26 +290,28 @@ export default {
                         <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:var(--sp-3)">
                             <div>
                                 <h3 class="dash-card-title">Informazioni Foresteria</h3>
-                                <p style="font-size:13px; color:var(--color-text-muted)">${Utils.escapeHtml(info.address)}</p>
+                                <p style="font-size:13px; color:var(--color-text-muted)">${Utils.escapeHtml(safeInfo.address || '')}</p>
                             </div>
-                            <button class="btn-dash" id="forest-edit-info"><i class="ph ph-pencil-simple"></i> Modifica</button>
+                            ${isAdmin ? '<button class="btn-dash" id="forest-edit-info"><i class="ph ph-pencil-simple"></i> Modifica</button>' : ''}
                         </div>
                         <div style="font-size:14px; line-height:1.6; color:rgba(255,255,255,0.8)">
-                            ${info.description ? info.description.replace(/\n/g, '<br>') : 'Nessuna descrizione impostata.'}
+                            ${safeInfo.description ? safeInfo.description.replace(/\n/g, '<br>') : 'Nessuna descrizione impostata.'}
                         </div>
                     </div>
                     
                     <div class="dash-card" style="padding:var(--sp-4)">
                         <h3 class="dash-card-title" style="margin-bottom:var(--sp-3)">Galleria Multimedia</h3>
+                        ${isAdmin ? `
                         <div style="display:flex; gap:10px; margin-bottom:var(--sp-3)">
                             <button class="btn-dash" id="forest-upload-media"><i class="ph ph-upload"></i> Carica Foto/Video</button>
                             <button class="btn-dash" id="forest-add-youtube"><i class="ph ph-youtube-logo"></i> Aggiungi Link YT</button>
                         </div>
+                        ` : ''}
                         <div class="forest-media-grid" id="forest-media-list">
-                            ${media.map(m => `
+                            ${safeMedia.map(m => `
                                 <div class="forest-media-item" data-id="${m.id}">
                                     ${m.type === 'youtube' ? `<div class="forest-media-yt"><i class="ph ph-youtube-logo"></i></div>` : m.type === 'video' ? `<div class="forest-media-vid"><i class="ph ph-video"></i></div>` : `<img src="${m.file_path}" alt="">`}
-                                    <button class="forest-media-del" data-id="${m.id}"><i class="ph ph-trash"></i></button>
+                                    ${isAdmin ? `<button class="forest-media-del" data-id="${m.id}"><i class="ph ph-trash"></i></button>` : ''}
                                 </div>
                             `).join('')}
                         </div>
@@ -314,10 +321,10 @@ export default {
                 <div class="dash-card" style="padding:var(--sp-4)">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--sp-3)">
                         <h3 class="dash-card-title">Ultime Spese</h3>
-                        <button class="btn-dash pink" id="forest-add-expense"><i class="ph ph-plus"></i></button>
+                        ${isAdmin ? '<button class="btn-dash pink" id="forest-add-expense"><i class="ph ph-plus"></i></button>' : ''}
                     </div>
                     <div style="display:flex; flex-direction:column; gap:10px">
-                        ${expenses.length === 0 ? '<div style="text-align:center; padding:20px; color:var(--color-text-muted)">Nessuna spesa</div>' : expenses.map(e => {
+                        ${safeExpenses.length === 0 ? '<div style="text-align:center; padding:20px; color:var(--color-text-muted)">Nessuna spesa</div>' : safeExpenses.map(e => {
                             const amountFloat = parseFloat(e.amount || 0);
                             const amountStr = isNaN(amountFloat) ? '0.00' : amountFloat.toFixed(2);
                             return `
@@ -327,7 +334,7 @@ export default {
                                         <div style="font-size:11px; color:var(--color-text-muted)">${Utils.formatDate(e.expense_date)}</div>
                                     </div>
                                     <div style="font-weight:700; color:var(--color-pink)">€ ${amountStr}</div>
-                                    <button class="btn-dash" style="padding:4px" data-del-expense="${e.id}"><i class="ph ph-trash"></i></button>
+                                    ${isAdmin ? `<button class="btn-dash" style="padding:4px" data-del-expense="${e.id}"><i class="ph ph-trash"></i></button>` : ''}
                                 </div>
                             `;
                         }).join('')}
@@ -336,5 +343,8 @@ export default {
             </div>
             
             <div id="forest-map-container" style="height:400px; border-radius:12px; margin-top:var(--sp-4); overflow:hidden; border:1px solid var(--color-border)"></div>
-        </div>`
+        </div>`;
+    }
 };
+
+export default SocietaView;
