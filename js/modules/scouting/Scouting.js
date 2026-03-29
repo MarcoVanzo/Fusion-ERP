@@ -176,10 +176,17 @@ class ScoutingModule {
 
         panel.innerHTML = ScoutingView.renderSidePanelForm(athlete);
         panel.style.display = "flex";
+        
+        // Trigger reflow for transition
+        void panel.offsetWidth;
+        panel.classList.add("open");
 
         const closeModal = () => {
-            panel.style.display = "none";
-            panel.innerHTML = "";
+            panel.classList.remove("open");
+            setTimeout(() => {
+                panel.style.display = "none";
+                panel.innerHTML = "";
+            }, 300); // match transition time
         };
 
         // UI Closure Bindings

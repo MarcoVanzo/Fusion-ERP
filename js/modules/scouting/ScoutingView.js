@@ -13,7 +13,27 @@ export class ScoutingView {
                 </div>
                 <div class="dash-card" style="padding:var(--sp-4)" id="scouting-content-area"></div>
             </div>
-            <div id="scouting-side-panel" class="side-panel" style="display:none;flex-direction:column;"></div>
+            
+            <style>
+                #scouting-side-panel {
+                    position: fixed;
+                    top: 0;
+                    right: -500px; /* Hidden initially but animated to 0 */
+                    width: 450px;
+                    max-width: 100vw;
+                    height: 100vh;
+                    background: var(--color-bg);
+                    z-index: 10000;
+                    box-shadow: -10px 0 30px rgba(0,0,0,0.8);
+                    border-left: 1px solid var(--color-border);
+                    transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                }
+                #scouting-side-panel.open {
+                    right: 0;
+                }
+            </style>
+            
+            <div id="scouting-side-panel" style="display:none;flex-direction:column;"></div>
             `;
     }
 
