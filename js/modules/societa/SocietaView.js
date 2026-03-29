@@ -572,6 +572,128 @@ const SocietaView = {
                 </div>
                 <div id="sp-modal-err" class="form-error hidden" style="margin-top:12px"></div>
             </div>`;
+    },
+
+    roleModal: (role, allRoles) => {
+        const isEdit = !!role;
+        const r = role || {};
+        const availableParents = allRoles.filter(x => x.id != r.id);
+        return `
+            <div style="padding:var(--sp-4);">
+                <div class="form-group">
+                    <label class="form-label">Nome Ruolo *</label>
+                    <input type="text" id="role-name" class="form-input" value="${Utils.escapeHtml(r.name || "")}" placeholder="es. Presidente" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Riporta a (Ruolo Superiore)</label>
+                    <select id="role-parent" class="form-input">
+                        <option value="">Nessuno (Ruolo Apicale)</option>
+                        ${availableParents.map(p => `<option value="${p.id}" ${r.parent_role_id == p.id ? "selected" : ""}>${Utils.escapeHtml(p.name)}</option>`).join("")}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Descrizione / Responsabilità</label>
+                    <textarea id="role-desc" class="form-input" rows="3" placeholder="Mansioni e responsabilità...">${Utils.escapeHtml(r.description || "")}</textarea>
+                </div>
+                <div id="role-modal-err" class="form-error hidden" style="margin-top:12px"></div>
+            </div>`;
+    },
+
+    memberModal: (member, roles) => {
+        const m = member || {};
+        const isEdit = !!member;
+        return `
+            <div style="padding:var(--sp-4);">
+                <div class="form-group">
+                    <label class="form-label">Nome Completo *</label>
+                    <input type="text" id="mem-name" class="form-input" value="${Utils.escapeHtml(m.full_name || "")}" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Ruolo</label>
+                    <select id="mem-role" class="form-input">
+                        <option value="">Nessun ruolo specifico</option>
+                        ${roles.map(r => `<option value="${r.id}" ${m.role_id == r.id ? "selected" : ""}>${Utils.escapeHtml(r.name)}</option>`).join("")}
+                    </select>
+                </div>
+                <div style="display:flex; gap:var(--sp-3); flex-wrap:wrap">
+                    <div class="form-group" style="flex:1">
+                        <label class="form-label">Data Inizio</label>
+                        <input type="date" id="mem-start-date" class="form-input" value="${Utils.escapeHtml(m.start_date || "")}">
+                    </div>
+                    <div class="form-group" style="flex:1">
+                        <label class="form-label">Data Fine (Opzionale)</label>
+                        <input type="date" id="mem-end-date" class="form-input" value="${Utils.escapeHtml(m.end_date || "")}">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer">
+                        <input type="checkbox" id="mem-active" ${(!isEdit || m.is_active) ? "checked" : ""}>
+                        <span style="font-size:14px">Membro Attivo</span>
+                    </label>
+                </div>
+                <div id="mem-modal-err" class="form-error hidden" style="margin-top:12px"></div>
+            </div>`;
+    },
+
+    deadlineModal: (dl) => {
+        const d = dl || {};
+        return `
+            <div style="padding:var(--sp-4);">
+                <div class="form-group">
+                    <label class="form-label">Titolo *</label>
+                    <input type="text" id="dl-title" class="form-input" value="${Utils.escapeHtml(d.title || "")}" required>
+                </div>
+                <div style="display:flex; gap:var(--sp-3); flex-wrap:wrap">
+                    <div class="form-group" style="flex:1">
+                        <label class="form-label">Categoria</label>
+                        <input type="text" id="dl-category" class="form-input" value="${Utils.escapeHtml(d.category || "")}" placeholder="Es. Fiscale, Federale">
+                    </div>
+                    <div class="form-group" style="flex:1">
+                        <label class="form-label">Scadenza *</label>
+                        <input type="date" id="dl-due-date" class="form-input" value="${Utils.escapeHtml(d.due_date || "")}" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Stato</label>
+                    <select id="dl-status" class="form-input">
+                        <option value="aperto" ${d.status === 'aperto' ? 'selected' : ''}>Aperto</option>
+                        <option value="completato" ${d.status === 'completato' ? 'selected' : ''}>Completato</option>
+                        <option value="scaduto" ${d.status === 'scaduto' ? 'selected' : ''}>Scaduto</option>
+                        <option value="annullato" ${d.status === 'annullato' ? 'selected' : ''}>Annullato</option>
+                    </select>
+                </div>
+                <div id="dl-modal-err" class="form-error hidden" style="margin-top:12px"></div>
+            </div>`;
+    },
+
+    titoloModal: (titolo) => {
+        const t = titolo || {};
+        return `
+            <div style="padding:var(--sp-4);">
+                <div class="form-group">
+                    <label class="form-label">Stagione *</label>
+                    <input type="text" id="tit-stagione" class="form-input" value="${Utils.escapeHtml(t.stagione || "")}" placeholder="Es. 2023/2024" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Campionato *</label>
+                    <input type="text" id="tit-campionato" class="form-input" value="${Utils.escapeHtml(t.campionato || "")}" placeholder="Es. Serie D, Under 17, ecc." required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Categoria</label>
+                    <input type="text" id="tit-categoria" class="form-input" value="${Utils.escapeHtml(t.categoria || "")}" placeholder="Es. Maschile, Femminile">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Piazzamento</label>
+                    <input type="number" id="tit-piazzamento" class="form-input" value="${Utils.escapeHtml(t.piazzamento || 1)}" min="1">
+                </div>
+                <div class="form-group">
+                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer">
+                        <input type="checkbox" id="tit-finali" ${t.finali_nazionali ? "checked" : ""}>
+                        <span style="font-size:14px">Partecipazione Finali Nazionali</span>
+                    </label>
+                </div>
+                <div id="tit-modal-err" class="form-error hidden" style="margin-top:12px"></div>
+            </div>`;
     }
 
 };
