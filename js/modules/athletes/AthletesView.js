@@ -6,11 +6,46 @@ export const AthletesView = {
     /**
      * Template principale della Dashboard Atleti
      */
-    dashboard: (teams) => `
+    dashboard: (teams, variant = 'anagrafica') => {
+        let title = "Anagrafica Atleti";
+        let subtitle = "Gestione dei tesserati, documenti e dati biometrici";
+        let thRow = ``;
+
+        if (variant === 'documenti') {
+            title = "Documenti Atlete";
+            subtitle = "Stato dei documenti, contratti d'iscrizione e certificati medici";
+            thRow = `
+                <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;">Atleta</th>
+                <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;">Squadra</th>
+                <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;text-align:center;">Doc. Identità</th>
+                <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;text-align:center;">Codice Fiscale</th>
+                <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;text-align:center;">Contratto Iscr.</th>
+                <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;">Certificato Medico</th>
+            `;
+        } else if (variant === 'metrics') {
+            title = "Performance e Metriche (VALD)";
+            subtitle = "Sincronizzazione misure, jump tests e analisi biometriche";
+            thRow = `
+                <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;">Atleta</th>
+                <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;">Squadra</th>
+                <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;text-align:center;">Sincronizzazione VALD</th>
+                <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;text-align:center;">Status</th>
+            `;
+        } else {
+            thRow = `
+                <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;">Atleta</th>
+                <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;">Ruolo</th>
+                <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;">Squadra</th>
+                <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;">Data Nascita</th>
+                <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;">Certificato Medico</th>
+            `;
+        }
+
+        return `
         <div class="module-header">
             <div class="header-content">
-                <h1 class="module-title"><i class="ph ph-users-three"></i> Anagrafica Atleti</h1>
-                <p class="module-subtitle">Gestione dei tesserati, documenti e dati biometrici</p>
+                <h1 class="module-title"><i class="ph ph-users-three"></i> ${title}</h1>
+                <p class="module-subtitle">${subtitle}</p>
             </div>
             <div class="header-actions">
                 <button class="btn btn-primary btn-sm" id="new-athlete-btn">
@@ -27,7 +62,7 @@ export const AthletesView = {
             <div class="filter-group">
                 <select id="team-filter" class="form-input select-filter">
                     <option value="">Tutte le squadre/stagioni</option>
-                    ${teams.map(t => `<option value="${Utils.escapeHtml(t.id)}">${Utils.escapeHtml(t.season)} — ${Utils.escapeHtml(t.name)} (${Utils.escapeHtml(t.category)})</option>`).join('')}
+                    \${teams.map(t => \`<option value="\${Utils.escapeHtml(t.id)}">\${Utils.escapeHtml(t.season)} — \${Utils.escapeHtml(t.name)} (\${Utils.escapeHtml(t.category)})\</option>\`).join('')}
                 </select>
                 <button class="btn btn-ghost btn-sm" id="reset-filters" title="Reset filtri">
                     <i class="ph ph-arrow-counter-clockwise"></i>
@@ -39,23 +74,20 @@ export const AthletesView = {
             <table class="table" style="width:100%;text-align:left;border-collapse:collapse;">
                 <thead style="background:rgba(255,255,255,0.02);border-bottom:1px solid rgba(255,255,255,0.05);">
                     <tr>
-                        <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;">Atleta</th>
-                        <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;">Ruolo</th>
-                        <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;">Squadra</th>
-                        <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;">Data Nascita</th>
-                        <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;">Certificato Medico</th>
+                        ${thRow}
                     </tr>
                 </thead>
                 <tbody id="athletes-grid"></tbody>
             </table>
         </div>
         <div id="athlete-bulk-bar" class="bulk-action-bar" style="display:none;"></div>
-    `,
+    `;
+    },
 
     /**
      * Template per singola card atleta nella griglia
      */
-    athleteCard: (athlete, isSelected = false) => {
+    athleteCard: (athlete, isSelected = false, variant = 'anagrafica') => {
         const initials = Utils.initials(athlete.full_name);
         const color = `hsl(${Array.from(athlete.full_name).reduce((acc, char) => acc + char.charCodeAt(0), 0) % 360}, 70%, 50%)`;
         const photo = athlete.photo_path 
@@ -75,6 +107,41 @@ export const AthletesView = {
             }
         }
 
+        let cellsHtml = ``;
+        if (variant === 'documenti') {
+            const renderDocCell = (hasDocFront, hasDocBack = false) => {
+                const complete = hasDocFront && (hasDocBack !== null ? hasDocBack : true);
+                if (complete) return `<span style="color:var(--color-success);font-size:18px;"><i class="ph ph-check-circle"></i></span>`;
+                return `<span style="color:var(--color-pink);font-size:18px;"><i class="ph ph-warning-circle"></i></span>`;
+            };
+            cellsHtml = `
+                <td style="padding:12px 16px;font-size:13px;color:var(--color-silver);">${Utils.escapeHtml(athlete.team_name)}</td>
+                <td style="padding:12px 16px;text-align:center;">${renderDocCell(athlete.id_doc_front_file_path, athlete.id_doc_back_file_path !== undefined ? athlete.id_doc_back_file_path : athlete.id_doc_front_file_path)}</td>
+                <td style="padding:12px 16px;text-align:center;">${renderDocCell(athlete.cf_doc_front_file_path, athlete.cf_doc_back_file_path !== undefined ? athlete.cf_doc_back_file_path : athlete.cf_doc_front_file_path)}</td>
+                <td style="padding:12px 16px;text-align:center;">${renderDocCell(athlete.contract_file_path)}</td>
+                <td style="padding:12px 16px;font-size:13px;">${medicalStatusHtml}</td>
+            `;
+        } else if (variant === 'metrics') {
+            cellsHtml = `
+                <td style="padding:12px 16px;font-size:13px;color:var(--color-silver);">${Utils.escapeHtml(athlete.team_name)}</td>
+                <td style="padding:12px 16px;text-align:center;">
+                    <span style="color:var(--color-text-muted);font-size:11px;padding:4px 8px;border:1px solid rgba(255,255,255,0.1);border-radius:4px;"><i class="ph ph-clock"></i> In attesa</span>
+                </td>
+                <td style="padding:12px 16px;text-align:center;">
+                    <button class="btn btn-ghost btn-xs" style="color:var(--color-pink);" onclick="event.stopPropagation();Router.navigate('athlete-metrics?id=${athlete.id}')">
+                        <i class="ph ph-chart-line-up"></i> Vai a Dati
+                    </button>
+                </td>
+            `;
+        } else {
+            cellsHtml = `
+                <td style="padding:12px 16px;font-size:13px;color:var(--color-silver);">${Utils.escapeHtml(athlete.role || '—')}</td>
+                <td style="padding:12px 16px;font-size:13px;color:var(--color-silver);"><i class="ph ph-shield-star"></i> ${Utils.escapeHtml(athlete.team_name)}</td>
+                <td style="padding:12px 16px;font-size:13px;color:var(--color-silver);">${athlete.birth_date ? Utils.formatDate(athlete.birth_date) : '<span style="color:var(--color-text-muted)">—</span>'}</td>
+                <td style="padding:12px 16px;font-size:13px;">${medicalStatusHtml}</td>
+            `;
+        }
+
         return `
             <tr class="athlete-card ${isSelected ? 'selected' : ''}" data-id="${athlete.id}" style="cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.05);transition:background 0.2s;">
                 <td style="padding:12px 16px;">
@@ -87,10 +154,7 @@ export const AthletesView = {
                         </div>
                     </div>
                 </td>
-                <td style="padding:12px 16px;font-size:13px;color:var(--color-silver);">${Utils.escapeHtml(athlete.role || '—')}</td>
-                <td style="padding:12px 16px;font-size:13px;color:var(--color-silver);"><i class="ph ph-shield-star"></i> ${Utils.escapeHtml(athlete.team_name)}</td>
-                <td style="padding:12px 16px;font-size:13px;color:var(--color-silver);">${athlete.birth_date ? Utils.formatDate(athlete.birth_date) : '<span style="color:var(--color-text-muted)">—</span>'}</td>
-                <td style="padding:12px 16px;font-size:13px;">${medicalStatusHtml}</td>
+                ${cellsHtml}
             </tr>
         `;
     },

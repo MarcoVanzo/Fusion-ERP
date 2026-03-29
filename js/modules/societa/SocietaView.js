@@ -4,18 +4,6 @@
 const SocietaView = {
     skeleton: () => `
         <div class="soc-container">
-            <div class="soc-profile-header">
-                <div class="soc-profile-nav">
-                    <button class="soc-nav-item active" data-tab="identita">Identità Club</button>
-                    <button class="soc-nav-item" data-tab="organigramma">Organigramma</button>
-                    <button class="soc-nav-item" data-tab="membri">Membri</button>
-                    <button class="soc-nav-item" data-tab="documenti">Documenti</button>
-                    <button class="soc-nav-item" data-tab="scadenze">Scadenze</button>
-                    <button class="soc-nav-item" data-tab="sponsor">Sponsor</button>
-                    <button class="soc-nav-item" data-tab="titoli">Palmarès</button>
-                    <button class="soc-nav-item" data-tab="foresteria">Foresteria</button>
-                </div>
-            </div>
             <div id="soc-tab-content" style="padding:var(--sp-4)">
                 <div class="skeleton-shimmer" style="height:400px; border-radius:12px"></div>
             </div>
