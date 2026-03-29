@@ -504,7 +504,7 @@ class SocietaService
             
             $destPath = $uploadDir . '/' . $fileName;
             if (move_uploaded_file($file['tmp_name'], $destPath)) {
-                $receiptPath = 'uploads/' . $tenantId . '/foresteria/' . $fileName;
+                $receiptPath = 'uploads/societa/' . $tenantId . '/foresteria/' . $fileName;
             }
         }
 

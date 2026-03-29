@@ -419,11 +419,22 @@ const SocietaView = {
                                 'utenze': 'ph-lightning',
                                 'cibo': 'ph-bowl-food',
                                 'frutta_verdura': 'ph-leaf',
+                                'abbigliamento': 'ph-t-shirt',
                                 'affitto': 'ph-house',
                                 'altro': 'ph-receipt'
                             };
+                            const catLabels = {
+                                'cibo': 'Cibo/Spesa',
+                                'utenze': 'Utenze',
+                                'pulizie': 'Pulizie',
+                                'manutenzione': 'Manutenzione',
+                                'affitto': 'Affitto',
+                                'frutta_verdura': 'Frutta e Verdura',
+                                'abbigliamento': 'Abbigliamento',
+                                'altro': 'Altro'
+                            };
                             const catIcon = catIcons[e.category] || 'ph-receipt';
-                            const catLabel = (e.category || 'Altro').replace('_', ' ').toUpperCase();
+                            const catLabel = (catLabels[e.category || 'altro'] || 'Altro').toUpperCase();
 
                             return `
                                 <div class="forest-expense-item" style="display:flex; align-items:center; gap:16px; padding:12px 16px; background:rgba(255,255,255,0.02); border-radius:12px; border:1px solid rgba(255,255,255,0.05)">

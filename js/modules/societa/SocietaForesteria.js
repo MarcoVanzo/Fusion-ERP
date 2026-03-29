@@ -120,38 +120,87 @@ export default {
 
     showAddExpenseModal: function(container, signal) {
         const modal = UI.modal({
-            title: "Aggiungi Spesa Foresteria",
+            title: "Nuova Spesa Foresteria",
             body: `
-                <div class="form-group">
-                    <label class="form-label">Data Spesa</label>
-                    <input type="date" id="fe-date" class="form-input" value="${new Date().toISOString().split('T')[0]}">
+                <div id="fe-step-1">
+                    <div style="text-align:center; margin-bottom:var(--sp-4); padding:var(--sp-4); border:2px dashed var(--color-border); border-radius:16px; background:rgba(255,255,255,0.02)">
+                        <i class="ph ph-camera" style="font-size:48px; color:var(--color-pink); margin-bottom:12px; display:block"></i>
+                        <p style="font-size:14px; color:var(--color-text-muted); margin-bottom:12px">Carica la foto della ricevuta (opzionale)</p>
+                        <input type="file" id="fe-receipt" accept="image/*" style="display:none">
+                        <button class="btn-dash" onclick="document.getElementById('fe-receipt').click()"><i class="ph ph-upload-simple"></i> Scegli file</button>
+                        <div id="fe-receipt-name" style="margin-top:8px; font-size:12px; color:var(--color-cyan)"></div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" style="text-align:center; display:block; font-size:14px">IMPORTO SPESO (€)</label>
+                        <input type="number" step="0.01" id="fe-amount" class="form-input" placeholder="0.00" style="font-size:32px; font-weight:800; text-align:center; height:70px; color:var(--color-pink)">
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Descrizione</label>
-                    <input type="text" id="fe-desc" class="form-input" placeholder="Es. Spesa Esselunga">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Categoria</label>
-                    <select id="fe-category" class="form-input">
-                        <option value="cibo">Cibo / Alimentari</option>
-                        <option value="utenze">Utenze (Luce, Gas, Acqua)</option>
-                        <option value="manutenzione">Manutenzione</option>
-                        <option value="pulizie">Pulizie</option>
-                        <option value="frutta_verdura">Frutta e Verdura</option>
-                        <option value="affitto">Affitto</option>
-                        <option value="altro" selected>Altro</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Importo (€)</label>
-                    <input type="number" step="0.01" id="fe-amount" class="form-input" placeholder="0.00">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Scontrino / Ricevuta (opzionale)</label>
-                    <input type="file" id="fe-receipt" class="form-input" accept="image/*,application/pdf">
+
+                <div id="fe-step-2" class="hidden">
+                    <div class="form-group">
+                        <label class="form-label">Data Spesa</label>
+                        <input type="date" id="fe-date" class="form-input" value="${new Date().toISOString().split('T')[0]}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Categoria</label>
+                        <select id="fe-category" class="form-input">
+                            <option value="cibo">Cibo/Spesa</option>
+                            <option value="utenze">Utenze</option>
+                            <option value="manutenzione">Manutenzione</option>
+                            <option value="pulizie">Pulizie</option>
+                            <option value="frutta_verdura">Frutta e Verdura</option>
+                            <option value="abbigliamento">Abbigliamento</option>
+                            <option value="affitto">Affitto</option>
+                            <option value="altro" selected>Altro</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Descrizione / Negozio</label>
+                        <input type="text" id="fe-desc" class="form-input" placeholder="Es. Esselunga, Carrefour...">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Note aggiuntive (opzionale)</label>
+                        <textarea id="fe-notes" class="form-input" rows="2" placeholder="Dettagli spesa..."></textarea>
+                    </div>
                 </div>
             `,
-            footer: `<button class="btn-dash" id="fe-cancel">Annulla</button><button class="btn-dash pink" id="fe-save">Salva Spesa</button>`
+            footer: `
+                <div id="fe-footer-1" style="display:flex; width:100%; gap:var(--sp-2)">
+                    <button class="btn-dash" id="fe-cancel" style="flex:1">Annulla</button>
+                    <button class="btn-dash pink" id="fe-next" style="flex:2">Avanti <i class="ph ph-caret-right"></i></button>
+                </div>
+                <div id="fe-footer-2" class="hidden" style="display:flex; width:100%; gap:var(--sp-2)">
+                    <button class="btn-dash" id="fe-back" style="flex:1"><i class="ph ph-caret-left"></i> Indietro</button>
+                    <button class="btn-dash pink" id="fe-save" style="flex:2">Salva Spesa</button>
+                </div>
+            `
+        });
+
+        // Step 1 -> 2
+        document.getElementById("fe-next")?.addEventListener("click", () => {
+            const amount = document.getElementById("fe-amount")?.value;
+            if (!amount || parseFloat(amount) <= 0) {
+                UI.toast("Inserire un importo valido", "warning");
+                return;
+            }
+            document.getElementById("fe-step-1").classList.add("hidden");
+            document.getElementById("fe-footer-1").classList.add("hidden");
+            document.getElementById("fe-step-2").classList.remove("hidden");
+            document.getElementById("fe-footer-2").classList.remove("hidden");
+        });
+
+        // Step 2 -> 1
+        document.getElementById("fe-back")?.addEventListener("click", () => {
+            document.getElementById("fe-step-1").classList.remove("hidden");
+            document.getElementById("fe-footer-1").classList.remove("hidden");
+            document.getElementById("fe-step-2").classList.add("hidden");
+            document.getElementById("fe-footer-2").classList.add("hidden");
+        });
+
+        // Receipt name update
+        document.getElementById("fe-receipt")?.addEventListener("change", (e) => {
+            const name = e.target.files[0]?.name;
+            if (name) document.getElementById("fe-receipt-name").textContent = name;
         });
 
         document.getElementById("fe-cancel")?.addEventListener("click", () => modal.close());
@@ -160,10 +209,11 @@ export default {
             const amount = document.getElementById("fe-amount")?.value;
             const date = document.getElementById("fe-date")?.value;
             const category = document.getElementById("fe-category")?.value;
+            const notes = document.getElementById("fe-notes")?.value;
             const receiptFile = document.getElementById("fe-receipt")?.files[0];
 
-            if (!desc || !amount) {
-                UI.toast("Inserire descrizione e importo", "warning");
+            if (!desc) {
+                UI.toast("Inserire una descrizione", "warning");
                 return;
             }
 
@@ -172,9 +222,8 @@ export default {
             fd.append("amount", amount);
             fd.append("expense_date", date);
             fd.append("category", category);
-            if (receiptFile) {
-                fd.append("receipt", receiptFile);
-            }
+            fd.append("notes", notes || "");
+            if (receiptFile) fd.append("receipt", receiptFile);
 
             try {
                 UI.loading(true);
@@ -299,11 +348,12 @@ export default {
         // Process data
         const catTotals = {};
         const catLabels = {
-            'cibo': 'Cibo / Alimentari',
+            'cibo': 'Cibo/Spesa',
             'utenze': 'Utenze',
             'manutenzione': 'Manutenzione',
             'pulizie': 'Pulizie',
             'frutta_verdura': 'Frutta e Verdura',
+            'abbigliamento': 'Abbigliamento',
             'affitto': 'Affitto',
             'altro': 'Altro'
         };
