@@ -24,8 +24,18 @@ Esegui lo script:
 ```bash
 python3 deploy.py
 ```
-- Lo script calcolerà le differenze rispetto all'ultimo deploy e **caricherà automaticamente via FTP solo i file modificati** o aggiunti (inclusa la versione aggiornata di `index.html`).
-- Non è più richiesto di caricare e decomprimere manualmente file ZIP sull'Area Clienti Aruba.
+
+### 3. Opzioni Avanzate (Novità)
+Lo script ora supporta parametri per rendere il deploy ancora più veloce:
+- `python3 deploy.py --no-build`: Salta la compilazione di React (usa se hai cambiato solo PHP/CSS).
+- `python3 deploy.py --no-git`: Salta il caricamento su GitHub (velocizza il deploy diretto).
+- `python3 deploy.py --dry-run`: Simula il deploy e mostra quali file verrebbero caricati senza toccare il server.
+- `python3 deploy.py --force-build`: Forza la compilazione anche se lo script pensa che non ci siano modifiche.
+
+### 4. Smart Build & Cache
+- Lo script calcolerà le differenze rispetto all'ultimo deploy e **caricherà automaticamente via FTP solo i file modificati**.
+- **Novità**: Se le cartelle `src` di React non sono cambiate, lo script salterà automaticamente il comando `npm run build`, risparmiando tempo prezioso.
+- Al termine, verrà eseguito un **Health Check** automatico sul sito live.
 
 ## AGGIORNAMENTO DB (SQL)
 *Se l'aggiornamento comporta modifiche a Database:*

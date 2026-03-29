@@ -266,9 +266,8 @@ const SocietaView = {
             </div>
         </div>`,
 
-    foresteria: (info, expenses, media, isAdmin) => {
+    foresteriaInfo: (info, media, isAdmin) => {
         const safeInfo = info || { address: '', description: '' };
-        const safeExpenses = Array.isArray(expenses) ? expenses : [];
         const safeMedia = Array.isArray(media) ? media : [];
 
         return `
@@ -307,33 +306,83 @@ const SocietaView = {
                     </div>
                 </div>
 
-                <div class="dash-card" style="padding:var(--sp-4)">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--sp-3)">
-                        <h3 class="dash-card-title">Ultime Spese</h3>
-                        ${isAdmin ? '<button class="btn-dash pink" id="forest-add-expense"><i class="ph ph-plus"></i></button>' : ''}
-                    </div>
-                    <div style="display:flex; flex-direction:column; gap:10px">
-                        ${safeExpenses.length === 0 ? '<div style="text-align:center; padding:20px; color:var(--color-text-muted)">Nessuna spesa</div>' : safeExpenses.map(e => {
-                            const amountFloat = parseFloat(e.amount || 0);
-                            const amountStr = isNaN(amountFloat) ? '0.00' : amountFloat.toFixed(2);
-                            return `
-                                <div class="forest-expense-item">
-                                    <div style="flex:1">
-                                        <div style="font-weight:600; font-size:13px">${Utils.escapeHtml(e.description)}</div>
-                                        <div style="font-size:11px; color:var(--color-text-muted)">${Utils.formatDate(e.expense_date)}</div>
-                                    </div>
-                                    <div style="font-weight:700; color:var(--color-pink)">€ ${amountStr}</div>
-                                    ${isAdmin ? `<button class="btn-dash" style="padding:4px" data-del-expense="${e.id}"><i class="ph ph-trash"></i></button>` : ''}
-                                </div>
-                            `;
-                        }).join('')}
-                    </div>
+                <div class="dash-card" style="padding:0; overflow:hidden; border:1px solid var(--color-border); aspect-ratio: 1/1">
+                    <div id="forest-map-container" style="width:100%; height:100%;"></div>
                 </div>
             </div>
-            
-            <div id="forest-map-container" style="height:400px; border-radius:12px; margin-top:var(--sp-4); overflow:hidden; border:1px solid var(--color-border)"></div>
+        </div>`;
+    },
+
+    foresteriaExpenses: (expenses, isAdmin) => {
+        const safeExpenses = Array.isArray(expenses) ? expenses : [];
+
+        return `
+        <div style="max-width:1000px; margin: 0 auto;">
+            <div class="dash-card" style="padding:var(--sp-4)">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--sp-4)">
+                    <div>
+                        <h3 class="dash-card-title">Riepilogo Spese Foresteria</h3>
+                        <p style="font-size:13px; color:var(--color-text-muted)">Gestione amministrativa e scontrini</p>
+                    </div>
+                    ${isAdmin ? '<button class="btn-dash pink" id="forest-add-expense"><i class="ph ph-plus"></i> AGGIUNGI SPESA</button>' : ''}
+                </div>
+                
+                <div style="display:flex; flex-direction:column; gap:12px">
+                    ${safeExpenses.length === 0 ? Utils.emptyState("Nessuna spesa", "Non sono ancora state registrate spese per la foresteria.") : safeExpenses.map(e => {
+                        const amountFloat = parseFloat(e.amount || 0);
+                        const amountStr = isNaN(amountFloat) ? '0.00' : amountFloat.toFixed(2);
+                        
+                        const catIcons = {
+                            'manutenzione': 'ph-wrench',
+                            'pulizie': 'ph-sparkle',
+                            'utenze': 'ph-lightning',
+                            'cibo': 'ph-bowl-food',
+                            'frutta_verdura': 'ph-leaf',
+                            'affitto': 'ph-house',
+                            'altro': 'ph-receipt',
+                            'tutto': 'ph-squares-four'
+                        };
+                        const catIcon = catIcons[e.category] || 'ph-receipt';
+                        const catLabel = (e.category || 'Altro').replace('_', ' ').toUpperCase();
+
+                        return `
+                            <div class="forest-expense-item" style="display:flex; align-items:center; gap:16px; padding:16px; background:rgba(255,255,255,0.02); border-radius:12px; border:1px solid rgba(255,255,255,0.05)">
+                                <div style="width:40px; height:40px; border-radius:10px; background:rgba(255,0,122,0.1); display:flex; align-items:center; justify-content:center; color:var(--color-pink)">
+                                    <i class="${catIcon}" style="font-size:22px;"></i>
+                                </div>
+                                <div style="flex:1; min-width:0">
+                                    <div style="font-weight:600; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis" title="${Utils.escapeHtml(e.description)}">
+                                        ${Utils.escapeHtml(e.description)}
+                                    </div>
+                                    <div style="font-size:12px; color:var(--color-text-muted); display:flex; gap:8px; align-items:center; margin-top:2px">
+                                        <span>${Utils.formatDate(e.expense_date)}</span>
+                                        <span style="opacity:0.3">•</span>
+                                        <span style="color:var(--color-pink); font-weight:700; font-size:10px; letter-spacing:0.5px">${catLabel}</span>
+                                    </div>
+                                </div>
+                                <div style="text-align:right">
+                                    <div style="font-weight:700; color:var(--color-pink); font-size:16px">€ ${amountStr}</div>
+                                    <div style="display:flex; gap:6px; justify-content:flex-end; margin-top:6px">
+                                        ${e.receipt_path ? `
+                                            <a href="${Utils.escapeHtml(e.receipt_path)}" target="_blank" class="btn-dash" style="padding:4px 8px; font-size:11px; height:auto; color:var(--color-cyan); border-color:var(--color-cyan)" title="Vedi Ricevuta">
+                                                <i class="ph ph-file-text"></i>
+                                            </a>
+                                        ` : ''}
+                                        ${isAdmin ? `
+                                            <button class="btn-dash" style="padding:4px 8px; font-size:11px; height:auto; border-color:rgba(255,255,255,0.2)" data-del-expense="${e.id}" title="Elimina">
+                                                <i class="ph ph-trash"></i>
+                                            </button>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
         </div>`;
     }
+
 };
 
 export default SocietaView;

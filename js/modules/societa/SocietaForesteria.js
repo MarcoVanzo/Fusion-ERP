@@ -24,25 +24,7 @@ export default {
         // ... (SocietaView.foresteria is already defined)
     },
 
-    attachEvents: function(container, info, signal) {
-        // Expense deletion
-        container.querySelectorAll("[data-del-expense]").forEach(btn => {
-            btn.addEventListener("click", async () => {
-                UI.confirm("Eliminare questa spesa?", async () => {
-                    try {
-                        await SocietaAPI.deleteExpense(btn.dataset.delExpense);
-                        UI.toast("Spesa rimossa", "success");
-                        this.refresh(container, signal);
-                    } catch (err) {
-                        UI.toast("Errore: " + err.message, "error");
-                    }
-                });
-            }, { signal });
-        });
-
-        // Add expense
-        document.getElementById("forest-add-expense")?.addEventListener("click", () => this.showAddExpenseModal(container, signal), { signal });
-        
+    attachInfoEvents: function(container, info, signal) {
         // Edit info
         document.getElementById("forest-edit-info")?.addEventListener("click", () => this.showEditInfoModal(container, info, signal), { signal });
         
@@ -65,6 +47,27 @@ export default {
             }, { signal });
         });
     },
+
+    attachExpenseEvents: function(container, signal) {
+        // Expense deletion
+        container.querySelectorAll("[data-del-expense]").forEach(btn => {
+            btn.addEventListener("click", async () => {
+                UI.confirm("Eliminare questa spesa?", async () => {
+                    try {
+                        await SocietaAPI.deleteExpense(btn.dataset.delExpense);
+                        UI.toast("Spesa rimossa", "success");
+                        this.refresh(container, signal);
+                    } catch (err) {
+                        UI.toast("Errore: " + err.message, "error");
+                    }
+                });
+            }, { signal });
+        });
+
+        // Add expense
+        document.getElementById("forest-add-expense")?.addEventListener("click", () => this.showAddExpenseModal(container, signal), { signal });
+    },
+
 
     refresh: async function() {
         if (window.Societa && typeof window.Societa.refreshTab === 'function' && Router.getCurrentRoute().startsWith('societa')) {
@@ -105,11 +108,27 @@ export default {
                 </div>
                 <div class="form-group">
                     <label class="form-label">Descrizione</label>
-                    <input type="text" id="fe-desc" class="form-input" placeholder="Es. Bolletta Luce Gennaio">
+                    <input type="text" id="fe-desc" class="form-input" placeholder="Es. Spesa Esselunga">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Categoria</label>
+                    <select id="fe-category" class="form-input">
+                        <option value="cibo">Cibo / Alimentari</option>
+                        <option value="utenze">Utenze (Luce, Gas, Acqua)</option>
+                        <option value="manutenzione">Manutenzione</option>
+                        <option value="pulizie">Pulizie</option>
+                        <option value="frutta_verdura">Frutta e Verdura</option>
+                        <option value="affitto">Affitto</option>
+                        <option value="altro" selected>Altro</option>
+                    </select>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Importo (€)</label>
                     <input type="number" step="0.01" id="fe-amount" class="form-input" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Scontrino / Ricevuta (opzionale)</label>
+                    <input type="file" id="fe-receipt" class="form-input" accept="image/*,application/pdf">
                 </div>
             `,
             footer: `<button class="btn-dash" id="fe-cancel">Annulla</button><button class="btn-dash pink" id="fe-save">Salva Spesa</button>`
@@ -117,22 +136,36 @@ export default {
 
         document.getElementById("fe-cancel")?.addEventListener("click", () => modal.close());
         document.getElementById("fe-save")?.addEventListener("click", async () => {
-            const data = {
-                expense_date: document.getElementById("fe-date")?.value,
-                description: document.getElementById("fe-desc")?.value,
-                amount: document.getElementById("fe-amount")?.value
-            };
-            if (!data.description || !data.amount) {
+            const desc = document.getElementById("fe-desc")?.value;
+            const amount = document.getElementById("fe-amount")?.value;
+            const date = document.getElementById("fe-date")?.value;
+            const category = document.getElementById("fe-category")?.value;
+            const receiptFile = document.getElementById("fe-receipt")?.files[0];
+
+            if (!desc || !amount) {
                 UI.toast("Inserire descrizione e importo", "warning");
                 return;
             }
+
+            const fd = new FormData();
+            fd.append("description", desc);
+            fd.append("amount", amount);
+            fd.append("expense_date", date);
+            fd.append("category", category);
+            if (receiptFile) {
+                fd.append("receipt", receiptFile);
+            }
+
             try {
-                await SocietaAPI.addExpense(data);
+                UI.loading(true);
+                await SocietaAPI.addExpense(fd, false);
                 UI.toast("Spesa aggiunta", "success");
                 modal.close();
                 this.refresh();
             } catch (err) {
                 UI.toast(err.message, "error");
+            } finally {
+                UI.loading(false);
             }
         });
     },

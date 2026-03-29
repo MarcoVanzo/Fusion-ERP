@@ -23,13 +23,15 @@ export const AthletesView = {
                 <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;">Certificato Medico</th>
             `;
         } else if (variant === 'metrics') {
-            title = "Performance e Metriche (VALD)";
-            subtitle = "Sincronizzazione misure, jump tests e analisi biometriche";
+            title = "Performance e Metriche";
+            subtitle = "Altezza, peso, IMC e integrazione con test VALD";
             thRow = `
                 <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;">Atleta</th>
                 <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;">Squadra</th>
-                <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;text-align:center;">Sincronizzazione VALD</th>
-                <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;text-align:center;">Status</th>
+                <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;text-align:center;">Altezza (cm)</th>
+                <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;text-align:center;">Peso (kg)</th>
+                <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;text-align:center;">IMC (BMI)</th>
+                <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;text-align:center;">VALD Sync</th>
             `;
         } else {
             thRow = `
@@ -42,15 +44,22 @@ export const AthletesView = {
         }
 
         return `
-        <div class="module-header">
-            <div class="header-content">
-                <h1 class="module-title"><i class="ph ph-users-three"></i> ${title}</h1>
-                <p class="module-subtitle">${subtitle}</p>
+        <div class="dash-top-bar" style="border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 24px; margin-bottom: 24px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div>
+                    <h1 class="dash-title"><i class="ph ph-users-three"></i> ${title}</h1>
+                    <p class="dash-subtitle" style="margin-top:4px;">${subtitle}</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-primary btn-sm" id="new-athlete-btn">
+                        <i class="ph ph-user-plus"></i> Nuovo Atleta
+                    </button>
+                </div>
             </div>
-            <div class="header-actions">
-                <button class="btn btn-primary btn-sm" id="new-athlete-btn">
-                    <i class="ph ph-user-plus"></i> Nuovo Atleta
-                </button>
+            <div class="dash-filters" style="margin-top: 16px;">
+                <button class="dash-filter athlete-main-tab ${variant === 'anagrafica' ? 'active' : ''}" onclick="Router.navigate('athletes')" type="button">Anagrafica</button>
+                <button class="dash-filter athlete-main-tab ${variant === 'documenti' ? 'active' : ''}" onclick="Router.navigate('athlete-documents')" type="button">Documenti</button>
+                <button class="dash-filter athlete-main-tab ${variant === 'metrics' ? 'active' : ''}" onclick="Router.navigate('athlete-metrics')" type="button">Performance (VALD)</button>
             </div>
         </div>
 
@@ -122,15 +131,25 @@ export const AthletesView = {
                 <td style="padding:12px 16px;font-size:13px;">${medicalStatusHtml}</td>
             `;
         } else if (variant === 'metrics') {
+            const height = athlete.height_cm ? parseInt(athlete.height_cm) : null;
+            const weight = athlete.weight_kg ? parseFloat(athlete.weight_kg) : null;
+            let bmiHtml = '<span style="color:var(--color-text-muted)">—</span>';
+            
+            if (height && weight) {
+                const bmi = (weight / Math.pow(height / 100, 2)).toFixed(1);
+                let bmiColor = 'var(--color-success)';
+                if (bmi < 18.5 || bmi > 25) bmiColor = 'var(--color-warning)';
+                if (bmi > 30) bmiColor = 'var(--color-pink)';
+                bmiHtml = `<span style="color:${bmiColor};font-weight:600;">${bmi}</span>`;
+            }
+
             cellsHtml = `
-                <td style="padding:12px 16px;font-size:13px;color:var(--color-silver);">${Utils.escapeHtml(athlete.team_name)}</td>
+                <td style="padding:12px 16px;font-size:13px;color:var(--color-silver);"><i class="ph ph-shield-star"></i> ${Utils.escapeHtml(athlete.team_name)}</td>
+                <td style="padding:12px 16px;text-align:center;font-size:13px;color:var(--color-white);">${height || '—'}</td>
+                <td style="padding:12px 16px;text-align:center;font-size:13px;color:var(--color-white);">${weight || '—'}</td>
+                <td style="padding:12px 16px;text-align:center;font-size:13px;">${bmiHtml}</td>
                 <td style="padding:12px 16px;text-align:center;">
-                    <span style="color:var(--color-text-muted);font-size:11px;padding:4px 8px;border:1px solid rgba(255,255,255,0.1);border-radius:4px;"><i class="ph ph-clock"></i> In attesa</span>
-                </td>
-                <td style="padding:12px 16px;text-align:center;">
-                    <button class="btn btn-ghost btn-xs" style="color:var(--color-pink);" onclick="event.stopPropagation();Router.navigate('athlete-metrics?id=${athlete.id}')">
-                        <i class="ph ph-chart-line-up"></i> Vai a Dati
-                    </button>
+                    <span style="color:var(--color-text-muted);font-size:10px;text-transform:uppercase;padding:2px 6px;border:1px solid rgba(255,255,255,0.05);border-radius:4px;"><i class="ph ph-link"></i> Collegato</span>
                 </td>
             `;
         } else {

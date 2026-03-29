@@ -44,8 +44,9 @@ class ResultsController
 
     public function addCampionato(): void
     {
-        $label = trim($_POST['label'] ?? '');
-        $url = trim($_POST['url'] ?? '');
+        $body = Response::jsonBody();
+        $label = trim($_POST['label'] ?? $body['label'] ?? '');
+        $url = trim($_POST['url'] ?? $body['url'] ?? '');
 
         if (!$label || !$url) {
             Response::error('Nome e URL sono obbligatori.', 400);
@@ -64,7 +65,8 @@ class ResultsController
 
     public function deleteCampionato(): void
     {
-        $id = $_POST['id'] ?? null;
+        $body = Response::jsonBody();
+        $id = $_POST['id'] ?? $body['id'] ?? null;
         if (!$id) {
             Response::error('ID mancante.', 400);
             return;
@@ -183,7 +185,8 @@ class ResultsController
 
     public function syncCampionato(): void
     {
-        $id = filter_input(INPUT_POST, 'id', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+        $body = Response::jsonBody();
+        $id = $_POST['id'] ?? $body['id'] ?? null;
         if (!$id) {
             Response::error('ID mancante.', 400);
             return;

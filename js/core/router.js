@@ -93,6 +93,7 @@ const Router = (() => {
         { path: 'societa-sponsor',      file: 'js/modules/societa.js',             permission: 'read', module: 'Societa', type: 'module' },
         { path: 'societa-titoli',       file: 'js/modules/societa.js',             permission: 'read', module: 'Societa', type: 'module' },
         { path: 'societa-foresteria',   file: 'js/modules/societa.js',             permission: 'read', module: 'Societa', type: 'module' },
+        { path: 'societa-spese-foresteria', file: 'js/modules/societa.js',         permission: 'read', module: 'Societa', type: 'module' },
         // Network
         { path: 'network',              file: 'js/modules/network/Network.js',             permission: 'read', module: 'Network', type: 'module' },
         { path: 'network-collaborazioni', file: 'js/modules/network/Network.js',           permission: 'read', module: 'Network', type: 'module' },

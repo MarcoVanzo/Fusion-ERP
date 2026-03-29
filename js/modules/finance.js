@@ -66,11 +66,10 @@ const Finance = {
                 this.attachBasicEvents(appContainer);
             } else if (this._currentView === "foresteria") {
                 const data = await SocietaAPI.getForesteria();
-                const contentHtml = SocietaView.foresteria(data.info, data.expenses, data.media, true);
+                const contentHtml = SocietaView.foresteriaExpenses(data.expenses, true);
                 appContainer.innerHTML = FinanceView.foresteriaContainer(contentHtml);
-                SocietaForesteria.attachEvents(appContainer.querySelector(".foresteria-finance-content"), data.info, this._abort.signal);
+                SocietaForesteria.attachExpenseEvents(appContainer.querySelector(".foresteria-finance-content"), this._abort.signal);
                 this.attachBasicEvents(appContainer);
-                if (data.info.lat) SocietaForesteria.initMap(data.info);
             }
         } catch (err) {
             UI.toast(err.message, "error");

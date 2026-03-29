@@ -320,6 +320,101 @@
     background: rgba(255, 0, 122, 0.12);
     color: var(--color-pink);
 }
+
+/* ─── Titoli / Palmares ─────────────────────────────────────────────────────── */
+.soc-titoli-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--sp-3);
+}
+
+.soc-titolo-card {
+    padding: var(--sp-4);
+    border-radius: 12px;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.soc-titolo-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.soc-titolo-card.win {
+    border-color: rgba(255, 215, 0, 0.3);
+    background: linear-gradient(145deg, var(--color-surface) 0%, rgba(255, 215, 0, 0.05) 100%);
+}
+
+.soc-titolo-icon {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    font-size: 80px;
+    color: var(--color-surface-elevated);
+    opacity: 0.5;
+    z-index: 0;
+}
+
+.soc-titolo-card.win .soc-titolo-icon {
+    color: rgba(255, 215, 0, 0.1);
+    opacity: 1;
+}
+
+.soc-titolo-place {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--color-text);
+    margin-bottom: var(--sp-1);
+    z-index: 1;
+}
+
+.soc-titolo-card.win .soc-titolo-place {
+    color: #ffd700;
+}
+
+.soc-titolo-main {
+    font-size: 16px;
+    font-weight: 700;
+    z-index: 1;
+}
+
+.soc-titolo-sub {
+    font-size: 13px;
+    color: var(--color-text-muted);
+    z-index: 1;
+}
+
+.soc-titolo-national {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: var(--sp-2);
+    padding: 4px 8px;
+    border-radius: 4px;
+    background: rgba(0, 230, 118, 0.1);
+    color: var(--color-success);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    width: fit-content;
+    z-index: 1;
+}
+
+.soc-titolo-actions {
+    position: absolute;
+    bottom: var(--sp-3);
+    right: var(--sp-3);
+    display: flex;
+    gap: 4px;
+    z-index: 2;
+}
+
 /* ─── Foresteria & Gallery ──────────────────────────────────────────────────── */
 .forest-media-grid {
     display: grid;

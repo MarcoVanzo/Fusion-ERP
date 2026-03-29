@@ -85,6 +85,7 @@ class AthletesRepository
         }
 
         $sql = "SELECT DISTINCT a.id, a.team_id, a.full_name, a.jersey_number, a.role, a.photo_path, a.is_active,
+                       a.birth_date, a.height_cm, a.weight_kg,
                        a.medical_cert_expires_at{$docCols},
                        COALESCE(t.name, 'Nessuna squadra') AS team_name,
                        COALESCE(t.category, 'Nessuna') AS category,
