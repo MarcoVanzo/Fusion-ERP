@@ -107,27 +107,47 @@ const SocietaView = {
 
     orgChart: (roles, isAdmin) => {
         const roots = roles.filter(r => !r.parent_role_id);
-        const renderNode = (role) => {
+        const renderNode = (role, level = 0) => {
             const children = roles.filter(r => r.parent_role_id === role.id);
+            const paddingLeft = level * 20;
             return `
-                <div style="margin-bottom:var(--sp-2)">
-                    <div class="soc-tree-node" draggable="${isAdmin}" data-role-id="${Utils.escapeHtml(role.id)}">
-                        ${isAdmin ? '<i class="ph ph-dots-six-vertical soc-tree-drag-handle"></i>' : ""}
-                        <div style="flex:1">
-                            <div class="soc-tree-node-name">${Utils.escapeHtml(role.name)}</div>
-                            ${role.description ? `<div class="soc-tree-node-desc">${Utils.escapeHtml(role.description)}</div>` : ""}
+                <tr class="soc-tree-node" draggable="${isAdmin}" data-role-id="${Utils.escapeHtml(role.id)}">
+                    ${isAdmin ? '<td style="padding:10px 12px;border-bottom:1px solid var(--color-border);text-align:center;width:50px"><i class="ph ph-dots-six-vertical soc-tree-drag-handle" style="cursor:grab;color:var(--color-text-muted);font-size:16px"></i></td>' : ""}
+                    <td style="padding:10px 12px;border-bottom:1px solid var(--color-border);padding-left:${paddingLeft + 12}px">
+                        <div style="display:flex;align-items:center;gap:8px">
+                            ${level > 0 ? '<i class="ph ph-arrow-elbow-down-right" style="color:var(--color-text-muted);opacity:0.5"></i>' : ''}
+                            <span class="soc-tree-node-name" style="font-weight:600">${Utils.escapeHtml(role.name)}</span>
                         </div>
-                        ${isAdmin ? `
-                            <button class="btn-dash" data-edit-role="${Utils.escapeHtml(role.id)}" type="button" title="Modifica"><i class="ph ph-pencil-simple"></i></button>
-                            <button class="btn-dash" data-del-role="${Utils.escapeHtml(role.id)}" type="button" title="Elimina" style="color:var(--color-pink)"><i class="ph ph-trash"></i></button>
-                        ` : ""}
-                    </div>
-                    ${children.length ? `<div class="soc-tree-level">${children.map(renderNode).join("")}</div>` : ""}
-                </div>`;
+                    </td>
+                    <td style="padding:10px 12px;border-bottom:1px solid var(--color-border);color:var(--color-text-muted)">
+                        <span class="soc-tree-node-desc">${Utils.escapeHtml(role.description || "—")}</span>
+                    </td>
+                    ${isAdmin ? `<td style="padding:10px 12px;border-bottom:1px solid var(--color-border);white-space:nowrap;text-align:right">
+                        <button class="btn-dash" data-edit-role="${Utils.escapeHtml(role.id)}" type="button" title="Modifica"><i class="ph ph-pencil-simple"></i></button>
+                        <button class="btn-dash" data-del-role="${Utils.escapeHtml(role.id)}" type="button" title="Elimina" style="color:var(--color-pink)"><i class="ph ph-trash"></i></button>
+                    </td>` : ""}
+                </tr>
+                ${children.map(c => renderNode(c, level + 1)).join("")}`;
         };
         const contentHtml = `
-            <div class="soc-tree" id="soc-tree">
-                ${roles.length === 0 ? Utils.emptyState("Nessun ruolo", "Aggiungi il primo ruolo con il pulsante in alto.") : roots.map(renderNode).join("")}
+            <div>
+                <div class="dash-card" style="padding:0;overflow:hidden;">
+                    <div class="table-wrapper" style="overflow-x:auto">
+                        <table class="data-table" style="width:100%;border-collapse:collapse;font-size:14px" id="soc-tree">
+                            <thead>
+                                <tr>
+                                    ${isAdmin ? '<th style="padding:10px 12px;border-bottom:1px solid var(--color-border);width:50px"></th>' : ""}
+                                    <th style="text-align:left;padding:10px 12px;border-bottom:1px solid var(--color-border);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:var(--color-text-muted)">Ruolo</th>
+                                    <th style="text-align:left;padding:10px 12px;border-bottom:1px solid var(--color-border);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:var(--color-text-muted)">Descrizione</th>
+                                    ${isAdmin ? '<th style="padding:10px 12px;border-bottom:1px solid var(--color-border)"></th>' : ""}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${roles.length === 0 ? `<tr><td colspan="${isAdmin ? 4 : 2}" style="text-align:center;padding:var(--sp-4);color:var(--color-text-muted)">Nessun ruolo</td></tr>` : roots.map(r => renderNode(r, 0)).join("")}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>`;
         return SocietaView._shell({
             icon: 'tree-structure',
