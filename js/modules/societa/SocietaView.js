@@ -485,6 +485,73 @@ const SocietaView = {
                 </div>
             </div>
         </div>`;
+    },
+
+    sponsorModal: (sp = null) => {
+        const isEdit = !!sp;
+        const s = sp || {};
+        return `
+            <div style="padding:var(--sp-4);">
+                <div class="form-group">
+                    <label class="form-label">Nome Sponsor *</label>
+                    <input type="text" id="sp-name" class="form-input" value="${Utils.escapeHtml(s.name || "")}" placeholder="Nome azienda o partner" required>
+                </div>
+                <div style="display:flex; gap:var(--sp-3); flex-wrap:wrap">
+                    <div class="form-group" style="flex:1">
+                        <label class="form-label">Tipologia</label>
+                        <select id="sp-tipo" class="form-input">
+                            <option value="Main Sponsor" ${s.tipo === "Main Sponsor" ? "selected" : ""}>Main Sponsor</option>
+                            <option value="Sponsor Tecnico" ${s.tipo === "Sponsor Tecnico" ? "selected" : ""}>Sponsor Tecnico</option>
+                            <option value="Partner" ${s.tipo === "Partner" ? "selected" : ""}>Partner</option>
+                            <option value="Sponsor" ${!s.tipo || s.tipo === "Sponsor" ? "selected" : ""}>Sponsor Base</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex:1">
+                        <label class="form-label">Stagione</label>
+                        <input type="text" id="sp-stagione" class="form-input" value="${Utils.escapeHtml(s.stagione || "")}" placeholder="es. 2024/2025">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Stato</label>
+                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer">
+                        <input type="checkbox" id="sp-active" ${(!isEdit || s.is_active) ? "checked" : ""}>
+                        <span style="font-size:14px">Sponsor Attivo</span>
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Descrizione Breve</label>
+                    <textarea id="sp-desc" class="form-input" rows="2" placeholder="Di cosa si occupa l'azienda...">${Utils.escapeHtml(s.description || "")}</textarea>
+                </div>
+                <hr style="border:0; border-top:1px solid rgba(255,255,255,0.1); margin:16px 0">
+                <p style="font-size:13px; color:var(--color-text-muted); margin-bottom:8px">Contatti e Link (Opzionali)</p>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:var(--sp-2)">
+                    <div class="form-group">
+                        <div class="input-wrapper" style="position:relative">
+                            <i class="ph ph-globe" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--color-text-muted)"></i>
+                            <input type="url" id="sp-website" class="form-input" value="${Utils.escapeHtml(s.website_url || "")}" placeholder="Sito web" style="padding-left:36px">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="input-wrapper" style="position:relative">
+                            <i class="ph ph-instagram-logo" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--color-text-muted)"></i>
+                            <input type="url" id="sp-instagram" class="form-input" value="${Utils.escapeHtml(s.instagram_url || "")}" placeholder="Instagram URL" style="padding-left:36px">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="input-wrapper" style="position:relative">
+                            <i class="ph ph-facebook-logo" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--color-text-muted)"></i>
+                            <input type="url" id="sp-facebook" class="form-input" value="${Utils.escapeHtml(s.facebook_url || "")}" placeholder="Facebook URL" style="padding-left:36px">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="input-wrapper" style="position:relative">
+                            <i class="ph ph-linkedin-logo" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--color-text-muted)"></i>
+                            <input type="url" id="sp-linkedin" class="form-input" value="${Utils.escapeHtml(s.linkedin_url || "")}" placeholder="LinkedIn URL" style="padding-left:36px">
+                        </div>
+                    </div>
+                </div>
+                <div id="sp-modal-err" class="form-error hidden" style="margin-top:12px"></div>
+            </div>`;
     }
 
 };

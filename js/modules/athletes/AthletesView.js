@@ -200,11 +200,11 @@ export const AthletesView = {
                         </div>
                     </div>
                 </div>
-                <div class="profile-tabs" id="athlete-tab-bar">
-                    <button class="athlete-tab-btn" data-tab="anagrafica">Anagrafica</button>
-                    <button class="athlete-tab-btn" data-tab="pagamenti">Pagamenti</button>
-                    <button class="athlete-tab-btn" data-tab="metrics" style="color:var(--color-pink)">Performance (VALD)</button>
-                    <button class="athlete-tab-btn" data-tab="documenti">Documenti</button>
+                <div class="fusion-tabs-container" id="athlete-tab-bar">
+                    <button class="fusion-tab" data-tab="anagrafica">Anagrafica</button>
+                    <button class="fusion-tab" data-tab="pagamenti">Pagamenti</button>
+                    <button class="fusion-tab" data-tab="metrics" style="color:var(--color-pink)">Performance (VALD)</button>
+                    <button class="fusion-tab" data-tab="documenti">Documenti</button>
                     <div id="tab-scroll-indicator" class="scroll-indicator"><i class="ph ph-caret-right"></i></div>
                 </div>
             </div>

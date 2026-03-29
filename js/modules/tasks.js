@@ -462,11 +462,11 @@ const Tasks = (() => {
 
     container.innerHTML = `
         <div class="tasks-page">
-            <div class="todo-tabs fusion-tabs-container">
-                <button class="todo-tab fusion-tab ${_currentView === "mine" ? "active" : ""}" data-tab="mine">
+            <div class="fusion-tabs-container" style="margin-bottom:var(--sp-4);">
+                <button class="fusion-tab ${_currentView === "mine" ? "active" : ""}" data-tab="mine">
                     <i class="ph ph-user"></i> I miei task <span class="todo-tab-count">${mineCount}</span>
                 </button>
-                <button class="todo-tab fusion-tab ${_currentView === "team" ? "active" : ""}" data-tab="team">
+                <button class="fusion-tab ${_currentView === "team" ? "active" : ""}" data-tab="team">
                     <i class="ph ph-users"></i> Team <span class="todo-tab-count">${teamCount}</span>
                 </button>
             </div>
@@ -559,7 +559,7 @@ const Tasks = (() => {
       render();
     }, sig());
 
-    container.querySelectorAll(".todo-tab").forEach(tab => {
+    container.querySelectorAll(".fusion-tab").forEach(tab => {
       tab.addEventListener("click", () => {
         _currentView = tab.dataset.tab;
         _filterCategory = "";

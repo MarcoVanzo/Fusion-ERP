@@ -188,11 +188,11 @@ const Athletes = (() => {
         const backBtn = document.getElementById("back-to-list");
         if (backBtn) backBtn.onclick = () => renderDashboard();
 
-        document.querySelectorAll(".athlete-tab-btn").forEach(btn => {
-            btn.onclick = () => {
-                const tab = btn.dataset.tab;
-                switchTab(tab, athlete);
-            };
+        document.querySelectorAll("#athlete-tab-bar .fusion-tab").forEach(btn => {
+            btn.addEventListener("click", () => {
+                const target = btn.dataset.tab;
+                switchTab(target, athlete);
+            });
         });
     }
 
@@ -201,8 +201,9 @@ const Athletes = (() => {
         if (typeof FilterState !== "undefined") FilterState.save("athletes", "tab", tab);
 
         // UI Update: toggle active state on buttons
-        document.querySelectorAll(".athlete-tab-btn").forEach(btn => {
-            btn.classList.toggle("active", btn.dataset.tab === tab);
+        document.querySelectorAll("#athlete-tab-bar .fusion-tab").forEach(btn => {
+            btn.classList.remove("active");
+            if (btn.dataset.tab === currentTab) btn.classList.add("active");
         });
 
         // Toggle panel visibility

@@ -91,7 +91,7 @@ class VehiclesModule {
             editBtn.addEventListener("click", () => this.openVehicleModal(this.currentVehicle), this.sig());
         }
 
-        window.Utils.qsa(".v-tab").forEach((tab) => {
+        window.Utils.qsa(".fusion-tab").forEach((tab) => {
             tab.addEventListener("click", () => {
                 this.currentTab = tab.dataset.tab;
                 

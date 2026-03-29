@@ -233,7 +233,104 @@ const Societa = {
 
     attachSponsorsEvents: function(container, isAdmin) {
         if (!isAdmin) return;
-        // Sponsor CRUD logic
+
+        container.querySelector("#soc-add-sponsor")?.addEventListener("click", () => {
+            this.openSponsorModal();
+        }, this.sig());
+
+        container.querySelectorAll("[data-sp-edit]").forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                const id = e.currentTarget.dataset.spEdit;
+                const sp = this._data.sponsors.find(x => x.id === id);
+                if (sp) this.openSponsorModal(sp);
+            }, this.sig());
+        });
+
+        container.querySelectorAll("[data-sp-del]").forEach(btn => {
+            btn.addEventListener("click", async (e) => {
+                const id = e.currentTarget.dataset.spDel;
+                if (!confirm("Sei sicuro di voler eliminare questo sponsor?")) return;
+                try {
+                    await SocietaAPI.deleteSponsor(id);
+                    UI.toast("Sponsor eliminato", "success");
+                    this.refreshTab();
+                } catch (err) {
+                    UI.toast(err.message, "error");
+                }
+            }, this.sig());
+        });
+
+        container.querySelectorAll("[data-sp-logo]").forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                const id = e.currentTarget.dataset.spLogo;
+                const input = document.createElement("input");
+                input.type = "file";
+                input.accept = "image/*";
+                input.onchange = async (evt) => {
+                    const file = evt.target.files[0];
+                    if (!file) return;
+                    try {
+                        const fd = new FormData();
+                        fd.append("logo", file);
+                        fd.append("id", id);
+                        await SocietaAPI.uploadSponsorLogo(fd);
+                        UI.toast("Logo sponsor aggiornato", "success");
+                        this.refreshTab();
+                    } catch (err) {
+                        UI.toast(err.message, "error");
+                    }
+                };
+                input.click();
+            }, this.sig());
+        });
+    },
+
+    openSponsorModal: function(sponsor = null) {
+        const isEdit = !!sponsor;
+        const modal = UI.modal({
+            title: isEdit ? "Modifica Sponsor" : "Nuovo Sponsor",
+            body: SocietaView.sponsorModal(sponsor),
+            footer: '<button class="btn-dash ghost" id="sp-modal-cancel">Annulla</button><button class="btn-dash primary" id="sp-modal-save">Salva</button>'
+        });
+
+        document.getElementById("sp-modal-cancel")?.addEventListener("click", () => modal.close(), this.sig());
+        document.getElementById("sp-modal-save")?.addEventListener("click", async () => {
+            const errEl = document.getElementById("sp-modal-err");
+            const name = document.getElementById("sp-name").value.trim();
+            if (!name) {
+                if (errEl) { errEl.textContent = "Il nome dello sponsor è obbligatorio"; errEl.classList.remove("hidden"); }
+                return;
+            }
+
+            const data = {
+                name: name,
+                tipo: document.getElementById("sp-tipo").value,
+                stagione: document.getElementById("sp-stagione").value.trim(),
+                is_active: document.getElementById("sp-active").checked ? 1 : 0,
+                description: document.getElementById("sp-desc").value.trim(),
+                website_url: document.getElementById("sp-website").value.trim(),
+                instagram_url: document.getElementById("sp-instagram").value.trim(),
+                facebook_url: document.getElementById("sp-facebook").value.trim(),
+                linkedin_url: document.getElementById("sp-linkedin").value.trim()
+            };
+
+            if (isEdit) data.id = sponsor.id;
+
+            try {
+                if (errEl) errEl.classList.add("hidden");
+                if (isEdit) {
+                    await SocietaAPI.updateSponsor(data);
+                    UI.toast("Sponsor aggiornato", "success");
+                } else {
+                    await SocietaAPI.createSponsor(data);
+                    UI.toast("Sponsor creato", "success");
+                }
+                modal.close();
+                this.refreshTab();
+            } catch (err) {
+                if (errEl) { errEl.textContent = err.message; errEl.classList.remove("hidden"); }
+            }
+        }, this.sig());
     },
 
     attachTitoliEvents: function(container, isAdmin) {
