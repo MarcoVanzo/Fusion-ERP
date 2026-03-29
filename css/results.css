@@ -47,6 +47,50 @@
       flex-wrap: wrap;
   }
 
+  /* ── Tabs Selector ──────────────────────────────── */
+  .res-view-selector {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 32px !important;
+      background: rgba(18, 18, 20, 0.5);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      padding: 6px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      width: fit-content;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+
+  .res-view-btn {
+      background: transparent;
+      border: none;
+      color: rgba(255, 255, 255, 0.4);
+      font-family: var(--font-body), sans-serif;
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 12px 28px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .res-view-btn:hover {
+      color: rgba(255, 255, 255, 0.9);
+      background: rgba(255, 255, 255, 0.05);
+  }
+
+  .res-view-btn.active {
+      background: rgba(255, 0, 255, 0.13);
+      color: white;
+      border: 1px solid rgba(255, 0, 255, 0.3);
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
+      box-shadow: 0 4px 20px rgba(255, 0, 255, 0.2), inset 0 0 8px rgba(255, 0, 255, 0.1);
+  }
+
+
   /* ── Custom Campionato Dropdown ──────────────────── */
   .res-champ-dropdown {
       position: relative;

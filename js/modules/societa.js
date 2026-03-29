@@ -98,10 +98,27 @@ const Societa = {
 
         const isAdmin = ["admin", "manager"].includes(App.getUser()?.role);
         
-        // Update nav active state
-        document.querySelectorAll(".soc-nav-item").forEach(btn => {
-            btn.classList.toggle("active", btn.dataset.tab === this._currentTab);
-        });
+        const headerEl = document.getElementById("soc-tab-header");
+        if (headerEl) {
+            const titles = {
+                identita: { t: "Identità Club", s: "Gestione colori, loghi e info societarie" },
+                organigramma: { t: "Organigramma", s: "Struttura gerarchica e ruoli societari" },
+                membri: { t: "Membri", s: "Persone e staff assegnato ai vari ruoli" },
+                documenti: { t: "Documenti", s: "Archivio di statuti, affiliazioni e licenze" },
+                scadenze: { t: "Scadenze", s: "Scadenze federali e amministrative" },
+                sponsor: { t: "Sponsor", s: "Partnership e sponsorizzazioni del club" },
+                titoli: { t: "Palmarès", s: "Trofei e successi storici del club" },
+                foresteria: { t: "Foresteria", s: "Gestione foresteria, spese e multimedia" }
+            };
+            const info = titles[this._currentTab] || { t: "Il Club", s: "Gestione societaria" };
+            headerEl.innerHTML = `
+                <div class="dash-top-bar" style="border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 24px; margin-bottom: 24px;">
+                    <div>
+                        <h1 class="dash-title">${info.t}</h1>
+                        <p class="dash-subtitle" style="margin-top:4px;">${info.s}</p>
+                    </div>
+                </div>`;
+        }
 
         switch (this._currentTab) {
             case 'identita':

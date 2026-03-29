@@ -18,6 +18,15 @@ const Athletes = (() => {
     let isBulkMode = false;
     let selectedIds = new Set();
 
+    function getVariantFromRoute() {
+        if (typeof Router === "undefined") return 'anagrafica';
+        const route = Router.getCurrentRoute();
+        if (route === 'athlete-documents') return 'documenti';
+        if (route === 'athlete-metrics') return 'metrics';
+        if (route === 'athlete-payments') return 'pagamenti';
+        return 'anagrafica';
+    }
+
     /**
      * Inizializzazione del modulo
      */
@@ -41,7 +50,8 @@ const Athletes = (() => {
 
             const params = Router.getParams();
             if (params.id) {
-                await renderProfile(params.id);
+                const initialTab = getVariantFromRoute();
+                await renderProfile(params.id, initialTab);
             } else {
                 renderDashboard();
             }
@@ -59,13 +69,15 @@ const Athletes = (() => {
      */
     function renderDashboard() {
         const app = document.getElementById("app");
-        app.innerHTML = AthletesView.dashboard(teamsData);
+        const variant = getVariantFromRoute();
+
+        app.innerHTML = AthletesView.dashboard(teamsData, variant);
         
         // Applicazione filtri iniziali
-        filterAndRenderGrid();
+        filterAndRenderGrid("", variant);
 
         // Event Listeners
-        addDashboardListeners();
+        addDashboardListeners(variant);
         
         // Reset breadcrumb
         Router.updateHash(Router.getCurrentRoute(), {});
@@ -75,37 +87,39 @@ const Athletes = (() => {
     /**
      * Aggiunge listeners alla dashboard
      */
-    function addDashboardListeners() {
+    function addDashboardListeners(variant = 'anagrafica') {
         const signal = abortController.signal;
+        const getSearch = () => document.getElementById("athlete-search")?.value || "";
 
         document.getElementById("new-athlete-btn")?.addEventListener("click", () => {
             AthletesWizard.openCreate(teamsData, () => {
-                refreshData();
+                refreshData(variant);
             });
         }, { signal });
 
         document.getElementById("athlete-search")?.addEventListener("input", (e) => {
-            debounce(() => filterAndRenderGrid(e.target.value), 300);
+            debounce(() => filterAndRenderGrid(e.target.value, variant), 300);
         }, { signal });
 
         document.getElementById("team-filter")?.addEventListener("change", (e) => {
             selectedTeamId = e.target.value;
             if (typeof FilterState !== "undefined") FilterState.save("athletes", "team", selectedTeamId);
-            filterAndRenderGrid();
+            filterAndRenderGrid(getSearch(), variant);
         }, { signal });
 
         document.getElementById("reset-filters")?.addEventListener("click", () => {
             selectedTeamId = "";
-            document.getElementById("athlete-search").value = "";
-            document.getElementById("team-filter").value = "";
-            filterAndRenderGrid();
+            if (document.getElementById("athlete-search")) document.getElementById("athlete-search").value = "";
+            if (document.getElementById("team-filter")) document.getElementById("team-filter").value = "";
+            if (typeof FilterState !== "undefined") FilterState.save("athletes", "team", "");
+            filterAndRenderGrid("", variant);
         }, { signal });
     }
 
     /**
      * Filtra e renderizza la griglia atleti
      */
-    function filterAndRenderGrid(searchTerm = "") {
+    function filterAndRenderGrid(searchTerm = "", variant = 'anagrafica') {
         const grid = document.getElementById("athletes-grid");
         if (!grid) return;
 
@@ -126,7 +140,7 @@ const Athletes = (() => {
             return;
         }
 
-        grid.innerHTML = filtered.map(a => AthletesView.athleteCard(a, selectedIds.has(a.id))).join('');
+        grid.innerHTML = filtered.map(a => AthletesView.athleteCard(a, selectedIds.has(a.id), variant)).join('');
 
         // Listeners sulle card
         grid.querySelectorAll(".athlete-card").forEach(card => {
@@ -134,7 +148,7 @@ const Athletes = (() => {
                 if (isBulkMode) {
                     toggleSelection(card.dataset.id);
                 } else {
-                    renderProfile(card.dataset.id);
+                    renderProfile(card.dataset.id, variant === 'anagrafica' ? null : variant);
                 }
             };
         });
@@ -143,8 +157,9 @@ const Athletes = (() => {
     /**
      * Renderizza il profilo di un singolo atleta
      */
-    async function renderProfile(id) {
+    async function renderProfile(id, initialTab = null) {
         activeAthleteId = id;
+        currentTab = initialTab || FilterState.restore("athletes", "tab", "anagrafica");
         UI.loading(true);
         const app = document.getElementById("app");
 
@@ -245,9 +260,9 @@ const Athletes = (() => {
         });
     }
 
-    async function refreshData() {
+    async function refreshData(variant = 'anagrafica') {
         athletesData = await AthletesAPI.getLightList();
-        if (!activeAthleteId) filterAndRenderGrid();
+        if (!activeAthleteId) filterAndRenderGrid("", variant);
     }
 
     let debounceTimer;
