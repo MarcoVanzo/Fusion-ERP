@@ -28,10 +28,10 @@ export const AthletesView = {
             thRow = `
                 <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;">Atleta</th>
                 <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;">Squadra</th>
-                <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;text-align:center;">Altezza (cm)</th>
-                <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;text-align:center;">Peso (kg)</th>
-                <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;text-align:center;">IMC (BMI)</th>
-                <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;text-align:center;">VALD Sync</th>
+                <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;text-align:center;">Jump Height (cm)</th>
+                <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;text-align:center;">RSImod</th>
+                <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;text-align:center;">Braking Imp.</th>
+                <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;text-align:center;">Ultimo Test VALD</th>
             `;
         } else {
             thRow = `
@@ -131,25 +131,29 @@ export const AthletesView = {
                 <td style="padding:12px 16px;font-size:13px;">${medicalStatusHtml}</td>
             `;
         } else if (variant === 'metrics') {
-            const height = athlete.height_cm ? parseInt(athlete.height_cm) : null;
-            const weight = athlete.weight_kg ? parseFloat(athlete.weight_kg) : null;
-            let bmiHtml = '<span style="color:var(--color-text-muted)">—</span>';
-            
-            if (height && weight) {
-                const bmi = (weight / Math.pow(height / 100, 2)).toFixed(1);
-                let bmiColor = 'var(--color-success)';
-                if (bmi < 18.5 || bmi > 25) bmiColor = 'var(--color-warning)';
-                if (bmi > 30) bmiColor = 'var(--color-pink)';
-                bmiHtml = `<span style="color:${bmiColor};font-weight:600;">${bmi}</span>`;
-            }
+            // Parsing metrics from backend
+            let valdMetrics = {};
+            try {
+                if (athlete.latest_vald_metrics) {
+                    valdMetrics = JSON.parse(athlete.latest_vald_metrics);
+                }
+            } catch(e) {}
+
+            const jumpHeight = valdMetrics.JumpHeight?.Value ?? valdMetrics.JumpHeightTotal?.Value ?? null;
+            const rsimod = valdMetrics.RSIModified?.Value ?? null;
+            const brakingImp = valdMetrics.BrakingImpulse?.Value ?? valdMetrics.EccentricBrakingImpulse?.Value ?? null;
+            const testDate = athlete.latest_vald_date ? Utils.formatDate(athlete.latest_vald_date) : null;
 
             cellsHtml = `
                 <td style="padding:12px 16px;font-size:13px;color:var(--color-silver);"><i class="ph ph-shield-star"></i> ${Utils.escapeHtml(athlete.team_name)}</td>
-                <td style="padding:12px 16px;text-align:center;font-size:13px;color:var(--color-white);">${height || '—'}</td>
-                <td style="padding:12px 16px;text-align:center;font-size:13px;color:var(--color-white);">${weight || '—'}</td>
-                <td style="padding:12px 16px;text-align:center;font-size:13px;">${bmiHtml}</td>
+                <td style="padding:12px 16px;text-align:center;font-size:13px;color:var(--color-white);font-weight:600;">${jumpHeight ? jumpHeight.toFixed(1) : '—'}</td>
+                <td style="padding:12px 16px;text-align:center;font-size:13px;color:var(--color-white);font-weight:600;">${rsimod ? rsimod.toFixed(3) : '—'}</td>
+                <td style="padding:12px 16px;text-align:center;font-size:13px;color:var(--color-white);">${brakingImp ? brakingImp.toFixed(0) : '—'}</td>
                 <td style="padding:12px 16px;text-align:center;">
-                    <span style="color:var(--color-text-muted);font-size:10px;text-transform:uppercase;padding:2px 6px;border:1px solid rgba(255,255,255,0.05);border-radius:4px;"><i class="ph ph-link"></i> Collegato</span>
+                    ${testDate 
+                        ? `<span style="color:var(--color-success);font-size:12px;font-weight:600;"><i class="ph ph-calendar-check"></i> ${testDate}</span>`
+                        : `<span style="color:var(--color-text-muted);font-size:10px;text-transform:uppercase;"><i class="ph ph-link-break"></i> Mai sinc.</span>`
+                    }
                 </td>
             `;
         } else {
@@ -182,37 +186,43 @@ export const AthletesView = {
      * Layout del profilo atleta (Header + Tabs)
      */
     profileLayout: (athlete, currentTab = 'anagrafica') => {
-        const photo = athlete.photo_path 
-            ? `<img src="${Utils.escapeHtml(athlete.photo_path)}" alt="${athlete.full_name}" style="width:100%;height:100%;object-fit:cover;object-position:center;">`
-            : `<span style="font-family:var(--font-display);font-size:3.5rem;font-weight:700;color:#000;">${Utils.initials(athlete.full_name)}</span>`;
+        const photoHtml = athlete.photo_path 
+            ? `<img src="${Utils.escapeHtml(athlete.photo_path)}" class="athlete-hero-photo" alt="${athlete.full_name}">`
+            : `<div class="athlete-hero-photo" style="display:flex;align-items:center;justify-content:center;background:var(--color-bg-card);"><span style="font-family:var(--font-display);font-size:5rem;font-weight:700;color:rgba(255,255,255,0.1);">${Utils.initials(athlete.full_name)}</span></div>`;
 
         return `
-            <div class="profile-header card">
-                <button class="btn-back" id="back-to-list"><i class="ph ph-arrow-left"></i> Torna alla lista</button>
-                <div class="profile-hero">
-                    <div class="profile-photo" id="athlete-photo-preview">${photo}</div>
+            <div class="athlete-hero">
+                ${photoHtml}
+                <div class="athlete-hero-overlay">
+                    <button class="btn btn-default btn-sm" id="back-to-list" style="margin-bottom:var(--sp-4);background:rgba(0,0,0,0.5);border-color:rgba(255,255,255,0.1);">
+                        <i class="ph ph-arrow-left"></i> Torna alla lista
+                    </button>
                     <div class="profile-main-info">
-                        <h1 class="profile-name">${Utils.escapeHtml(athlete.full_name)}</h1>
-                        <div class="profile-badges">
-                            <span class="badge"><i class="ph ph-hashtag"></i> Maglia #${athlete.jersey_number || '—'}</span>
-                            <span class="badge"><i class="ph ph-shield"></i> ${Utils.escapeHtml(athlete.role || '—')}</span>
-                            <span class="badge"><i class="ph ph-users"></i> ${Utils.escapeHtml(athlete.team_name)}</span>
+                        <h1 class="profile-name" style="font-size:clamp(2.5rem, 6vw, 4.5rem);line-height:1;margin-bottom:var(--sp-2);color:var(--color-white);font-family:var(--font-display);font-weight:800;text-transform:uppercase;letter-spacing:-0.03em;">
+                            ${Utils.escapeHtml(athlete.full_name)}
+                        </h1>
+                        <div class="profile-badges" style="display:flex;gap:8px;flex-wrap:wrap;">
+                            <span class="badge badge-pink" style="border-radius:20px;padding:6px 14px;font-size:11px;"><i class="ph ph-hashtag"></i> Maglia #${athlete.jersey_number || '—'}</span>
+                            <span class="badge badge-white" style="border-radius:20px;padding:6px 14px;font-size:11px;background:rgba(255,255,255,0.05);"><i class="ph ph-shield"></i> ${Utils.escapeHtml(athlete.role || '—')}</span>
+                            <span class="badge badge-white" style="border-radius:20px;padding:6px 14px;font-size:11px;background:rgba(255,255,255,0.05);"><i class="ph ph-users"></i> ${Utils.escapeHtml(athlete.team_name)}</span>
                         </div>
                     </div>
                 </div>
-                <div class="fusion-tabs-container" id="athlete-tab-bar">
+            </div>
+
+            <div class="card" style="margin: -40px 16px 0; border-radius: 24px; position:relative; z-index: 10; padding: 4px; background: rgba(20,20,20,0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1);">
+                <div class="fusion-tabs-container" id="athlete-tab-bar" style="border:none;background:transparent;width:100%;justify-content:flex-start;padding:8px 16px;">
                     <button class="fusion-tab" data-tab="anagrafica">Anagrafica</button>
                     <button class="fusion-tab" data-tab="pagamenti">Pagamenti</button>
                     <button class="fusion-tab" data-tab="metrics" style="color:var(--color-pink)">Performance (VALD)</button>
                     <button class="fusion-tab" data-tab="documenti">Documenti</button>
-                    <div id="tab-scroll-indicator" class="scroll-indicator"><i class="ph ph-caret-right"></i></div>
                 </div>
             </div>
 
-            <div id="tab-panel-anagrafica" class="athlete-tab-panel" style="display:none;"></div>
-            <div id="tab-panel-pagamenti" class="athlete-tab-panel" style="display:none;"></div>
-            <div id="tab-panel-metrics" class="athlete-tab-panel" style="display:none;"></div>
-            <div id="tab-panel-documenti" class="athlete-tab-panel" style="display:none;"></div>
+            <div id="tab-panel-anagrafica" class="athlete-tab-panel" style="display:none;padding:24px 16px;"></div>
+            <div id="tab-panel-pagamenti" class="athlete-tab-panel" style="display:none;padding:24px 16px;"></div>
+            <div id="tab-panel-metrics" class="athlete-tab-panel" style="display:none;padding:24px 16px;"></div>
+            <div id="tab-panel-documenti" class="athlete-tab-panel" style="display:none;padding:24px 16px;"></div>
         `;
     },
 

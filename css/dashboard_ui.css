@@ -109,6 +109,22 @@
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4), var(--shadow-glow-cyan);
 }
 
+.dash-stat-card.green::before {
+  background: linear-gradient(90deg, #00E676, transparent);
+}
+
+.dash-stat-card.green:hover {
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(0, 230, 118, 0.2);
+}
+
+.dash-stat-card.yellow::before {
+  background: linear-gradient(90deg, #f59e0b, transparent);
+}
+
+.dash-stat-card.yellow:hover {
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(245, 158, 11, 0.2);
+}
+
 .dash-stat-card::after {
   content: '';
   position: absolute;
@@ -147,14 +163,15 @@
 
 .dash-stat-value {
   font-family: var(--font-display);
-  font-size: 42px;
-  font-weight: 800;
+  font-size: 48px;
+  font-weight: 900;
   margin-top: 16px;
   line-height: 1;
   display: flex;
   align-items: baseline;
   gap: 12px;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  text-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+  letter-spacing: -1px;
 }
 
 .dash-stat-trend {

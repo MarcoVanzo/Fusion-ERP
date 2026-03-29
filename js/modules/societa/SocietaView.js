@@ -123,8 +123,8 @@ const SocietaView = {
                         <span class="soc-tree-node-desc">${Utils.escapeHtml(role.description || "—")}</span>
                     </td>
                     ${isAdmin ? `<td style="padding:10px 12px;border-bottom:1px solid var(--color-border);white-space:nowrap;text-align:right">
-                        <button class="btn-dash" data-edit-role="${Utils.escapeHtml(role.id)}" type="button" title="Modifica"><i class="ph ph-pencil-simple"></i></button>
-                        <button class="btn-dash" data-del-role="${Utils.escapeHtml(role.id)}" type="button" title="Elimina" style="color:var(--color-pink)"><i class="ph ph-trash"></i></button>
+                        <button class="btn-dash btn-xs" data-edit-role="${Utils.escapeHtml(role.id)}" type="button" title="Modifica"><i class="ph ph-pencil-simple"></i></button>
+                        <button class="btn-dash btn-xs" data-del-role="${Utils.escapeHtml(role.id)}" type="button" title="Elimina" style="color:var(--color-pink)"><i class="ph ph-trash"></i></button>
                     </td>` : ""}
                 </tr>
                 ${children.map(c => renderNode(c, level + 1)).join("")}`;
@@ -194,8 +194,8 @@ const SocietaView = {
                                             <span style="color:${m.is_active ? "var(--color-success)" : "var(--color-text-muted)"}">${m.is_active ? "Attivo" : "Inattivo"}</span>
                                         </td>
                                         ${isAdmin ? `<td style="padding:10px 12px;border-bottom:1px solid var(--color-border);white-space:nowrap">
-                                            <button class="btn-dash" data-edit-member="${Utils.escapeHtml(m.id)}" type="button"><i class="ph ph-pencil-simple"></i></button>
-                                            <button class="btn-dash" data-del-member="${Utils.escapeHtml(m.id)}" type="button" style="color:var(--color-pink)"><i class="ph ph-trash"></i></button>
+                                            <button class="btn-dash btn-xs" data-edit-member="${Utils.escapeHtml(m.id)}" type="button"><i class="ph ph-pencil-simple"></i></button>
+                                            <button class="btn-dash btn-xs" data-del-member="${Utils.escapeHtml(m.id)}" type="button" style="color:var(--color-pink)"><i class="ph ph-trash"></i></button>
                                         </td>` : ""}
                                     </tr>`).join("")}
                             </tbody>
@@ -225,7 +225,7 @@ const SocietaView = {
                             <div class="soc-doc-card">
                                 <div style="display:flex;align-items:flex-start;justify-content:space-between">
                                     <i class="ph ph-${icons[doc.category] || "file"} soc-doc-icon"></i>
-                                    ${isAdmin ? `<button class="btn-dash" data-del-doc="${Utils.escapeHtml(doc.id)}" type="button" style="color:var(--color-pink)"><i class="ph ph-trash"></i></button>` : ""}
+                                    ${isAdmin ? `<button class="btn-dash btn-xs" data-del-doc="${Utils.escapeHtml(doc.id)}" type="button" style="color:var(--color-pink)"><i class="ph ph-trash"></i></button>` : ""}
                                 </div>
                                 <div class="soc-doc-name" title="${Utils.escapeHtml(doc.file_name)}">${Utils.escapeHtml(doc.file_name)}</div>
                                 <div class="soc-doc-meta">${Utils.escapeHtml(categories[doc.category] || doc.category)}</div>
@@ -267,9 +267,9 @@ const SocietaView = {
                             </div>
                             <span style="font-size:12px;font-weight:700;text-transform:uppercase;color:${getStatusColor(dl.status)}">${Utils.escapeHtml(statusMap[dl.status] || dl.status)}</span>
                             ${isAdmin ? `
-                                <div style="display:flex;gap:4px">
-                                    <button class="btn-dash" data-edit-dl="${Utils.escapeHtml(dl.id)}" type="button"><i class="ph ph-pencil-simple"></i></button>
-                                    <button class="btn-dash" data-del-dl="${Utils.escapeHtml(dl.id)}" type="button" style="color:var(--color-pink)"><i class="ph ph-trash"></i></button>
+                                <div class="soc-actions-wrap">
+                                    <button class="btn-dash btn-xs" data-edit-dl="${Utils.escapeHtml(dl.id)}" type="button"><i class="ph ph-pencil-simple"></i></button>
+                                    <button class="btn-dash btn-xs" data-del-dl="${Utils.escapeHtml(dl.id)}" type="button" style="color:var(--color-pink)"><i class="ph ph-trash"></i></button>
                                 </div>` : ""}
                         </div>`).join("")}
                 </div>
@@ -286,10 +286,10 @@ const SocietaView = {
                                 <div class="soc-sponsor-card-header">
                                     ${sp.logo_path ? `<img src="${Utils.escapeHtml(sp.logo_path)}" alt="Logo" class="soc-sponsor-logo">` : '<div class="soc-sponsor-logo-placeholder"><i class="ph ph-image"></i></div>'}
                                     ${isAdmin ? `
-                                        <div style="display:flex;gap:4px">
-                                            <button class="btn-dash" data-sp-logo="${Utils.escapeHtml(sp.id)}" type="button" title="Carica logo"><i class="ph ph-camera"></i></button>
-                                            <button class="btn-dash" data-sp-edit="${Utils.escapeHtml(sp.id)}" type="button" title="Modifica"><i class="ph ph-pencil-simple"></i></button>
-                                            <button class="btn-dash" data-sp-del="${Utils.escapeHtml(sp.id)}" type="button" style="color:var(--color-pink)" title="Elimina"><i class="ph ph-trash"></i></button>
+                                        <div class="soc-actions-wrap">
+                                            <button class="btn-dash btn-xs" data-sp-logo="${Utils.escapeHtml(sp.id)}" type="button" title="Carica logo"><i class="ph ph-camera"></i></button>
+                                            <button class="btn-dash btn-xs" data-sp-edit="${Utils.escapeHtml(sp.id)}" type="button" title="Modifica"><i class="ph ph-pencil-simple"></i></button>
+                                            <button class="btn-dash btn-xs" data-sp-del="${Utils.escapeHtml(sp.id)}" type="button" style="color:var(--color-pink)" title="Elimina"><i class="ph ph-trash"></i></button>
                                         </div>
                                     ` : ""}
                                 </div>
@@ -326,8 +326,8 @@ const SocietaView = {
                         ${t.finali_nazionali ? '<div class="soc-titolo-national"><i class="ph ph-flag"></i> Finali Nazionali</div>' : ""}
                         ${isAdmin ? `
                             <div class="soc-titolo-actions">
-                                <button class="btn-dash" data-edit-titolo="${Utils.escapeHtml(t.id)}" type="button"><i class="ph ph-pencil-simple"></i></button>
-                                <button class="btn-dash" data-del-titolo="${Utils.escapeHtml(t.id)}" type="button" style="color:var(--color-pink)"><i class="ph ph-trash"></i></button>
+                                <button class="btn-dash btn-xs" data-edit-titolo="${Utils.escapeHtml(t.id)}" type="button"><i class="ph ph-pencil-simple"></i></button>
+                                <button class="btn-dash btn-xs" data-del-titolo="${Utils.escapeHtml(t.id)}" type="button" style="color:var(--color-pink)"><i class="ph ph-trash"></i></button>
                             </div>
                         ` : ""}
                     </div>`).join("")}
@@ -495,8 +495,8 @@ const SocietaView = {
                                     <div style="text-align:right">
                                         <div style="font-weight:700; color:var(--color-pink); font-size:15px">€ ${amountStr}</div>
                                         <div style="display:flex; gap:6px; justify-content:flex-end; margin-top:4px">
-                                            ${e.receipt_path ? `<a href="${Utils.escapeHtml(e.receipt_path)}" target="_blank" class="btn-dash" style="padding:2px 6px; font-size:10px; height:auto; color:var(--color-cyan); border-color:var(--color-cyan)" title="Ricevuta"><i class="ph ph-file-text"></i></a>` : ''}
-                                            ${isAdmin ? `<button class="btn-dash" style="padding:2px 6px; font-size:10px; height:auto; border-color:rgba(255,255,255,0.1)" data-del-expense="${e.id}" title="Elimina"><i class="ph ph-trash"></i></button>` : ''}
+                                            ${e.receipt_path ? `<a href="${Utils.escapeHtml(e.receipt_path)}" target="_blank" class="btn-dash btn-xs" style=" color:var(--color-cyan); border-color:var(--color-cyan)" title="Ricevuta"><i class="ph ph-file-text"></i></a>` : ''}
+                                            ${isAdmin ? `<button class="btn-dash btn-xs" style=" border-color:rgba(255,255,255,0.1)" data-del-expense="${e.id}" title="Elimina"><i class="ph ph-trash"></i></button>` : ''}
                                         </div>
                                     </div>
                                 </div>`;

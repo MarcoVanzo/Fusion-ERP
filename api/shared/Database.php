@@ -56,11 +56,11 @@ class Database
      */
     private static function connect(): PDO
     {
-        $host   = $_ENV['DB_HOST'] ?? getenv('DB_HOST') ?: '127.0.0.1';
-        $port   = $_ENV['DB_PORT'] ?? getenv('DB_PORT') ?: '3306';
-        $dbname = $_ENV['DB_NAME'] ?? getenv('DB_NAME') ?: 'fusion_erp';
-        $user   = $_ENV['DB_USER'] ?? getenv('DB_USER') ?: '';
-        $pass   = $_ENV['DB_PASS'] ?? getenv('DB_PASS') ?: '';
+        $host   = $_ENV['DB_HOST'] ?? $_SERVER['DB_HOST'] ?? getenv('DB_HOST') ?: '127.0.0.1';
+        $port   = $_ENV['DB_PORT'] ?? $_SERVER['DB_PORT'] ?? getenv('DB_PORT') ?: '3306';
+        $dbname = $_ENV['DB_NAME'] ?? $_SERVER['DB_NAME'] ?? getenv('DB_NAME') ?: 'fusion_erp';
+        $user   = $_ENV['DB_USER'] ?? $_SERVER['DB_USER'] ?? getenv('DB_USER') ?: '';
+        $pass   = $_ENV['DB_PASS'] ?? $_SERVER['DB_PASS'] ?? getenv('DB_PASS') ?: '';
 
         $dsn = "mysql:host={$host};port={$port};dbname={$dbname};charset=utf8mb4";
 

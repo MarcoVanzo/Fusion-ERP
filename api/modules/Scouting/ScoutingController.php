@@ -24,8 +24,8 @@ class ScoutingController
      * ───────────────────────────────────────────────────────────────────── */
     private static function getEnvVar(string $key): ?string
     {
-        // Standard precedence: $_ENV (populated by Dotenv at bootstrap) → OS env vars
-        $val = $_ENV[$key] ?? getenv($key);
+        // Standard precedence: $_ENV -> $_SERVER -> getenv()
+        $val = $_ENV[$key] ?? $_SERVER[$key] ?? getenv($key);
         if ($val !== false && $val !== null && $val !== '') {
             return (string)$val;
         }
@@ -201,7 +201,11 @@ class ScoutingController
         $networkFormId = self::networkFormId();
 
         if ($fusionFormId === 0 && $networkFormId === 0) {
-            return ['success' => false, 'error' => 'Nessun Form ID configurato. Impostare SCOUTING_FUSION_FORM_ID e/o SCOUTING_NETWORK_FORM_ID in .env'];
+            $error = 'Nessun Form ID configurato. Impostare SCOUTING_FUSION_FORM_ID e/o SCOUTING_NETWORK_FORM_ID in .env';
+            if (empty($_ENV) && empty($_SERVER['SCOUTING_FUSION_FORM_ID'])) {
+                $error .= ' (Ambiente di configurazione non rilevato)';
+            }
+            return ['success' => false, 'error' => $error];
         }
 
         $fusionUpserted = 0;
