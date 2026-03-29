@@ -39,7 +39,7 @@ export default {
     
     getForesteria: () => Store.get("getForesteria", "societa"),
     saveForesteria: (data) => Store.api("saveForesteria", "societa", data),
-    addExpense: (data, isJson = true) => Store.api("addExpense", "societa", data, isJson),
+    addExpense: (data) => Store.api("addExpense", "societa", data),
     deleteExpense: (id) => Store.api("deleteExpense", "societa", { id }),
     uploadForesteriaMedia: (formData) => Store.api("uploadForesteriaMedia", "societa", formData),
     addForesteriaYoutubeLink: (data) => Store.api("addForesteriaYoutubeLink", "societa", data),

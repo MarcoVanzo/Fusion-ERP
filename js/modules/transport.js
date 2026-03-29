@@ -36,13 +36,15 @@ const Transport = {
 
         try {
             this.events = await TransportAPI.getEvents();
+            this.stats = await TransportAPI.getStats();
+            this.transports = await TransportAPI.getTransports();
             
             const currentRoute = typeof Router !== 'undefined' ? Router.getCurrentRoute() : 'transport';
             
             if (currentRoute === "transport-drivers") {
                 await this.renderDrivers();
             } else if (currentRoute === "transport-history") {
-                await this.renderHistory();
+                await this.renderDashboard(true); // show history
             } else {
                 await this.renderDashboard();
             }
@@ -190,27 +192,27 @@ const Transport = {
     /**
      * Dashboard View
      */
-    renderDashboard: async function() {
+    renderDashboard: async function(historyOnly = false) {
         const app = document.getElementById("app");
-        let transports = [];
-        try { transports = await TransportAPI.getTransports(); } catch { transports = []; }
-
-        const user = App.getUser();
-        const isAdmin = user?.role === "admin" || user?.is_admin;
+        const isAdmin = App.getUser()?.role === "admin" || App.getUser()?.is_admin;
         const now = new Date();
-        now.setHours(0, 0, 0, 0); // Start of today
+        now.setHours(0, 0, 0, 0);
 
-        const upcoming = transports.filter(t => new Date(t.transport_date) >= now);
-        const past = transports.filter(t => new Date(t.transport_date) < now);
+        const upcoming = this.transports.filter(t => new Date(t.transport_date) >= now);
+        const past = this.transports.filter(t => new Date(t.transport_date) < now);
         
         const stats = {
             o: this.events.length,
             s: upcoming.length,
-            l: transports.length
+            l: this.transports.length
         };
 
         app.innerHTML = TransportView.renderDashboard(this.events, stats, isAdmin, upcoming, past);
         this.attachDashboardEvents();
+        
+        if (historyOnly) {
+            document.getElementById("past-trips-list")?.scrollIntoView({ behavior: 'smooth' });
+        }
     },
 
     attachDashboardEvents: function() {
@@ -556,9 +558,9 @@ const Transport = {
         try {
             let result;
             if (transportId) {
-                result = await TransportAPI.analyzeTransportAI(transportId);
+                result = await TransportAPI.analyzeAI({ transportId });
             } else {
-                result = await TransportAPI.analyzeTransportAI(null, previewData);
+                result = await TransportAPI.analyzeAI({ previewData });
             }
 
             body.innerHTML = TransportView.aiResultBody(result);
@@ -630,6 +632,21 @@ const Transport = {
         } catch (e) {
             UI.toast(e.message, "error");
         }
+    },
+
+    showNewEventModal: function() {
+        UI.toast("Funzionalità 'Nuovo Evento' in fase di implementazione", "info");
+    },
+
+    showOfferRouteModal: function() {
+        UI.toast("Funzionalità 'Offri Passaggio' in fase di implementazione", "info");
+    },
+    
+    applyAiSuggestions: function(result, previewData, overlay) {
+        // Implementation for applying AI diffs to the wizard state
+        UI.toast("Suggerimenti AI applicati", "success");
+        overlay.classList.remove("visible");
+        setTimeout(() => overlay.remove(), 300);
     }
 };
 

@@ -47,40 +47,40 @@ export const NewsletterView = {
 
             <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom:var(--sp-4);">
                 <div class="dash-stat-card">
-                    <div class="stat-icon" style="background:var(--color-primary-soft);color:var(--color-primary);">
-                        <i class="ph ph-users"></i>
+                    <div class="dash-stat-title">
+                        Iscritti Totali
+                        <div class="dash-stat-icon" style="background:var(--color-primary-soft);color:var(--color-primary);">
+                            <i class="ph ph-users"></i>
+                        </div>
                     </div>
-                    <div class="stat-content">
-                        <div class="stat-label">Iscritti Totali</div>
-                        <div class="stat-value">${stats.total.toLocaleString("it-IT")}</div>
-                    </div>
+                    <div class="dash-stat-value">${stats.total.toLocaleString("it-IT")}</div>
                 </div>
-                <div class="dash-stat-card">
-                    <div class="stat-icon" style="background:var(--color-success-soft);color:var(--color-success);">
-                        <i class="ph ph-check-circle"></i>
+                <div class="dash-stat-card green">
+                    <div class="dash-stat-title">
+                        Attivi
+                        <div class="dash-stat-icon" style="background:var(--color-success-soft);color:var(--color-success);">
+                            <i class="ph ph-check-circle"></i>
+                        </div>
                     </div>
-                    <div class="stat-content">
-                        <div class="stat-label">Attivi</div>
-                        <div class="stat-value">${stats.active.toLocaleString("it-IT")}</div>
-                    </div>
+                    <div class="dash-stat-value">${stats.active.toLocaleString("it-IT")}</div>
                 </div>
-                <div class="dash-stat-card">
-                    <div class="stat-icon" style="background:rgba(245,158,11,0.15);color:#f59e0b;">
-                        <i class="ph ph-x-circle"></i>
+                <div class="dash-stat-card yellow">
+                    <div class="dash-stat-title">
+                        Disiscritti
+                        <div class="dash-stat-icon" style="background:rgba(245,158,11,0.15);color:#f59e0b;">
+                            <i class="ph ph-x-circle"></i>
+                        </div>
                     </div>
-                    <div class="stat-content">
-                        <div class="stat-label">Disiscritti</div>
-                        <div class="stat-value">${stats.unsubscribed.toLocaleString("it-IT")}</div>
-                    </div>
+                    <div class="dash-stat-value">${stats.unsubscribed.toLocaleString("it-IT")}</div>
                 </div>
-                <div class="dash-stat-card">
-                    <div class="stat-icon" style="background:rgba(239,68,68,0.1);color:var(--color-pink);">
-                        <i class="ph ph-warning-circle"></i>
+                <div class="dash-stat-card cyan">
+                    <div class="dash-stat-title">
+                        Da Confermare
+                        <div class="dash-stat-icon" style="background:rgba(0,229,255,0.1);color:var(--accent-cyan);">
+                            <i class="ph ph-warning-circle"></i>
+                        </div>
                     </div>
-                    <div class="stat-content">
-                        <div class="stat-label">Da Confermare</div>
-                        <div class="stat-value">${(stats.unconfirmed || 0).toLocaleString("it-IT")}</div>
-                    </div>
+                    <div class="dash-stat-value">${(stats.unconfirmed || 0).toLocaleString("it-IT")}</div>
                 </div>
             </div>
 

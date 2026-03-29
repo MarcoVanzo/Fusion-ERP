@@ -383,14 +383,38 @@ class TransportRepository
 
     public function listTeams(): array
     {
-        // Join with team_seasons to get the latest/active seasons for the dropdowns
         $stmt = $this->db->query(
-            'SELECT ts.id AS team_season_id, t.id AS team_id, t.id, t.name, t.category, ts.season 
+            'SELECT ts.id AS team_season_id, t.id AS team_id, t.name, t.category, ts.season 
              FROM team_seasons ts
              JOIN teams t ON ts.team_id = t.id
              WHERE t.is_active = 1 AND t.deleted_at IS NULL 
              ORDER BY ts.season DESC, t.name'
         );
         return $stmt->fetchAll();
+    }
+
+    public function listVehicles(): array
+    {
+        return $this->db->query(
+            'SELECT id, model, license_plate, seats, status
+             FROM vehicles
+             ORDER BY model'
+        )->fetchAll();
+    }
+
+    public function getStats(): array
+    {
+        $total = $this->db->query('SELECT COUNT(*) FROM transports')->fetchColumn();
+        $upcoming = $this->db->prepare('SELECT COUNT(*) FROM transports WHERE transport_date >= ?');
+        $upcoming->execute([date('Y-m-d')]);
+        $upCount = (int)$upcoming->fetchColumn();
+
+        $eventsCount = $this->db->query('SELECT COUNT(*) FROM events')->fetchColumn();
+
+        return [
+            'o' => (int)$eventsCount,
+            's' => (int)$upCount,
+            'l' => (int)$total
+        ];
     }
 }

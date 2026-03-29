@@ -257,14 +257,14 @@ export class VehiclesView {
                 </div>
             </div>
             
-            <div class="v-tabs fusion-tabs-container" style="margin: 0 24px;">
-                <div class="v-tab ${currentTab === "anomalies" ? "active" : ""}" data-tab="anomalies">
+            <div class="fusion-tabs-container" style="margin: 0 24px;">
+                <div class="fusion-tab ${currentTab === "anomalies" ? "active" : ""}" data-tab="anomalies">
                     <i class="ph ph-warning"></i> Anomalie (${openAnomaliesCount})
                 </div>
-                <div class="v-tab ${currentTab === "maintenance" ? "active" : ""}" data-tab="maintenance">
+                <div class="fusion-tab ${currentTab === "maintenance" ? "active" : ""}" data-tab="maintenance">
                     <i class="ph ph-wrench"></i> Manutenzione (${maintenanceCount})
                 </div>
-                <div class="v-tab ${currentTab === "info" ? "active" : ""}" data-tab="info">
+                <div class="fusion-tab ${currentTab === "info" ? "active" : ""}" data-tab="info">
                     <i class="ph ph-list-dashes"></i> Info e Scadenze
                 </div>
             </div>

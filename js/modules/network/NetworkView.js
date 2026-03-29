@@ -19,16 +19,21 @@ export class NetworkView {
 
     static renderMainLayout(currentTab) {
         return `
-            <div class="transport-dashboard" style="min-height:100vh;">
-                <div class="dash-top-bar" style="border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 24px; margin-bottom: 24px;">
-                    <div>
-                        <h1 class="dash-title">Network</h1>
-                        <p class="dash-subtitle" style="margin-top:4px;">Collaborazioni, atleti in prova e attività di rete</p>
-                    </div>
-                    <div class="dash-filters" style="margin-top: 16px;">
-                        <button class="dash-filter net-main-tab ${currentTab === 'collaborazioni' ? 'active' : ''}" data-net-main-tab="collaborazioni" type="button">Collaborazioni</button>
-                        <button class="dash-filter net-main-tab ${currentTab === 'prove' ? 'active' : ''}" data-net-main-tab="prove" type="button">Prove</button>
-                        <button class="dash-filter net-main-tab ${currentTab === 'attivita' ? 'active' : ''}" data-net-main-tab="attivita" type="button">Attività</button>
+            <div class="transport-dashboard" style="min-height:100vh; padding:24px;">
+                <div class="dash-top-bar" style="border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:24px; margin-bottom:24px;">
+                    <div style="display:flex;justify-content:space-between;width:100%;align-items:center;flex-wrap:wrap;gap:12px;">
+                        <div>
+                            <h1 class="dash-title" style="display:flex;align-items:center;gap:10px;">
+                                <i class="ph ph-share-network" style="color:var(--accent-pink);"></i>
+                                Network
+                            </h1>
+                            <p style="color:var(--text-muted);font-size:13px;margin-top:4px;">Collaborazioni, atleti in prova e attività di rete</p>
+                        </div>
+                        <div class="dash-filters" style="margin-top: 0;">
+                            <button class="dash-filter net-main-tab ${currentTab === 'collaborazioni' ? 'active' : ''}" data-net-main-tab="collaborazioni" type="button">Collaborazioni</button>
+                            <button class="dash-filter net-main-tab ${currentTab === 'prove' ? 'active' : ''}" data-net-main-tab="prove" type="button">Prove</button>
+                            <button class="dash-filter net-main-tab ${currentTab === 'attivita' ? 'active' : ''}" data-net-main-tab="attivita" type="button">Attività</button>
+                        </div>
                     </div>
                 </div>
                 <main id="net-tab-content"></main>

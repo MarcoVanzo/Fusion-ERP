@@ -596,7 +596,7 @@ select.input-field {
 .expense-icon.cat-manutenzione { background: rgba(156, 39, 176, 0.15); color: #9c27b0; }
 .expense-icon.cat-affitto { background: rgba(244, 67, 54, 0.15); color: #f44336; }
 .expense-icon.cat-frutta_verdura { background: rgba(139, 195, 74, 0.15); color: #8bc34a; }
-.expense-icon.cat-tuto { background: rgba(0, 188, 212, 0.15); color: #00bcd4; }
+.expense-icon.cat-abbigliamento { background: rgba(0, 188, 212, 0.15); color: #00bcd4; }
 .expense-icon.cat-altro { background: rgba(158, 158, 158, 0.15); color: #9e9e9e; }
 
 .expense-details {

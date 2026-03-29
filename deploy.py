@@ -9,6 +9,9 @@ import subprocess
 import time as _time
 import threading
 import concurrent.futures
+import argparse
+import http.client
+import urllib.parse
 from typing import Optional
 
 # Timeouts (seconds)
@@ -40,6 +43,28 @@ def load_env():
                 val = val.strip().strip("'\"")
                 os.environ[key] = val
     return True
+
+def get_folder_hash(folderpath):
+    """Calculate a combined hash of all files in a folder (src/public)."""
+    if not os.path.exists(folderpath):
+        return None
+    hasher = hashlib.sha256()
+    for root, dirs, files in os.walk(folderpath):
+        for name in sorted(files):
+            # Skip common hidden files
+            if name.startswith('.'): continue
+            filepath = os.path.join(root, name)
+            # Add filename and content to hash
+            hasher.update(name.encode())
+            try:
+                with open(filepath, 'rb') as f:
+                    while True:
+                        chunk = f.read(65536)
+                        if not chunk: break
+                        hasher.update(chunk)
+            except Exception:
+                continue
+    return hasher.hexdigest()
 
 def get_file_hash(filepath):
     """Calculate SHA-256 hash of a file."""
@@ -154,8 +179,46 @@ def worker_upload(item: tuple[str, str, str], host: str, user: str, password: st
             _time.sleep(2)
     return False, local_path, "Max retries exceeded"
 
-def deploy_files_via_ftp():
+def build_react_apps(force=False, skip=False, cache=None):
+    """Build the React applications before deployment if changed."""
+    if skip:
+        print("\n⏩ Skipping React builds (--no-build).")
+        return
+        
+    apps = ['fusion-website', 'fusion-erp-react']
+    for app in apps:
+        if os.path.isdir(app):
+            # Smart check: hash the src and public folders
+            src_path = os.path.join(app, 'src')
+            public_path = os.path.join(app, 'public')
+            current_hash = f"{get_folder_hash(src_path)}|{get_folder_hash(public_path)}"
+            
+            cached_hash = cache.get(f"__build_hash_{app}", "") if cache else ""
+            
+            if not force and cached_hash == current_hash and os.path.exists(os.path.join(app, 'dist')):
+                print(f"\n✨ React app {app} is unchanged, skipping build (use --force-build to override).")
+                continue
+
+            print(f"\n📦 Building React app: {app}...")
+            try:
+                if not os.path.exists(os.path.join(app, 'node_modules')):
+                    print(f"  ⬇️  Installing dependencies for {app}...")
+                    subprocess.run(['npm', 'install'], cwd=app, check=True)
+                subprocess.run(['npm', 'run', 'build'], cwd=app, check=True)
+                print(f"  ✅ Build successful for {app}!")
+                if cache is not None:
+                    cache[f"__build_hash_{app}"] = current_hash
+            except subprocess.CalledProcessError as e:
+                print(f"  ❌ Build failed for {app}: {e}")
+                sys.exit(1)
+            except Exception as e:
+                print(f"  ❌ Error building {app}: {e}")
+                sys.exit(1)
+
+def deploy_files_via_ftp(dry_run=False):
     """Upload project files via FTP in parallel, only if changed."""
+    if dry_run:
+        print("\n🔍 DRY RUN: No files will be actually uploaded.")
     print("\n🚀 Starting Fast Smart Auto-Deploy (Parallelized)...")
     
     host = os.getenv('FTP_HOST', '')
@@ -181,6 +244,7 @@ def deploy_files_via_ftp():
         required_dirs: set[str] = set()
         required_dirs.add(base_remote_dir)
         skip_count: int = 0
+        uploaded_sql_files: list[str] = []
 
         print("🔍 Scanning for modified files...")
         for root, dirs, files in os.walk('.'):
@@ -191,13 +255,26 @@ def deploy_files_via_ftp():
 
             # Calculate the corresponding remote path
             rel_path = os.path.relpath(root, '.')
+            rel_path_unix = rel_path.replace('\\', '/')
+            
+            # Skip uploading source code for React apps (only upload 'dist')
+            if rel_path_unix in ['fusion-website', 'fusion-erp-react']:
+                for d in list(dirs):
+                    if d != 'dist':
+                        dirs.remove(d)
+                # Skip the root files of the React apps (package.json, ecc)
+                continue
             
             # Map fusion-website/dist to the root folder in production
-            if rel_path == 'fusion-website/dist' or rel_path.startswith('fusion-website/dist/'):
-                sub_rel = rel_path.replace('fusion-website/dist', '').lstrip('/\\')
-                remote_sub_dir = '/www.fusionteamvolley.it' if not sub_rel else f"/www.fusionteamvolley.it/{sub_rel}".replace('\\', '/')
+            if rel_path_unix == 'fusion-website/dist' or rel_path_unix.startswith('fusion-website/dist/'):
+                sub_rel = rel_path_unix.replace('fusion-website/dist', '').lstrip('/')
+                remote_sub_dir = '/www.fusionteamvolley.it' if not sub_rel else f"/www.fusionteamvolley.it/{sub_rel}"
+            # Map fusion-erp-react/dist inside the ERP base folder
+            elif rel_path_unix == 'fusion-erp-react/dist' or rel_path_unix.startswith('fusion-erp-react/dist/'):
+                sub_rel = rel_path_unix.replace('fusion-erp-react/dist', '').lstrip('/')
+                remote_sub_dir = f"{base_remote_dir}/react" if not sub_rel else f"{base_remote_dir}/react/{sub_rel}"
             else:
-                remote_sub_dir = base_remote_dir if rel_path == '.' else f"{base_remote_dir}/{rel_path}".replace('\\', '/')
+                remote_sub_dir = base_remote_dir if rel_path_unix == '.' else f"{base_remote_dir}/{rel_path_unix}"
 
             for file in files:
                 # Skip ignored / hidden files (allow .htaccess and .env.prod)
@@ -220,6 +297,9 @@ def deploy_files_via_ftp():
                 if cached_hash and cached_hash == file_hash and file != '.env.prod':
                     skip_count += 1
                     continue
+
+                if file.endswith('.sql') and 'db/migrations' in rel_path_unix:
+                    uploaded_sql_files.append(file)
 
                 remote_filename = '.env' if file == '.env.prod' else file
                 # Add to queue
@@ -262,6 +342,11 @@ def deploy_files_via_ftp():
                 job = future_to_job[future]
                 local_path, remote_filename, remote_sub_dir, f_hash = job
                 try:
+                    if dry_run:
+                        upload_count += 1
+                        print(f"  [DRY] Should upload {local_path} -> {remote_filename}")
+                        continue
+
                     success, completed_local_path, error_msg = future.result()
                     if success:
                         upload_count += 1 # type: ignore
@@ -286,15 +371,29 @@ def deploy_files_via_ftp():
         if failed_jobs:
             print(f"⚠️ Warning: {len(failed_jobs)} files failed to upload.")
             return False
-            
+
+        if uploaded_sql_files:
+            print("\n" + "="*60)
+            print("🚨 🚨 🚨   ATTENZIONE: MIGRAZIONI DB RILEVATE   🚨 🚨 🚨")
+            print("="*60)
+            print("Hai caricato dei nuovi script SQL o modificato quelli esistenti:")
+            for sql_file in uploaded_sql_files:
+                print(f"  - {sql_file}")
+            print("\nRicordati di importare questi file su phpMyAdmin (ambiente Aruba)")
+            print("per aggiornare la struttura del database!")
+            print("="*60 + "\n")
+
         return True
         
     except Exception as e:
         print(f"❌ FTP Error: {e}")
         return False
 
-def git_commit_and_push():
+def git_commit_and_push(skip=False):
     """Committa tutte le modifiche locali e fa push su GitHub prima del deploy."""
+    if skip:
+        print("\n⏩ Skipping Git push (--no-git).")
+        return
     print("\n📦 Salvataggio codice su GitHub prima del deploy...")
     try:
         # Controlla se ci sono modifiche
@@ -354,33 +453,68 @@ def update_index_version():
     except Exception as e:
         print(f"⚠️ Errore durante l'aggiornamento della cache in index.html: {e}")
 
+def verify_deployment():
+    """Effettua un health check sul sito di produzione."""
+    print("\n🩺 Eseguo Health Check sul sito live...")
+    url = os.getenv('APP_URL', 'https://www.fusionteamvolley.it/ERP')
+    try:
+        parsed_url = urllib.parse.urlparse(url)
+        conn = http.client.HTTPSConnection(parsed_url.netloc, timeout=10)
+        conn.request("GET", parsed_url.path or "/")
+        response = conn.getresponse()
+        if response.status == 200:
+            print(f"  ✅ Health Check superato! {url} risponde con 200 OK.")
+        else:
+            print(f"  ⚠️ Health Check incompleto: {url} risponde con {response.status}.")
+    except Exception as e:
+        print(f"  ❌ Errore durante l'Health Check: {e}")
+
 def main():
+    parser = argparse.ArgumentParser(description="Fusion ERP Fast Auto-Deploy")
+    parser.add_argument("--no-build", action="store_true", help="Salta la build dei progetti React")
+    parser.add_argument("--force-build", action="store_true", help="Forza la build anche se non sono state rilevate modifiche")
+    parser.add_argument("--no-git", action="store_true", help="Salta il commit e push su GitHub")
+    parser.add_argument("--dry-run", action="store_true", help="Simula il deploy senza caricare file o committare")
+    args = parser.parse_args()
+
     print("=== Fusion ERP Fast Auto-Deploy ===")
     
     # 1. Load credentials
     load_env()
     
-    # 2. Aggiorna cache buster prima del deploy
-    update_index_version()
+    # 2. Carica cache per smart build
+    cache = load_cache()
 
-    # 3. Salva su GitHub prima di deployare
-    git_commit_and_push()
+    # 3. Aggiorna cache buster prima del deploy
+    if not args.dry_run:
+        update_index_version()
 
-    # 4. Ensure .env.prod exists
+    # 4. Build React apps
+    build_react_apps(force=args.force_build, skip=args.no_build, cache=cache)
+
+    # 5. Salva su GitHub prima di deployare
+    git_commit_and_push(skip=(args.no_git or args.dry_run))
+
+    # 6. Ensure .env.prod exists
     if not os.path.exists('.env.prod'):
         print("❌ Error: .env.prod file not found. Create it with production credentials before deploying.")
         sys.exit(1)
 
-    # 5. Deploy directly
+    # 7. Deploy direttamente
     try:
-        success = deploy_files_via_ftp()
+        success = deploy_files_via_ftp(dry_run=args.dry_run)
+        if success and not args.dry_run:
+            verify_deployment()
     except KeyboardInterrupt:
         print("\n🛑 Deployment interrupted by user. Cache saved for uploaded files.")
         success = False
 
     if success:
-        print("\n🎉 Auto-deployment finished successfully!")
-        print("Your application is now live. Only changed files were uploaded.")
+        if args.dry_run:
+            print("\n🏁 Dry run finished successfully! No changes were made.")
+        else:
+            print("\n🎉 Auto-deployment finished successfully!")
+            print("Your application is now live. Only changed files were uploaded.")
     else:
         print("\n💥 Deployment failed. Please check the errors above.")
         sys.exit(1)

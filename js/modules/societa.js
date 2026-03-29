@@ -51,7 +51,6 @@ const Societa = {
             await this.reloadData();
             
             this.render();
-            this.attachGlobalEvents();
         } catch (err) {
             console.error("[Societa] Init error:", err);
             appContainer.innerHTML = Utils.emptyState("Errore caricamento", err.message);
@@ -62,81 +61,79 @@ const Societa = {
     },
 
     reloadData: async function() {
-        const promises = [
-            SocietaAPI.getProfile().catch(() => ({})),
-            SocietaAPI.listRoles().catch(() => []),
-            SocietaAPI.listMembers().catch(() => []),
-            SocietaAPI.listDocuments().catch(() => []),
-            SocietaAPI.listDeadlines().catch(() => []),
-            SocietaAPI.listSponsors().catch(() => []),
-            SocietaAPI.listTitoli().catch(() => [])
-        ];
+        const promises = {
+            profile: SocietaAPI.getProfile().catch(() => ({})),
+            roles: SocietaAPI.listRoles().catch(() => []),
+            members: SocietaAPI.listMembers().catch(() => []),
+            documents: SocietaAPI.listDocuments().catch(() => []),
+            deadlines: SocietaAPI.listDeadlines().catch(() => []),
+            sponsors: SocietaAPI.listSponsors().catch(() => []),
+            titles: SocietaAPI.listTitoli().catch(() => [])
+        };
 
-        if (this._currentTab === 'foresteria') {
-            promises.push(SocietaAPI.getForesteria().catch(() => null));
+        if (this._currentTab === 'foresteria' || this._currentTab === 'spese-foresteria') {
+            promises.foresteria = SocietaAPI.getForesteria().catch(err => {
+                console.error("[Societa] Error fetching foresteria data:", err);
+                return null;
+            });
         }
 
-        const results = await Promise.all(promises);
-        this._data.profile = results[0];
-        this._data.roles = results[1];
-        this._data.members = results[2];
-        this._data.documents = results[3];
-        this._data.deadlines = results[4];
-        this._data.sponsors = results[5];
-        this._data.titles = results[6];
-        if (this._currentTab === 'foresteria') {
-            this._data.foresteria = results[7];
-        }
+        const keys = Object.keys(promises);
+        const results = await Promise.all(Object.values(promises));
+        
+        // Map results back to this._data using keys to avoid race condition index mismatches
+        keys.forEach((key, index) => {
+            if (key === 'titles') {
+                this._data.titles = results[index];
+            } else {
+                this._data[key] = results[index];
+            }
+        });
     },
 
     render: function() {
-        const contentEl = document.getElementById("soc-tab-content");
-        if (!contentEl) return;
+        const appContainer = document.getElementById("app");
+        if (!appContainer) return;
 
         const isAdmin = ["admin", "manager"].includes(App.getUser()?.role);
-        
-        // Update nav active state
-        document.querySelectorAll(".soc-nav-item").forEach(btn => {
-            btn.classList.toggle("active", btn.dataset.tab === this._currentTab);
-        });
 
         switch (this._currentTab) {
             case 'identita':
-                contentEl.innerHTML = SocietaView.identity(this._data.profile, isAdmin);
-                this.attachIdentityEvents(contentEl, isAdmin);
+                appContainer.innerHTML = SocietaView.identity(this._data.profile, isAdmin);
+                this.attachIdentityEvents(appContainer, isAdmin);
                 break;
             case 'organigramma':
-                contentEl.innerHTML = SocietaView.orgChart(this._data.roles, isAdmin);
-                if (isAdmin) SocietaOrgChart.initDragAndDrop(contentEl, () => this.refreshTab(), this._abort.signal);
-                this.attachOrgEvents(contentEl, isAdmin);
+                appContainer.innerHTML = SocietaView.orgChart(this._data.roles, isAdmin);
+                if (isAdmin) SocietaOrgChart.initDragAndDrop(appContainer, () => this.refreshTab(), this._abort.signal);
+                this.attachOrgEvents(appContainer, isAdmin);
                 break;
             case 'membri':
-                contentEl.innerHTML = SocietaView.membersTable(this._data.members, isAdmin);
-                this.attachMembersEvents(contentEl, isAdmin);
+                appContainer.innerHTML = SocietaView.membersTable(this._data.members, isAdmin);
+                this.attachMembersEvents(appContainer, isAdmin);
                 break;
             case 'documenti':
-                contentEl.innerHTML = SocietaView.documentsGrid(this._data.documents, isAdmin);
-                this.attachDocumentsEvents(contentEl, isAdmin);
+                appContainer.innerHTML = SocietaView.documentsGrid(this._data.documents, isAdmin);
+                this.attachDocumentsEvents(appContainer, isAdmin);
                 break;
             case 'scadenze':
-                contentEl.innerHTML = SocietaView.deadlines(this._data.deadlines, isAdmin);
-                this.attachDeadlinesEvents(contentEl, isAdmin);
+                appContainer.innerHTML = SocietaView.deadlines(this._data.deadlines, isAdmin);
+                this.attachDeadlinesEvents(appContainer, isAdmin);
                 break;
             case 'sponsor':
-                contentEl.innerHTML = SocietaView.sponsorsGrid(this._data.sponsors, isAdmin);
-                this.attachSponsorsEvents(contentEl, isAdmin);
+                appContainer.innerHTML = SocietaView.sponsorsGrid(this._data.sponsors, isAdmin);
+                this.attachSponsorsEvents(appContainer, isAdmin);
                 break;
             case 'titoli':
-                contentEl.innerHTML = SocietaView.titoli(this._data.titles, isAdmin);
-                this.attachTitoliEvents(contentEl, isAdmin);
+                appContainer.innerHTML = SocietaView.titoli(this._data.titles, isAdmin);
+                this.attachTitoliEvents(appContainer, isAdmin);
                 break;
             case 'foresteria':
                 if (this._data.foresteria) {
-                   contentEl.innerHTML = SocietaView.foresteria(this._data.foresteria.info, this._data.foresteria.expenses, this._data.foresteria.media, isAdmin);
-                   SocietaForesteria.attachEvents(contentEl, this._data.foresteria.info, this._abort.signal);
-                   if (this._data.foresteria.info.lat) SocietaForesteria.initMap(this._data.foresteria.info);
+                   appContainer.innerHTML = SocietaView.foresteriaInfo(this._data.foresteria.info, this._data.foresteria.media, isAdmin);
+                   SocietaForesteria.attachInfoEvents(appContainer, this._data.foresteria.info, this._abort.signal);
+                   if (this._data.foresteria.info && this._data.foresteria.info.lat) SocietaForesteria.initMap(this._data.foresteria.info);
                 } else {
-                   contentEl.innerHTML = Utils.emptyState("Dati mancanti", "Impossibile caricare i dati della foresteria.");
+                   appContainer.innerHTML = Utils.emptyState("Dati mancanti", "Impossibile caricare i dati della foresteria.");
                 }
                 break;
         }
@@ -154,23 +151,11 @@ const Societa = {
         }
     },
 
-    attachGlobalEvents: function() {
-        document.querySelectorAll(".soc-nav-item").forEach(btn => {
-            btn.addEventListener("click", () => {
-                const tab = btn.dataset.tab;
-                if (tab === this._currentTab) return;
-                
-                const route = tab === 'identita' ? 'societa' : `societa-${tab}`;
-                Router.navigate(route);
-            }, this.sig());
-        });
-    },
-
     attachIdentityEvents: function(container, isAdmin) {
         if (!isAdmin) return;
-        
+
         container.querySelector("#soc-logo-btn")?.addEventListener("click", () => {
-            document.getElementById("soc-logo-input")?.click();
+            container.querySelector("#soc-logo-input")?.click();
         }, this.sig());
 
         container.querySelector("#soc-logo-input")?.addEventListener("change", async (e) => {
@@ -188,22 +173,26 @@ const Societa = {
             }
         }, this.sig());
 
+        // Salva profilo — pulsante ora nell'header (dash-top-bar)
         container.querySelector("#soc-save-profile")?.addEventListener("click", async () => {
+            const errEl = container.querySelector("#soc-profile-err");
             const body = {
-                mission: document.getElementById("soc-mission")?.value,
-                vision: document.getElementById("soc-vision")?.value,
-                values: document.getElementById("soc-values")?.value,
-                founded_year: document.getElementById("soc-founded")?.value,
-                primary_color: document.getElementById("soc-color-primary")?.value,
-                secondary_color: document.getElementById("soc-color-secondary")?.value,
-                legal_address: document.getElementById("soc-legal-addr")?.value,
-                operative_address: document.getElementById("soc-op-addr")?.value
+                mission: container.querySelector("#soc-mission")?.value,
+                vision: container.querySelector("#soc-vision")?.value,
+                values: container.querySelector("#soc-values")?.value,
+                founded_year: container.querySelector("#soc-founded")?.value,
+                primary_color: container.querySelector("#soc-color-primary")?.value,
+                secondary_color: container.querySelector("#soc-color-secondary")?.value,
+                legal_address: container.querySelector("#soc-legal-addr")?.value,
+                operative_address: container.querySelector("#soc-op-addr")?.value
             };
             try {
+                if (errEl) errEl.classList.add("hidden");
                 await SocietaAPI.saveProfile(body);
                 UI.toast("Profilo aggiornato", "success");
                 this.refreshTab();
             } catch (err) {
+                if (errEl) { errEl.textContent = err.message; errEl.classList.remove("hidden"); }
                 UI.toast(err.message, "error");
             }
         }, this.sig());
@@ -211,7 +200,80 @@ const Societa = {
 
     attachOrgEvents: function(container, isAdmin) {
         if (!isAdmin) return;
-        // Logic for adding/editing roles
+        
+        container.querySelector("#soc-add-role")?.addEventListener("click", () => {
+            this.openRoleModal();
+        }, this.sig());
+
+        container.querySelectorAll("[data-edit-role]").forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                const id = e.currentTarget.dataset.editRole;
+                const role = this._data.roles.find(x => x.id == id);
+                if (role) this.openRoleModal(role);
+            }, this.sig());
+        });
+
+        container.querySelectorAll("[data-del-role]").forEach(btn => {
+            btn.addEventListener("click", async (e) => {
+                const id = e.currentTarget.dataset.delRole;
+                const hasChildren = this._data.roles.some(x => x.parent_role_id == id);
+                if (hasChildren) {
+                    UI.toast("Attenzione: questo ruolo ha sotto-ruoli. Elimina prima i sotto-ruoli.", "error");
+                    return;
+                }
+                
+                if (!confirm("Sei sicuro di voler eliminare questo ruolo?")) return;
+                try {
+                    await SocietaAPI.deleteRole(id);
+                    UI.toast("Ruolo eliminato", "success");
+                    this.refreshTab();
+                } catch (err) {
+                    UI.toast(err.message, "error");
+                }
+            }, this.sig());
+        });
+    },
+
+    openRoleModal: function(role = null) {
+        const isEdit = !!role;
+        const modal = UI.modal({
+            title: isEdit ? "Modifica Ruolo" : "Nuovo Ruolo",
+            body: SocietaView.roleModal(role, this._data.roles),
+            footer: '<button class="btn-dash ghost" id="role-modal-cancel">Annulla</button><button class="btn-dash primary" id="role-modal-save">Salva</button>'
+        });
+
+        document.getElementById("role-modal-cancel")?.addEventListener("click", () => modal.close(), this.sig());
+        document.getElementById("role-modal-save")?.addEventListener("click", async () => {
+            const errEl = document.getElementById("role-modal-err");
+            const name = document.getElementById("role-name").value.trim();
+            if (!name) {
+                if (errEl) { errEl.textContent = "Il nome del ruolo è obbligatorio"; errEl.classList.remove("hidden"); }
+                return;
+            }
+
+            const data = {
+                name: name,
+                parent_role_id: document.getElementById("role-parent").value || null,
+                description: document.getElementById("role-desc").value.trim()
+            };
+
+            if (isEdit) data.id = role.id;
+
+            try {
+                if (errEl) errEl.classList.add("hidden");
+                if (isEdit) {
+                    await SocietaAPI.updateRole(data);
+                    UI.toast("Ruolo aggiornato", "success");
+                } else {
+                    await SocietaAPI.createRole(data);
+                    UI.toast("Ruolo creato", "success");
+                }
+                modal.close();
+                this.refreshTab();
+            } catch (err) {
+                if (errEl) { errEl.textContent = err.message; errEl.classList.remove("hidden"); }
+            }
+        }, this.sig());
     },
 
     attachMembersEvents: function(container, isAdmin) {
@@ -225,31 +287,382 @@ const Societa = {
         }, this.sig());
         
         if (!isAdmin) return;
-        // Add member logic
+        
+        container.querySelector("#soc-add-member")?.addEventListener("click", () => {
+            this.openMemberModal();
+        }, this.sig());
+
+        container.querySelectorAll("[data-edit-member]").forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                const id = e.currentTarget.dataset.editMember;
+                const mem = this._data.members.find(x => x.id == id);
+                if (mem) this.openMemberModal(mem);
+            }, this.sig());
+        });
+
+        container.querySelectorAll("[data-del-member]").forEach(btn => {
+            btn.addEventListener("click", async (e) => {
+                const id = e.currentTarget.dataset.delMember;
+                if (!confirm("Eliminare definitivamente questo membro dal direttivo?")) return;
+                try {
+                    await SocietaAPI.deleteMember(id);
+                    UI.toast("Membro eliminato", "success");
+                    this.refreshTab();
+                } catch (err) {
+                    UI.toast(err.message, "error");
+                }
+            }, this.sig());
+        });
+    },
+
+    openMemberModal: function(member = null) {
+        const isEdit = !!member;
+        const modal = UI.modal({
+            title: isEdit ? "Modifica Membro" : "Nuovo Membro",
+            body: SocietaView.memberModal(member, this._data.roles),
+            footer: '<button class="btn-dash ghost" id="mem-modal-cancel">Annulla</button><button class="btn-dash primary" id="mem-modal-save">Salva</button>'
+        });
+
+        document.getElementById("mem-modal-cancel")?.addEventListener("click", () => modal.close(), this.sig());
+        document.getElementById("mem-modal-save")?.addEventListener("click", async () => {
+            const errEl = document.getElementById("mem-modal-err");
+            const fullName = document.getElementById("mem-name").value.trim();
+            if (!fullName) {
+                if (errEl) { errEl.textContent = "Il nome completo è obbligatorio"; errEl.classList.remove("hidden"); }
+                return;
+            }
+
+            const data = {
+                full_name: fullName,
+                role_id: document.getElementById("mem-role").value || null,
+                start_date: document.getElementById("mem-start-date").value || null,
+                end_date: document.getElementById("mem-end-date").value || null,
+                is_active: document.getElementById("mem-active").checked ? 1 : 0
+            };
+
+            if (isEdit) data.id = member.id;
+
+            try {
+                if (errEl) errEl.classList.add("hidden");
+                if (isEdit) {
+                    await SocietaAPI.updateMember(data);
+                    UI.toast("Membro aggiornato", "success");
+                } else {
+                    await SocietaAPI.createMember(data);
+                    UI.toast("Membro aggiunto", "success");
+                }
+                modal.close();
+                this.refreshTab();
+            } catch (err) {
+                if (errEl) { errEl.textContent = err.message; errEl.classList.remove("hidden"); }
+            }
+        }, this.sig());
     },
 
     attachDocumentsEvents: function(container, isAdmin) {
         if (!isAdmin) return;
-        // Upload doc logic
+        
+        container.querySelector("#soc-upload-doc")?.addEventListener("click", () => {
+            const input = document.createElement("input");
+            input.type = "file";
+            input.onchange = async (evt) => {
+                const file = evt.target.files[0];
+                if (!file) return;
+                try {
+                    UI.loading(true);
+                    const fd = new FormData();
+                    fd.append("document", file);
+                    await SocietaAPI.uploadDocument(fd);
+                    UI.toast("Documento caricato", "success");
+                    this.refreshTab();
+                } catch (err) {
+                    UI.toast(err.message, "error");
+                } finally {
+                    UI.loading(false);
+                }
+            };
+            input.click();
+        }, this.sig());
+
+        container.querySelectorAll("[data-del-doc]").forEach(btn => {
+            btn.addEventListener("click", async (e) => {
+                const id = e.currentTarget.dataset.delDoc;
+                if (!confirm("Eliminare questo documento societario?")) return;
+                try {
+                    await SocietaAPI.deleteDocument(id);
+                    UI.toast("Documento eliminato", "success");
+                    this.refreshTab();
+                } catch (err) {
+                    UI.toast(err.message, "error");
+                }
+            }, this.sig());
+        });
     },
 
     attachDeadlinesEvents: function(container, isAdmin) {
         // Filter logic
         container.querySelectorAll("[data-dl-status]").forEach(btn => {
-            btn.addEventListener("click", () => {
-               // ... (logic from legacy)
+            btn.addEventListener("click", (e) => {
+                container.querySelectorAll(".dash-filter").forEach(b => b.classList.remove("active"));
+                e.target.classList.add("active");
+                const filter = e.target.dataset.dlStatus;
+                container.querySelectorAll("#soc-deadlines-list > div").forEach(el => {
+                    if (!filter || el.dataset.dlStatus === filter) el.style.display = "";
+                    else el.style.display = "none";
+                });
+            }, this.sig());
+        });
+
+        if (!isAdmin) return;
+
+        container.querySelector("#soc-add-deadline")?.addEventListener("click", () => {
+            this.openDeadlineModal();
+        }, this.sig());
+
+        container.querySelectorAll("[data-edit-dl]").forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                const id = e.currentTarget.dataset.editDl;
+                const dl = this._data.deadlines.find(x => x.id == id);
+                if (dl) this.openDeadlineModal(dl);
+            }, this.sig());
+        });
+
+        container.querySelectorAll("[data-del-dl]").forEach(btn => {
+            btn.addEventListener("click", async (e) => {
+                const id = e.currentTarget.dataset.delDl;
+                if (!confirm("Eliminare questa scadenza?")) return;
+                try {
+                    await SocietaAPI.deleteDeadline(id);
+                    UI.toast("Scadenza eliminata", "success");
+                    this.refreshTab();
+                } catch (err) {
+                    UI.toast(err.message, "error");
+                }
             }, this.sig());
         });
     },
 
+    openDeadlineModal: function(dl = null) {
+        const isEdit = !!dl;
+        const modal = UI.modal({
+            title: isEdit ? "Modifica Scadenza" : "Nuova Scadenza",
+            body: SocietaView.deadlineModal(dl),
+            footer: '<button class="btn-dash ghost" id="dl-modal-cancel">Annulla</button><button class="btn-dash primary" id="dl-modal-save">Salva</button>'
+        });
+
+        document.getElementById("dl-modal-cancel")?.addEventListener("click", () => modal.close(), this.sig());
+        document.getElementById("dl-modal-save")?.addEventListener("click", async () => {
+            const errEl = document.getElementById("dl-modal-err");
+            const title = document.getElementById("dl-title").value.trim();
+            const dueDate = document.getElementById("dl-due-date").value;
+            
+            if (!title || !dueDate) {
+                if (errEl) { errEl.textContent = "I campi Titolo e Scadenza sono obbligatori"; errEl.classList.remove("hidden"); }
+                return;
+            }
+
+            const data = {
+                title: title,
+                due_date: dueDate,
+                category: document.getElementById("dl-category").value.trim(),
+                status: document.getElementById("dl-status").value
+            };
+
+            if (isEdit) data.id = dl.id;
+
+            try {
+                if (errEl) errEl.classList.add("hidden");
+                if (isEdit) {
+                    await SocietaAPI.updateDeadline(data);
+                    UI.toast("Scadenza aggiornata", "success");
+                } else {
+                    await SocietaAPI.createDeadline(data);
+                    UI.toast("Scadenza creata", "success");
+                }
+                modal.close();
+                this.refreshTab();
+            } catch (err) {
+                if (errEl) { errEl.textContent = err.message; errEl.classList.remove("hidden"); }
+            }
+        }, this.sig());
+    },
+
     attachSponsorsEvents: function(container, isAdmin) {
         if (!isAdmin) return;
-        // Sponsor CRUD logic
+
+        container.querySelector("#soc-add-sponsor")?.addEventListener("click", () => {
+            this.openSponsorModal();
+        }, this.sig());
+
+        container.querySelectorAll("[data-sp-edit]").forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                const id = e.currentTarget.dataset.spEdit;
+                const sp = this._data.sponsors.find(x => x.id === id);
+                if (sp) this.openSponsorModal(sp);
+            }, this.sig());
+        });
+
+        container.querySelectorAll("[data-sp-del]").forEach(btn => {
+            btn.addEventListener("click", async (e) => {
+                const id = e.currentTarget.dataset.spDel;
+                if (!confirm("Sei sicuro di voler eliminare questo sponsor?")) return;
+                try {
+                    await SocietaAPI.deleteSponsor(id);
+                    UI.toast("Sponsor eliminato", "success");
+                    this.refreshTab();
+                } catch (err) {
+                    UI.toast(err.message, "error");
+                }
+            }, this.sig());
+        });
+
+        container.querySelectorAll("[data-sp-logo]").forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                const id = e.currentTarget.dataset.spLogo;
+                const input = document.createElement("input");
+                input.type = "file";
+                input.accept = "image/*";
+                input.onchange = async (evt) => {
+                    const file = evt.target.files[0];
+                    if (!file) return;
+                    try {
+                        const fd = new FormData();
+                        fd.append("logo", file);
+                        fd.append("id", id);
+                        await SocietaAPI.uploadSponsorLogo(fd);
+                        UI.toast("Logo sponsor aggiornato", "success");
+                        this.refreshTab();
+                    } catch (err) {
+                        UI.toast(err.message, "error");
+                    }
+                };
+                input.click();
+            }, this.sig());
+        });
+    },
+
+    openSponsorModal: function(sponsor = null) {
+        const isEdit = !!sponsor;
+        const modal = UI.modal({
+            title: isEdit ? "Modifica Sponsor" : "Nuovo Sponsor",
+            body: SocietaView.sponsorModal(sponsor),
+            footer: '<button class="btn-dash ghost" id="sp-modal-cancel">Annulla</button><button class="btn-dash primary" id="sp-modal-save">Salva</button>'
+        });
+
+        document.getElementById("sp-modal-cancel")?.addEventListener("click", () => modal.close(), this.sig());
+        document.getElementById("sp-modal-save")?.addEventListener("click", async () => {
+            const errEl = document.getElementById("sp-modal-err");
+            const name = document.getElementById("sp-name").value.trim();
+            if (!name) {
+                if (errEl) { errEl.textContent = "Il nome dello sponsor è obbligatorio"; errEl.classList.remove("hidden"); }
+                return;
+            }
+
+            const data = {
+                name: name,
+                tipo: document.getElementById("sp-tipo").value,
+                stagione: document.getElementById("sp-stagione").value.trim(),
+                is_active: document.getElementById("sp-active").checked ? 1 : 0,
+                description: document.getElementById("sp-desc").value.trim(),
+                website_url: document.getElementById("sp-website").value.trim(),
+                instagram_url: document.getElementById("sp-instagram").value.trim(),
+                facebook_url: document.getElementById("sp-facebook").value.trim(),
+                linkedin_url: document.getElementById("sp-linkedin").value.trim()
+            };
+
+            if (isEdit) data.id = sponsor.id;
+
+            try {
+                if (errEl) errEl.classList.add("hidden");
+                if (isEdit) {
+                    await SocietaAPI.updateSponsor(data);
+                    UI.toast("Sponsor aggiornato", "success");
+                } else {
+                    await SocietaAPI.createSponsor(data);
+                    UI.toast("Sponsor creato", "success");
+                }
+                modal.close();
+                this.refreshTab();
+            } catch (err) {
+                if (errEl) { errEl.textContent = err.message; errEl.classList.remove("hidden"); }
+            }
+        }, this.sig());
     },
 
     attachTitoliEvents: function(container, isAdmin) {
         if (!isAdmin) return;
-        // Titoli CRUD logic
+        
+        container.querySelector("#soc-add-titolo")?.addEventListener("click", () => {
+            this.openTitoloModal();
+        }, this.sig());
+
+        container.querySelectorAll("[data-edit-titolo]").forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                const id = e.currentTarget.dataset.editTitolo;
+                const titolo = this._data.titles.find(x => x.id == id);
+                if (titolo) this.openTitoloModal(titolo);
+            }, this.sig());
+        });
+
+        container.querySelectorAll("[data-del-titolo]").forEach(btn => {
+            btn.addEventListener("click", async (e) => {
+                const id = e.currentTarget.dataset.delTitolo;
+                if (!confirm("Eliminare questo titolo dal palmarès?")) return;
+                try {
+                    await SocietaAPI.deleteTitolo(id);
+                    UI.toast("Titolo eliminato", "success");
+                    this.refreshTab();
+                } catch (err) {
+                    UI.toast(err.message, "error");
+                }
+            }, this.sig());
+        });
+    },
+
+    openTitoloModal: function(titolo = null) {
+        const isEdit = !!titolo;
+        const modal = UI.modal({
+            title: isEdit ? "Modifica Titolo" : "Nuovo Titolo",
+            body: SocietaView.titoloModal(titolo),
+            footer: '<button class="btn-dash ghost" id="tit-modal-cancel">Annulla</button><button class="btn-dash primary" id="tit-modal-save">Salva</button>'
+        });
+
+        document.getElementById("tit-modal-cancel")?.addEventListener("click", () => modal.close(), this.sig());
+        document.getElementById("tit-modal-save")?.addEventListener("click", async () => {
+            const errEl = document.getElementById("tit-modal-err");
+            const stagione = document.getElementById("tit-stagione").value.trim();
+            const campionato = document.getElementById("tit-campionato").value.trim();
+            
+            if (!stagione || !campionato) {
+                if (errEl) { errEl.textContent = "I campi Stagione e Campionato sono obbligatori"; errEl.classList.remove("hidden"); }
+                return;
+            }
+
+            const data = {
+                stagione: stagione,
+                campionato: campionato,
+                categoria: document.getElementById("tit-categoria").value.trim(),
+                piazzamento: document.getElementById("tit-piazzamento").value || null,
+                finali_nazionali: document.getElementById("tit-finali").checked ? 1 : 0
+            };
+
+            if (isEdit) data.id = titolo.id;
+
+            try {
+                if (errEl) errEl.classList.add("hidden");
+                if (isEdit) {
+                    await SocietaAPI.updateTitolo(data);
+                    UI.toast("Titolo aggiornato", "success");
+                } else {
+                    await SocietaAPI.createTitolo(data);
+                    UI.toast("Titolo aggiunto", "success");
+                }
+                modal.close();
+                this.refreshTab();
+            } catch (err) {
+                if (errEl) { errEl.textContent = err.message; errEl.classList.remove("hidden"); }
+            }
+        }, this.sig());
     }
 };
 

@@ -24,8 +24,8 @@ class ScoutingController
      * ───────────────────────────────────────────────────────────────────── */
     private static function getEnvVar(string $key): ?string
     {
-        // Standard precedence: $_ENV (populated by Dotenv at bootstrap) → OS env vars
-        $val = $_ENV[$key] ?? getenv($key);
+        // Standard precedence: $_ENV -> $_SERVER -> getenv()
+        $val = $_ENV[$key] ?? $_SERVER[$key] ?? getenv($key);
         if ($val !== false && $val !== null && $val !== '') {
             return (string)$val;
         }
@@ -201,7 +201,11 @@ class ScoutingController
         $networkFormId = self::networkFormId();
 
         if ($fusionFormId === 0 && $networkFormId === 0) {
-            return ['success' => false, 'error' => 'Nessun Form ID configurato. Impostare SCOUTING_FUSION_FORM_ID e/o SCOUTING_NETWORK_FORM_ID in .env'];
+            $error = 'Nessun Form ID configurato. Impostare SCOUTING_FUSION_FORM_ID e/o SCOUTING_NETWORK_FORM_ID in .env';
+            if (empty($_ENV) && empty($_SERVER['SCOUTING_FUSION_FORM_ID'])) {
+                $error .= ' (Ambiente di configurazione non rilevato)';
+            }
+            return ['success' => false, 'error' => $error];
         }
 
         $fusionUpserted = 0;
@@ -331,20 +335,27 @@ class ScoutingController
             $rawDate = $e['Entry_DateSubmitted'] ?? $e['Entry.DateSubmitted'] ?? null;
             $dataRil = !empty($rawDate) ? date('Y-m-d', (int)strtotime((string)$rawDate)) : date('Y-m-d');
 
-            $stmt->execute([
-                ':tenant_id' => 'TNT_default', // Assuming TNT_default for automated imports per system default
-                ':cog_id' => (int)$e['Id'],
-                ':cog_form' => $source,
-                ':nome' => (string)$nome,
-                ':cognome' => (string)$cognome,
-                ':societa' => $societa,
-                ':anno' => $anno ? (int)$anno : null,
-                ':note' => $note,
-                ':rilevatore' => (string)$rilevatore,
-                ':data_ril' => $dataRil,
-                ':source' => $source,
-            ]);
-            $upserted++;
+            try {
+                $stmt->execute([
+                    ':tenant_id' => 'TNT_default', // Assuming TNT_default for automated imports per system default
+                    ':cog_id' => (int)$e['Id'],
+                    ':cog_form' => $source,
+                    ':nome' => (string)$nome,
+                    ':cognome' => (string)$cognome,
+                    ':societa' => $societa,
+                    ':anno' => $anno ? (int)$anno : null,
+                    ':note' => $note,
+                    ':rilevatore' => (string)$rilevatore,
+                    ':data_ril' => $dataRil,
+                    ':source' => $source,
+                ]);
+                $upserted++;
+            } catch (\PDOException $ex) {
+                error_log("[Scouting Sync PDO Error] form $formId, entry " . ($e['Id'] ?? '?') . ": " . $ex->getMessage());
+                return ['success' => false, 'error' => 'Database error on entry ' . ($e['Id'] ?? '?') . ': ' . $ex->getMessage()];
+            } catch (\Throwable $ex) {
+                return ['success' => false, 'error' => 'Runtime error: ' . $ex->getMessage()];
+            }
         }
 
         return ['success' => true, 'upserted' => $upserted];

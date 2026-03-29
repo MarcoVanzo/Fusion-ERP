@@ -85,10 +85,13 @@ class AthletesRepository
         }
 
         $sql = "SELECT DISTINCT a.id, a.team_id, a.full_name, a.jersey_number, a.role, a.photo_path, a.is_active,
+                       a.birth_date, a.height_cm, a.weight_kg,
                        a.medical_cert_expires_at{$docCols},
                        COALESCE(t.name, 'Nessuna squadra') AS team_name,
                        COALESCE(t.category, 'Nessuna') AS category,
-                       (SELECT GROUP_CONCAT(at_sub.team_season_id SEPARATOR ',') FROM athlete_teams at_sub WHERE at_sub.athlete_id = a.id) AS team_season_ids
+                       (SELECT GROUP_CONCAT(at_sub.team_season_id SEPARATOR ',') FROM athlete_teams at_sub WHERE at_sub.athlete_id = a.id) AS team_season_ids,
+                       (SELECT metrics FROM vald_test_results WHERE athlete_id = a.id ORDER BY test_date DESC LIMIT 1) AS latest_vald_metrics,
+                       (SELECT test_date FROM vald_test_results WHERE athlete_id = a.id ORDER BY test_date DESC LIMIT 1) AS latest_vald_date
                 FROM athletes a
                 LEFT JOIN teams t ON a.team_id = t.id";
 

@@ -47,6 +47,12 @@ class TransportController
         Response::success($this->repo->listEvents($teamId, $type));
     }
 
+    public function getStats(): void
+    {
+        Auth::requireRead('transport');
+        Response::success($this->repo->getStats());
+    }
+
     public function createEvent(): void
     {
         $user = Auth::requireWrite('transport');

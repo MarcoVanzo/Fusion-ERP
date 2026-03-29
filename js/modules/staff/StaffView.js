@@ -212,9 +212,9 @@ const StaffView = {
 
                 <!-- TAB BAR -->
                 <div style="position:relative;margin:0 calc(var(--sp-4) * -1);padding:0 var(--sp-4);border-bottom:1px solid var(--color-border);margin-bottom:var(--sp-4);">
-                    <div id="staff-tab-bar" class="fusion-tabs-container" style="display:flex;gap:0;overflow-x:auto;scrollbar-width:none;position:relative;z-index:2;padding-bottom:1px;">
-                        <button class="athlete-tab-btn fusion-tab active" data-stab="anagrafica" type="button" style="flex-shrink:0;white-space:nowrap;"><i class="ph ph-identification-card"></i> Anagrafica </button>
-                        <button class="athlete-tab-btn fusion-tab" data-stab="documenti" type="button" style="flex-shrink:0;white-space:nowrap;"><i class="ph ph-file-text"></i> Documenti </button>
+                    <div id="staff-tab-bar" class="fusion-tabs-container">
+                        <button class="fusion-tab active" data-stab="anagrafica" type="button"><i class="ph ph-identification-card"></i> Anagrafica </button>
+                        <button class="fusion-tab" data-stab="documenti" type="button"><i class="ph ph-file-text"></i> Documenti </button>
                     </div>
                 </div>
 

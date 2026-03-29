@@ -270,7 +270,7 @@ class App {
                       <option value="utenze">Utenze</option>
                       <option value="cibo" selected>Cibo/Spesa</option>
                       <option value="frutta_verdura">Frutta e Verdura</option>
-                      <option value="tuto">Tuto</option>
+                      <option value="abbigliamento">Abbigliamento</option>
                       <option value="affitto">Affitto</option>
                       <option value="altro">Altro</option>
                     </select>
@@ -485,7 +485,7 @@ class App {
       manutenzione: 'Manutenzione',
       affitto: 'Affitto',
       frutta_verdura: 'Frutta e Verdura',
-      tuto: 'Tuto',
+      abbigliamento: 'Abbigliamento',
       altro: 'Altro'
     };
 
@@ -496,7 +496,7 @@ class App {
       manutenzione: 'fa-wrench',
       affitto: 'fa-home',
       frutta_verdura: 'fa-apple-alt',
-      tuto: 'fa-tshirt',
+      abbigliamento: 'fa-tshirt',
       altro: 'fa-ellipsis-h'
     };
 
