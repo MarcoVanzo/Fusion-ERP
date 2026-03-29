@@ -69,6 +69,9 @@ const Finance = {
                 const contentHtml = SocietaView.foresteriaExpenses(data.expenses, true);
                 appContainer.innerHTML = FinanceView.foresteriaContainer(contentHtml);
                 SocietaForesteria.attachExpenseEvents(appContainer.querySelector(".foresteria-finance-content"), this._abort.signal);
+                if (data.expenses && data.expenses.length > 0) {
+                    SocietaForesteria.initCharts(data.expenses);
+                }
                 this.attachBasicEvents(appContainer);
             }
         } catch (err) {

@@ -5,6 +5,21 @@ import SocietaAPI from './SocietaAPI.js';
 
 export default {
     abortController: new AbortController(),
+    _chartJsPromise: null,
+
+    loadChartJs: function() {
+        if (window.Chart) return Promise.resolve();
+        if (this._chartJsPromise) return this._chartJsPromise;
+
+        this._chartJsPromise = new Promise((resolve, reject) => {
+            const script = document.createElement("script");
+            script.src = "https://cdn.jsdelivr.net/npm/chart.js";
+            script.onload = () => resolve();
+            script.onerror = reject;
+            document.head.appendChild(script);
+        });
+        return this._chartJsPromise;
+    },
 
     init: async function(container, signal) {
         this.abortController = new AbortController();
@@ -12,6 +27,11 @@ export default {
         
         this.render(container, data);
         this.attachEvents(container, data.info, signal);
+        
+        // Initialize charts
+        if (data.expenses && data.expenses.length > 0) {
+            this.initCharts(data.expenses);
+        }
         
         // Google Maps integration (if coordinates exist)
         if (data.info.lat && data.info.lng) {
@@ -263,5 +283,98 @@ export default {
                 UI.toast(err.message, "error");
             }
         });
+    },
+
+    initCharts: async function(expenses) {
+        const canvas = document.getElementById("forest-expenses-chart");
+        if (!canvas) return;
+
+        try {
+            await this.loadChartJs();
+        } catch (e) {
+            console.error("[Foresteria] Failed to load Chart.js", e);
+            return;
+        }
+
+        // Process data
+        const catTotals = {};
+        const catLabels = {
+            'cibo': 'Cibo / Alimentari',
+            'utenze': 'Utenze',
+            'manutenzione': 'Manutenzione',
+            'pulizie': 'Pulizie',
+            'frutta_verdura': 'Frutta e Verdura',
+            'affitto': 'Affitto',
+            'altro': 'Altro'
+        };
+
+        expenses.forEach(e => {
+            const cat = e.category || 'altro';
+            catTotals[cat] = (catTotals[cat] || 0) + parseFloat(e.amount || 0);
+        });
+
+        const labels = Object.keys(catTotals).map(k => catLabels[k] || k);
+        const data = Object.values(catTotals);
+        
+        // Colors palette (Harmonious with Fusion ERP theme)
+        const colors = [
+            '#FF007A', // Primary Pink
+            '#00B7FF', // Cyan
+            '#10B981', // Success Green
+            '#F59E0B', // Amber
+            '#8B5CF6', // Violet
+            '#6366F1', // Indigo
+            '#94A3B8'  // Slate
+        ];
+
+        // Destroy existing
+        if (window._forestChart) window._forestChart.destroy();
+
+        const ctx = canvas.getContext('2d');
+        window._forestChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: colors,
+                    borderColor: 'rgba(0,0,0,0.2)',
+                    borderWidth: 2,
+                    hoverOffset: 12
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => {
+                                const val = ctx.raw.toLocaleString('it-IT', { minimumFractionDigits: 2 });
+                                return ` ${ctx.label}: € ${val}`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Build Custom Legend
+        const legendContainer = document.getElementById("chart-legend");
+        if (legendContainer) {
+            const total = data.reduce((a, b) => a + b, 0);
+            legendContainer.innerHTML = labels.map((l, i) => {
+                const perc = total > 0 ? ((data[i] / total) * 100).toFixed(0) : 0;
+                return `
+                    <div style="display:flex; align-items:center; gap:10px; font-size:12px;">
+                        <div style="width:10px; height:10px; border-radius:3px; background:${colors[i % colors.length]}"></div>
+                        <div style="flex:1; color:rgba(255,255,255,0.7)">${l}</div>
+                        <div style="font-weight:700; color:rgba(255,255,255,0.9)">${perc}%</div>
+                    </div>
+                `;
+            }).join('');
+        }
     }
 };

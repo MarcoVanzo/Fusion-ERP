@@ -325,69 +325,140 @@ const SocietaView = {
 
     foresteriaExpenses: (expenses, isAdmin) => {
         const safeExpenses = Array.isArray(expenses) ? expenses : [];
+        const totalAmount = safeExpenses.reduce((acc, e) => acc + parseFloat(e.amount || 0), 0);
+        
+        // Group by category for KPIs
+        const catTotals = {};
+        let topCat = "—";
+        let topCatVal = 0;
+        
+        safeExpenses.forEach(e => {
+            const c = e.category || 'altro';
+            catTotals[c] = (catTotals[c] || 0) + parseFloat(e.amount || 0);
+            if (catTotals[c] > topCatVal) {
+                topCatVal = catTotals[c];
+                topCat = c.replace('_', ' ').toUpperCase();
+            }
+        });
+
+        // Current month total
+        const now = new Date();
+        const curMonth = now.getMonth();
+        const curYear = now.getFullYear();
+        const thisMonthTotal = safeExpenses.reduce((acc, e) => {
+            const d = new Date(e.expense_date);
+            return (d.getMonth() === curMonth && d.getFullYear() === curYear) ? acc + parseFloat(e.amount || 0) : acc;
+        }, 0);
 
         return `
-        <div style="max-width:1000px; margin: 0 auto;">
-            <div class="dash-card" style="padding:var(--sp-4)">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--sp-4)">
-                    <div>
-                        <h3 class="dash-card-title">Riepilogo Spese Foresteria</h3>
-                        <p style="font-size:13px; color:var(--color-text-muted)">Gestione amministrativa e scontrini</p>
+        <div style="max-width:1200px; margin: 0 auto; display:flex; flex-direction:column; gap:var(--sp-4)">
+            
+            <!-- KPI Section -->
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:var(--sp-4)">
+                <div class="dash-card" style="padding:var(--sp-4); display:flex; align-items:center; gap:var(--sp-3)">
+                    <div style="width:48px; height:48px; border-radius:12px; background:rgba(255,0,122,0.1); display:flex; align-items:center; justify-content:center; color:var(--color-pink)">
+                        <i class="ph ph-wallet" style="font-size:24px;"></i>
                     </div>
-                    ${isAdmin ? '<button class="btn-dash pink" id="forest-add-expense"><i class="ph ph-plus"></i> AGGIUNGI SPESA</button>' : ''}
+                    <div>
+                        <div style="font-size:12px; color:var(--color-text-muted); text-transform:uppercase; letter-spacing:0.05em">Totale Storico</div>
+                        <div style="font-size:20px; font-weight:800; color:var(--color-pink)">€ ${totalAmount.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                    </div>
                 </div>
                 
-                <div style="display:flex; flex-direction:column; gap:12px">
-                    ${safeExpenses.length === 0 ? Utils.emptyState("Nessuna spesa", "Non sono ancora state registrate spese per la foresteria.") : safeExpenses.map(e => {
-                        const amountFloat = parseFloat(e.amount || 0);
-                        const amountStr = isNaN(amountFloat) ? '0.00' : amountFloat.toFixed(2);
-                        
-                        const catIcons = {
-                            'manutenzione': 'ph-wrench',
-                            'pulizie': 'ph-sparkle',
-                            'utenze': 'ph-lightning',
-                            'cibo': 'ph-bowl-food',
-                            'frutta_verdura': 'ph-leaf',
-                            'affitto': 'ph-house',
-                            'altro': 'ph-receipt',
-                            'tutto': 'ph-squares-four'
-                        };
-                        const catIcon = catIcons[e.category] || 'ph-receipt';
-                        const catLabel = (e.category || 'Altro').replace('_', ' ').toUpperCase();
+                <div class="dash-card" style="padding:var(--sp-4); display:flex; align-items:center; gap:var(--sp-3)">
+                    <div style="width:48px; height:48px; border-radius:12px; background:rgba(0,183,255,0.1); display:flex; align-items:center; justify-content:center; color:var(--color-cyan)">
+                        <i class="ph ph-calendar-check" style="font-size:24px;"></i>
+                    </div>
+                    <div>
+                        <div style="font-size:12px; color:var(--color-text-muted); text-transform:uppercase; letter-spacing:0.05em">Mese Corrente</div>
+                        <div style="font-size:20px; font-weight:800; color:var(--color-cyan)">€ ${thisMonthTotal.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                    </div>
+                </div>
 
-                        return `
-                            <div class="forest-expense-item" style="display:flex; align-items:center; gap:16px; padding:16px; background:rgba(255,255,255,0.02); border-radius:12px; border:1px solid rgba(255,255,255,0.05)">
-                                <div style="width:40px; height:40px; border-radius:10px; background:rgba(255,0,122,0.1); display:flex; align-items:center; justify-content:center; color:var(--color-pink)">
-                                    <i class="${catIcon}" style="font-size:22px;"></i>
-                                </div>
-                                <div style="flex:1; min-width:0">
-                                    <div style="font-weight:600; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis" title="${Utils.escapeHtml(e.description)}">
-                                        ${Utils.escapeHtml(e.description)}
+                <div class="dash-card" style="padding:var(--sp-4); display:flex; align-items:center; gap:var(--sp-3)">
+                    <div style="width:48px; height:48px; border-radius:12px; background:rgba(16,185,129,0.1); display:flex; align-items:center; justify-content:center; color:var(--color-success)">
+                        <i class="ph ph-chart-pie-slice" style="font-size:24px;"></i>
+                    </div>
+                    <div>
+                        <div style="font-size:12px; color:var(--color-text-muted); text-transform:uppercase; letter-spacing:0.05em">Top Categoria</div>
+                        <div style="font-size:18px; font-weight:800; color:rgba(255,255,255,0.9)">${topCat}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart & List Section -->
+            <div style="display:grid; grid-template-columns: 350px 1fr; gap:var(--sp-4); align-items:start">
+                
+                <!-- Chart Card -->
+                <div class="dash-card" style="padding:var(--sp-4); position:sticky; top:var(--sp-4)">
+                    <h3 class="dash-card-title" style="margin-bottom:var(--sp-4)">Ripartizione Spese</h3>
+                    <div style="position:relative; height:280px; width:100%">
+                        <canvas id="forest-expenses-chart"></canvas>
+                    </div>
+                    <div id="chart-legend" style="margin-top:var(--sp-4); display:flex; flex-direction:column; gap:8px"></div>
+                </div>
+
+                <!-- Expenses List -->
+                <div class="dash-card" style="padding:var(--sp-4)">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--sp-4)">
+                        <div>
+                            <h3 class="dash-card-title">Dettaglio Movimenti</h3>
+                            <p style="font-size:13px; color:var(--color-text-muted)">Ultime spese registrate</p>
+                        </div>
+                        ${isAdmin ? '<button class="btn-dash pink" id="forest-add-expense"><i class="ph ph-plus"></i> AGGIUNGI</button>' : ''}
+                    </div>
+                    
+                    <div style="display:flex; flex-direction:column; gap:12px">
+                        ${safeExpenses.length === 0 ? Utils.emptyState("Nessuna spesa", "Non sono ancora state registrate spese per la foresteria.") : safeExpenses.map(e => {
+                            const amountFloat = parseFloat(e.amount || 0);
+                            const amountStr = isNaN(amountFloat) ? '0.00' : amountFloat.toFixed(2);
+                            
+                            const catIcons = {
+                                'manutenzione': 'ph-wrench',
+                                'pulizie': 'ph-sparkle',
+                                'utenze': 'ph-lightning',
+                                'cibo': 'ph-bowl-food',
+                                'frutta_verdura': 'ph-leaf',
+                                'affitto': 'ph-house',
+                                'altro': 'ph-receipt'
+                            };
+                            const catIcon = catIcons[e.category] || 'ph-receipt';
+                            const catLabel = (e.category || 'Altro').replace('_', ' ').toUpperCase();
+
+                            return `
+                                <div class="forest-expense-item" style="display:flex; align-items:center; gap:16px; padding:12px 16px; background:rgba(255,255,255,0.02); border-radius:12px; border:1px solid rgba(255,255,255,0.05)">
+                                    <div style="width:36px; height:36px; border-radius:8px; background:rgba(255,255,255,0.05); display:flex; align-items:center; justify-content:center; color:var(--color-text-muted)">
+                                        <i class="${catIcon}" style="font-size:18px;"></i>
                                     </div>
-                                    <div style="font-size:12px; color:var(--color-text-muted); display:flex; gap:8px; align-items:center; margin-top:2px">
-                                        <span>${Utils.formatDate(e.expense_date)}</span>
-                                        <span style="opacity:0.3">•</span>
-                                        <span style="color:var(--color-pink); font-weight:700; font-size:10px; letter-spacing:0.5px">${catLabel}</span>
+                                    <div style="flex:1; min-width:0">
+                                        <div style="font-weight:600; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis" title="${Utils.escapeHtml(e.description)}">
+                                            ${Utils.escapeHtml(e.description)}
+                                        </div>
+                                        <div style="font-size:11px; color:var(--color-text-muted); display:flex; gap:6px; align-items:center; margin-top:2px">
+                                            <span>${Utils.formatDate(e.expense_date)}</span>
+                                            <span style="opacity:0.3">•</span>
+                                            <span style="color:var(--color-pink); font-weight:700; font-size:10px; letter-spacing:0.5px">${catLabel}</span>
+                                        </div>
+                                    </div>
+                                    <div style="text-align:right">
+                                        <div style="font-weight:700; color:var(--color-pink); font-size:15px">€ ${amountStr}</div>
+                                        <div style="display:flex; gap:6px; justify-content:flex-end; margin-top:4px">
+                                            ${e.receipt_path ? `
+                                                <a href="${Utils.escapeHtml(e.receipt_path)}" target="_blank" class="btn-dash" style="padding:2px 6px; font-size:10px; height:auto; color:var(--color-cyan); border-color:var(--color-cyan)" title="Ricevuta">
+                                                    <i class="ph ph-file-text"></i>
+                                                </a>
+                                            ` : ''}
+                                            ${isAdmin ? `
+                                                <button class="btn-dash" style="padding:2px 6px; font-size:10px; height:auto; border-color:rgba(255,255,255,0.1)" data-del-expense="${e.id}" title="Elimina">
+                                                    <i class="ph ph-trash"></i>
+                                                </button>
+                                            ` : ''}
+                                        </div>
                                     </div>
                                 </div>
-                                <div style="text-align:right">
-                                    <div style="font-weight:700; color:var(--color-pink); font-size:16px">€ ${amountStr}</div>
-                                    <div style="display:flex; gap:6px; justify-content:flex-end; margin-top:6px">
-                                        ${e.receipt_path ? `
-                                            <a href="${Utils.escapeHtml(e.receipt_path)}" target="_blank" class="btn-dash" style="padding:4px 8px; font-size:11px; height:auto; color:var(--color-cyan); border-color:var(--color-cyan)" title="Vedi Ricevuta">
-                                                <i class="ph ph-file-text"></i>
-                                            </a>
-                                        ` : ''}
-                                        ${isAdmin ? `
-                                            <button class="btn-dash" style="padding:4px 8px; font-size:11px; height:auto; border-color:rgba(255,255,255,0.2)" data-del-expense="${e.id}" title="Elimina">
-                                                <i class="ph ph-trash"></i>
-                                            </button>
-                                        ` : ''}
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    }).join('')}
+                            `;
+                        }).join('')}
+                    </div>
                 </div>
             </div>
         </div>`;
