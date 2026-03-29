@@ -78,9 +78,13 @@ class ScoutingModule {
         // Ensure DOM wipe before binding new listeners
         container.innerHTML = "";
         
-        const canEdit = ["admin", "manager", "allenatore"].includes(window.App.getUser()?.role);
-        container.innerHTML = ScoutingView.renderTableArea(this._athletes, this._lastSync, canEdit);
+        const user = window.App.getUser();
+        const role = user?.role?.toLowerCase();
+        const canEdit = ["admin", "manager", "allenatore"].includes(role);
         
+        console.log("[Scouting] User role:", role, "canEdit:", canEdit);
+        
+        container.innerHTML = ScoutingView.renderTableArea(this._athletes, this._lastSync, canEdit);
         this.bindTableEvents(container, canEdit);
     }
 
@@ -102,15 +106,33 @@ class ScoutingModule {
         }, this.sig());
 
         if (canEdit) {
+            console.log("[Scouting] Binding event listeners for edit actions");
             // New Entry Button
-            container.querySelector("#scouting-add-btn")?.addEventListener("click", () => {
-                this.openSidePanel();
-            }, this.sig());
+            const addBtn = container.querySelector("#scouting-add-btn");
+            if (addBtn) {
+                console.log("[Scouting] Add button found, attaching listener");
+                // Remove sig for debugging to ensure listener is ALWAYS attached if button exists
+                addBtn.addEventListener("click", (e) => {
+                    e.preventDefault();
+                    console.log("[Scouting] Add button clicked!");
+                    this.openSidePanel();
+                });
+            } else {
+                console.error("[Scouting] ERROR: #scouting-add-btn NOT found in container!");
+            }
 
             // Cognito Sync Button
-            container.querySelector("#scouting-sync-btn")?.addEventListener("click", () => {
-                this.handleSync();
-            }, this.sig());
+            const syncBtn = container.querySelector("#scouting-sync-btn");
+            if (syncBtn) {
+                console.log("[Scouting] Sync button found, attaching listener");
+                syncBtn.addEventListener("click", (e) => {
+                    e.preventDefault();
+                    console.log("[Scouting] Sync button clicked!");
+                    this.handleSync();
+                });
+            } else {
+                console.error("[Scouting] ERROR: #scouting-sync-btn NOT found in container!");
+            }
 
             // Edit Athlete Rows Delegation
             const tbody = container.querySelector("#scouting-tbody");
