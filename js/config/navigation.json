@@ -99,8 +99,7 @@
             { "title": "Direttivo", "path": "societa-membri", "icon": "users-three", "isMobileVisible": false, "roles": ["operatore", "admin"] },
             { "title": "Network", "path": "network-collaborazioni", "icon": "share-network", "isMobileVisible": false, "roles": ["operatore", "admin"] },
             { "title": "Titoli & Palmares", "path": "societa-titoli", "icon": "trophy", "isMobileVisible": false, "roles": ["operatore", "admin"] },
-            { "title": "La Foresteria", "path": "societa-foresteria", "icon": "house-line", "isMobileVisible": false, "roles": ["operatore", "admin"] },
-            { "title": "Spese Foresteria", "path": "societa-spese-foresteria", "icon": "house-line", "isMobileVisible": false, "roles": ["operatore", "admin"] }
+            { "title": "La Foresteria", "path": "societa-foresteria", "icon": "house-line", "isMobileVisible": false, "roles": ["operatore", "admin"] }
         ]
     }
 ]

@@ -44,8 +44,7 @@ const Societa = {
                 "societa-scadenze": "scadenze",
                 "societa-sponsor": "sponsor",
                 "societa-titoli": "titoli",
-                "societa-foresteria": "foresteria",
-                "societa-spese-foresteria": "spese-foresteria"
+                "societa-foresteria": "foresteria"
             }[route] || "identita";
 
             // Load initial data
@@ -97,6 +96,11 @@ const Societa = {
         const contentEl = document.getElementById("soc-tab-content");
         if (!contentEl) return;
 
+        // Update active tab highlight
+        document.querySelectorAll(".soc-nav-item").forEach(btn => {
+            btn.classList.toggle("active", btn.dataset.tab === this._currentTab);
+        });
+
         const isAdmin = ["admin", "manager"].includes(App.getUser()?.role);
         
         const headerEl = document.getElementById("soc-tab-header");
@@ -109,8 +113,7 @@ const Societa = {
                 scadenze: { t: "Scadenze", s: "Scadenze federali e amministrative" },
                 sponsor: { t: "Sponsor", s: "Partnership e sponsorizzazioni del club" },
                 titoli: { t: "Palmarès", s: "Trofei e successi storici del club" },
-                foresteria: { t: "La Foresteria", s: "Informazioni, multimedia e mappa" },
-                "spese-foresteria": { t: "Spese Foresteria", s: "Gestione amministrativa e scontrini" }
+                foresteria: { t: "La Foresteria", s: "Informazioni, multimedia e mappa" }
             };
             const info = titles[this._currentTab] || { t: "Il Club", s: "Gestione societaria" };
             headerEl.innerHTML = `
@@ -159,14 +162,6 @@ const Societa = {
                    if (this._data.foresteria.info.lat) SocietaForesteria.initMap(this._data.foresteria.info);
                 } else {
                    contentEl.innerHTML = Utils.emptyState("Dati mancanti", "Impossibile caricare i dati della foresteria.");
-                }
-                break;
-            case 'spese-foresteria':
-                if (this._data.foresteria) {
-                   contentEl.innerHTML = SocietaView.foresteriaExpenses(this._data.foresteria.expenses, isAdmin);
-                   SocietaForesteria.attachExpenseEvents(contentEl, this._abort.signal);
-                } else {
-                   contentEl.innerHTML = Utils.emptyState("Dati mancanti", "Impossibile caricare le spese della foresteria.");
                 }
                 break;
         }
