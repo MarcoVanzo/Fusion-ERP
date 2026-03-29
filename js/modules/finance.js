@@ -4,6 +4,9 @@
  */
 import FinanceAPI from './finance/FinanceAPI.js';
 import FinanceView from './finance/FinanceView.js';
+import SocietaAPI from './societa/SocietaAPI.js';
+import SocietaView from './societa/SocietaView.js';
+import SocietaForesteria from './societa/SocietaForesteria.js';
 
 const Finance = {
     _abort: new AbortController(),
@@ -29,7 +32,8 @@ const Finance = {
         try {
             // Set view based on route
             const currentRoute = typeof Router !== "undefined" ? Router.getCurrentRoute() : "finance";
-            this._currentView = currentRoute === "finance-invoices" ? "invoices" : "dashboard";
+            this._currentView = currentRoute === "finance-invoices" ? "invoices" : 
+                                 currentRoute === "finance-foresteria" ? "foresteria" : "dashboard";
 
             // Load essential metadata
             this._categories = await FinanceAPI.getCategories();
@@ -60,6 +64,13 @@ const Finance = {
             } else if (this._currentView === "accounts") {
                 appContainer.innerHTML = FinanceView.accountsList(this._accounts);
                 this.attachBasicEvents(appContainer);
+            } else if (this._currentView === "foresteria") {
+                const data = await SocietaAPI.getForesteria();
+                const contentHtml = SocietaView.foresteria(data.info, data.expenses, data.media, true);
+                appContainer.innerHTML = FinanceView.foresteriaContainer(contentHtml);
+                SocietaForesteria.attachEvents(appContainer.querySelector(".foresteria-finance-content"), data.info, this._abort.signal);
+                this.attachBasicEvents(appContainer);
+                if (data.info.lat) SocietaForesteria.initMap(data.info);
             }
         } catch (err) {
             UI.toast(err.message, "error");

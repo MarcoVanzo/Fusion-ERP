@@ -67,8 +67,10 @@ export default {
     },
 
     refresh: async function() {
-        if (window.Societa && typeof window.Societa.refreshTab === 'function') {
+        if (window.Societa && typeof window.Societa.refreshTab === 'function' && Router.getCurrentRoute().startsWith('societa')) {
             await window.Societa.refreshTab();
+        } else if (window.Finance && typeof window.Finance.refresh === 'function' && Router.getCurrentRoute().startsWith('finance')) {
+            await window.Finance.refresh();
         }
     },
 

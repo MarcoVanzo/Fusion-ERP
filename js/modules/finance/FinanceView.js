@@ -266,6 +266,28 @@ const FinanceView = {
         `;
     },
 
+    foresteriaContainer: (contentHtml) => {
+        return `
+            <div class="transport-dashboard" style="min-height:100vh; padding: 24px;">
+                <div class="dash-top-bar" style="border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 24px; margin-bottom: 24px;">
+                    <div style="display:flex;justify-content:space-between;width:100%;align-items:center;">
+                        <div>
+                            <h1 class="dash-title" style="display:flex;align-items:center;gap:10px;">
+                                <i class="ph ph-house-line" style="color:var(--accent-pink);"></i>
+                                Spese Foresteria
+                            </h1>
+                            <p style="color:var(--text-muted);font-size:13px;margin-top:4px;">Gestione amministrativa e costi della foresteria</p>
+                        </div>
+                        <button class="btn-dash" id="btn-back-dash"><i class="ph ph-arrow-left"></i> Dashboard</button>
+                    </div>
+                </div>
+                <div class="foresteria-finance-content">
+                    ${contentHtml}
+                </div>
+            </div>
+        `;
+    },
+
     _kpiCard: (label, value, icon, type) => {
 
         const isNum = typeof value === 'number';

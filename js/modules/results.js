@@ -19,6 +19,7 @@ const Results = {
     },
 
     init: async function() {
+        this._abort = new AbortController();
         const appContainer = document.getElementById("app");
         if (!appContainer) return;
 
@@ -205,7 +206,6 @@ const Results = {
                 UI.toast("Campionato aggiunto", "success");
                 modal.close();
                 this._abort.abort();
-                this._abort = new AbortController();
                 await this.init();
             } catch (err) {
                 UI.toast(err.message, "error");
@@ -225,7 +225,6 @@ const Results = {
                     UI.toast("Campionato rimosso", "success");
                     modal.close();
                     this._abort.abort();
-                    this._abort = new AbortController();
                     await this.init();
                 } catch (err) {
                     UI.toast(err.message, "error");
