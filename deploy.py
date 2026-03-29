@@ -154,6 +154,25 @@ def worker_upload(item: tuple[str, str, str], host: str, user: str, password: st
             _time.sleep(2)
     return False, local_path, "Max retries exceeded"
 
+def build_react_apps():
+    """Build the React applications before deployment."""
+    apps = ['fusion-website', 'fusion-erp-react']
+    for app in apps:
+        if os.path.isdir(app):
+            print(f"\n📦 Building React app: {app}...")
+            try:
+                if not os.path.exists(os.path.join(app, 'node_modules')):
+                    print(f"  ⬇️  Installing dependencies for {app}...")
+                    subprocess.run(['npm', 'install'], cwd=app, check=True)
+                subprocess.run(['npm', 'run', 'build'], cwd=app, check=True)
+                print(f"  ✅ Build successful for {app}!")
+            except subprocess.CalledProcessError as e:
+                print(f"  ❌ Build failed for {app}: {e}")
+                sys.exit(1)
+            except Exception as e:
+                print(f"  ❌ Error building {app}: {e}")
+                sys.exit(1)
+
 def deploy_files_via_ftp():
     """Upload project files via FTP in parallel, only if changed."""
     print("\n🚀 Starting Fast Smart Auto-Deploy (Parallelized)...")
@@ -181,6 +200,7 @@ def deploy_files_via_ftp():
         required_dirs: set[str] = set()
         required_dirs.add(base_remote_dir)
         skip_count: int = 0
+        uploaded_sql_files: list[str] = []
 
         print("🔍 Scanning for modified files...")
         for root, dirs, files in os.walk('.'):
@@ -191,13 +211,26 @@ def deploy_files_via_ftp():
 
             # Calculate the corresponding remote path
             rel_path = os.path.relpath(root, '.')
+            rel_path_unix = rel_path.replace('\\', '/')
+            
+            # Skip uploading source code for React apps (only upload 'dist')
+            if rel_path_unix in ['fusion-website', 'fusion-erp-react']:
+                for d in list(dirs):
+                    if d != 'dist':
+                        dirs.remove(d)
+                # Skip the root files of the React apps (package.json, ecc)
+                continue
             
             # Map fusion-website/dist to the root folder in production
-            if rel_path == 'fusion-website/dist' or rel_path.startswith('fusion-website/dist/'):
-                sub_rel = rel_path.replace('fusion-website/dist', '').lstrip('/\\')
-                remote_sub_dir = '/www.fusionteamvolley.it' if not sub_rel else f"/www.fusionteamvolley.it/{sub_rel}".replace('\\', '/')
+            if rel_path_unix == 'fusion-website/dist' or rel_path_unix.startswith('fusion-website/dist/'):
+                sub_rel = rel_path_unix.replace('fusion-website/dist', '').lstrip('/')
+                remote_sub_dir = '/www.fusionteamvolley.it' if not sub_rel else f"/www.fusionteamvolley.it/{sub_rel}"
+            # Map fusion-erp-react/dist inside the ERP base folder
+            elif rel_path_unix == 'fusion-erp-react/dist' or rel_path_unix.startswith('fusion-erp-react/dist/'):
+                sub_rel = rel_path_unix.replace('fusion-erp-react/dist', '').lstrip('/')
+                remote_sub_dir = f"{base_remote_dir}/react" if not sub_rel else f"{base_remote_dir}/react/{sub_rel}"
             else:
-                remote_sub_dir = base_remote_dir if rel_path == '.' else f"{base_remote_dir}/{rel_path}".replace('\\', '/')
+                remote_sub_dir = base_remote_dir if rel_path_unix == '.' else f"{base_remote_dir}/{rel_path_unix}"
 
             for file in files:
                 # Skip ignored / hidden files (allow .htaccess and .env.prod)
@@ -220,6 +253,9 @@ def deploy_files_via_ftp():
                 if cached_hash and cached_hash == file_hash and file != '.env.prod':
                     skip_count += 1
                     continue
+
+                if file.endswith('.sql') and 'db/migrations' in rel_path_unix:
+                    uploaded_sql_files.append(file)
 
                 remote_filename = '.env' if file == '.env.prod' else file
                 # Add to queue
@@ -286,7 +322,18 @@ def deploy_files_via_ftp():
         if failed_jobs:
             print(f"⚠️ Warning: {len(failed_jobs)} files failed to upload.")
             return False
-            
+
+        if uploaded_sql_files:
+            print("\n" + "="*60)
+            print("🚨 🚨 🚨   ATTENZIONE: MIGRAZIONI DB RILEVATE   🚨 🚨 🚨")
+            print("="*60)
+            print("Hai caricato dei nuovi script SQL o modificato quelli esistenti:")
+            for sql_file in uploaded_sql_files:
+                print(f"  - {sql_file}")
+            print("\nRicordati di importare questi file su phpMyAdmin (ambiente Aruba)")
+            print("per aggiornare la struttura del database!")
+            print("="*60 + "\n")
+
         return True
         
     except Exception as e:
@@ -363,7 +410,10 @@ def main():
     # 2. Aggiorna cache buster prima del deploy
     update_index_version()
 
-    # 3. Salva su GitHub prima di deployare
+    # 3. Build React apps
+    build_react_apps()
+
+    # 4. Salva su GitHub prima di deployare
     git_commit_and_push()
 
     # 4. Ensure .env.prod exists
