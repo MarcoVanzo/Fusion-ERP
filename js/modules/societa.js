@@ -51,7 +51,6 @@ const Societa = {
             await this.reloadData();
             
             this.render();
-            this.attachGlobalEvents();
         } catch (err) {
             console.error("[Societa] Init error:", err);
             appContainer.innerHTML = Utils.emptyState("Errore caricamento", err.message);
@@ -95,11 +94,6 @@ const Societa = {
     render: function() {
         const contentEl = document.getElementById("soc-tab-content");
         if (!contentEl) return;
-
-        // Update active tab highlight
-        document.querySelectorAll(".soc-nav-item").forEach(btn => {
-            btn.classList.toggle("active", btn.dataset.tab === this._currentTab);
-        });
 
         const isAdmin = ["admin", "manager"].includes(App.getUser()?.role);
         
@@ -177,18 +171,6 @@ const Societa = {
         } finally {
             UI.loading(false);
         }
-    },
-
-    attachGlobalEvents: function() {
-        document.querySelectorAll(".soc-nav-item").forEach(btn => {
-            btn.addEventListener("click", () => {
-                const tab = btn.dataset.tab;
-                if (tab === this._currentTab) return;
-                
-                const route = tab === 'identita' ? 'societa' : `societa-${tab}`;
-                Router.navigate(route);
-            }, this.sig());
-        });
     },
 
     attachIdentityEvents: function(container, isAdmin) {

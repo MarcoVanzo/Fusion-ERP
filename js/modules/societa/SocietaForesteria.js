@@ -90,6 +90,7 @@ export default {
 
 
     refresh: async function() {
+        if (window.Store) Store.invalidate("getForesteria");
         if (window.Societa && typeof window.Societa.refreshTab === 'function' && Router.getCurrentRoute().startsWith('societa')) {
             await window.Societa.refreshTab();
         } else if (window.Finance && typeof window.Finance.refresh === 'function' && Router.getCurrentRoute().startsWith('finance')) {
@@ -227,7 +228,7 @@ export default {
 
             try {
                 UI.loading(true);
-                await SocietaAPI.addExpense(fd, false);
+                await SocietaAPI.addExpense(fd);
                 UI.toast("Spesa aggiunta", "success");
                 modal.close();
                 this.refresh();

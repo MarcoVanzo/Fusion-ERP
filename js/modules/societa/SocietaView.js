@@ -5,16 +5,6 @@ const SocietaView = {
     skeleton: () => `
         <div class="soc-container">
             <div id="soc-tab-header" style="padding:var(--sp-4) var(--sp-4) 0 var(--sp-4)"></div>
-            <div class="soc-tabs" style="display:flex; gap:var(--sp-4); padding:0 var(--sp-4); border-bottom:1px solid var(--color-border); margin-bottom:var(--sp-4); overflow-x:auto;">
-                <div class="soc-nav-item" data-tab="identita">Identità Club</div>
-                <div class="soc-nav-item" data-tab="organigramma">Organigramma</div>
-                <div class="soc-nav-item" data-tab="membri">Membri</div>
-                <div class="soc-nav-item" data-tab="documenti">Documenti</div>
-                <div class="soc-nav-item" data-tab="scadenze">Scadenze</div>
-                <div class="soc-nav-item" data-tab="sponsor">Sponsor</div>
-                <div class="soc-nav-item" data-tab="titoli">Palmarès</div>
-                <div class="soc-nav-item" data-tab="foresteria">Foresteria</div>
-            </div>
             <div id="soc-tab-content" style="padding:var(--sp-4)">
                 <div class="skeleton-shimmer" style="height:400px; border-radius:12px"></div>
             </div>
