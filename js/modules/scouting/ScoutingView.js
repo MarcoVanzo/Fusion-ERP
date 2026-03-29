@@ -12,7 +12,9 @@ export class ScoutingView {
                     </div>
                 </div>
                 <div class="dash-card" style="padding:var(--sp-4)" id="scouting-content-area"></div>
-            </div>`;
+            </div>
+            <div id="scouting-side-panel" class="side-panel" style="display:none;flex-direction:column;"></div>
+            `;
     }
 
     /**

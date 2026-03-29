@@ -331,20 +331,27 @@ class ScoutingController
             $rawDate = $e['Entry_DateSubmitted'] ?? $e['Entry.DateSubmitted'] ?? null;
             $dataRil = !empty($rawDate) ? date('Y-m-d', (int)strtotime((string)$rawDate)) : date('Y-m-d');
 
-            $stmt->execute([
-                ':tenant_id' => 'TNT_default', // Assuming TNT_default for automated imports per system default
-                ':cog_id' => (int)$e['Id'],
-                ':cog_form' => $source,
-                ':nome' => (string)$nome,
-                ':cognome' => (string)$cognome,
-                ':societa' => $societa,
-                ':anno' => $anno ? (int)$anno : null,
-                ':note' => $note,
-                ':rilevatore' => (string)$rilevatore,
-                ':data_ril' => $dataRil,
-                ':source' => $source,
-            ]);
-            $upserted++;
+            try {
+                $stmt->execute([
+                    ':tenant_id' => 'TNT_default', // Assuming TNT_default for automated imports per system default
+                    ':cog_id' => (int)$e['Id'],
+                    ':cog_form' => $source,
+                    ':nome' => (string)$nome,
+                    ':cognome' => (string)$cognome,
+                    ':societa' => $societa,
+                    ':anno' => $anno ? (int)$anno : null,
+                    ':note' => $note,
+                    ':rilevatore' => (string)$rilevatore,
+                    ':data_ril' => $dataRil,
+                    ':source' => $source,
+                ]);
+                $upserted++;
+            } catch (\PDOException $ex) {
+                error_log("[Scouting Sync PDO Error] form $formId, entry " . ($e['Id'] ?? '?') . ": " . $ex->getMessage());
+                return ['success' => false, 'error' => 'Database error on entry ' . ($e['Id'] ?? '?') . ': ' . $ex->getMessage()];
+            } catch (\Throwable $ex) {
+                return ['success' => false, 'error' => 'Runtime error: ' . $ex->getMessage()];
+            }
         }
 
         return ['success' => true, 'upserted' => $upserted];
