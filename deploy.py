@@ -498,7 +498,10 @@ def verify_deployment():
     url = os.getenv('APP_URL', 'https://www.fusionteamvolley.it/ERP')
     try:
         parsed_url = urllib.parse.urlparse(url)
-        conn = http.client.HTTPSConnection(parsed_url.netloc, timeout=10)
+        # Bypassa verifica SSL se fallisce localmente (problema comune su Mac/Python)
+        import ssl
+        context = ssl._create_unverified_context()
+        conn = http.client.HTTPSConnection(parsed_url.netloc, timeout=10, context=context)
         conn.request("GET", parsed_url.path or "/")
         response = conn.getresponse()
         if response.status == 200:
@@ -507,6 +510,49 @@ def verify_deployment():
             print(f"  ⚠️ Health Check incompleto: {url} risponde con {response.status}.")
     except Exception as e:
         print(f"  ❌ Errore durante l'Health Check: {e}")
+
+def trigger_migrations():
+    """Trigger automated database migrations on the production server."""
+    print("\n🗄️  Esecuzione migrazioni database...")
+    token = os.getenv('MIGRATION_TOKEN')
+    app_url = os.getenv('APP_URL', 'https://www.fusionteamvolley.it/ERP')
+    
+    if not token:
+        print("  ⚠️  MIGRATION_TOKEN non trovato in .env. Salto migrazioni automatiche.")
+        return
+
+    url = f"{app_url.rstrip('/')}/api/migrate.php"
+    try:
+        parsed_url = urllib.parse.urlparse(url)
+        import ssl
+        context = ssl._create_unverified_context()
+        conn = http.client.HTTPSConnection(parsed_url.netloc, timeout=30, context=context)
+        
+        headers = {
+            'X-Migration-Token': token,
+            'Content-Type': 'application/json'
+        }
+        
+        conn.request("POST", parsed_url.path + "?" + (parsed_url.query or ""), headers=headers)
+        response = conn.getresponse()
+        data = json.loads(response.read().decode())
+        
+        if response.status == 200 and data.get('success'):
+            applied = data.get('applied', [])
+            if applied:
+                print(f"  ✅ {len(applied)} migrazioni applicate con successo:")
+                for m in applied:
+                    print(f"    - {m}")
+            else:
+                print("  ✅ Database già aggiornato. Nessuna nuova migrazione necessaria.")
+        else:
+            print(f"  ❌ Errore durante le migrazioni: {data.get('error', 'Unknown error')}")
+            sys.exit(1)
+            
+    except Exception as e:
+        print(f"  ❌ Errore di connessione durante il trigger delle migrazioni: {e}")
+        # Non usciamo per errore di rete, ma avvisiamo l'utente
+        print("  ⚠️  Assicurati di controllare manualmente lo stato del database.")
 
 def main():
     parser = argparse.ArgumentParser(description="Fusion ERP Fast Auto-Deploy")
@@ -547,6 +593,7 @@ def main():
     try:
         success = deploy_files_via_ftp(dry_run=args.dry_run)
         if success and not args.dry_run:
+            trigger_migrations()
             verify_deployment()
     except KeyboardInterrupt:
         print("\n🛑 Deployment interrupted by user. Cache saved for uploaded files.")

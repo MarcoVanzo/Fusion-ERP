@@ -19,6 +19,17 @@ class AthletesRepository
         $this->db = Database::getInstance();
     }
 
+    /**
+     * Helper to generate SEO-friendly slugs consistently
+     */
+    public static function slugify(string $text): string
+    {
+        $text = mb_strtolower($text, 'UTF-8');
+        $text = preg_replace('/[^a-z0-9\-]/', '-', $text);
+        $text = preg_replace('/-+/', '-', $text);
+        return trim($text, '-');
+    }
+
     public function getTeamIdForSeason(string $seasonId): ?string
     {
         $stmt = $this->db->prepare('SELECT team_id FROM team_seasons WHERE id = :id');
@@ -533,7 +544,12 @@ class AthletesRepository
              ORDER BY ts.season DESC, t.category, t.name'
         );
         $stmt->execute();
-        return $stmt->fetchAll();
+        $teams = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        return array_map(function($team) {
+            $team['slug'] = self::slugify($team['name']);
+            return $team;
+        }, $teams);
     }
 
     // ─── AI SUMMARIES ────────────────────────────────────────────────────────

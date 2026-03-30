@@ -28,6 +28,21 @@ class WebsiteRepository
     }
 
     /**
+     * Helper to generate SEO-friendly slugs consistently
+     */
+    public static function slugify(string $text): string
+    {
+        // Lowercase
+        $text = mb_strtolower($text, 'UTF-8');
+        // Replace non-alphanumeric with hyphens
+        $text = preg_replace('/[^a-z0-9\-]/', '-', $text);
+        // Remove duplicate hyphens
+        $text = preg_replace('/-+/', '-', $text);
+        // Trim hyphens
+        return trim($text, '-');
+    }
+
+    /**
      * Get all categories
      */
     public function getCategories(): array
@@ -174,7 +189,13 @@ class WebsiteRepository
              ORDER BY ts.season DESC, t.category, t.name'
         );
         $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $teams = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Add slugs to each team
+        return array_map(function($team) {
+            $team['slug'] = self::slugify($team['name']);
+            return $team;
+        }, $teams);
     }
 }
  	

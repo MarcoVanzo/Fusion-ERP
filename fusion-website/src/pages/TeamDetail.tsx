@@ -177,11 +177,11 @@ const TeamDetail = () => {
                 if (teamData.status === 'success' || teamData.success === true) {
                     if (!targetTeamId) {
                         // Try matching by slug first (SEO-friendly URL)
-                        let t = teamData.data.find((t: { id: string | number; name: string }) => generateSlug(t.name) === slug);
+                        let t = teamData.data.find((t: { id: string | number; name: string; slug?: string }) => (t.slug || generateSlug(t.name)) === slug);
                         
                         // Fallback: match by raw team_season_id (e.g. /teams/TS_03bf1a12676b50d)
                         if (!t && slug) {
-                            t = teamData.data.find((t: { id: string | number; name: string }) => t.id.toString() === slug);
+                            t = teamData.data.find((t: { id: string | number; name: string; slug?: string }) => t.id.toString() === slug);
                         }
                         
                         if (t) {
@@ -189,14 +189,14 @@ const TeamDetail = () => {
                             setTeamName(t.name);
                             
                             // SEO redirect: if URL uses raw ID, redirect to slug-based URL
-                            const correctSlug = generateSlug(t.name);
+                            const correctSlug = t.slug || generateSlug(t.name);
                             if (slug !== correctSlug) {
                                 navigate(`/teams/${correctSlug}`, { replace: true, state: { teamId: t.id, teamName: t.name } });
                                 return;
                             }
                         }
                     } else {
-                        const t = teamData.data.find((t: { id: string | number; name: string }) => t.id.toString() === targetTeamId.toString());
+                        const t = teamData.data.find((t: { id: string | number; name: string; slug?: string }) => t.id.toString() === targetTeamId.toString());
                         if (t) setTeamName(t.name);
                     }
                 }

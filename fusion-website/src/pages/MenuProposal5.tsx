@@ -47,19 +47,19 @@ const MenuProposal5 = () => {
             megaMenuContent: (
                 <div className="grid grid-cols-4 gap-6">
                     <div className="col-span-1">
-                        <Link to="/teams/1" className="block p-4 border border-zinc-800 hover:border-brand-500 rounded-xl bg-zinc-900/50 hover:bg-zinc-900 transition-all group">
+                        <Link to="/teams/serie-c-maschile" className="block p-4 border border-zinc-800 hover:border-brand-500 rounded-xl bg-zinc-900/50 hover:bg-zinc-900 transition-all group">
                             <h5 className="font-heading uppercase text-xl mb-1 text-white group-hover:text-brand-500">Serie C Maschile</h5>
                             <span className="text-xs text-zinc-500 tracking-widest uppercase">Prima Squadra</span>
                         </Link>
                     </div>
                     <div className="col-span-1">
-                        <Link to="/teams/2" className="block p-4 border border-zinc-800 hover:border-brand-500 rounded-xl bg-zinc-900/50 hover:bg-zinc-900 transition-all group">
+                        <Link to="/teams/under-18" className="block p-4 border border-zinc-800 hover:border-brand-500 rounded-xl bg-zinc-900/50 hover:bg-zinc-900 transition-all group">
                             <h5 className="font-heading uppercase text-xl mb-1 text-white group-hover:text-brand-500">Under 18</h5>
                             <span className="text-xs text-zinc-500 tracking-widest uppercase">Giovanili Maschile</span>
                         </Link>
                     </div>
                     <div className="col-span-1">
-                        <Link to="/teams/3" className="block p-4 border border-zinc-800 hover:border-brand-500 rounded-xl bg-zinc-900/50 hover:bg-zinc-900 transition-all group">
+                        <Link to="/teams/under-16" className="block p-4 border border-zinc-800 hover:border-brand-500 rounded-xl bg-zinc-900/50 hover:bg-zinc-900 transition-all group">
                             <h5 className="font-heading uppercase text-xl mb-1 text-white group-hover:text-brand-500">Under 16</h5>
                             <span className="text-xs text-zinc-500 tracking-widest uppercase">Giovanili Maschile</span>
                         </Link>

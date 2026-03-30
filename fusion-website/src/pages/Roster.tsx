@@ -3,15 +3,16 @@ import { Link } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 import { Seo } from '../components/Seo';
 
-interface Team {
-    id: number;
+interface RosterTeam {
+    id: number | string;
     name: string;
     category: string;
     season?: string;
+    slug?: string;
 }
 
 const Roster = () => {
-    const [teams, setTeams] = useState<Team[]>([]);
+    const [teams, setTeams] = useState<RosterTeam[]>([]);
     const [loading, setLoading] = useState(true);
 
     const generateSlug = (name: string) => {
@@ -79,7 +80,7 @@ const Roster = () => {
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         {teams.map(team => {
-                            const slug = generateSlug(team.name);
+                            const slug = team.slug || generateSlug(team.name);
                             return (
                             <Link
                                 to={`/teams/${slug}`}
