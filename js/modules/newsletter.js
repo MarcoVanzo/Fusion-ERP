@@ -19,6 +19,7 @@ const Newsletter = (() => {
   let _meta = { total: 0 };
   let _nextCursor = null;
   let _filter = { status: "active", search: "" };
+  let _searchTimeout = null;
 
   function extractCursor(nextUrl) {
     if (!nextUrl) return null;
@@ -86,10 +87,9 @@ const Newsletter = (() => {
     });
 
     // Search
-    let searchTimeout;
     document.getElementById("nl-search")?.addEventListener("input", (e) => {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(async () => {
+        clearTimeout(_searchTimeout);
+        _searchTimeout = setTimeout(async () => {
           _filter.search = e.target.value.trim();
           _subscribers = [];
           _nextCursor = null;
@@ -225,6 +225,7 @@ const Newsletter = (() => {
       render();
     },
     destroy() {
+      clearTimeout(_searchTimeout);
       _controller.abort();
       _controller = new AbortController();
       _subscribers = [];
