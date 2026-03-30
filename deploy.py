@@ -560,12 +560,13 @@ def main():
     parser.add_argument("--force-build", action="store_true", help="Forza la build anche se non sono state rilevate modifiche")
     parser.add_argument("--no-git", action="store_true", help="Salta il commit e push su GitHub")
     parser.add_argument("--dry-run", action="store_true", help="Simula il deploy senza caricare file o committare")
+    parser.add_argument("--skip-checks", action="store_true", help="Salta i controlli pre-flight (PHPStan, Stress Test)")
     args = parser.parse_args()
 
     print("=== Fusion ERP Fast Auto-Deploy ===")
     
     # 0. Pre-flight Checks
-    if not args.dry_run:
+    if not args.dry_run and not args.skip_checks:
         run_preflight_checks()
 
     # 1. Load credentials

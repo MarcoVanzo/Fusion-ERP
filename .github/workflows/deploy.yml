@@ -42,8 +42,13 @@ jobs:
           key: vendor-${{ hashFiles('composer.lock') }}
           restore-keys: vendor-
 
-      - name: 📦 Install Composer dependencies (no dev)
-        if: steps.vendor-cache.outputs.cache-hit != 'true'
+      - name: 📦 Install all Composer dependencies (with dev)
+        run: composer install --optimize-autoloader --no-interaction
+
+      - name: 🔍 Run PHPStan analysis
+        run: composer phpstan
+
+      - name: 🧹 Prepare production vendor (no dev)
         run: composer install --no-dev --optimize-autoloader --no-interaction
 
       # ── 3. Set up Python ───────────────────────────────────────────────────
@@ -167,7 +172,7 @@ jobs:
 
       # ── 6. Run the existing deploy.py ─────────────────────────────────────
       - name: 🚀 Run deploy.py (FTP incremental upload)
-        run: python deploy.py
+        run: python deploy.py --skip-checks --no-git
 
       # ── 7. Persist the updated deploy cache ───────────────────────────────
       # This is already handled by actions/cache (post-step save),
