@@ -37,13 +37,11 @@ class VehiclesController
         $id = filter_input(INPUT_GET, 'id', FILTER_DEFAULT) ?? '';
         if (empty($id)) {
             Response::error('ID veicolo obbligatorio', 400);
-            return;
         }
 
         $vehicle = $this->repo()->getVehicleById($id);
         if (!$vehicle) {
             Response::error('Veicolo non trovato', 404);
-            return;
         }
 
         Response::success($vehicle);
@@ -89,7 +87,6 @@ class VehiclesController
 
         if (!$success) {
             Response::error('Veicolo non trovato', 404);
-            return;
         }
 
         Audit::log('UPDATE', 'vehicles', $body['id'], null, $body);
@@ -104,13 +101,11 @@ class VehiclesController
 
         if (empty($id)) {
             Response::error('ID veicolo obbligatorio', 400);
-            return;
         }
 
         $success = $this->repo()->deleteVehicle($id);
         if (!$success) {
             Response::error('Veicolo non trovato', 404);
-            return;
         }
 
         Audit::log('DELETE', 'vehicles', $id, null, null);
@@ -181,7 +176,6 @@ class VehiclesController
 
         if (!$success) {
             Response::error('Anomalia non trovata', 404);
-            return;
         }
 
         Audit::log('UPDATE', 'vehicle_anomalies', $body['id'], null, $body);

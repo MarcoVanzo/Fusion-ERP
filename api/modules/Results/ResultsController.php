@@ -50,7 +50,6 @@ class ResultsController
 
         if (!$label || !$url) {
             Response::error('Nome e URL sono obbligatori.', 400);
-            return;
         }
 
         $this->handleServiceCall(function() use ($label, $url) {
@@ -69,7 +68,6 @@ class ResultsController
         $id = $_POST['id'] ?? $body['id'] ?? null;
         if (!$id) {
             Response::error('ID mancante.', 400);
-            return;
         }
         
         $this->handleServiceCall(function() use ($id) {
@@ -84,7 +82,6 @@ class ResultsController
         $campionatoId = filter_input(INPUT_GET, 'campionato_id', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
         if (!$campionatoId) {
             Response::error('Parametro campionato_id mancante.', 400);
-            return;
         }
 
         try {
@@ -131,7 +128,6 @@ class ResultsController
         $campionatoId = filter_input(INPUT_GET, 'campionato_id', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
         if (!$campionatoId) {
             Response::error('Parametro campionato_id mancante.', 400);
-            return;
         }
 
         try {
@@ -176,7 +172,6 @@ class ResultsController
             if ($sqlState === '42S02' || str_contains($e->getMessage(), "doesn't exist")) {
                 $this->repository->applyMigrationsSelfHeal();
                 Response::success(['matches' => [], 'total' => 0, 'count' => 0, 'source' => 'db', 'note' => 'schema_ok']);
-                return;
             }
             error_log('[Results] recentResults error: ' . $e->getMessage());
             Response::error('Errore database', 500);
@@ -189,7 +184,6 @@ class ResultsController
         $id = $_POST['id'] ?? $body['id'] ?? null;
         if (!$id) {
             Response::error('ID mancante.', 400);
-            return;
         }
 
         $result = $this->service->syncChampionshipData($id);
@@ -260,7 +254,6 @@ class ResultsController
             $sqlState = $e->errorInfo[0] ?? (string)$e->getCode();
             if ($sqlState === '42S02') {
                 Response::success(['matches' => [], 'total' => 0, 'source' => 'db']);
-                return;
             }
             Response::error('Errore database', 500);
         }
@@ -304,7 +297,6 @@ class ResultsController
             $sqlState = $e->errorInfo[0] ?? (string)$e->getCode();
             if ($sqlState === '42S02') {
                 Response::success(['matches' => [], 'standings' => [], 'source' => 'db']);
-                return;
             }
             Response::error('Errore database', 500);
         }

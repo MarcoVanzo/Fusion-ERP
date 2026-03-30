@@ -283,3 +283,4 @@ class WebsiteController
         Response::success($this->repo->getPublicTeams());
     }
 }
+ 	

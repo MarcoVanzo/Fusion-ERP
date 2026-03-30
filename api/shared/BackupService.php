@@ -55,9 +55,7 @@ class BackupService
 
         $storagePath = null;
         foreach ($candidates as $candidate) {
-            if ($candidate === '') {
-                continue;
-            }
+            // candidate is never empty here due to array_filter
             if (!is_dir($candidate)) {
                 @mkdir($candidate, 0750, true);
             }

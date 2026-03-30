@@ -416,3 +416,4 @@ class AthletesController
         Response::success($this->repo->listPublicAthletes($teamId));
     }
 }
+ 	
