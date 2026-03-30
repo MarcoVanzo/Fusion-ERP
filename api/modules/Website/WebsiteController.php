@@ -275,4 +275,11 @@ class WebsiteController
             Response::error('Servizio temporaneamente non disponibile.', 500);
         }
     }
+
+    // ─── GET /api/?module=website&action=getPublicTeams ──────────────────────
+    public function getPublicTeams(): void
+    {
+        // NO Auth required. Used by the external website SPA
+        Response::success($this->repo->getPublicTeams());
+    }
 }
