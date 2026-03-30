@@ -23,6 +23,45 @@ FTP_OP_TIMEOUT = 30
 CACHE_FILE = '.deploy_cache.json'
 MAX_WORKERS = 8
 
+def run_preflight_checks():
+    """Run security and stability checks before proceeding with deployment."""
+    print("📋 Starting Pre-flight Checks...")
+    
+    # 1. PHPStan Static Analysis
+    print("🔍 Running PHPStan Static Analysis...")
+    try:
+        # Use the composer script defined in composer.json
+        result = subprocess.run(['composer', 'phpstan'], capture_output=True, text=True)
+        if result.returncode != 0:
+            print("❌ PHPStan failed! Fix the following issues before deploying:")
+            print(result.stdout)
+            print(result.stderr)
+            sys.exit(1)
+        print("  ✅ PHPStan passed.")
+    except FileNotFoundError:
+        print("  ⚠️  Composer not found, skipping PHPStan.")
+    except Exception as e:
+        print(f"  ⚠️  Error running PHPStan: {e}")
+
+    # 2. Stress Test
+    print("🧪 Running API Stress Test...")
+    stress_script = 'scripts/stress_checker.py'
+    if os.path.exists(stress_script):
+        try:
+            result = subprocess.run([sys.executable, stress_script], capture_output=True, text=True)
+            if result.returncode != 0:
+                print("❌ Stress Test failed! API is not stable or slow.")
+                print(result.stdout)
+                sys.exit(1)
+            print("  ✅ Stress Test passed.")
+        except Exception as e:
+            print(f"  ⚠️  Error running Stress Test: {e}")
+    else:
+        print(f"  ⚠️  {stress_script} not found, skipping Stress Test.")
+    
+    print("✅ All Pre-flight Checks passed!\n")
+
+
 def load_env():
     """Load variables from .env file into environment."""
     env_file = '.env'
@@ -479,6 +518,10 @@ def main():
 
     print("=== Fusion ERP Fast Auto-Deploy ===")
     
+    # 0. Pre-flight Checks
+    if not args.dry_run:
+        run_preflight_checks()
+
     # 1. Load credentials
     load_env()
     
