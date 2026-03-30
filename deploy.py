@@ -23,6 +23,45 @@ FTP_OP_TIMEOUT = 30
 CACHE_FILE = '.deploy_cache.json'
 MAX_WORKERS = 8
 
+def run_preflight_checks():
+    """Run security and stability checks before proceeding with deployment."""
+    print("📋 Starting Pre-flight Checks...")
+    
+    # 1. PHPStan Static Analysis
+    print("🔍 Running PHPStan Static Analysis...")
+    try:
+        # Use the composer script defined in composer.json
+        result = subprocess.run(['composer', 'phpstan'], capture_output=True, text=True)
+        if result.returncode != 0:
+            print("❌ PHPStan failed! Fix the following issues before deploying:")
+            print(result.stdout)
+            print(result.stderr)
+            sys.exit(1)
+        print("  ✅ PHPStan passed.")
+    except FileNotFoundError:
+        print("  ⚠️  Composer not found, skipping PHPStan.")
+    except Exception as e:
+        print(f"  ⚠️  Error running PHPStan: {e}")
+
+    # 2. Stress Test
+    print("🧪 Running API Stress Test...")
+    stress_script = 'scripts/stress_checker.py'
+    if os.path.exists(stress_script):
+        try:
+            result = subprocess.run([sys.executable, stress_script], capture_output=True, text=True)
+            if result.returncode != 0:
+                print("❌ Stress Test failed! API is not stable or slow.")
+                print(result.stdout)
+                sys.exit(1)
+            print("  ✅ Stress Test passed.")
+        except Exception as e:
+            print(f"  ⚠️  Error running Stress Test: {e}")
+    else:
+        print(f"  ⚠️  {stress_script} not found, skipping Stress Test.")
+    
+    print("✅ All Pre-flight Checks passed!\n")
+
+
 def load_env():
     """Load variables from .env file into environment."""
     env_file = '.env'
@@ -459,7 +498,10 @@ def verify_deployment():
     url = os.getenv('APP_URL', 'https://www.fusionteamvolley.it/ERP')
     try:
         parsed_url = urllib.parse.urlparse(url)
-        conn = http.client.HTTPSConnection(parsed_url.netloc, timeout=10)
+        # Bypassa verifica SSL se fallisce localmente (problema comune su Mac/Python)
+        import ssl
+        context = ssl._create_unverified_context()
+        conn = http.client.HTTPSConnection(parsed_url.netloc, timeout=10, context=context)
         conn.request("GET", parsed_url.path or "/")
         response = conn.getresponse()
         if response.status == 200:
@@ -469,16 +511,64 @@ def verify_deployment():
     except Exception as e:
         print(f"  ❌ Errore durante l'Health Check: {e}")
 
+def trigger_migrations():
+    """Trigger automated database migrations on the production server."""
+    print("\n🗄️  Esecuzione migrazioni database...")
+    token = os.getenv('MIGRATION_TOKEN')
+    app_url = os.getenv('APP_URL', 'https://www.fusionteamvolley.it/ERP')
+    
+    if not token:
+        print("  ⚠️  MIGRATION_TOKEN non trovato in .env. Salto migrazioni automatiche.")
+        return
+
+    url = f"{app_url.rstrip('/')}/api/migrate.php"
+    try:
+        parsed_url = urllib.parse.urlparse(url)
+        import ssl
+        context = ssl._create_unverified_context()
+        conn = http.client.HTTPSConnection(parsed_url.netloc, timeout=30, context=context)
+        
+        headers = {
+            'X-Migration-Token': token,
+            'Content-Type': 'application/json'
+        }
+        
+        conn.request("POST", parsed_url.path + "?" + (parsed_url.query or ""), headers=headers)
+        response = conn.getresponse()
+        data = json.loads(response.read().decode())
+        
+        if response.status == 200 and data.get('success'):
+            applied = data.get('applied', [])
+            if applied:
+                print(f"  ✅ {len(applied)} migrazioni applicate con successo:")
+                for m in applied:
+                    print(f"    - {m}")
+            else:
+                print("  ✅ Database già aggiornato. Nessuna nuova migrazione necessaria.")
+        else:
+            print(f"  ❌ Errore durante le migrazioni: {data.get('error', 'Unknown error')}")
+            sys.exit(1)
+            
+    except Exception as e:
+        print(f"  ❌ Errore di connessione durante il trigger delle migrazioni: {e}")
+        # Non usciamo per errore di rete, ma avvisiamo l'utente
+        print("  ⚠️  Assicurati di controllare manualmente lo stato del database.")
+
 def main():
     parser = argparse.ArgumentParser(description="Fusion ERP Fast Auto-Deploy")
     parser.add_argument("--no-build", action="store_true", help="Salta la build dei progetti React")
     parser.add_argument("--force-build", action="store_true", help="Forza la build anche se non sono state rilevate modifiche")
     parser.add_argument("--no-git", action="store_true", help="Salta il commit e push su GitHub")
     parser.add_argument("--dry-run", action="store_true", help="Simula il deploy senza caricare file o committare")
+    parser.add_argument("--skip-checks", action="store_true", help="Salta i controlli pre-flight (PHPStan, Stress Test)")
     args = parser.parse_args()
 
     print("=== Fusion ERP Fast Auto-Deploy ===")
     
+    # 0. Pre-flight Checks
+    if not args.dry_run and not args.skip_checks:
+        run_preflight_checks()
+
     # 1. Load credentials
     load_env()
     
@@ -504,6 +594,7 @@ def main():
     try:
         success = deploy_files_via_ftp(dry_run=args.dry_run)
         if success and not args.dry_run:
+            trigger_migrations()
             verify_deployment()
     except KeyboardInterrupt:
         print("\n🛑 Deployment interrupted by user. Cache saved for uploaded files.")

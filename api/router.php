@@ -22,12 +22,12 @@ $dotenv = Dotenv\Dotenv::createMutable(dirname(__DIR__));
 $dotenv->safeLoad();
 
 // Global Error Handler to ensure JSON responses on fatal errors
-set_error_handler(function($severity, $message, $file, $line) {
-    if (!(error_reporting() & $severity)) return;
+set_error_handler(function(int $severity, string $message, string $file, int $line): bool {
+    if (!(error_reporting() & $severity)) return false;
     throw new \ErrorException($message, 0, $severity, $file, $line);
 });
 
-set_exception_handler(function(\Throwable $e) {
+set_exception_handler(function(\Throwable $e): void {
     $errMsg = '[ROUTER FATAL] ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine();
     error_log($errMsg);
 
@@ -186,7 +186,7 @@ function dispatchWebhook(string $action): void
 function dispatch(string $controllerName, string $action): void
 {
     // FIX: Auth middleware globale. Richiede login per TUTTE le action tranne quelle esplicitamente pubbliche.
-    $publicActions = ['login', 'requestPasswordReset', 'confirmPasswordReset', 'getPublicTeams', 'getPublicTeamAthletes', 'getPublicSponsors', 'getPublicProfile', 'getPublicForesteria', 'getPublicCollaborations', 'getPublicHubConfig', 'getPublicNews', 'getArticle', 'getSitemapUrls', 'getPublicShop', 'getProductImage', 'getPublicMatchCenter', 'getPublicStaff', 'getPublicRecentResults', 'subscribeNewsletter', 'teams'];
+    $publicActions = ['login', 'requestPasswordReset', 'confirmPasswordReset', 'getPublicTeams', 'getPublicTeamAthletes', 'getPublicSponsors', 'getPublicProfile', 'getPublicForesteria', 'getPublicOrganigramma', 'getPublicCollaborations', 'getPublicHubConfig', 'getPublicNews', 'getArticle', 'getSitemapUrls', 'getPublicShop', 'getProductImage', 'getPublicMatchCenter', 'getPublicStaff', 'getPublicRecentResults', 'subscribeNewsletter', 'teams'];
     if (!in_array($action, $publicActions, true)) {
         Auth::requireAuth();
     }

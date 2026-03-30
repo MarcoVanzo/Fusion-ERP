@@ -28,6 +28,21 @@ class WebsiteRepository
     }
 
     /**
+     * Helper to generate SEO-friendly slugs consistently
+     */
+    public static function slugify(string $text): string
+    {
+        // Lowercase
+        $text = mb_strtolower($text, 'UTF-8');
+        // Replace non-alphanumeric with hyphens
+        $text = preg_replace('/[^a-z0-9\-]/', '-', $text);
+        // Remove duplicate hyphens
+        $text = preg_replace('/-+/', '-', $text);
+        // Trim hyphens
+        return trim($text, '-');
+    }
+
+    /**
      * Get all categories
      */
     public function getCategories(): array
@@ -160,4 +175,27 @@ class WebsiteRepository
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([':id' => $id, ':tenant_id' => $dbTenantId]);
     }
+
+    /**
+     * Get sports teams for the public website
+     */
+    public function getPublicTeams(): array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT ts.id AS id, t.name, t.category, t.color_hex, ts.season
+             FROM team_seasons ts
+             JOIN teams t ON ts.team_id = t.id
+             WHERE t.deleted_at IS NULL AND t.is_active = 1
+             ORDER BY ts.season DESC, t.category, t.name'
+        );
+        $stmt->execute();
+        $teams = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Add slugs to each team
+        return array_map(function($team) {
+            $team['slug'] = self::slugify($team['name']);
+            return $team;
+        }, $teams);
+    }
 }
+ 	

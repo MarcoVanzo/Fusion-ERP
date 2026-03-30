@@ -99,7 +99,6 @@ class ValdController
                     'ranking' => [],
                     'coachMessage' => 'Nessun dato VALD disponibile per questo atleta.',
                 ]);
-                return;
             }
 
             $metrics = json_decode($latest['metrics'] ?? '{}', true) ?: [];
@@ -150,10 +149,10 @@ class ValdController
             $athleteId = filter_input(INPUT_GET, 'athleteId', FILTER_DEFAULT) ?? '';
             $part      = filter_input(INPUT_GET, 'part', FILTER_DEFAULT) ?? 'diagnosis';
 
-            if (empty($athleteId)) { Response::error('athleteId obbligatorio', 400); return; }
+            if (empty($athleteId)) { Response::error('athleteId obbligatorio', 400); }
 
             $latest = $this->repo->getLatestResult($athleteId);
-            if (!$latest) { Response::success(['text' => 'Nessun dato VALD disponibile.']); return; }
+            if (!$latest) { Response::success(['text' => 'Nessun dato VALD disponibile.']); }
 
             $metrics   = json_decode($latest['metrics'] ?? '{}', true) ?: [];
             $baseline  = $this->repo->getBaselineMetrics($athleteId);
@@ -255,12 +254,10 @@ PROMPT;
                 ? 'Autenticazione VALD fallita. Verifica VALD_CLIENT_ID e VALD_CLIENT_SECRET nel file .env.'
                 : 'Errore API: ' . $e->getMessage();
             Response::error($msg, 502);
-            return;
         }
 
         if (!is_array($valdAthletes)) {
             Response::error('API non valida', 502);
-            return;
         }
 
         $stmt = $db->prepare(

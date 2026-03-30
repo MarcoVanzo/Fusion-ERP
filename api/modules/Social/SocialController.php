@@ -35,7 +35,6 @@ class SocialController
                 'connected' => false,
                 'message' => 'Nessun account Meta collegato',
             ]);
-            return; // explicit return — do not rely on Response::success exit side-effect
         }
 
         $isValid = $this->repo->isTokenValid($token);
@@ -76,7 +75,6 @@ class SocialController
         $appId = $_ENV['META_APP_ID'] ?? $_SERVER['META_APP_ID'] ?? getenv('META_APP_ID');
         if (empty($appId) || $appId === 'YOUR_META_APP_ID') {
             Response::error('Meta App non configurata. Aggiungere META_APP_ID e META_APP_SECRET nel file .env', 500);
-            return;
         }
 
         // Store token → userId in DB (with file fallback), get short hex token for state
@@ -175,7 +173,6 @@ class SocialController
             $result['steps'][] = 'INSERT ERROR: ' . $e->getMessage();
             $result['insert_ok'] = false;
             Response::success($result);
-            return;
         }
 
         // Step 2: SELECT via resolveOAuthToken
@@ -225,7 +222,6 @@ class SocialController
         if (!$token || !$this->repo->isTokenValid($token)) {
             $mockData = $this->repo->getMockData($days);
             Response::success($mockData);
-            return;
         }
 
         try {
@@ -292,7 +288,6 @@ class SocialController
             // Return mock posts
             $mock = $this->repo->getMockData(28);
             Response::success($mock['posts']);
-            return; // explicit return — do not rely on Response::success exit side-effect
         }
 
         try {

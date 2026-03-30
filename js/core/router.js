@@ -310,3 +310,20 @@ const Router = (() => {
     };
 })();
 window.Router = Router;
+
+// ─── Global Event Delegation for Navigation ────────────────────────────────
+document.addEventListener('click', (e) => {
+    const routeEl = e.target.closest('[data-route]');
+    if (routeEl) {
+        e.preventDefault();
+        const route = routeEl.dataset.route;
+        
+        // Extract params if any via data-route-params (assuming valid JSON or query string format)
+        let params = {};
+        if (routeEl.dataset.routeParams) {
+            try { params = JSON.parse(routeEl.dataset.routeParams); } catch (e) { /* ignore */ }
+        }
+        
+        Router.navigate(route, params);
+    }
+});

@@ -69,9 +69,9 @@ if ($body) {
 
 // FETCH TEAMS
 $teamEndpoints = [
-    'http://localhost/ERP/api/router.php?module=athletes&action=getPublicTeams',
-    'http://127.0.0.1/ERP/api/router.php?module=athletes&action=getPublicTeams',
-    'https://www.fusionteamvolley.it/ERP/api/router.php?module=athletes&action=getPublicTeams',
+    'http://localhost/ERP/api/router.php?module=website&action=getPublicTeams',
+    'http://127.0.0.1/ERP/api/router.php?module=website&action=getPublicTeams',
+    'https://www.fusionteamvolley.it/ERP/api/router.php?module=website&action=getPublicTeams',
 ];
 
 $teamBody = false;
@@ -99,11 +99,11 @@ if ($teamBody) {
     $data = json_decode($teamBody, true);
     if (isset($data['data']) && is_array($data['data'])) {
         foreach ($data['data'] as $team) {
-            $id = $team['id'] ?? '';
-            if (!$id) continue;
+            $slug = $team['slug'] ?? '';
+            if (!$slug) continue;
             $teamUrls[] = [
-                'loc'        => $SITE_BASE . '/teams/' . $id,
-                'lastmod'    => date('Y-m-d'), // Teams usually don't have published_at
+                'loc'        => $SITE_BASE . '/teams/' . $slug,
+                'lastmod'    => date('Y-m-d'),
                 'priority'   => '0.7',
                 'changefreq' => 'weekly',
             ];

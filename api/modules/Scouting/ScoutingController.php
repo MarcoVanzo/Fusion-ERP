@@ -26,7 +26,7 @@ class ScoutingController
     {
         // Standard precedence: $_ENV -> $_SERVER -> getenv()
         $val = $_ENV[$key] ?? $_SERVER[$key] ?? getenv($key);
-        if ($val !== false && $val !== null && $val !== '') {
+        if ($val !== false && $val !== '') {
             return (string)$val;
         }
         return null;

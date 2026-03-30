@@ -346,11 +346,6 @@ PROMPT;
         $stats = ['found' => 0, 'synced' => 0, 'skipped' => 0, 'unlinkedAthletes' => []];
         $guardClientId     = (getenv('VALD_CLIENT_ID')     ?: $_SERVER['VALD_CLIENT_ID']     ?? '') ?: ValdCredentials::CLIENT_ID;
         $guardClientSecret = (getenv('VALD_CLIENT_SECRET') ?: $_SERVER['VALD_CLIENT_SECRET'] ?? '') ?: ValdCredentials::CLIENT_SECRET;
-        if ($guardClientId === '' || $guardClientSecret === '') {
-            error_log('[VALD Sync] Credenziali non configurate.');
-            return $stats;
-        }
-
         $db = \FusionERP\Shared\Database::getInstance();
         @set_time_limit(300);
 
@@ -376,7 +371,7 @@ PROMPT;
 
             while (true) {
                 $pageResults = $this->getTestResults($dateFrom, '', $page, $dateTo);
-                if (empty($pageResults) || !is_array($pageResults) || isset($pageResults['error'])) break;
+                if (empty($pageResults) || isset($pageResults['error'])) break;
 
                 $stats['found'] += count($pageResults);
 

@@ -12,6 +12,29 @@ const { chromium } = require('playwright');
     const context = await browser.newContext();
     const page = await context.newPage();
 
+    let errorCount = 0;
+    
+    page.on('console', msg => {
+        if (msg.type() === 'error') {
+            const exceptionText = msg.text();
+            // Filter some known irrelevant errors if needed, but we output all for now
+            console.error(`[Browser JS Error] ${exceptionText}`);
+            errorCount++;
+        }
+    });
+    
+    page.on('pageerror', exception => {
+        console.error(`[Browser Exception] Uncaught exception: "${exception}"`);
+        errorCount++;
+    });
+    
+    page.on('response', response => {
+        if (response.status() >= 400) {
+            console.error(`[Browser Network Error] Status ${response.status()} at ${response.url()}`);
+            errorCount++;
+        }
+    });
+
     console.log("Navigating to local setup (modify URL if taking place on a different port/host)...");
     await page.goto('http://localhost:8000'); // Port standard for php -S localhost:8000
     

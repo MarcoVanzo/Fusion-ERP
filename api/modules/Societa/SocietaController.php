@@ -409,6 +409,17 @@ class SocietaController
         ]);
     }
 
+    public function getPublicOrganigramma(): void
+    {
+        $roles = $this->repo->listRoles();
+        $members = $this->repo->listMembers();
+        
+        Response::success([
+            'roles' => $roles,
+            'members' => $members
+        ]);
+    }
+
     public function getForesteria(): void
     {
         Auth::requireRole('operator');

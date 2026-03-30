@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Seo } from '../components/Seo';
 import { motion } from 'framer-motion';
-import { Shield, Eye, Heart, Calendar } from 'lucide-react';
+import { Shield, Eye, Heart, Calendar, Users, ChevronRight } from 'lucide-react';
 
 const ERP_BASE = 'https://www.fusionteamvolley.it/ERP';
 const API_URL = `${ERP_BASE}/api/router.php`;
@@ -16,26 +16,53 @@ interface ClubProfile {
     secondary_color: string | null;
 }
 
+interface Role {
+    id: string;
+    name: string;
+    description: string | null;
+    parent_role_id: string | null;
+}
+
+interface Member {
+    id: string;
+    full_name: string;
+    role_id: string;
+    role_name: string;
+    photo_path: string | null;
+    is_active: number;
+}
+
+interface OrganigrammaData {
+    roles: Role[];
+    members: Member[];
+}
+
 const Club = () => {
     const [profile, setProfile] = useState<ClubProfile | null>(null);
+    const [orgData, setOrgData] = useState<OrganigrammaData | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const fetchProfile = async () => {
+        const fetchData = async () => {
             try {
-                const res = await fetch(`${API_URL}?module=societa&action=getPublicProfile`);
-                const data = await res.json();
-                if (data.success) {
-                    setProfile(data.data);
-                }
+                const [profileRes, orgRes] = await Promise.all([
+                    fetch(`${API_URL}?module=societa&action=getPublicProfile`),
+                    fetch(`${API_URL}?module=societa&action=getPublicOrganigramma`)
+                ]);
+                
+                const profileJson = await profileRes.json();
+                const orgJson = await orgRes.json();
+
+                if (profileJson.success) setProfile(profileJson.data);
+                if (orgJson.success) setOrgData(orgJson.data);
             } catch (error) {
-                console.error('Failed to fetch club profile:', error);
+                console.error('Failed to fetch club data:', error);
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchProfile();
+        fetchData();
     }, []);
 
     const containerVariants = {
@@ -227,8 +254,118 @@ const Club = () => {
                         </motion.div>
                     )}
 
+                    {/* Organigramma Section */}
+                    {orgData && orgData.roles.length > 0 && (
+                        <motion.div variants={itemVariants} className="mt-12">
+                            <div className="text-center mb-16">
+                                <h2 className="font-heading text-4xl md:text-6xl text-white uppercase mb-4 tracking-tighter">
+                                    L' <span className="text-brand-500">ORGANIGRAMMA</span>
+                                </h2>
+                                <p className="text-zinc-500 uppercase tracking-[0.2em] text-sm">La squadra che lavora dietro le quinte</p>
+                            </div>
+
+                            <div className="space-y-12">
+                                {orgData.roles
+                                    .filter(r => !r.parent_role_id)
+                                    .map(rootRole => {
+                                        const roleMembers = orgData.members.filter(m => m.role_id === rootRole.id);
+                                        const children = orgData.roles.filter(r => r.parent_role_id === rootRole.id);
+                                        
+                                        return (
+                                            <div key={rootRole.id} className="space-y-8">
+                                                {/* Parent Role Card */}
+                                                <div className="flex justify-center">
+                                                    <motion.div 
+                                                        whileHover={{ y: -5 }}
+                                                        className="w-full max-w-md bg-zinc-900/60 backdrop-blur-md border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl hover:border-brand-500/50 transition-all duration-500"
+                                                    >
+                                                        <div className="bg-brand-500/10 p-4 border-b border-zinc-800 flex items-center justify-between">
+                                                            <span className="text-brand-400 font-heading uppercase text-sm tracking-widest">{rootRole.name}</span>
+                                                            <Users size={18} className="text-brand-500" />
+                                                        </div>
+                                                        <div className="p-6">
+                                                            {roleMembers.length > 0 ? (
+                                                                <div className="space-y-4">
+                                                                    {roleMembers.map(member => (
+                                                                        <div key={member.id} className="flex items-center gap-4">
+                                                                            <div className="relative">
+                                                                                {member.photo_path ? (
+                                                                                    <img 
+                                                                                        src={`${ERP_BASE}/${member.photo_path}`} 
+                                                                                        className="w-14 h-14 rounded-full object-cover border-2 border-brand-500/30" 
+                                                                                        alt={member.full_name} 
+                                                                                    />
+                                                                                ) : (
+                                                                                    <div className="w-14 h-14 rounded-full bg-zinc-800 flex items-center justify-center border-2 border-zinc-700">
+                                                                                        <Users className="text-zinc-500" size={24} />
+                                                                                    </div>
+                                                                                )}
+                                                                                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-zinc-900 rounded-full" />
+                                                                            </div>
+                                                                            <div>
+                                                                                <h4 className="text-white font-bold leading-tight">{member.full_name}</h4>
+                                                                                <p className="text-zinc-500 text-xs uppercase tracking-wider">{rootRole.name}</p>
+                                                                            </div>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            ) : (
+                                                                <p className="text-zinc-600 italic text-sm text-center">In attesa di assegnazione</p>
+                                                            )}
+                                                            {rootRole.description && (
+                                                                <p className="mt-4 text-zinc-400 text-xs border-t border-zinc-800/50 pt-3 leading-relaxed">
+                                                                    {rootRole.description}
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                    </motion.div>
+                                                </div>
+
+                                                {/* Children Roles Grid */}
+                                                {children.length > 0 && (
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+                                                        {children.map(childRole => {
+                                                            const childMembers = orgData.members.filter(m => m.role_id === childRole.id);
+                                                            return (
+                                                                <motion.div 
+                                                                    key={childRole.id}
+                                                                    whileHover={{ y: -5 }}
+                                                                    className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-6 hover:border-brand-500/30 transition-all duration-300 flex flex-col gap-4"
+                                                                >
+                                                                    <div className="flex items-center justify-between">
+                                                                        <h5 className="text-brand-300 font-heading text-xs uppercase tracking-widest">{childRole.name}</h5>
+                                                                        <ChevronRight size={14} className="text-zinc-600" />
+                                                                    </div>
+                                                                    {childMembers.length > 0 ? (
+                                                                        <div className="space-y-3">
+                                                                            {childMembers.map(m => (
+                                                                                <div key={m.id} className="flex items-center gap-3">
+                                                                                    {m.photo_path ? (
+                                                                                        <img src={`${ERP_BASE}/${m.photo_path}`} className="w-8 h-8 rounded-full object-cover grayscale hover:grayscale-0 transition-all" alt="" />
+                                                                                    ) : (
+                                                                                        <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-600"><Users size={12} /></div>
+                                                                                    )}
+                                                                                    <span className="text-zinc-200 text-sm font-medium">{m.full_name}</span>
+                                                                                </div>
+                                                                            ))}
+                                                                        </div>
+                                                                    ) : (
+                                                                        <span className="text-zinc-700 text-xs italic">Non assegnato</span>
+                                                                    )}
+                                                                </motion.div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                            </div>
+                        </motion.div>
+                    )}
+
                     {/* Fallback if no profile data at all */}
-                    {!profile?.mission && !profile?.vision && valuesList.length === 0 && !profile?.founded_year && (
+                    {!profile?.mission && !profile?.vision && valuesList.length === 0 && !profile?.founded_year && !orgData?.roles.length && (
                         <motion.div variants={itemVariants}>
                             <div className="bg-zinc-900/50 p-8 md:p-12 border border-zinc-800 rounded-2xl backdrop-blur-sm text-center">
                                 <Shield className="mx-auto text-zinc-600 mb-4" size={48} />
