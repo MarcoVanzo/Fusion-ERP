@@ -420,12 +420,9 @@ HTML;
             'responseMimeType' => 'application/json',
         ]);
 
-        // Robust JSON extraction
-        if (preg_match('/\{[\s\S]*\}/', $aiContent, $matches)) {
-            $aiContent = $matches[0];
-        }
-
-        $aiJson = json_decode($aiContent, true);
+        // Robust JSON extraction using Shared AIService helper
+        $aiJson = AIService::extractJson($aiContent);
+        
         if (!$aiJson) {
             error_log('[AI_TRANSPORT] Invalid JSON: ' . $aiContent);
             $aiJson = [

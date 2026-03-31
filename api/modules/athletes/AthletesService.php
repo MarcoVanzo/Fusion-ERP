@@ -135,12 +135,23 @@ class AthletesService
 
     /**
      * Generate an AI report for the athlete using Gemini.
+     * PERF: Checks for an existing summary created in the last 24h to avoid redundant API calls.
      */
     public function generateAIReport(string $athleteId): array
     {
         $athlete = $this->repo->getAthleteById($athleteId);
         if (!$athlete) {
             throw new \Exception('Atleta non trovato', 404);
+        }
+
+        // 1. PERFORMANCE: Check if a summary already exists for today/last 24h
+        $latest = $this->repo->getLatestAiSummary($athleteId);
+        if ($latest && (time() - strtotime($latest['created_at'])) < 86400) {
+            return [
+                'summary' => $latest['summary_text'],
+                'period' => ['start' => $latest['period_start'], 'end' => $latest['period_end']],
+                'cached' => true
+            ];
         }
 
         $history = $this->repo->getMetricsHistory($athleteId, 30);
@@ -151,6 +162,7 @@ class AthletesService
         $prompt = $this->buildGeminiPrompt($athlete, $history, $acwr, $notes);
         
         try {
+            // AIService now defaults to gemini-1.5-flash which is stable and fast.
             $summary = AIService::generateContent($prompt, ['maxOutputTokens' => 512, 'temperature' => 0.3]);
         } catch (\Exception $e) {
             $summary = 'Impossibile generare il riepilogo AI al momento. Riprovare più tardi.';

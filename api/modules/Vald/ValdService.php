@@ -269,6 +269,12 @@ class ValdService
             'quads_r' => null,
             'hips_l'  => null,
             'hips_r'  => null,
+            'glutes_l' => null,
+            'glutes_r' => null,
+            'hamstrings_l' => null,
+            'hamstrings_r' => null,
+            'calves_l' => null,
+            'calves_r' => null,
         ];
 
         // Core highlighting (based on fatigue semaphore)
@@ -276,7 +282,7 @@ class ValdService
         if ($status === 'RED') $map['core'] = '#FF1744';
         elseif ($status === 'YELLOW') $map['core'] = '#FFD600';
 
-        // Asymmetry highlighting
+        // Asymmetry highlighting (Proxy for all lower body segments)
         $asymVal = (float)($asymmetry['landing']['asymmetry'] ?? 0);
         $weaker  = $asymmetry['landing']['weaker'] ?? 'N/A';
 
@@ -288,9 +294,15 @@ class ValdService
             if ($weaker === 'SX') {
                 $map['quads_l'] = $color;
                 $map['hips_l']  = $color;
+                $map['glutes_l'] = $color;
+                $map['hamstrings_l'] = $color;
+                $map['calves_l'] = $color;
             } elseif ($weaker === 'DX') {
                 $map['quads_r'] = $color;
                 $map['hips_r']  = $color;
+                $map['glutes_r'] = $color;
+                $map['hamstrings_r'] = $color;
+                $map['calves_r'] = $color;
             }
         }
 
