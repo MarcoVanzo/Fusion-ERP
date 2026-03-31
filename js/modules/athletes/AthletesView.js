@@ -71,7 +71,7 @@ export const AthletesView = {
             <div class="filter-group">
                 <select id="team-filter" class="form-input select-filter">
                     <option value="">Tutte le squadre/stagioni</option>
-                    \${teams.map(t => \`<option value="\${Utils.escapeHtml(t.id)}">\${Utils.escapeHtml(t.season)} — \${Utils.escapeHtml(t.name)} (\${Utils.escapeHtml(t.category)})\</option>\`).join('')}
+                    ${teams.map(t => `<option value="${Utils.escapeHtml(t.id)}">${Utils.escapeHtml(t.season)} — ${Utils.escapeHtml(t.name)} (${Utils.escapeHtml(t.category)})</option>`).join('')}
                 </select>
                 <button class="btn btn-ghost btn-sm" id="reset-filters" title="Reset filtri">
                     <i class="ph ph-arrow-counter-clockwise"></i>
