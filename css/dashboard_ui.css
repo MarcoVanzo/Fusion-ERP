@@ -1428,13 +1428,13 @@
 }
 
 .muscle-blob {
-  filter: blur(4px); /* Reduced blur for better definition */
+  /* Rimossa sfocatura per colori più decisi */
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   stroke-linejoin: round;
 }
 
 .muscle-blob.active {
-  filter: blur(2px) drop-shadow(0 0 10px currentColor);
+  filter: drop-shadow(0 0 5px rgba(255,255,255,0.4));
   opacity: 1 !important;
 }
 
@@ -1443,9 +1443,9 @@
 }
 
 @keyframes muscle-pulse-anim {
-  0% { opacity: 0.6; filter: blur(6px); }
-  50% { opacity: 0.9; filter: blur(8px); }
-  100% { opacity: 0.6; filter: blur(6px); }
+  0% { opacity: 0.7; }
+  50% { opacity: 1; }
+  100% { opacity: 0.7; }
 }
 
 /* Griglia KPI */

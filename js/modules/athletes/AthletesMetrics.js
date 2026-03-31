@@ -22,10 +22,7 @@ export const AthletesMetrics = {
             </div>
         `;
 
-        await Promise.all([
-            this._loadValdData(athleteId),
-            this._loadActivityLogs(athleteId)
-        ]);
+        await this._loadValdData(athleteId);
     },
 
     /**
@@ -104,6 +101,9 @@ export const AthletesMetrics = {
                         <div id="vald-ai-plan-result-${athleteId}" class="ai-result-slot"></div>
                     </div>
                 </div>
+                <div id="vald-history-container" style="margin-top:var(--sp-4);">
+                    ${this._renderValdMeasurements(data.results)}
+                </div>
             `;
 
             document.getElementById("vald-sync-btn-header").onclick = () => this._syncVald(athleteId);
@@ -118,8 +118,9 @@ export const AthletesMetrics = {
     _renderAnatomy(view, muscleMap = {}) {
         const getStyles = (muscle) => {
             const color = muscleMap[muscle];
-            if (!color) return `fill="rgba(0, 255, 188, 0.15)" stroke="rgba(0, 255, 188, 0.2)" stroke-width="0.5" class="muscle-blob"`;
-            return `fill="${color}" stroke="${color}" stroke-width="2" class="muscle-blob muscle-pulse active" style="filter: drop-shadow(0 0 5px ${color});"`;
+            if (!color) return `fill="rgba(0, 255, 188, 0.08)" stroke="rgba(0, 255, 188, 0.15)" stroke-width="0.3" class="muscle-blob"`;
+            // Color decisi e bordi netti come richiesto
+            return `fill="${color}" stroke="#fff" stroke-width="1.5" class="muscle-blob active" style="filter: drop-shadow(0 0 3px ${color}); opacity: 0.9;"`;
         };
         
         return `
@@ -153,61 +154,54 @@ export const AthletesMetrics = {
         return colors[status] || '#888';
     },
 
-    async _loadActivityLogs(athleteId) {
-        const container = document.getElementById("logs-section");
-        if (!container) return;
-
-        try {
-            const sections = await AthletesAPI.getActivityLog(athleteId);
-            
-            // Appiattiamo i log da tutte le sezioni (anagrafica, metrics, etc.) per la tabella
-            const allLogs = [];
-            if (sections && typeof sections === 'object') {
-                Object.values(sections).forEach(sectionArray => {
-                    if (Array.isArray(sectionArray)) {
-                        allLogs.push(...sectionArray);
-                    }
-                });
-            }
-
-            if (allLogs.length === 0) {
-                container.innerHTML = '<p class="text-muted" style="padding:var(--sp-4);">Nessun log attività recente disponibile.</p>';
-                return;
-            }
-
-            // Ordiniamo per data decrescente
-            allLogs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-
-            container.innerHTML = `
-                <h3 class="section-title">Audit Log Attività</h3>
+    /**
+     * Renderizza la tabella delle misurazioni VALD
+     */
+    _renderValdMeasurements(results = []) {
+        if (!results || results.length === 0) return '';
+        
+        return `
+            <div class="logs-section">
+                <h3 class="section-title">Storico Misurazioni VALD</h3>
                 <div class="table-wrapper">
                     <table class="table">
                         <thead>
                             <tr>
-                                <th>Data</th>
-                                <th>Azione</th>
-                                <th class="text-end">Operatore</th>
+                                <th>Data Test</th>
+                                <th>Test</th>
+                                <th class="text-end">Jump Height</th>
+                                <th class="text-end">RSImod</th>
+                                <th class="text-end">Asimmetria Atterraggio</th>
                             </tr>
                         </thead>
                         <tbody>
-                            ${allLogs.map(log => `
-                                <tr>
-                                    <td><small>${new Date(log.created_at).toLocaleString('it-IT')}</small></td>
-                                    <td>
-                                        <div style="font-weight:600; font-size:0.85rem;">${Utils.escapeHtml(log.action)}</div>
-                                        <div style="font-size:0.75rem; opacity:0.7;">Tabella: ${log.table_name}</div>
-                                    </td>
-                                    <td class="text-end"><small>${Utils.escapeHtml(log.operator)}</small></td>
-                                </tr>
-                            `).join('')}
+                            ${results.map(res => {
+                                const m = res.metrics || {};
+                                const asy = res.asymmetry?.landing?.asymmetry?.toFixed(1) || '—';
+                                const jh = (m.JumpHeightTotal?.Value || m.JumpHeight?.Value || 0).toFixed(1);
+                                const rsi = (m.RSIModified?.Value || 0).toFixed(3);
+                                
+                                return `
+                                    <tr>
+                                        <td><small>${new Date(res.test_date).toLocaleDateString('it-IT')}</small></td>
+                                        <td><strong>${res.test_type}</strong></td>
+                                        <td class="text-end">${jh} <small>cm</small></td>
+                                        <td class="text-end"><strong>${rsi}</strong></td>
+                                        <td class="text-end" style="color:${parseFloat(asy) > 15 ? '#FF1744' : 'inherit'}">
+                                            ${asy}%
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
                         </tbody>
                     </table>
                 </div>
-            `;
-        } catch (e) {
-            console.error("Error loading logs:", e);
-            container.innerHTML = '<p class="text-danger">Errore caricamento log attività.</p>';
-        }
+            </div>
+        `;
+    },
+
+    async _loadActivityLogs(athleteId) {
+        // Metodo rimosso in favore di _renderValdMeasurements
     },
 
     async _syncVald(athleteId) {
