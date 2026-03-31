@@ -84,9 +84,20 @@ export const AthletesMetrics = {
                     `).join('')}
                 </div>
 
-                <div class="vald-ai-actions" id="vald-ai-section-${athleteId}">
-                    <button class="btn btn-ai-primary" onclick="window.__valdAi('${athleteId}', 'diagnosis')"><i class="ph ph-brain"></i> Analisi Stato di Forma (AI)</button>
-                    <button class="btn btn-ai-secondary" onclick="window.__valdAi('${athleteId}', 'plan')"><i class="ph ph-barbell"></i> Piano di Intervento (AI)</button>
+                <div class="vald-ai-actions-v2" id="vald-ai-section-${athleteId}">
+                    <div class="ai-action-block">
+                        <button class="btn btn-ai-primary w-100" id="vald-ai-dx-btn-${athleteId}" onclick="window.__valdAi('${athleteId}', 'diagnosis')">
+                            <i class="ph ph-brain"></i> Analisi Stato di Forma (AI)
+                        </button>
+                        <div id="vald-ai-diagnosis-result-${athleteId}" class="ai-result-slot"></div>
+                    </div>
+                    
+                    <div class="ai-action-block">
+                        <button class="btn btn-ai-secondary w-100" id="vald-ai-pl-btn-${athleteId}" onclick="window.__valdAi('${athleteId}', 'plan')">
+                            <i class="ph ph-barbell"></i> Piano di Intervento (AI)
+                        </button>
+                        <div id="vald-ai-plan-result-${athleteId}" class="ai-result-slot"></div>
+                    </div>
                 </div>
             `;
 
