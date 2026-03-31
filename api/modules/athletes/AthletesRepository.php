@@ -67,7 +67,7 @@ class AthletesRepository
         }
 
         if (!$includeInactive) {
-            $sql .= ' AND (a.is_active = 1 OR a.is_active IS NULL OR a.is_active = 0)';
+            $sql .= ' AND a.is_active = 1';
         }
         $sql .= ' ORDER BY a.full_name';
 
@@ -110,16 +110,16 @@ class AthletesRepository
         if ($teamSeasonId !== '') {
             if (str_starts_with($teamSeasonId, 'TEAM_')) {
                 // Legacy support for public website API which passes team_id instead of team_season_id
-                $sql .= ' WHERE a.deleted_at IS NULL AND (a.is_active = 1 OR a.is_active IS NULL OR a.is_active = 0) AND a.team_id = :team_id';
+                $sql .= ' WHERE a.deleted_at IS NULL AND a.is_active = 1 AND a.team_id = :team_id';
                 $params[':team_id'] = $teamSeasonId;
             } else {
                 $sql .= ' JOIN athlete_teams at2 ON a.id = at2.athlete_id';
-                $sql .= ' WHERE a.deleted_at IS NULL AND (a.is_active = 1 OR a.is_active IS NULL OR a.is_active = 0) AND at2.team_season_id = :team_season_id';
+                $sql .= ' WHERE a.deleted_at IS NULL AND a.is_active = 1 AND at2.team_season_id = :team_season_id';
                 $params[':team_season_id'] = $teamSeasonId;
             }
         }
         else {
-            $sql .= ' WHERE a.deleted_at IS NULL AND (a.is_active = 1 OR a.is_active IS NULL OR a.is_active = 0)';
+            $sql .= ' WHERE a.deleted_at IS NULL AND a.is_active = 1';
         }
         $sql .= ' ORDER BY a.full_name';
 
@@ -515,15 +515,15 @@ class AthletesRepository
         $params = [];
         if ($teamSeasonId !== '') {
             if (str_starts_with($teamSeasonId, 'TEAM_')) {
-                $sql .= ' WHERE a.deleted_at IS NULL AND (a.is_active = 1 OR a.is_active IS NULL OR a.is_active = 0) AND a.team_id = :team_id';
+                $sql .= ' WHERE a.deleted_at IS NULL AND a.is_active = 1 AND a.team_id = :team_id';
                 $params[':team_id'] = $teamSeasonId;
             } else {
                 $sql .= ' JOIN athlete_teams at2 ON a.id = at2.athlete_id';
-                $sql .= ' WHERE a.deleted_at IS NULL AND (a.is_active = 1 OR a.is_active IS NULL OR a.is_active = 0) AND at2.team_season_id = :team_season_id';
+                $sql .= ' WHERE a.deleted_at IS NULL AND a.is_active = 1 AND at2.team_season_id = :team_season_id';
                 $params[':team_season_id'] = $teamSeasonId;
             }
         } else {
-            $sql .= ' WHERE a.deleted_at IS NULL AND (a.is_active = 1 OR a.is_active IS NULL OR a.is_active = 0)';
+            $sql .= ' WHERE a.deleted_at IS NULL AND a.is_active = 1';
         }
         $sql .= ' ORDER BY a.jersey_number ASC, a.full_name ASC';
 
