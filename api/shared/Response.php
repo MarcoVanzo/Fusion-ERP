@@ -13,7 +13,7 @@ class Response
     /**
      * Send a successful JSON response and exit.
      */
-    public static function success(mixed $data = null, int $httpCode = 200): never
+    public static function success(mixed $data = null, int $httpCode = 200)
     {
         http_response_code($httpCode);
         header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
@@ -29,7 +29,7 @@ class Response
      * Send an error JSON response and exit.
      * Never exposes stack traces or DB internals.
      */
-    public static function error(string $message, int $httpCode = 400, ?string $internalDetail = null): never
+    public static function error(string $message, int $httpCode = 400, ?string $internalDetail = null)
     {
         if ($internalDetail !== null) {
             $codeStr = (string)$httpCode;

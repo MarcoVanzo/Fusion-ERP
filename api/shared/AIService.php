@@ -5,8 +5,8 @@ namespace FusionERP\Shared;
 
 class AIService
 {
-    private const DEFAULT_MODEL = 'gemini-1.5-flash';
-    private const API_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models/';
+    private const DEFAULT_MODEL = 'gemini-2.5-flash';
+    private const API_BASE_URL = 'https://generativelanguage.googleapis.com/v1/models/';
 
     /**
      * @param string|array $prompt The text prompt or parts array to send to the model
@@ -78,9 +78,20 @@ class AIService
         if ($httpCode !== 200 || empty($responseData)) {
             $keyUsed = substr($apiKey, 0, 8) . '...';
             $errMsg = $responseData['error']['message'] ?? 'Risposta non valida dall\'AI (HTTP ' . $httpCode . ')';
-            $logMsg = date('Y-m-d H:i:s') . " [AI_SERVICE] API error ($keyUsed) on model $model: " . $response . PHP_EOL;
-            file_put_contents(__DIR__ . '/../ai_debug.log', $logMsg, FILE_APPEND);
-            error_log('[AI_SERVICE] API error (' . $keyUsed . ') on model ' . $model . ': ' . $response);
+            
+            // Detailed logging for debugging
+            $logData = [
+                'timestamp' => date('Y-m-d H:i:s'),
+                'model' => $model,
+                'key_prefix' => $keyUsed,
+                'http_code' => $httpCode,
+                'error' => $errMsg,
+                'full_response' => $responseData
+            ];
+            
+            file_put_contents(__DIR__ . '/../ai_debug.log', json_encode($logData) . PHP_EOL, FILE_APPEND);
+            error_log('[AI_SERVICE] API error (' . $keyUsed . ') on model ' . $model . ': ' . $errMsg);
+            
             throw new \Exception('Errore AI: ' . $errMsg);
         }
 

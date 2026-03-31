@@ -410,6 +410,12 @@ class AthletesController
     }
 
     // ─── PUBLIC ENDPOINTS ───────────────────────────────────────────────────
+    public function getPublicTeams(): void
+    {
+        // Public endpoint allowed by router.php whitelist
+        Response::success($this->repo->listTeams());
+    }
+
     public function getPublicTeamAthletes(): void
     {
         $teamId = filter_input(INPUT_GET, 'teamId', FILTER_DEFAULT) ?? '';
