@@ -101,16 +101,24 @@ export const AthletesMetrics = {
     _renderAnatomy(view, muscleMap = {}) {
         const getColor = (muscle) => muscleMap[muscle] || 'var(--color-anatomy-default)';
         
-        // Semplificazione: ritorno un placeholder SVG o l'immagine con overlay
-        // In produzione usiamo gli SVG completi estratti dal monolite
         return `
             <div class="anatomy-container ${view}">
-                <img src="assets/img/anatomy/body_${view}.png" style="width:100%; opacity:0.3;">
+                <img src="assets/img/anatomy/body_${view}.png" style="width:100%; opacity:0.4;">
                 <svg viewBox="0 0 100 100" class="anatomy-overlay">
-                    <!-- I cerchi rappresentano i gruppi muscolari principali -->
-                    <circle cx="50" cy="35" r="5" fill="${getColor('core')}" />
-                    <circle cx="43" cy="65" r="6" fill="${getColor('quads_l')}" />
-                    <circle cx="57" cy="65" r="6" fill="${getColor('quads_r')}" />
+                    ${view === 'front' ? `
+                        <!-- Front View -->
+                        <circle cx="50" cy="32" r="5" fill="${getColor('core')}" />
+                        <circle cx="42" cy="50" r="5" fill="${getColor('hips_l')}" />
+                        <circle cx="58" cy="50" r="5" fill="${getColor('hips_r')}" />
+                        <circle cx="42" cy="72" r="6" fill="${getColor('quads_l')}" />
+                        <circle cx="58" cy="72" r="6" fill="${getColor('quads_r')}" />
+                    ` : `
+                        <!-- Back View -->
+                        <circle cx="42" cy="52" r="5.5" fill="${getColor('hips_l')}" />
+                        <circle cx="58" cy="52" r="5.5" fill="${getColor('hips_r')}" />
+                        <circle cx="42" cy="74" r="5" fill="${getColor('quads_l')}" />
+                        <circle cx="58" cy="74" r="5" fill="${getColor('quads_r')}" />
+                    `}
                 </svg>
             </div>
         `;

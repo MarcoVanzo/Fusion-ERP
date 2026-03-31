@@ -106,6 +106,7 @@ class ValdController
             
             $semaphore = $this->service->computeSemaphore($metrics, $baseline);
             $asymmetry = $this->service->computeAsymmetry($metrics);
+            $muscleMap = $this->service->computeMuscleMap($semaphore, $asymmetry);
             
             $athleteWeight = $this->service->getAthleteWeight($athleteId);
             $profile = $this->service->computeProfile($metrics, $athleteWeight);
@@ -131,6 +132,7 @@ class ValdController
                 'semaphore' => $semaphore,
                 'asymmetry' => $asymmetry,
                 'profile' => $profile,
+                'muscleMap' => $muscleMap,
                 'results' => $allResults,
             ]);
         } catch (\Throwable $e) {

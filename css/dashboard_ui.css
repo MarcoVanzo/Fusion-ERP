@@ -1383,7 +1383,7 @@
   align-items: center;
   gap: 12px;
   width: 100%;
-  max-width: 280px; /* Previene "immagini immense" */
+  max-width: 420px; /* Increased from 280px for better visibility */
 }
 
 .anatomy-view span {

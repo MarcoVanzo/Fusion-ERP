@@ -261,6 +261,42 @@ class ValdService
         ];
     }
 
+    public function computeMuscleMap(array $semaphore, array $asymmetry): array
+    {
+        $map = [
+            'core'    => null,
+            'quads_l' => null,
+            'quads_r' => null,
+            'hips_l'  => null,
+            'hips_r'  => null,
+        ];
+
+        // Core highlighting (based on fatigue semaphore)
+        $status = $semaphore['status'] ?? 'GREEN';
+        if ($status === 'RED') $map['core'] = '#FF1744';
+        elseif ($status === 'YELLOW') $map['core'] = '#FFD600';
+
+        // Asymmetry highlighting
+        $asymVal = (float)($asymmetry['landing']['asymmetry'] ?? 0);
+        $weaker  = $asymmetry['landing']['weaker'] ?? 'N/A';
+
+        $color = null;
+        if ($asymVal > 15) $color = '#FF1744';
+        elseif ($asymVal > 10) $color = '#FFD600';
+
+        if ($color) {
+            if ($weaker === 'SX') {
+                $map['quads_l'] = $color;
+                $map['hips_l']  = $color;
+            } elseif ($weaker === 'DX') {
+                $map['quads_r'] = $color;
+                $map['hips_r']  = $color;
+            }
+        }
+
+        return $map;
+    }
+
     public function getAthleteWeight(string $athleteId): float
     {
         $db = \FusionERP\Shared\Database::getInstance();
