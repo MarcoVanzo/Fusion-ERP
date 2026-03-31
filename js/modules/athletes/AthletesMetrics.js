@@ -60,8 +60,13 @@ export const AthletesMetrics = {
 
             container.innerHTML = `
                 <div class="vald-header">
-                    <div class="vald-status-dot" style="background:${this._getStatusColor(data.semaphore?.status)}"></div>
-                    <span class="vald-title">VALD FORCE-DECKS ANALYSIS</span>
+                    <div style="display:flex; align-items:center; gap:var(--sp-2);">
+                        <div class="vald-status-dot" style="background:${this._getStatusColor(data.semaphore?.status)}"></div>
+                        <span class="vald-title">VALD FORCE-DECKS ANALYSIS</span>
+                    </div>
+                    <button class="btn btn-default btn-xs" id="vald-sync-btn-header">
+                        <i class="ph ph-arrows-clockwise"></i> Sincronizza
+                    </button>
                 </div>
                 
                 <div class="vald-hero">
@@ -101,6 +106,7 @@ export const AthletesMetrics = {
                 </div>
             `;
 
+            document.getElementById("vald-sync-btn-header").onclick = () => this._syncVald(athleteId);
         } catch (e) {
             container.innerHTML = `<div class="error-box">Errore VALD: ${e.message}</div>`;
         }
@@ -112,8 +118,8 @@ export const AthletesMetrics = {
     _renderAnatomy(view, muscleMap = {}) {
         const getStyles = (muscle) => {
             const color = muscleMap[muscle];
-            if (!color) return `fill="rgba(0, 255, 188, 0.25)" class="muscle-blob"`;
-            return `fill="${color}" class="muscle-blob muscle-pulse"`;
+            if (!color) return `fill="rgba(0, 255, 188, 0.15)" stroke="rgba(0, 255, 188, 0.2)" stroke-width="0.5" class="muscle-blob"`;
+            return `fill="${color}" stroke="${color}" stroke-width="2" class="muscle-blob muscle-pulse active" style="filter: drop-shadow(0 0 5px ${color});"`;
         };
         
         return `
@@ -152,33 +158,46 @@ export const AthletesMetrics = {
         if (!container) return;
 
         try {
-            const logs = await AthletesAPI.getActivityLog(athleteId);
-            if (!logs || logs.length === 0) {
-                container.innerHTML = '<p class="text-muted">Nessun log attività recente.</p>';
+            const sections = await AthletesAPI.getActivityLog(athleteId);
+            
+            // Appiattiamo i log da tutte le sezioni (anagrafica, metrics, etc.) per la tabella
+            const allLogs = [];
+            if (sections && typeof sections === 'object') {
+                Object.values(sections).forEach(sectionArray => {
+                    if (Array.isArray(sectionArray)) {
+                        allLogs.push(...sectionArray);
+                    }
+                });
+            }
+
+            if (allLogs.length === 0) {
+                container.innerHTML = '<p class="text-muted" style="padding:var(--sp-4);">Nessun log attività recente disponibile.</p>';
                 return;
             }
 
+            // Ordiniamo per data decrescente
+            allLogs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
             container.innerHTML = `
-                <h3 class="section-title">Log Attività Recenti</h3>
+                <h3 class="section-title">Audit Log Attività</h3>
                 <div class="table-wrapper">
                     <table class="table">
                         <thead>
                             <tr>
                                 <th>Data</th>
-                                <th>Tipo</th>
-                                <th>RPE</th>
-                                <th>Carico</th>
-                                <th>Stato ACWR</th>
+                                <th>Azione</th>
+                                <th class="text-end">Operatore</th>
                             </tr>
                         </thead>
                         <tbody>
-                            ${logs.map(log => `
+                            ${allLogs.map(log => `
                                 <tr>
-                                    <td>${Utils.formatDate(log.log_date)}</td>
-                                    <td>${Utils.escapeHtml(log.activity_type)}</td>
-                                    <td>${log.rpe}/10</td>
-                                    <td><strong>${log.load_value}</strong></td>
-                                    <td>${Utils.riskBadge(log.acwr_risk)}</td>
+                                    <td><small>${new Date(log.created_at).toLocaleString('it-IT')}</small></td>
+                                    <td>
+                                        <div style="font-weight:600; font-size:0.85rem;">${Utils.escapeHtml(log.action)}</div>
+                                        <div style="font-size:0.75rem; opacity:0.7;">Tabella: ${log.table_name}</div>
+                                    </td>
+                                    <td class="text-end"><small>${Utils.escapeHtml(log.operator)}</small></td>
                                 </tr>
                             `).join('')}
                         </tbody>
@@ -186,7 +205,8 @@ export const AthletesMetrics = {
                 </div>
             `;
         } catch (e) {
-            container.innerHTML = '<p class="text-danger">Errore caricamento log.</p>';
+            console.error("Error loading logs:", e);
+            container.innerHTML = '<p class="text-danger">Errore caricamento log attività.</p>';
         }
     },
 

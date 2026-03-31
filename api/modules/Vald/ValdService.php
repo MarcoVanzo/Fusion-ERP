@@ -375,7 +375,7 @@ PROMPT;
     public function callGeminiSingle(string $prompt): string
     {
         try {
-            return trim(AIService::generateContent($prompt, ['temperature' => 0.4, 'maxOutputTokens' => 1500]));
+            return trim(AIService::generateContent($prompt, ['temperature' => 0.4, 'maxOutputTokens' => 4096]));
         } catch (\Exception $e) {
             error_log("[VALD GEMINI SINGLE] Error: " . $e->getMessage());
             return 'Analisi AI temporaneamente non disponibile. Errore: ' . $e->getMessage();

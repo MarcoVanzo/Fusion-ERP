@@ -1381,10 +1381,10 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   width: 100%;
-  max-width: 480px; /* Slightly larger for the glow to breathe */
-  perspective: 1000px;
+  max-width: 600px; /* Increased size */
+  perspective: 1200px;
 }
 
 .anatomy-view span {
@@ -1401,12 +1401,13 @@
 .anatomy-container {
   position: relative;
   width: 100%;
-  background: radial-gradient(circle at center, rgba(0, 242, 254, 0.05) 0%, transparent 70%);
-  border-radius: 24px;
-  padding: 30px;
-  border: 1px solid rgba(255, 255, 255, 0.03);
-  overflow: hidden;
-  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.5);
+  background: radial-gradient(circle at center, rgba(0, 242, 254, 0.08) 0%, transparent 80%);
+  border-radius: 28px;
+  padding: 10px; /* Reduced internal padding to allow image to be larger */
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  overflow: visible;
+  box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.6);
+  transform: scale(1.1); /* Slight overall zoom */
 }
 
 .anatomy-cyber-body {
@@ -1427,8 +1428,14 @@
 }
 
 .muscle-blob {
-  filter: blur(6px);
-  transition: fill 0.4s ease, opacity 0.4s ease;
+  filter: blur(4px); /* Reduced blur for better definition */
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  stroke-linejoin: round;
+}
+
+.muscle-blob.active {
+  filter: blur(2px) drop-shadow(0 0 10px currentColor);
+  opacity: 1 !important;
 }
 
 .muscle-pulse {
