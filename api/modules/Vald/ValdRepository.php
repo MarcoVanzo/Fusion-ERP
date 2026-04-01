@@ -211,7 +211,9 @@ class ValdRepository
              ON DUPLICATE KEY UPDATE 
                 metrics = VALUES(metrics),
                 test_date = VALUES(test_date),
-                test_type = VALUES(test_type)'
+                test_type = VALUES(test_type),
+                tenant_id = VALUES(tenant_id),
+                athlete_id = VALUES(athlete_id)'
         );
         $stmt->execute($data);
     }

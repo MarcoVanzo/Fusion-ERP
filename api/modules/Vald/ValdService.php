@@ -395,8 +395,6 @@ PROMPT;
         }
         
         $stats = ['found' => 0, 'synced' => 0, 'skipped' => 0, 'unlinkedAthletes' => []];
-        $guardClientId     = (getenv('VALD_CLIENT_ID')     ?: $_SERVER['VALD_CLIENT_ID']     ?? '') ?: ValdCredentials::CLIENT_ID;
-        $guardClientSecret = (getenv('VALD_CLIENT_SECRET') ?: $_SERVER['VALD_CLIENT_SECRET'] ?? '') ?: ValdCredentials::CLIENT_SECRET;
         $db = \FusionERP\Shared\Database::getInstance();
         @set_time_limit(300);
 
@@ -539,6 +537,66 @@ PROMPT;
         }
 
         error_log('[VALD Sync] Completata: ' . $stats['synced'] . ' salvati, ' . $stats['skipped'] . ' saltati su ' . $stats['found'] . ' trovati.');
+        return $stats;
+    }
+
+    /**
+     * REPAIR: Re-links orphaned test results to current athletes based on name-matching.
+     * Useful when athletes have been migrated to a new tenant with new IDs.
+     */
+    public function repairLinks(string $tenantId): array
+    {
+        $db = \FusionERP\Shared\Database::getInstance();
+        $stats = ['updated' => 0, 'already_ok' => 0, 'orphaned' => 0];
+
+        // 1. Get all athletes (including deleted) to resolve names across migrations
+        $stmt = $db->query("SELECT id, full_name, tenant_id, deleted_at FROM athletes");
+        $athletes = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $idToName = [];
+        $nameToCurrentId = [];
+
+        foreach ($athletes as $a) {
+            $idToName[$a['id']] = $a['full_name'];
+            if ($a['tenant_id'] === $tenantId && $a['deleted_at'] === null) {
+                $nameToCurrentId[$a['full_name']] = $a['id'];
+            }
+        }
+
+        // 2. Process results
+        $stmt = $db->query("SELECT id, athlete_id, tenant_id, test_id FROM vald_test_results");
+        $results = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        foreach ($results as $res) {
+            $currentAthId = $res['athlete_id'];
+            $currentTenant = $res['tenant_id'];
+            $originalName = $idToName[$currentAthId] ?? null;
+
+            // Already ok?
+            if ($currentTenant === $tenantId && isset($nameToCurrentId[$originalName ?? '']) && $nameToCurrentId[$originalName] === $currentAthId) {
+                $stats['already_ok']++;
+                continue;
+            }
+
+            if ($originalName && isset($nameToCurrentId[$originalName])) {
+                $newAthId = $nameToCurrentId[$originalName];
+                $upd = $db->prepare('UPDATE vald_test_results SET tenant_id = :tid, athlete_id = :aid WHERE id = :id');
+                $upd->execute([':tid' => $tenantId, ':aid' => $newAthId, ':id' => $res['id']]);
+                $stats['updated']++;
+            } else {
+                $stats['orphaned']++;
+            }
+        }
+
+        // 3. Refresh caches
+        if ($stats['updated'] > 0) {
+            $db->query("UPDATE athletes a 
+                        SET 
+                          latest_vald_metrics = (SELECT metrics FROM vald_test_results WHERE athlete_id = a.id ORDER BY test_date DESC LIMIT 1),
+                          latest_vald_date = (SELECT test_date FROM vald_test_results WHERE athlete_id = a.id ORDER BY test_date DESC LIMIT 1)
+                        WHERE tenant_id = '$tenantId'");
+        }
+
         return $stats;
     }
 }
