@@ -1,0 +1,14 @@
+Sponsors per tenant:
+Array
+(
+    [0] => Array
+        (
+            [tenant_id] => TNT_default
+            [c] => 13
+        )
+
+)
+
+JSON test:
+{"id":"SSP_094389b5","tenant_id":"TNT_default","name":"3T Tombolato","tipo":"Sponsor","stagione":"2025\/2026","description":"3T Tombolato \u00e8 un'impresa italiana con oltre vent'anni di esperienza, fondata all'inizio del 1999 e radicata nel territorio padovano. La societ\u00e0 opera come punto di riferimento nel settore dell'elettrotecnica e dell'impiantistica, offrendo soluzioni su misura sia in ambito civile che industriale.\n\nAttivit\u00e0 e Specializzazioni Core\nL'azienda si dedica principalmente alle seguenti attivit\u00e0:\n- Impianti Elettrici e di Illuminazione: Progettazione, installazione e messa in sicurezza di impianti per edifici residenziali e commerciali.\n- Settore Fotovoltaico: Soluzioni per l'energia rinnovabile e l'efficientamento energetico tramite l'installazione e l'assistenza su pannelli solari.\n- Elettrotecnica Industriale: Riparazione e manutenzione di macchinari ad alto carico e attrezzature complesse, come trasformatori elettrici (ad esempio trasformatori raffreddati ad olio fino a 1600 KVA).\n- Manutenzione Programmata: Servizi di assistenza continuativa e revisione per garantire la perfetta operativit\u00e0 e la sicurezza degli impianti nel lungo periodo.","logo_path":"uploads\/societa\/TNT_default\/sponsors\/sponsor_SSP_094389b5_20260320_214113.png","website_url":"https:\/\/www.impianti3t.com\/","instagram_url":null,"facebook_url":null,"linkedin_url":null,"tiktok_url":null,"importo":"1500.00","rapporto":"1.00","sponsorizzazione":"1665.00","sort_order":0,"is_active":1,"created_at":"2026-03-20 20:36:00","updated_at":"2026-03-20 21:41:13","is_deleted":0}
+JSON error: No error

@@ -160,7 +160,14 @@ export const AthletesMetrics = {
      * Renderizza la tabella delle misurazioni VALD
      */
     _renderValdMeasurements(results = []) {
-        if (!Array.isArray(results) || results.length === 0) return '';
+        if (!Array.isArray(results) || results.length === 0) {
+            return `
+                <div class="empty-state-simple">
+                    <i class="ph ph-clock-counter-clockwise"></i>
+                    <p>Nessuno storico misurazioni trovato per questo atleta.</p>
+                </div>
+            `;
+        }
         
         return `
             <div class="logs-section">
