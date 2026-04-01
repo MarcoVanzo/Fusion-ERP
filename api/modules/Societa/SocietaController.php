@@ -380,28 +380,20 @@ class SocietaController
 
     public function getPublicForesteria(): void
     {
-        $tenantId = null; 
-        $infoRow = $this->repo->getForesteriaInfo(null);
+        $tenantId = TenantContext::id(); 
+        $infoRow = $this->repo->getForesteriaInfo($tenantId);
         
         if (!$infoRow) {
             $infoRow = [
+                'tenant_id'   => $tenantId,
                 'description' => '',
                 'address'     => 'Via Bazzera 18, 30030 Martellago (VE)',
                 'lat'         => 45.5440000,
                 'lng'         => 12.1580000,
             ];
-            $tenantId = null;
-        } else {
-            $tenantId = $infoRow['tenant_id'];
         }
 
-        $db = \FusionERP\Shared\Database::getInstance();
-        if ($tenantId) {
-            $media = $this->repo->getForesteriaMedia($tenantId);
-        } else {
-            $stmt = $db->query("SELECT * FROM foresteria_media WHERE is_deleted = 0 ORDER BY uploaded_at DESC");
-            $media = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-        }
+        $media = $this->repo->getForesteriaMedia($tenantId);
 
         Response::success([
             'info'  => $infoRow,
@@ -412,13 +404,24 @@ class SocietaController
     public function getPublicOrganigramma(): void
     {
         $roles = $this->repo->listRoles();
-        $members = $this->repo->listMembers();
+        // Return only active members for organigramma public view
+        $members = array_filter($this->repo->listMembers(), function($m) {
+            return (int)$m['is_active'] === 1;
+        });
         
         Response::success([
             'roles' => $roles,
-            'members' => $members
+            'members' => array_values($members)
         ]);
     }
+
+    public function getPublicTitoli(): void
+    {
+        $titoli = $this->repo->listTitoli();
+        Response::success($titoli);
+    }
+
+
 
     public function getForesteria(): void
     {

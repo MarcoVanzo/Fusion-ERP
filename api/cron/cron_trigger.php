@@ -88,6 +88,34 @@ try {
         $log[] = "⚠️ Scouting Sync error: " . $e->getMessage();
     }
 
+    // ── 4. Sync Risultati Campionati ──────────────────────────────────────────
+    try {
+        require_once $baseDir . '/api/Modules/Results/ResultsRepository.php';
+        require_once $baseDir . '/api/Modules/Results/ResultsService.php';
+        
+        $tenants = $db->query('SELECT id, name FROM tenants WHERE is_active = 1')->fetchAll(PDO::FETCH_ASSOC);
+        $totalCamps = 0;
+        $successCamps = 0;
+
+        foreach ($tenants as $tenant) {
+            \FusionERP\Shared\TenantContext::setOverride($tenant['id']);
+            $repository = new \FusionERP\Modules\Results\ResultsRepository();
+            $service = new \FusionERP\Modules\Results\ResultsService($repository);
+            
+            $camps = $repository->getActiveChampionshipsWithTeamFlags();
+            foreach ($camps as $c) {
+                $totalCamps++;
+                $res = $service->syncChampionshipData($c['id']);
+                if ($res['success']) {
+                    $successCamps++;
+                }
+            }
+        }
+        $log[] = "🏆 Risultati Sync: {$successCamps}/{$totalCamps} campionati aggiornati";
+    } catch (\Throwable $e) {
+        $log[] = "⚠️ Risultati Sync error: " . $e->getMessage();
+    }
+
     $elapsed = round(microtime(true) - $startTime, 2);
     $log[] = "⏱ Tempo: " . $elapsed . "s";
 

@@ -126,7 +126,11 @@ const Athletes = (() => {
         searchTerm = searchTerm.toLowerCase();
         
         const filtered = athletesData.filter(a => {
-            const matchesTeam = !selectedTeamId || String(a.team_id) === String(selectedTeamId);
+            const seasonIds = a.team_season_ids ? String(a.team_season_ids).split(',') : [];
+            const matchesTeam = !selectedTeamId || 
+                                String(a.team_id) === String(selectedTeamId) || 
+                                seasonIds.includes(String(selectedTeamId));
+            
             const matchesSearch = !searchTerm || 
                 a.full_name.toLowerCase().includes(searchTerm) || 
                 (a.role && a.role.toLowerCase().includes(searchTerm)) ||

@@ -352,4 +352,23 @@ PROMPT;
             Response::error('Errore sincronizzazione VALD: ' . $e->getMessage(), 500);
         }
     }
+
+    /**
+     * POST /api/?module=vald&action=recovery
+     */
+    public function recovery(): void
+    {
+        Auth::requireRole('admin');
+        try {
+            $stats = $this->service->repairLinks(TenantContext::id());
+            Response::success([
+                'updated' => $stats['updated'],
+                'already_ok' => $stats['already_ok'],
+                'orphaned' => $stats['orphaned'],
+                'message' => 'Riparazione completata: ' . $stats['updated'] . ' record ricollegati correttamente.',
+            ]);
+        } catch (\Throwable $e) {
+            Response::error('Errore riparazione VALD: ' . $e->getMessage(), 500);
+        }
+    }
 }

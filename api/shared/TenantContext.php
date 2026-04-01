@@ -58,8 +58,8 @@ class TenantContext
             }
         }
 
-        // 4. Fallback: default tenant
-        self::$tenantId = getenv('DEFAULT_TENANT_ID') ?: 'TNT_default';
+        // 4. Fallback: default tenant (checks getenv, $_SERVER, $_ENV)
+        self::$tenantId = getenv('DEFAULT_TENANT_ID') ?: ($_SERVER['DEFAULT_TENANT_ID'] ?? ($_ENV['DEFAULT_TENANT_ID'] ?? 'TNT_default'));
         return self::$tenantId;
     }
 
