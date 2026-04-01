@@ -108,6 +108,7 @@ export const AthletesMetrics = {
 
             document.getElementById("vald-sync-btn-header").onclick = () => this._syncVald(athleteId);
         } catch (e) {
+            console.error("Errore critico in _loadValdData:", e);
             container.innerHTML = `<div class="error-box">Errore VALD: ${e.message}</div>`;
         }
     },
@@ -116,6 +117,7 @@ export const AthletesMetrics = {
      * Renderizza gli SVG dell'anatomia con i colori dei muscoli
      */
     _renderAnatomy(view, muscleMap = {}) {
+        if (!muscleMap) muscleMap = {};
         const getStyles = (muscle) => {
             const color = muscleMap[muscle];
             if (!color) return `fill="rgba(0, 255, 188, 0.08)" stroke="rgba(0, 255, 188, 0.15)" stroke-width="0.3" class="muscle-blob"`;
@@ -158,7 +160,7 @@ export const AthletesMetrics = {
      * Renderizza la tabella delle misurazioni VALD
      */
     _renderValdMeasurements(results = []) {
-        if (!results || results.length === 0) return '';
+        if (!Array.isArray(results) || results.length === 0) return '';
         
         return `
             <div class="logs-section">

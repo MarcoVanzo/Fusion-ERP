@@ -261,8 +261,11 @@ class ValdService
         ];
     }
 
-    public function computeMuscleMap(array $semaphore, array $asymmetry): array
+    public function computeMuscleMap(?array $semaphore, ?array $asymmetry): array
     {
+        $semaphore = $semaphore ?: [];
+        $asymmetry = $asymmetry ?: [];
+
         $map = [
             'core'    => null,
             'quads_l' => null,

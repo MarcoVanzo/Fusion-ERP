@@ -1,0 +1,55 @@
+commit e6034e7dbe787d181b05b1bd601d643430e5763a
+Author: Marco Vanzo <marco@mv-consulting.it>
+Date:   Tue Mar 31 23:03:58 2026 +0200
+
+    style: full cyber-neon redesign of VALD anatomy view
+
+diff --git a/js/modules/athletes/AthletesMetrics.js b/js/modules/athletes/AthletesMetrics.js
+index 0b2ab36..e9f94cc 100644
+--- a/js/modules/athletes/AthletesMetrics.js
++++ b/js/modules/athletes/AthletesMetrics.js
+@@ -99,25 +99,32 @@ export const AthletesMetrics = {
+      * Renderizza gli SVG dell'anatomia con i colori dei muscoli
+      */
+     _renderAnatomy(view, muscleMap = {}) {
+-        const getColor = (muscle) => muscleMap[muscle] || 'var(--color-anatomy-default)';
++        const getStyles = (muscle) => {
++            const color = muscleMap[muscle];
++            if (!color) return `fill="rgba(0, 255, 188, 0.25)" class="muscle-blob"`;
++            return `fill="${color}" class="muscle-blob muscle-pulse"`;
++        };
+         
+         return `
+             <div class="anatomy-container ${view}">
+-                <img src="assets/img/anatomy/body_${view}.png" style="width:100%; opacity:0.4;">
+-                <svg viewBox="0 0 100 100" class="anatomy-overlay">
++                <img src="assets/img/anatomy/body_${view}.png" class="anatomy-cyber-body">
++                <svg viewBox="0 0 100 120" class="anatomy-overlay">
+                     ${view === 'front' ? `
+                         <!-- Front View -->
+-                        <circle cx="50" cy="32" r="5" fill="${getColor('core')}" />
+-                        <circle cx="42" cy="50" r="5" fill="${getColor('hips_l')}" />
+-                        <circle cx="58" cy="50" r="5" fill="${getColor('hips_r')}" />
+-                        <circle cx="42" cy="72" r="6" fill="${getColor('quads_l')}" />
+-                        <circle cx="58" cy="72" r="6" fill="${getColor('quads_r')}" />
++                        <ellipse cx="50" cy="38" rx="12" ry="15" ${getStyles('core')} />
++                        <ellipse cx="42" cy="54" rx="8" ry="6" ${getStyles('hips_l')} />
++                        <ellipse cx="58" cy="54" rx="8" ry="6" ${getStyles('hips_r')} />
++                        <ellipse cx="42" cy="75" rx="8" ry="14" ${getStyles('quads_l')} />
++                        <ellipse cx="58" cy="75" rx="8" ry="14" ${getStyles('quads_r')} />
+                     ` : `
+                         <!-- Back View -->
+-                        <circle cx="42" cy="52" r="5.5" fill="${getColor('hips_l')}" />
+-                        <circle cx="58" cy="52" r="5.5" fill="${getColor('hips_r')}" />
+-                        <circle cx="42" cy="74" r="5" fill="${getColor('quads_l')}" />
+-                        <circle cx="58" cy="74" r="5" fill="${getColor('quads_r')}" />
++                        <ellipse cx="50" cy="38" rx="12" ry="15" ${getStyles('core')} />
++                        <ellipse cx="42" cy="56" rx="9" ry="10" ${getStyles('glutes_l')} />
++                        <ellipse cx="58" cy="56" rx="9" ry="10" ${getStyles('glutes_r')} />
++                        <ellipse cx="42" cy="78" rx="8" ry="14" ${getStyles('hamstrings_l')} />
++                        <ellipse cx="58" cy="78" rx="8" ry="14" ${getStyles('hamstrings_r')} />
++                        <ellipse cx="42" cy="95" rx="5" ry="9" ${getStyles('calves_l')} />
++                        <ellipse cx="58" cy="95" rx="5" ry="9" ${getStyles('calves_r')} />
+                     `}
+                 </svg>
+             </div>

@@ -44,11 +44,14 @@ class Auth
                 session_save_path($localSessionPath);
             }
 
+            $isSecure = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') || 
+                        (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+
             session_set_cookie_params([
                 'lifetime' => $sessionLifetime,
                 'path' => '/',
                 'domain' => '',
-                'secure' => (getenv('APP_ENV') === 'production'),
+                'secure' => $isSecure,
                 'httponly' => true,
                 'samesite' => 'Lax',
             ]);
@@ -178,6 +181,7 @@ class Auth
             'email' => $user['email'],
             'role' => $user['role'],
             'fullName' => $user['full_name'],
+            'tenant_id' => $user['tenantId'] ?? null,
             'permissions' => $perms,
         ];
     }
