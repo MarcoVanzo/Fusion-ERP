@@ -12,6 +12,8 @@ class Response
 {
     /**
      * Send a successful JSON response and exit.
+     *
+     * @return never
      */
     public static function success(mixed $data = null, int $httpCode = 200)
     {
@@ -28,6 +30,8 @@ class Response
     /**
      * Send an error JSON response and exit.
      * Never exposes stack traces or DB internals.
+     *
+     * @return never
      */
     public static function error(string $message, int $httpCode = 400, ?string $internalDetail = null)
     {

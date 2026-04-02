@@ -190,8 +190,9 @@ class AthletesController
 
         $ext = match ($mimeType) {
             'image/jpeg' => 'jpg',
-            'image/png' => 'png',
+            'image/png'  => 'png',
             'image/webp' => 'webp',
+            default      => throw new \Exception('Formato non supportato'),
         };
 
         $uploadDir = __DIR__ . '/../../../uploads/athlete_photos/';
