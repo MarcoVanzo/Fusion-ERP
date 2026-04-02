@@ -37,6 +37,25 @@ try {
     echo "\n--- SCOUTING DATA ---\n";
     print_r($stmt->fetchAll(PDO::FETCH_ASSOC));
 
+    // Check VALD fix
+    require_once __DIR__ . '/Modules/Vald/ValdRepository.php';
+    $vald = new \FusionERP\Modules\Vald\ValdRepository();
+    echo "\n--- VALD REPO FIX CHECK ---\n";
+    try {
+        // Try to call with an existing athlete ID or dummy
+        $stmt = $db->query("SELECT id FROM athletes WHERE tenant_id = 'TNT_fusion' LIMIT 1");
+        $a = $stmt->fetch();
+        if ($a) {
+            echo "Testing athlete: " . $a['id'] . "\n";
+            $res = $vald->getBaselineBrakingImpulse($a['id']);
+            echo "VALD Result: " . (is_null($res) ? 'NULL (Success)' : $res) . "\n";
+        } else {
+            echo "No athletes found in TNT_fusion, skipping VALD check.\n";
+        }
+    } catch (Exception $ve) {
+        echo "VALD ERROR STILL PRESENT: " . $ve->getMessage() . "\n";
+    }
+
     // Check current user in session (if any) - might not work via CLI but let's see
     session_start();
     echo "\n--- SESSION USER ---\n";
