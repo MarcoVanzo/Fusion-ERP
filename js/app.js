@@ -384,12 +384,13 @@ const App = (() => {
             if (desktopContainer) desktopContainer.innerHTML = '';
             if (mobileContainer) mobileContainer.innerHTML = '';
 
-            const userRole = user.role;
+            const userRole = (user.role || '').toLowerCase();
 
             navConfig.forEach(item => {
-                // Roles Check
+                // Roles Check (case-insensitive)
                 if (item.roles && item.roles.length > 0) {
-                    if (!item.roles.includes(userRole)) return;
+                    const normalizedRoles = item.roles.map(r => r.toLowerCase());
+                    if (!normalizedRoles.includes(userRole)) return;
                 }
 
                 const isComingSoon = item.implemented === false;
@@ -397,7 +398,7 @@ const App = (() => {
                 // Desktop Nav Item
                 if (desktopContainer) {
                     const visibleChildren = (item.children || []).filter(child =>
-                        !child.roles || child.roles.length === 0 || child.roles.includes(userRole)
+                        !child.roles || child.roles.length === 0 || child.roles.map(r => r.toLowerCase()).includes(userRole)
                     );
 
                     if (visibleChildren.length > 0) {

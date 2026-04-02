@@ -14,5 +14,5 @@ class AIConfig
      * Google Gemini API Key.
      * Use the .env file (GEMINI_TOKEN) as primary source; this is a reliable fallback.
      */
-    public const GEMINI_TOKEN = 'AIzaSyCFS5C4Dukyfi2ZJInJRexfbbPIIOzggrw';
+    public const GEMINI_TOKEN = '';
 }

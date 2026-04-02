@@ -310,7 +310,15 @@ class SocietaRepository
              ORDER BY sort_order ASC, name ASC'
         );
         $stmt->execute([':tid' => $tenantId]);
-        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        $results = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        // Fallback: Se il tenant corrente è vuoto, prova a recuperare quelli globali/fusion
+        if (empty($results) && $tenantId !== 'TNT_fusion') {
+            $stmt->execute([':tid' => 'TNT_fusion']);
+            $results = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        }
+
+        return $results;
     }
 
     public function getSponsorById(string $id): ?array

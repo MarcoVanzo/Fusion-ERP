@@ -251,15 +251,15 @@ class ValdRepository
                      )
                )
              ORDER BY test_date DESC
-             LIMIT 5 OFFSET 1'
+             LIMIT :lim OFFSET 1'
         );
-        $stmt->execute([
-            ':t1' => TenantContext::id(),
-            ':t2' => TenantContext::id(),
-            ':t3' => TenantContext::id(),
-            ':athlete_id2' => $athleteId,
-            ':athlete_id3' => $athleteId,
-        ]);
+        $stmt->bindValue(':lim', $limit, \PDO::PARAM_INT);
+        $stmt->bindValue(':t1', TenantContext::id());
+        $stmt->bindValue(':t2', TenantContext::id());
+        $stmt->bindValue(':t3', TenantContext::id());
+        $stmt->bindValue(':athlete_id2', $athleteId);
+        $stmt->bindValue(':athlete_id3', $athleteId);
+        $stmt->execute();
 
         $rows = $stmt->fetchAll();
         $vals = [];

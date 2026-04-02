@@ -59,7 +59,14 @@ class TenantContext
         }
 
         // 4. Fallback: default tenant (checks getenv, $_SERVER, $_ENV)
-        self::$tenantId = getenv('DEFAULT_TENANT_ID') ?: ($_SERVER['DEFAULT_TENANT_ID'] ?? ($_ENV['DEFAULT_TENANT_ID'] ?? 'TNT_default'));
+        $default = getenv('DEFAULT_TENANT_ID') ?: ($_SERVER['DEFAULT_TENANT_ID'] ?? ($_ENV['DEFAULT_TENANT_ID'] ?? 'TNT_fusion'));
+        self::$tenantId = $default;
+
+        // Log resolution in debug mode to help trace "empty tab" issues
+        if (getenv('APP_DEBUG') === 'true') {
+            error_log("[TenantContext] Resolved to '{$default}' (Source: Fallback)");
+        }
+
         return self::$tenantId;
     }
 

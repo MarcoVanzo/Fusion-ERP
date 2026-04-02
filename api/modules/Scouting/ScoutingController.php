@@ -72,6 +72,12 @@ class ScoutingController
         $stmt->execute([':tenant_id' => $tenantId]);
         $athletes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+        // Fallback: Se il tenant corrente è vuoto, prova a recuperare quelli globali/fusion
+        if (empty($athletes) && $tenantId !== 'TNT_fusion') {
+            $stmt->execute([':tenant_id' => 'TNT_fusion']);
+            $athletes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
+
         // Last sync time for this tenant
         $syncStmt = $this->db->prepare(
             "SELECT MAX(synced_at) FROM scouting_athletes WHERE cognito_id IS NOT NULL AND tenant_id = :tenant_id"
@@ -337,7 +343,7 @@ class ScoutingController
 
             try {
                 $stmt->execute([
-                    ':tenant_id' => 'TNT_default', // Assuming TNT_default for automated imports per system default
+                    ':tenant_id' => \FusionERP\Shared\TenantContext::id(), 
                     ':cog_id' => (int)$e['Id'],
                     ':cog_form' => $source,
                     ':nome' => (string)$nome,

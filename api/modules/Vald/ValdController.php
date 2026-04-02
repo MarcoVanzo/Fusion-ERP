@@ -8,11 +8,7 @@ declare(strict_types=1);
 
 namespace FusionERP\Modules\Vald;
 
-$_valdShared = dirname(__DIR__, 2) . '/Shared/';
-require_once $_valdShared . 'Auth.php';
-require_once $_valdShared . 'Response.php';
-require_once $_valdShared . 'TenantContext.php';
-unset($_valdShared);
+// Shared classes are PSR-4 autoloaded via composer
 require_once __DIR__ . '/ValdRepository.php';
 require_once __DIR__ . '/ValdService.php';
 
@@ -108,7 +104,7 @@ class ValdController
             $asymmetry = $this->service->computeAsymmetry($metrics);
             $muscleMap = $this->service->computeMuscleMap($semaphore, $asymmetry);
             
-            $athleteWeight = $this->service->getAthleteWeight($athleteId);
+            $athleteWeight = (float)$this->service->getAthleteWeight($athleteId);
             $profile = $this->service->computeProfile($metrics, $athleteWeight);
 
             $allResults = $this->repo->getResultsByAthlete($athleteId);

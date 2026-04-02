@@ -8,18 +8,19 @@
         "roles": [
             "atleta",
             "allenatore",
+            "manager",
             "admin"
         ],
         "children": [
-            { "title": "Squadre", "path": "squadre", "icon": "users-four", "isMobileVisible": false, "roles": ["allenatore", "admin"] },
-            { "title": "Anagrafica Atleti", "path": "athlete-profile", "icon": "users", "isMobileVisible": false, "roles": ["atleta", "allenatore", "admin"] },
-            { "title": "Documenti Atleti", "path": "athlete-documents", "icon": "file-text", "isMobileVisible": false, "roles": ["atleta", "allenatore", "admin"] },
-            { "title": "Metrics Atleti", "path": "athlete-metrics", "icon": "trend-up", "isMobileVisible": false, "roles": ["atleta", "allenatore", "admin"] },
-            { "title": "Elenco Staff", "path": "staff", "icon": "identification-badge", "isMobileVisible": false, "roles": ["allenatore", "admin"] },
-            { "title": "Documenti Staff", "path": "staff-documents", "icon": "file-text", "isMobileVisible": false, "roles": ["allenatore", "admin"] },
-            { "title": "Risultati", "path": "results-matches", "icon": "volleyball", "isMobileVisible": false, "roles": ["allenatore", "admin"] },
-            { "title": "Classifiche", "path": "results-standings", "icon": "list-numbers", "isMobileVisible": false, "roles": ["allenatore", "admin"] },
-            { "title": "Database Scouting", "path": "scouting-database", "icon": "database", "isMobileVisible": false, "implemented": true, "roles": ["allenatore", "admin"] },
+            { "title": "Squadre", "path": "squadre", "icon": "users-four", "isMobileVisible": false, "roles": ["allenatore", "manager", "admin"] },
+            { "title": "Anagrafica Atleti", "path": "athlete-profile", "icon": "users", "isMobileVisible": false, "roles": ["atleta", "allenatore", "manager", "admin"] },
+            { "title": "Documenti Atleti", "path": "athlete-documents", "icon": "file-text", "isMobileVisible": false, "roles": ["atleta", "allenatore", "manager", "admin"] },
+            { "title": "Metrics Atleti", "path": "athlete-metrics", "icon": "trend-up", "isMobileVisible": false, "roles": ["atleta", "allenatore", "manager", "admin"] },
+            { "title": "Elenco Staff", "path": "staff", "icon": "identification-badge", "isMobileVisible": false, "roles": ["allenatore", "manager", "admin"] },
+            { "title": "Documenti Staff", "path": "staff-documents", "icon": "file-text", "isMobileVisible": false, "roles": ["allenatore", "manager", "admin"] },
+            { "title": "Risultati", "path": "results-matches", "icon": "volleyball", "isMobileVisible": false, "roles": ["allenatore", "manager", "admin"] },
+            { "title": "Classifiche", "path": "results-standings", "icon": "list-numbers", "isMobileVisible": false, "roles": ["allenatore", "manager", "admin"] },
+            { "title": "Database Scouting", "path": "scouting-database", "icon": "database", "isMobileVisible": false, "implemented": true, "roles": ["allenatore", "manager", "admin"] },
             { "title": "Valutazioni Scouting", "path": "scouting-evaluations", "icon": "star", "isMobileVisible": false, "implemented": false, "roles": ["allenatore", "admin"] },
             { "title": "Watchlist Scouting", "path": "scouting-watchlist", "icon": "eye", "isMobileVisible": false, "implemented": false, "roles": ["allenatore", "admin"] },
             { "title": "Report Scouting", "path": "scouting-reports", "icon": "note-pencil", "isMobileVisible": false, "implemented": false, "roles": ["allenatore", "admin"] }
@@ -33,16 +34,17 @@
         "isMobileVisible": true,
         "roles": [
             "operatore",
+            "manager",
             "admin"
         ],
         "children": [
-            { "title": "Task Operativi", "path": "tasks", "icon": "check-square", "isMobileVisible": false, "roles": ["operatore", "admin"] },
-            { "title": "Gestione Trasporti", "path": "transport", "icon": "van", "isMobileVisible": false, "roles": ["operatore", "admin"] },
-            { "title": "Gestione Autisti", "path": "transport-drivers", "icon": "steering-wheel", "isMobileVisible": false, "roles": ["operatore", "admin"] },
-            { "title": "Gestione Mezzi", "path": "transport-fleet", "icon": "bus", "isMobileVisible": false, "roles": ["operatore", "admin"] },
-            { "title": "Rimborsi Trasporti", "path": "transport-refunds", "icon": "receipt", "isMobileVisible": false, "roles": ["operatore", "admin"] },
-            { "title": "OutSeason", "path": "outseason-camps", "icon": "tent", "isMobileVisible": false, "roles": ["operatore", "admin"] },
-            { "title": "Gestione Tornei", "path": "outseason-tournaments", "icon": "medal", "isMobileVisible": false, "roles": ["operatore", "admin"] }
+            { "title": "Task Operativi", "path": "tasks", "icon": "check-square", "isMobileVisible": false, "roles": ["operatore", "manager", "admin"] },
+            { "title": "Gestione Trasporti", "path": "transport", "icon": "van", "isMobileVisible": false, "roles": ["operatore", "manager", "admin"] },
+            { "title": "Gestione Autisti", "path": "transport-drivers", "icon": "steering-wheel", "isMobileVisible": false, "roles": ["operatore", "manager", "admin"] },
+            { "title": "Gestione Mezzi", "path": "transport-fleet", "icon": "bus", "isMobileVisible": false, "roles": ["operatore", "manager", "admin"] },
+            { "title": "Rimborsi Trasporti", "path": "transport-refunds", "icon": "receipt", "isMobileVisible": false, "roles": ["operatore", "manager", "admin"] },
+            { "title": "OutSeason", "path": "outseason-camps", "icon": "tent", "isMobileVisible": false, "roles": ["operatore", "manager", "admin"] },
+            { "title": "Gestione Tornei", "path": "outseason-tournaments", "icon": "medal", "isMobileVisible": false, "roles": ["operatore", "manager", "admin"] }
         ]
     },
     {
@@ -71,16 +73,17 @@
         "icon": "vault",
         "isMobileVisible": false,
         "roles": [
+            "manager",
             "admin"
         ],
         "children": [
-            { "title": "Contabilità", "path": "finance", "icon": "calculator", "isMobileVisible": false, "roles": ["admin"] },
-            { "title": "Fatturazione", "path": "finance-invoices", "icon": "receipt", "isMobileVisible": false, "roles": ["admin"] },
-            { "title": "Quote Atleti", "path": "athlete-payments", "icon": "credit-card", "isMobileVisible": false, "roles": ["admin"] },
-            { "title": "Articoli eCommerce", "path": "ecommerce-articles", "icon": "tag", "isMobileVisible": false, "roles": ["admin"] },
-            { "title": "Ordini eCommerce", "path": "ecommerce-orders", "icon": "package", "isMobileVisible": false, "roles": ["admin"] },
-            { "title": "Partner & Sponsor", "path": "societa-sponsor", "icon": "storefront", "isMobileVisible": false, "roles": ["admin"] },
-            { "title": "Spese Foresteria", "path": "finance-foresteria", "icon": "house-line", "isMobileVisible": false, "roles": ["admin"] }
+            { "title": "Contabilità", "path": "finance", "icon": "calculator", "isMobileVisible": false, "roles": ["manager", "admin"] },
+            { "title": "Fatturazione", "path": "finance-invoices", "icon": "receipt", "isMobileVisible": false, "roles": ["manager", "admin"] },
+            { "title": "Quote Atleti", "path": "athlete-payments", "icon": "credit-card", "isMobileVisible": false, "roles": ["manager", "admin"] },
+            { "title": "Articoli eCommerce", "path": "ecommerce-articles", "icon": "tag", "isMobileVisible": false, "roles": ["manager", "admin"] },
+            { "title": "Ordini eCommerce", "path": "ecommerce-orders", "icon": "package", "isMobileVisible": false, "roles": ["manager", "admin"] },
+            { "title": "Partner & Sponsor", "path": "societa-sponsor", "icon": "storefront", "isMobileVisible": false, "roles": ["manager", "admin"] },
+            { "title": "Spese Foresteria", "path": "finance-foresteria", "icon": "house-line", "isMobileVisible": false, "roles": ["manager", "admin"] }
         ]
     },
     {
@@ -91,15 +94,16 @@
         "isMobileVisible": false,
         "roles": [
             "operatore",
+            "manager",
             "admin"
         ],
         "children": [
-            { "title": "Identità", "path": "societa-identita", "icon": "identification-card", "isMobileVisible": false, "roles": ["operatore", "admin"] },
-            { "title": "Organigramma", "path": "societa-organigramma", "icon": "tree-structure", "isMobileVisible": false, "roles": ["operatore", "admin"] },
-            { "title": "Direttivo", "path": "societa-membri", "icon": "users-three", "isMobileVisible": false, "roles": ["operatore", "admin"] },
-            { "title": "Network", "path": "network-collaborazioni", "icon": "share-network", "isMobileVisible": false, "roles": ["operatore", "admin"] },
-            { "title": "Titoli & Palmares", "path": "societa-titoli", "icon": "trophy", "isMobileVisible": false, "roles": ["operatore", "admin"] },
-            { "title": "La Foresteria", "path": "societa-foresteria", "icon": "house-line", "isMobileVisible": false, "roles": ["operatore", "admin"] }
+            { "title": "Identità", "path": "societa-identita", "icon": "identification-card", "isMobileVisible": false, "roles": ["operatore", "manager", "admin"] },
+            { "title": "Organigramma", "path": "societa-organigramma", "icon": "tree-structure", "isMobileVisible": false, "roles": ["operatore", "manager", "admin"] },
+            { "title": "Direttivo", "path": "societa-membri", "icon": "users-three", "isMobileVisible": false, "roles": ["operatore", "manager", "admin"] },
+            { "title": "Network", "path": "network-collaborazioni", "icon": "share-network", "isMobileVisible": false, "roles": ["operatore", "manager", "admin"] },
+            { "title": "Titoli & Palmares", "path": "societa-titoli", "icon": "trophy", "isMobileVisible": false, "roles": ["operatore", "manager", "admin"] },
+            { "title": "La Foresteria", "path": "societa-foresteria", "icon": "house-line", "isMobileVisible": false, "roles": ["operatore", "manager", "admin"] }
         ]
     }
 ]

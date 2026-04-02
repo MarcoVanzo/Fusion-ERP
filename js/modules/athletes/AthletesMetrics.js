@@ -171,14 +171,18 @@ export const AthletesMetrics = {
         
         return `
             <div class="logs-section">
-                <h3 class="section-title">Storico Misurazioni VALD</h3>
+                <div style="display:flex; align-items:center; gap:var(--sp-2); margin-bottom:var(--sp-3);">
+                    <h3 class="section-title" style="margin:0;">Storico Misurazioni VALD</h3>
+                    <span class="badge badge-ai-subtle" style="font-size:10px; opacity:0.8;">Max Peak (FT - Flight Time)</span>
+                </div>
                 <div class="table-wrapper">
                     <table class="table">
+
                         <thead>
                             <tr>
                                 <th>Data Test</th>
                                 <th>Test</th>
-                                <th class="text-end">Jump Height</th>
+                                <th class="text-end">Jump Height (FT)</th>
                                 <th class="text-end">RSImod</th>
                                 <th class="text-end">Asimmetria Atterraggio</th>
                             </tr>
@@ -187,7 +191,8 @@ export const AthletesMetrics = {
                             ${results.map(res => {
                                 const m = res.metrics || {};
                                 const asy = res.asymmetry?.landing?.asymmetry?.toFixed(1) || '—';
-                                const jh = (m.JumpHeightTotal?.Value || m.JumpHeight?.Value || 0).toFixed(1);
+                                // Priorità a JumpHeight (che nel backend ora mappa il Best Flight Time)
+                                const jh = (m.JumpHeight?.Value || m.JumpHeightTotal?.Value || 0).toFixed(1);
                                 const rsi = (m.RSIModified?.Value || 0).toFixed(3);
                                 
                                 return `

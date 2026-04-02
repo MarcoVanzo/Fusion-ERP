@@ -190,7 +190,7 @@ class AthletesController
 
         $ext = match ($mimeType) {
             'image/jpeg' => 'jpg',
-            'image/png' => 'png',
+            'image/png'  => 'png',
             'image/webp' => 'webp',
         };
 
