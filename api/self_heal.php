@@ -3,7 +3,7 @@
  * Self-Heal script to fix user-tenant associations and data strands.
  * Moves 'TNT_default' records to 'TNT_fusion' for primary tables and users.
  */
-require_once __DIR__ . '/api/Shared/Database.php';
+require_once __DIR__ . '/Shared/Database.php';
 
 use FusionERP\Shared\Database;
 

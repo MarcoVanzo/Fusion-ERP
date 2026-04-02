@@ -1,11 +1,11 @@
 <?php
-require_once __DIR__ . '/vendor/autoload.php';
+require_once __DIR__ . '/../vendor/autoload.php';
 
 // Load .env
-$dotenv = Dotenv\Dotenv::createMutable(__DIR__);
+$dotenv = Dotenv\Dotenv::createMutable(dirname(__DIR__));
 $dotenv->safeLoad();
 
-require_once __DIR__ . '/api/Shared/Database.php';
+require_once __DIR__ . '/Shared/Database.php';
 use FusionERP\Shared\Database;
 
 try {
