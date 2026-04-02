@@ -11,6 +11,8 @@ require_once __DIR__ . '/Shared/Database.php';
 
 use FusionERP\Shared\Database;
 
+/** @var \PDO|null $db */
+$db = null;
 try {
     $db = Database::getInstance();
     $db->beginTransaction();
@@ -50,6 +52,9 @@ try {
     echo "Users should log out and log back in to refresh their session tenant ID.\n";
 
 } catch (Exception $e) {
-    if (isset($db) && $db instanceof \PDO) $db->rollBack();
+    /** @phpstan-ignore-next-line redundant check but kept for safety in global scope */
+    if ($db instanceof \PDO && $db->inTransaction()) {
+        $db->rollBack();
+    }
     echo "FATAL ERROR during self-heal: " . $e->getMessage() . "\n";
 }
