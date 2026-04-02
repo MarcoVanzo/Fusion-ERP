@@ -251,8 +251,9 @@ class ValdRepository
                      )
                )
              ORDER BY test_date DESC
-             LIMIT 5 OFFSET 1'
+             LIMIT :lim OFFSET 1'
         );
+        $stmt->bindValue(':lim', $limit, \PDO::PARAM_INT);
         $stmt->execute([
             ':t1' => TenantContext::id(),
             ':t2' => TenantContext::id(),

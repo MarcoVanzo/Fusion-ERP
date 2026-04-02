@@ -62,7 +62,7 @@ class ValdService
         return $this->accessToken;
     }
 
-    private function request(string $method, string $endpoint, ?array $data = null)
+    private function request(string $method, string $endpoint, ?array $data = null): ?array
     {
         $token = $this->getAccessToken();
         $url = $this->apiBaseUrl . $endpoint;
@@ -332,12 +332,13 @@ class ValdService
         $jumpHeight   = round((float)($profile['jumpHeight'] ?? 0), 1);
         $brakingImp   = round((float)($profile['brakingImpulse'] ?? 0), 1);
         $asymLanding  = round($asymmetry['landing']['asymmetry'] ?? 0, 1);
-        $asymConcentric = round($asymmetry['concentric']['asymmetry'] ?? 0, 1);
+        $asymPeak     = round($asymmetry['peak']['asymmetry'] ?? 0, 1);
         $weakerLimb   = $asymmetry['landing']['weaker'] ?? 'N/A';
 
         $historyLines = '';
         foreach (array_reverse($history) as $h) {
-            $hm = is_array($h['metrics']) ? $h['metrics'] : json_decode($h['metrics'] ?? '{}', true);
+            $metricsData = is_array($h['metrics'] ?? null) ? $h['metrics'] : json_decode((string)($h['metrics'] ?? '{}'), true);
+            $hm = is_array($metricsData) ? $metricsData : [];
             $hRsi  = round((float)($hm['RSIModified']['Value'] ?? 0), 3);
             $hJump = round((float)($hm['JumpHeight']['Value'] ?? $hm['ConcJumpHeight']['Value'] ?? 0), 1);
             $historyLines .= '  - ' . $h['test_date'] . ': RSImod=' . $hRsi . ', JumpHeight=' . $hJump . "cm\n";
@@ -354,7 +355,7 @@ DATI TEST ATTUALE:
 - Jump Height: {$jumpHeight} cm
 - Braking Impulse: {$brakingImp} N\u00b7s/kg
 - Asimmetria atterraggio: {$asymLanding}% (arto pi\u00f9 debole: {$weakerLimb})
-- Asimmetria spinta: {$asymConcentric}%
+- Asimmetria spinta: {$asymPeak}%
 
 STORICO ULTIMI TEST:
 {$historyLines}
