@@ -451,9 +451,15 @@ PROMPT;
                         try {
                             $trialsData = $this->getTrials($teamId, $testIdStr);
                             if (is_array($trialsData) && !empty($trialsData)) {
-                                $accumulatedMetrics = []; $trialCounts = [];
+                                $bestJumpHeight = -1.0;
+                                $bestMetrics = [];
+
                                 foreach ($trialsData as $trial) {
                                     if (!isset($trial['results']) || !is_array($trial['results'])) continue;
+                                    
+                                    $trialMetrics = [];
+                                    $trialJumpHeight = 0;
+
                                     foreach ($trial['results'] as $res) {
                                         $def  = strtoupper($res['definition']['result'] ?? '');
                                         $val  = $res['value'] ?? null;
@@ -463,13 +469,25 @@ PROMPT;
                                         $keyToStore = null;
                                         if ($limb === 'Trial') {
                                             if ($def === 'RSI_MODIFIED') {
+                                                // Scaling factor correction (already handled in Hub v2 but kept for safety)
                                                 $val = round((float)$val > 3.0 ? (float)$val / 100.0 : (float)$val, 3);
                                                 $keyToStore = 'RSIModified';
                                             }
+                                            
+                                            // New Priority: Jump Height (Flight Time) as requested by user
                                             if (in_array($def, ['JUMP_HEIGHT_FLIGHT_TIME', 'FLIGHT_TIME_JUMP_HEIGHT', 'JUMP_HEIGHT', 'ESTIMATED_JUMP_HEIGHT', 'JUMP_HEIGHT_IMPULSE', 'JUMP_HEIGHT_IMP_MOM', 'JUMP_HEIGHT_IMPULSE_MOMENTUM'])) {
-                                                $val = (float)$val < 1.0 ? (float)$val * 100.0 : (float)$val;
+                                                $val = (float)$val < 1.0 ? (float)$val * 100.0 : (float)$val; // m to cm
                                                 $keyToStore = 'JumpHeight';
+                                                
+                                                // Favor Flight Time (explicitly requested by user)
+                                                $isFlightTime = (strpos($def, 'FLIGHT') !== false);
+                                                if ($isFlightTime || !isset($trialMetrics['JumpHeight'])) {
+                                                    $trialMetrics['JumpHeight'] = ['Value' => round((float)$val, 1)];
+                                                    $trialJumpHeight = (float)$val;
+                                                }
+                                                continue; 
                                             }
+
                                             if ($def === 'PEAK_FORCE') $keyToStore = 'PeakForce';
                                             if (in_array($def, ['BRAKING_IMPULSE', 'ECCENTRIC_BRAKING_IMPULSE', 'BRAKING_PHASE_IMPULSE', 'BRAKING_PHASE_NET_IMPULSE', 'NET_BRAKING_IMPULSE', 'ECC_BRAKING_IMPULSE'])) $keyToStore = 'BrakingImpulse';
                                             if ($def === 'CONCENTRIC_PEAK_FORCE') $keyToStore = 'ConcentricPeakForce';
@@ -479,6 +497,7 @@ PROMPT;
                                             if ($def === 'TIME_TO_TAKEOFF') { $val = (float)$val * 1000; $keyToStore = 'TimeToTakeoff'; }
                                             if ($def === 'CONTRACTION_TIME') { $val = (float)$val * 1000; $keyToStore = 'ContractionTime'; }
                                         }
+
                                         if ($limb === 'Left') {
                                             if (in_array($def, ['PEAK_FORCE', 'PEAK_FORCE_LEFT'])) $keyToStore = 'PeakForceLeft';
                                             if (in_array($def, ['PEAK_LANDING_FORCE', 'LANDING_PEAK_FORCE', 'LANDING_FORCE_LEFT', 'PEAK_LANDING_FORCE_LEFT'])) $keyToStore = 'LandingForceLeft';
@@ -489,22 +508,29 @@ PROMPT;
                                         }
 
                                         if ($keyToStore !== null) {
-                                            $accumulatedMetrics[$keyToStore] = ($accumulatedMetrics[$keyToStore] ?? 0.0) + (float)$val;
-                                            $trialCounts[$keyToStore]        = ($trialCounts[$keyToStore] ?? 0) + 1;
+                                            $decimals = match(true) {
+                                                in_array($keyToStore, ['TimeToTakeoff', 'ContractionTime']) => 0,
+                                                in_array($keyToStore, ['ConcentricPeakVelocity', 'RSIModified']) => 3,
+                                                default => 1,
+                                            };
+                                            $trialMetrics[$keyToStore] = ['Value' => round((float)$val, $decimals)];
                                         }
                                     }
+
+                                    // Selection logic: Pick the trial with the highest JumpHeight (Performance)
+                                    // or PeakForce if no JumpHeight is found (Static tests)
+                                    $score = $trialJumpHeight > 0 ? $trialJumpHeight : ($trialMetrics['PeakForce']['Value'] ?? 0) / 100;
+                                    if ($score > $bestJumpHeight) {
+                                        $bestJumpHeight = $score;
+                                        $bestMetrics = $trialMetrics;
+                                    }
                                 }
-                                foreach ($accumulatedMetrics as $key => $sumVal) {
-                                    $n = $trialCounts[$key] ?? 1;
-                                    $avgVal = $sumVal / $n;
-                                    $decimals = match(true) {
-                                        in_array($key, ['TimeToTakeoff', 'ContractionTime']) => 0,
-                                        in_array($key, ['ConcentricPeakVelocity', 'RSIModified']) => 3,
-                                        in_array($key, ['JumpHeight', 'JumpHeightImpMom', 'PeakForce', 'LandingForceLeft', 'LandingForceRight', 'PeakForceLeft', 'PeakForceRight']) => 1,
-                                        default => 2,
-                                    };
-                                    $metrics[$key] = ['Value' => round($avgVal, $decimals)];
+
+                                // Use the best trial's metrics for the entire session
+                                if (!empty($bestMetrics)) {
+                                    $metrics = array_merge($metrics, $bestMetrics);
                                 }
+
                             }
                         } catch (\Throwable $e) {
                             error_log('[VALD Sync] Errore getTrials per test ' . $testIdStr . ': ' . $e->getMessage());
