@@ -45,6 +45,13 @@ class StaffRepository
         $stmt->execute([':tenant_id' => $tenantId]);
 
         $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        // Fallback: Se il tenant corrente è vuoto, prova a recuperare quelli globali/fusion
+        if (empty($rows) && $tenantId !== 'TNT_fusion') {
+            $stmt->execute([':tenant_id' => 'TNT_fusion']);
+            $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        }
+
         foreach ($rows as &$row) {
             $row['team_season_ids'] = $row['team_season_ids'] ? explode(',', $row['team_season_ids']) : [];
         }

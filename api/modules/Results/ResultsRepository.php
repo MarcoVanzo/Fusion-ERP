@@ -59,6 +59,12 @@ class ResultsRepository
         $stmt->execute([':tid' => $this->tenantId]);
         $campionati = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+        // Fallback: Se il tenant corrente è vuoto, prova a recuperare quelli globali/fusion
+        if (empty($campionati) && $this->tenantId !== 'TNT_fusion') {
+            $stmt->execute([':tid' => 'TNT_fusion']);
+            $campionati = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
+
         foreach ($campionati as &$c) {
             $c['has_our_team'] = (bool)($c['has_our_team'] ?? false);
         }
@@ -162,7 +168,16 @@ class ResultsRepository
         $stmt->bindValue(':tid', $this->tenantId);
         $stmt->bindValue(':lim', $limit, PDO::PARAM_INT);
         $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Fallback: Se il tenant corrente è vuoto, prova a recuperare quelli globali/fusion
+        if (empty($results) && $this->tenantId !== 'TNT_fusion') {
+            $stmt->bindValue(':tid', 'TNT_fusion');
+            $stmt->execute();
+            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
+
+        return $results;
     }
 
     public function countMatchesByChampionship(string $campionatoId): int

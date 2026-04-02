@@ -91,12 +91,13 @@ class AuthRepository
             
             $stmtCheck = $this->db->prepare('SELECT 1 FROM tenant_users WHERE user_id = :id');
             $stmtCheck->execute([':id' => $id]);
+            $defaultTenant = getenv('DEFAULT_TENANT_ID') ?: 'TNT_fusion';
             if ($stmtCheck->fetchColumn()) {
                 $stmtUpdate = $this->db->prepare('UPDATE tenant_users SET roles = :perms WHERE user_id = :id');
                 $stmtUpdate->execute([':perms' => $permissionsJson, ':id' => $id]);
             } else {
-                $stmtInsert = $this->db->prepare('INSERT INTO tenant_users (user_id, tenant_id, roles) VALUES (:id, \'TNT_default\', :perms)');
-                $stmtInsert->execute([':id' => $id, ':perms' => $permissionsJson]);
+                $stmtInsert = $this->db->prepare('INSERT INTO tenant_users (user_id, tenant_id, roles) VALUES (:id, :tid, :perms)');
+                $stmtInsert->execute([':id' => $id, ':tid' => $defaultTenant, ':perms' => $permissionsJson]);
             }
 
             $this->db->commit();
@@ -211,10 +212,11 @@ class AuthRepository
                 $permissionsJson = json_encode($data['permissions_json']);
             }
             
+            $defaultTenant = getenv('DEFAULT_TENANT_ID') ?: 'TNT_fusion';
             $stmtInsert = $this->db->prepare(
-                'INSERT INTO tenant_users (user_id, tenant_id, roles) VALUES (:id, \'TNT_default\', :perms)'
+                'INSERT INTO tenant_users (user_id, tenant_id, roles) VALUES (:id, :tid, :perms)'
             );
-            $stmtInsert->execute([':id' => $data['id'], ':perms' => $permissionsJson]);
+            $stmtInsert->execute([':id' => $data['id'], ':tid' => $defaultTenant, ':perms' => $permissionsJson]);
 
             $this->db->commit();
         } catch (\Exception $e) {
@@ -238,14 +240,15 @@ class AuthRepository
             
             if ($permissions !== null) {
                 $permsJson = json_encode($permissions);
+                $defaultTenant = getenv('DEFAULT_TENANT_ID') ?: 'TNT_fusion';
                 $stmtCheck = $this->db->prepare('SELECT 1 FROM tenant_users WHERE user_id = :id');
                 $stmtCheck->execute([':id' => $id]);
                 if ($stmtCheck->fetchColumn()) {
                     $stmtUpdate = $this->db->prepare('UPDATE tenant_users SET roles = :perms WHERE user_id = :id');
                     $stmtUpdate->execute([':perms' => $permsJson, ':id' => $id]);
                 } else {
-                    $stmtInsert = $this->db->prepare('INSERT INTO tenant_users (user_id, tenant_id, roles) VALUES (:id, \'TNT_default\', :perms)');
-                    $stmtInsert->execute([':id' => $id, ':perms' => $permsJson]);
+                    $stmtInsert = $this->db->prepare('INSERT INTO tenant_users (user_id, tenant_id, roles) VALUES (:id, :tid, :perms)');
+                    $stmtInsert->execute([':id' => $id, ':tid' => $defaultTenant, ':perms' => $permsJson]);
                 }
             }
             $this->db->commit();
