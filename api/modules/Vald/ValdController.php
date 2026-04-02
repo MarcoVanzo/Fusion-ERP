@@ -107,6 +107,9 @@ class ValdController
             $athleteWeight = (float)$this->service->getAthleteWeight($athleteId);
             $profile = $this->service->computeProfile($metrics, $athleteWeight);
 
+            // Fetch Deep Analytics (Python Processor)
+            $deep = $this->service->getDeepAnalytics($athleteId);
+
             $allResults = $this->repo->getResultsByAthlete($athleteId);
             foreach ($allResults as &$res) {
                 if (isset($res['metrics'])) {
@@ -121,7 +124,11 @@ class ValdController
                 'hasData' => true,
                 'testDate' => $latest['test_date'],
                 'testType' => $latest['test_type'],
-                'jumpHeight' => $profile['jumpHeight'] ?? null,
+                'jumpHeight' => $deep['Jump Height (Imp-Mom) (cm)'] ?? $profile['jumpHeight'] ?? null,
+                'jhTrend' => $deep['Jump Height (Imp-Mom) (cm)_zscore'] ?? 0, // Placeholder for trend
+                'peakPowerBM' => $deep['Concentric Peak Power / BM (W/kg)'] ?? 0,
+                'rsiZScore' => $deep['RSI-modified_zscore'] ?? null,
+                'strategyShiftAlert' => $deep['Strategy_Shift_Alert'] ?? null,
                 'brakingImpulse' => $profile['brakingImpulse'] ?? null,
                 'asymmetryPct' => $asymmetry['landing']['asymmetry'] ?? null,
                 'baselineBraking' => $baselineBraking,
@@ -365,6 +372,49 @@ PROMPT;
             ]);
         } catch (\Throwable $e) {
             Response::error('Errore riparazione VALD: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * POST /api/?module=vald&action=uploadCsv
+     */
+    public function uploadCsv(): void
+    {
+        Auth::requireWrite('athletes');
+        
+        if (!isset($_FILES['file'])) {
+            Response::error('Nessun file caricato', 400);
+        }
+        
+        $file = $_FILES['file'];
+        if ($file['error'] !== UPLOAD_ERR_OK) {
+            Response::error('Errore durante il caricamento del file: ' . $file['error'], 400);
+        }
+        
+        // Move to temp directory
+        $tmpPath = $file['tmp_name'] . '.csv';
+        if (!move_uploaded_file($file['tmp_name'], $tmpPath)) {
+            Response::error('Errore nel salvataggio temporaneo del file', 500);
+        }
+        
+        try {
+            $analysisResult = $this->service->processCsv($tmpPath);
+            unlink($tmpPath);
+            
+            if ($analysisResult === null) {
+                Response::error('Analisi fallita. Verifica il formato del CSV.', 500);
+            }
+            
+            // For now, return the results to display in the frontend
+            // You might want to save these results to the DB as well
+            Response::success([
+                'message' => 'Analisi completata con successo.',
+                'data' => $analysisResult,
+            ]);
+            
+        } catch (\Throwable $e) {
+            if (file_exists($tmpPath)) unlink($tmpPath);
+            Response::error('Errore processamento CSV: ' . $e->getMessage(), 500);
         }
     }
 }

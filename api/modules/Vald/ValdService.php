@@ -626,4 +626,78 @@ PROMPT;
 
         return $stats;
     }
+
+    /**
+     * PROCESS CSV using Python Processor
+     */
+    public function processCsv(string $filePath): ?array
+    {
+        $scriptPath = __DIR__ . '/ValdProcessor.py';
+        $escapedFilePath = escapeshellarg($filePath);
+        $command = "python3 " . escapeshellarg($scriptPath) . " " . $escapedFilePath . " 2>&1";
+        
+        $output = shell_exec($command);
+        if ($output === null) {
+            error_log("[VALD CSV] Execution failed for $command");
+            return null;
+        }
+        
+        $data = json_decode($output, true);
+        if ($data === null) {
+            error_log("[VALD CSV] JSON Decode failed. Output: " . $output);
+            return null;
+        }
+
+        if (isset($data['error'])) {
+            error_log("[VALD CSV] Processor error: " . $data['error']);
+            return null;
+        }
+        
+        return $data;
+    }
+
+    /**
+     * GET DEEP ANALYTICS using Python Processor on DB data
+     */
+    public function getDeepAnalytics(string $athleteId): ?array
+    {
+        if (!$this->repo) return null;
+        
+        $results = $this->repo->getResultsByAthlete($athleteId);
+        if (empty($results)) return null;
+        
+        // 1. Create a temporary CSV from DB results to feed the Python processor
+        $tmpPath = sys_get_temp_dir() . '/vald_data_' . $athleteId . '.csv';
+        $fp = fopen($tmpPath, 'w');
+        
+        // Headers matching ForceDecks format expected by ValdProcessor.py
+        fputcsv($fp, ['Athlete', 'Test Date', 'Test Type', 'Body Mass (kg)', 'Jump Height (Imp-Mom) (cm)', 'RSI-modified', 'Eccentric Duration (ms)', 'Concentric Peak Power / BM (W/kg)', 'Peak Vertical Force (N)', 'Net Impulse (N s)', 'RFD (N/s)']);
+        
+        foreach (array_reverse($results) as $res) {
+            $m = json_decode($res['metrics'] ?? '{}', true) ?: [];
+            fputcsv($fp, [
+                'Athlete', // Placeholder
+                $res['test_date'],
+                $res['test_type'],
+                $m['weight'] ?? 75,
+                $m['JumpHeight']['Value'] ?? $m['JumpHeightTotal']['Value'] ?? 0,
+                $m['RSIModified']['Value'] ?? 0,
+                $m['EccentricDuration']['Value'] ?? $m['TimeToTakeoff']['Value'] ?? 0,
+                $m['ConcentricPeakPower']['Value'] ?? 0,
+                $m['PeakForce']['Value'] ?? 0,
+                $m['NetImpulse']['Value'] ?? 0,
+                $m['RFD']['Value'] ?? 0
+            ]);
+        }
+        fclose($fp);
+        
+        // 2. Run Python Processor
+        $analysis = $this->processCsv($tmpPath);
+        unlink($tmpPath);
+        
+        if (!$analysis) return null;
+        
+        // 3. Take the latest record from the analysis
+        return end($analysis);
+    }
 }
