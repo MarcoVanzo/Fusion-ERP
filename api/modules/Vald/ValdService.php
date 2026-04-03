@@ -626,4 +626,191 @@ PROMPT;
 
         return $stats;
     }
+
+    /**
+     * ─── PURE PHP DEEP ANALYTICS ENGINE ─────────────────────────────────
+     * Replaces the Python processor to ensure compatibility with Aruba shared hosting.
+     */
+
+    private function _calculateMean(array $values): float
+    {
+        if (empty($values)) return 0;
+        return \array_sum($values) / \count($values);
+    }
+
+    private function _calculateStdDev(array $values): float
+    {
+        $count = \count($values);
+        if ($count < 2) return 0;
+        $mean = $this->_calculateMean($values);
+        $sumSq = 0;
+        foreach ($values as $v) {
+            $sumSq += ($v - $mean) ** 2;
+        }
+        return \sqrt($sumSq / ($count - 1));
+    }
+
+    /**
+     * Aggrega i trial per data (stessa sessione).
+     * Usa MEAN per parametri di Readiness, MAX per parametri di Performance.
+     */
+    private function _aggregateTrials(array $results): array
+    {
+        $daily = [];
+        foreach ($results as $res) {
+            $date = \substr($res['test_date'], 0, 10);
+            if (!isset($daily[$date])) {
+                $daily[$date] = [
+                    'Test Date' => $date,
+                    'Jump Height (Imp-Mom) (cm)' => [],
+                    'RSI-modified' => [],
+                    'Eccentric Duration (ms)' => [],
+                    'Concentric Peak Power / BM (W/kg)' => [],
+                    'Peak Vertical Force (N)' => [],
+                    'Net Impulse (N s)' => [],
+                    'RFD (N/s)' => []
+                ];
+            }
+            
+            $m = is_array($res['metrics']) ? $res['metrics'] : \json_decode($res['metrics'] ?? '{}', true);
+            
+            $daily[$date]['Jump Height (Imp-Mom) (cm)'][] = (float)($m['JumpHeight']['Value'] ?? $m['JumpHeightTotal']['Value'] ?? 0);
+            $daily[$date]['RSI-modified'][]              = (float)($m['RSIModified']['Value'] ?? 0);
+            $daily[$date]['Eccentric Duration (ms)'][]    = (float)($m['EccentricDuration']['Value'] ?? $m['TimeToTakeoff']['Value'] ?? 0);
+            $daily[$date]['Concentric Peak Power / BM (W/kg)'][] = (float)($m['ConcentricPeakPower']['Value'] ?? 0);
+            $daily[$date]['Peak Vertical Force (N)'][]   = (float)($m['PeakForce']['Value'] ?? 0);
+            $daily[$date]['Net Impulse (N s)'][]         = (float)($m['NetImpulse']['Value'] ?? 0);
+            $daily[$date]['RFD (N/s)'][]                 = (float)($m['RFD']['Value'] ?? 0);
+        }
+
+        $aggregated = [];
+        foreach ($daily as $date => $vals) {
+            $aggregated[] = [
+                'Test Date' => $date,
+                'Jump Height (Imp-Mom) (cm)' => !empty($vals['Jump Height (Imp-Mom) (cm)']) ? \max($vals['Jump Height (Imp-Mom) (cm)']) : 0,
+                'RSI-modified' => $this->_calculateMean($vals['RSI-modified']),
+                'Eccentric Duration (ms)' => $this->_calculateMean($vals['Eccentric Duration (ms)']),
+                'Concentric Peak Power / BM (W/kg)' => \max($vals['Concentric Peak Power / BM (W/kg)']),
+                'Peak Vertical Force (N)' => $this->_calculateMean($vals['Peak Vertical Force (N)']),
+                'Net Impulse (N s)' => $this->_calculateMean($vals['Net Impulse (N s)']),
+                'RFD (N/s)' => $this->_calculateMean($vals['RFD (N/s)'])
+            ];
+        }
+
+        // Sort by date ASC for rolling calculations
+        \usort($aggregated, fn($a, $b) => \strcmp($a['Test Date'], $b['Test Date']));
+        return $aggregated;
+    }
+
+    /**
+     * Calcola Z-Score e Baseline mobile 28 giorni.
+     */
+    private function _processAnalytics(array $data): array
+    {
+        $fullResults = [];
+        $metricsToAnalyze = ['Jump Height (Imp-Mom) (cm)', 'RSI-modified', 'Eccentric Duration (ms)'];
+
+        foreach ($data as $i => $current) {
+            $currentDate = new \DateTime($current['Test Date']);
+            $baselineWindow = [];
+
+            // Look back 28 days
+            for ($j = 0; $j < $i; $j++) {
+                $prevDate = new \DateTime($data[$j]['Test Date']);
+                $diff = $currentDate->diff($prevDate)->days;
+                if ($diff <= 28) {
+                    $baselineWindow[] = $data[$j];
+                }
+            }
+
+            $stats = [];
+            foreach ($metricsToAnalyze as $metric) {
+                $historicalValues = \array_column($baselineWindow, $metric);
+                
+                // Outlier Removal (Z > 2.5) for the baseline itself
+                if (\count($historicalValues) > 5) {
+                    $m = $this->_calculateMean($historicalValues);
+                    $s = $this->_calculateStdDev($historicalValues);
+                    if ($s > 0) {
+                        $historicalValues = \array_filter($historicalValues, fn($v) => \abs(($v - $m) / $s) < 2.5);
+                    }
+                }
+
+                $meanVal = $this->_calculateMean($historicalValues);
+                $stdVal  = $this->_calculateStdDev($historicalValues);
+                $zScore  = ($stdVal > 0) ? ($current[$metric] - $meanVal) / $stdVal : 0;
+
+                $stats[$metric . '_zscore'] = round($zScore, 2);
+                $stats[$metric . '_mean']   = round($meanVal, 2);
+                $stats[$metric . '_std']    = round($stdVal, 2);
+            }
+
+            // Movement Strategy Shift Detection
+            $alert = null;
+            $edZ = $stats['Eccentric Duration (ms)_zscore'] ?? 0;
+            $jhZ = $stats['Jump Height (Imp-Mom) (cm)_zscore'] ?? 0;
+            if ($edZ > 0.5 && $jhZ >= -0.2) {
+                $alert = "L'atleta sta compensando temporalmente (+{$edZ} SD durata eccentrica) per mantenere l'output balistico (JH Z: {$jhZ}). Possibile fatica mascherata.";
+            }
+
+            $fullResults[] = \array_merge($current, $stats, ['Strategy_Shift_Alert' => $alert]);
+        }
+
+        return $fullResults;
+    }
+
+    public function processCsv(string $filePath): ?array
+    {
+        // Parse CSV manually in PHP
+        if (!\file_exists($filePath)) return null;
+        
+        $handle = \fopen($filePath, 'r');
+        $headers = \fgetcsv($handle); // Metadati o intestazione
+        
+        // Skip metadata lines until we find actual headers
+        while ($headers && !\in_array('Test Date', $headers)) {
+            $headers = \fgetcsv($handle);
+        }
+
+        if (!$headers) {
+            \fclose($handle);
+            return null;
+        }
+
+        $rows = [];
+        while (($row = \fgetcsv($handle)) !== false) {
+            if (\count($row) < \count($headers)) continue;
+            $data = \array_combine($headers, $row);
+            
+            // Map common ForceDecks CSV columns to our internal format
+            $rows[] = [
+                'test_date' => $data['Test Date'] ?? 'now',
+                'test_type' => $data['Test Type'] ?? 'CMJ',
+                'metrics' => [
+                    'JumpHeight' => ['Value' => (float)($data['Jump Height (Imp-Mom) (cm)'] ?? 0)],
+                    'RSIModified' => ['Value' => (float)($data['RSI-modified'] ?? 0)],
+                    'EccentricDuration' => ['Value' => (float)($data['Eccentric Duration (ms)'] ?? 0)],
+                    'ConcentricPeakPower' => ['Value' => (float)($data['Concentric Peak Power / BM (W/kg)'] ?? 0)],
+                    'PeakForce' => ['Value' => (float)($data['Peak Vertical Force (N)'] ?? 0)],
+                ]
+            ];
+        }
+        \fclose($handle);
+
+        $aggregated = $this->_aggregateTrials($rows);
+        return $this->_processAnalytics($aggregated);
+    }
+
+    public function getDeepAnalytics(string $athleteId): ?array
+    {
+        if (!$this->repo) return null;
+        
+        $results = $this->repo->getResultsByAthlete($athleteId);
+        if (empty($results)) return null;
+        
+        $aggregated = $this->_aggregateTrials($results);
+        $analysis = $this->_processAnalytics($aggregated);
+        
+        return \end($analysis);
+    }
 }

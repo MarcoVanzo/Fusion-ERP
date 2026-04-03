@@ -17,11 +17,15 @@ class AIService
      */
     public static function generateContent(string|array $prompt, array $options = [], string $model = self::DEFAULT_MODEL): string
     {
-        // Use getenv() first as it's more reliable on some servers, then fallback to $_SERVER/$_ENV
-        // and finally to the hardcoded AIConfig::GEMINI_TOKEN for maximum stability.
+        // Key lookup priority: getenv -> $_SERVER -> $_ENV -> AIConfig::GEMINI_TOKEN
         $apiKey = (getenv('GEMINI_TOKEN') ?: ($_SERVER['GEMINI_TOKEN'] ?? $_ENV['GEMINI_TOKEN'] ?? '')) ?: AIConfig::GEMINI_TOKEN;
 
-        // apiKey is never empty due to AIConfig::GEMINI_TOKEN fallback
+        if (empty($apiKey)) {
+            $logMsg = date('Y-m-d H:i:s') . " [AI_SERVICE] CRITICAL: Gemini API Key not found in environment or AIConfig." . PHP_EOL;
+            file_put_contents(__DIR__ . '/../ai_debug.log', $logMsg, FILE_APPEND);
+            throw new \Exception('Chiave API Gemini non configurata. Verifica il file .env o AIConfig.php.');
+        }
+
         $url = self::API_BASE_URL . $model . ':generateContent?key=' . $apiKey;
 
         $generationConfig = array_merge([
@@ -64,7 +68,6 @@ class AIService
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $curlErr = curl_error($ch);
-        curl_close($ch);
         
         if ($response === false) {
             $logMsg = date('Y-m-d H:i:s') . " [AI_SERVICE] cURL error on model $model: $curlErr" . PHP_EOL;

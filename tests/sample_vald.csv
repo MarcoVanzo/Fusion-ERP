@@ -1,0 +1,14 @@
+VALD Hub Export Data,
+Generated:,2023-10-01 09:00:00,
+Organization:,Saviour Del Bene,
+,
+Athlete,Test Date,Test Type,Body Mass (kg),Jump Height (Imp-Mom) (cm),RSI-modified,Eccentric Duration (ms),Peak Vertical Force (N)
+Mario Rossi,2023-09-01 10:00:00,CMJ,80.0,30.0,0.400,250,2000
+Mario Rossi,2023-09-01 10:01:00,CMJ,80.0,32.0,0.420,240,2100
+Mario Rossi,2023-09-05 10:00:00,CMJ,80.1,35.0,0.450,230,2200
+Mario Rossi,2023-09-10 10:00:00,CMJ,80.0,34.0,0.440,235,2150
+Mario Rossi,2023-09-15 10:00:00,CMJ,79.5,36.0,0.470,220,2300
+Mario Rossi,2023-09-20 10:00:00,CMJ,80.0,35.5,0.460,225,2250
+Mario Rossi,2023-09-25 10:00:00,CMJ,80.2,37.0,0.480,210,2400
+Mario Rossi,2023-10-01 10:00:00,CMJ,80.0,36.5,0.465,220,2350
+Mario Rossi,2023-10-02 10:00:00,CMJ,80.0,31.0,0.300,350,2000

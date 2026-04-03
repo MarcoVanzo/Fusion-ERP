@@ -45,21 +45,14 @@ export const AthletesView = {
 
         return `
         <div class="dash-top-bar" style="border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 24px; margin-bottom: 24px;">
-            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                <div>
-                    <h1 class="dash-title"><i class="ph ph-users-three"></i> ${title}</h1>
-                    <p class="dash-subtitle" style="margin-top:4px;">${subtitle}</p>
-                </div>
-                <div class="header-actions">
-                    <button class="btn btn-primary btn-sm" id="new-athlete-btn">
-                        <i class="ph ph-user-plus"></i> Nuovo Atleta
-                    </button>
-                </div>
+            <div>
+                <h1 class="dash-title"><i class="ph ph-users-three"></i> ${title}</h1>
+                <p class="dash-subtitle" style="margin-top:4px;">${subtitle}</p>
             </div>
-            <div class="dash-filters" style="margin-top: 16px;">
-                <button class="dash-filter athlete-main-tab ${variant === 'anagrafica' ? 'active' : ''}" onclick="Router.navigate('athletes')" type="button">Anagrafica</button>
-                <button class="dash-filter athlete-main-tab ${variant === 'documenti' ? 'active' : ''}" onclick="Router.navigate('athlete-documents')" type="button">Documenti</button>
-                <button class="dash-filter athlete-main-tab ${variant === 'metrics' ? 'active' : ''}" onclick="Router.navigate('athlete-metrics')" type="button">Performance (VALD)</button>
+            <div class="header-actions">
+                <button class="btn btn-primary btn-sm" id="new-athlete-btn">
+                    <i class="ph ph-user-plus"></i> Nuovo Atleta
+                </button>
             </div>
         </div>
 

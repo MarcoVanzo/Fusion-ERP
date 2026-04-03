@@ -61,11 +61,69 @@ export const AthletesMetrics = {
                         <div class="vald-status-dot" style="background:${this._getStatusColor(data.semaphore?.status)}"></div>
                         <span class="vald-title">VALD FORCE-DECKS ANALYSIS</span>
                     </div>
-                    <button class="btn btn-default btn-xs" id="vald-sync-btn-header">
-                        <i class="ph ph-arrows-clockwise"></i> Sincronizza
-                    </button>
+                    <div style="display:flex; gap:var(--sp-2);">
+                        <button class="btn btn-default btn-xs" id="vald-upload-btn">
+                            <i class="ph ph-upload-simple"></i> Carica CSV ForceDecks
+                        </button>
+                        <button class="btn btn-default btn-xs" id="vald-sync-btn-header">
+                            <i class="ph ph-arrows-clockwise"></i> Sincronizza Hub
+                        </button>
+                    </div>
                 </div>
+
+                ${data.strategyShiftAlert ? `
+                    <div class="alert alert-warning" style="margin-bottom:var(--sp-3); border-left:4px solid #FFD600; background:rgba(255, 214, 0, 0.05);">
+                        <div style="display:flex; gap:10px; align-items:center;">
+                            <i class="ph ph-warning-circle" style="font-size:20px; color:#FFD600;"></i>
+                            <div>
+                                <strong style="display:block; font-size:12px; text-transform:uppercase; opacity:0.7;">Movement Strategy Shift Detected</strong>
+                                <span style="font-size:14px;">${data.strategyShiftAlert}</span>
+                                <small style="display:block; margin-top:4px; opacity:0.6;">L'atleta compensa temporalmente per mantenere l'output: segnale di fatica mascherata.</small>
+                            </div>
+                        </div>
+                    </div>
+                ` : ''}
                 
+                <div class="pipeline-split" style="display:grid; grid-template-columns: 1fr 1fr; gap:var(--sp-4); margin-bottom:var(--sp-4);">
+                    <!-- Pipeline 1: Performance Growth -->
+                    <div class="pipeline-card">
+                        <div class="pipeline-header">
+                            <i class="ph ph-chart-line-up" style="color:var(--brand-primary);"></i>
+                            <span>Performance Growth <small>(Long-term)</small></span>
+                        </div>
+                        <div class="vald-kpi-grid-mini">
+                            <div class="mini-kpi">
+                                <span class="label">Jump Height</span>
+                                <span class="value">${data.jumpHeight?.toFixed(1) || '—'}<small>cm</small></span>
+                                <span class="trend ${data.jhTrend > 0 ? 'up' : 'down'}">${data.jhTrend > 0 ? '+' : ''}${data.jhTrend?.toFixed(1)}%</span>
+                            </div>
+                            <div class="mini-kpi">
+                                <span class="label">Peak Power/BM</span>
+                                <span class="value">${data.peakPowerBM?.toFixed(1) || '—'}<small>W/kg</small></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pipeline 2: Readiness & Fatigue -->
+                    <div class="pipeline-card">
+                        <div class="pipeline-header">
+                            <i class="ph ph-gauge" style="color:#FFD600;"></i>
+                            <span>Readiness & Fatigue <small>(Daily/Weekly)</small></span>
+                        </div>
+                        <div class="vald-kpi-grid-mini">
+                            <div class="mini-kpi">
+                                <span class="label">RSImod</span>
+                                <span class="value" style="color:${this._getStatusColor(data.semaphore?.status)}">${data.semaphore?.rsimod?.current?.toFixed(3) || '—'}</span>
+                                <span class="zscore">Z: ${data.rsiZScore?.toFixed(2) || '—'}</span>
+                            </div>
+                            <div class="mini-kpi">
+                                <span class="label">Asymmetry</span>
+                                <span class="value" style="color:${parseFloat(data.asymmetryPct) > 15 ? '#FF1744' : 'inherit'}">${data.asymmetryPct?.toFixed(1) || '—'}<small>%</small></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="vald-hero">
                     <div class="anatomy-view">
                         ${this._renderAnatomy('front', data.muscleMap)}
@@ -75,15 +133,6 @@ export const AthletesMetrics = {
                         ${this._renderAnatomy('back', data.muscleMap)}
                         <span>Back</span>
                     </div>
-                </div>
-
-                <div class="vald-kpi-grid">
-                    ${kpi.map(item => `
-                        <div class="vald-kpi-card">
-                            <span class="kpi-label"><i class="ph ph-${item.icon}"></i> ${item.label}</span>
-                            <span class="kpi-value">${item.value}<small>${item.unit}</small></span>
-                        </div>
-                    `).join('')}
                 </div>
 
                 <div class="vald-ai-actions-v2" id="vald-ai-section-${athleteId}">
@@ -107,6 +156,8 @@ export const AthletesMetrics = {
             `;
 
             document.getElementById("vald-sync-btn-header").onclick = () => this._syncVald(athleteId);
+            document.getElementById("vald-upload-btn").onclick = () => this._handleCsvUpload(athleteId);
+
         } catch (e) {
             console.error("Errore critico in _loadValdData:", e);
             container.innerHTML = `<div class="error-box">Errore VALD: ${e.message}</div>`;
@@ -229,5 +280,55 @@ export const AthletesMetrics = {
         } finally {
             UI.loading(false);
         }
+    },
+
+    /**
+     * Gestisce l'upload del CSV ForceDecks
+     */
+    async _handleCsvUpload(athleteId) {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.csv';
+        
+        input.onchange = async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('athleteId', athleteId);
+            
+            UI.loading(true, "Elaborazione Biomeccanica in corso...");
+            
+            try {
+                // Call the new uploadCsv endpoint
+                // Note: Store.api might need to handle FormData
+                const response = await fetch('api/?module=vald&action=uploadCsv', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    UI.toast("Analisi completata con successo", "success");
+                    // In a real scenario, we would save the results and reload.
+                    // For now, let's simulate the reload with the first athlete's data 
+                    // from the analysis if it matches.
+                    console.log("Analysis Result:", result.data);
+                    
+                    // Trigger a reload of the dashboard (the backend sync would normally save this)
+                    this._loadValdData(athleteId);
+                } else {
+                    throw new Error(result.error || "Errore sconosciuto");
+                }
+            } catch (err) {
+                UI.toast("Errore: " + err.message, "error");
+            } finally {
+                UI.loading(false);
+            }
+        };
+        
+        input.click();
     }
 };
