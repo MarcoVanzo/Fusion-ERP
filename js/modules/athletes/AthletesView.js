@@ -228,107 +228,151 @@ export const AthletesView = {
      * Tab: Anagrafica (Redesigned with logical groups and all DB fields)
      */
     tabAnagrafica: (athlete, canEdit = true) => {
+        // Calcolo giorni alla scadenza medica per la barra visuale
+        const daysToMetric = athlete.medical_cert_expires_at ? Utils.daysUntil(athlete.medical_cert_expires_at) : -1;
+        const medicalPercent = Math.max(0, Math.min(100, (daysToMetric / 365) * 100)); // Approssimazione annuale
+        const medicalColor = daysToMetric > 30 ? 'var(--color-success)' : (daysToMetric >= 0 ? 'var(--color-warning)' : 'var(--color-pink)');
+
         const sections = [
             {
-                title: "Dati Personali",
+                title: "Identità & Bio",
                 icon: "ph-user-focus",
                 items: [
-                    { label: "Nata il", value: athlete.birth_date ? Utils.formatDate(athlete.birth_date) : null, icon: "ph-calendar" },
+                    { label: "Data di nascita", value: athlete.birth_date ? Utils.formatDate(athlete.birth_date) : null, icon: "ph-calendar" },
                     { label: "Luogo di nascita", value: athlete.birth_place, icon: "ph-map-pin" },
                     { label: "Codice Fiscale", value: athlete.fiscal_code, icon: "ph-identification-card", copy: true },
                     { label: "Documento ID", value: athlete.identity_document, icon: "ph-cardholder" },
                 ]
             },
             {
-                title: "Dati Sportivi",
+                title: "Squadra & Ruolo",
                 icon: "ph-volleyball",
                 items: [
-                    { label: "Ruolo", value: athlete.role, icon: "ph-shield-check" },
-                    { label: "N° Maglia", value: athlete.jersey_number ? `#${athlete.jersey_number}` : null, icon: "ph-hashtag" },
+                    { label: "Ruolo tecnico", value: athlete.role, icon: "ph-shield-check" },
+                    { label: "Numero Maglia", value: athlete.jersey_number ? `#${athlete.jersey_number}` : null, icon: "ph-hashtag" },
                     { label: "ID Federale", value: athlete.federal_id, icon: "ph-barcode" },
-                    { label: "Squadra", value: athlete.team_name, icon: "ph-users" },
+                    { label: "Squadra attuale", value: athlete.team_name, icon: "ph-users-three" },
                 ]
             },
             {
                 title: "Contatti & Residenza",
                 icon: "ph-address-book",
                 items: [
-                    { label: "Email", value: athlete.email, icon: "ph-envelope-simple", copy: true },
+                    { label: "Email Atleta", value: athlete.email, icon: "ph-envelope-simple", copy: true },
                     { label: "Cellulare", value: athlete.phone, icon: "ph-phone" },
                     { label: "Indirizzo", value: athlete.residence_address, icon: "ph-map-trifold" },
-                    { label: "Città", value: athlete.residence_city, icon: "ph-buildings" },
+                    { label: "Città / CAP", value: athlete.residence_city, icon: "ph-buildings" },
                 ]
             },
             {
-                title: "Dotazione & Kit",
-                icon: "ph-t-shirt",
+                title: "Famiglia & Referenti",
+                icon: "ph-users-four",
                 items: [
-                    { label: "Taglia Maglia", value: athlete.shirt_size, icon: "ph-ruler" },
-                    { label: "Numero Scarpe", value: athlete.shoe_size, icon: "ph-sneaker-move" },
-                    { label: "Altezza (cm)", value: athlete.height_cm, icon: "ph-arrows-out-line-vertical" },
-                    { label: "Peso (kg)", value: athlete.weight_kg, icon: "ph-scales" },
+                    { label: "Genitore Referente", value: athlete.parent_contact, icon: "ph-user-circle" },
+                    { label: "Cellulare Genitore", value: athlete.parent_phone, icon: "ph-phone-call" },
+                    { label: "Taglia Kit", value: athlete.shirt_size ? `Taglia ${athlete.shirt_size}` : null, icon: "ph-t-shirt" },
+                    { label: "Scarpe", value: athlete.shoe_size, icon: "ph-sneaker-move" },
                 ]
             }
         ];
 
+        const athletePhoto = athlete.photo_path 
+            ? `<img src="${Utils.escapeHtml(athlete.photo_path)}" alt="${athlete.full_name}">`
+            : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.02);color:rgba(255,255,255,0.1);font-size:64px;font-weight:800;">${Utils.initials(athlete.full_name)}</div>`;
+
         return `
-            <div class="profile-header-actions" style="display:flex;justify-content:flex-end;margin-bottom:20px;gap:12px;">
-                ${canEdit ? `
-                    <button class="btn btn-ghost btn-sm" id="toggle-active-btn" style="color:${athlete.is_active ? 'var(--color-success)' : 'var(--color-pink)'}">
-                        <i class="ph ph-${athlete.is_active ? 'check-square' : 'square'}"></i> Atleta ${athlete.is_active ? 'Attiva' : 'Disattivata'}
-                    </button>
-                ` : ''}
-            </div>
+            <div class="anagrafica-premium-container">
+                <!-- Sidebar: Quick Info & Status -->
+                <aside class="profile-info-sidebar">
+                    <div class="sidebar-glass-card" style="padding:12px;">
+                        <div class="profile-photo-container">
+                            ${athletePhoto}
+                            <div class="photo-overlay-badge">#${athlete.jersey_number || '—'}</div>
+                        </div>
+                        <div style="text-align:center; padding:12px 0 8px;">
+                            <h2 style="font-size:20px; font-weight:800; color:var(--color-white); margin:0;">${athlete.first_name}</h2>
+                            <p style="font-size:14px; color:rgba(255,255,255,0.4); margin:4px 0 0; text-transform:uppercase; letter-spacing:0.05em;">${athlete.last_name}</p>
+                        </div>
+                    </div>
 
-            <div class="anagrafica-grid" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));gap:24px;">
-                ${sections.map(section => `
-                    <div class="card glass-card" style="padding:20px;display:flex;flex-direction:column;gap:16px;border:1px solid rgba(255,255,255,0.05);background:rgba(255,255,255,0.02);">
-                        <h3 style="font-size:13px;text-transform:uppercase;letter-spacing:0.05em;color:var(--color-text-muted);display:flex;align-items:center;gap:8px;margin:0;">
-                            <i class="ph ${section.icon}" style="font-size:16px;"></i> ${section.title}
-                        </h3>
-                        <div style="display:flex;flex-direction:column;gap:12px;">
-                            ${section.items.map(item => `
-                                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
-                                    <div style="display:flex;align-items:center;gap:8px;color:rgba(255,255,255,0.4);font-size:12px;">
-                                        <i class="ph ${item.icon}"></i>
-                                        <span>${item.label}</span>
-                                    </div>
-                                    <div style="display:flex;align-items:center;gap:6px;text-align:right;">
-                                        <span style="font-size:13px;font-weight:500;color:var(--color-white);">${Utils.escapeHtml(item.value || '—')}</span>
-                                        ${item.copy && item.value ? `<button class="btn btn-ghost btn-xs" onclick="navigator.clipboard.writeText('${item.value}'); UI.toast('Copiato!')" style="padding:2px;min-height:auto;"><i class="ph ph-copy" style="font-size:12px;"></i></button>` : ''}
-                                    </div>
-                                </div>
-                            `).join('')}
+                    <div class="sidebar-glass-card">
+                        <div class="quick-stats-grid">
+                            <div class="stat-item">
+                                <div class="stat-label">Altezza</div>
+                                <div class="stat-value">${athlete.height_cm ? athlete.height_cm + ' cm' : '—'}</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Peso</div>
+                                <div class="stat-value">${athlete.weight_kg ? athlete.weight_kg + ' kg' : '—'}</div>
+                            </div>
                         </div>
                     </div>
-                `).join('')}
 
-                <div class="card glass-card" style="padding:20px;display:flex;flex-direction:column;gap:16px;border:1px solid rgba(255,255,255,0.05);background:rgba(255,255,255,0.02);">
-                    <h3 style="font-size:13px;text-transform:uppercase;letter-spacing:0.05em;color:var(--color-text-muted);display:flex;align-items:center;gap:8px;margin:0;">
-                         <i class="ph ph-users-four" style="font-size:16px;"></i> Contatti Genitori
-                    </h3>
-                    <div style="display:flex;flex-direction:column;gap:12px;">
-                        <div style="display:flex;justify-content:space-between;align-items:center;">
-                            <span style="color:rgba(255,255,255,0.4);font-size:12px;">Referente:</span>
-                            <span style="font-size:13px;color:var(--color-white);">${Utils.escapeHtml(athlete.parent_contact || '—')}</span>
+                    <div class="sidebar-glass-card ${athlete.is_active ? 'indicator-active' : 'indicator-inactive'} status-indicator-card">
+                        <div class="indicator-icon">
+                            <i class="ph ph-${athlete.is_active ? 'check-circle' : 'prohibit'}"></i>
                         </div>
-                        <div style="display:flex;justify-content:space-between;align-items:center;">
-                            <span style="color:rgba(255,255,255,0.4);font-size:12px;">Cellulare:</span>
-                            <span style="font-size:13px;color:var(--color-white);">${Utils.escapeHtml(athlete.parent_phone || '—')}</span>
+                        <div class="indicator-text" style="flex:1;">
+                            <h4>Stato Atleta</h4>
+                            <p>${athlete.is_active ? 'Attiva e tesserata' : 'Inattiva system-wide'}</p>
+                        </div>
+                        ${canEdit ? `
+                            <button id="toggle-active-btn" class="btn btn-ghost btn-xs" style="padding:4px; min-height:auto;">
+                                <i class="ph ph-arrows-counter-clockwise"></i>
+                            </button>
+                        ` : ''}
+                    </div>
+
+                    <div class="sidebar-glass-card">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
+                            <div class="indicator-text">
+                                <h4 style="color:rgba(255,255,255,0.6); font-size:11px; text-transform:uppercase; letter-spacing:0.05em;">Certificato Medico</h4>
+                                <h3 style="font-size:14px; color:var(--color-white); margin:4px 0;">${athlete.medical_cert_type || 'Agonistico'}</h3>
+                            </div>
+                            <i class="ph ph-shield-check" style="font-size:24px; color:${medicalColor}; opacity:0.8;"></i>
+                        </div>
+                        
+                        <div class="expiry-visual">
+                            <div class="expiry-bar-bg">
+                                <div class="expiry-bar-fill" style="width:${medicalPercent}%; background:${medicalColor}; box-shadow: 0 0 10px ${medicalColor}44;"></div>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:600; color:${medicalColor};">
+                                <span>${athlete.medical_cert_expires_at ? Utils.formatDate(athlete.medical_cert_expires_at) : 'Dato mancante'}</span>
+                                <span>${daysToMetric >= 0 ? daysToMetric + ' gg' : 'SCADUTO'}</span>
+                            </div>
                         </div>
                     </div>
-                    <div style="margin-top:auto;padding-top:16px;border-top:1px solid rgba(255,255,255,0.05);">
-                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-                             <span style="font-size:11px;text-transform:uppercase;color:var(--color-text-muted);">Certificato Medico</span>
-                             <span class="badge ${Utils.daysUntil(athlete.medical_cert_expires_at) > 30 ? 'badge-success' : 'badge-pink'}" style="font-size:10px;">
-                                ${athlete.medical_cert_type || 'Agonistico'}
-                             </span>
+                </aside>
+
+                <!-- Main Content: Detailed Details -->
+                <main class="profile-details-main">
+                    ${sections.map(section => `
+                        <div class="detail-section">
+                            <div class="section-header-premium">
+                                <i class="ph ${section.icon}"></i>
+                                <h2>${section.title}</h2>
+                            </div>
+                            <div class="details-grid-premium">
+                                ${section.items.map(item => `
+                                    <div class="detail-item-premium">
+                                        <div class="detail-item-label">
+                                            <i class="ph ${item.icon}"></i>
+                                            <span>${item.label}</span>
+                                        </div>
+                                        <div class="detail-item-value">
+                                            <span>${Utils.escapeHtml(item.value || '—')}</span>
+                                            ${item.copy && item.value ? `
+                                                <button class="btn btn-ghost btn-xs copy-btn-mini" onclick="navigator.clipboard.writeText('${item.value}'); UI.toast('Copiato!')" title="Copia">
+                                                    <i class="ph ph-copy" style="font-size:14px;"></i>
+                                                </button>
+                                            ` : ''}
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
                         </div>
-                        <div style="font-size:12px;font-weight:600;color:${Utils.daysUntil(athlete.medical_cert_expires_at) > 30 ? 'var(--color-success)' : 'var(--color-pink)'}">
-                            Scadenza: ${athlete.medical_cert_expires_at ? Utils.formatDate(athlete.medical_cert_expires_at) : 'Dato mancante'}
-                        </div>
-                    </div>
-                </div>
+                    `).join('')}
+                </main>
             </div>
         `;
     },
