@@ -6,7 +6,7 @@
 import { AthletesAPI } from './athletes/AthletesAPI.js';
 import { AthletesView } from './athletes/AthletesView.js';
 import { AthletesWizard } from './athletes/AthletesWizard.js';
-import { AthletesMetrics } from './athletes/AthletesMetrics.js';
+import { AthletesMetrics } from './athletes/AthletesMetricsV2.js';
 
 const Athletes = (() => {
     let abortController = new AbortController();
@@ -148,11 +148,23 @@ const Athletes = (() => {
 
         // Listeners sulle card
         grid.querySelectorAll(".athlete-card").forEach(card => {
+            const id = card.dataset.id;
+            
+            // Edit rapido dalla lista
+            const editBtn = card.querySelector(".quick-edit-btn");
+            if (editBtn) {
+                editBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    const athlete = athletesData.find(a => String(a.id) === String(id));
+                    if (athlete) renderEditForm(athlete);
+                };
+            }
+
             card.onclick = () => {
                 if (isBulkMode) {
-                    toggleSelection(card.dataset.id);
+                    toggleSelection(id);
                 } else {
-                    renderProfile(card.dataset.id, variant === 'anagrafica' ? null : variant);
+                    renderProfile(id, variant === 'anagrafica' ? null : variant);
                 }
             };
         });
@@ -189,14 +201,20 @@ const Athletes = (() => {
     }
 
     function addProfileListeners(athlete) {
+        const signal = abortController.signal;
         const backBtn = document.getElementById("back-to-list");
         if (backBtn) backBtn.onclick = () => renderDashboard();
+
+        const editBtn = document.getElementById("edit-athlete-btn");
+        if (editBtn) {
+            editBtn.onclick = () => renderEditForm(athlete);
+        }
 
         document.querySelectorAll("#athlete-tab-bar .fusion-tab").forEach(btn => {
             btn.addEventListener("click", () => {
                 const target = btn.dataset.tab;
                 switchTab(target, athlete);
-            });
+            }, { signal });
         });
     }
 
@@ -222,6 +240,9 @@ const Athletes = (() => {
         switch (tab) {
             case 'anagrafica':
                 panel.innerHTML = AthletesView.tabAnagrafica(athlete);
+                // Listener rimosso da qui perché spostato in addProfileListeners (header)
+                // ma manteniamo addAnagraficaListeners per altri controlli (es. toggle active)
+                addAnagraficaListeners(athlete);
                 break;
             case 'pagamenti':
                 panel.innerHTML = AthletesView.tabPagamenti(athlete);
@@ -234,6 +255,83 @@ const Athletes = (() => {
                 await AthletesMetrics.render(panel, athlete.id);
                 break;
             // Add other tabs here...
+        }
+    }
+
+    function addAnagraficaListeners(athlete) {
+        const signal = abortController.signal;
+        // edit-athlete-btn listener rimosso perché gestito in addProfileListeners (header)
+
+        document.getElementById("toggle-active-btn")?.addEventListener("click", async () => {
+            UI.loading(true);
+            try {
+                const newState = athlete.is_active ? 0 : 1;
+                await AthletesAPI.update({ id: athlete.id, is_active: newState });
+                UI.toast(`Atleta ${newState ? 'attivata' : 'disattivata'}`, "success");
+                const updated = await AthletesAPI.getById(athlete.id);
+                switchTab('anagrafica', updated);
+            } catch (e) {
+                UI.toast(e.message, "error");
+            } finally {
+                UI.loading(false);
+            }
+        }, { signal });
+    }
+
+    function renderEditForm(athlete) {
+        const app = document.getElementById("app");
+        app.innerHTML = AthletesView.athleteForm(athlete, teamsData);
+
+        document.getElementById("cancel-form")?.addEventListener("click", () => renderProfile(athlete.id));
+        document.getElementById("cancel-form-btn")?.addEventListener("click", () => renderProfile(athlete.id));
+
+        document.getElementById("athlete-edit-form")?.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            
+            // Handle multi-team checkboxes
+            const teamIds = Array.from(e.target.querySelectorAll('input[name="team_season_ids[]"]:checked')).map(cb => cb.value);
+            data.team_season_ids = teamIds;
+
+            UI.loading(true);
+            try {
+                await AthletesAPI.update(data);
+                UI.toast("Atleta aggiornata con successo", "success");
+                renderProfile(athlete.id);
+            } catch (err) {
+                const errEl = document.getElementById("form-error");
+                if (errEl) {
+                    errEl.textContent = err.message;
+                    errEl.classList.remove("hidden");
+                }
+                UI.toast(err.message, "error");
+            } finally {
+                UI.loading(false);
+            }
+        });
+
+        // Autocomplete for address if needed (reusing logic from wizard if applicable)
+        if (typeof google !== 'undefined') {
+            const input = document.querySelector('input[name="residence_address"]');
+            if (input) {
+                const autocomplete = new google.maps.places.Autocomplete(input, {
+                    types: ['address'],
+                    componentRestrictions: { country: 'it' },
+                    fields: ['address_components', 'formatted_address']
+                });
+                autocomplete.addListener("place_changed", () => {
+                    const place = autocomplete.getPlace();
+                    let city = "";
+                    place.address_components?.forEach(c => {
+                        if (c.types.includes("locality")) city = c.long_name;
+                    });
+                    if (city) {
+                        const cityInput = document.querySelector('input[name="residence_city"]');
+                        if (cityInput) cityInput.value = city;
+                    }
+                });
+            }
         }
     }
 

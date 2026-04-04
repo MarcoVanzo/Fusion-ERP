@@ -687,7 +687,7 @@ PROMPT;
         foreach ($daily as $date => $vals) {
             $aggregated[] = [
                 'Test Date' => $date,
-                'Jump Height (Imp-Mom) (cm)' => !empty($vals['Jump Height (Imp-Mom) (cm)']) ? \max($vals['Jump Height (Imp-Mom) (cm)']) : 0,
+                'Jump Height (Imp-Mom) (cm)' => \max($vals['Jump Height (Imp-Mom) (cm)']),
                 'RSI-modified' => $this->_calculateMean($vals['RSI-modified']),
                 'Eccentric Duration (ms)' => $this->_calculateMean($vals['Eccentric Duration (ms)']),
                 'Concentric Peak Power / BM (W/kg)' => \max($vals['Concentric Peak Power / BM (W/kg)']),

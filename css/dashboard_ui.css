@@ -1708,3 +1708,261 @@
   align-self: flex-start;
   border-bottom-left-radius: 2px;
 }
+
+/* ──────────────────────────────────────────────────────────────────────────
+   PERFORMANCE VALD REDESIGN — PREMIUM UI V3 (Refined)
+   ────────────────────────────────────────────────────────────────────────── */
+
+.perf-dashboard-v2 {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  animation: perf-fade-in 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes perf-fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.perf-grid-main {
+  display: grid;
+  grid-template-columns: 1fr 1.6fr;
+  gap: 24px;
+}
+
+/* --- Blueprint Anatomy --- */
+.blueprint-card {
+  position: relative;
+  background: #09090b;
+  border: 1px solid rgba(0, 229, 255, 0.1);
+  overflow: hidden;
+  box-shadow: inset 0 0 30px rgba(0, 229, 255, 0.03);
+}
+
+.blueprint-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(rgba(0, 229, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 229, 255, 0.05) 1px, transparent 1px);
+  background-size: 30px 30px;
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.blueprint-card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(0, 229, 255, 0.3), transparent);
+  animation: scanline 4s linear infinite;
+  z-index: 5;
+}
+
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(800%); }
+}
+
+.anatomy-cyber-body {
+  filter: brightness(0.6) contrast(1.2) grayscale(1) invert(0.1);
+  opacity: 0.35;
+  mix-blend-mode: screen;
+}
+
+.muscle-blob {
+  transition: all 0.5s ease;
+  fill: rgba(0, 255, 188, 0.1);
+  stroke: rgba(0, 255, 188, 0.2);
+  stroke-width: 0.5;
+}
+
+.muscle-blob.active {
+  fill: var(--color-active, #FFD700);
+  fill-opacity: 0.4;
+  stroke: var(--color-active, #FFD700);
+  stroke-width: 1;
+  filter: blur(1.5px);
+  animation: muscle-plasma 2s infinite alternate ease-in-out;
+}
+
+@keyframes muscle-plasma {
+  0% { fill-opacity: 0.3; filter: blur(2px); }
+  100% { fill-opacity: 0.6; filter: blur(1px); }
+}
+
+/* --- SVG Semi-Circle Gauges --- */
+.gauge-svg-container {
+  position: relative;
+  width: 140px;
+  height: 80px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+.gauge-svg-bg {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.06);
+  stroke-width: 8;
+  stroke-linecap: round;
+}
+
+.gauge-svg-val {
+  fill: none;
+  stroke: var(--gauge-color, #00e5ff);
+  stroke-width: 10;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+  filter: drop-shadow(0 0 3px var(--gauge-color));
+}
+
+.gauge-svg-text {
+  position: absolute;
+  bottom: 0;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* --- Mini KPI Cards --- */
+.perf-mini-card {
+  padding: 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.perf-mini-card.active-green { border-top: 2px solid #00E676; }
+.perf-mini-card.active-pink { border-top: 2px solid #FF00FF; }
+.perf-mini-card.active-cyan { border-top: 2px solid #00e5ff; }
+
+/* --- BIOMECHANICAL BLUEPRINT REFINEMENT --- */
+.blueprint-card {
+    background: radial-gradient(circle at center, #0a0a0f 0%, #050508 100%) !important;
+    position: relative;
+    overflow: hidden;
+}
+
+.blueprint-card::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 200%;
+    height: 200%;
+    transform: translate(-50%, -50%);
+    background-image: 
+        linear-gradient(rgba(0, 229, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 229, 255, 0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.anatomy-entry {
+    z-index: 1;
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.anatomy-entry:hover {
+    transform: scale(1.02);
+}
+
+.anatomy-container svg {
+    filter: drop-shadow(0 0 30px rgba(0, 229, 255, 0.1));
+}
+
+.anatomy-container .muscle-region {
+    fill: rgba(0, 229, 255, 0.03);
+    stroke: rgba(0, 229, 255, 0.1);
+    stroke-width: 0.5px;
+    transition: all 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.anatomy-container .muscle-region.active {
+    fill: var(--color-active, #00e5ff);
+    stroke: var(--color-active, #00e5ff);
+    stroke-width: 1.5px;
+    filter: url(#neonGlow) brightness(1.2);
+    opacity: 0.45;
+    animation: muscle-pulse 3s infinite ease-in-out;
+}
+
+/* Elite Scanline Overlay */
+.blueprint-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(
+        to bottom,
+        transparent 50%,
+        rgba(0, 229, 255, 0.02) 50%
+    );
+    background-size: 100% 4px;
+    pointer-events: none;
+    z-index: 2;
+    opacity: 0.4;
+}
+
+@keyframes muscle-pulse {
+    0%, 100% { opacity: 0.35; filter: blur(5px) brightness(1.1); }
+    50% { opacity: 0.6; filter: blur(12px) brightness(1.4); }
+}
+
+.anatomy-entry span {
+    text-shadow: 0 0 10px rgba(0, 229, 255, 0.5);
+}
+
+/* --- AI Intelligence Slot --- */
+.ai-intel-slot {
+  background: linear-gradient(135deg, rgba(20, 20, 25, 0.8), rgba(15, 15, 20, 0.9));
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+}
+
+/* --- Timeline History --- */
+.timeline-entry {
+  display: grid;
+  grid-template-columns: 120px 1.5fr 1fr 1fr 1fr;
+  align-items: center;
+  padding: 12px 20px;
+  background: rgba(255, 255, 255, 0.01);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  margin-bottom: 4px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.timeline-entry .timeline-val {
+  text-align: right;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 14px;
+}
+
+.timeline-entry .timeline-date {
+  font-size: 11px;
+  font-weight: 700;
+  font-family: monospace;
+}
+
+.timeline-entry .timeline-type {
+  font-size: 12px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 0.5px;
+}
+
+.timeline-entry:hover {
+  background: rgba(0, 229, 255, 0.03);
+  border-color: rgba(0, 229, 255, 0.1);
+}
+
+

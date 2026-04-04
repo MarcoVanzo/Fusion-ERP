@@ -11,70 +11,75 @@ export const AthletesView = {
         let subtitle = "Gestione dei tesserati, documenti e dati biometrici";
         let thRow = ``;
 
+        const thStyle = `padding:16px; color:rgba(255,255,255,0.4); font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:0.05em; border-bottom:1px solid rgba(255,255,255,0.05);`;
+
         if (variant === 'documenti') {
             title = "Documenti Atlete";
             subtitle = "Stato dei documenti, contratti d'iscrizione e certificati medici";
             thRow = `
-                <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;">Atleta</th>
-                <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;">Squadra</th>
-                <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;text-align:center;">Doc. Identità</th>
-                <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;text-align:center;">Codice Fiscale</th>
-                <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;text-align:center;">Contratto Iscr.</th>
-                <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;">Certificato Medico</th>
+                <th style="${thStyle}">Atleta</th>
+                <th style="${thStyle}">Squadra</th>
+                <th style="${thStyle} text-align:center;">Doc. Identità</th>
+                <th style="${thStyle} text-align:center;">Codice Fiscale</th>
+                <th style="${thStyle} text-align:center;">Contratto Iscr.</th>
+                <th style="${thStyle}">Certificato Medico</th>
+                <th style="${thStyle} text-align:right;">Azioni</th>
             `;
         } else if (variant === 'metrics') {
             title = "Performance e Metriche";
             subtitle = "Altezza, peso, IMC e integrazione con test VALD";
             thRow = `
-                <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;">Atleta</th>
-                <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;">Squadra</th>
-                <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;text-align:center;">Jump Height (cm)</th>
-                <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;text-align:center;">RSImod</th>
-                <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;text-align:center;">Braking Imp.</th>
-                <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;text-align:center;">Ultimo Test VALD</th>
+                <th style="${thStyle}">Atleta</th>
+                <th style="${thStyle}">Squadra</th>
+                <th style="${thStyle} text-align:center;">Jump Height (cm)</th>
+                <th style="${thStyle} text-align:center;">RSImod</th>
+                <th style="${thStyle} text-align:center;">Braking Imp.</th>
+                <th style="${thStyle} text-align:center;">Ultimo Test VALD</th>
+                <th style="${thStyle} text-align:right;">Azioni</th>
             `;
         } else {
             thRow = `
-                <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;">Atleta</th>
-                <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;">Ruolo</th>
-                <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;">Squadra</th>
-                <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;">Data Nascita</th>
-                <th style="padding:16px;color:var(--color-silver);font-weight:600;font-size:12px;text-transform:uppercase;">Certificato Medico</th>
+                <th style="${thStyle}">Atleta</th>
+                <th style="${thStyle}">Ruolo</th>
+                <th style="${thStyle}">Squadra</th>
+                <th style="${thStyle}">Data Nascita</th>
+                <th style="${thStyle}">Certificato Medico</th>
+                <th style="${thStyle} text-align:right;">Azioni</th>
             `;
         }
 
         return `
-        <div class="dash-top-bar" style="border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 24px; margin-bottom: 24px;">
+        <div class="dash-top-bar" style="border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 24px; margin-bottom: 24px; display:flex; justify-content:space-between; align-items:flex-end;">
             <div>
-                <h1 class="dash-title"><i class="ph ph-users-three"></i> ${title}</h1>
-                <p class="dash-subtitle" style="margin-top:4px;">${subtitle}</p>
+                <h1 class="dash-title" style="font-family:var(--font-display); font-size:32px; font-weight:800; color:var(--color-white); letter-spacing:-0.02em;"><i class="ph ph-users-three" style="color:var(--color-pink);"></i> ${title}</h1>
+                <p class="dash-subtitle" style="margin-top:4px; color:var(--color-text-muted); font-size:14px;">${subtitle}</p>
             </div>
             <div class="header-actions">
-                <button class="btn btn-primary btn-sm" id="new-athlete-btn">
+                <button class="btn btn-primary btn-sm" id="new-athlete-btn" style="padding:10px 20px; border-radius:12px; font-weight:600;">
                     <i class="ph ph-user-plus"></i> Nuovo Atleta
                 </button>
             </div>
         </div>
 
-        <div class="module-controls card">
-            <div class="search-box">
-                <i class="ph ph-magnifying-glass search-icon"></i>
-                <input type="text" id="athlete-search" class="search-input" placeholder="Cerca per nome, ruolo o maglia...">
+        <div class="module-controls card glass-card" style="display:flex; align-items:center; gap:16px; padding:16px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); margin-bottom:24px;">
+            <div class="search-box" style="flex:1; position:relative;">
+                <i class="ph ph-magnifying-glass" style="position:absolute; left:14px; top:50%; transform:translateY(-50%); color:rgba(255,255,255,0.3);"></i>
+                <input type="text" id="athlete-search" class="search-input" placeholder="Cerca per nome, ruolo o maglia..." style="width:100%; padding:12px 12px 12px 42px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); border-radius:10px; color:var(--color-white); font-size:14px;">
             </div>
-            <div class="filter-group">
-                <select id="team-filter" class="form-input select-filter">
+            <div class="filter-group" style="display:flex; gap:12px;">
+                <select id="team-filter" class="form-input select-filter" style="min-width:240px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); color:var(--color-white);">
                     <option value="">Tutte le squadre/stagioni</option>
-                    ${teams.map(t => `<option value="${Utils.escapeHtml(t.id)}">${Utils.escapeHtml(t.season)} — ${Utils.escapeHtml(t.name)} (${Utils.escapeHtml(t.category)})</option>`).join('')}
+                    ${teams.map(t => `<option value="${Utils.escapeHtml(t.id)}">${Utils.escapeHtml(t.season)} — ${Utils.escapeHtml(t.name)}</option>`).join('')}
                 </select>
-                <button class="btn btn-ghost btn-sm" id="reset-filters" title="Reset filtri">
+                <button class="btn btn-ghost btn-sm" id="reset-filters" title="Reset filtri" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05);">
                     <i class="ph ph-arrow-counter-clockwise"></i>
                 </button>
             </div>
         </div>
 
-        <div class="table-wrapper" style="background:var(--color-black);border:1px solid rgba(255,255,255,0.05);border-radius:12px;overflow:hidden;margin-top:24px;">
-            <table class="table" style="width:100%;text-align:left;border-collapse:collapse;">
-                <thead style="background:rgba(255,255,255,0.02);border-bottom:1px solid rgba(255,255,255,0.05);">
+        <div class="table-wrapper" style="background:rgba(255,255,255,0.01); border:1px solid rgba(255,255,255,0.05); border-radius:16px; overflow:hidden;">
+            <table class="table" style="width:100%; text-align:left; border-collapse:collapse;">
+                <thead style="background:rgba(255,255,255,0.03);">
                     <tr>
                         ${thRow}
                     </tr>
@@ -91,86 +96,80 @@ export const AthletesView = {
      */
     athleteCard: (athlete, isSelected = false, variant = 'anagrafica') => {
         const initials = Utils.initials(athlete.full_name);
-        const color = `hsl(${Array.from(athlete.full_name).reduce((acc, char) => acc + char.charCodeAt(0), 0) % 360}, 70%, 50%)`;
-        const photo = athlete.photo_path 
-            ? `<img src="${Utils.escapeHtml(athlete.photo_path)}" alt="${Utils.escapeHtml(athlete.full_name)}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;">`
-            : `<div style="width:36px;height:36px;border-radius:50%;background:${color};display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;color:#fff;flex-shrink:0;">${initials}</div>`;
+        const nameColor = `hsl(${Array.from(athlete.full_name).reduce((acc, char) => acc + char.charCodeAt(0), 0) % 360}, 60%, 65%)`;
+        const profilePhoto = athlete.photo_path 
+            ? `<img src="${Utils.escapeHtml(athlete.photo_path)}" alt="${Utils.escapeHtml(athlete.full_name)}" style="width:40px; height:40px; border-radius:12px; object-fit:cover; border:1px solid rgba(255,255,255,0.1);">`
+            : `<div style="width:40px; height:40px; border-radius:12px; background:linear-gradient(135deg, ${nameColor}, rgba(0,0,0,0.5)); display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; color:#fff; border:1px solid rgba(255,255,255,0.1);">${initials}</div>`;
         
-        let medicalStatusHtml = '<span style="color:var(--color-text-muted)">—</span>';
+        let medStatusHtml = '<span style="color:rgba(255,255,255,0.2)">—</span>';
         if (athlete.medical_cert_expires_at) {
-            const days = Utils.daysUntil(athlete.medical_cert_expires_at);
-            const dateStr = Utils.formatDate(athlete.medical_cert_expires_at);
-            if (days > 30) {
-                medicalStatusHtml = `<span style="color:var(--color-success)">${dateStr} <i class="ph ph-check-circle"></i></span>`;
-            } else if (days >= 0) {
-                medicalStatusHtml = `<span style="color:var(--color-warning)">${dateStr} <i class="ph ph-warning"></i></span>`;
+            const daysIdx = Utils.daysUntil(athlete.medical_cert_expires_at);
+            const dateFmt = Utils.formatDate(athlete.medical_cert_expires_at);
+            if (daysIdx > 30) {
+                medStatusHtml = `<div style="display:flex; align-items:center; gap:6px; color:var(--color-success); font-weight:600; font-size:13px;">${dateFmt} <i class="ph ph-check-circle-fill"></i></div>`;
+            } else if (daysIdx >= 0) {
+                medStatusHtml = `<div style="display:flex; align-items:center; gap:6px; color:var(--color-warning); font-weight:600; font-size:13px;">${dateFmt} <i class="ph ph-warning-fill"></i></div>`;
             } else {
-                medicalStatusHtml = `<span style="color:var(--color-pink)">${dateStr} <i class="ph ph-x-circle"></i></span>`;
+                medStatusHtml = `<div style="display:flex; align-items:center; gap:6px; color:var(--color-pink); font-weight:600; font-size:13px;">${dateFmt} <i class="ph ph-x-circle-fill"></i></div>`;
             }
         }
 
-        let cellsHtml = ``;
+        const tdStyle = `padding:14px 16px; font-size:14px; color:rgba(255,255,255,0.7); vertical-align:middle;`;
+
+        let extraCells = ``;
         if (variant === 'documenti') {
-            const renderDocCell = (hasDocFront, hasDocBack = false) => {
-                const complete = hasDocFront && (hasDocBack !== null ? hasDocBack : true);
-                if (complete) return `<span style="color:var(--color-success);font-size:18px;"><i class="ph ph-check-circle"></i></span>`;
-                return `<span style="color:var(--color-pink);font-size:18px;"><i class="ph ph-warning-circle"></i></span>`;
-            };
-            cellsHtml = `
-                <td style="padding:12px 16px;font-size:13px;color:var(--color-silver);">${Utils.escapeHtml(athlete.team_name)}</td>
-                <td style="padding:12px 16px;text-align:center;">${renderDocCell(athlete.id_doc_front_file_path, athlete.id_doc_back_file_path !== undefined ? athlete.id_doc_back_file_path : athlete.id_doc_front_file_path)}</td>
-                <td style="padding:12px 16px;text-align:center;">${renderDocCell(athlete.cf_doc_front_file_path, athlete.cf_doc_back_file_path !== undefined ? athlete.cf_doc_back_file_path : athlete.cf_doc_front_file_path)}</td>
-                <td style="padding:12px 16px;text-align:center;">${renderDocCell(athlete.contract_file_path)}</td>
-                <td style="padding:12px 16px;font-size:13px;">${medicalStatusHtml}</td>
+            const getDocSymbol = (path) => path 
+                ? `<i class="ph ph-check-circle-fill" style="color:var(--color-success); font-size:20px;"></i>` 
+                : `<i class="ph ph-circle" style="color:rgba(255,255,255,0.1); font-size:20px;"></i>`;
+            
+            extraCells = `
+                <td style="${tdStyle} color:rgba(255,255,255,0.4); font-size:13px;">${Utils.escapeHtml(athlete.team_name)}</td>
+                <td style="${tdStyle} text-align:center;">${getDocSymbol(athlete.id_doc_front_file_path)}</td>
+                <td style="${tdStyle} text-align:center;">${getDocSymbol(athlete.cf_doc_front_file_path)}</td>
+                <td style="${tdStyle} text-align:center;">${getDocSymbol(athlete.contract_file_path)}</td>
+                <td style="${tdStyle}">${medStatusHtml}</td>
             `;
         } else if (variant === 'metrics') {
-            // Parsing metrics from backend
-            let valdMetrics = {};
-            try {
-                if (athlete.latest_vald_metrics) {
-                    valdMetrics = JSON.parse(athlete.latest_vald_metrics);
-                }
-            } catch(e) {}
+            let metricsData = {};
+            try { if (athlete.latest_vald_metrics) metricsData = JSON.parse(athlete.latest_vald_metrics); } catch(e) {}
 
-            const jumpHeight = valdMetrics.JumpHeight?.Value ?? valdMetrics.JumpHeightTotal?.Value ?? null;
-            const rsimod = valdMetrics.RSIModified?.Value ?? null;
-            const brakingImp = valdMetrics.BrakingImpulse?.Value ?? valdMetrics.EccentricBrakingImpulse?.Value ?? null;
-            const testDate = athlete.latest_vald_date ? Utils.formatDate(athlete.latest_vald_date) : null;
+            const jhVal = metricsData.JumpHeight?.Value ?? metricsData.JumpHeightTotal?.Value ?? null;
+            const rsiVal = metricsData.RSIModified?.Value ?? null;
+            const testDateFmt = athlete.latest_vald_date ? Utils.formatDate(athlete.latest_vald_date) : null;
 
-            cellsHtml = `
-                <td style="padding:12px 16px;font-size:13px;color:var(--color-silver);"><i class="ph ph-shield-star"></i> ${Utils.escapeHtml(athlete.team_name)}</td>
-                <td style="padding:12px 16px;text-align:center;font-size:13px;color:var(--color-white);font-weight:600;">${jumpHeight ? jumpHeight.toFixed(1) : '—'}</td>
-                <td style="padding:12px 16px;text-align:center;font-size:13px;color:var(--color-white);font-weight:600;">${rsimod ? rsimod.toFixed(3) : '—'}</td>
-                <td style="padding:12px 16px;text-align:center;font-size:13px;color:var(--color-white);">${brakingImp ? brakingImp.toFixed(0) : '—'}</td>
-                <td style="padding:12px 16px;text-align:center;">
-                    ${testDate 
-                        ? `<span style="color:var(--color-success);font-size:12px;font-weight:600;"><i class="ph ph-calendar-check"></i> ${testDate}</span>`
-                        : `<span style="color:var(--color-text-muted);font-size:10px;text-transform:uppercase;"><i class="ph ph-link-break"></i> Mai sinc.</span>`
-                    }
-                </td>
+            extraCells = `
+                <td style="${tdStyle} color:rgba(255,255,255,0.4); font-size:13px;"><i class="ph ph-shield-star"></i> ${Utils.escapeHtml(athlete.team_name)}</td>
+                <td style="${tdStyle} text-align:center; font-weight:700; color:var(--color-white);">${jhVal ? jhVal.toFixed(1) : '—'}</td>
+                <td style="${tdStyle} text-align:center; font-weight:700; color:var(--color-pink);">${rsiVal ? rsiVal.toFixed(3) : '—'}</td>
+                <td style="${tdStyle} text-align:center;">—</td>
+                <td style="${tdStyle} text-align:center; font-size:12px;">${testDateFmt || '<span style="opacity:0.3">Mai</span>'}</td>
             `;
         } else {
-            cellsHtml = `
-                <td style="padding:12px 16px;font-size:13px;color:var(--color-silver);">${Utils.escapeHtml(athlete.role || '—')}</td>
-                <td style="padding:12px 16px;font-size:13px;color:var(--color-silver);"><i class="ph ph-shield-star"></i> ${Utils.escapeHtml(athlete.team_name)}</td>
-                <td style="padding:12px 16px;font-size:13px;color:var(--color-silver);">${athlete.birth_date ? Utils.formatDate(athlete.birth_date) : '<span style="color:var(--color-text-muted)">—</span>'}</td>
-                <td style="padding:12px 16px;font-size:13px;">${medicalStatusHtml}</td>
+            extraCells = `
+                <td style="${tdStyle} color:var(--color-white); font-weight:500;">${Utils.escapeHtml(athlete.role || '—')}</td>
+                <td style="${tdStyle} color:rgba(255,255,255,0.4); font-size:13px;"><i class="ph ph-shield-star"></i> ${Utils.escapeHtml(athlete.team_name)}</td>
+                <td style="${tdStyle}">${athlete.birth_date ? Utils.formatDate(athlete.birth_date) : '—'}</td>
+                <td style="${tdStyle}">${medStatusHtml}</td>
             `;
         }
 
         return `
-            <tr class="athlete-card ${isSelected ? 'selected' : ''}" data-id="${athlete.id}" style="cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.05);transition:background 0.2s;">
+            <tr class="athlete-card ${isSelected ? 'selected' : ''}" data-id="${athlete.id}" style="cursor:pointer; border-bottom:1px solid rgba(255,255,255,0.03); transition:background 0.2s;">
                 <td style="padding:12px 16px;">
-                    <div style="display:flex;align-items:center;gap:12px;">
-                        ${isSelected ? '<div style="color:var(--color-primary);"><i class="ph ph-check-circle" style="font-size:18px;"></i></div>' : ''}
-                        ${photo}
+                    <div style="display:flex; align-items:center; gap:14px;">
+                        ${profilePhoto}
                         <div>
-                            <div style="font-weight:600;font-size:14px;color:var(--color-white);">${Utils.escapeHtml(athlete.full_name)}</div>
-                            <div style="font-size:11px;color:var(--color-text-muted);"><i class="ph ph-hashtag"></i> ${athlete.jersey_number || '—'}</div>
+                            <div style="font-weight:700; font-size:15px; color:var(--color-white); line-height:1.2;">${Utils.escapeHtml(athlete.full_name)}</div>
+                            <div style="font-size:12px; color:rgba(255,255,255,0.3); margin-top:2px;"><i class="ph ph-hashtag"></i> ${athlete.jersey_number || '—'}</div>
                         </div>
                     </div>
                 </td>
-                ${cellsHtml}
+                ${extraCells}
+                <td style="padding:12px 16px; text-align:right;">
+                    <button class="btn btn-ghost btn-xs quick-edit-btn" title="Modifica Rapida" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05);">
+                        <i class="ph ph-pencil-simple" style="font-size:16px;"></i>
+                    </button>
+                </td>
             </tr>
         `;
     },
@@ -184,12 +183,18 @@ export const AthletesView = {
             : `<div class="athlete-hero-photo" style="display:flex;align-items:center;justify-content:center;background:var(--color-bg-card);"><span style="font-family:var(--font-display);font-size:5rem;font-weight:700;color:rgba(255,255,255,0.1);">${Utils.initials(athlete.full_name)}</span></div>`;
 
         return `
+            <div style="padding: 0 var(--sp-4) var(--sp-4); display:flex; justify-content:space-between; align-items:center;">
+                <button class="btn btn-default btn-sm" id="back-to-list" style="background:rgba(255,255,255,0.05); border-color:rgba(255,255,255,0.1);">
+                    <i class="ph ph-arrow-left"></i> Torna alla lista
+                </button>
+                <button class="btn btn-primary btn-sm" id="edit-athlete-btn" style="box-shadow: 0 4px 12px rgba(255, 0, 122, 0.2);">
+                    <i class="ph ph-pencil-simple"></i> Modifica Atleta
+                </button>
+            </div>
+
             <div class="athlete-hero">
                 ${photoHtml}
                 <div class="athlete-hero-overlay">
-                    <button class="btn btn-default btn-sm" id="back-to-list" style="margin-bottom:var(--sp-4);background:rgba(0,0,0,0.5);border-color:rgba(255,255,255,0.1);">
-                        <i class="ph ph-arrow-left"></i> Torna alla lista
-                    </button>
                     <div class="profile-main-info">
                         <h1 class="profile-name" style="font-size:clamp(2.5rem, 6vw, 4.5rem);line-height:1;margin-bottom:var(--sp-2);color:var(--color-white);font-family:var(--font-display);font-weight:800;text-transform:uppercase;letter-spacing:-0.03em;">
                             ${Utils.escapeHtml(athlete.full_name)}
@@ -220,49 +225,272 @@ export const AthletesView = {
     },
 
     /**
-     * Tab: Anagrafica
+     * Tab: Anagrafica (Redesigned with logical groups and all DB fields)
      */
-    tabAnagrafica: (athlete) => `
-        <div class="profile-grid">
-            <div class="profile-col">
-                <div class="card glass-card h-full">
-                    <h3 class="section-title"><i class="ph ph-info"></i> Informazioni Personali</h3>
-                    <div class="info-list">
-                        <div class="info-item"><span class="label">Nato il:</span> <span class="value">${Utils.formatDate(athlete.birth_date)} a ${Utils.escapeHtml(athlete.birth_place || '—')}</span></div>
-                        <div class="info-item"><span class="label">Codice Fiscale:</span> <span class="value">${Utils.escapeHtml(athlete.fiscal_code || '—')}</span></div>
-                        <div class="info-item"><span class="label">Indirizzo:</span> <span class="value">${Utils.escapeHtml(athlete.residence_address || '—')}, ${Utils.escapeHtml(athlete.residence_city || '—')}</span></div>
-                        <div class="info-item"><span class="label">Email:</span> <span class="value">${Utils.escapeHtml(athlete.email || '—')}</span></div>
-                        <div class="info-item"><span class="label">Cellulare:</span> <span class="value">${Utils.escapeHtml(athlete.phone || '—')}</span></div>
-                    </div>
-                </div>
-            </div>
-            <div class="profile-col">
-                <div class="card glass-card h-full">
-                    <h3 class="section-title"><i class="ph ph-users-four"></i> Contatti Genitori</h3>
-                    <div class="info-list">
-                        <div class="info-item"><span class="label">Referente:</span> <span class="value">${Utils.escapeHtml(athlete.parent_contact || '—')}</span></div>
-                        <div class="info-item"><span class="label">Cellulare:</span> <span class="value">${Utils.escapeHtml(athlete.parent_phone || '—')}</span></div>
-                    </div>
-                    <div class="medical-info-box" style="margin-top:var(--sp-4);">
-                        <h4 style="font-size:11px;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:8px;">Stato Medico</h4>
-                        <div class="medical-cert-card" style="background:rgba(255,255,255,0.03);padding:12px;border-radius:var(--radius);border:1px solid var(--color-border);">
-                            <div style="font-size:13px;font-weight:600;margin-bottom:4px;">Certificato: ${Utils.escapeHtml(athlete.medical_cert_type || 'Agonistico')}</div>
-                            <div style="font-size:12px;color:var(--color-pink);">Scadenza: ${Utils.formatDate(athlete.medical_cert_expires_at) || '—'}</div>
+    tabAnagrafica: (athlete, canEdit = true) => {
+        // Calcolo giorni alla scadenza medica per la barra visuale
+        const daysToMetric = athlete.medical_cert_expires_at ? Utils.daysUntil(athlete.medical_cert_expires_at) : -1;
+        const medicalPercent = Math.max(0, Math.min(100, (daysToMetric / 365) * 100)); // Approssimazione annuale
+        const medicalColor = daysToMetric > 30 ? 'var(--color-success)' : (daysToMetric >= 0 ? 'var(--color-warning)' : 'var(--color-pink)');
+
+        const sections = [
+            {
+                title: "Identità & Bio",
+                icon: "ph-user-focus",
+                items: [
+                    { label: "Data di nascita", value: athlete.birth_date ? Utils.formatDate(athlete.birth_date) : null, icon: "ph-calendar" },
+                    { label: "Luogo di nascita", value: athlete.birth_place, icon: "ph-map-pin" },
+                    { label: "Codice Fiscale", value: athlete.fiscal_code, icon: "ph-identification-card", copy: true },
+                    { label: "Documento ID", value: athlete.identity_document, icon: "ph-cardholder" },
+                ]
+            },
+            {
+                title: "Squadra & Ruolo",
+                icon: "ph-volleyball",
+                items: [
+                    { label: "Ruolo tecnico", value: athlete.role, icon: "ph-shield-check" },
+                    { label: "Numero Maglia", value: athlete.jersey_number ? `#${athlete.jersey_number}` : null, icon: "ph-hashtag" },
+                    { label: "ID Federale", value: athlete.federal_id, icon: "ph-barcode" },
+                    { label: "Squadra attuale", value: athlete.team_name, icon: "ph-users-three" },
+                ]
+            },
+            {
+                title: "Contatti & Residenza",
+                icon: "ph-address-book",
+                items: [
+                    { label: "Email Atleta", value: athlete.email, icon: "ph-envelope-simple", copy: true },
+                    { label: "Cellulare", value: athlete.phone, icon: "ph-phone" },
+                    { label: "Indirizzo", value: athlete.residence_address, icon: "ph-map-trifold" },
+                    { label: "Città / CAP", value: athlete.residence_city, icon: "ph-buildings" },
+                ]
+            },
+            {
+                title: "Famiglia & Referenti",
+                icon: "ph-users-four",
+                items: [
+                    { label: "Genitore Referente", value: athlete.parent_contact, icon: "ph-user-circle" },
+                    { label: "Cellulare Genitore", value: athlete.parent_phone, icon: "ph-phone-call" },
+                    { label: "Taglia Kit", value: athlete.shirt_size ? `Taglia ${athlete.shirt_size}` : null, icon: "ph-t-shirt" },
+                    { label: "Scarpe", value: athlete.shoe_size, icon: "ph-sneaker-move" },
+                ]
+            }
+        ];
+
+        const athletePhoto = athlete.photo_path 
+            ? `<img src="${Utils.escapeHtml(athlete.photo_path)}" alt="${athlete.full_name}">`
+            : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.02);color:rgba(255,255,255,0.1);font-size:64px;font-weight:800;">${Utils.initials(athlete.full_name)}</div>`;
+
+        return `
+            <div class="anagrafica-premium-container">
+                <!-- Sidebar: Quick Info & Status -->
+                <aside class="profile-info-sidebar">
+                    <div class="sidebar-glass-card" style="padding:12px;">
+                        <div class="profile-photo-container">
+                            ${athletePhoto}
+                            <div class="photo-overlay-badge">#${athlete.jersey_number || '—'}</div>
+                        </div>
+                        <div style="text-align:center; padding:12px 0 8px;">
+                            <h2 style="font-size:20px; font-weight:800; color:var(--color-white); margin:0;">${athlete.first_name}</h2>
+                            <p style="font-size:14px; color:rgba(255,255,255,0.4); margin:4px 0 0; text-transform:uppercase; letter-spacing:0.05em;">${athlete.last_name}</p>
                         </div>
                     </div>
-                </div>
+
+                    <div class="sidebar-glass-card">
+                        <div class="quick-stats-grid">
+                            <div class="stat-item">
+                                <div class="stat-label">Altezza</div>
+                                <div class="stat-value">${athlete.height_cm ? athlete.height_cm + ' cm' : '—'}</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Peso</div>
+                                <div class="stat-value">${athlete.weight_kg ? athlete.weight_kg + ' kg' : '—'}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="sidebar-glass-card ${athlete.is_active ? 'indicator-active' : 'indicator-inactive'} status-indicator-card">
+                        <div class="indicator-icon">
+                            <i class="ph ph-${athlete.is_active ? 'check-circle' : 'prohibit'}"></i>
+                        </div>
+                        <div class="indicator-text" style="flex:1;">
+                            <h4>Stato Atleta</h4>
+                            <p>${athlete.is_active ? 'Attiva e tesserata' : 'Inattiva system-wide'}</p>
+                        </div>
+                        ${canEdit ? `
+                            <button id="toggle-active-btn" class="btn btn-ghost btn-xs" style="padding:4px; min-height:auto;">
+                                <i class="ph ph-arrows-counter-clockwise"></i>
+                            </button>
+                        ` : ''}
+                    </div>
+
+                    <div class="sidebar-glass-card">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
+                            <div class="indicator-text">
+                                <h4 style="color:rgba(255,255,255,0.6); font-size:11px; text-transform:uppercase; letter-spacing:0.05em;">Certificato Medico</h4>
+                                <h3 style="font-size:14px; color:var(--color-white); margin:4px 0;">${athlete.medical_cert_type || 'Agonistico'}</h3>
+                            </div>
+                            <i class="ph ph-shield-check" style="font-size:24px; color:${medicalColor}; opacity:0.8;"></i>
+                        </div>
+                        
+                        <div class="expiry-visual">
+                            <div class="expiry-bar-bg">
+                                <div class="expiry-bar-fill" style="width:${medicalPercent}%; background:${medicalColor}; box-shadow: 0 0 10px ${medicalColor}44;"></div>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:600; color:${medicalColor};">
+                                <span>${athlete.medical_cert_expires_at ? Utils.formatDate(athlete.medical_cert_expires_at) : 'Dato mancante'}</span>
+                                <span>${daysToMetric >= 0 ? daysToMetric + ' gg' : 'SCADUTO'}</span>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+
+                <!-- Main Content: Detailed Details -->
+                <main class="profile-details-main">
+                    ${sections.map(section => `
+                        <div class="detail-section">
+                            <div class="section-header-premium">
+                                <i class="ph ${section.icon}"></i>
+                                <h2>${section.title}</h2>
+                            </div>
+                            <div class="details-grid-premium">
+                                ${section.items.map(item => `
+                                    <div class="detail-item-premium">
+                                        <div class="detail-item-label">
+                                            <i class="ph ${item.icon}"></i>
+                                            <span>${item.label}</span>
+                                        </div>
+                                        <div class="detail-item-value">
+                                            <span>${Utils.escapeHtml(item.value || '—')}</span>
+                                            ${item.copy && item.value ? `
+                                                <button class="btn btn-ghost btn-xs copy-btn-mini" onclick="navigator.clipboard.writeText('${item.value}'); UI.toast('Copiato!')" title="Copia">
+                                                    <i class="ph ph-copy" style="font-size:14px;"></i>
+                                                </button>
+                                            ` : ''}
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `).join('')}
+                </main>
             </div>
-        </div>
-    `,
+        `;
+    },
+
+    /**
+     * Form per l'inserimento o modifica di un atleta
+     */
+    athleteForm: (athlete = null, teams = []) => {
+        const isEdit = !!athlete;
+        const title = isEdit ? `Modifica ${athlete.full_name}` : "Nuova Atleta";
+        const btnLabel = isEdit ? "SALVA MODIFICHE" : "CREA ATLETA";
+        
+        // Seleziona i team attuali dell'atleta (solo se in editing)
+        const currentTeamIds = athlete ? (athlete.team_ids || [athlete.team_id]) : [];
+
+        return `
+            <div class="form-container card glass-card" style="max-width:900px;margin:0 auto;padding:32px;border:1px solid rgba(255,255,255,0.1);">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:32px;">
+                    <h2 style="font-family:var(--font-display);font-size:24px;color:var(--color-white);margin:0;"><i class="ph ph-user-circle-plus"></i> ${title}</h2>
+                    <button class="btn btn-ghost" id="cancel-form"><i class="ph ph-x"></i> ANNULLA</button>
+                </div>
+
+                <form id="athlete-edit-form">
+                    <input type="hidden" name="id" value="${athlete?.id || ''}">
+                    
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:32px;">
+                        <!-- Sezione 1: Identità -->
+                        <div style="display:flex;flex-direction:column;gap:16px;">
+                            <h4 style="font-size:12px;text-transform:uppercase;color:var(--color-pink);letter-spacing:0.1em;border-bottom:1px solid rgba(255,255,255,0.05);padding-bottom:8px;">Identità & Bio</h4>
+                            <div class="form-group"><label class="form-label">Nome *</label><input name="first_name" class="form-input" value="${Utils.escapeHtml(athlete?.first_name || '')}" required></div>
+                            <div class="form-group"><label class="form-label">Cognome *</label><input name="last_name" class="form-input" value="${Utils.escapeHtml(athlete?.last_name || '')}" required></div>
+                            <div class="form-grid">
+                                <div class="form-group"><label class="form-label">Data Nascita</label><input name="birth_date" class="form-input" type="date" value="${athlete?.birth_date || ''}"></div>
+                                <div class="form-group"><label class="form-label">Luogo Nascita</label><input name="birth_place" class="form-input" value="${Utils.escapeHtml(athlete?.birth_place || '')}"></div>
+                            </div>
+                            <div class="form-group"><label class="form-label">Codice Fiscale</label><input name="fiscal_code" class="form-input" placeholder="ABCDEF12G34H567I" maxlength="16" style="text-transform:uppercase;" value="${Utils.escapeHtml(athlete?.fiscal_code || '')}"></div>
+                            <div class="form-group"><label class="form-label">Documento Identità (Nr.)</label><input name="identity_document" class="form-input" value="${Utils.escapeHtml(athlete?.identity_document || '')}"></div>
+                        </div>
+
+                        <!-- Sezione 2: Sport & Squadra -->
+                        <div style="display:flex;flex-direction:column;gap:16px;">
+                            <h4 style="font-size:12px;text-transform:uppercase;color:var(--color-primary);letter-spacing:0.1em;border-bottom:1px solid rgba(255,255,255,0.05);padding-bottom:8px;">Inquadramento Sportivo</h4>
+                            <div class="form-group">
+                                <label class="form-label">Squadre / Stagioni *</label>
+                                <div id="form-team-panel" class="multi-team-panel" style="max-height:160px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding:10px;background:rgba(255,255,255,0.04);border:1px solid var(--color-border);border-radius:var(--radius);">
+                                    ${teams.map(t => {
+                                        const isSelected = currentTeamIds.includes(t.id);
+                                        return `
+                                            <label class="multi-team-option ${isSelected ? 'selected' : ''}" for="fe-team-${t.id}">
+                                                <input type="checkbox" name="team_season_ids[]" id="fe-team-${t.id}" class="fe-team-cb" value="${t.id}" ${isSelected ? 'checked' : ''} style="display:none;">
+                                                <span class="multi-team-label">${Utils.escapeHtml(t.name)} — ${Utils.escapeHtml(t.season)}</span>
+                                            </label>
+                                        `;
+                                    }).join('')}
+                                </div>
+                            </div>
+                            <div class="form-grid">
+                                <div class="form-group"><label class="form-label">Ruolo</label><input name="role" class="form-input" value="${Utils.escapeHtml(athlete?.role || '')}"></div>
+                                <div class="form-group"><label class="form-label">Numero Maglia</label><input name="jersey_number" class="form-input" type="number" value="${athlete?.jersey_number || ''}"></div>
+                            </div>
+                            <div class="form-group"><label class="form-label">ID Federale (FIPAV)</label><input name="federal_id" class="form-input" value="${Utils.escapeHtml(athlete?.federal_id || '')}"></div>
+                        </div>
+                    </div>
+
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:32px;">
+                        <!-- Sezione 3: Contatti -->
+                        <div style="display:flex;flex-direction:column;gap:16px;">
+                            <h4 style="font-size:12px;text-transform:uppercase;color:var(--color-text-muted);letter-spacing:0.1em;border-bottom:1px solid rgba(255,255,255,0.05);padding-bottom:8px;">Contatti</h4>
+                            <div class="form-group"><label class="form-label">Email Atleta</label><input name="email" class="form-input" type="email" value="${Utils.escapeHtml(athlete?.email || '')}"></div>
+                            <div class="form-group"><label class="form-label">Cellulare Atleta</label><input name="phone" class="form-input" type="tel" value="${Utils.escapeHtml(athlete?.phone || '')}"></div>
+                            <div class="form-group"><label class="form-label">Indirizzo Residenza</label><input name="residence_address" class="form-input" value="${Utils.escapeHtml(athlete?.residence_address || '')}"></div>
+                            <div class="form-group"><label class="form-label">Città</label><input name="residence_city" class="form-input" value="${Utils.escapeHtml(athlete?.residence_city || '')}"></div>
+                        </div>
+
+                        <!-- Sezione 4: Kit & Taglie -->
+                        <div style="display:flex;flex-direction:column;gap:16px;">
+                            <h4 style="font-size:12px;text-transform:uppercase;color:var(--color-text-muted);letter-spacing:0.1em;border-bottom:1px solid rgba(255,255,255,0.05);padding-bottom:8px;">Kit & Stato Medico</h4>
+                            <div class="form-grid">
+                                <div class="form-group"><label class="form-label">Taglia Maglia</label><input name="shirt_size" class="form-input" placeholder="es. M o S" value="${Utils.escapeHtml(athlete?.shirt_size || '')}"></div>
+                                <div class="form-group"><label class="form-label">Taglia Scarpe</label><input name="shoe_size" class="form-input" placeholder="es. 42" value="${Utils.escapeHtml(athlete?.shoe_size || '')}"></div>
+                            </div>
+                            <div class="form-grid">
+                                <div class="form-group"><label class="form-label">Altezza (cm)</label><input name="height_cm" class="form-input" type="number" value="${athlete?.height_cm || ''}"></div>
+                                <div class="form-group"><label class="form-label">Peso (kg)</label><input name="weight_kg" class="form-input" type="number" step="0.1" value="${athlete?.weight_kg || ''}"></div>
+                            </div>
+                            <div class="form-group"><label class="form-label">Scadenza Certificato Medico</label><input name="medical_cert_expires_at" class="form-input" type="date" value="${athlete?.medical_cert_expires_at || ''}"></div>
+                            <div class="form-group"><label class="form-label">Nome Genitore Referente</label><input name="parent_contact" class="form-input" value="${Utils.escapeHtml(athlete?.parent_contact || '')}"></div>
+                            <div class="form-group"><label class="form-label">Cellulare Genitore</label><input name="parent_phone" class="form-input" type="tel" value="${Utils.escapeHtml(athlete?.parent_phone || '')}"></div>
+                        </div>
+                    </div>
+
+                    <div id="form-error" class="form-error hidden" style="margin-bottom:20px;"></div>
+
+                    <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:40px;padding-top:24px;border-top:1px solid rgba(255,255,255,0.1);">
+                        <button type="button" class="btn btn-ghost" id="cancel-form-btn">ANNULLA</button>
+                        <button type="submit" class="btn btn-primary" id="save-athlete-btn" style="padding: 12px 32px;">${btnLabel}</button>
+                    </div>
+                </form>
+            </div>
+        `;
+    },
 
     /**
      * Tab: Pagamenti
      */
     tabPagamenti: (athlete) => `
-        <div class="card p-6" style="text-align:center;color:var(--color-text-muted);">
-            <i class="ph ph-currency-eur" style="font-size:3rem;margin-bottom:1rem;color:var(--color-text-muted);"></i>
-            <h3>Modulo Pagamenti in arrivo</h3>
-            <p>Lo storico dei pagamenti e delle rate sarà disponibile prossimamente.</p>
+        <div class="card glass-card" style="padding:60px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:24px; border:1px dashed rgba(255,255,255,0.1); background:rgba(255,255,255,0.01);">
+            <div style="width:80px; height:80px; border-radius:50%; background:rgba(255,255,255,0.03); display:flex; align-items:center; justify-content:center; color:rgba(255,255,255,0.2);">
+                <i class="ph ph-currency-eur" style="font-size:40px;"></i>
+            </div>
+            <div>
+                <h3 style="font-family:var(--font-display); font-size:20px; color:var(--color-white); margin-bottom:8px;">Modulo Pagamenti & Scadenze</h3>
+                <p style="color:var(--color-text-muted); max-width:400px; margin:0 auto; line-height:1.6;">Lo storico dei versamenti, le rate in scadenza e la gestione contabile dell'atleta saranno disponibili nel prossimo modulo di aggiornamento.</p>
+            </div>
+            <div style="display:flex; gap:12px; margin-top:12px;">
+                <span class="badge badge-white" style="opacity:0.4; font-size:10px;">PROSSIMAMENTE</span>
+                <span class="badge badge-white" style="opacity:0.4; font-size:10px;">GESTIONALE CONTABILE</span>
+            </div>
         </div>
     `,
 
@@ -271,29 +499,50 @@ export const AthletesView = {
      */
     tabDocumenti: (athlete, canUpload = false) => {
         const docs = [
-            { id: 'contract-file', label: 'Contratto / Iscrizione', path: athlete.contract_file_path },
-            { id: 'id-doc-front', label: 'Documento ID (Fronte)', path: athlete.id_doc_front_file_path },
-            { id: 'id-doc-back', label: 'Documento ID (Retro)', path: athlete.id_doc_back_file_path },
-            { id: 'cf-doc-front', label: 'Codice Fiscale (Fronte)', path: athlete.cf_doc_front_file_path },
-            { id: 'cf-doc-back', label: 'Codice Fiscale (Retro)', path: athlete.cf_doc_back_file_path },
-            { id: 'med-cert', label: 'Certificato Medico', path: athlete.medical_cert_file_path }
+            { id: 'contract-file', label: 'Contratto / Iscrizione', path: athlete.contract_file_path, icon: 'ph-file-pdf' },
+            { id: 'id-doc-front', label: 'Documento ID (Fronte)', path: athlete.id_doc_front_file_path, icon: 'ph-identification-badge' },
+            { id: 'id-doc-back', label: 'Documento ID (Retro)', path: athlete.id_doc_back_file_path, icon: 'ph-identification-badge' },
+            { id: 'cf-doc-front', label: 'Codice Fiscale (Fronte)', path: athlete.cf_doc_front_file_path, icon: 'ph-identification-card' },
+            { id: 'cf-doc-back', label: 'Codice Fiscale (Retro)', path: athlete.cf_doc_back_file_path, icon: 'ph-identification-card' },
+            { id: 'med-cert', label: 'Certificato Medico', path: athlete.medical_cert_file_path, icon: 'ph-article-ny-times' }
         ];
 
         return `
-            <div class="docs-grid">
-                ${docs.map(doc => `
-                    <div class="doc-card card">
-                        <div class="doc-icon"><i class="ph ph-file-pdf"></i></div>
-                        <div class="doc-info">
-                            <span class="doc-label">${doc.label}</span>
-                            <span class="doc-status">${doc.path ? '✅ Caricato' : '❌ Mancante'}</span>
+            <div class="docs-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:20px;">
+                ${docs.map(doc => {
+                    const hasFile = !!doc.path;
+                    return `
+                        <div class="doc-card card glass-card" style="padding:24px; display:flex; flex-direction:column; gap:20px; border:1px solid ${hasFile ? 'rgba(0, 230, 118, 0.15)' : 'rgba(255,255,255,0.05)'}; background:${hasFile ? 'rgba(0, 230, 118, 0.02)' : 'rgba(255,255,255,0.01)'}; transition: transform 0.2s, background 0.2s;">
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                                <div style="width:48px; height:48px; border-radius:12px; background:rgba(255,255,255,0.04); display:flex; align-items:center; justify-content:center; color:${hasFile ? 'var(--color-success)' : 'rgba(255,255,255,0.2)'};">
+                                    <i class="ph ${doc.icon}" style="font-size:24px;"></i>
+                                </div>
+                                <span class="badge ${hasFile ? 'badge-success' : 'badge-pink'}" style="font-size:10px; padding:4px 10px;">
+                                    ${hasFile ? 'CARICATO' : 'MANCANTE'}
+                                </span>
+                            </div>
+                            
+                            <div>
+                                <h4 style="font-size:14px; font-weight:600; color:var(--color-white); margin-bottom:4px;">${doc.label}</h4>
+                                <p style="font-size:11px; color:var(--color-text-muted);">${hasFile ? 'Documento verificato e pronto per la consultazione.' : 'Il documento non è ancora stato caricato nel sistema.'}</p>
+                            </div>
+
+                            <div style="display:flex; gap:10px; margin-top:auto; padding-top:16px; border-top:1px solid rgba(255,255,255,0.05);">
+                                ${hasFile ? `
+                                    <button class="btn btn-default btn-xs" style="flex:1; background:rgba(0, 230, 118, 0.1); border-color:rgba(0, 230, 118, 0.2); color:var(--color-success);" onclick="window.open('api/?module=athletes&action=downloadDoc&id=${athlete.id}&field=${doc.id.replace(/-/g,'_')}_path', '_blank')">
+                                        <i class="ph ph-eye"></i> Visualizza
+                                    </button>
+                                ` : ''}
+                                ${canUpload ? `
+                                    <button class="btn btn-ghost btn-xs" id="upload-${doc.id}-btn" style="flex:${hasFile ? '0.5' : '1'}; background:rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.1);">
+                                        <i class="ph ph-upload-simple"></i> ${hasFile ? 'Sostituisci' : 'Carica PDF/Foto'}
+                                    </button>
+                                    <input type="file" id="upload-${doc.id}-input" style="display:none;" accept=".pdf,image/*">
+                                ` : ''}
+                            </div>
                         </div>
-                        <div class="doc-actions">
-                            ${doc.path ? `<button class="btn btn-ghost btn-xs" onclick="window.open('api/?module=athletes&action=downloadDoc&id=${athlete.id}&field=${doc.id.replace(/-/g,'_')}_path', '_blank')"><i class="ph ph-eye"></i></button>` : ''}
-                            ${canUpload ? `<button class="btn btn-ghost btn-xs" id="upload-${doc.id}-btn"><i class="ph ph-upload-simple"></i></button><input type="file" id="upload-${doc.id}-input" style="display:none;" accept=".pdf,image/*">` : ''}
-                        </div>
-                    </div>
-                `).join('')}
+                    `;
+                }).join('')}
             </div>
         `;
     }
