@@ -252,63 +252,88 @@ export const AthletesMetrics = {
             console.error("Errore critico in _loadValdData:", e);
             container.innerHTML = `<div class="error-box">ERROR::DATA_LOAD_FAILED ${e.message}</div>`;
         }
-    },
-
-    /**
-     * Renderizza gli SVG dell'anatomia FEMMINILE con i colori dei muscoli (Elite Precision)
-     * High-clarity SVG paths for female athletic silhouette.
+    },    /**
+     * Renderizza gli SVG dell'anatomia FEMMINILE (Elite Articulated Wireframe)
+     * High-precision anatomical silhouettes with internal 'Cyber-Blueprint' grid-lines.
      */
     _renderAnatomy(view, muscleMap = {}) {
         if (!muscleMap) muscleMap = {};
         const getStyles = (muscle) => {
             const color = muscleMap[muscle];
-            if (!color) return `class="muscle-blob"`;
-            return `class="muscle-blob active" style="--color-active:${color};"`;
+            if (!color) return `class="muscle-region" fill="rgba(0, 229, 255, 0.02)"`;
+            return `class="muscle-region active" style="--color-active:${color};"`;
         };
         
-        // Define paths for female athletic silhouette (front/back)
-        const frontBody = `M50,15 c-4,0 -7,3 -7,7 c0,3.5 2,6 5,7 c-6,3 -10,8 -11,15 c-1,6 1,12 1,18 c0,8 -3,15 -3,22 c0,10 2,20 4,30 c2,10 3,20 3,30 v60 c0,5 2,8 5,8 s5,-3 5,-8 v-60 c0,-10 1,-20 3,-30 c2,-10 4,-20 4,-30 c0,-7 -3,-14 -3,-22 c0,-6 2,-12 1,-18 c-1,-7 -5,-12 -11,-15 c3,-1 5,-3.5 5,-7 c0,-4 -3,-7 -7,-7 Z`;
-        const backBody = `M50,15 c-4,0 -7,3 -7,7 c0,3.5 2,6 5,7 c-7,3 -11,8 -12,16 c-1,7 2,13 2,20 c0,10 -4,18 -4,26 c0,12 3,24 5,36 c2,12 3,24 3,36 v50 c0,5 2,8 5,8 s5,-3 5,-8 v-50 c0,-12 1,-24 3,-36 c2,-12 5,-24 5,-36 c0,-8 -4,-16 -4,-26 c0,-7 3,-13 2,-20 c-1,-8 -5,-13 -12,-16 c3,-1 5,-3.5 5,-7 c0,-4 -3,-7 -7,-7 Z`;
+        // Elite Stylized Female Athlete Silhouette (Articulated Multi-Segment)
+        const commonStyles = `fill="none" stroke="rgba(0, 229, 255, 0.15)" stroke-width="0.5"`;
+        const skeletonLines = view === 'front' ? `
+            <line x1="50" y1="35" x2="50" y2="100" stroke="rgba(0, 229, 255, 0.08)" stroke-width="0.3" stroke-dasharray="2,2" /> <!-- Spine -->
+            <path d="M40,45 Q50,48 60,45" ${commonStyles} opacity="0.3" /> <!-- Clavicle -->
+            <path d="M42,95 Q50,98 58,95" ${commonStyles} opacity="0.3" /> <!-- Pelvic Rim -->
+            <circle cx="50" cy="22" r="7" ${commonStyles} opacity="0.2" /> <!-- Head Wireframe -->
+        ` : `
+            <line x1="50" y1="35" x2="50" y2="105" stroke="rgba(0, 229, 255, 0.08)" stroke-width="0.3" stroke-dasharray="2,2" /> <!-- Spine -->
+            <path d="M38,48 Q50,52 62,48" ${commonStyles} opacity="0.3" /> <!-- Scapula Line -->
+            <path d="M40,105 Q50,110 60,105" ${commonStyles} opacity="0.3" /> <!-- Glute Fold Line -->
+        `;
 
-        // Refined FEMALE athletic silhouette paths
+        // HIGH-PRECISION FEMALE ATHLETIC SILHOUETTE (Front)
         const femaleFrontPath = `
             M50,12 c-3.5,0 -6.5,3 -6.5,6.5 s3,6.5 6.5,6.5 s6.5,-3 6.5,-6.5 s-3,-6.5 -6.5,-6.5 
-            M43.5,19 c0,10 -4,15 -8,18 c-5,4 -8,10 -8,18 c0,15 3,25 3,40 c0,10 -2,20 -4,35 c-2,15 -3,30 -3,45 v60 c0,3 2.5,5 5,5 s5,-2 5,-5 v-60 c0,-15 1,-30 3,-45 c2,-15 4,-25 4,-35 c0,-15 3,-25 3,-40 c0,-8 -3,-14 -8,-18 c-4,-3 -8,-8 -8,-18
-            M56.5,19 c0,10 4,15 8,18 c5,4 8,10 8,18 c0,15 -3,25 -3,40 c0,10 2,20 4,35 c2,15 3,30 3,45 v60 c0,3 -2.5,5 -5,5 s-5,-2 -5,-5 v-60 c0,-15 -1,-30 -3,-45 c2,-15 -4,-25 -4,-35 c0,-15 -3,-25 -3,-40 c0,-8 3,-14 8,-18 c4,-3 8,-8 8,-18
+            M43.5,23 c-6,1 -10,6 -13,12 c-3,7 -2,15 -2,25 c0,15 -2,25 -2,40 c0,15 2,30 4,45 c2,15 3,30 3,45 v45 c0,4 2,6 5,6 s5,-2 5,-6 v-45 m-10,0 v45 c0,4 2,6 5,6 s5,-2 5,-6 v-45 c0,-15 1,-30 3,-45 c2,-15 4,-30 4,-45 c0,-15 -3,-25 -3,-40 c0,-10 1,-18 -2,-25 c-3,-6 -7,-11 -13,-12
+            M50,33 c5,0 9,4 12,10 c3,6 4,14 4,22 c0,8 -1,16 -2,24 c-1,8 -2.5,16 -2.5,24 c0,12 2,24 2,36 v50 c0,4 -2,6 -5,6 s-5,-2 -5,-6 v-50 c-1,-12 -2,-24 -2,-36 c0,-8 1.5,-16 2.5,-24 c1,-8 2,-16 2,-24 c0,-8 -1,-16 -4,-22 c-3,-6 -7,-10 -12,-10
+        `;
+
+        // HIGH-PRECISION FEMALE ATHLETIC SILHOUETTE (Back)
+        const femaleBackPath = `
+            M50,12 c-3.5,0 -6.5,3 -6.5,6.5 s3,6.5 6.5,6.5 s6.5,-3 6.5,-6.5 s-3,-6.5 -6.5,-6.5 
+            M43.5,23 c-7,2 -11,8 -13,16 c-2,8 -1,18 -1,28 c0,15 -3,25 -3,35 c0,20 3,40 5,60 c2,20 3,40 3,60 v30 c0,4 2,6 5,6 s5,-2 5,-6 v-30 c0,-20 1,-40 3,-60 c2,-20 5,-40 5,-60 c0,-10 -3,-20 -3,-35 c0,-10 1,-20 -1,-28 c-2,-8 -6,-14 -13,-16
         `;
 
         return `
             <div class="anatomy-container ${view}" style="width:100%; height:100%; position:relative; overflow:visible;">
-                <svg viewBox="0 0 100 240" style="width:100%; height:100%; filter: drop-shadow(0 0 20px rgba(0, 229, 255, 0.05));">
+                <svg viewBox="0 0 100 240" style="width:100%; height:100%;">
                     <defs>
-                        <linearGradient id="bodyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                            <stop offset="0%" style="stop-color:rgba(0, 229, 255, 0.05);stop-opacity:1" />
-                            <stop offset="100%" style="stop-color:rgba(0, 229, 255, 0.01);stop-opacity:1" />
+                        <linearGradient id="bodyGrad${view}" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" style="stop-color:rgba(0, 229, 255, 0.08);stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:rgba(0, 229, 255, 0.02);stop-opacity:1" />
                         </linearGradient>
+                        <filter id="neonGlow" x="-50%" y="-50%" width="200%" height="200%">
+                            <feGaussianBlur stdDeviation="4" result="blur" />
+                            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                        </filter>
                     </defs>
                     
-                    <!-- High-Precision Female Silhouette -->
+                    <!-- Elite Cyber-Blueprint Skeleton -->
+                    ${skeletonLines}
+                    
+                    <!-- HIGH-PRECISION BODY SILHOUETTE -->
+                    <path d="${view === 'front' ? femaleFrontPath : femaleBackPath}" 
+                        fill="url(#bodyGrad${view})" 
+                        stroke="rgba(0, 229, 255, 0.4)" 
+                        stroke-width="0.8" 
+                        filter="url(#neonGlow)" />
+
+                    <!-- MUSCLE REGION MAPPING (Detailed Anatomical Precision) -->
                     ${view === 'front' ? `
-                        <path d="M50,15 c-4,0 -7.5,3.5 -7.5,7.5 s3.5,7.5 7.5,7.5 s7.5,-3.5 7.5,-7.5 s-3.5,-7.5 -7.5,-7.5 M42.5,23 c-8,3 -12,8 -14,15 c-2,8 -1,15 -1,25 c0,12 -3,20 -3,35 c0,15 2,30 4,45 c2,15 3,30 3,45 v45 c0,4 2,6 5,6 s5,-2 5,-6 v-45 c0,-15 1,-30 3,-45 c2,-15 4,-30 4,-45 c0,-15 -3,-23 -3,-35 c0,-10 1,-17 -1,-25 c-2,-7 -6,-12 -14,-15 M57.5,23 c8,3 12,8 14,15 c2,8 1,15 1,25 c0,12 3,20 3,35 c0,15 -2,30 -4,45 c-2,15 -3,30 -3,45 v45 c0,4 -2,6 -5,6 s-5,-2 -5,-6 v-45 c0,-15 -1,-30 -3,-45 c2,-15 -4,-30 -4,-45 c0,-15 3,-23 3,-35 c0,-10 -1,-17 1,-25 c2,-7 6,-12 14,-15" fill="none" stroke="rgba(0, 229, 255, 0.2)" stroke-width="0.8" />
-                        <path d="M50,15 c-4,0 -7.5,3.5 -7.5,7.5 s3.5,7.5 7.5,7.5 s7.5,-3.5 7.5,-7.5 s-3.5,-7.5 -7.5,-7.5 M42.5,23 c-8,3 -12,8 -14,15 c-2,8 -1,15 -1,25 c0,12 -3,20 -3,35 c0,15 2,30 4,45 c2,15 3,30 3,45 v45 c0,4 2,6 5,6 s5,-2 5,-6 v-45 c0,-15 1,-30 3,-45 c2,-15 4,-30 4,-45 c0,-15 -3,-23 -3,-35 c0,-10 1,-17 -1,-25 c-2,-7 -6,-12 -14,-15 M57.5,23 c8,3 12,8 14,15 c2,8 1,15 1,25 c0,12 3,20 3,35 c0,15 -2,30 -4,45 c-2,15 -3,30 -3,45 v45 c0,4 -2,6 -5,6 s-5,-2 -5,-6 v-45 c0,-15 -1,-30 -3,-45 c2,-15 -4,-30 -4,-45 c0,-15 3,-23 3,-35 c0,-10 -1,-17 1,-25 c2,-7 6,-12 14,-15" fill="url(#bodyGrad)" />
+                        <!-- Quads (Femminile Stilizzata) -->
+                        <path d="M35,110 c-3,10 -4,25 -2,40 c1,5 3,10 6,12 c3,2 5,0 6,-8 c1,-15 -2,-30 -4,-45 c-1,-5 -3,-5 -6,1" ${getStyles('quads_l')} />
+                        <path d="M65,110 c3,10 4,25 2,40 c-1,5 -3,10 -6,12 c-3,2 -5,0 -6,-8 c-1,-15 2,-30 4,-45 c1,-5 3,-5 6,1" ${getStyles('quads_r')} />
                         
-                        <!-- Front Muscle Overlays (Cyan Glow Blobs) -->
-                        <ellipse cx="50" cy="75" rx="10" ry="15" ${getStyles('core')} />
-                        <ellipse cx="40" cy="115" rx="8" ry="12" ${getStyles('quads_l')} />
-                        <ellipse cx="60" cy="115" rx="8" ry="12" ${getStyles('quads_r')} />
-                        <ellipse cx="42" cy="100" rx="6" ry="6" ${getStyles('hips_l')} />
-                        <ellipse cx="58" cy="100" rx="6" ry="6" ${getStyles('hips_r')} />
+                        <!-- Core / Abs -->
+                        <path d="M44,65 c0,5 0,15 2,25 c2,10 8,10 10,0 c2,-10 2,-20 0,-25 c-2,-5 -8,-5 -12,0" ${getStyles('core')} />
+                        
+                        <!-- Hip / Lateral -->
+                        <ellipse cx="38" cy="95" rx="5" ry="8" ${getStyles('hips_l')} />
+                        <ellipse cx="62" cy="95" rx="5" ry="8" ${getStyles('hips_r')} />
                     ` : `
-                        <path d="M50,15 c-4,0 -7.5,3.5 -7.5,7.5 s3.5,7.5 7.5,7.5 s7.5,-3.5 7.5,-7.5 s-3.5,-7.5 -7.5,-7.5 M42.5,23 c-8,3 -12,10 -13,18 c-1,8 1,15 1,28 c0,12 -4,22 -4,38 c0,18 3,34 5,50 c2,18 3,34 3,50 v40 c0,4 2,6 5,6 s5,-2 5,-6 v-40 c0,-16 1,-32 3,-50 c2,-16 5,-32 5,-50 c0,-16 -4,-26 -4,-38 c0,-13 2,-20 1,-28 c-1,-8 -5,-15 -13,-18 M57.5,23 c8,3 12,10 13,18 c1,8 -1,15 -1,28 c0,12 4,22 4,38 c0,18 -3,34 -5,50 c-2,18 -3,34 -3,50 v40 c0,4 -2,6 -5,6 s-5,-2 -5,-6 v-40 c0,-16 -1,-32 -3,-50 c2,-16 -5,-32 -5,-50 c0,-16 4,-26 4,-38 c0,-13 -2,-20 -1,-28 c2,-8 6,-15 14,-18" fill="none" stroke="rgba(0, 229, 255, 0.2)" stroke-width="0.8" />
-                        <path d="M50,15 c-4,0 -7.5,3.5 -7.5,7.5 s3.5,7.5 7.5,7.5 s7.5,-3.5 7.5,-7.5 s-3.5,-7.5 -7.5,-7.5 M42.5,23 c-8,3 -12,10 -13,18 c-1,8 1,15 1,28 c0,12 -4,22 -4,38 c0,18 3,34 5,50 c2,18 3,34 3,50 v40 c0,4 2,6 5,6 s5,-2 5,-6 v-40 c0,-16 1,-32 3,-50 c2,-16 5,-32 5,-50 c0,-16 -4,-26 -4,-38 c0,-13 2,-20 1,-28 c-1,-8 -5,-15 -13,-18 M57.5,23 c8,3 12,10 13,18 c1,8 -1,15 -1,28 c0,12 4,22 4,38 c0,18 -3,34 -5,50 c-2,18 -3,34 -3,50 v40 c0,4 -2,6 -5,6 s-5,-2 -5,-6 v-40 c0,-16 -1,-32 -3,-50 c2,-16 -5,-32 -5,-50 c0,-16 4,-26 4,-38 c0,-13 -2,-20 -1,-28 c2,-8 6,-15 14,-18" fill="url(#bodyGrad)" />
+                        <!-- Glutes (Powerful Athletic Base) -->
+                        <path d="M38,95 c-4,5 -6,15 -4,25 c2,10 10,12 14,8 c4,-4 5,-15 3,-25 c-2,-5 -8,-10 -13,-8" ${getStyles('glutes_l')} />
+                        <path d="M62,95 c4,5 6,15 4,25 c-2,10 -10,12 -14,8 c-4,-4 -5,-15 -3,-25 c2,-5 8,-10 13,-8" ${getStyles('glutes_r')} />
                         
-                        <!-- Back Muscle Overlays (Cyan Glow Blobs) -->
-                        <ellipse cx="40" cy="90" rx="9" ry="11" ${getStyles('glutes_l')} />
-                        <ellipse cx="60" cy="90" rx="9" ry="11" ${getStyles('glutes_r')} />
-                        <ellipse cx="40" cy="130" rx="8" ry="15" ${getStyles('hamstrings_l')} />
-                        <ellipse cx="60" cy="130" rx="8" ry="15" ${getStyles('hamstrings_r')} />
-                        <ellipse cx="40" cy="175" rx="6" ry="12" ${getStyles('calves_l')} />
-                        <ellipse cx="60" cy="175" rx="6" ry="12" ${getStyles('calves_r')} />
+                        <!-- Hamstrings -->
+                        <path d="M38,135 c-2,10 -3,20 -1,30 c1,8 5,10 7,5 c2,-10 1,-25 -1,-35 c-1,-5 -4,-5 -5,0" ${getStyles('hams_l')} />
+                        <path d="M62,135 c2,10 3,20 1,30 c-1,8 -5,10 -7,5 c-2,-10 -1,-25 1,-35 c1,-5 4,-5 5,0" ${getStyles('hams_r')} />
                     `}
                 </svg>
             </div>
