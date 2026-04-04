@@ -90,108 +90,98 @@ export const AthletesMetrics = {
                     </div>
                 ` : ''}
 
-                <!-- Main Grid: Anatomy & Performance -->
-                <div class="perf-grid-main">
-                    <!-- Column 1: Anatomy Blueprint -->
-                    <div class="card glass-card blueprint-card" style="padding:20px; display:flex; flex-direction:column; align-items:center; gap:16px; min-height:500px;">
-                        <div style="width:100%; display:flex; justify-content:space-between; align-items:flex-start;">
-                            <span style="font-size:10px; font-weight:800; color:var(--accent-cyan); letter-spacing:1.5px; opacity:0.8;">BIOMECHANICAL SCAN</span>
-                            <div style="text-align:right;">
-                                <div style="font-size:18px; font-weight:800; color:#fff; font-family:monospace;">${data.asymmetryPct?.toFixed(1) || '0.0'}%</div>
-                                <div style="font-size:9px; opacity:0.4; text-transform:uppercase; font-weight:700;">Landing Asymmetry</div>
+                <!-- Main Content: KPIs & Readiness -->
+                <div class="perf-grid-kpis" style="display:grid; grid-template-columns: 1fr 1.6fr; gap:24px; margin-top:24px;">
+                    <!-- Column 1: Performance Summary -->
+                    <div style="display:flex; flex-direction:column; gap:20px;">
+                        <div class="card glass-card" style="padding:24px;">
+                            <span style="font-size:11px; font-weight:900; color:var(--accent-cyan); letter-spacing:1px; text-transform:uppercase; display:block; margin-bottom:16px;">Biomechanical Status</span>
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <div>
+                                    <div style="font-size:32px; font-weight:900; color:#fff; font-family:var(--font-display);">${data.asymmetryPct?.toFixed(1) || '0.0'}%</div>
+                                    <div style="font-size:10px; opacity:0.4; font-weight:800; text-transform:uppercase;">Asymmetry</div>
+                                </div>
+                                <div style="text-align:right;">
+                                    <div style="font-size:15px; font-weight:800; color:${parseFloat(data.asymmetryPct) > 15 ? 'var(--color-pink)' : 'var(--accent-cyan)'};">${data.semaphore?.asymmetry?.weaker || 'BALANCED'}</div>
+                                    <div style="font-size:9px; opacity:0.4; font-weight:700;">WEAK_LIMB</div>
+                                </div>
                             </div>
                         </div>
-                        
-                        <div style="width:100%; flex:1; display:flex; justify-content:center; gap:20px; align-items:center;">
-                            <div class="anatomy-view" style="position:relative; width:160px; height:320px;">
-                                ${this._renderAnatomy('front', data.muscleMap)}
-                                <span style="position:absolute; bottom:0; left:50%; transform:translateX(-50%); font-size:9px; opacity:0.3; letter-spacing:2px; font-weight:800;">FRONT_SCAN</span>
-                            </div>
-                             <div class="anatomy-view" style="position:relative; width:160px; height:320px;">
-                                ${this._renderAnatomy('back', data.muscleMap)}
-                                <span style="position:absolute; bottom:0; left:50%; transform:translateX(-50%); font-size:9px; opacity:0.3; letter-spacing:2px; font-weight:800;">BACK_SCAN</span>
-                            </div>
+
+                        <div class="card glass-card" style="padding:24px;">
+                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                                <span style="font-size:11px; font-weight:900; color:var(--color-pink); letter-spacing:1px; text-transform:uppercase;">Explosive Power</span>
+                                <span class="trend up" style="font-size:11px; font-weight:900; color:var(--color-pink);">+${data.jhTrend?.toFixed(1)}%</span>
+                             </div>
+                             <div style="font-size:40px; font-weight:900; color:#fff; font-family:var(--font-display); line-height:1;">${data.jumpHeight?.toFixed(1) || '0.0'} <small style="font-size:16px; opacity:0.3; font-weight:400;">cm</small></div>
+                             <div style="font-size:10px; opacity:0.3; font-weight:800; margin-top:10px; text-transform:uppercase;">Peak Flight Height</div>
                         </div>
-                        
-                        <div style="width:100%; display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:10px;">
-                             <div class="perf-mini-card ${parseFloat(data.asymmetryPct) > 15 ? 'active-pink' : 'active-cyan'}">
-                                <span style="font-size:9px; opacity:0.4; text-transform:uppercase; font-weight:800;">WEAK_LIMB</span>
-                                <span style="font-size:15px; font-weight:800; color:#fff;">${data.semaphore?.asymmetry?.weaker || 'BALANCED'}</span>
-                             </div>
-                             <div class="perf-mini-card active-cyan">
-                                <span style="font-size:9px; opacity:0.4; text-transform:uppercase; font-weight:800;">PEAK_POWER</span>
-                                <span style="font-size:15px; font-weight:800; color:#fff;">${data.peakPowerBM?.toFixed(1) || '0.0'} <small style="font-size:10px; opacity:0.5;">W/kg</small></span>
-                             </div>
+
+                        <div class="perf-mini-card active-cyan" style="padding:20px;">
+                            <span style="font-size:9px; opacity:0.4; text-transform:uppercase; font-weight:800;">RELATIVE_PEAK_POWER</span>
+                            <div style="font-size:24px; font-weight:900; color:#fff; margin-top:4px;">${data.peakPowerBM?.toFixed(1) || '0.0'} <small style="font-size:12px; opacity:0.4;">W/kg</small></div>
                         </div>
                     </div>
 
-                    <!-- Column 2: Growth Metrics & Readiness -->
+                    <!-- Column 2: Readiness Gauges -->
                     <div style="display:flex; flex-direction:column; gap:24px;">
-                        
-                        <!-- Row 1: Readiness Gauges -->
-                        <div class="card glass-card" style="padding:24px; display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
-                            <div style="grid-column: 1 / -1; display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; padding-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.04);">
-                                <span style="font-size:11px; font-weight:900; color:#FFD600; letter-spacing:1px; text-transform:uppercase;">Readiness & Fatigue <small style="font-weight:400; opacity:0.5;">(28D Rolling)</small></span>
-                                <div class="badge" style="background:${rsiStatusColor}15; color:${rsiStatusColor}; border:1px solid ${rsiStatusColor}40; font-size:10px; font-weight:800;">${data.semaphore?.label || 'BASELINE'}</div>
+                        <div class="card glass-card" style="padding:32px; display:grid; grid-template-columns: 1fr 1fr 1fr; gap:20px; align-items:center;">
+                            <div style="grid-column: 1 / -1; display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; padding-bottom:16px; border-bottom:1px solid rgba(255,255,255,0.05);">
+                                <div style="display:flex; flex-direction:column;">
+                                    <span style="font-size:12px; font-weight:900; color:#FFD600; letter-spacing:1.5px; text-transform:uppercase;">Readiness & Readiness Index</span>
+                                    <span style="font-size:9px; opacity:0.3; text-transform:uppercase; font-weight:700;">28-Day Rolling Baseline Integration</span>
+                                </div>
+                                <div class="badge" style="padding:6px 12px; background:${rsiStatusColor}15; color:${rsiStatusColor}; border:1px solid ${rsiStatusColor}40; font-size:10px; font-weight:900;">${data.semaphore?.label || 'STABLE'}</div>
                             </div>
                             
-                            <div style="display:flex; flex-direction:column; align-items:center; gap:2px;">
+                            <div style="display:flex; flex-direction:column; align-items:center;">
                                 ${this._renderGauge(data.semaphore?.rsimod?.variation || 0, rsiStatusColor, 'RSI_MOD')}
-                                <div style="text-align:center; margin-top:8px;">
-                                    <div style="font-size:20px; font-weight:900; color:${rsiStatusColor}">${data.semaphore?.rsimod?.current?.toFixed(3) || '0.000'}</div>
-                                    <div style="font-size:10px; opacity:0.4; font-weight:700;">Z-SCORE: ${rsiZ?.toFixed(2)}</div>
+                                <div style="text-align:center; margin-top:12px;">
+                                    <div style="font-size:24px; font-weight:900; color:${rsiStatusColor}">${data.semaphore?.rsimod?.current?.toFixed(3) || '0.000'}</div>
+                                    <div style="font-size:10px; opacity:0.4; font-weight:800;">Z-SCORE: ${rsiZ?.toFixed(2)}</div>
                                 </div>
                             </div>
 
-                            <div style="display:flex; flex-direction:column; align-items:center; gap:2px;">
+                            <div style="display:flex; flex-direction:column; align-items:center;">
                                 ${this._renderGauge(data.semaphore?.ttto?.variation || 0, '#9682ff', 'TTT_OFF')}
-                                <div style="text-align:center; margin-top:8px;">
-                                    <div style="font-size:20px; font-weight:900; color:#fff;">${data.semaphore?.ttto?.current?.toFixed(0) || '0'} <small style="font-size:11px; opacity:0.4;">ms</small></div>
-                                    <div style="font-size:10px; opacity:0.4; font-weight:700;">TAKE-OFF DUR.</div>
+                                <div style="text-align:center; margin-top:12px;">
+                                    <div style="font-size:24px; font-weight:900; color:#fff;">${data.semaphore?.ttto?.current?.toFixed(0) || '0'} <small style="font-size:11px; opacity:0.4;">ms</small></div>
+                                    <div style="font-size:10px; opacity:0.4; font-weight:800;">TAKE-OFF DUR.</div>
                                 </div>
                             </div>
 
-                            <div style="display:flex; flex-direction:column; align-items:center; gap:2px;">
+                            <div style="display:flex; flex-direction:column; align-items:center;">
                                 ${this._renderGauge(parseFloat(data.asymmetryPct) * 4, rsiStatusColor, 'ASYMMETRY')}
-                                <div style="text-align:center; margin-top:8px;">
-                                    <div style="font-size:20px; font-weight:900; color:#fff;">${data.asymmetryPct?.toFixed(1) || '0.0'} <small style="font-size:11px; opacity:0.4;">%</small></div>
-                                    <div style="font-size:10px; opacity:0.4; font-weight:700;">LOAD VARIANCE</div>
+                                <div style="text-align:center; margin-top:12px;">
+                                    <div style="font-size:24px; font-weight:900; color:#fff;">${data.asymmetryPct?.toFixed(1) || '0.0'} <small style="font-size:11px; opacity:0.4;">%</small></div>
+                                    <div style="font-size:10px; opacity:0.4; font-weight:800;">LANDING_VARIANCE</div>
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
 
-                        <!-- Row 2: Performance Growth -->
-                        <div class="card glass-card" style="padding:24px;">
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                                <span style="font-size:11px; font-weight:900; color:var(--color-pink); letter-spacing:1px; text-transform:uppercase;">Performance Peak Growth</span>
-                                <span style="font-size:10px; opacity:0.4; font-family:monospace;">LAST_SYNC: ${data.results?.[0]?.test_date ? new Date(data.results[0].test_date).toLocaleDateString() : '—'}</span>
-                            </div>
-                            
-                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
-                                <div class="perf-mini-card active-pink" style="padding:20px; background:linear-gradient(135deg, rgba(255,0,255,0.03), transparent);">
-                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                                        <div style="width:32px; height:32px; border-radius:8px; background:rgba(255,0,255,0.1); display:flex; align-items:center; justify-content:center; color:var(--color-pink);">
-                                            <i class="ph ph-arrow-fat-up" style="font-size:20px;"></i>
-                                        </div>
-                                        <span class="trend ${data.jhTrend > 0 ? 'up' : 'down'}" style="font-size:12px; font-weight:900; font-family:monospace;">${data.jhTrend > 0 ? '+' : ''}${data.jhTrend?.toFixed(1)}%</span>
-                                    </div>
-                                    <div style="font-size:36px; font-weight:900; color:#fff; line-height:1; font-family:var(--font-display);">${data.jumpHeight?.toFixed(1) || '0.0'} <small style="font-size:14px; opacity:0.4; font-weight:400;">cm</small></div>
-                                    <div style="font-size:10px; opacity:0.4; margin-top:8px; text-transform:uppercase; letter-spacing:1px; font-weight:700;">Jump Height (Flight Time)</div>
-                                </div>
-
-                                <div class="perf-mini-card active-pink" style="padding:20px; background:linear-gradient(135deg, rgba(255,0,255,0.03), transparent);">
-                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                                        <div style="width:32px; height:32px; border-radius:8px; background:rgba(255,255,255,0.05); display:flex; align-items:center; justify-content:center; color:var(--color-pink);">
-                                            <i class="ph ph-arrows-in" style="font-size:20px;"></i>
-                                        </div>
-                                        <span style="font-size:9px; opacity:0.3; text-transform:uppercase; font-weight:800;">Force Loading</span>
-                                    </div>
-                                    <div style="font-size:36px; font-weight:900; color:#fff; line-height:1; font-family:var(--font-display);">${data.brakingImpulse?.toFixed(0) || '0'} <small style="font-size:14px; opacity:0.4; font-weight:400;">Ns</small></div>
-                                    <div style="font-size:10px; opacity:0.4; margin-top:8px; text-transform:uppercase; letter-spacing:1px; font-weight:700;">Braking Impulse</div>
-                                </div>
+                <!-- NEW: Full-Width Anatomy Blueprint Section -->
+                <div class="card glass-card blueprint-card" style="margin-top:32px; padding:40px; border-radius:32px; background:#050508;">
+                    <div style="display:flex; justify-content:center; align-items:center; gap:20px; margin-bottom:40px;">
+                         <div style="width:40px; height:1px; background:linear-gradient(90deg, transparent, var(--accent-cyan));"></div>
+                         <h3 style="font-family:var(--font-display); font-size:22px; font-weight:800; color:#fff; margin:0; letter-spacing:2px; text-transform:uppercase;">Biomechanical Blueprint</h3>
+                         <div style="width:40px; height:1px; background:linear-gradient(90deg, var(--accent-cyan), transparent);"></div>
+                    </div>
+                    
+                    <div style="display:flex; justify-content:center; gap:60px; align-items:center; min-height:600px;">
+                        <div class="anatomy-entry" style="position:relative; width:300px; height:600px; filter:drop-shadow(0 0 50px rgba(0, 229, 255, 0.05));">
+                            ${this._renderAnatomy('front', data.muscleMap)}
+                            <div style="position:absolute; bottom:-30px; left:50%; transform:translateX(-50%); white-space:nowrap;">
+                                <span style="font-size:10px; font-weight:900; letter-spacing:4px; color:var(--accent-cyan); opacity:0.3;">ANTERIOR_VIEW</span>
                             </div>
                         </div>
-
+                        <div class="anatomy-entry" style="position:relative; width:300px; height:600px; filter:drop-shadow(0 0 50px rgba(0, 229, 255, 0.05));">
+                            ${this._renderAnatomy('back', data.muscleMap)}
+                            <div style="position:absolute; bottom:-30px; left:50%; transform:translateX(-50%); white-space:nowrap;">
+                                <span style="font-size:10px; font-weight:900; letter-spacing:4px; color:var(--accent-cyan); opacity:0.3;">POSTERIOR_VIEW</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -228,7 +218,7 @@ export const AthletesMetrics = {
                     </div>
                     
                     <div class="perf-timeline">
-                        <div class="timeline-header" style="display:grid; grid-template-columns: 80px 1.5fr 1fr 1fr 1fr; padding:10px 20px; font-size:9px; font-weight:900; opacity:0.3; text-transform:uppercase; letter-spacing:1px;">
+                        <div class="timeline-header" style="display:grid; grid-template-columns: 120px 1.5fr 1fr 1fr 1fr; padding:10px 20px; font-size:9px; font-weight:900; opacity:0.3; text-transform:uppercase; letter-spacing:1px;">
                             <span>Date</span>
                             <span>Test Type</span>
                             <span style="text-align:right;">Height</span>

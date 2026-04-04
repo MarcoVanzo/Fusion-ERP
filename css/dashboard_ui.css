@@ -1852,9 +1852,35 @@
 
 /* --- Timeline History --- */
 .timeline-entry {
-  grid-template-columns: 80px 1.5fr 1fr 1fr 1fr;
+  display: grid;
+  grid-template-columns: 120px 1.5fr 1fr 1fr 1fr;
+  align-items: center;
+  padding: 12px 20px;
   background: rgba(255, 255, 255, 0.01);
   border: 1px solid rgba(255, 255, 255, 0.03);
+  margin-bottom: 4px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.timeline-entry .timeline-val {
+  text-align: right;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 14px;
+}
+
+.timeline-entry .timeline-date {
+  font-size: 11px;
+  font-weight: 700;
+  font-family: monospace;
+}
+
+.timeline-entry .timeline-type {
+  font-size: 12px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 0.5px;
 }
 
 .timeline-entry:hover {
