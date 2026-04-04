@@ -161,25 +161,25 @@ export const AthletesMetrics = {
                     </div>
                 </div>
 
-                <!-- NEW: Full-Width Anatomy Blueprint Section -->
-                <div class="card glass-card blueprint-card" style="margin-top:32px; padding:40px; border-radius:32px; background:#050508;">
-                    <div style="display:flex; justify-content:center; align-items:center; gap:20px; margin-bottom:40px;">
-                         <div style="width:40px; height:1px; background:linear-gradient(90deg, transparent, var(--accent-cyan));"></div>
-                         <h3 style="font-family:var(--font-display); font-size:22px; font-weight:800; color:#fff; margin:0; letter-spacing:2px; text-transform:uppercase;">Biomechanical Blueprint</h3>
-                         <div style="width:40px; height:1px; background:linear-gradient(90deg, var(--accent-cyan), transparent);"></div>
+                <!-- NEW: Full-Width Massive Anatomy Blueprint Section -->
+                <div class="card glass-card blueprint-card" style="margin-top:32px; padding:60px 40px; border-radius:32px; background:#050508; width:100%; border:1px solid rgba(0, 229, 255, 0.1);">
+                    <div style="display:flex; justify-content:center; align-items:center; gap:24px; margin-bottom:60px;">
+                         <div style="width:100px; height:1px; background:linear-gradient(90deg, transparent, var(--accent-cyan));"></div>
+                         <h3 style="font-family:var(--font-display); font-size:24px; font-weight:800; color:#fff; margin:0; letter-spacing:4px; text-transform:uppercase;">Biomechanical Blueprint</h3>
+                         <div style="width:100px; height:1px; background:linear-gradient(90deg, var(--accent-cyan), transparent);"></div>
                     </div>
                     
-                    <div style="display:flex; justify-content:center; gap:60px; align-items:center; min-height:600px;">
-                        <div class="anatomy-entry" style="position:relative; width:300px; height:600px; filter:drop-shadow(0 0 50px rgba(0, 229, 255, 0.05));">
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:80px; align-items:center; min-height:800px; max-width:1400px; margin:0 auto;">
+                        <div class="anatomy-entry" style="position:relative; width:100%; height:800px; filter:drop-shadow(0 0 80px rgba(0, 229, 255, 0.08));">
                             ${this._renderAnatomy('front', data.muscleMap)}
-                            <div style="position:absolute; bottom:-30px; left:50%; transform:translateX(-50%); white-space:nowrap;">
-                                <span style="font-size:10px; font-weight:900; letter-spacing:4px; color:var(--accent-cyan); opacity:0.3;">ANTERIOR_VIEW</span>
+                            <div style="position:absolute; bottom:-40px; left:50%; transform:translateX(-50%); white-space:nowrap;">
+                                <span style="font-size:12px; font-weight:900; letter-spacing:6px; color:var(--accent-cyan); opacity:0.4;">ANTERIOR_VIEW_SILHOUETTE</span>
                             </div>
                         </div>
-                        <div class="anatomy-entry" style="position:relative; width:300px; height:600px; filter:drop-shadow(0 0 50px rgba(0, 229, 255, 0.05));">
+                        <div class="anatomy-entry" style="position:relative; width:100%; height:800px; filter:drop-shadow(0 0 80px rgba(0, 229, 255, 0.08));">
                             ${this._renderAnatomy('back', data.muscleMap)}
-                            <div style="position:absolute; bottom:-30px; left:50%; transform:translateX(-50%); white-space:nowrap;">
-                                <span style="font-size:10px; font-weight:900; letter-spacing:4px; color:var(--accent-cyan); opacity:0.3;">POSTERIOR_VIEW</span>
+                            <div style="position:absolute; bottom:-40px; left:50%; transform:translateX(-50%); white-space:nowrap;">
+                                <span style="font-size:12px; font-weight:900; letter-spacing:6px; color:var(--accent-cyan); opacity:0.4;">POSTERIOR_VIEW_SILHOUETTE</span>
                             </div>
                         </div>
                     </div>
@@ -255,35 +255,60 @@ export const AthletesMetrics = {
     },
 
     /**
-     * Renderizza gli SVG dell'anatomia con i colori dei muscoli (Refined Precision)
+     * Renderizza gli SVG dell'anatomia FEMMINILE con i colori dei muscoli (Elite Precision)
+     * High-clarity SVG paths for female athletic silhouette.
      */
     _renderAnatomy(view, muscleMap = {}) {
         if (!muscleMap) muscleMap = {};
         const getStyles = (muscle) => {
             const color = muscleMap[muscle];
             if (!color) return `class="muscle-blob"`;
-            // Color decisi ma sfumatura plasma
             return `class="muscle-blob active" style="--color-active:${color};"`;
         };
         
+        // Define paths for female athletic silhouette (front/back)
+        const frontBody = `M50,15 c-4,0 -7,3 -7,7 c0,3.5 2,6 5,7 c-6,3 -10,8 -11,15 c-1,6 1,12 1,18 c0,8 -3,15 -3,22 c0,10 2,20 4,30 c2,10 3,20 3,30 v60 c0,5 2,8 5,8 s5,-3 5,-8 v-60 c0,-10 1,-20 3,-30 c2,-10 4,-20 4,-30 c0,-7 -3,-14 -3,-22 c0,-6 2,-12 1,-18 c-1,-7 -5,-12 -11,-15 c3,-1 5,-3.5 5,-7 c0,-4 -3,-7 -7,-7 Z`;
+        const backBody = `M50,15 c-4,0 -7,3 -7,7 c0,3.5 2,6 5,7 c-7,3 -11,8 -12,16 c-1,7 2,13 2,20 c0,10 -4,18 -4,26 c0,12 3,24 5,36 c2,12 3,24 3,36 v50 c0,5 2,8 5,8 s5,-3 5,-8 v-50 c0,-12 1,-24 3,-36 c2,-12 5,-24 5,-36 c0,-8 -4,-16 -4,-26 c0,-7 3,-13 2,-20 c-1,-8 -5,-13 -12,-16 c3,-1 5,-3.5 5,-7 c0,-4 -3,-7 -7,-7 Z`;
+
+        // Refined FEMALE athletic silhouette paths
+        const femaleFrontPath = `
+            M50,12 c-3.5,0 -6.5,3 -6.5,6.5 s3,6.5 6.5,6.5 s6.5,-3 6.5,-6.5 s-3,-6.5 -6.5,-6.5 
+            M43.5,19 c0,10 -4,15 -8,18 c-5,4 -8,10 -8,18 c0,15 3,25 3,40 c0,10 -2,20 -4,35 c-2,15 -3,30 -3,45 v60 c0,3 2.5,5 5,5 s5,-2 5,-5 v-60 c0,-15 1,-30 3,-45 c2,-15 4,-25 4,-35 c0,-15 3,-25 3,-40 c0,-8 -3,-14 -8,-18 c-4,-3 -8,-8 -8,-18
+            M56.5,19 c0,10 4,15 8,18 c5,4 8,10 8,18 c0,15 -3,25 -3,40 c0,10 2,20 4,35 c2,15 3,30 3,45 v60 c0,3 -2.5,5 -5,5 s-5,-2 -5,-5 v-60 c0,-15 -1,-30 -3,-45 c2,-15 -4,-25 -4,-35 c0,-15 -3,-25 -3,-40 c0,-8 3,-14 8,-18 c4,-3 8,-8 8,-18
+        `;
+
         return `
-            <div class="anatomy-container ${view}" style="width:100%; height:100%; position:relative;">
-                <img src="assets/img/anatomy/body_${view}.png" class="anatomy-cyber-body" style="width:100%; height:100%; object-fit:contain; display:block;">
-                <svg viewBox="0 0 100 120" style="position:absolute; top:0; left:0; width:100%; height:100%;">
+            <div class="anatomy-container ${view}" style="width:100%; height:100%; position:relative; overflow:visible;">
+                <svg viewBox="0 0 100 240" style="width:100%; height:100%; filter: drop-shadow(0 0 20px rgba(0, 229, 255, 0.05));">
+                    <defs>
+                        <linearGradient id="bodyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" style="stop-color:rgba(0, 229, 255, 0.05);stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:rgba(0, 229, 255, 0.01);stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    
+                    <!-- High-Precision Female Silhouette -->
                     ${view === 'front' ? `
-                        <ellipse cx="50" cy="38" rx="6" ry="7" ${getStyles('core')} />
-                        <ellipse cx="45" cy="54" rx="4" ry="3" ${getStyles('hips_l')} />
-                        <ellipse cx="55" cy="54" rx="4" ry="3" ${getStyles('hips_r')} />
-                        <ellipse cx="44" cy="72" rx="5" ry="9" ${getStyles('quads_l')} />
-                        <ellipse cx="56" cy="72" rx="5" ry="9" ${getStyles('quads_r')} />
+                        <path d="M50,15 c-4,0 -7.5,3.5 -7.5,7.5 s3.5,7.5 7.5,7.5 s7.5,-3.5 7.5,-7.5 s-3.5,-7.5 -7.5,-7.5 M42.5,23 c-8,3 -12,8 -14,15 c-2,8 -1,15 -1,25 c0,12 -3,20 -3,35 c0,15 2,30 4,45 c2,15 3,30 3,45 v45 c0,4 2,6 5,6 s5,-2 5,-6 v-45 c0,-15 1,-30 3,-45 c2,-15 4,-30 4,-45 c0,-15 -3,-23 -3,-35 c0,-10 1,-17 -1,-25 c-2,-7 -6,-12 -14,-15 M57.5,23 c8,3 12,8 14,15 c2,8 1,15 1,25 c0,12 3,20 3,35 c0,15 -2,30 -4,45 c-2,15 -3,30 -3,45 v45 c0,4 -2,6 -5,6 s-5,-2 -5,-6 v-45 c0,-15 -1,-30 -3,-45 c2,-15 -4,-30 -4,-45 c0,-15 3,-23 3,-35 c0,-10 -1,-17 1,-25 c2,-7 6,-12 14,-15" fill="none" stroke="rgba(0, 229, 255, 0.2)" stroke-width="0.8" />
+                        <path d="M50,15 c-4,0 -7.5,3.5 -7.5,7.5 s3.5,7.5 7.5,7.5 s7.5,-3.5 7.5,-7.5 s-3.5,-7.5 -7.5,-7.5 M42.5,23 c-8,3 -12,8 -14,15 c-2,8 -1,15 -1,25 c0,12 -3,20 -3,35 c0,15 2,30 4,45 c2,15 3,30 3,45 v45 c0,4 2,6 5,6 s5,-2 5,-6 v-45 c0,-15 1,-30 3,-45 c2,-15 4,-30 4,-45 c0,-15 -3,-23 -3,-35 c0,-10 1,-17 -1,-25 c-2,-7 -6,-12 -14,-15 M57.5,23 c8,3 12,8 14,15 c2,8 1,15 1,25 c0,12 3,20 3,35 c0,15 -2,30 -4,45 c-2,15 -3,30 -3,45 v45 c0,4 -2,6 -5,6 s-5,-2 -5,-6 v-45 c0,-15 -1,-30 -3,-45 c2,-15 -4,-30 -4,-45 c0,-15 3,-23 3,-35 c0,-10 -1,-17 1,-25 c2,-7 6,-12 14,-15" fill="url(#bodyGrad)" />
+                        
+                        <!-- Front Muscle Overlays (Cyan Glow Blobs) -->
+                        <ellipse cx="50" cy="75" rx="10" ry="15" ${getStyles('core')} />
+                        <ellipse cx="40" cy="115" rx="8" ry="12" ${getStyles('quads_l')} />
+                        <ellipse cx="60" cy="115" rx="8" ry="12" ${getStyles('quads_r')} />
+                        <ellipse cx="42" cy="100" rx="6" ry="6" ${getStyles('hips_l')} />
+                        <ellipse cx="58" cy="100" rx="6" ry="6" ${getStyles('hips_r')} />
                     ` : `
-                        <ellipse cx="50" cy="38" rx="7" ry="8" ${getStyles('core')} />
-                        <ellipse cx="44" cy="56" rx="5" ry="6" ${getStyles('glutes_l')} />
-                        <ellipse cx="56" cy="56" rx="5" ry="6" ${getStyles('glutes_r')} />
-                        <ellipse cx="44" cy="75" rx="5" ry="9" ${getStyles('hamstrings_l')} />
-                        <ellipse cx="56" cy="75" rx="5" ry="9" ${getStyles('hamstrings_r')} />
-                        <ellipse cx="44" cy="95" rx="3.5" ry="6" ${getStyles('calves_l')} />
-                        <ellipse cx="56" cy="95" rx="3.5" ry="6" ${getStyles('calves_r')} />
+                        <path d="M50,15 c-4,0 -7.5,3.5 -7.5,7.5 s3.5,7.5 7.5,7.5 s7.5,-3.5 7.5,-7.5 s-3.5,-7.5 -7.5,-7.5 M42.5,23 c-8,3 -12,10 -13,18 c-1,8 1,15 1,28 c0,12 -4,22 -4,38 c0,18 3,34 5,50 c2,18 3,34 3,50 v40 c0,4 2,6 5,6 s5,-2 5,-6 v-40 c0,-16 1,-32 3,-50 c2,-16 5,-32 5,-50 c0,-16 -4,-26 -4,-38 c0,-13 2,-20 1,-28 c-1,-8 -5,-15 -13,-18 M57.5,23 c8,3 12,10 13,18 c1,8 -1,15 -1,28 c0,12 4,22 4,38 c0,18 -3,34 -5,50 c-2,18 -3,34 -3,50 v40 c0,4 -2,6 -5,6 s-5,-2 -5,-6 v-40 c0,-16 -1,-32 -3,-50 c2,-16 -5,-32 -5,-50 c0,-16 4,-26 4,-38 c0,-13 -2,-20 -1,-28 c2,-8 6,-15 14,-18" fill="none" stroke="rgba(0, 229, 255, 0.2)" stroke-width="0.8" />
+                        <path d="M50,15 c-4,0 -7.5,3.5 -7.5,7.5 s3.5,7.5 7.5,7.5 s7.5,-3.5 7.5,-7.5 s-3.5,-7.5 -7.5,-7.5 M42.5,23 c-8,3 -12,10 -13,18 c-1,8 1,15 1,28 c0,12 -4,22 -4,38 c0,18 3,34 5,50 c2,18 3,34 3,50 v40 c0,4 2,6 5,6 s5,-2 5,-6 v-40 c0,-16 1,-32 3,-50 c2,-16 5,-32 5,-50 c0,-16 -4,-26 -4,-38 c0,-13 2,-20 1,-28 c-1,-8 -5,-15 -13,-18 M57.5,23 c8,3 12,10 13,18 c1,8 -1,15 -1,28 c0,12 4,22 4,38 c0,18 -3,34 -5,50 c-2,18 -3,34 -3,50 v40 c0,4 -2,6 -5,6 s-5,-2 -5,-6 v-40 c0,-16 -1,-32 -3,-50 c2,-16 -5,-32 -5,-50 c0,-16 4,-26 4,-38 c0,-13 -2,-20 -1,-28 c2,-8 6,-15 14,-18" fill="url(#bodyGrad)" />
+                        
+                        <!-- Back Muscle Overlays (Cyan Glow Blobs) -->
+                        <ellipse cx="40" cy="90" rx="9" ry="11" ${getStyles('glutes_l')} />
+                        <ellipse cx="60" cy="90" rx="9" ry="11" ${getStyles('glutes_r')} />
+                        <ellipse cx="40" cy="130" rx="8" ry="15" ${getStyles('hamstrings_l')} />
+                        <ellipse cx="60" cy="130" rx="8" ry="15" ${getStyles('hamstrings_r')} />
+                        <ellipse cx="40" cy="175" rx="6" ry="12" ${getStyles('calves_l')} />
+                        <ellipse cx="60" cy="175" rx="6" ry="12" ${getStyles('calves_r')} />
                     `}
                 </svg>
             </div>

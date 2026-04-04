@@ -1843,6 +1843,68 @@
 .perf-mini-card.active-pink { border-top: 2px solid #FF00FF; }
 .perf-mini-card.active-cyan { border-top: 2px solid #00e5ff; }
 
+/* --- BIOMECHANICAL BLUEPRINT REFINEMENT --- */
+.blueprint-card {
+    background: radial-gradient(circle at center, #0a0a0f 0%, #050508 100%) !important;
+    position: relative;
+    overflow: hidden;
+}
+
+.blueprint-card::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 200%;
+    height: 200%;
+    transform: translate(-50%, -50%);
+    background-image: 
+        linear-gradient(rgba(0, 229, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 229, 255, 0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.anatomy-entry {
+    z-index: 1;
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.anatomy-entry:hover {
+    transform: scale(1.02);
+}
+
+.anatomy-container svg {
+    filter: drop-shadow(0 0 30px rgba(0, 229, 255, 0.1));
+}
+
+.anatomy-container .muscle-blob {
+    fill: rgba(255, 255, 255, 0.05);
+    stroke: rgba(255, 255, 255, 0.1);
+    stroke-width: 0.5px;
+    transition: all 0.8s ease;
+    filter: blur(4px);
+}
+
+.anatomy-container .muscle-blob.active {
+    fill: var(--color-active);
+    stroke: var(--color-active);
+    stroke-width: 2px;
+    filter: blur(8px) brightness(1.5);
+    opacity: 0.6;
+    animation: muscle-pulse 3s infinite ease-in-out;
+}
+
+@keyframes muscle-pulse {
+    0%, 100% { opacity: 0.4; filter: blur(8px) brightness(1.2); }
+    50% { opacity: 0.7; filter: blur(12px) brightness(1.8); }
+}
+
+.anatomy-entry span {
+    text-shadow: 0 0 10px rgba(0, 229, 255, 0.5);
+}
+
 /* --- AI Intelligence Slot --- */
 .ai-intel-slot {
   background: linear-gradient(135deg, rgba(20, 20, 25, 0.8), rgba(15, 15, 20, 0.9));
