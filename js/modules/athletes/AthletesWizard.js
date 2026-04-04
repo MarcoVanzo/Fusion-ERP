@@ -42,6 +42,7 @@ export const AthletesWizard = {
                     <div class="form-group"><label class="form-label" for="na-role">Ruolo</label><input id="na-role" class="form-input" type="text" placeholder="Schiacciatore"></div>
                     <div class="form-group"><label class="form-label" for="na-jersey">N° Maglia</label><input id="na-jersey" class="form-input" type="number" min="1" max="99"></div>
                 </div>
+                <div class="form-group"><label class="form-label" for="na-federal">ID Federale (FIPAV)</label><input id="na-federal" class="form-input" type="text"></div>
                 <div class="form-grid">
                     <div class="form-group"><label class="form-label" for="na-height">Altezza (cm)</label><input id="na-height" class="form-input" type="number"></div>
                     <div class="form-group"><label class="form-label" for="na-weight">Peso (kg)</label><input id="na-weight" class="form-input" type="number"></div>
@@ -52,6 +53,10 @@ export const AthletesWizard = {
                 <div class="form-grid">
                     <div class="form-group"><label class="form-label" for="na-phone">Cellulare</label><input id="na-phone" class="form-input" type="tel"></div>
                     <div class="form-group"><label class="form-label" for="na-email">E-Mail</label><input id="na-email" class="form-input" type="email"></div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group"><label class="form-label" for="na-shirt">Taglia Maglia</label><input id="na-shirt" class="form-input" type="text" placeholder="es. M"></div>
+                    <div class="form-group"><label class="form-label" for="na-shoe">Numero Scarpe</label><input id="na-shoe" class="form-input" type="text" placeholder="es. 41"></div>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Indirizzo di Residenza</label>
@@ -66,9 +71,13 @@ export const AthletesWizard = {
             () => `
                 <div class="form-grid">
                     <div class="form-group"><label class="form-label" for="na-fiscal">Codice Fiscale</label><input id="na-fiscal" class="form-input" type="text" maxlength="16" style="text-transform:uppercase;"></div>
-                    <div class="form-group"><label class="form-label" for="na-medcert">Scadenza Certificato Medico</label><input id="na-medcert" class="form-input" type="date"></div>
+                    <div class="form-group"><label class="form-label" for="na-idcard">Documento Identità (Nr.)</label><input id="na-idcard" class="form-input" type="text"></div>
                 </div>
-                <div class="form-group"><label class="form-label" for="na-parent">Contatto Genitore (per minori)</label><input id="na-parent" class="form-input" type="text"></div>
+                <div class="form-group"><label class="form-label" for="na-medcert">Scadenza Certificato Medico</label><input id="na-medcert" class="form-input" type="date"></div>
+                <div class="form-grid">
+                    <div class="form-group"><label class="form-label" for="na-parent">Contatto Genitore (per minori)</label><input id="na-parent" class="form-input" type="text"></div>
+                    <div class="form-group"><label class="form-label" for="na-parent-phone">Cellulare Genitore</label><input id="na-parent-phone" class="form-input" type="tel"></div>
+                </div>
             `
         ];
 
@@ -183,15 +192,20 @@ export const AthletesWizard = {
                     birth_place: formData["na-birthplace"],
                     role: formData["na-role"],
                     jersey_number: formData["na-jersey"],
+                    federal_id: formData["na-federal"],
                     height_cm: formData["na-height"],
                     weight_kg: formData["na-weight"],
                     phone: formData["na-phone"],
                     email: formData["na-email"],
+                    shirt_size: formData["na-shirt"],
+                    shoe_size: formData["na-shoe"],
                     residence_address: formData["na-resaddr"],
                     residence_city: formData["na-rescity"],
                     fiscal_code: formData["na-fiscal"],
+                    identity_document: formData["na-idcard"],
                     medical_cert_expires_at: formData["na-medcert"],
-                    parent_contact: formData["na-parent"]
+                    parent_contact: formData["na-parent"],
+                    parent_phone: formData["na-parent-phone"]
                 });
                 
                 UI.toast("Atleta creato con successo", "success");
