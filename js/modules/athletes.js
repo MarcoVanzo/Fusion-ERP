@@ -6,7 +6,7 @@
 import { AthletesAPI } from './athletes/AthletesAPI.js';
 import { AthletesView } from './athletes/AthletesView.js';
 import { AthletesWizard } from './athletes/AthletesWizard.js';
-import { AthletesMetrics } from './athletes/AthletesMetrics.js';
+import { AthletesMetrics } from './athletes/AthletesMetricsV2.js';
 
 const Athletes = (() => {
     let abortController = new AbortController();
