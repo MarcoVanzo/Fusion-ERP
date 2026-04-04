@@ -169,14 +169,14 @@ export const AthletesMetrics = {
                          <div style="width:100px; height:1px; background:linear-gradient(90deg, var(--accent-cyan), transparent);"></div>
                     </div>
                     
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:80px; align-items:center; min-height:800px; max-width:1400px; margin:0 auto;">
-                        <div class="anatomy-entry" style="position:relative; width:100%; height:800px; filter:drop-shadow(0 0 80px rgba(0, 229, 255, 0.08));">
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:80px; align-items:center; min-height:1000px; width:100%; margin:0 auto;">
+                        <div class="anatomy-entry" style="position:relative; width:100%; height:1000px; filter:drop-shadow(0 0 100px rgba(0, 229, 255, 0.1));">
                             ${this._renderAnatomy('front', data.muscleMap)}
                             <div style="position:absolute; bottom:-40px; left:50%; transform:translateX(-50%); white-space:nowrap;">
                                 <span style="font-size:12px; font-weight:900; letter-spacing:6px; color:var(--accent-cyan); opacity:0.4;">ANTERIOR_VIEW_SILHOUETTE</span>
                             </div>
                         </div>
-                        <div class="anatomy-entry" style="position:relative; width:100%; height:800px; filter:drop-shadow(0 0 80px rgba(0, 229, 255, 0.08));">
+                        <div class="anatomy-entry" style="position:relative; width:100%; height:1000px; filter:drop-shadow(0 0 100px rgba(0, 229, 255, 0.1));">
                             ${this._renderAnatomy('back', data.muscleMap)}
                             <div style="position:absolute; bottom:-40px; left:50%; transform:translateX(-50%); white-space:nowrap;">
                                 <span style="font-size:12px; font-weight:900; letter-spacing:6px; color:var(--accent-cyan); opacity:0.4;">POSTERIOR_VIEW_SILHOUETTE</span>
@@ -232,12 +232,12 @@ export const AthletesMetrics = {
                             const rsi = (m.RSIModified?.Value || 0).toFixed(3);
                             
                             return `
-                                <div class="timeline-entry">
+                                <div class="timeline-entry" style="display:grid; grid-template-columns: 120px 1.5fr 1fr 1fr 1fr; padding:15px 20px; align-items:center;">
                                     <div class="timeline-date" style="opacity:0.6;">${new Date(res.test_date).toLocaleDateString('it-IT')}</div>
-                                    <div class="timeline-type">${res.test_type}</div>
-                                    <div class="timeline-val" style="color:var(--color-pink)">${jh}<small>cm</small></div>
-                                    <div class="timeline-val" style="color:#FFD600">${rsi}</div>
-                                    <div class="timeline-val" style="color:${parseFloat(asy) > 15 ? '#FF1744' : '#00e5ff'}">${asy}<small>%</small></div>
+                                    <div class="timeline-type" style="font-weight:700;">${res.test_type}</div>
+                                    <div class="timeline-val" style="color:var(--color-pink); text-align:right; font-weight:800;">${jh}<small>cm</small></div>
+                                    <div class="timeline-val" style="color:#FFD600; text-align:right; font-weight:800;">${rsi}</div>
+                                    <div class="timeline-val" style="color:${parseFloat(asy) > 15 ? '#FF1744' : '#00e5ff'}; text-align:right; font-weight:800;">${asy}<small>%</small></div>
                                 </div>
                             `;
                         }).join('')}
