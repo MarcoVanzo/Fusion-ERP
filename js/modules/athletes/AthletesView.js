@@ -184,12 +184,15 @@ export const AthletesView = {
             : `<div class="athlete-hero-photo" style="display:flex;align-items:center;justify-content:center;background:var(--color-bg-card);"><span style="font-family:var(--font-display);font-size:5rem;font-weight:700;color:rgba(255,255,255,0.1);">${Utils.initials(athlete.full_name)}</span></div>`;
 
         return `
+            <div style="padding: 0 var(--sp-4) var(--sp-4);">
+                <button class="btn btn-default btn-sm" id="back-to-list" style="background:rgba(255,255,255,0.05); border-color:rgba(255,255,255,0.1);">
+                    <i class="ph ph-arrow-left"></i> Torna alla lista
+                </button>
+            </div>
+
             <div class="athlete-hero">
                 ${photoHtml}
                 <div class="athlete-hero-overlay">
-                    <button class="btn btn-default btn-sm" id="back-to-list" style="margin-bottom:var(--sp-4);background:rgba(0,0,0,0.5);border-color:rgba(255,255,255,0.1);">
-                        <i class="ph ph-arrow-left"></i> Torna alla lista
-                    </button>
                     <div class="profile-main-info">
                         <h1 class="profile-name" style="font-size:clamp(2.5rem, 6vw, 4.5rem);line-height:1;margin-bottom:var(--sp-2);color:var(--color-white);font-family:var(--font-display);font-weight:800;text-transform:uppercase;letter-spacing:-0.03em;">
                             ${Utils.escapeHtml(athlete.full_name)}
