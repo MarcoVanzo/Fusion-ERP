@@ -48,7 +48,7 @@ window.__valdAi = async function (athleteId, part) {
         <div class="ai-card-title" style="margin-bottom:16px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:12px;">
           <i class="ph ${icon}" style="font-size:18px;"></i> 
           <span style="font-size:13px; font-weight:800; letter-spacing:1px;">${label.toUpperCase()}</span>
-          <span style="margin-left:auto; font-weight:400; font-size:9px; opacity:0.3; letter-spacing:1px;">AI CORE • GEMINI 2.5</span>
+          <span style="margin-left:auto; font-weight:400; font-size:9px; opacity:0.3; letter-spacing:1px;">AI CORE • GEMINI ULTRA V2</span>
         </div>
         
         <div class="ai-card-body" id="${textId}" style="font-size:14px; color:rgba(255,255,255,0.8);">

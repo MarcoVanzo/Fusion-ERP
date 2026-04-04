@@ -31,7 +31,7 @@ def run_preflight_checks():
     print("🔍 Running PHPStan Static Analysis...")
     try:
         # Use the composer script defined in composer.json
-        result = subprocess.run(['composer', 'phpstan'], capture_output=True, text=True)
+        result = subprocess.run(['php', 'composer.phar', 'phpstan'], capture_output=True, text=True)
         if result.returncode != 0:
             print("❌ PHPStan failed! Fix the following issues before deploying:")
             print(result.stdout)
