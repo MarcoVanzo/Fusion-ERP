@@ -6,7 +6,7 @@ namespace FusionERP\Shared;
 class AIService
 {
     private const DEFAULT_MODEL = 'gemini-2.5-flash';
-    private const API_BASE_URL = 'https://generativelanguage.googleapis.com/v1/models/';
+    private const API_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models/';
 
     /**
      * @param string|array $prompt The text prompt or parts array to send to the model
@@ -18,9 +18,9 @@ class AIService
     public static function generateContent(string|array $prompt, array $options = [], string $model = self::DEFAULT_MODEL): string
     {
         // Key lookup priority: getenv -> $_SERVER -> $_ENV -> AIConfig::GEMINI_TOKEN
-        $apiKey = (getenv('GEMINI_TOKEN') ?: ($_SERVER['GEMINI_TOKEN'] ?? $_ENV['GEMINI_TOKEN'] ?? '')) ?: AIConfig::GEMINI_TOKEN;
+        $apiKey = (getenv('GEMINI_TOKEN') ?: ($_SERVER['GEMINI_TOKEN'] ?? $_ENV['GEMINI_TOKEN'] ?? '')) ?: (class_exists(AIConfig::class) ? AIConfig::GEMINI_TOKEN : '');
 
-        if (empty($apiKey)) {
+        if (!$apiKey || trim($apiKey) === '') {
             $logMsg = date('Y-m-d H:i:s') . " [AI_SERVICE] CRITICAL: Gemini API Key not found in environment or AIConfig." . PHP_EOL;
             file_put_contents(__DIR__ . '/../ai_debug.log', $logMsg, FILE_APPEND);
             throw new \Exception('Chiave API Gemini non configurata. Verifica il file .env o AIConfig.php.');

@@ -267,17 +267,17 @@ class ValdService
         $asymmetry = $asymmetry ?: [];
 
         $map = [
-            'core'    => null,
-            'quads_l' => null,
-            'quads_r' => null,
-            'hips_l'  => null,
-            'hips_r'  => null,
-            'glutes_l' => null,
-            'glutes_r' => null,
-            'hamstrings_l' => null,
-            'hamstrings_r' => null,
-            'calves_l' => null,
-            'calves_r' => null,
+            'core'    => '#00E676',
+            'quads_l' => '#00E676',
+            'quads_r' => '#00E676',
+            'hips_l'  => '#00E676',
+            'hips_r'  => '#00E676',
+            'glutes_l' => '#00E676',
+            'glutes_r' => '#00E676',
+            'hams_l' => '#00E676',
+            'hams_r' => '#00E676',
+            'calves_l' => '#00E676',
+            'calves_r' => '#00E676',
         ];
 
         // Core highlighting (based on fatigue semaphore)
@@ -298,13 +298,13 @@ class ValdService
                 $map['quads_l'] = $color;
                 $map['hips_l']  = $color;
                 $map['glutes_l'] = $color;
-                $map['hamstrings_l'] = $color;
+                $map['hams_l'] = $color;
                 $map['calves_l'] = $color;
             } elseif ($weaker === 'DX') {
                 $map['quads_r'] = $color;
                 $map['hips_r']  = $color;
                 $map['glutes_r'] = $color;
-                $map['hamstrings_r'] = $color;
+                $map['hams_r'] = $color;
                 $map['calves_r'] = $color;
             }
         }
@@ -491,7 +491,9 @@ PROMPT;
                                             if ($def === 'PEAK_FORCE') $keyToStore = 'PeakForce';
                                             if (in_array($def, ['BRAKING_IMPULSE', 'ECCENTRIC_BRAKING_IMPULSE', 'BRAKING_PHASE_IMPULSE', 'BRAKING_PHASE_NET_IMPULSE', 'NET_BRAKING_IMPULSE', 'ECC_BRAKING_IMPULSE'])) $keyToStore = 'BrakingImpulse';
                                             if ($def === 'CONCENTRIC_PEAK_FORCE') $keyToStore = 'ConcentricPeakForce';
-                                            if ($def === 'CONCENTRIC_PEAK_POWER') $keyToStore = 'ConcentricPeakPower';
+                                            if (in_array($def, ['CONCENTRIC_PEAK_POWER', 'CONCENTRIC_PEAK_POWER_BM', 'CONCENTRIC_PEAK_POWER_PER_BM', 'RELATIVE_CONCENTRIC_PEAK_POWER'])) {
+                                                $keyToStore = 'ConcentricPeakPower';
+                                            }
                                             if ($def === 'CONCENTRIC_PEAK_VELOCITY') $keyToStore = 'ConcentricPeakVelocity';
                                             if (in_array($def, ['PEAK_LANDING_FORCE', 'LANDING_PEAK_FORCE'])) $keyToStore = 'PeakLandingForce';
                                             if ($def === 'TIME_TO_TAKEOFF') { $val = (float)$val * 1000; $keyToStore = 'TimeToTakeoff'; }

@@ -3,10 +3,10 @@
  * Gestisce l'integrazione tra API, View e componenti specializzati (Wizard, Metrics).
  */
 
-import { AthletesAPI } from './athletes/AthletesAPI.js';
-import { AthletesView } from './athletes/AthletesView.js';
-import { AthletesWizard } from './athletes/AthletesWizard.js';
-import { AthletesMetrics } from './athletes/AthletesMetricsV2.js';
+import { AthletesAPI } from './athletes/AthletesAPI.js?v=2';
+import { AthletesView } from './athletes/AthletesView.js?v=2';
+import { AthletesWizard } from './athletes/AthletesWizard.js?v=2';
+import { AthletesMetrics } from './athletes/AthletesMetricsV2.js?v=5';
 
 const Athletes = (() => {
     let abortController = new AbortController();

@@ -35,4 +35,13 @@ export class ScoutingAPI {
     static async updateEntry(data) {
         return window.Store.api("updateEntry", "scouting", data);
     }
+
+    /**
+     * Deletes an athlete entry manually.
+     * @param {Object} data Needs id payload.
+     * @returns {Promise<any>}
+     */
+    static async deleteEntry(data) {
+        return window.Store.api("deleteEntry", "scouting", data);
+    }
 }

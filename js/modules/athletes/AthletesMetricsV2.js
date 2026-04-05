@@ -32,6 +32,7 @@ export const AthletesMetrics = {
         if (!container) return;
 
         try {
+            // Fix: action and module order in Store.get
             const data = await Store.get("analytics", "vald", { athleteId });
             
             if (!data || !data.hasData) {
@@ -162,21 +163,15 @@ export const AthletesMetrics = {
                 </div>
 
                 <!-- NEW: Full-Width Massive Anatomy Blueprint Section -->
-                <div class="card glass-card blueprint-card" style="margin-top:32px; padding:60px 40px; border-radius:32px; background:#050508; width:100%; border:1px solid rgba(0, 229, 255, 0.1);">
-                    <div style="display:flex; justify-content:center; align-items:center; gap:24px; margin-bottom:60px;">
-                         <div style="width:100px; height:1px; background:linear-gradient(90deg, transparent, var(--accent-cyan));"></div>
-                         <h3 style="font-family:var(--font-display); font-size:24px; font-weight:800; color:#fff; margin:0; letter-spacing:4px; text-transform:uppercase;">Biomechanical Blueprint</h3>
-                         <div style="width:100px; height:1px; background:linear-gradient(90deg, var(--accent-cyan), transparent);"></div>
-                    </div>
-                    
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:80px; align-items:center; min-height:1000px; width:100%; margin:0 auto;">
-                        <div class="anatomy-entry" style="position:relative; width:100%; height:1000px; filter:drop-shadow(0 0 100px rgba(0, 229, 255, 0.1));">
+                <div class="blueprint-card" style="margin-top:32px; width:100%;">
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:40px; align-items:center; min-height:900px; width:100%; margin:0 auto;">
+                        <div class="anatomy-entry" style="position:relative; width:100%; height:900px;">
                             ${this._renderAnatomy('front', data.muscleMap)}
                             <div style="position:absolute; bottom:-40px; left:50%; transform:translateX(-50%); white-space:nowrap;">
                                 <span style="font-size:12px; font-weight:900; letter-spacing:6px; color:var(--accent-cyan); opacity:0.4;">ANTERIOR_VIEW_SILHOUETTE</span>
                             </div>
                         </div>
-                        <div class="anatomy-entry" style="position:relative; width:100%; height:1000px; filter:drop-shadow(0 0 100px rgba(0, 229, 255, 0.1));">
+                        <div class="anatomy-entry" style="position:relative; width:100%; height:900px;">
                             ${this._renderAnatomy('back', data.muscleMap)}
                             <div style="position:absolute; bottom:-40px; left:50%; transform:translateX(-50%); white-space:nowrap;">
                                 <span style="font-size:12px; font-weight:900; letter-spacing:6px; color:var(--accent-cyan); opacity:0.4;">POSTERIOR_VIEW_SILHOUETTE</span>
@@ -252,88 +247,86 @@ export const AthletesMetrics = {
             console.error("Errore critico in _loadValdData:", e);
             container.innerHTML = `<div class="error-box">ERROR::DATA_LOAD_FAILED ${e.message}</div>`;
         }
-    },    /**
-     * Renderizza gli SVG dell'anatomia FEMMINILE (Elite Articulated Wireframe)
-     * High-precision anatomical silhouettes with internal 'Cyber-Blueprint' grid-lines.
+    },
+
+    /**
+     * Renderizza gli SVG dell'anatomia FEMMINILE in modalità HYBRID (Realistic 3D + SVG Data)
+     * High-fidelity medical renders for visualization with transparent SVG overlays for interactive data.
      */
     _renderAnatomy(view, muscleMap = {}) {
         if (!muscleMap) muscleMap = {};
         const getStyles = (muscle) => {
             const color = muscleMap[muscle];
-            if (!color) return `class="muscle-region" fill="rgba(0, 229, 255, 0.02)"`;
-            return `class="muscle-region active" style="--color-active:${color};"`;
+            if (!color) return `class="muscle-region" fill="transparent" stroke="none"`;
+            // Enable CSS to pick up our dynamic status color correctly
+            return `class="muscle-region active" style="--color-active: ${color};" fill="${color}" fill-opacity="0.95" stroke="${color}" stroke-width="0.75" stroke-opacity="1"`;
         };
         
-        // Elite Stylized Female Athlete Silhouette (Articulated Multi-Segment)
-        const commonStyles = `fill="none" stroke="rgba(0, 229, 255, 0.15)" stroke-width="0.5"`;
-        const skeletonLines = view === 'front' ? `
-            <line x1="50" y1="35" x2="50" y2="100" stroke="rgba(0, 229, 255, 0.08)" stroke-width="0.3" stroke-dasharray="2,2" /> <!-- Spine -->
-            <path d="M40,45 Q50,48 60,45" ${commonStyles} opacity="0.3" /> <!-- Clavicle -->
-            <path d="M42,95 Q50,98 58,95" ${commonStyles} opacity="0.3" /> <!-- Pelvic Rim -->
-            <circle cx="50" cy="22" r="7" ${commonStyles} opacity="0.2" /> <!-- Head Wireframe -->
-        ` : `
-            <line x1="50" y1="35" x2="50" y2="105" stroke="rgba(0, 229, 255, 0.08)" stroke-width="0.3" stroke-dasharray="2,2" /> <!-- Spine -->
-            <path d="M38,48 Q50,52 62,48" ${commonStyles} opacity="0.3" /> <!-- Scapula Line -->
-            <path d="M40,105 Q50,110 60,105" ${commonStyles} opacity="0.3" /> <!-- Glute Fold Line -->
-        `;
+        // Fix: Use existing high-fidelity anatomy assets from assets/img/anatomy/
+        const imgSrc = `assets/img/anatomy/body_${view}.png`;
 
-        // HIGH-PRECISION FEMALE ATHLETIC SILHOUETTE (Front)
-        const femaleFrontPath = `
-            M50,12 c-3.5,0 -6.5,3 -6.5,6.5 s3,6.5 6.5,6.5 s6.5,-3 6.5,-6.5 s-3,-6.5 -6.5,-6.5 
-            M43.5,23 c-6,1 -10,6 -13,12 c-3,7 -2,15 -2,25 c0,15 -2,25 -2,40 c0,15 2,30 4,45 c2,15 3,30 3,45 v45 c0,4 2,6 5,6 s5,-2 5,-6 v-45 m-10,0 v45 c0,4 2,6 5,6 s5,-2 5,-6 v-45 c0,-15 1,-30 3,-45 c2,-15 4,-30 4,-45 c0,-15 -3,-25 -3,-40 c0,-10 1,-18 -2,-25 c-3,-6 -7,-11 -13,-12
-            M50,33 c5,0 9,4 12,10 c3,6 4,14 4,22 c0,8 -1,16 -2,24 c-1,8 -2.5,16 -2.5,24 c0,12 2,24 2,36 v50 c0,4 -2,6 -5,6 s-5,-2 -5,-6 v-50 c-1,-12 -2,-24 -2,-36 c0,-8 1.5,-16 2.5,-24 c1,-8 2,-16 2,-24 c0,-8 -1,-16 -4,-22 c-3,-6 -7,-10 -12,-10
-        `;
-
-        // HIGH-PRECISION FEMALE ATHLETIC SILHOUETTE (Back)
-        const femaleBackPath = `
-            M50,12 c-3.5,0 -6.5,3 -6.5,6.5 s3,6.5 6.5,6.5 s6.5,-3 6.5,-6.5 s-3,-6.5 -6.5,-6.5 
-            M43.5,23 c-7,2 -11,8 -13,16 c-2,8 -1,18 -1,28 c0,15 -3,25 -3,35 c0,20 3,40 5,60 c2,20 3,40 3,60 v30 c0,4 2,6 5,6 s5,-2 5,-6 v-30 c0,-20 1,-40 3,-60 c2,-20 5,-40 5,-60 c0,-10 -3,-20 -3,-35 c0,-10 1,-20 -1,-28 c-2,-8 -6,-14 -13,-16
-        `;
-
+        // Interactive High-Performance Highlighting (Calibrated to 3D Assets)
         return `
-            <div class="anatomy-container ${view}" style="width:100%; height:100%; position:relative; overflow:visible;">
-                <svg viewBox="0 0 100 240" style="width:100%; height:100%;">
-                    <defs>
-                        <linearGradient id="bodyGrad${view}" x1="0%" y1="0%" x2="0%" y2="100%">
-                            <stop offset="0%" style="stop-color:rgba(0, 229, 255, 0.08);stop-opacity:1" />
-                            <stop offset="100%" style="stop-color:rgba(0, 229, 255, 0.02);stop-opacity:1" />
-                        </linearGradient>
-                        <filter id="neonGlow" x="-50%" y="-50%" width="200%" height="200%">
-                            <feGaussianBlur stdDeviation="4" result="blur" />
-                            <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                        </filter>
-                    </defs>
-                    
-                    <!-- Elite Cyber-Blueprint Skeleton -->
-                    ${skeletonLines}
-                    
-                    <!-- HIGH-PRECISION BODY SILHOUETTE -->
-                    <path d="${view === 'front' ? femaleFrontPath : femaleBackPath}" 
-                        fill="url(#bodyGrad${view})" 
-                        stroke="rgba(0, 229, 255, 0.4)" 
-                        stroke-width="0.8" 
-                        filter="url(#neonGlow)" />
+            <div class="anatomy-container ${view}" style="width:100%; height:100%; position:relative; overflow:hidden; background:transparent; display:flex; align-items:center; justify-content:center;">
+                <!-- High-Fidelity 3D Medical Render (Muscle Fibers - Myology) -->
+                <img src="${imgSrc}" alt="${view} anatomy" style="
+                    position:absolute; 
+                    top:0; 
+                    left:50%; 
+                    transform:translateX(-50%); 
+                    height:100%; 
+                    width:auto; 
+                    object-fit:contain; 
+                    opacity:0.85; 
+                    mix-blend-mode:screen;
+                    filter: brightness(1.1) contrast(1.15);
+                    z-index:1;
+                ">
 
-                    <!-- MUSCLE REGION MAPPING (Detailed Anatomical Precision) -->
+                <!-- Interactive SVG Telemetry Overlay -->
+                <svg viewBox="0 0 100 240" style="
+                    position:absolute; 
+                    top:0; 
+                    left:50%; 
+                    transform:translateX(-50%);
+                    width:auto;
+                    height:100%; 
+                    aspect-ratio: 100 / 240;
+                    z-index:2; 
+                    pointer-events:none;
+                    mix-blend-mode: hard-light;
+                    opacity: 1;
+                ">
+                    <defs>
+                    </defs>
+
+                    <!-- MUSCLE REGION HIGHLIGHTS -->
                     ${view === 'front' ? `
-                        <!-- Quads (Femminile Stilizzata) -->
-                        <path d="M35,110 c-3,10 -4,25 -2,40 c1,5 3,10 6,12 c3,2 5,0 6,-8 c1,-15 -2,-30 -4,-45 c-1,-5 -3,-5 -6,1" ${getStyles('quads_l')} />
-                        <path d="M65,110 c3,10 4,25 2,40 c-1,5 -3,10 -6,12 c-3,2 -5,0 -6,-8 c-1,-15 2,-30 4,-45 c1,-5 3,-5 6,1" ${getStyles('quads_r')} />
+                        <!-- Quads (Calibrated to Realistic Muscle Tiers) -->
+                        <path d="M34,120 c-2,15 -3,40 -1,60 c1,10 4,12 8,12 c4,0 5,-5 6,-15 c1,-20 -2,-45 -4,-65 c-1,-10 -4,-10 -9,8" 
+                            ${getStyles('quads_l')} />
+                        <path d="M66,120 c2,15 3,40 1,60 c-1,10 -4,12 -8,12 c-4,0 -5,-5 -6,-15 c-1,-20 2,-45 4,-65 c1,-10 4,-10 9,8" 
+                            ${getStyles('quads_r')} />
                         
-                        <!-- Core / Abs -->
-                        <path d="M44,65 c0,5 0,15 2,25 c2,10 8,10 10,0 c2,-10 2,-20 0,-25 c-2,-5 -8,-5 -12,0" ${getStyles('core')} />
+                        <!-- Core / Abs (Centralized on 3D Model) -->
+                        <path d="M42,65 c0,10 0,30 2,40 c2,15 10,15 12,0 c2,-10 2,-30 0,-40 c-2,-10 -10,-10 -14,0" 
+                            ${getStyles('core')} />
                         
-                        <!-- Hip / Lateral -->
-                        <ellipse cx="38" cy="95" rx="5" ry="8" ${getStyles('hips_l')} />
-                        <ellipse cx="62" cy="95" rx="5" ry="8" ${getStyles('hips_r')} />
+                        <!-- Hips / Lateral Stabilizers -->
+                        <ellipse cx="36" cy="100" rx="5" ry="12" ${getStyles('hips_l')} />
+                        <ellipse cx="64" cy="100" rx="5" ry="12" ${getStyles('hips_r')} />
                     ` : `
-                        <!-- Glutes (Powerful Athletic Base) -->
-                        <path d="M38,95 c-4,5 -6,15 -4,25 c2,10 10,12 14,8 c4,-4 5,-15 3,-25 c-2,-5 -8,-10 -13,-8" ${getStyles('glutes_l')} />
-                        <path d="M62,95 c4,5 6,15 4,25 c-2,10 -10,12 -14,8 c-4,-4 -5,-15 -3,-25 c2,-5 8,-10 13,-8" ${getStyles('glutes_r')} />
+                        <!-- Glutes (Powerful Base Highlights) -->
+                        <path d="M36,95 c-5,5 -9,25 -5,45 c3,12 15,18 20,8 c5,-8 7,-25 4,-45 c-2,-12 -12,-18 -19,-8" 
+                            ${getStyles('glutes_l')} />
+                        <path d="M64,95 c5,5 9,25 5,45 c-3,12 -15,18 -20,8 c-5,-8 -7,-25 -4,-45 c2,-12 12,-18 19,-8" 
+                            ${getStyles('glutes_r')} />
                         
                         <!-- Hamstrings -->
-                        <path d="M38,135 c-2,10 -3,20 -1,30 c1,8 5,10 7,5 c2,-10 1,-25 -1,-35 c-1,-5 -4,-5 -5,0" ${getStyles('hams_l')} />
-                        <path d="M62,135 c2,10 3,20 1,30 c-1,8 -5,10 -7,5 c-2,-10 -1,-25 1,-35 c1,-5 4,-5 5,0" ${getStyles('hams_r')} />
+                        <path d="M35,155 c-2,15 -3,40 -1,60 c1,10 5,8 8,0 c3,-25 2,-50 -1,-70 c-1,-10 -5,-10 -6,10" 
+                            ${getStyles('hams_l')} />
+                        <path d="M65,155 c2,15 3,40 1,60 c-1,10 -5,8 -8,0 c-3,-25 -2,-50 1,-70 c1,-10 5,-10 6,10" 
+                            ${getStyles('hams_r')} />
                     `}
                 </svg>
             </div>
@@ -352,9 +345,7 @@ export const AthletesMetrics = {
         return `
             <div class="gauge-svg-container">
                 <svg viewBox="0 0 130 75" preserveAspectRatio="xMidYMax meet" style="width:100%; height:100%;">
-                    <!-- Background Arc -->
                     <path class="gauge-svg-bg" d="M 10 65 A 55 55 0 0 1 120 65" />
-                    <!-- Value Arc -->
                     <path class="gauge-svg-val" 
                           d="M 10 65 A 55 55 0 0 1 120 65" 
                           style="--gauge-color:${color}; stroke-dasharray: ${circumference}; stroke-dashoffset: ${offset};" />

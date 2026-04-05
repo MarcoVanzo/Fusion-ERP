@@ -294,8 +294,10 @@ const SocietaView = {
                                     ` : ""}
                                 </div>
                                 <div class="soc-sponsor-name">${Utils.escapeHtml(sp.name)}</div>
-                                <div style="font-size:11px;color:var(--color-text-muted);margin-top:2px;text-transform:uppercase;letter-spacing:0.05em">${Utils.escapeHtml(sp.tipo || "Sponsor")}</div>
+                                <div style="font-size:11px;color:var(--color-text-muted);margin-top:2px;text-transform:uppercase;letter-spacing:0.05em">${Utils.escapeHtml(sp.tipo || "Sponsor")} ${sp.stagione ? `· ${Utils.escapeHtml(sp.stagione)}` : ""}</div>
+                                ${sp.importo ? `<div style="font-size:12px; font-weight:800; color:var(--color-pink); margin-top:4px;">€ ${parseFloat(sp.importo).toLocaleString('it-IT', {minimumFractionDigits:2})}</div>` : ""}
                                 ${sp.description ? `<div class="soc-sponsor-desc">${Utils.escapeHtml(sp.description)}</div>` : ""}
+                                ${sp.rapporto ? `<div style="font-size:11px; color:rgba(255,255,255,0.5); margin-top:4px; font-style:italic;">${Utils.escapeHtml(sp.rapporto)}</div>` : ""}
                                 <div class="soc-sponsor-links">
                                     ${sp.website_url ? `<a href="${Utils.escapeHtml(sp.website_url)}" target="_blank" class="soc-sponsor-link" title="Sito web"><i class="ph ph-globe-simple"></i></a>` : ""}
                                     ${sp.instagram_url ? `<a href="${Utils.escapeHtml(sp.instagram_url)}" target="_blank" class="soc-sponsor-link" title="Instagram"><i class="ph ph-instagram-logo"></i></a>` : ""}
@@ -542,6 +544,20 @@ const SocietaView = {
                     <label class="form-label">Descrizione Breve</label>
                     <textarea id="sp-desc" class="form-input" rows="2" placeholder="Di cosa si occupa l'azienda...">${Utils.escapeHtml(s.description || "")}</textarea>
                 </div>
+                <div style="display:flex; gap:var(--sp-3); flex-wrap:wrap">
+                    <div class="form-group" style="flex:1">
+                        <label class="form-label">Importo (€)</label>
+                        <input type="number" id="sp-importo" class="form-input" value="${Utils.escapeHtml(String(s.importo || ""))}" step="0.01" placeholder="0.00">
+                    </div>
+                    <div class="form-group" style="flex:1">
+                        <label class="form-label">Rapporto / Note collab.</label>
+                        <input type="text" id="sp-rapporto" class="form-input" value="${Utils.escapeHtml(s.rapporto || "")}" placeholder="es. Contratto triennale">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Dettagli Sponsorizzazione</label>
+                    <textarea id="sp-sponsorizzazione" class="form-input" rows="2" placeholder="Dettagli tecnici o accordi specifici...">${Utils.escapeHtml(s.sponsorizzazione || "")}</textarea>
+                </div>
                 <hr style="border:0; border-top:1px solid rgba(255,255,255,0.1); margin:16px 0">
                 <p style="font-size:13px; color:var(--color-text-muted); margin-bottom:8px">Contatti e Link (Opzionali)</p>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:var(--sp-2)">
@@ -567,6 +583,12 @@ const SocietaView = {
                         <div class="input-wrapper" style="position:relative">
                             <i class="ph ph-linkedin-logo" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--color-text-muted)"></i>
                             <input type="url" id="sp-linkedin" class="form-input" value="${Utils.escapeHtml(s.linkedin_url || "")}" placeholder="LinkedIn URL" style="padding-left:36px">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="input-wrapper" style="position:relative">
+                            <i class="ph ph-tiktok-logo" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--color-text-muted)"></i>
+                            <input type="url" id="sp-tiktok" class="form-input" value="${Utils.escapeHtml(s.tiktok_url || "")}" placeholder="TikTok URL" style="padding-left:36px">
                         </div>
                     </div>
                 </div>

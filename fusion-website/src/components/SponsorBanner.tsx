@@ -9,6 +9,8 @@ interface Sponsor {
     description: string | null;
     logo_path: string | null;
     website_url: string | null;
+    stagione: string | null;
+    rapporto: string | null;
 }
 
 const ERP_BASE = 'https://www.fusionteamvolley.it/ERP';

@@ -8,6 +8,11 @@ const TransportMap = {
     _pollInterval: null,
     _activeIntervals: [],
 
+    resetAllIntervals: () => {
+        TransportMap._activeIntervals.forEach(clearInterval);
+        TransportMap._activeIntervals = [];
+    },
+
     initGoogleMaps: (callback) => {
         if (typeof google !== "undefined" && google.maps && google.maps.places) {
             TransportMap._injectStyles();

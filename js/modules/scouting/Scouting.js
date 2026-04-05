@@ -148,6 +148,14 @@ class ScoutingModule {
                             this.openSidePanel(athlete);
                         }
                     }
+
+                    const delBtn = e.target.closest(".delete-athlete-btn");
+                    if (delBtn) {
+                        e.stopPropagation();
+                        if (confirm("Sei sicuro di voler eliminare questo atleta?")) {
+                            this.handleDelete(delBtn.dataset.id);
+                        }
+                    }
                 }, this.sig());
             }
         }
@@ -191,6 +199,17 @@ class ScoutingModule {
         }
     }
 
+    async handleDelete(id) {
+        try {
+            await ScoutingAPI.deleteEntry({ id });
+            window.UI.toast("Atleta eliminato con successo", "success");
+            window.Store.invalidate("scouting");
+            await this.refreshData(true);
+        } catch (err) {
+            window.UI.toast("Errore durante l'eliminazione: " + err.message, "error");
+        }
+    }
+
     openSidePanel(athlete = null) {
         const isEdit = athlete !== null;
         const panel = document.getElementById("scouting-side-panel");
@@ -223,7 +242,10 @@ class ScoutingModule {
             const payload = {
                 nome: document.getElementById("sc-nome")?.value.trim(),
                 cognome: document.getElementById("sc-cognome")?.value.trim(),
+                ruolo: document.getElementById("sc-ruolo")?.value.trim(),
                 societa_appartenenza: document.getElementById("sc-societa")?.value.trim(),
+                email: document.getElementById("sc-email")?.value.trim(),
+                cellulare: document.getElementById("sc-cellulare")?.value.trim(),
                 anno_nascita: document.getElementById("sc-anno")?.value,
                 rilevatore: document.getElementById("sc-rilevatore")?.value.trim(),
                 data_rilevazione: document.getElementById("sc-data")?.value,

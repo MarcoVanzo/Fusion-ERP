@@ -31,11 +31,10 @@ def run_preflight_checks():
     print("🔍 Running PHPStan Static Analysis...")
     try:
         # Use the composer script defined in composer.json
-        result = subprocess.run(['php', 'composer.phar', 'phpstan'], capture_output=True, text=True)
+        # Running without capture_output to show live progress to the user
+        result = subprocess.run(['php', 'composer.phar', 'phpstan'])
         if result.returncode != 0:
-            print("❌ PHPStan failed! Fix the following issues before deploying:")
-            print(result.stdout)
-            print(result.stderr)
+            print("❌ PHPStan failed! Fix the following issues before deploying.")
             sys.exit(1)
         print("  ✅ PHPStan passed.")
     except FileNotFoundError:
@@ -48,10 +47,10 @@ def run_preflight_checks():
     stress_script = 'scripts/stress_checker.py'
     if os.path.exists(stress_script):
         try:
-            result = subprocess.run([sys.executable, stress_script], capture_output=True, text=True)
+            # Running without capture_output to show live progress
+            result = subprocess.run([sys.executable, stress_script])
             if result.returncode != 0:
                 print("❌ Stress Test failed! API is not stable or slow.")
-                print(result.stdout)
                 sys.exit(1)
             print("  ✅ Stress Test passed.")
         except Exception as e:
@@ -277,7 +276,7 @@ def deploy_files_via_ftp(dry_run=False):
         
         ignore_dirs = ['.git', 'node_modules', 'tests', '__pycache__', '.pytest_cache', '.gemini', '.venv', 'venv_video', 'uploads']
         ignore_extensions = ['.zip', '.log']
-        ignore_files = ['deploy.py', 'deploy.mp', 'deploy_ftp.sh', CACHE_FILE]
+        ignore_files = ['deploy.py', 'deploy.mp', 'deploy_ftp.sh', CACHE_FILE, '.env.prod']
 
         upload_jobs: list[tuple[str, str, str, str]] = []
         required_dirs: set[str] = set()
@@ -296,12 +295,21 @@ def deploy_files_via_ftp(dry_run=False):
             rel_path = os.path.relpath(root, '.')
             rel_path_unix = rel_path.replace('\\', '/')
             
-            # Skip uploading source code for React apps (only upload 'dist')
+            # Special handling for assets to avoid uploading thousands of user files if they exist locally
+            if rel_path_unix == 'assets':
+                files[:] = [f for f in files if f in ['favicon.svg', 'cestino.png']]
+                # Let os.walk descend into 'anatomy' and 'media' subdirectories
+            elif rel_path_unix.startswith('assets/') and not (rel_path_unix.startswith('assets/media') or rel_path_unix.startswith('assets/anatomy')):
+                for d in list(dirs):
+                    dirs.remove(d)
+                files[:] = [] # Skip files in unallowed sub-assets
+                continue
+            
+            # Skip the root files of the React apps (package.json, ecc)
             if rel_path_unix in ['fusion-website', 'fusion-erp-react']:
                 for d in list(dirs):
                     if d != 'dist':
                         dirs.remove(d)
-                # Skip the root files of the React apps (package.json, ecc)
                 continue
             
             # Map fusion-website/dist to the root folder in production
@@ -453,15 +461,15 @@ def git_commit_and_push(skip=False):
             print(f"  ✅ Commit creato: deploy: {timestamp}")
 
         # Push sempre (anche se non c'era commit, può esserci roba non pushata)
+        # We don't capture output here so the user can see if it asks for a password or shows progress
         push_result = subprocess.run(
             ['git', 'push', 'origin', 'main'],
-            capture_output=True, text=True,
             timeout=GIT_PUSH_TIMEOUT
         )
         if push_result.returncode == 0:
             print("  ✅ Push su GitHub completato.")
         else:
-            print(f"  ⚠️  Push fallito (non bloccante): {push_result.stderr.strip()}")
+            print(f"  ⚠️  Push fallito (non bloccante).")
 
     except subprocess.TimeoutExpired:
         print("  ⚠️  Git timeout — il push potrebbe richiedere credenziali. Continuo il deploy...")
@@ -563,15 +571,21 @@ def main():
     parser.add_argument("--skip-checks", action="store_true", help="Salta i controlli pre-flight (PHPStan, Stress Test)")
     args = parser.parse_args()
 
-    print("=== Fusion ERP Fast Auto-Deploy ===")
+    # 0. Fast Checks (Credentials and mandatory files)
+    # Check this FIRST before running expensive builds/analysis
+    load_env()
     
-    # 0. Pre-flight Checks
+    if not os.path.exists('.env.prod'):
+        print("❌ Error: .env.prod file not found. Create it with production credentials before deploying.")
+        print("💡 Hint: This file will be uploaded as '.env' on the production server.")
+        sys.exit(1)
+
+    print("=== Fusion ERP Fast Auto-Deploy ===")
+
+    # 1. Pre-flight Checks
     if not args.dry_run and not args.skip_checks:
         run_preflight_checks()
 
-    # 1. Load credentials
-    load_env()
-    
     # 2. Carica cache per smart build
     cache = load_cache()
 
@@ -584,11 +598,6 @@ def main():
 
     # 5. Salva su GitHub prima di deployare
     git_commit_and_push(skip=(args.no_git or args.dry_run))
-
-    # 6. Ensure .env.prod exists
-    if not os.path.exists('.env.prod'):
-        print("❌ Error: .env.prod file not found. Create it with production credentials before deploying.")
-        sys.exit(1)
 
     # 7. Deploy direttamente
     try:

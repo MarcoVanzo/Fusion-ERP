@@ -61,6 +61,26 @@ try {
     echo "\n--- SESSION USER ---\n";
     print_r($_SESSION['user'] ?? 'No session user');
 
+    // Check Societa Sponsors schema fix
+    echo "\n--- SCHEMA VERIFICATION (societa_sponsors) ---\n";
+    $stmt = $db->query("SHOW COLUMNS FROM societa_sponsors WHERE Field IN ('rapporto', 'sponsorizzazione')");
+    $cols = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($cols as $col) {
+        echo "Field: {$col['Field']}, Type: {$col['Type']}\n";
+    }
+
+    // Check Athletes schema synchronization (V028)
+    echo "\n--- SCHEMA VERIFICATION (athletes extended) ---\n";
+    $extendedFields = ['nationality', 'blood_group', 'allergies', 'medications', 'emergency_contact_name', 'emergency_contact_phone', 'communication_preference', 'image_release_consent', 'medical_cert_issued_at'];
+    $placeholders = implode(',', array_fill(0, count($extendedFields), '?'));
+    $stmt = $db->prepare("SHOW COLUMNS FROM athletes WHERE Field IN ($placeholders)");
+    $stmt->execute($extendedFields);
+    $cols = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $found = array_column($cols, 'Field');
+    foreach ($extendedFields as $f) {
+        $status = in_array($f, $found) ? "PRESENT" : "MISSING ❌";
+        echo "Field $f: $status\n";
+    }
 } catch (Exception $e) {
     echo "ERROR: " . $e->getMessage();
 }

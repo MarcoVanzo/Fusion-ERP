@@ -273,6 +273,26 @@ export const AthletesView = {
                     { label: "Taglia Kit", value: athlete.shirt_size ? `Taglia ${athlete.shirt_size}` : null, icon: "ph-t-shirt" },
                     { label: "Scarpe", value: athlete.shoe_size, icon: "ph-sneaker-move" },
                 ]
+            },
+            {
+                title: "Salute & Emergenza",
+                icon: "ph-first-aid",
+                items: [
+                    { label: "Gruppo Sanguigno", value: athlete.blood_group, icon: "ph-drop" },
+                    { label: "Allergie Note", value: athlete.allergies, icon: "ph-warning-octagon" },
+                    { label: "Farmaci / Terapie", value: athlete.medications, icon: "ph-pill" },
+                    { label: "Contatto Emergenza", value: athlete.emergency_contact_name ? `${athlete.emergency_contact_name} (${athlete.emergency_contact_phone || '—'})` : null, icon: "ph-emergency" },
+                ]
+            },
+            {
+                title: "Privacy & Consensi",
+                icon: "ph-shield-checkered",
+                items: [
+                    { label: "Nazionalità", value: athlete.nationality, icon: "ph-globe-hemisphere-west" },
+                    { label: "Preferenza Comm.", value: athlete.communication_preference, icon: "ph-broadcast" },
+                    { label: "Consenso Immagini", value: athlete.image_release_consent ? 'Rilasciato' : 'Non Rilasciato', icon: "ph-camera" },
+                    { label: "Data Rilascio Cert.", value: athlete.medical_cert_issued_at ? Utils.formatDate(athlete.medical_cert_issued_at) : null, icon: "ph-calendar-check" },
+                ]
             }
         ];
 
@@ -442,12 +462,27 @@ export const AthletesView = {
                         <div style="display:flex;flex-direction:column;gap:16px;">
                             <h4 style="font-size:12px;text-transform:uppercase;color:var(--color-text-muted);letter-spacing:0.1em;border-bottom:1px solid rgba(255,255,255,0.05);padding-bottom:8px;">Contatti</h4>
                             <div class="form-group"><label class="form-label">Email Atleta</label><input name="email" class="form-input" type="email" value="${Utils.escapeHtml(athlete?.email || '')}"></div>
+                            <div class="form-group"><label class="form-label">Nazionalità</label><input name="nationality" class="form-input" placeholder="es. Italiana" value="${Utils.escapeHtml(athlete?.nationality || '')}"></div>
                             <div class="form-group"><label class="form-label">Cellulare Atleta</label><input name="phone" class="form-input" type="tel" value="${Utils.escapeHtml(athlete?.phone || '')}"></div>
                             <div class="form-group"><label class="form-label">Indirizzo Residenza</label><input name="residence_address" class="form-input" value="${Utils.escapeHtml(athlete?.residence_address || '')}"></div>
                             <div class="form-group"><label class="form-label">Città</label><input name="residence_city" class="form-input" value="${Utils.escapeHtml(athlete?.residence_city || '')}"></div>
                         </div>
 
-                        <!-- Sezione 4: Kit & Taglie -->
+                        <!-- Sezione 4.1: Emergenza & Salute -->
+                        <div style="display:flex;flex-direction:column;gap:16px;">
+                            <h4 style="font-size:12px;text-transform:uppercase;color:var(--color-pink);letter-spacing:0.1em;border-bottom:1px solid rgba(255,255,255,0.05);padding-bottom:8px;">Emergenza & Salute</h4>
+                            <div class="form-grid">
+                                <div class="form-group"><label class="form-label">Gruppo Sanguigno</label><input name="blood_group" class="form-input" placeholder="es. A+" value="${Utils.escapeHtml(athlete?.blood_group || '')}"></div>
+                                <div class="form-group"><label class="form-label">Nome Contatto Emergenza</label><input name="emergency_contact_name" class="form-input" value="${Utils.escapeHtml(athlete?.emergency_contact_name || '')}"></div>
+                            </div>
+                            <div class="form-group"><label class="form-label">Telefono Emergenza</label><input name="emergency_contact_phone" class="form-input" type="tel" value="${Utils.escapeHtml(athlete?.emergency_contact_phone || '')}"></div>
+                            <div class="form-group"><label class="form-label">Allergie</label><textarea name="allergies" class="form-input" rows="2" style="resize:none;">${Utils.escapeHtml(athlete?.allergies || '')}</textarea></div>
+                            <div class="form-group"><label class="form-label">Farmaci / Terapie</label><textarea name="medications" class="form-input" rows="2" style="resize:none;">${Utils.escapeHtml(athlete?.medications || '')}</textarea></div>
+                        </div>
+                    </div>
+
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:32px;">
+                        <!-- Sezione 4: Kit & Stato Medico -->
                         <div style="display:flex;flex-direction:column;gap:16px;">
                             <h4 style="font-size:12px;text-transform:uppercase;color:var(--color-text-muted);letter-spacing:0.1em;border-bottom:1px solid rgba(255,255,255,0.05);padding-bottom:8px;">Kit & Stato Medico</h4>
                             <div class="form-grid">
@@ -458,9 +493,36 @@ export const AthletesView = {
                                 <div class="form-group"><label class="form-label">Altezza (cm)</label><input name="height_cm" class="form-input" type="number" value="${athlete?.height_cm || ''}"></div>
                                 <div class="form-group"><label class="form-label">Peso (kg)</label><input name="weight_kg" class="form-input" type="number" step="0.1" value="${athlete?.weight_kg || ''}"></div>
                             </div>
-                            <div class="form-group"><label class="form-label">Scadenza Certificato Medico</label><input name="medical_cert_expires_at" class="form-input" type="date" value="${athlete?.medical_cert_expires_at || ''}"></div>
+                            <div class="form-grid">
+                                <div class="form-group"><label class="form-label">Data Rilascio Cert.</label><input name="medical_cert_issued_at" class="form-input" type="date" value="${athlete?.medical_cert_issued_at || ''}"></div>
+                                <div class="form-group"><label class="form-label">Scadenza Certificato</label><input name="medical_cert_expires_at" class="form-input" type="date" value="${athlete?.medical_cert_expires_at || ''}"></div>
+                            </div>
                             <div class="form-group"><label class="form-label">Nome Genitore Referente</label><input name="parent_contact" class="form-input" value="${Utils.escapeHtml(athlete?.parent_contact || '')}"></div>
                             <div class="form-group"><label class="form-label">Cellulare Genitore</label><input name="parent_phone" class="form-input" type="tel" value="${Utils.escapeHtml(athlete?.parent_phone || '')}"></div>
+                        </div>
+
+                        <!-- Sezione 5: Privacy -->
+                        <div style="display:flex;flex-direction:column;gap:16px;">
+                            <h4 style="font-size:12px;text-transform:uppercase;color:var(--color-warning);letter-spacing:0.1em;border-bottom:1px solid rgba(255,255,255,0.05);padding-bottom:8px;">Privacy & Consensi</h4>
+                            <div class="form-group">
+                                <label class="form-label">Preferenza Comunicazioni</label>
+                                <select name="communication_preference" class="form-input">
+                                    <option value="email" ${athlete?.communication_preference === 'email' ? 'selected' : ''}>Email</option>
+                                    <option value="whatsapp" ${athlete?.communication_preference === 'whatsapp' ? 'selected' : ''}>WhatsApp</option>
+                                    <option value="none" ${athlete?.communication_preference === 'none' ? 'selected' : ''}>Nessuna</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin-top:10px;">
+                                <label class="multi-team-option ${athlete?.image_release_consent ? 'selected' : ''}" style="padding:16px; display:flex; align-items:center; gap:12px;">
+                                    <input type="checkbox" name="image_release_consent" value="1" ${athlete?.image_release_consent ? 'checked' : ''} style="width:20px; height:20px;">
+                                    <span style="font-size:13px; font-weight:600;">Consenso riprese video e foto (Social/Sito)</span>
+                                </label>
+                            </div>
+                            <div style="margin-top:auto; padding:16px; background:rgba(255,193,7,0.05); border:1px solid rgba(255,193,7,0.1); border-radius:12px;">
+                                <p style="font-size:12px; color:rgba(255,255,255,0.5); line-height:1.5; margin:0;">
+                                    <i class="ph ph-info" style="color:var(--color-warning);"></i> Assicurarsi che l'atleta (o genitore se minorenne) abbia firmato il modulo cartaceo prima di flaggare i consensi digitali.
+                                </p>
+                            </div>
                         </div>
                     </div>
 

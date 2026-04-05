@@ -183,13 +183,15 @@ const Results = () => {
                                             
                                             // Determine if Fusion won
                                             let fusionWonStatus: 'win' | 'loss' | null = null;
-                                            if (isFusionHome || isFusionAway) {
-                                                const homeSets = match.sets_home || 0;
-                                                const awaySets = match.sets_away || 0;
-                                                if (isFusionHome) {
-                                                    fusionWonStatus = homeSets > awaySets ? 'win' : 'loss';
-                                                } else if (isFusionAway) {
-                                                    fusionWonStatus = awaySets > homeSets ? 'win' : 'loss';
+                                            if ((isFusionHome || isFusionAway) && match.sets_home != null && match.sets_away != null) {
+                                                const homeSets = Number(match.sets_home);
+                                                const awaySets = Number(match.sets_away);
+                                                if (homeSets > 0 || awaySets > 0) {
+                                                    if (isFusionHome) {
+                                                        fusionWonStatus = homeSets > awaySets ? 'win' : (homeSets < awaySets ? 'loss' : null);
+                                                    } else if (isFusionAway) {
+                                                        fusionWonStatus = awaySets > homeSets ? 'win' : (awaySets < homeSets ? 'loss' : null);
+                                                    }
                                                 }
                                             }
 
@@ -261,8 +263,10 @@ const Results = () => {
                             {activeTab === 'classifiche' && (
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                     {filteredStandings.length === 0 ? (
-                                        <div className="col-span-1 lg:col-span-2 py-16 text-center border border-zinc-800/50 bg-zinc-900/20 rounded-2xl">
-                                            <p className="font-subheading text-xl text-zinc-500">Nessuna classifica trovata per i criteri selezionati.</p>
+                                        <div className="col-span-1 lg:col-span-2 py-16 flex flex-col items-center justify-center text-center border border-zinc-800/50 bg-zinc-900/20 rounded-2xl">
+                                            <Trophy className="text-zinc-700 mb-4" size={48} />
+                                            <h3 className="font-heading text-2xl text-zinc-400 tracking-widest uppercase mb-2">Classifica non disponibile</h3>
+                                            <p className="font-subheading text-lg text-zinc-500 uppercase">Dati non ancora sincronizzati.</p>
                                         </div>
                                     ) : (
                                         filteredStandings.map((champ) => (

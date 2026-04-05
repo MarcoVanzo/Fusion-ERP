@@ -51,6 +51,7 @@ const Navbar = () => {
         name: string;
         path: string;
         badge?: string;
+        isHighlight?: boolean;
     };
 
     const splitLeftLinks: NavLink[] = [
@@ -66,6 +67,7 @@ const Navbar = () => {
         { name: 'MATCH CENTER', path: '/results', badge: 'LIVE' },
         { name: 'OUTSEASON', path: '/outseason' },
         { name: 'STORE', path: '/shop' },
+        { name: 'ENTRA NELLA NOSTRA FAMIGLIA', path: '/candidatura-scouting', isHighlight: true },
     ];
 
     const allLinks = [...splitLeftLinks, ...splitRightLinks];
@@ -104,17 +106,36 @@ const Navbar = () => {
                     <div className="flex items-center gap-6">
                         {splitRightLinks.map(link => {
                             const isActive = location.pathname === link.path || (link.path !== '/' && location.pathname.startsWith(link.path));
+                            // Sostituisco "ENTRA NELLA NOSTRA FAMIGLIA" con "CANDIDATI" per non rompere altri possibili riferimenti
+                            const linkName = link.name === 'ENTRA NELLA NOSTRA FAMIGLIA' ? 'CANDIDATI' : link.name;
                             return (
                                 <Link 
                                     key={link.name} 
                                     to={link.path} 
-                                    className={`text-sm font-semibold tracking-widest transition-colors uppercase relative group flex items-center ${isActive ? 'text-brand-500' : 'text-zinc-300 hover:text-white'}`}
+                                    className={
+                                        link.isHighlight 
+                                        ? "relative group flex items-center justify-center px-4 py-2 transition-all duration-300 transform hover:scale-105" 
+                                        : `text-sm font-semibold tracking-widest transition-colors uppercase relative group flex items-center ${isActive ? 'text-brand-500' : 'text-zinc-300 hover:text-white'}`
+                                    }
                                 >
-                                    {link.name}
-                                    {link.badge && (
-                                        <span className="absolute -top-3 -right-6 text-[8px] bg-red-600/90 text-white px-1.5 py-0.5 rounded animate-pulse shadow-[0_0_8px_rgba(220,38,38,0.6)]">{link.badge}</span>
+                                    {link.isHighlight ? (
+                                        <>
+                                            <span 
+                                                className="relative z-10 text-[28px] md:text-[32px] text-brand-500 hover:text-brand-400 drop-shadow-[0_0_12px_rgba(217,70,239,0.3)] group-hover:drop-shadow-[0_0_20px_rgba(217,70,239,0.6)] transition-all duration-300" 
+                                                style={{ fontFamily: "'Rubik Dirt', system-ui", lineHeight: 1 }}
+                                            >
+                                                {linkName}
+                                            </span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            {linkName}
+                                            {link.badge && (
+                                                <span className="absolute -top-3 -right-6 text-[8px] bg-red-600/90 text-white px-1.5 py-0.5 rounded animate-pulse shadow-[0_0_8px_rgba(220,38,38,0.6)]">{link.badge}</span>
+                                            )}
+                                            <span className={`absolute -bottom-2 left-0 h-[2px] bg-brand-500 transition-all duration-300 ${isActive ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
+                                        </>
                                     )}
-                                    <span className={`absolute -bottom-2 left-0 h-[2px] bg-brand-500 transition-all duration-300 ${isActive ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
                                 </Link>
                             )
                         })}
@@ -124,10 +145,18 @@ const Navbar = () => {
                     {hubLogo && (
                         <a 
                             href="https://www.fusionteamvolley.it/network" 
-                            className="ml-auto block w-[60px] h-[60px] -mt-1 bg-white rounded-full p-1.5 shadow-lg hover:scale-105 transition-transform duration-300 group ring-1 ring-zinc-800/50 hover:ring-brand-500/50 relative z-50 pointer-events-auto"
+                            className="ml-6 block relative group z-50 pointer-events-auto"
                             title="Savino del bene volley HUB"
                         >
-                            <img src={hubLogo} alt="HUB" className="w-full h-full object-contain mix-blend-multiply filter grayscale group-hover:grayscale-0 transition-all duration-300" />
+                            {/* Glow under logo */}
+                            <div className="absolute inset-0 bg-brand-500/30 blur-xl rounded-full scale-150 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                            
+                            {/* Container */}
+                            <div className="relative w-[48px] h-[48px] bg-gradient-to-b from-white/90 to-white/70 backdrop-blur-md p-[2px] rounded-full border border-white/20 shadow-[0_4px_15px_rgba(0,0,0,0.5)] group-hover:shadow-[0_0_25px_rgba(217,70,239,0.4)] group-hover:-translate-y-1 transition-all duration-300">
+                                <div className="w-full h-full bg-white rounded-full flex items-center justify-center p-1 shadow-inner">
+                                    <img src={hubLogo} alt="HUB" className="w-full h-full object-contain filter grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500" />
+                                </div>
+                            </div>
                         </a>
                     )}
                 </div>
@@ -169,9 +198,13 @@ const Navbar = () => {
                                         <Link 
                                             to={link.path} 
                                             onClick={() => setIsMobileMenuOpen(false)}
-                                            className={`font-heading text-2xl uppercase tracking-widest border-b border-zinc-800/50 py-5 px-4 min-h-[56px] flex items-center justify-between transition-all ${isActive ? 'text-brand-500 bg-brand-500/10 border-l-4 border-l-brand-500' : 'text-zinc-300 hover:text-white hover:bg-white/5'}`}
+                                            className={
+                                                link.isHighlight 
+                                                ? `font-heading text-2xl uppercase tracking-widest border-b border-zinc-800/50 py-5 px-4 min-h-[56px] flex items-center justify-between transition-all bg-brand-900/30 text-brand-300 border-l-4 border-l-brand-500` 
+                                                : `font-heading text-2xl uppercase tracking-widest border-b border-zinc-800/50 py-5 px-4 min-h-[56px] flex items-center justify-between transition-all ${isActive ? 'text-brand-500 bg-brand-500/10 border-l-4 border-l-brand-500' : 'text-zinc-300 hover:text-white hover:bg-white/5'}`
+                                            }
                                         >
-                                            {link.name}
+                                            <span className={link.isHighlight ? "drop-shadow-[0_0_8px_rgba(217,70,239,0.5)]" : ""}>{link.name}</span>
                                             {link.badge && (
                                                 <span className="bg-red-600/90 shadow-[0_0_12px_rgba(220,38,38,0.8)] text-white font-sans text-xs font-bold px-3 py-1.5 rounded animate-pulse tracking-normal">
                                                     {link.badge}
