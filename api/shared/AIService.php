@@ -20,6 +20,7 @@ class AIService
         // Key lookup priority: getenv -> $_SERVER -> $_ENV -> AIConfig::GEMINI_TOKEN
         $apiKey = (getenv('GEMINI_TOKEN') ?: ($_SERVER['GEMINI_TOKEN'] ?? $_ENV['GEMINI_TOKEN'] ?? '')) ?: AIConfig::GEMINI_TOKEN;
 
+        /** @phpstan-ignore-next-line */
         if (empty($apiKey)) {
             $logMsg = date('Y-m-d H:i:s') . " [AI_SERVICE] CRITICAL: Gemini API Key not found in environment or AIConfig." . PHP_EOL;
             file_put_contents(__DIR__ . '/../ai_debug.log', $logMsg, FILE_APPEND);
