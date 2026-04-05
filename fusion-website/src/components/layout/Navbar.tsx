@@ -112,15 +112,30 @@ const Navbar = () => {
                                     to={link.path} 
                                     className={
                                         link.isHighlight 
-                                        ? `text-sm font-bold tracking-widest uppercase relative group flex items-center bg-brand-500 text-white px-4 py-2 rounded-full !shadow-[0_0_15px_rgba(217,70,239,0.5)] hover:bg-brand-400 hover:scale-105 transition-all animate-pulse-slow` 
+                                        ? "relative group flex items-center justify-center px-5 py-2 rounded-full transition-all duration-300 transform hover:-translate-y-0.5" 
                                         : `text-sm font-semibold tracking-widest transition-colors uppercase relative group flex items-center ${isActive ? 'text-brand-500' : 'text-zinc-300 hover:text-white'}`
                                     }
                                 >
-                                    {link.name}
-                                    {link.badge && (
-                                        <span className="absolute -top-3 -right-6 text-[8px] bg-red-600/90 text-white px-1.5 py-0.5 rounded animate-pulse shadow-[0_0_8px_rgba(220,38,38,0.6)]">{link.badge}</span>
+                                    {link.isHighlight ? (
+                                        <>
+                                            <span className="absolute inset-0 bg-brand-500/10 backdrop-blur-md border border-brand-500/30 rounded-full group-hover:bg-brand-500/20 group-hover:border-brand-400/60 transition-all duration-300 shadow-[0_0_15px_rgba(217,70,239,0.15)] group-hover:shadow-[0_0_25px_rgba(217,70,239,0.4)]"></span>
+                                            <span className="relative flex items-center gap-2 text-[12px] font-bold tracking-[0.15em] text-white uppercase group-hover:text-brand-50 transition-colors">
+                                                <span className="relative flex h-2 w-2">
+                                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span>
+                                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-500 shadow-[0_0_8px_rgba(217,70,239,0.8)]"></span>
+                                                </span>
+                                                {link.name}
+                                            </span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            {link.name}
+                                            {link.badge && (
+                                                <span className="absolute -top-3 -right-6 text-[8px] bg-red-600/90 text-white px-1.5 py-0.5 rounded animate-pulse shadow-[0_0_8px_rgba(220,38,38,0.6)]">{link.badge}</span>
+                                            )}
+                                            <span className={`absolute -bottom-2 left-0 h-[2px] bg-brand-500 transition-all duration-300 ${isActive ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
+                                        </>
                                     )}
-                                    {!link.isHighlight && <span className={`absolute -bottom-2 left-0 h-[2px] bg-brand-500 transition-all duration-300 ${isActive ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>}
                                 </Link>
                             )
                         })}
@@ -130,10 +145,18 @@ const Navbar = () => {
                     {hubLogo && (
                         <a 
                             href="https://www.fusionteamvolley.it/network" 
-                            className="ml-auto block w-[60px] h-[60px] -mt-1 bg-white rounded-full p-1.5 shadow-lg hover:scale-105 transition-transform duration-300 group ring-1 ring-zinc-800/50 hover:ring-brand-500/50 relative z-50 pointer-events-auto"
+                            className="ml-6 block relative group z-50 pointer-events-auto"
                             title="Savino del bene volley HUB"
                         >
-                            <img src={hubLogo} alt="HUB" className="w-full h-full object-contain mix-blend-multiply filter grayscale group-hover:grayscale-0 transition-all duration-300" />
+                            {/* Glow under logo */}
+                            <div className="absolute inset-0 bg-brand-500/30 blur-xl rounded-full scale-150 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                            
+                            {/* Container */}
+                            <div className="relative w-[48px] h-[48px] bg-gradient-to-b from-white/90 to-white/70 backdrop-blur-md p-[2px] rounded-full border border-white/20 shadow-[0_4px_15px_rgba(0,0,0,0.5)] group-hover:shadow-[0_0_25px_rgba(217,70,239,0.4)] group-hover:-translate-y-1 transition-all duration-300">
+                                <div className="w-full h-full bg-white rounded-full flex items-center justify-center p-1 shadow-inner">
+                                    <img src={hubLogo} alt="HUB" className="w-full h-full object-contain filter grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500" />
+                                </div>
+                            </div>
                         </a>
                     )}
                 </div>
