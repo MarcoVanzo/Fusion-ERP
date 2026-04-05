@@ -276,7 +276,7 @@ def deploy_files_via_ftp(dry_run=False):
         
         ignore_dirs = ['.git', 'node_modules', 'tests', '__pycache__', '.pytest_cache', '.gemini', '.venv', 'venv_video', 'uploads']
         ignore_extensions = ['.zip', '.log']
-        ignore_files = ['deploy.py', 'deploy.mp', 'deploy_ftp.sh', CACHE_FILE]
+        ignore_files = ['deploy.py', 'deploy.mp', 'deploy_ftp.sh', CACHE_FILE, '.env.prod']
 
         upload_jobs: list[tuple[str, str, str, str]] = []
         required_dirs: set[str] = set()

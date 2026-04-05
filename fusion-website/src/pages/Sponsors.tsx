@@ -16,7 +16,9 @@ interface Sponsor {
     instagram_url: string | null;
     facebook_url: string | null;
     linkedin_url: string | null;
-    tiktok_url: string | null;
+    stagione: string | null;
+    rapporto: string | null;
+    sponsorizzazione: string | null;
 }
 
 const Sponsors = () => {
@@ -158,7 +160,6 @@ const Sponsors = () => {
                                     <h2 className="text-3xl md:text-4xl font-heading text-white uppercase tracking-widest shrink-0">
                                         {group}
                                     </h2>
-                                    <div className="h-[2px] w-full bg-gradient-to-r from-brand-500/50 via-zinc-800 to-transparent rounded-full"></div>
                                 </motion.div>
 
                                 {/* Group Grid */}
@@ -217,9 +218,28 @@ const Sponsors = () => {
                                                         className="relative mb-4 flex-grow min-h-0 overflow-visible md:overflow-y-auto pr-0 md:pr-4" 
                                                         style={{ scrollbarWidth: 'thin', scrollbarColor: '#3f3f46 transparent' }}
                                                     >
+                                                        {sponsor.stagione && (
+                                                            <div className="flex items-center gap-2 mb-3">
+                                                                <span className="text-[10px] font-bold uppercase tracking-tighter px-2 py-0.5 rounded bg-brand-500/20 text-brand-400 border border-brand-500/30">
+                                                                    Stagione {sponsor.stagione}
+                                                                </span>
+                                                            </div>
+                                                        )}
                                                         <p className={`text-zinc-400 leading-relaxed font-light ${isMain ? 'text-base' : 'text-sm'}`}>
                                                             {sponsor.description}
                                                         </p>
+                                                        {sponsor.rapporto && (
+                                                            <div className="mt-4 flex flex-col gap-1 border-l-2 border-brand-500/20 pl-3">
+                                                                <p className="text-xs text-zinc-500 italic">
+                                                                    {sponsor.rapporto}
+                                                                </p>
+                                                                {sponsor.sponsorizzazione && (
+                                                                    <p className="text-[10px] text-brand-400/70 font-medium uppercase tracking-widest">
+                                                                        {sponsor.sponsorizzazione}
+                                                                    </p>
+                                                                )}
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 )}
 

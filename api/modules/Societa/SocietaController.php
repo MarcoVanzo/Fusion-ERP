@@ -371,7 +371,8 @@ class SocietaController
         // 1. Prova a recuperare gli sponsor specifici per il tenant risolto
         $stmt = $db->prepare(
             "SELECT id, name, tipo, description, logo_path, website_url, 
-                    instagram_url, facebook_url, linkedin_url, tiktok_url 
+                    instagram_url, facebook_url, linkedin_url, tiktok_url,
+                    stagione, rapporto, sponsorizzazione 
              FROM societa_sponsors 
              WHERE tenant_id = ? AND is_active = 1 AND is_deleted = 0
              ORDER BY sort_order ASC, name ASC"
@@ -380,10 +381,11 @@ class SocietaController
         $data = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
         // 2. Se vuoto (e non è il default), fallback su tutti gli sponsor attivi (globali)
-        if (empty($data) && $tenantId !== 'TNT_default') {
+        if (empty($data) && $tenantId !== 'TNT_fusion') {
             $stmt = $db->query(
                 "SELECT id, name, tipo, description, logo_path, website_url, 
-                        instagram_url, facebook_url, linkedin_url, tiktok_url 
+                        instagram_url, facebook_url, linkedin_url, tiktok_url,
+                        stagione, rapporto, sponsorizzazione 
                  FROM societa_sponsors 
                  WHERE is_active = 1 AND is_deleted = 0
                  ORDER BY sort_order ASC, name ASC"

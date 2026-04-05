@@ -329,8 +329,8 @@ class SocietaService
             ':linkedin_url'   => $body['linkedin_url'] ?? null,
             ':tiktok_url'     => $body['tiktok_url'] ?? null,
             ':importo'        => isset($body['importo']) && $body['importo'] !== '' ? (float)$body['importo'] : null,
-            ':rapporto'       => isset($body['rapporto']) && $body['rapporto'] !== '' ? (float)$body['rapporto'] : null,
-            ':sponsorizzazione'=> isset($body['sponsorizzazione']) && $body['sponsorizzazione'] !== '' ? (float)$body['sponsorizzazione'] : null,
+            ':rapporto'       => $body['rapporto'] ?? null,
+            ':sponsorizzazione'=> $body['sponsorizzazione'] ?? null,
             ':sort_order'     => (int)($body['sort_order'] ?? 0),
             ':is_active'      => isset($body['is_active']) ? (int)(bool)$body['is_active'] : 1,
         ];
@@ -357,8 +357,8 @@ class SocietaService
             ':linkedin_url'   => $body['linkedin_url'] ?? null,
             ':tiktok_url'     => $body['tiktok_url'] ?? null,
             ':importo'        => isset($body['importo']) && $body['importo'] !== '' ? (float)$body['importo'] : null,
-            ':rapporto'       => isset($body['rapporto']) && $body['rapporto'] !== '' ? (float)$body['rapporto'] : null,
-            ':sponsorizzazione'=> isset($body['sponsorizzazione']) && $body['sponsorizzazione'] !== '' ? (float)$body['sponsorizzazione'] : null,
+            ':rapporto'       => $body['rapporto'] ?? null,
+            ':sponsorizzazione'=> $body['sponsorizzazione'] ?? null,
             ':sort_order'     => (int)($body['sort_order'] ?? 0),
             ':is_active'      => isset($body['is_active']) ? (int)(bool)$body['is_active'] : 1,
         ];
