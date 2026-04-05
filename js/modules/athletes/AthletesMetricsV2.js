@@ -252,9 +252,11 @@ export const AthletesMetrics = {
             console.error("Errore critico in _loadValdData:", e);
             container.innerHTML = `<div class="error-box">ERROR::DATA_LOAD_FAILED ${e.message}</div>`;
         }
-    },    /**
-     * Renderizza gli SVG dell'anatomia FEMMINILE (Elite Articulated Wireframe)
-     * High-precision anatomical silhouettes with internal 'Cyber-Blueprint' grid-lines.
+    },
+
+    /**
+     * Renderizza gli SVG dell'anatomia FEMMINILE (Unified Professional Silhouette)
+     * High-precision female athletic outline with subtle 'Cyber-Blueprint' wireframes.
      */
     _renderAnatomy(view, muscleMap = {}) {
         if (!muscleMap) muscleMap = {};
@@ -264,76 +266,57 @@ export const AthletesMetrics = {
             return `class="muscle-region active" style="--color-active:${color};"`;
         };
         
-        // Elite Stylized Female Athlete Silhouette (Articulated Multi-Segment)
-        const commonStyles = `fill="none" stroke="rgba(0, 229, 255, 0.15)" stroke-width="0.5"`;
-        const skeletonLines = view === 'front' ? `
-            <line x1="50" y1="35" x2="50" y2="100" stroke="rgba(0, 229, 255, 0.08)" stroke-width="0.3" stroke-dasharray="2,2" /> <!-- Spine -->
-            <path d="M40,45 Q50,48 60,45" ${commonStyles} opacity="0.3" /> <!-- Clavicle -->
-            <path d="M42,95 Q50,98 58,95" ${commonStyles} opacity="0.3" /> <!-- Pelvic Rim -->
-            <circle cx="50" cy="22" r="7" ${commonStyles} opacity="0.2" /> <!-- Head Wireframe -->
+        // UNIFIED FEMALE ATHLETIC SILHOUETTES (Front/Back)
+        const frontOutline = `
+            M50,15 c-3,0 -5.5,2.5 -5.5,5.5 s2.5,5.5 5.5,5.5 s5.5,-2.5 5.5,-5.5 s-2.5,-5.5 -5.5,-5.5
+            M44.5,26 c-8,2 -13,8 -15,16 c-2,8 -1,20 -1,35 c0,25 -4,50 -4,75 c0,20 2,40 4,60 c2,20 3,40 3,60 v15 c0,4 2,6 5,6 s5,-2 5,-6 v-15 v15 c0,4 2,6 5,6 s5,-2 5,-6 v-15 c0,-20 1,-40 3,-60 c2,-20 4,-40 4,-60 c0,-25 -4,-50 -4,-75 c0,-15 1,-27 -1,-35 c-2,-8 -7,-14 -15,-16
+        `;
+
+        const backOutline = `
+            M50,15 c-3,0 -5.5,2.5 -5.5,5.5 s2.5,5.5 5.5,5.5 s5.5,-2.5 5.5,-5.5 s-2.5,-5.5 -5.5,-5.5
+            M44.5,26 c-9,3 -14,10 -16,20 c-2,10 -1,25 -1,40 c0,30 -5,60 -5,90 c0,25 3,50 5,75 c1,12 2,24 2,36 v15 c0,4 2,6 5,6 s5,-2 5,-6 v-15 v15 c0,4 2,6 5,6 s5,-2 5,-6 v-15 c0,-12 1,-24 2,-36 c2,-25 5,-50 5,-75 c0,-30 -5,-60 -5,-90 c0,-15 1,-30 -1,-40 c-2,-10 -7,-17 -16,-20
+        `;
+
+        const decorations = view === 'front' ? `
+            <path d="M40,50 Q50,55 60,50" fill="none" stroke="rgba(0, 229, 255, 0.08)" stroke-width="0.3" />
+            <path d="M42,100 Q50,105 58,100" fill="none" stroke="rgba(0, 229, 255, 0.08)" stroke-width="0.3" />
+            <line x1="50" y1="35" x2="50" y2="110" stroke="rgba(0, 229, 255, 0.05)" stroke-width="0.2" stroke-dasharray="2,2" />
         ` : `
-            <line x1="50" y1="35" x2="50" y2="105" stroke="rgba(0, 229, 255, 0.08)" stroke-width="0.3" stroke-dasharray="2,2" /> <!-- Spine -->
-            <path d="M38,48 Q50,52 62,48" ${commonStyles} opacity="0.3" /> <!-- Scapula Line -->
-            <path d="M40,105 Q50,110 60,105" ${commonStyles} opacity="0.3" /> <!-- Glute Fold Line -->
-        `;
-
-        // HIGH-PRECISION FEMALE ATHLETIC SILHOUETTE (Front)
-        const femaleFrontPath = `
-            M50,12 c-3.5,0 -6.5,3 -6.5,6.5 s3,6.5 6.5,6.5 s6.5,-3 6.5,-6.5 s-3,-6.5 -6.5,-6.5 
-            M43.5,23 c-6,1 -10,6 -13,12 c-3,7 -2,15 -2,25 c0,15 -2,25 -2,40 c0,15 2,30 4,45 c2,15 3,30 3,45 v45 c0,4 2,6 5,6 s5,-2 5,-6 v-45 m-10,0 v45 c0,4 2,6 5,6 s5,-2 5,-6 v-45 c0,-15 1,-30 3,-45 c2,-15 4,-30 4,-45 c0,-15 -3,-25 -3,-40 c0,-10 1,-18 -2,-25 c-3,-6 -7,-11 -13,-12
-            M50,33 c5,0 9,4 12,10 c3,6 4,14 4,22 c0,8 -1,16 -2,24 c-1,8 -2.5,16 -2.5,24 c0,12 2,24 2,36 v50 c0,4 -2,6 -5,6 s-5,-2 -5,-6 v-50 c-1,-12 -2,-24 -2,-36 c0,-8 1.5,-16 2.5,-24 c1,-8 2,-16 2,-24 c0,-8 -1,-16 -4,-22 c-3,-6 -7,-10 -12,-10
-        `;
-
-        // HIGH-PRECISION FEMALE ATHLETIC SILHOUETTE (Back)
-        const femaleBackPath = `
-            M50,12 c-3.5,0 -6.5,3 -6.5,6.5 s3,6.5 6.5,6.5 s6.5,-3 6.5,-6.5 s-3,-6.5 -6.5,-6.5 
-            M43.5,23 c-7,2 -11,8 -13,16 c-2,8 -1,18 -1,28 c0,15 -3,25 -3,35 c0,20 3,40 5,60 c2,20 3,40 3,60 v30 c0,4 2,6 5,6 s5,-2 5,-6 v-30 c0,-20 1,-40 3,-60 c2,-20 5,-40 5,-60 c0,-10 -3,-20 -3,-35 c0,-10 1,-20 -1,-28 c-2,-8 -6,-14 -13,-16
+            <path d="M38,55 Q50,60 62,55" fill="none" stroke="rgba(0, 229, 255, 0.08)" stroke-width="0.3" />
+            <path d="M40,115 Q50,125 60,115" fill="none" stroke="rgba(0, 229, 255, 0.08)" stroke-width="0.3" />
+            <line x1="50" y1="35" x2="50" y2="120" stroke="rgba(0, 229, 255, 0.05)" stroke-width="0.2" stroke-dasharray="2,2" />
         `;
 
         return `
             <div class="anatomy-container ${view}" style="width:100%; height:100%; position:relative; overflow:visible;">
-                <svg viewBox="0 0 100 240" style="width:100%; height:100%;">
+                <svg viewBox="0 0 100 280" style="width:100%; height:100%;">
                     <defs>
                         <linearGradient id="bodyGrad${view}" x1="0%" y1="0%" x2="0%" y2="100%">
-                            <stop offset="0%" style="stop-color:rgba(0, 229, 255, 0.08);stop-opacity:1" />
-                            <stop offset="100%" style="stop-color:rgba(0, 229, 255, 0.02);stop-opacity:1" />
+                            <stop offset="0%" style="stop-color:rgba(0, 229, 255, 0.12);stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:rgba(0, 229, 255, 0.04);stop-opacity:1" />
                         </linearGradient>
-                        <filter id="neonGlow" x="-50%" y="-50%" width="200%" height="200%">
-                            <feGaussianBlur stdDeviation="4" result="blur" />
+                        <filter id="neonGlowOutline" x="-50%" y="-50%" width="200%" height="200%">
+                            <feGaussianBlur stdDeviation="3" result="blur" />
                             <feComposite in="SourceGraphic" in2="blur" operator="over" />
                         </filter>
                     </defs>
-                    
-                    <!-- Elite Cyber-Blueprint Skeleton -->
-                    ${skeletonLines}
-                    
-                    <!-- HIGH-PRECISION BODY SILHOUETTE -->
-                    <path d="${view === 'front' ? femaleFrontPath : femaleBackPath}" 
+                    <path d="${view === 'front' ? frontOutline : backOutline}" 
                         fill="url(#bodyGrad${view})" 
-                        stroke="rgba(0, 229, 255, 0.4)" 
-                        stroke-width="0.8" 
-                        filter="url(#neonGlow)" />
-
-                    <!-- MUSCLE REGION MAPPING (Detailed Anatomical Precision) -->
+                        stroke="rgba(0, 229, 255, 0.6)" 
+                        stroke-width="1" 
+                        filter="url(#neonGlowOutline)" />
+                    ${decorations}
                     ${view === 'front' ? `
-                        <!-- Quads (Femminile Stilizzata) -->
-                        <path d="M35,110 c-3,10 -4,25 -2,40 c1,5 3,10 6,12 c3,2 5,0 6,-8 c1,-15 -2,-30 -4,-45 c-1,-5 -3,-5 -6,1" ${getStyles('quads_l')} />
-                        <path d="M65,110 c3,10 4,25 2,40 c-1,5 -3,10 -6,12 c-3,2 -5,0 -6,-8 c-1,-15 2,-30 4,-45 c1,-5 3,-5 6,1" ${getStyles('quads_r')} />
-                        
-                        <!-- Core / Abs -->
-                        <path d="M44,65 c0,5 0,15 2,25 c2,10 8,10 10,0 c2,-10 2,-20 0,-25 c-2,-5 -8,-5 -12,0" ${getStyles('core')} />
-                        
-                        <!-- Hip / Lateral -->
-                        <ellipse cx="38" cy="95" rx="5" ry="8" ${getStyles('hips_l')} />
-                        <ellipse cx="62" cy="95" rx="5" ry="8" ${getStyles('hips_r')} />
+                        <path d="M35,120 c-2,15 -3,35 -1,55 c1,8 4,12 7,12 c3,0 5,-4 6,-15 c1,-20 -2,-40 -4,-60 c-1,-10 -3,-10 -8,8" ${getStyles('quads_l')} />
+                        <path d="M65,120 c2,15 3,35 1,55 c-1,8 -4,12 -7,12 c-3,0 -5,-4 -6,-15 c-1,-20 2,-40 4,-60 c1,-10 3,-10 8,8" ${getStyles('quads_r')} />
+                        <path d="M44,70 c-1,10 -1,25 2,35 s8,12 10,0 s2,-25 0,-35 s-9,-10 -12,0" ${getStyles('core')} />
+                        <ellipse cx="37" cy="105" rx="4" ry="10" ${getStyles('hips_l')} />
+                        <ellipse cx="63" cy="105" rx="4" ry="10" ${getStyles('hips_r')} />
                     ` : `
-                        <!-- Glutes (Powerful Athletic Base) -->
-                        <path d="M38,95 c-4,5 -6,15 -4,25 c2,10 10,12 14,8 c4,-4 5,-15 3,-25 c-2,-5 -8,-10 -13,-8" ${getStyles('glutes_l')} />
-                        <path d="M62,95 c4,5 6,15 4,25 c-2,10 -10,12 -14,8 c-4,-4 -5,-15 -3,-25 c2,-5 8,-10 13,-8" ${getStyles('glutes_r')} />
-                        
-                        <!-- Hamstrings -->
-                        <path d="M38,135 c-2,10 -3,20 -1,30 c1,8 5,10 7,5 c2,-10 1,-25 -1,-35 c-1,-5 -4,-5 -5,0" ${getStyles('hams_l')} />
-                        <path d="M62,135 c2,10 3,20 1,30 c-1,8 -5,10 -7,5 c-2,-10 -1,-25 1,-35 c1,-5 4,-5 5,0" ${getStyles('hams_r')} />
+                        <path d="M38,105 c-5,5 -8,20 -5,35 c2,10 12,15 16,8 c4,-6 6,-20 3,-35 c-2,-10 -9,-15 -14,-8" ${getStyles('glutes_l')} />
+                        <path d="M62,105 c5,5 8,20 5,35 c-2,10 -12,15 -14,8 c-4,-6 -6,-20 -3,-35 c2,-10 9,-15 14,-8" ${getStyles('glutes_r')} />
+                        <path d="M37,155 c-2,15 -3,35 -1,55 c1,8 5,8 7,0 c2,-20 1,-40 -1,-60 c-1,-10 -4,-10 -5,5" ${getStyles('hams_l')} />
+                        <path d="M63,155 c2,15 3,35 1,55 c-1,8 -5,8 -7,0 c-2,-20 -1,-40 1,-60 c 1,-10 4,-10 5,5" ${getStyles('hams_r')} />
                     `}
                 </svg>
             </div>
@@ -352,9 +335,7 @@ export const AthletesMetrics = {
         return `
             <div class="gauge-svg-container">
                 <svg viewBox="0 0 130 75" preserveAspectRatio="xMidYMax meet" style="width:100%; height:100%;">
-                    <!-- Background Arc -->
                     <path class="gauge-svg-bg" d="M 10 65 A 55 55 0 0 1 120 65" />
-                    <!-- Value Arc -->
                     <path class="gauge-svg-val" 
                           d="M 10 65 A 55 55 0 0 1 120 65" 
                           style="--gauge-color:${color}; stroke-dasharray: ${circumference}; stroke-dashoffset: ${offset};" />
