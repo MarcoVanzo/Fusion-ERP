@@ -64,7 +64,7 @@ const CandidaturaScouting = () => {
             {/* Left side Image / Hero Area */}
             <div className="w-full lg:w-[45%] relative min-h-[50vh] lg:min-h-screen flex flex-col justify-end lg:justify-center p-8 lg:p-16 xl:p-24 pt-32 shrink-0">
                 <div className="absolute inset-0">
-                    <img src="/images/hero-1.jpg" className="w-full h-full object-cover opacity-80 mix-blend-luminosity grayscale-[20%] hover:grayscale-0 transition-all duration-1000" alt="Scouting Fusion Team Volley" />
+                    <img src="/assets/hero-1.jpg" className="w-full h-full object-cover opacity-80 mix-blend-luminosity grayscale-[20%] hover:grayscale-0 transition-all duration-1000" alt="Scouting Fusion Team Volley" />
                     <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/70 to-zinc-950/30 lg:bg-gradient-to-r lg:from-transparent lg:via-zinc-950/80 lg:to-zinc-950"></div>
                 </div>
                 
