@@ -26,9 +26,17 @@ const Societa = {
 
     destroy: function() {
         this._abort.abort();
+        // Clear data to release memory
+        this._data = {
+            profile: null, roles: [], members: [], documents: [],
+            deadlines: [], sponsors: [], titles: [], foresteria: null
+        };
     },
 
     init: async function() {
+        // Reset controller to allow new listeners after a previous destroy
+        this._abort = new AbortController();
+        
         const appContainer = document.getElementById("app");
         if (!appContainer) return;
 
@@ -567,7 +575,11 @@ const Societa = {
                 website_url: document.getElementById("sp-website").value.trim(),
                 instagram_url: document.getElementById("sp-instagram").value.trim(),
                 facebook_url: document.getElementById("sp-facebook").value.trim(),
-                linkedin_url: document.getElementById("sp-linkedin").value.trim()
+                linkedin_url: document.getElementById("sp-linkedin").value.trim(),
+                tiktok_url: document.getElementById("sp-tiktok").value.trim(),
+                importo: document.getElementById("sp-importo").value || null,
+                rapporto: document.getElementById("sp-rapporto").value.trim(),
+                sponsorizzazione: document.getElementById("sp-sponsorizzazione").value.trim()
             };
 
             if (isEdit) data.id = sponsor.id;
