@@ -113,7 +113,7 @@ $options = [
     'responseSchema' => $responseSchema
 ];
 
-$models = ['gemini-1.5-flash', 'gemini-1.5-pro'];
+$models = ['gemini-2.5-flash', 'gemini-2.5-pro'];
 $rawText = null;
 
 foreach ($models as $idx => $mdl) {

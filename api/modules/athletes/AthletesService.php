@@ -187,7 +187,7 @@ class AthletesService
             ':period_start' => $periodStart,
             ':period_end' => $periodEnd,
             ':summary_text' => $summary,
-            ':model_version' => 'gemini-1.5-flash',
+            ':model_version' => 'gemini-2.5-flash',
         ]);
 
         Audit::log('AI_REPORT', 'ai_summaries', $summaryId, null, ['athlete_id' => $athleteId]);
