@@ -34,7 +34,61 @@ export const AthletesMetrics = {
         try {
             const data = await Store.get("analytics", "vald", { athleteId });
             
-            // Per il mock, assumiamo i dati della foto pari a 1:1
+            if (!data || !data.hasData) {
+                container.innerHTML = `
+                    <div class="med-view" style="justify-content:center; align-items:center;">
+                        <div style="text-align:center;">
+                            <i class="ph ph-lightning-slash" style="font-size:60px; color:rgba(0,210,255,0.3);"></i>
+                            <h3 style="color:#00d2ff; font-weight:800; font-family:var(--font-display); margin-top:20px; font-size:24px;">NO BIOMETRIC DATA DETECTED</h3>
+                            <p style="color:rgba(255,255,255,0.5); font-family:monospace;">Synchronize VALD Hub to import biomechanical telemetry.</p>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            const muscleNames = {
+                'quads_l': 'LEFT QUADRICEPS', 'quads_r': 'RIGHT QUADRICEPS',
+                'glutes_l': 'LEFT GLUTES', 'glutes_r': 'RIGHT GLUTES',
+                'hams_l': 'LEFT HAMSTRING', 'hams_r': 'RIGHT HAMSTRING',
+                'core': 'RECTUS ABDOMINIS',
+                'hips_l': 'LEFT LATERAL STAB.', 'hips_r': 'RIGHT LATERAL STAB.'
+            };
+
+            const getColorConfig = (colorHex) => {
+                colorHex = (colorHex || '').toUpperCase();
+                if(colorHex.includes('00E676') || colorHex === 'GREEN') return { cls: 'sq-green', title: 'Nominal', textColor: '#00E676' };
+                if(colorHex.includes('FFD600') || colorHex === 'YELLOW') return { cls: 'sq-yellow', title: 'Tension', textColor: '#FFD600' };
+                if(colorHex.includes('FF9100') || colorHex === 'ORANGE') return { cls: 'sq-orange', title: 'Fatigue', textColor: '#FF9100' };
+                if(colorHex.includes('FF1744') || colorHex === 'RED') return { cls: 'sq-orange', title: 'High Strain', textColor: '#FF1744' };
+                return { cls: 'sq-green', title: 'Active', textColor: colorHex || '#00E676' };
+            };
+
+            const musclesHTML = Object.entries(data.muscleMap || {}).map(([key, color]) => {
+                const conf = getColorConfig(color);
+                return `
+                    <div class="med-hl-item">
+                        <div class="med-hl-title">${muscleNames[key] || key.toUpperCase()}</div>
+                        <div class="med-hl-color" style="color:${conf.textColor};">${conf.title}</div>
+                        <div class="med-hl-stat">Status: Tracked</div>
+                        <div class="med-square ${conf.cls}"></div>
+                    </div>
+                `;
+            }).join('') || '<div class="med-hl-item"><div class="med-hl-title">ALL SYSTEMS</div><div class="med-hl-color" style="color:#00E676;">Nominal</div><div class="med-square sq-green"></div></div>';
+
+            const getStyles = (muscle) => {
+                const color = data.muscleMap && data.muscleMap[muscle];
+                if (!color) return `fill="transparent" stroke="none"`;
+                return `fill="${color}" fill-opacity="0.9" stroke="${color}" stroke-opacity="1" stroke-width="2"`;
+            };
+
+            const asymmetry = parseFloat(data.asymmetryPct) || 0;
+            const rsiStatus = data.semaphore?.label || 'STABLE';
+            const rsiColorClass = data.semaphore?.status === 'RED' ? 'orange' : (data.semaphore?.status === 'YELLOW' ? 'orange' : 'green');
+            const rsiLabel = data.semaphore?.status === 'RED' ? 'CRITICAL' : (data.semaphore?.status === 'YELLOW' ? 'ELEVATED' : 'NOMINAL');
+            const asyColorClass = asymmetry > 15 ? 'orange' : 'green';
+            const asyLabel = asymmetry > 15 ? 'HIGH' : 'LOW';
+
             container.innerHTML = `
                 <style>
                     .med-view {
@@ -255,18 +309,15 @@ export const AthletesMetrics = {
 
                 <div class="med-view">
                     
-                    <!-- Config Header icon -->
                     <div style="position:absolute; top:20px; left:10px; display:flex; flex-direction:column; gap:10px; opacity:0.3;">
                         <i class="ph ph-waveform" style="font-size:20px; color:#00d2ff;"></i>
                         <i class="ph ph-magnifying-glass" style="font-size:20px; color:#00d2ff;"></i>
                     </div>
-                    <!-- Config Header icon 2 -->
                     <div style="position:absolute; top:90px; left:10px; display:flex; flex-direction:column; gap:10px; opacity:0.3;">
                         <i class="ph ph-user-focus" style="font-size:20px; color:#00d2ff;"></i>
                         <i class="ph ph-shield-plus" style="font-size:20px; color:#00d2ff;"></i>
                         <i class="ph ph-database" style="font-size:20px; color:#00d2ff;"></i>
                     </div>
-
 
                     <div class="med-header">
                         <div class="med-title-area">
@@ -274,8 +325,8 @@ export const AthletesMetrics = {
                             <div class="med-title">MED-VIEW <span>| ANALYTICS | V.4.2</span></div>
                         </div>
                         <div class="med-time">
-                            <div>09:14 AM | OCT 27, 2023</div>
-                            <div class="med-session">ACTIVE SESSION - DR. ELARA VANCE</div>
+                            <div>${new Date().toLocaleString()}</div>
+                            <div class="med-session">ACTIVE SESSION</div>
                         </div>
                     </div>
 
@@ -284,39 +335,20 @@ export const AthletesMetrics = {
                         <!-- LEFT PANEL -->
                         <div class="med-panel">
                             <div>
-                                <div class="med-card-header">MUSCULAR SYSTEM OVERVIEW</div>
+                                <div class="med-card-header">SYSTEM OVERVIEW</div>
                                 <div style="padding-left:15px; border-left:1px solid rgba(0,163,255,0.2);">
-                                    <div class="med-info-text">Female Model</div>
-                                    <div class="med-info-text">H: 168cm</div>
-                                    <div class="med-info-text">W: 58kg</div>
+                                    <div class="med-info-text">READINESS: <strong style="color:white">${rsiStatus}</strong></div>
+                                    <div class="med-info-text">RSI Z-SCORE: <span style="color:#00d2ff;">${(data.rsiZScore || 0).toFixed(2)}</span></div>
+                                    <div class="med-info-text">JUMP HEIGHT: <span style="color:#FFD600;">${(data.jumpHeight || 0).toFixed(1)}cm</span></div>
+                                    <div class="med-info-text">PEAK POWER: <span style="color:#00E676;">${(data.peakPowerBM || 0).toFixed(1)} W/kg</span></div>
                                 </div>
                             </div>
                             
-                            <img src="assets/img/anatomy/db_icon.png" style="width:24px; opacity:0.5; margin: -10px 0;"> <!-- Placeholder DB Icon like in image -->
+                            <img src="assets/img/anatomy/db_icon.png" style="width:24px; opacity:0.5; margin: -10px 0;"> 
 
                             <div>
                                 <div class="med-card-header">MUSCLE HIGHLIGHTS</div>
-                                
-                                <div class="med-hl-item">
-                                    <div class="med-hl-title">QUADRICEPS</div>
-                                    <div class="med-hl-color" style="color:#00E676;">Neon Green</div>
-                                    <div class="med-hl-stat">Active: 94% Strain</div>
-                                    <div class="med-square sq-green"></div>
-                                </div>
-                                
-                                <div class="med-hl-item">
-                                    <div class="med-hl-title">RECTUS ABDOMINIS</div>
-                                    <div class="med-hl-color" style="color:#FFD600;">Vivid Yellow</div>
-                                    <div class="med-hl-stat">Active: 88% Tension</div>
-                                    <div class="med-square sq-yellow"></div>
-                                </div>
-
-                                <div class="med-hl-item" style="margin-bottom:0;">
-                                    <div class="med-hl-title">RECTUS ABDOMINIS</div>
-                                    <div class="med-hl-color" style="color:#FF9100;">Vivid Orange</div>
-                                    <div class="med-hl-stat">Active: 88% Tension</div>
-                                    <div class="med-square sq-orange"></div>
-                                </div>
+                                ${musclesHTML}
                             </div>
                         </div>
 
@@ -324,7 +356,6 @@ export const AthletesMetrics = {
                         <div class="anatomy-box">
                             <div class="anatomy-glow"></div>
                             
-                            <!-- Immagine di base wireframe o silhouette medica (adattiamo la front) -->
                             <img src="assets/img/anatomy/body_front.png" style="
                                 height: 100%;
                                 width: auto;
@@ -334,7 +365,6 @@ export const AthletesMetrics = {
                                 mix-blend-mode: screen;
                             ">
                             
-                            <!-- Overlays esatti -->
                             <svg viewBox="0 0 100 240" style="
                                 position:absolute; 
                                 top:0; 
@@ -347,28 +377,7 @@ export const AthletesMetrics = {
                                 mix-blend-mode: screen;
                                 filter: blur(1.5px) drop-shadow(0 0 15px rgba(255, 214, 0, 0.6));
                             ">
-                                <!-- Rectus Abdominis / Core (Arancione/Giallo) -->
-                                <path d="M42,65 c0,10 0,30 2,40 c2,15 10,15 12,0 c2,-10 2,-30 0,-40 c-2,-10 -10,-10 -14,0" 
-                                      fill="#FF9100" fill-opacity="0.9" stroke="#FFD600" stroke-width="2" />
-                            </svg>
-                            
-                            <svg viewBox="0 0 100 240" style="
-                                position:absolute; 
-                                top:0; 
-                                left:50%; 
-                                transform:translateX(-50%);
-                                width:100%;
-                                height:100%; 
-                                z-index:3; 
-                                pointer-events:none;
-                                mix-blend-mode: screen;
-                                filter: blur(1px) drop-shadow(0 0 15px rgba(0, 230, 118, 0.6));
-                            ">
-                                <!-- Quadriceps (Verde Neon) -->
-                                <path d="M34,120 c-2,15 -3,40 -1,60 c1,10 4,12 8,12 c4,0 5,-5 6,-15 c1,-20 -2,-45 -4,-65 c-1,-10 -4,-10 -9,8" 
-                                      fill="#00E676" fill-opacity="0.9" />
-                                <path d="M66,120 c2,15 3,40 1,60 c-1,10 -4,12 -8,12 c-4,0 -5,-5 -6,-15 c-1,-20 2,-45 4,-65 c1,-10 4,-10 9,8" 
-                                      fill="#00E676" fill-opacity="0.9" />
+                                ${getSvgPaths()}
                             </svg>
                         </div>
 
@@ -387,7 +396,7 @@ export const AthletesMetrics = {
                                     </svg>
                                 </div>
                                 
-                                <div class="med-chart-title">TENSION %</div>
+                                <div class="med-chart-title">TENSION (SYMMETRY %)</div>
                                 <div class="med-chart">
                                     <svg viewBox="0 0 100 30" style="width:100%; height:100%; overflow:visible;">
                                         <path d="M0,25 C20,25 30,20 50,15 C70,10 80,15 100,5 L100,30 L0,30 Z" fill="rgba(0,163,255,0.15)" />
@@ -419,10 +428,10 @@ export const AthletesMetrics = {
                             
                             <div style="margin-top: 10px;">
                                 <div class="med-card-header">DIAGNOSTICS</div>
-                                <div class="med-diag-title">QUADRICEPS STRAIN:</div>
-                                <div class="med-diag-val orange">ELEVATED</div>
-                                <div class="med-diag-title">ABS ENGAGEMENT:</div>
-                                <div class="med-diag-val green">HIGH</div>
+                                <div class="med-diag-title">VALD RSI STATUS:</div>
+                                <div class="med-diag-val ${rsiColorClass}">${rsiLabel}</div>
+                                <div class="med-diag-title">ASYMMETRY (${asymmetry.toFixed(1)}%):</div>
+                                <div class="med-diag-val ${asyColorClass}">${asyLabel}</div>
                             </div>
                             
                             <!-- 3D VIEWER -->
