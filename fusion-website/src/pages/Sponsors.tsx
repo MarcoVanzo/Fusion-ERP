@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Globe, Instagram, Facebook, Diamond } from 'lucide-react';
+import { Globe, Instagram, Facebook, Youtube, Music, Diamond } from 'lucide-react';
 import { Seo } from '../components/Seo';
 
-const ERP_BASE = 'https://www.fusionteamvolley.it/ERP';
+const ERP_BASE = import.meta.env.VITE_ERP_BASE_URL || 'https://www.fusionteamvolley.it/ERP';
 const API_URL = `${ERP_BASE}/api/router.php`;
 
 interface Sponsor {
@@ -16,6 +16,7 @@ interface Sponsor {
     instagram_url: string | null;
     facebook_url: string | null;
     linkedin_url: string | null;
+    tiktok_url: string | null;
     stagione: string | null;
     rapporto: string | null;
     sponsorizzazione: string | null;
@@ -287,6 +288,17 @@ const Sponsors = () => {
                                                             title="LinkedIn"
                                                         >
                                                             <Globe size={isMain ? 22 : 18} strokeWidth={2} />
+                                                        </a>
+                                                    )}
+                                                    {sponsor.tiktok_url && (
+                                                        <a
+                                                            href={sponsor.tiktok_url}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className={`flex items-center justify-center bg-zinc-800/80 rounded-full text-zinc-400 hover:text-white hover:bg-zinc-700 hover:scale-110 transition-all duration-300 ${isMain ? 'w-12 h-12' : 'w-10 h-10'}`}
+                                                            title="TikTok"
+                                                        >
+                                                            <Music size={isMain ? 22 : 18} strokeWidth={2} />
                                                         </a>
                                                     )}
                                                 </div>

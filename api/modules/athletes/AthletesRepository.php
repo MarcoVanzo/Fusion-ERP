@@ -152,7 +152,10 @@ class AthletesRepository
                     a.fiscal_code, a.identity_document, a.federal_id,
                     a.email, a.phone,
                     a.parent_contact, a.parent_phone,
-                    a.medical_cert_type, a.medical_cert_expires_at{$docCols},
+                    a.nationality, a.blood_group, a.allergies, a.medications,
+                    a.emergency_contact_name, a.emergency_contact_phone,
+                    a.communication_preference, a.image_release_consent,
+                    a.medical_cert_type, a.medical_cert_expires_at, a.medical_cert_issued_at{$docCols},
                     a.shirt_size, a.shoe_size,
                     a.is_active,
                     t.name AS team_name, t.category
@@ -196,7 +199,10 @@ class AthletesRepository
                     a.fiscal_code, a.identity_document, a.federal_id,
                     a.email, a.phone,
                     a.parent_contact, a.parent_phone,
-                    a.medical_cert_type, a.medical_cert_expires_at{$docCols},
+                    a.nationality, a.blood_group, a.allergies, a.medications,
+                    a.emergency_contact_name, a.emergency_contact_phone,
+                    a.communication_preference, a.image_release_consent,
+                    a.medical_cert_type, a.medical_cert_expires_at, a.medical_cert_issued_at{$docCols},
                     a.shirt_size, a.shoe_size,
                     a.is_active,
                     t.name AS team_name, t.category
@@ -240,7 +246,10 @@ class AthletesRepository
                     a.fiscal_code, a.identity_document, a.federal_id,
                     a.email, a.phone,
                     a.parent_contact, a.parent_phone,
-                    a.medical_cert_type, a.medical_cert_expires_at{$docCols},
+                    a.nationality, a.blood_group, a.allergies, a.medications,
+                    a.emergency_contact_name, a.emergency_contact_phone,
+                    a.communication_preference, a.image_release_consent,
+                    a.medical_cert_type, a.medical_cert_expires_at, a.medical_cert_issued_at{$docCols},
                     a.shirt_size, a.shoe_size,
                     a.is_active,
                     t.name AS team_name, t.category
@@ -343,7 +352,10 @@ class AthletesRepository
                 fiscal_code, identity_document, federal_id,
                 email, phone,
                 parent_contact, parent_phone,
-                medical_cert_type, medical_cert_expires_at,
+                nationality, blood_group, allergies, medications,
+                emergency_contact_name, emergency_contact_phone,
+                communication_preference, image_release_consent,
+                medical_cert_type, medical_cert_expires_at, medical_cert_issued_at,
                 shirt_size, shoe_size,
                 is_active
              ) VALUES (
@@ -357,7 +369,10 @@ class AthletesRepository
                 :fiscal_code, :identity_document, :federal_id,
                 :email, :phone,
                 :parent_contact, :parent_phone,
-                :medical_cert_type, :medical_cert_expires_at,
+                :nationality, :blood_group, :allergies, :medications,
+                :emergency_contact_name, :emergency_contact_phone,
+                :communication_preference, :image_release_consent,
+                :medical_cert_type, :medical_cert_expires_at, :medical_cert_issued_at,
                 :shirt_size, :shoe_size,
                 1
              )'
@@ -388,8 +403,17 @@ class AthletesRepository
                  phone = :phone,
                  parent_contact = :parent_contact,
                  parent_phone = :parent_phone,
+                 nationality = :nationality,
+                 blood_group = :blood_group,
+                 allergies = :allergies,
+                 medications = :medications,
+                 emergency_contact_name = :emergency_contact_name,
+                 emergency_contact_phone = :emergency_contact_phone,
+                 communication_preference = :communication_preference,
+                 image_release_consent = :image_release_consent,
                  medical_cert_type = :medical_cert_type,
                  medical_cert_expires_at = :medical_cert_expires_at,
+                 medical_cert_issued_at = :medical_cert_issued_at,
                  shirt_size = :shirt_size,
                  shoe_size = :shoe_size
              WHERE id = :id AND deleted_at IS NULL'

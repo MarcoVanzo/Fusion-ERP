@@ -124,6 +124,15 @@ class AthletesService
             ':shoe_size'               => $body['shoe_size'] ?? null,
             ':parent_contact'          => $body['parent_contact'] ?? null,
             ':parent_phone'            => $body['parent_phone'] ?? null,
+            ':nationality'             => $body['nationality'] ?? null,
+            ':blood_group'             => $body['blood_group'] ?? null,
+            ':allergies'               => $body['allergies'] ?? null,
+            ':medications'             => $body['medications'] ?? null,
+            ':emergency_contact_name'  => $body['emergency_contact_name'] ?? null,
+            ':emergency_contact_phone' => $body['emergency_contact_phone'] ?? null,
+            ':communication_preference' => $body['communication_preference'] ?? 'email',
+            ':image_release_consent'   => isset($body['image_release_consent']) ? (int)$body['image_release_consent'] : 0,
+            ':medical_cert_issued_at'  => $body['medical_cert_issued_at'] ?? null,
         ];
 
         $this->repo->createAthlete($data);

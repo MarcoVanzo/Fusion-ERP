@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Globe, Instagram, Facebook, Youtube, Users } from 'lucide-react';
 import { Seo } from '../components/Seo';
 
-const ERP_BASE = 'https://www.fusionteamvolley.it/ERP';
+const ERP_BASE = import.meta.env.VITE_ERP_BASE_URL || 'https://www.fusionteamvolley.it/ERP';
 const API_URL = `${ERP_BASE}/api/router.php`;
 
 interface Collaboration {
