@@ -82,6 +82,16 @@ export const AthletesMetrics = {
                 return `fill="${color}" fill-opacity="0.9" stroke="${color}" stroke-opacity="1" stroke-width="2"`;
             };
 
+            const getSvgPaths = () => {
+                return `
+                    <path d="M34,120 c-2,15 -3,40 -1,60 c1,10 4,12 8,12 c4,0 5,-5 6,-15 c1,-20 -2,-45 -4,-65 c-1,-10 -4,-10 -9,8" ${getStyles('quads_l')} />
+                    <path d="M66,120 c2,15 3,40 1,60 c-1,10 -4,12 -8,12 c-4,0 -5,-5 -6,-15 c-1,-20 2,-45 4,-65 c1,-10 4,-10 9,8" ${getStyles('quads_r')} />
+                    <path d="M42,65 c0,10 0,30 2,40 c2,15 10,15 12,0 c2,-10 2,-30 0,-40 c-2,-10 -10,-10 -14,0" ${getStyles('core')} />
+                    <ellipse cx="36" cy="100" rx="5" ry="12" ${getStyles('hips_l')} />
+                    <ellipse cx="64" cy="100" rx="5" ry="12" ${getStyles('hips_r')} />
+                `;
+            };
+
             const asymmetry = parseFloat(data.asymmetryPct) || 0;
             const rsiStatus = data.semaphore?.label || 'STABLE';
             const rsiColorClass = data.semaphore?.status === 'RED' ? 'orange' : (data.semaphore?.status === 'YELLOW' ? 'orange' : 'green');
