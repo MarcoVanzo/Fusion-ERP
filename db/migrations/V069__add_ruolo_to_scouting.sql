@@ -1,0 +1,1 @@
+ALTER TABLE scouting_athletes ADD COLUMN ruolo VARCHAR(50) DEFAULT NULL;

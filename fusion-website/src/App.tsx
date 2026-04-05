@@ -13,6 +13,7 @@ const Roster = React.lazy(() => import('./pages/Roster'));
 const News = React.lazy(() => import('./pages/News'));
 const TeamDetail = React.lazy(() => import('./pages/TeamDetail'));
 const ArticleDetail = React.lazy(() => import('./pages/ArticleDetail'));
+const CandidaturaScouting = React.lazy(() => import('./pages/CandidaturaScouting'));
 const Shop = React.lazy(() => import('./pages/Shop'));
 const Results = React.lazy(() => import('./pages/Results'));
 const Outseason = React.lazy(() => import('./pages/Outseason'));
@@ -64,6 +65,7 @@ function AppContent() {
               <Route path="/foresteria" element={<Foresteria />} />
               <Route path="/network" element={<Network />} />
               <Route path="/sponsors" element={<Sponsors />} />
+              <Route path="/candidatura-scouting" element={<CandidaturaScouting />} />
               <Route path="/proposal1" element={<Proposal1 />} />
               <Route path="/proposal2" element={<Proposal2 />} />
               <Route path="/proposal3" element={<Proposal3 />} />

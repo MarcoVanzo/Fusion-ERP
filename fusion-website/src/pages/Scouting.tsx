@@ -24,10 +24,11 @@ interface ScoutingAthlete {
     cognome: string;
     societa_appartenenza: string | null;
     anno_nascita: string | null;
+    ruolo: string | null;
     note: string | null;
     rilevatore: string | null;
     data_rilevazione: string | null;
-    source: 'manual' | 'cognito_fusion' | 'cognito_network';
+    source: 'manual' | 'cognito_fusion' | 'cognito_network' | 'website';
     is_locked_edit: number;
 }
 
@@ -206,9 +207,16 @@ const Scouting = () => {
                                                                 <div className="text-white font-heading tracking-tight text-lg leading-tight uppercase">
                                                                     {athlete.nome} {athlete.cognome}
                                                                 </div>
-                                                                <div className="flex items-center gap-1.5 text-zinc-500 text-xs mt-1">
-                                                                    <Calendar size={12} />
-                                                                    Anno: {athlete.anno_nascita || 'N/D'}
+                                                                <div className="flex items-center gap-3 text-zinc-500 text-xs mt-1">
+                                                                    <div className="flex items-center gap-1.5">
+                                                                        <Calendar size={12} />
+                                                                        Anno: {athlete.anno_nascita || 'N/D'}
+                                                                    </div>
+                                                                    {athlete.ruolo && (
+                                                                        <div className="flex items-center gap-1.5 border-l border-zinc-800 pl-3 uppercase tracking-wider text-[10px] text-zinc-400">
+                                                                            {athlete.ruolo}
+                                                                        </div>
+                                                                    )}
                                                                 </div>
                                                             </div>
                                                         </div>
