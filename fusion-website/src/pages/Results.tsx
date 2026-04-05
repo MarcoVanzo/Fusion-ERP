@@ -183,13 +183,15 @@ const Results = () => {
                                             
                                             // Determine if Fusion won
                                             let fusionWonStatus: 'win' | 'loss' | null = null;
-                                            if (isFusionHome || isFusionAway) {
-                                                const homeSets = match.sets_home || 0;
-                                                const awaySets = match.sets_away || 0;
-                                                if (isFusionHome) {
-                                                    fusionWonStatus = homeSets > awaySets ? 'win' : 'loss';
-                                                } else if (isFusionAway) {
-                                                    fusionWonStatus = awaySets > homeSets ? 'win' : 'loss';
+                                            if ((isFusionHome || isFusionAway) && match.sets_home != null && match.sets_away != null) {
+                                                const homeSets = Number(match.sets_home);
+                                                const awaySets = Number(match.sets_away);
+                                                if (homeSets > 0 || awaySets > 0) {
+                                                    if (isFusionHome) {
+                                                        fusionWonStatus = homeSets > awaySets ? 'win' : (homeSets < awaySets ? 'loss' : null);
+                                                    } else if (isFusionAway) {
+                                                        fusionWonStatus = awaySets > homeSets ? 'win' : (awaySets < homeSets ? 'loss' : null);
+                                                    }
                                                 }
                                             }
 
