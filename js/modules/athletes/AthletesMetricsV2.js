@@ -163,15 +163,15 @@ export const AthletesMetrics = {
                 </div>
 
                 <!-- NEW: Full-Width Massive Anatomy Blueprint Section -->
-                <div class="card glass-card blueprint-card" style="margin-top:32px; padding:60px 40px; border-radius:32px; background:#050508; width:100%; border:1px solid rgba(0, 229, 255, 0.1);">
+                <div class="blueprint-card" style="margin-top:32px; width:100%;">
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:40px; align-items:center; min-height:900px; width:100%; margin:0 auto;">
-                        <div class="anatomy-entry" style="position:relative; width:100%; height:900px; filter:drop-shadow(0 0 100px rgba(0, 229, 255, 0.1));">
+                        <div class="anatomy-entry" style="position:relative; width:100%; height:900px;">
                             ${this._renderAnatomy('front', data.muscleMap)}
                             <div style="position:absolute; bottom:-40px; left:50%; transform:translateX(-50%); white-space:nowrap;">
                                 <span style="font-size:12px; font-weight:900; letter-spacing:6px; color:var(--accent-cyan); opacity:0.4;">ANTERIOR_VIEW_SILHOUETTE</span>
                             </div>
                         </div>
-                        <div class="anatomy-entry" style="position:relative; width:100%; height:900px; filter:drop-shadow(0 0 100px rgba(0, 229, 255, 0.1));">
+                        <div class="anatomy-entry" style="position:relative; width:100%; height:900px;">
                             ${this._renderAnatomy('back', data.muscleMap)}
                             <div style="position:absolute; bottom:-40px; left:50%; transform:translateX(-50%); white-space:nowrap;">
                                 <span style="font-size:12px; font-weight:900; letter-spacing:6px; color:var(--accent-cyan); opacity:0.4;">POSTERIOR_VIEW_SILHOUETTE</span>
@@ -257,8 +257,8 @@ export const AthletesMetrics = {
         if (!muscleMap) muscleMap = {};
         const getStyles = (muscle) => {
             const color = muscleMap[muscle];
-            if (!color) return `class="muscle-region" fill="rgba(0, 229, 255, 0.03)" stroke="rgba(0,229,255,0.2)" stroke-width="0.5"`;
-            return `class="muscle-region active" style="--color-active:${color};" fill="${color}" fill-opacity="0.95" stroke="${color}" stroke-opacity="1" stroke-width="3"`;
+            if (!color) return `class="muscle-region" fill="transparent" stroke="none"`;
+            return `class="muscle-region active" style="--color-active:${color};" fill="${color}" fill-opacity="1" stroke="none"`;
         };
         
         // Fix: Use existing high-fidelity anatomy assets from assets/img/anatomy/
@@ -293,41 +293,40 @@ export const AthletesMetrics = {
                     aspect-ratio: 100 / 240;
                     z-index:2; 
                     pointer-events:none;
+                    mix-blend-mode: overlay;
+                    filter: blur(12px);
+                    opacity: 0.9;
                 ">
                     <defs>
-                        <filter id="neonGlowOutline" x="-50%" y="-50%" width="200%" height="200%">
-                            <feGaussianBlur stdDeviation="3.5" result="blur" />
-                            <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                        </filter>
                     </defs>
 
-                    <!-- MUSCLE REGION HIGHLIGHTS (Data-Driven Neon Glows) -->
+                    <!-- MUSCLE REGION HIGHLIGHTS -->
                     ${view === 'front' ? `
                         <!-- Quads (Calibrated to Realistic Muscle Tiers) -->
                         <path d="M34,120 c-2,15 -3,40 -1,60 c1,10 4,12 8,12 c4,0 5,-5 6,-15 c1,-20 -2,-45 -4,-65 c-1,-10 -4,-10 -9,8" 
-                            ${getStyles('quads_l')} filter="url(#neonGlowOutline)" />
+                            ${getStyles('quads_l')} />
                         <path d="M66,120 c2,15 3,40 1,60 c-1,10 -4,12 -8,12 c-4,0 -5,-5 -6,-15 c-1,-20 2,-45 4,-65 c1,-10 4,-10 9,8" 
-                            ${getStyles('quads_r')} filter="url(#neonGlowOutline)" />
+                            ${getStyles('quads_r')} />
                         
                         <!-- Core / Abs (Centralized on 3D Model) -->
                         <path d="M42,65 c0,10 0,30 2,40 c2,15 10,15 12,0 c2,-10 2,-30 0,-40 c-2,-10 -10,-10 -14,0" 
-                            ${getStyles('core')} filter="url(#neonGlowOutline)" />
+                            ${getStyles('core')} />
                         
                         <!-- Hips / Lateral Stabilizers -->
-                        <ellipse cx="36" cy="100" rx="5" ry="12" ${getStyles('hips_l')} filter="url(#neonGlowOutline)" />
-                        <ellipse cx="64" cy="100" rx="5" ry="12" ${getStyles('hips_r')} filter="url(#neonGlowOutline)" />
+                        <ellipse cx="36" cy="100" rx="5" ry="12" ${getStyles('hips_l')} />
+                        <ellipse cx="64" cy="100" rx="5" ry="12" ${getStyles('hips_r')} />
                     ` : `
                         <!-- Glutes (Powerful Base Highlights) -->
                         <path d="M36,95 c-5,5 -9,25 -5,45 c3,12 15,18 20,8 c5,-8 7,-25 4,-45 c-2,-12 -12,-18 -19,-8" 
-                            ${getStyles('glutes_l')} filter="url(#neonGlowOutline)" />
+                            ${getStyles('glutes_l')} />
                         <path d="M64,95 c5,5 9,25 5,45 c-3,12 -15,18 -20,8 c-5,-8 -7,-25 -4,-45 c2,-12 12,-18 19,-8" 
-                            ${getStyles('glutes_r')} filter="url(#neonGlowOutline)" />
+                            ${getStyles('glutes_r')} />
                         
                         <!-- Hamstrings -->
                         <path d="M35,155 c-2,15 -3,40 -1,60 c1,10 5,8 8,0 c3,-25 2,-50 -1,-70 c-1,-10 -5,-10 -6,10" 
-                            ${getStyles('hams_l')} filter="url(#neonGlowOutline)" />
+                            ${getStyles('hams_l')} />
                         <path d="M65,155 c2,15 3,40 1,60 c-1,10 -5,8 -8,0 c-3,-25 -2,-50 1,-70 c1,-10 5,-10 6,10" 
-                            ${getStyles('hams_r')} filter="url(#neonGlowOutline)" />
+                            ${getStyles('hams_r')} />
                     `}
                 </svg>
             </div>
