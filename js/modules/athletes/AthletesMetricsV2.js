@@ -255,68 +255,83 @@ export const AthletesMetrics = {
     },
 
     /**
-     * Renderizza gli SVG dell'anatomia FEMMINILE (Unified Professional Silhouette)
-     * High-precision female athletic outline with subtle 'Cyber-Blueprint' wireframes.
+     * Renderizza gli SVG dell'anatomia FEMMINILE in modalità HYBRID (Realistic 3D + SVG Data)
+     * High-fidelity medical renders for visualization with transparent SVG overlays for interactive data.
      */
     _renderAnatomy(view, muscleMap = {}) {
         if (!muscleMap) muscleMap = {};
         const getStyles = (muscle) => {
             const color = muscleMap[muscle];
-            if (!color) return `class="muscle-region" fill="rgba(0, 229, 255, 0.02)"`;
+            if (!color) return `class="muscle-region" fill="rgba(0, 229, 255, 0.01)"`;
             return `class="muscle-region active" style="--color-active:${color};"`;
         };
         
-        // UNIFIED FEMALE ATHLETIC SILHOUETTES (Front/Back)
-        const frontOutline = `
-            M50,15 c-3,0 -5.5,2.5 -5.5,5.5 s2.5,5.5 5.5,5.5 s5.5,-2.5 5.5,-5.5 s-2.5,-5.5 -5.5,-5.5
-            M44.5,26 c-8,2 -13,8 -15,16 c-2,8 -1,20 -1,35 c0,25 -4,50 -4,75 c0,20 2,40 4,60 c2,20 3,40 3,60 v15 c0,4 2,6 5,6 s5,-2 5,-6 v-15 v15 c0,4 2,6 5,6 s5,-2 5,-6 v-15 c0,-20 1,-40 3,-60 c2,-20 4,-40 4,-60 c0,-25 -4,-50 -4,-75 c0,-15 1,-27 -1,-35 c-2,-8 -7,-14 -15,-16
-        `;
+        const imgSrc = `assets/anatomy/female_muscle_${view}.png`;
 
-        const backOutline = `
-            M50,15 c-3,0 -5.5,2.5 -5.5,5.5 s2.5,5.5 5.5,5.5 s5.5,-2.5 5.5,-5.5 s-2.5,-5.5 -5.5,-5.5
-            M44.5,26 c-9,3 -14,10 -16,20 c-2,10 -1,25 -1,40 c0,30 -5,60 -5,90 c0,25 3,50 5,75 c1,12 2,24 2,36 v15 c0,4 2,6 5,6 s5,-2 5,-6 v-15 v15 c0,4 2,6 5,6 s5,-2 5,-6 v-15 c0,-12 1,-24 2,-36 c2,-25 5,-50 5,-75 c0,-30 -5,-60 -5,-90 c0,-15 1,-30 -1,-40 c-2,-10 -7,-17 -16,-20
-        `;
-
-        const decorations = view === 'front' ? `
-            <path d="M40,50 Q50,55 60,50" fill="none" stroke="rgba(0, 229, 255, 0.08)" stroke-width="0.3" />
-            <path d="M42,100 Q50,105 58,100" fill="none" stroke="rgba(0, 229, 255, 0.08)" stroke-width="0.3" />
-            <line x1="50" y1="35" x2="50" y2="110" stroke="rgba(0, 229, 255, 0.05)" stroke-width="0.2" stroke-dasharray="2,2" />
-        ` : `
-            <path d="M38,55 Q50,60 62,55" fill="none" stroke="rgba(0, 229, 255, 0.08)" stroke-width="0.3" />
-            <path d="M40,115 Q50,125 60,115" fill="none" stroke="rgba(0, 229, 255, 0.08)" stroke-width="0.3" />
-            <line x1="50" y1="35" x2="50" y2="120" stroke="rgba(0, 229, 255, 0.05)" stroke-width="0.2" stroke-dasharray="2,2" />
-        `;
-
+        // Interactive High-Performance Highlighting (Calibrated to 3D Assets)
         return `
-            <div class="anatomy-container ${view}" style="width:100%; height:100%; position:relative; overflow:visible;">
-                <svg viewBox="0 0 100 280" style="width:100%; height:100%;">
+            <div class="anatomy-container ${view}" style="width:100%; height:100%; position:relative; overflow:hidden; background:#000; display:flex; align-items:center; justify-content:center;">
+                <!-- High-Fidelity 3D Medical Render (Muscle Fibers - Myology) -->
+                <img src="${imgSrc}" alt="${view} anatomy" style="
+                    position:absolute; 
+                    top:0; 
+                    left:50%; 
+                    transform:translateX(-50%); 
+                    height:100%; 
+                    width:auto; 
+                    object-fit:contain; 
+                    opacity:0.85; 
+                    mix-blend-mode:screen;
+                    filter: brightness(1.1) contrast(1.15);
+                    z-index:1;
+                ">
+
+                <!-- Interactive SVG Telemetry Overlay -->
+                <svg viewBox="0 0 100 240" style="
+                    position:absolute; 
+                    top:0; 
+                    left:50%; 
+                    transform:translateX(-50%);
+                    width:auto;
+                    height:100%; 
+                    aspect-ratio: 100 / 240;
+                    z-index:2; 
+                    pointer-events:none;
+                ">
                     <defs>
-                        <linearGradient id="bodyGrad${view}" x1="0%" y1="0%" x2="0%" y2="100%">
-                            <stop offset="0%" style="stop-color:rgba(0, 229, 255, 0.12);stop-opacity:1" />
-                            <stop offset="100%" style="stop-color:rgba(0, 229, 255, 0.04);stop-opacity:1" />
-                        </linearGradient>
                         <filter id="neonGlowOutline" x="-50%" y="-50%" width="200%" height="200%">
-                            <feGaussianBlur stdDeviation="3" result="blur" />
+                            <feGaussianBlur stdDeviation="3.5" result="blur" />
                             <feComposite in="SourceGraphic" in2="blur" operator="over" />
                         </filter>
                     </defs>
-                    <path d="${view === 'front' ? frontOutline : backOutline}" 
-                        fill="url(#bodyGrad${view})" 
-                        stroke="rgba(0, 229, 255, 0.6)" 
-                        stroke-width="1" 
-                        filter="url(#neonGlowOutline)" />
-                    ${decorations}
+
+                    <!-- MUSCLE REGION HIGHLIGHTS (Data-Driven Neon Glows) -->
                     ${view === 'front' ? `
-                        <path d="M35,120 c-2,15 -3,35 -1,55 c1,8 4,12 7,12 c3,0 5,-4 6,-15 c1,-20 -2,-40 -4,-60 c-1,-10 -3,-10 -8,8" ${getStyles('quads_l')} />
-                        <path d="M65,120 c2,15 3,35 1,55 c-1,8 -4,12 -7,12 c-3,0 -5,-4 -6,-15 c-1,-20 2,-40 4,-60 c1,-10 3,-10 8,8" ${getStyles('quads_r')} />
-                        <path d="M44,70 c-1,10 -1,25 2,35 s8,12 10,0 s2,-25 0,-35 s-9,-10 -12,0" ${getStyles('core')} />
-                        <ellipse cx="37" cy="105" rx="4" ry="10" ${getStyles('hips_l')} />
-                        <ellipse cx="63" cy="105" rx="4" ry="10" ${getStyles('hips_r')} />
+                        <!-- Quads (Calibrated to Realistic Muscle Tiers) -->
+                        <path d="M34,120 c-2,15 -3,40 -1,60 c1,10 4,12 8,12 c4,0 5,-5 6,-15 c1,-20 -2,-45 -4,-65 c-1,-10 -4,-10 -9,8" 
+                            ${getStyles('quads_l')} filter="url(#neonGlowOutline)" />
+                        <path d="M66,120 c2,15 3,40 1,60 c-1,10 -4,12 -8,12 c-4,0 -5,-5 -6,-15 c-1,-20 2,-45 4,-65 c1,-10 4,-10 9,8" 
+                            ${getStyles('quads_r')} filter="url(#neonGlowOutline)" />
+                        
+                        <!-- Core / Abs (Centralized on 3D Model) -->
+                        <path d="M42,65 c0,10 0,30 2,40 c2,15 10,15 12,0 c2,-10 2,-30 0,-40 c-2,-10 -10,-10 -14,0" 
+                            ${getStyles('core')} filter="url(#neonGlowOutline)" />
+                        
+                        <!-- Hips / Lateral Stabilizers -->
+                        <ellipse cx="36" cy="100" rx="5" ry="12" ${getStyles('hips_l')} filter="url(#neonGlowOutline)" />
+                        <ellipse cx="64" cy="100" rx="5" ry="12" ${getStyles('hips_r')} filter="url(#neonGlowOutline)" />
                     ` : `
-                        <path d="M38,105 c-5,5 -8,20 -5,35 c2,10 12,15 16,8 c4,-6 6,-20 3,-35 c-2,-10 -9,-15 -14,-8" ${getStyles('glutes_l')} />
-                        <path d="M62,105 c5,5 8,20 5,35 c-2,10 -12,15 -14,8 c-4,-6 -6,-20 -3,-35 c2,-10 9,-15 14,-8" ${getStyles('glutes_r')} />
-                        <path d="M37,155 c-2,15 -3,35 -1,55 c1,8 5,8 7,0 c2,-20 1,-40 -1,-60 c-1,-10 -4,-10 -5,5" ${getStyles('hams_l')} />
-                        <path d="M63,155 c2,15 3,35 1,55 c-1,8 -5,8 -7,0 c-2,-20 -1,-40 1,-60 c 1,-10 4,-10 5,5" ${getStyles('hams_r')} />
+                        <!-- Glutes (Powerful Base Highlights) -->
+                        <path d="M36,95 c-5,5 -9,25 -5,45 c3,12 15,18 20,8 c5,-8 7,-25 4,-45 c-2,-12 -12,-18 -19,-8" 
+                            ${getStyles('glutes_l')} filter="url(#neonGlowOutline)" />
+                        <path d="M64,95 c5,5 9,25 5,45 c-3,12 -15,18 -20,8 c-5,-8 -7,-25 -4,-45 c2,-12 12,-18 19,-8" 
+                            ${getStyles('glutes_r')} filter="url(#neonGlowOutline)" />
+                        
+                        <!-- Hamstrings -->
+                        <path d="M35,155 c-2,15 -3,40 -1,60 c1,10 5,8 8,0 c3,-25 2,-50 -1,-70 c-1,-10 -5,-10 -6,10" 
+                            ${getStyles('hams_l')} filter="url(#neonGlowOutline)" />
+                        <path d="M65,155 c2,15 3,40 1,60 c-1,10 -5,8 -8,0 c-3,-25 -2,-50 1,-70 c1,-10 5,-10 6,10" 
+                            ${getStyles('hams_r')} filter="url(#neonGlowOutline)" />
                     `}
                 </svg>
             </div>
