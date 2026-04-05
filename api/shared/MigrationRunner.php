@@ -107,17 +107,16 @@ class MigrationRunner
         try {
             $this->db->beginTransaction();
             
-            // Execute the script (might contain multiple queries)
-            // Note: PDO::exec doesn't support multiple queries easily with emulated prepares off.
-            // But for simple migrations it's often okay. 
-            // Better: split by semicolon if needed, or use the raw PDO connection.
+            // Execute the script
             $this->db->exec($sql);
 
             // Record success
             $stmt = $this->db->prepare("INSERT INTO `{$this->tableName}` (filename) VALUES (?)");
             $stmt->execute([$filename]);
 
-            $this->db->commit();
+            if ($this->db->inTransaction()) {
+                $this->db->commit();
+            }
         } catch (Exception $e) {
             if ($this->db->inTransaction()) {
                 $this->db->rollBack();
