@@ -164,20 +164,14 @@ export const AthletesMetrics = {
 
                 <!-- NEW: Full-Width Massive Anatomy Blueprint Section -->
                 <div class="card glass-card blueprint-card" style="margin-top:32px; padding:60px 40px; border-radius:32px; background:#050508; width:100%; border:1px solid rgba(0, 229, 255, 0.1);">
-                    <div style="display:flex; justify-content:center; align-items:center; gap:24px; margin-bottom:60px;">
-                         <div style="width:100px; height:1px; background:linear-gradient(90deg, transparent, var(--accent-cyan));"></div>
-                         <h3 style="font-family:var(--font-display); font-size:24px; font-weight:800; color:#fff; margin:0; letter-spacing:4px; text-transform:uppercase;">Biomechanical Blueprint</h3>
-                         <div style="width:100px; height:1px; background:linear-gradient(90deg, var(--accent-cyan), transparent);"></div>
-                    </div>
-                    
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:40px; align-items:center; min-height:600px; width:100%; margin:0 auto;">
-                        <div class="anatomy-entry" style="position:relative; width:100%; height:600px; filter:drop-shadow(0 0 100px rgba(0, 229, 255, 0.1));">
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:40px; align-items:center; min-height:900px; width:100%; margin:0 auto;">
+                        <div class="anatomy-entry" style="position:relative; width:100%; height:900px; filter:drop-shadow(0 0 100px rgba(0, 229, 255, 0.1));">
                             ${this._renderAnatomy('front', data.muscleMap)}
                             <div style="position:absolute; bottom:-40px; left:50%; transform:translateX(-50%); white-space:nowrap;">
                                 <span style="font-size:12px; font-weight:900; letter-spacing:6px; color:var(--accent-cyan); opacity:0.4;">ANTERIOR_VIEW_SILHOUETTE</span>
                             </div>
                         </div>
-                        <div class="anatomy-entry" style="position:relative; width:100%; height:600px; filter:drop-shadow(0 0 100px rgba(0, 229, 255, 0.1));">
+                        <div class="anatomy-entry" style="position:relative; width:100%; height:900px; filter:drop-shadow(0 0 100px rgba(0, 229, 255, 0.1));">
                             ${this._renderAnatomy('back', data.muscleMap)}
                             <div style="position:absolute; bottom:-40px; left:50%; transform:translateX(-50%); white-space:nowrap;">
                                 <span style="font-size:12px; font-weight:900; letter-spacing:6px; color:var(--accent-cyan); opacity:0.4;">POSTERIOR_VIEW_SILHOUETTE</span>
@@ -264,7 +258,7 @@ export const AthletesMetrics = {
         const getStyles = (muscle) => {
             const color = muscleMap[muscle];
             if (!color) return `class="muscle-region" fill="rgba(0, 229, 255, 0.03)" stroke="rgba(0,229,255,0.2)" stroke-width="0.5"`;
-            return `class="muscle-region active" style="--color-active:${color};" fill="${color}" fill-opacity="0.5" stroke="${color}" stroke-opacity="0.9" stroke-width="1.5"`;
+            return `class="muscle-region active" style="--color-active:${color};" fill="${color}" fill-opacity="0.95" stroke="${color}" stroke-opacity="1" stroke-width="3"`;
         };
         
         // Fix: Use existing high-fidelity anatomy assets from assets/img/anatomy/
