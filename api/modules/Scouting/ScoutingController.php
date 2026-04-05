@@ -186,6 +186,33 @@ class ScoutingController
     }
 
     /* ─────────────────────────────────────────────────────────────────────
+     * deleteEntry — DELETE an entry
+     * POST /api?module=scouting&action=deleteEntry
+     * ───────────────────────────────────────────────────────────────────── */
+    public function deleteEntry(): void
+    {
+        $user = Auth::requireRole('allenatore');
+        $tenantId = \FusionERP\Shared\TenantContext::id();
+
+        $data = json_decode(file_get_contents('php://input'), true);
+        if (!$data || empty($data['id'])) {
+            Response::error('ID obbligatorio', 400);
+        }
+
+        $stmt = $this->db->prepare("DELETE FROM scouting_athletes WHERE id = :id AND tenant_id = :tenant_id");
+        $stmt->execute([
+            ':id' => (int)$data['id'],
+            ':tenant_id' => $tenantId
+        ]);
+
+        if ($stmt->rowCount() === 0) {
+            Response::error('Atleta non trovato o non autorizzato', 404);
+        }
+
+        Response::success(['success' => true]);
+    }
+
+    /* ─────────────────────────────────────────────────────────────────────
      * applyScouting — POST public endpoint for athlete applications
      * POST /api?module=scouting&action=applyScouting
      * ───────────────────────────────────────────────────────────────────── */

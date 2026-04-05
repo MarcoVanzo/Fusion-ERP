@@ -124,6 +124,9 @@ export class ScoutingView {
                         <button class="btn btn-icon btn-ghost btn-sm edit-athlete-btn" data-id="${window.Utils.escapeHtml(athlete.id)}" title="Modifica">
                             <i class="ph ph-pencil-simple"></i>
                         </button>
+                        <button class="btn btn-icon btn-ghost btn-sm delete-athlete-btn" data-id="${window.Utils.escapeHtml(athlete.id)}" title="Elimina" style="color: var(--color-pink);">
+                            <i class="ph ph-trash"></i>
+                        </button>
                     </td>` : ""}
                 </tr>
             `;

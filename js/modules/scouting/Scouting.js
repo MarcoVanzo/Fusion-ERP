@@ -148,6 +148,14 @@ class ScoutingModule {
                             this.openSidePanel(athlete);
                         }
                     }
+
+                    const delBtn = e.target.closest(".delete-athlete-btn");
+                    if (delBtn) {
+                        e.stopPropagation();
+                        if (confirm("Sei sicuro di voler eliminare questo atleta?")) {
+                            this.handleDelete(delBtn.dataset.id);
+                        }
+                    }
                 }, this.sig());
             }
         }
@@ -188,6 +196,17 @@ class ScoutingModule {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="ph ph-arrows-clockwise"></i> Sincronizza da Cognito';
             }
+        }
+    }
+
+    async handleDelete(id) {
+        try {
+            await ScoutingAPI.deleteEntry({ id });
+            window.UI.toast("Atleta eliminato con successo", "success");
+            window.Store.invalidate("scouting");
+            await this.refreshData(true);
+        } catch (err) {
+            window.UI.toast("Errore durante l'eliminazione: " + err.message, "error");
         }
     }
 
