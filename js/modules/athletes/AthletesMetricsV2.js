@@ -32,8 +32,8 @@ export const AthletesMetrics = {
         if (!container) return;
 
         try {
-            // Fix: module and action order in Store.get
-            const data = await Store.get("vald", "analytics", { athleteId });
+            // Fix: action and module order in Store.get
+            const data = await Store.get("analytics", "vald", { athleteId });
             
             if (!data || !data.hasData) {
                 container.innerHTML = `
