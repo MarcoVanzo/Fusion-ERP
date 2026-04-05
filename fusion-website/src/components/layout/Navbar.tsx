@@ -106,30 +106,30 @@ const Navbar = () => {
                     <div className="flex items-center gap-6">
                         {splitRightLinks.map(link => {
                             const isActive = location.pathname === link.path || (link.path !== '/' && location.pathname.startsWith(link.path));
+                            // Sostituisco "ENTRA NELLA NOSTRA FAMIGLIA" con "CANDIDATI" per non rompere altri possibili riferimenti
+                            const linkName = link.name === 'ENTRA NELLA NOSTRA FAMIGLIA' ? 'CANDIDATI' : link.name;
                             return (
                                 <Link 
                                     key={link.name} 
                                     to={link.path} 
                                     className={
                                         link.isHighlight 
-                                        ? "relative group flex items-center justify-center px-5 py-2 rounded-full transition-all duration-300 transform hover:-translate-y-0.5" 
+                                        ? "relative group flex items-center justify-center px-4 py-2 transition-all duration-300 transform hover:scale-105" 
                                         : `text-sm font-semibold tracking-widest transition-colors uppercase relative group flex items-center ${isActive ? 'text-brand-500' : 'text-zinc-300 hover:text-white'}`
                                     }
                                 >
                                     {link.isHighlight ? (
                                         <>
-                                            <span className="absolute inset-0 bg-brand-500/10 backdrop-blur-md border border-brand-500/30 rounded-full group-hover:bg-brand-500/20 group-hover:border-brand-400/60 transition-all duration-300 shadow-[0_0_15px_rgba(217,70,239,0.15)] group-hover:shadow-[0_0_25px_rgba(217,70,239,0.4)]"></span>
-                                            <span className="relative flex items-center gap-2 text-[12px] font-bold tracking-[0.15em] text-white uppercase group-hover:text-brand-50 transition-colors">
-                                                <span className="relative flex h-2 w-2">
-                                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span>
-                                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-500 shadow-[0_0_8px_rgba(217,70,239,0.8)]"></span>
-                                                </span>
-                                                {link.name}
+                                            <span 
+                                                className="relative z-10 text-[28px] md:text-[32px] text-brand-500 hover:text-brand-400 drop-shadow-[0_0_12px_rgba(217,70,239,0.3)] group-hover:drop-shadow-[0_0_20px_rgba(217,70,239,0.6)] transition-all duration-300" 
+                                                style={{ fontFamily: "'Rubik Dirt', system-ui", lineHeight: 1 }}
+                                            >
+                                                {linkName}
                                             </span>
                                         </>
                                     ) : (
                                         <>
-                                            {link.name}
+                                            {linkName}
                                             {link.badge && (
                                                 <span className="absolute -top-3 -right-6 text-[8px] bg-red-600/90 text-white px-1.5 py-0.5 rounded animate-pulse shadow-[0_0_8px_rgba(220,38,38,0.6)]">{link.badge}</span>
                                             )}
