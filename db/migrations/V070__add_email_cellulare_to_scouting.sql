@@ -1,0 +1,2 @@
+ALTER TABLE scouting_athletes ADD COLUMN email VARCHAR(255) DEFAULT NULL;
+ALTER TABLE scouting_athletes ADD COLUMN cellulare VARCHAR(50) DEFAULT NULL;

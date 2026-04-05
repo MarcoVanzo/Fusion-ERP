@@ -12,6 +12,8 @@ const CandidaturaScouting = () => {
         societa_appartenenza: '',
         anno_nascita: '',
         ruolo: '',
+        email: '',
+        cellulare: '',
         note: ''
     });
 
@@ -106,7 +108,7 @@ const CandidaturaScouting = () => {
                         <button 
                             onClick={() => {
                                 setSuccess(false);
-                                setFormData({ nome: '', cognome: '', societa_appartenenza: '', anno_nascita: '', ruolo: '', note: '' });
+                                setFormData({ nome: '', cognome: '', societa_appartenenza: '', anno_nascita: '', ruolo: '', email: '', cellulare: '', note: '' });
                             }}
                             className="bg-zinc-800 text-white px-8 py-4 rounded-xl font-heading uppercase tracking-wider hover:bg-brand-500 hover:shadow-[0_0_20px_rgba(217,70,239,0.4)] transition-all relative z-10"
                         >
@@ -159,6 +161,30 @@ const CandidaturaScouting = () => {
                                         onChange={handleChange}
                                         className="w-full bg-zinc-950/50 border border-zinc-800 rounded-2xl px-5 py-4 text-white focus:outline-none focus:ring-1 focus:ring-brand-500 focus:border-brand-500 transition-all font-sans"
                                         placeholder="Il tuo cognome"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="block text-zinc-400 text-xs font-heading tracking-[0.2em] uppercase ml-1">Email *</label>
+                                    <input 
+                                        type="email" 
+                                        name="email" 
+                                        required 
+                                        value={formData.email} 
+                                        onChange={handleChange}
+                                        className="w-full bg-zinc-950/50 border border-zinc-800 rounded-2xl px-5 py-4 text-white focus:outline-none focus:ring-1 focus:ring-brand-500 focus:border-brand-500 transition-all font-sans"
+                                        placeholder="La tua email"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="block text-zinc-400 text-xs font-heading tracking-[0.2em] uppercase ml-1">Cellulare *</label>
+                                    <input 
+                                        type="tel" 
+                                        name="cellulare" 
+                                        required 
+                                        value={formData.cellulare} 
+                                        onChange={handleChange}
+                                        className="w-full bg-zinc-950/50 border border-zinc-800 rounded-2xl px-5 py-4 text-white focus:outline-none focus:ring-1 focus:ring-brand-500 focus:border-brand-500 transition-all font-sans"
+                                        placeholder="Il tuo numero di cellulare"
                                     />
                                 </div>
                                 <div className="space-y-2">

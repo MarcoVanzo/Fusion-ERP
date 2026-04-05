@@ -63,7 +63,7 @@ class ScoutingController
 
         // Security: limit to current tenant's records, ordered by recency
         $stmt = $this->db->prepare("
-            SELECT id, nome, cognome, societa_appartenenza, anno_nascita, ruolo, note, rilevatore, data_rilevazione, source, is_locked_edit
+            SELECT id, nome, cognome, societa_appartenenza, anno_nascita, ruolo, email, cellulare, note, rilevatore, data_rilevazione, source, is_locked_edit
             FROM scouting_athletes
             WHERE tenant_id = :tenant_id
             ORDER BY created_at DESC
@@ -107,8 +107,8 @@ class ScoutingController
         }
 
         $stmt = $this->db->prepare("
-            INSERT INTO scouting_athletes (tenant_id, nome, cognome, societa_appartenenza, anno_nascita, ruolo, note, rilevatore, data_rilevazione, source)
-            VALUES (:tenant_id, :nome, :cognome, :societa, :anno, :ruolo, :note, :rilevatore, :data_ril, 'manual')
+            INSERT INTO scouting_athletes (tenant_id, nome, cognome, societa_appartenenza, anno_nascita, ruolo, email, cellulare, note, rilevatore, data_rilevazione, source)
+            VALUES (:tenant_id, :nome, :cognome, :societa, :anno, :ruolo, :email, :cellulare, :note, :rilevatore, :data_ril, 'manual')
         ");
 
         $stmt->execute([
@@ -118,6 +118,8 @@ class ScoutingController
             ':societa'   => $data['societa_appartenenza'] ?? null,
             ':anno'      => !empty($data['anno_nascita']) ? (int)$data['anno_nascita'] : null,
             ':ruolo'     => $data['ruolo'] ?? null,
+            ':email'     => $data['email'] ?? null,
+            ':cellulare' => $data['cellulare'] ?? null,
             ':note'      => $data['note'] ?? null,
             ':rilevatore'=> $data['rilevatore'] ?? null,
             ':data_ril'  => $data['data_rilevazione'] ?? date('Y-m-d'),
@@ -148,6 +150,8 @@ class ScoutingController
                 societa_appartenenza = :societa,
                 anno_nascita = :anno,
                 ruolo = :ruolo,
+                email = :email,
+                cellulare = :cellulare,
                 note = :note,
                 rilevatore = :rilevatore,
                 data_rilevazione = :data_ril,
@@ -163,6 +167,8 @@ class ScoutingController
             ':societa'    => $data['societa_appartenenza'] ?? null,
             ':anno'       => !empty($data['anno_nascita']) ? (int)$data['anno_nascita'] : null,
             ':ruolo'      => $data['ruolo'] ?? null,
+            ':email'      => $data['email'] ?? null,
+            ':cellulare'  => $data['cellulare'] ?? null,
             ':note'       => $data['note'] ?? null,
             ':rilevatore' => $data['rilevatore'] ?? null,
             ':data_ril'   => $data['data_rilevazione'] ?? date('Y-m-d'),
@@ -191,8 +197,8 @@ class ScoutingController
         }
 
         $stmt = $this->db->prepare("
-            INSERT INTO scouting_athletes (tenant_id, nome, cognome, societa_appartenenza, anno_nascita, ruolo, note, rilevatore, data_rilevazione, source)
-            VALUES (:tenant_id, :nome, :cognome, :societa, :anno, :ruolo, :note, 'Atleta', :data_ril, 'website')
+            INSERT INTO scouting_athletes (tenant_id, nome, cognome, societa_appartenenza, anno_nascita, ruolo, email, cellulare, note, rilevatore, data_rilevazione, source)
+            VALUES (:tenant_id, :nome, :cognome, :societa, :anno, :ruolo, :email, :cellulare, :note, 'Atleta', :data_ril, 'website')
         ");
 
         $stmt->execute([
@@ -202,6 +208,8 @@ class ScoutingController
             ':societa'   => $data['societa_appartenenza'] ?? null,
             ':anno'      => !empty($data['anno_nascita']) ? (int)$data['anno_nascita'] : null,
             ':ruolo'     => $data['ruolo'] ?? null,
+            ':email'     => $data['email'] ?? null,
+            ':cellulare' => $data['cellulare'] ?? null,
             ':note'      => $data['note'] ?? null,
             ':data_ril'  => date('Y-m-d'),
         ]);
@@ -342,10 +350,10 @@ class ScoutingController
 
         $sql = "
             INSERT INTO scouting_athletes
-                (tenant_id, cognito_id, cognito_form, nome, cognome, societa_appartenenza, anno_nascita, ruolo,
+                (tenant_id, cognito_id, cognito_form, nome, cognome, societa_appartenenza, anno_nascita, ruolo, email, cellulare,
                  note, rilevatore, data_rilevazione, source, synced_at)
             VALUES
-                (:tenant_id, :cog_id, :cog_form, :nome, :cognome, :societa, :anno, :ruolo,
+                (:tenant_id, :cog_id, :cog_form, :nome, :cognome, :societa, :anno, :ruolo, :email, :cellulare,
                  :note, :rilevatore, :data_ril, :source, NOW())
             ON DUPLICATE KEY UPDATE
                 nome                  = IF(is_locked_edit = 1, nome, VALUES(nome)),
@@ -353,6 +361,8 @@ class ScoutingController
                 societa_appartenenza  = IF(is_locked_edit = 1, societa_appartenenza, VALUES(societa_appartenenza)),
                 anno_nascita          = IF(is_locked_edit = 1, anno_nascita, VALUES(anno_nascita)),
                 ruolo                 = IF(is_locked_edit = 1, ruolo, VALUES(ruolo)),
+                email                 = IF(is_locked_edit = 1, email, VALUES(email)),
+                cellulare             = IF(is_locked_edit = 1, cellulare, VALUES(cellulare)),
                 note                  = IF(is_locked_edit = 1, note, VALUES(note)),
                 rilevatore            = IF(is_locked_edit = 1, rilevatore, VALUES(rilevatore)),
                 data_rilevazione      = IF(is_locked_edit = 1, data_rilevazione, VALUES(data_rilevazione)),
@@ -369,6 +379,8 @@ class ScoutingController
             $societa = $e['Societa'] ?? $e['SocietaDiAppartenenza'] ?? $e['societa_appartenenza'] ?? null;
             $anno = $e['AnnoDiNascita'] ?? $e['Anno'] ?? $e['anno_nascita'] ?? null;
             $ruolo = $e['Ruolo'] ?? $e['ruolo'] ?? null;
+            $email = $e['Email'] ?? $e['email'] ?? null;
+            $cellulare = $e['Cellulare'] ?? $e['Telefono'] ?? $e['cellulare'] ?? null;
             $note = $e['Note'] ?? $e['note'] ?? null;
             $rilevatore = $e['Rilevatore'] ?? $e['rilevatore'] ?? 'Cognito Form';
 
@@ -386,6 +398,8 @@ class ScoutingController
                     ':societa' => $societa,
                     ':anno' => $anno ? (int)$anno : null,
                     ':ruolo' => $ruolo,
+                    ':email' => $email,
+                    ':cellulare' => $cellulare,
                     ':note' => $note,
                     ':rilevatore' => (string)$rilevatore,
                     ':data_ril' => $dataRil,
