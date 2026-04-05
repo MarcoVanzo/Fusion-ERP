@@ -74,7 +74,7 @@ export class ScoutingView {
                     <table class="data-table" style="width:100%;border-collapse:collapse;font-size:14px">
                         <thead>
                             <tr>
-                                ${["Nome", "Cognome", "Società", "Anno Nascita", "Note", "Rilevatore", "Data", "Fonte"].map((h) => `<th style="text-align:left;padding:10px 12px;border-bottom:1px solid var(--color-border);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:var(--color-text-muted)">${h}</th>`).join("")}
+                                ${["Nome", "Cognome", "Ruolo", "Società", "Email", "Cellulare", "Anno Nasc.", "Note", "Rilevatore", "Data", "Fonte"].map((h) => `<th style="text-align:left;padding:10px 12px;border-bottom:1px solid var(--color-border);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:var(--color-text-muted)">${h}</th>`).join("")}
                                 ${canEdit ? `<th style="text-align:right;padding:10px 12px;border-bottom:1px solid var(--color-border);"></th>` : ""}
                             </tr>
                         </thead>
@@ -93,7 +93,7 @@ export class ScoutingView {
      */
     static renderRows(data, canEdit) {
         if (data.length === 0) {
-            return `<tr><td colspan="${canEdit ? 9 : 8}" style="text-align:center;padding:var(--sp-4);color:var(--color-text-muted)">Nessun atleta trovato nel database scouting.</td></tr>`;
+            return `<tr><td colspan="${canEdit ? 12 : 11}" style="text-align:center;padding:var(--sp-4);color:var(--color-text-muted)">Nessun atleta trovato nel database scouting.</td></tr>`;
         }
 
         const sourceMap = {
@@ -109,9 +109,13 @@ export class ScoutingView {
 
             return `
                 <tr>
+                <tr>
                     <td style="padding:10px 12px;border-bottom:1px solid var(--color-border);font-weight:600">${window.Utils.escapeHtml(athlete.nome || "—")}</td>
                     <td style="padding:10px 12px;border-bottom:1px solid var(--color-border);font-weight:600">${window.Utils.escapeHtml(athlete.cognome || "—")}</td>
+                    <td style="padding:10px 12px;border-bottom:1px solid var(--color-border)">${window.Utils.escapeHtml(athlete.ruolo || "—")}</td>
                     <td style="padding:10px 12px;border-bottom:1px solid var(--color-border)">${window.Utils.escapeHtml(athlete.societa_appartenenza || "—")}</td>
+                    <td style="padding:10px 12px;border-bottom:1px solid var(--color-border)">${window.Utils.escapeHtml(athlete.email || "—")}</td>
+                    <td style="padding:10px 12px;border-bottom:1px solid var(--color-border)">${window.Utils.escapeHtml(athlete.cellulare || "—")}</td>
                     <td style="padding:10px 12px;border-bottom:1px solid var(--color-border)">${athlete.anno_nascita || "—"}</td>
                     <td style="padding:10px 12px;border-bottom:1px solid var(--color-border);max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${window.Utils.escapeHtml(athlete.note || "")}">${window.Utils.escapeHtml(athlete.note || "—")}</td>
                     <td style="padding:10px 12px;border-bottom:1px solid var(--color-border)">${window.Utils.escapeHtml(athlete.rilevatore || "—")}</td>
@@ -161,9 +165,24 @@ export class ScoutingView {
                 </div>
                 <div class="form-grid">
                     <div class="form-group">
+                        <label class="form-label" for="sc-ruolo">Ruolo</label>
+                        <input id="sc-ruolo" class="form-input" type="text" value="${isEdit ? window.Utils.escapeHtml(athlete.ruolo || "") : ""}">
+                    </div>
+                    <div class="form-group">
                         <label class="form-label" for="sc-societa">Società</label>
                         <input id="sc-societa" class="form-input" type="text" value="${isEdit ? window.Utils.escapeHtml(athlete.societa_appartenenza || "") : ""}">
                     </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label" for="sc-email">Email</label>
+                        <input id="sc-email" class="form-input" type="email" value="${isEdit ? window.Utils.escapeHtml(athlete.email || "") : ""}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="sc-cellulare">Cellulare</label>
+                        <input id="sc-cellulare" class="form-input" type="text" value="${isEdit ? window.Utils.escapeHtml(athlete.cellulare || "") : ""}">
+                    </div>
+                </div>
                     <div class="form-group">
                         <label class="form-label" for="sc-anno">Nascita (Anno)</label>
                         <input id="sc-anno" class="form-input" type="number" min="1990" max="2025" value="${isEdit ? athlete.anno_nascita || "" : ""}">
