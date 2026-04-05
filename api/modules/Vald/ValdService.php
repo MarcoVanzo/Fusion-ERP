@@ -491,7 +491,9 @@ PROMPT;
                                             if ($def === 'PEAK_FORCE') $keyToStore = 'PeakForce';
                                             if (in_array($def, ['BRAKING_IMPULSE', 'ECCENTRIC_BRAKING_IMPULSE', 'BRAKING_PHASE_IMPULSE', 'BRAKING_PHASE_NET_IMPULSE', 'NET_BRAKING_IMPULSE', 'ECC_BRAKING_IMPULSE'])) $keyToStore = 'BrakingImpulse';
                                             if ($def === 'CONCENTRIC_PEAK_FORCE') $keyToStore = 'ConcentricPeakForce';
-                                            if ($def === 'CONCENTRIC_PEAK_POWER') $keyToStore = 'ConcentricPeakPower';
+                                            if (in_array($def, ['CONCENTRIC_PEAK_POWER', 'CONCENTRIC_PEAK_POWER_BM', 'CONCENTRIC_PEAK_POWER_PER_BM', 'RELATIVE_CONCENTRIC_PEAK_POWER'])) {
+                                                $keyToStore = 'ConcentricPeakPower';
+                                            }
                                             if ($def === 'CONCENTRIC_PEAK_VELOCITY') $keyToStore = 'ConcentricPeakVelocity';
                                             if (in_array($def, ['PEAK_LANDING_FORCE', 'LANDING_PEAK_FORCE'])) $keyToStore = 'PeakLandingForce';
                                             if ($def === 'TIME_TO_TAKEOFF') { $val = (float)$val * 1000; $keyToStore = 'TimeToTakeoff'; }

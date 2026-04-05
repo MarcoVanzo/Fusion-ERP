@@ -32,7 +32,8 @@ export const AthletesMetrics = {
         if (!container) return;
 
         try {
-            const data = await Store.get("analytics", "vald", { athleteId });
+            // Fix: module and action order in Store.get
+            const data = await Store.get("vald", "analytics", { athleteId });
             
             if (!data || !data.hasData) {
                 container.innerHTML = `
@@ -266,7 +267,8 @@ export const AthletesMetrics = {
             return `class="muscle-region active" style="--color-active:${color};"`;
         };
         
-        const imgSrc = `assets/anatomy/female_muscle_${view}.png`;
+        // Fix: Use existing high-fidelity anatomy assets from assets/img/anatomy/
+        const imgSrc = `assets/img/anatomy/body_${view}.png`;
 
         // Interactive High-Performance Highlighting (Calibrated to 3D Assets)
         return `

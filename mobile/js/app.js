@@ -1,17 +1,18 @@
 class App {
   constructor() {
-    this.container = document.getElementById('app-container');
-    this.addGlobalOrbs();
-    this.initPWA();
-    this.route();
-    
     this.intervals = []; // Registry for clearing timers
     
-    // Listen for hash changes to navigate
+    // 1. First attach navigator listener so it catches any hash-redirects
     window.addEventListener('hashchange', () => {
       this.vibrate(50);
       this.route();
     });
+
+    // 2. Initialize and route
+    this.container = document.getElementById('app-container');
+    this.addGlobalOrbs();
+    this.initPWA();
+    this.route();
   }
 
   // --- Lifecycle & Resource Management ---
