@@ -258,8 +258,8 @@ export const AthletesMetrics = {
         const getStyles = (muscle) => {
             const color = muscleMap[muscle];
             if (!color) return `class="muscle-region" fill="transparent" stroke="none"`;
-            // Sharpened neon rendering: removed transparency, sharp outer glow, distinct stroke
-            return `class="muscle-region active" style="filter: drop-shadow(0 0 4px ${color}) drop-shadow(0 0 12px ${color});" fill="${color}" fill-opacity="0.95" stroke="${color}" stroke-width="0.75" stroke-opacity="1"`;
+            // Enable CSS to pick up our dynamic status color correctly
+            return `class="muscle-region active" style="--color-active: ${color};" fill="${color}" fill-opacity="0.95" stroke="${color}" stroke-width="0.75" stroke-opacity="1"`;
         };
         
         // Fix: Use existing high-fidelity anatomy assets from assets/img/anatomy/
