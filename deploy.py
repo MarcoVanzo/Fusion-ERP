@@ -297,11 +297,21 @@ def deploy_files_via_ftp(dry_run=False):
             rel_path_unix = rel_path.replace('\\', '/')
             
             # Skip uploading source code for React apps (only upload 'dist')
+            # Special handling for assets to avoid uploading thousands of user files if they exist locally
+            if rel_path_unix == 'assets':
+                files[:] = [f for f in files if f in ['favicon.svg', 'cestino.png']]
+                # Let os.walk descend into 'anatomy' and 'media' subdirectories
+            elif rel_path_unix.startswith('assets/') and not (rel_path_unix.startswith('assets/media') or rel_path_unix.startswith('assets/anatomy')):
+                for d in list(dirs):
+                    dirs.remove(d)
+                files[:] = [] # Skip files in unallowed sub-assets
+                continue
+            
+            # Skip the root files of the React apps (package.json, ecc)
             if rel_path_unix in ['fusion-website', 'fusion-erp-react']:
                 for d in list(dirs):
                     if d != 'dist':
                         dirs.remove(d)
-                # Skip the root files of the React apps (package.json, ecc)
                 continue
             
             # Map fusion-website/dist to the root folder in production
