@@ -164,14 +164,14 @@ export const AthletesMetrics = {
 
                 <!-- NEW: Full-Width Massive Anatomy Blueprint Section -->
                 <div class="blueprint-card" style="margin-top:32px; width:100%;">
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:40px; align-items:center; min-height:900px; width:100%; margin:0 auto;">
-                        <div class="anatomy-entry" style="position:relative; width:100%; height:900px;">
+                    <div style="display:flex; justify-content:center; gap:80px; width:100%; margin:0 auto; padding: 20px 0;">
+                        <div class="anatomy-entry" style="position:relative; height: 75vh; max-height: 800px; aspect-ratio: 100 / 240;">
                             ${this._renderAnatomy('front', data.muscleMap)}
                             <div style="position:absolute; bottom:-40px; left:50%; transform:translateX(-50%); white-space:nowrap;">
                                 <span style="font-size:12px; font-weight:900; letter-spacing:6px; color:var(--accent-cyan); opacity:0.4;">ANTERIOR_VIEW_SILHOUETTE</span>
                             </div>
                         </div>
-                        <div class="anatomy-entry" style="position:relative; width:100%; height:900px;">
+                        <div class="anatomy-entry" style="position:relative; height: 75vh; max-height: 800px; aspect-ratio: 100 / 240;">
                             ${this._renderAnatomy('back', data.muscleMap)}
                             <div style="position:absolute; bottom:-40px; left:50%; transform:translateX(-50%); white-space:nowrap;">
                                 <span style="font-size:12px; font-weight:900; letter-spacing:6px; color:var(--accent-cyan); opacity:0.4;">POSTERIOR_VIEW_SILHOUETTE</span>
@@ -258,7 +258,7 @@ export const AthletesMetrics = {
         const getStyles = (muscle) => {
             const color = muscleMap[muscle];
             if (!color) return `class="muscle-region" fill="transparent" stroke="none"`;
-            return `class="muscle-region active" style="--color-active:${color};" fill="${color}" fill-opacity="0.8" stroke="${color}" stroke-opacity="0.9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"`;
+            return `class="muscle-region active" style="--color-active:${color};" fill="${color}" fill-opacity="0.95" stroke="${color}" stroke-opacity="1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"`;
         };
         
         // Fix: Use existing high-fidelity anatomy assets from assets/img/anatomy/
@@ -278,9 +278,9 @@ export const AthletesMetrics = {
                     object-fit:contain; 
                     opacity:0.9; 
                     mix-blend-mode:screen;
-                    filter: brightness(1.2) contrast(1.15);
-                    -webkit-mask-image: radial-gradient(ellipse at 50% 50%, black 50%, transparent 80%);
-                    mask-image: radial-gradient(ellipse at 50% 50%, black 50%, transparent 80%);
+                    filter: sepia(1) hue-rotate(180deg) saturate(3) brightness(0.6) contrast(1.5);
+                    -webkit-mask-image: radial-gradient(ellipse at 50% 50%, black 60%, transparent 90%);
+                    mask-image: radial-gradient(ellipse at 50% 50%, black 60%, transparent 90%);
                     z-index:1;
                 ">
 
@@ -290,13 +290,12 @@ export const AthletesMetrics = {
                     top:0; 
                     left:50%; 
                     transform:translateX(-50%);
-                    width:auto;
+                    width:100%;
                     height:100%; 
-                    aspect-ratio: 100 / 240;
                     z-index:2; 
                     pointer-events:none;
                     mix-blend-mode: lighten;
-                    filter: blur(8px);
+                    filter: blur(2px) drop-shadow(0 0 10px rgba(0, 229, 255, 0.4));
                     opacity: 1;
                 ">
                     <defs>
