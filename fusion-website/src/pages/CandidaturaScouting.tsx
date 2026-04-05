@@ -64,8 +64,8 @@ const CandidaturaScouting = () => {
             {/* Left side Image / Hero Area */}
             <div className="w-full lg:w-[45%] relative min-h-[50vh] lg:min-h-screen flex flex-col justify-end lg:justify-center p-8 lg:p-16 xl:p-24 pt-32 shrink-0">
                 <div className="absolute inset-0">
-                    <img src="/assets/scouting_hero.png" className="w-full h-full object-cover" alt="Scouting Fusion Team Volley" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/60 to-zinc-950/20 lg:bg-gradient-to-r lg:from-transparent lg:via-zinc-950/80 lg:to-zinc-950"></div>
+                    <img src="/images/hero-1.jpg" className="w-full h-full object-cover opacity-80 mix-blend-luminosity grayscale-[20%] hover:grayscale-0 transition-all duration-1000" alt="Scouting Fusion Team Volley" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/70 to-zinc-950/30 lg:bg-gradient-to-r lg:from-transparent lg:via-zinc-950/80 lg:to-zinc-950"></div>
                 </div>
                 
                 <motion.div 
@@ -224,11 +224,11 @@ const CandidaturaScouting = () => {
                             <button 
                                 type="submit" 
                                 disabled={loading}
-                                className="w-full bg-brand-500 text-white rounded-2xl py-5 font-heading text-lg uppercase tracking-widest hover:bg-brand-600 transition-all shadow-[0_10px_30px_rgba(217,70,239,0.3)] hover:shadow-[0_10px_40px_rgba(217,70,239,0.5)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-[0_10px_30px_rgba(217,70,239,0.3)] flex items-center justify-center gap-3 relative overflow-hidden group"
+                                className="w-full bg-gradient-to-r from-brand-600 via-brand-500 to-brand-400 bg-[length:200%_auto] hover:bg-right hover:scale-[1.02] text-white rounded-2xl py-5 font-heading text-xl uppercase tracking-widest transition-all duration-500 shadow-[0_0_20px_rgba(217,70,239,0.3)] hover:shadow-[0_0_40px_rgba(217,70,239,0.6),inset_0_0_15px_rgba(255,255,255,0.4)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:bg-left disabled:hover:shadow-[0_0_20px_rgba(217,70,239,0.3)] flex items-center justify-center gap-3 relative overflow-hidden group border border-brand-400/30 font-bold"
                             >
-                                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></div>
-                                {loading && <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin relative z-10"></div>}
-                                <span className="relative z-10">Invia Candidatura</span>
+                                <div className="absolute top-0 -inset-full h-full w-1/2 z-5 block transform -skew-x-12 bg-gradient-to-r from-transparent to-white opacity-20 -left-[100%] group-hover:left-[200%] transition-all duration-1000 ease-in-out"></div>
+                                {loading && <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin relative z-10"></div>}
+                                <span className="relative z-10 drop-shadow-md group-hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.8)] transition-all duration-300">Invia Candidatura</span>
                             </button>
                         </form>
                     </motion.div>
