@@ -267,17 +267,17 @@ class ValdService
         $asymmetry = $asymmetry ?: [];
 
         $map = [
-            'core'    => null,
-            'quads_l' => null,
-            'quads_r' => null,
-            'hips_l'  => null,
-            'hips_r'  => null,
-            'glutes_l' => null,
-            'glutes_r' => null,
-            'hamstrings_l' => null,
-            'hamstrings_r' => null,
-            'calves_l' => null,
-            'calves_r' => null,
+            'core'    => '#00E676',
+            'quads_l' => '#00E676',
+            'quads_r' => '#00E676',
+            'hips_l'  => '#00E676',
+            'hips_r'  => '#00E676',
+            'glutes_l' => '#00E676',
+            'glutes_r' => '#00E676',
+            'hamstrings_l' => '#00E676',
+            'hamstrings_r' => '#00E676',
+            'calves_l' => '#00E676',
+            'calves_r' => '#00E676',
         ];
 
         // Core highlighting (based on fatigue semaphore)

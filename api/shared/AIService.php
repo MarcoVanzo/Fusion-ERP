@@ -6,7 +6,7 @@ namespace FusionERP\Shared;
 class AIService
 {
     private const DEFAULT_MODEL = 'gemini-1.5-flash';
-    private const API_BASE_URL = 'https://generativelanguage.googleapis.com/v1/models/';
+    private const API_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models/';
 
     /**
      * @param string|array $prompt The text prompt or parts array to send to the model
