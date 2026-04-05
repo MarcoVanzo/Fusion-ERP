@@ -258,7 +258,8 @@ export const AthletesMetrics = {
         const getStyles = (muscle) => {
             const color = muscleMap[muscle];
             if (!color) return `class="muscle-region" fill="transparent" stroke="none"`;
-            return `class="muscle-region active" style="--color-active:${color};" fill="${color}" fill-opacity="1" stroke="none"`;
+            // Enhance visibility: reduced transparency, added drop shadow and outline for clear shape
+            return `class="muscle-region active" style="filter: drop-shadow(0 0 8px ${color}) drop-shadow(0 0 18px ${color});" fill="${color}" fill-opacity="0.85" stroke="#ffffff" stroke-width="0.3" stroke-opacity="0.9"`;
         };
         
         // Fix: Use existing high-fidelity anatomy assets from assets/img/anatomy/
@@ -293,9 +294,9 @@ export const AthletesMetrics = {
                     aspect-ratio: 100 / 240;
                     z-index:2; 
                     pointer-events:none;
-                    mix-blend-mode: overlay;
-                    filter: blur(12px);
-                    opacity: 0.9;
+                    mix-blend-mode: screen;
+                    filter: blur(1.5px);
+                    opacity: 1;
                 ">
                     <defs>
                     </defs>
