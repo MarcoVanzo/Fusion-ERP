@@ -51,6 +51,7 @@ const Navbar = () => {
         name: string;
         path: string;
         badge?: string;
+        isHighlight?: boolean;
     };
 
     const splitLeftLinks: NavLink[] = [
@@ -66,6 +67,7 @@ const Navbar = () => {
         { name: 'MATCH CENTER', path: '/results', badge: 'LIVE' },
         { name: 'OUTSEASON', path: '/outseason' },
         { name: 'STORE', path: '/shop' },
+        { name: 'ENTRA NELLA NOSTRA FAMIGLIA', path: '/candidatura-scouting', isHighlight: true },
     ];
 
     const allLinks = [...splitLeftLinks, ...splitRightLinks];
@@ -108,13 +110,17 @@ const Navbar = () => {
                                 <Link 
                                     key={link.name} 
                                     to={link.path} 
-                                    className={`text-sm font-semibold tracking-widest transition-colors uppercase relative group flex items-center ${isActive ? 'text-brand-500' : 'text-zinc-300 hover:text-white'}`}
+                                    className={
+                                        link.isHighlight 
+                                        ? `text-sm font-bold tracking-widest uppercase relative group flex items-center bg-brand-500 text-white px-4 py-2 rounded-full !shadow-[0_0_15px_rgba(217,70,239,0.5)] hover:bg-brand-400 hover:scale-105 transition-all animate-pulse-slow` 
+                                        : `text-sm font-semibold tracking-widest transition-colors uppercase relative group flex items-center ${isActive ? 'text-brand-500' : 'text-zinc-300 hover:text-white'}`
+                                    }
                                 >
                                     {link.name}
                                     {link.badge && (
                                         <span className="absolute -top-3 -right-6 text-[8px] bg-red-600/90 text-white px-1.5 py-0.5 rounded animate-pulse shadow-[0_0_8px_rgba(220,38,38,0.6)]">{link.badge}</span>
                                     )}
-                                    <span className={`absolute -bottom-2 left-0 h-[2px] bg-brand-500 transition-all duration-300 ${isActive ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
+                                    {!link.isHighlight && <span className={`absolute -bottom-2 left-0 h-[2px] bg-brand-500 transition-all duration-300 ${isActive ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>}
                                 </Link>
                             )
                         })}
@@ -169,9 +175,13 @@ const Navbar = () => {
                                         <Link 
                                             to={link.path} 
                                             onClick={() => setIsMobileMenuOpen(false)}
-                                            className={`font-heading text-2xl uppercase tracking-widest border-b border-zinc-800/50 py-5 px-4 min-h-[56px] flex items-center justify-between transition-all ${isActive ? 'text-brand-500 bg-brand-500/10 border-l-4 border-l-brand-500' : 'text-zinc-300 hover:text-white hover:bg-white/5'}`}
+                                            className={
+                                                link.isHighlight 
+                                                ? `font-heading text-2xl uppercase tracking-widest border-b border-zinc-800/50 py-5 px-4 min-h-[56px] flex items-center justify-between transition-all bg-brand-900/30 text-brand-300 border-l-4 border-l-brand-500` 
+                                                : `font-heading text-2xl uppercase tracking-widest border-b border-zinc-800/50 py-5 px-4 min-h-[56px] flex items-center justify-between transition-all ${isActive ? 'text-brand-500 bg-brand-500/10 border-l-4 border-l-brand-500' : 'text-zinc-300 hover:text-white hover:bg-white/5'}`
+                                            }
                                         >
-                                            {link.name}
+                                            <span className={link.isHighlight ? "drop-shadow-[0_0_8px_rgba(217,70,239,0.5)]" : ""}>{link.name}</span>
                                             {link.badge && (
                                                 <span className="bg-red-600/90 shadow-[0_0_12px_rgba(220,38,38,0.8)] text-white font-sans text-xs font-bold px-3 py-1.5 rounded animate-pulse tracking-normal">
                                                     {link.badge}
