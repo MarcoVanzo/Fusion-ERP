@@ -242,7 +242,10 @@ class ScoutingModule {
             const payload = {
                 nome: document.getElementById("sc-nome")?.value.trim(),
                 cognome: document.getElementById("sc-cognome")?.value.trim(),
+                ruolo: document.getElementById("sc-ruolo")?.value.trim(),
                 societa_appartenenza: document.getElementById("sc-societa")?.value.trim(),
+                email: document.getElementById("sc-email")?.value.trim(),
+                cellulare: document.getElementById("sc-cellulare")?.value.trim(),
                 anno_nascita: document.getElementById("sc-anno")?.value,
                 rilevatore: document.getElementById("sc-rilevatore")?.value.trim(),
                 data_rilevazione: document.getElementById("sc-data")?.value,

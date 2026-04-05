@@ -109,7 +109,6 @@ export class ScoutingView {
 
             return `
                 <tr>
-                <tr>
                     <td style="padding:10px 12px;border-bottom:1px solid var(--color-border);font-weight:600">${window.Utils.escapeHtml(athlete.nome || "—")}</td>
                     <td style="padding:10px 12px;border-bottom:1px solid var(--color-border);font-weight:600">${window.Utils.escapeHtml(athlete.cognome || "—")}</td>
                     <td style="padding:10px 12px;border-bottom:1px solid var(--color-border)">${window.Utils.escapeHtml(athlete.ruolo || "—")}</td>
