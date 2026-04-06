@@ -86,8 +86,8 @@ const Navbar = () => {
                             title="Savino del bene volley HUB"
                         >
                             <div className="absolute inset-0 bg-brand-500/30 blur-xl rounded-full scale-150 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                            <div className="relative w-[56px] h-[56px] md:w-[72px] md:h-[72px] bg-gradient-to-b from-white/90 to-white/70 backdrop-blur-md p-[2px] rounded-full border border-white/20 shadow-[0_4px_15px_rgba(0,0,0,0.5)] group-hover:shadow-[0_0_25px_rgba(217,70,239,0.4)] group-hover:-translate-y-1 transition-all duration-300">
-                                <div className="w-full h-full bg-white rounded-full flex items-center justify-center p-1 shadow-inner">
+                            <div className="relative w-[56px] h-[56px] md:w-[72px] md:h-[72px] bg-gradient-to-b from-white/90 to-white/70 backdrop-blur-md p-[2px] rounded-full border border-white/20 shadow-[0_4px_15px_rgba(0,0,0,0.5)] group-hover:shadow-[0_0_25px_rgba(217,70,239,0.4)] group-hover:-translate-y-1 transition-all duration-300 overflow-hidden">
+                                <div className="w-full h-full bg-white rounded-full flex items-center justify-center p-1 shadow-inner overflow-hidden">
                                     <img src={hubLogo} alt="HUB" className="w-full h-full object-contain filter grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500" />
                                 </div>
                             </div>
@@ -138,7 +138,7 @@ const Navbar = () => {
                                 >
                                     {link.isHighlight ? (
                                         <span 
-                                            className="relative z-10 text-[28px] md:text-[32px] text-brand-500 hover:text-brand-400 drop-shadow-[0_0_12px_rgba(217,70,239,0.3)] group-hover:drop-shadow-[0_0_20px_rgba(217,70,239,0.6)] transition-all duration-300 rotate-[25deg]" 
+                                            className="relative z-10 text-[28px] md:text-[32px] text-brand-500 hover:text-brand-400 drop-shadow-[0_0_12px_rgba(217,70,239,0.3)] group-hover:drop-shadow-[0_0_20px_rgba(217,70,239,0.6)] transition-all duration-300 rotate-[15deg] animate-neon-pulse" 
                                             style={{ fontFamily: "'Rubik Dirt', system-ui", lineHeight: 1 }}
                                         >
                                             {linkName}
