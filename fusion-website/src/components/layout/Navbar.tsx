@@ -20,7 +20,7 @@ const Navbar = () => {
             setIsScrolled(currentScrollY > 20);
             
             if (currentScrollY > lastScrollY.current && currentScrollY > 100 && !isMobileMenuOpen) {
-                // Scrolling giù: nascondo navbar
+                // Scrolling giu: nascondo navbar
                 setIsVisible(false);
             } else {
                 // Scrolling su: mostro navbar
@@ -77,7 +77,7 @@ const Navbar = () => {
             <div className="max-w-[1400px] mx-auto px-6 lg:px-8 h-12 relative flex items-center justify-between">
                 
                 {/* Left Section: Hub Logo + Left Links */}
-                <div className="hidden lg:flex flex-1 items-center justify-between pr-10">
+                <div className="flex flex-1 items-center justify-between lg:pr-10">
                     {/* Hub Logo - desktop far left, enlarged to match Fusion logo */}
                     {hubLogo && (
                         <a 
@@ -86,15 +86,15 @@ const Navbar = () => {
                             title="Savino del bene volley HUB"
                         >
                             <div className="absolute inset-0 bg-brand-500/30 blur-xl rounded-full scale-150 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                            <div className="relative w-[56px] h-[56px] md:w-[72px] md:h-[72px] bg-gradient-to-b from-white/90 to-white/70 backdrop-blur-md p-[2px] rounded-full border border-white/20 shadow-[0_4px_15px_rgba(0,0,0,0.5)] group-hover:shadow-[0_0_25px_rgba(217,70,239,0.4)] group-hover:-translate-y-1 transition-all duration-300 overflow-hidden">
+                            <div className="relative w-[38px] h-[38px] md:w-[56px] md:h-[56px] lg:w-[72px] lg:h-[72px] bg-gradient-to-b from-white/90 to-white/70 backdrop-blur-md p-[2px] rounded-full border border-white/20 shadow-[0_4px_15px_rgba(0,0,0,0.5)] group-hover:shadow-[0_0_25px_rgba(217,70,239,0.4)] transition-all duration-300 overflow-hidden">
                                 <div className="w-full h-full bg-white rounded-full flex items-center justify-center p-1 shadow-inner overflow-hidden">
-                                    <img src={hubLogo} alt="HUB" className="w-full h-full object-contain filter grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500" />
+                                    <img src={hubLogo} alt="HUB" className="w-full h-full object-contain lg:filter lg:grayscale lg:opacity-80 lg:group-hover:grayscale-0 lg:group-hover:opacity-100 transition-all duration-500" />
                                 </div>
                             </div>
                         </a>
                     )}
 
-                    <div className="flex items-center gap-6">
+                    <div className="hidden lg:flex items-center gap-6 ml-6">
                         {splitLeftLinks.map(link => {
                             const isActive = location.pathname === link.path || (link.path !== '/' && location.pathname.startsWith(link.path));
                             return (
@@ -158,14 +158,27 @@ const Navbar = () => {
                     </div>
                 </div>
 
-                {/* Mobile Menu Toggle */}
-                <div className="absolute right-6 top-1/2 -translate-y-1/2 lg:static lg:translate-y-0 lg:hidden flex items-center justify-end z-50">
+                {/* Mobile Menu Toggle & CANDIDATI Button */}
+                <div className="absolute right-6 top-1/2 -translate-y-1/2 lg:static lg:translate-y-0 lg:hidden flex items-center gap-4 z-50">
+                    {/* High-impact Mobile CANDIDATI Button */}
+                    <Link 
+                        to="/candidatura-scouting" 
+                        className="relative group transition-transform hover:scale-110 active:scale-95 px-2 -mr-2"
+                    >
+                        <span 
+                            className="relative z-10 text-[18px] sm:text-[22px] text-brand-500 drop-shadow-[0_0_8px_rgba(217,70,239,0.5)] animate-neon-pulse whitespace-nowrap" 
+                            style={{ fontFamily: "'Rubik Dirt', system-ui", lineHeight: 1 }}
+                        >
+                            CANDIDATI
+                        </span>
+                    </Link>
+                    
                     <button 
                         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                         className="text-white hover:text-brand-500 transition-colors p-2 rounded-full bg-black/20 md:bg-transparent backdrop-blur-sm drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]"
                         aria-label="Toggle Menu"
                     >
-                        {isMobileMenuOpen ? <X size={32} /> : <Menu size={32} />}
+                        {isMobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
                     </button>
                 </div>
             </div>
@@ -197,11 +210,16 @@ const Navbar = () => {
                                             onClick={() => setIsMobileMenuOpen(false)}
                                             className={
                                                 link.isHighlight 
-                                                ? `font-heading text-2xl uppercase tracking-widest border-b border-zinc-800/50 py-5 px-4 min-h-[56px] flex items-center justify-between transition-all bg-brand-900/30 text-brand-300 border-l-4 border-l-brand-500` 
+                                                ? `font-heading text-2xl uppercase tracking-widest border-b border-zinc-800/50 py-5 px-4 min-h-[56px] flex items-center justify-between transition-all bg-brand-900/30 text-brand-300 border-l-4 border-l-brand-500 group/link` 
                                                 : `font-heading text-2xl uppercase tracking-widest border-b border-zinc-800/50 py-5 px-4 min-h-[56px] flex items-center justify-between transition-all ${isActive ? 'text-brand-500 bg-brand-500/10 border-l-4 border-l-brand-500' : 'text-zinc-300 hover:text-white hover:bg-white/5'}`
                                             }
                                         >
-                                            <span className={link.isHighlight ? "drop-shadow-[0_0_8px_rgba(217,70,239,0.5)]" : ""}>{link.name}</span>
+                                            <span 
+                                                className={link.isHighlight ? "text-brand-500 animate-neon-pulse" : ""}
+                                                style={link.isHighlight ? { fontFamily: "'Rubik Dirt', system-ui", fontSize: '32px' } : {}}
+                                            >
+                                                {link.isHighlight ? 'CANDIDATI' : link.name}
+                                            </span>
                                             {link.badge && (
                                                 <span className="bg-red-600/90 shadow-[0_0_12px_rgba(220,38,38,0.8)] text-white font-sans text-xs font-bold px-3 py-1.5 rounded animate-pulse tracking-normal">
                                                     {link.badge}
