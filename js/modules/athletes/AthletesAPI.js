@@ -52,7 +52,12 @@ export const AthletesAPI = {
             "id-doc-back": "uploadIdDocBack",
             "cf-doc-front": "uploadCfDocFront",
             "cf-doc-back": "uploadCfDocBack",
-            "med-cert": "uploadMedicalCert"
+            "med-cert": "uploadMedicalCert",
+            "photo-release": "uploadPhotoRelease",
+            "privacy-policy": "uploadPrivacyPolicy",
+            "guesthouse-rules": "uploadGuesthouseRules",
+            "guesthouse-delegate": "uploadGuesthouseDelegate",
+            "health-card": "uploadHealthCard"
         };
 
         const action = actionMap[type];

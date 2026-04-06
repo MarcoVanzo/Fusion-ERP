@@ -249,13 +249,6 @@ class AuthController
 
     // ─── HELPERS ──────────────────────────────────────────────────────────────
 
-    private function validateUserExists(string $userId): array
-    {
-        $user = $this->repo->getUserById($userId);
-        if (!$user) Response::error('Utente non trovato', 404);
-        return $user;
-    }
-
     private function getClientIp(): string
     {
         return $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';

@@ -42,6 +42,8 @@ const Athletes = (() => {
         }
 
         try {
+            const initialTab = getVariantFromRoute();
+            
             // Caricamento dati iniziali
             [teamsData, athletesData] = await Promise.all([
                 AthletesAPI.getTeams(),
@@ -49,7 +51,7 @@ const Athletes = (() => {
             ]);
 
             const params = Router.getParams();
-            const user = Auth.user();
+            const user = App.getUser();
 
             if (user && user.role === 'atleta') {
                 // Se è un atleta, cerchiamo il suo ID atleta tramite il suo user_id
@@ -62,7 +64,6 @@ const Athletes = (() => {
                     app.innerHTML = Utils.emptyState("Profilo non trovato", "Il tuo account non è ancora collegato a un'anagrafica atleta.");
                 }
             } else if (params.id) {
-                const initialTab = getVariantFromRoute();
                 await renderProfile(params.id, initialTab);
             } else {
                 renderDashboard();
@@ -369,7 +370,21 @@ const Athletes = (() => {
     }
 
     function addDocumentListeners(athlete) {
-        const docTypes = ['contract-file', 'id-doc-front', 'id-doc-back', 'cf-doc-front', 'cf-doc-back', 'med-cert'];
+        const docTypes = [
+            'contract-file', 'id-doc-front', 'id-doc-back', 'cf-doc-front', 'cf-doc-back', 'med-cert',
+            'photo-release', 'privacy-policy', 'guesthouse-rules', 'guesthouse-delegate', 'health-card'
+        ];
+        
+        // Toggle Foresteria
+        document.getElementById("toggle-foresteria-btn")?.addEventListener("click", () => {
+            const container = document.getElementById("foresteria-docs-container");
+            if (container) {
+                const isHidden = container.style.display === "none";
+                container.style.display = isHidden ? "block" : "none";
+                document.getElementById("toggle-foresteria-btn").style.background = isHidden ? "rgba(255, 255, 255, 0.08)" : "rgba(255, 255, 255, 0.02)";
+            }
+        });
+
         docTypes.forEach(type => {
             const btn = document.getElementById(`upload-${type}-btn`);
             const input = document.getElementById(`upload-${type}-input`);

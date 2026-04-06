@@ -88,7 +88,9 @@ class AthletesRepository
         // Build document columns dynamically
         $docCols = '';
         $docFields = ['contract_file_path', 'id_doc_front_file_path', 'id_doc_back_file_path',
-                       'cf_doc_front_file_path', 'cf_doc_back_file_path', 'medical_cert_file_path'];
+                       'cf_doc_front_file_path', 'cf_doc_back_file_path', 'medical_cert_file_path',
+                       'photo_release_file_path', 'privacy_policy_file_path', 'guesthouse_rules_file_path',
+                       'guesthouse_delegate_file_path', 'health_card_file_path'];
         if ($this->_hasColumn('athletes', 'contract_file_path')) {
             $docCols = ', a.' . implode(', a.', $docFields);
         }
@@ -135,7 +137,9 @@ class AthletesRepository
         $docCols = '';
         if ($this->_hasColumn('athletes', 'contract_file_path')) {
             $docCols = ', a.contract_file_path, a.id_doc_front_file_path, a.id_doc_back_file_path,
-                    a.cf_doc_front_file_path, a.cf_doc_back_file_path, a.medical_cert_file_path';
+                    a.cf_doc_front_file_path, a.cf_doc_back_file_path, a.medical_cert_file_path,
+                    a.photo_release_file_path, a.privacy_policy_file_path,
+                    a.guesthouse_rules_file_path, a.guesthouse_delegate_file_path, a.health_card_file_path';
         }
 
         $stmt = $this->db->prepare(
@@ -178,7 +182,9 @@ class AthletesRepository
         $docCols = '';
         if ($this->_hasColumn('athletes', 'contract_file_path')) {
             $docCols = ', a.contract_file_path, a.id_doc_front_file_path, a.id_doc_back_file_path,
-                    a.cf_doc_front_file_path, a.cf_doc_back_file_path, a.medical_cert_file_path';
+                    a.cf_doc_front_file_path, a.cf_doc_back_file_path, a.medical_cert_file_path,
+                    a.photo_release_file_path, a.privacy_policy_file_path,
+                    a.guesthouse_rules_file_path, a.guesthouse_delegate_file_path, a.health_card_file_path';
         }
 
         $stmt = $this->db->prepare(
@@ -218,7 +224,9 @@ class AthletesRepository
         $docCols = '';
         if ($this->_hasColumn('athletes', 'contract_file_path')) {
             $docCols = ', a.contract_file_path, a.id_doc_front_file_path, a.id_doc_back_file_path,
-                    a.cf_doc_front_file_path, a.cf_doc_back_file_path, a.medical_cert_file_path';
+                    a.cf_doc_front_file_path, a.cf_doc_back_file_path, a.medical_cert_file_path,
+                    a.photo_release_file_path, a.privacy_policy_file_path,
+                    a.guesthouse_rules_file_path, a.guesthouse_delegate_file_path, a.health_card_file_path';
         }
 
         $stmt = $this->db->prepare(
@@ -307,22 +315,22 @@ class AthletesRepository
     {
         $stmt = $this->db->prepare(
             'INSERT INTO athletes (
-                id, user_id, team_id,
-                first_name, last_name,
-                jersey_number, role,
-                birth_date, birth_place,
-                height_cm, weight_kg,
-                photo_path,
-                residence_address, residence_city,
-                fiscal_code, identity_document, federal_id,
-                email, phone,
-                parent_contact, parent_phone,
-                nationality, blood_group, allergies, medications,
-                emergency_contact_name, emergency_contact_phone,
-                communication_preference, image_release_consent,
-                medical_cert_type, medical_cert_expires_at, medical_cert_issued_at,
-                shirt_size, shoe_size,
-                is_active
+                `id`, `user_id`, `team_id`,
+                `first_name`, `last_name`,
+                `jersey_number`, `role`,
+                `birth_date`, `birth_place`,
+                `height_cm`, `weight_kg`,
+                `photo_path`,
+                `residence_address`, `residence_city`,
+                `fiscal_code`, `identity_document`, `federal_id`,
+                `email`, `phone`,
+                `parent_contact`, `parent_phone`,
+                `nationality`, `blood_group`, `allergies`, `medications`,
+                `emergency_contact_name`, `emergency_contact_phone`,
+                `communication_preference`, `image_release_consent`,
+                `medical_cert_type`, `medical_cert_expires_at`, `medical_cert_issued_at`,
+                `shirt_size`, `shoe_size`,
+                `is_active`
              ) VALUES (
                 :id, :user_id, :team_id,
                 :first_name, :last_name,
@@ -351,7 +359,7 @@ class AthletesRepository
         $setClauses = [];
         foreach ($data as $key => $value) {
             $cleanKey = ltrim($key, ':');
-            $setClauses[] = "{$cleanKey} = :{$cleanKey}";
+            $setClauses[] = "`{$cleanKey}` = :{$cleanKey}";
             $params[":{$cleanKey}"] = $value;
         }
         
@@ -369,7 +377,7 @@ class AthletesRepository
     public function updatePhotoPath(string $id, ?string $photoPath): void
     {
         $stmt = $this->db->prepare(
-            'UPDATE athletes SET photo_path = :photo_path WHERE id = :id AND deleted_at IS NULL'
+            'UPDATE athletes SET `photo_path` = :photo_path WHERE id = :id AND deleted_at IS NULL'
         );
         $stmt->execute([':photo_path' => $photoPath, ':id' => $id]);
     }
@@ -377,7 +385,7 @@ class AthletesRepository
     public function updateDocumentPath(string $id, string $dbField, ?string $path): void
     {
         $stmt = $this->db->prepare(
-            "UPDATE athletes SET {$dbField} = :path WHERE id = :id AND deleted_at IS NULL"
+            "UPDATE athletes SET `{$dbField}` = :path WHERE id = :id AND deleted_at IS NULL"
         );
         $stmt->execute([':path' => $path, ':id' => $id]);
     }

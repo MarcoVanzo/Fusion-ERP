@@ -46,8 +46,23 @@ class FinanceRepository
      */
     public function getCategories(): array
     {
-        // For simplicity, we use predefined categories or from a dedicated table if exists
-        // Current implementation uses a mapping in the frontend, but we can store it in DB
+        try {
+            $stmt = $this->db->prepare("SELECT id, label FROM finance_categories WHERE (tenant_id = ? OR tenant_id = 'default') AND is_active = 1 ORDER BY display_order ASC");
+            $stmt->execute([$this->tid]);
+            $rows = $stmt->fetchAll();
+            
+            if ($rows) {
+                $categories = [];
+                foreach ($rows as $row) {
+                    $categories[$row['id']] = $row['label'];
+                }
+                return $categories;
+            }
+        } catch (\Exception $e) {
+            error_log("[FinanceRepository] " . $e->getMessage());
+        }
+
+        // Fallback in case table doesn't exist yet or query fails
         return [
             'quote' => 'Quote Associative',
             'sponsor' => 'Sponsorizzazioni',
