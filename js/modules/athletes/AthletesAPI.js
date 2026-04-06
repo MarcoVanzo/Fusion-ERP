@@ -24,6 +24,8 @@ export const AthletesAPI = {
 
     delete: async (id) => await Store.api("delete", "athletes", { id }),
 
+    generateUser: async (id) => await Store.api("generateUser", "athletes", { id }),
+
     logMetric: async (data) => await Store.api("logMetric", "athletes", data),
 
     generateAIReport: async (athleteId) => await Store.api("aiReport", "athletes", { athlete_id: athleteId }),

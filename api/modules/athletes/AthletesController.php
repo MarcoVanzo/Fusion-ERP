@@ -81,14 +81,31 @@ class AthletesController
     // ─── POST /api/?module=athletes&action=update ─────────────────────────────
     public function update(): void
     {
-        Auth::requireWrite('athletes');
+        $user = Auth::requireAuth();
         $body = Response::jsonBody();
-        Response::requireFields($body, ['id', 'first_name', 'last_name']);
+        Response::requireFields($body, ['id']);
 
-        $before = $this->repo->getAthleteById($body['id']);
+        $athleteId = $body['id'];
+        $before = $this->repo->getAthleteById($athleteId);
         if (!$before) {
             Response::error('Atleta non trovato', 404);
         }
+
+        // ROLE-BASED ACCESS CONTROL
+        if ($user['role'] === 'atleta') {
+            // Athletes can only update their own profile
+            if ($before['user_id'] !== $user['id']) {
+                Response::error('Non hai i permessi per modificare questo profilo.', 403);
+            }
+            // Restricted update
+            $this->handleServiceCall(fn() => $this->service->updateAthleteBasic($athleteId, $body));
+            return;
+        }
+
+        // STAFF/ADMIN ACCESS
+        Auth::requireWrite('athletes');
+        
+        Response::requireFields($body, ['first_name', 'last_name']);
 
         // Support multi-team: team_season_ids (array) takes priority over legacy team_id
         if (isset($body['team_season_ids']) && is_array($body['team_season_ids'])) {
@@ -149,6 +166,18 @@ class AthletesController
 
         Audit::log('UPDATE', 'athletes', $body['id'], $before, $body);
         Response::success(['message' => 'Atleta aggiornato']);
+    }
+
+    // ─── POST /api/?module=athletes&action=generateUser ───────────────────────
+    public function generateUser(): void
+    {
+        Auth::requireWrite('athletes');
+        $body = Response::jsonBody();
+        $id = $body['id'] ?? '';
+        if (empty($id)) {
+            Response::error('ID atleta obbligatorio', 400);
+        }
+        $this->handleServiceCall(fn() => $this->service->generateAthleteUser($id));
     }
 
     // ─── POST /api/?module=athletes&action=delete ─────────────────────────────

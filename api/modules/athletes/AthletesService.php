@@ -143,6 +143,104 @@ class AthletesService
     }
 
     /**
+     * Generate a system user for an existing athlete.
+     */
+    public function generateAthleteUser(string $athleteId): array
+    {
+        $athlete = $this->repo->getAthleteById($athleteId);
+        if (!$athlete) {
+            throw new \Exception('Atleta non trovato', 404);
+        }
+
+        if (empty($athlete['email'])) {
+            throw new \Exception('L\'atleta non ha una mail inserita. Impossibile generare l\'utente.', 400);
+        }
+
+        if (!empty($athlete['user_id'])) {
+            throw new \Exception('L\'atleta ha già un utente associato.', 400);
+        }
+
+        // Reuse Auth logic to create user
+        $authRepo = new \FusionERP\Modules\Auth\AuthRepository();
+        $email = strtolower(trim($athlete['email']));
+        
+        if ($authRepo->getUserByEmail($email) !== null) {
+            throw new \Exception('Questa email è già in uso da un altro utente nel sistema.', 400);
+        }
+
+        $tempPassword = bin2hex(random_bytes(10));
+        $hash = password_hash($tempPassword, PASSWORD_BCRYPT, ['cost' => 12]);
+        $userId = 'USR_' . bin2hex(random_bytes(4));
+
+        $authRepo->createUser([
+            'id' => $userId,
+            'email' => $email,
+            'pwd_hash' => $hash,
+            'role' => 'atleta',
+            'full_name' => $athlete['full_name'],
+            'phone' => $athlete['phone'] ?? null,
+            'permissions_json' => null
+        ]);
+
+        $this->repo->linkUserToAthlete($athleteId, $userId);
+
+        // Send Welcome Email
+        $appUrl = rtrim(getenv('APP_URL') ?: 'https://www.fusionteamvolley.it/ERP', '/');
+        $subject = "Benvenuto nel Portale Atleti Fusion ERP";
+        $htmlBody = "
+            <body style=\"font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0;\">
+                <div style=\"max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); overflow: hidden;\">
+                    <div style=\"background-color: #e5005c; color: #ffffff; padding: 20px; text-align: center;\">
+                        <h1 style=\"margin: 0; font-size: 24px;\">Portale Atleti Fusion</h1>
+                    </div>
+                    <div style=\"padding: 30px;\">
+                        <p>Ciao <strong>{$athlete['full_name']}</strong>,</p>
+                        <p>Il tuo account per il portale atleti è stato attivato.</p>
+                        <p>Puoi accedere per visualizzare i tuoi dati, pagamenti e metriche di performance.</p>
+                        <div style=\"background-color: #f9f9f9; padding: 15px; border-left: 4px solid #e5005c;\">
+                            <p><strong>Email:</strong> {$email}</p>
+                            <p><strong>Password Temporanea:</strong> {$tempPassword}</p>
+                        </div>
+                        <p style=\"margin-top: 20px;\"><a href=\"{$appUrl}/\" style=\"background: #e5005c; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;\">Accedi Ora</a></p>
+                    </div>
+                </div>
+            </body>";
+
+        \FusionERP\Shared\Mailer::send($email, $athlete['full_name'], $subject, $htmlBody);
+        
+        Audit::log('USER_GENERATED', 'athletes', $athleteId, null, ['user_id' => $userId, 'email' => $email]);
+        
+        return ['message' => 'Utente generato correttamente e mail inviata.', 'user_id' => $userId];
+    }
+
+    /**
+     * Update limited profile data (for athlete self-service).
+     */
+    public function updateAthleteBasic(string $athleteId, array $data): void
+    {
+        $allowedFields = [
+            'residence_address', 'residence_city', 'phone', 'email', 
+            'emergency_contact_name', 'emergency_contact_phone', 
+            'communication_preference', 'shirt_size', 'shoe_size'
+        ];
+
+        $updateData = [];
+        foreach ($allowedFields as $field) {
+            if (array_key_exists($field, $data)) {
+                $updateData[":{$field}"] = $data[$field];
+            }
+        }
+
+        if (empty($updateData)) {
+            throw new \Exception('Nessun dato valido fornito per l\'aggiornamento.', 400);
+        }
+
+        $before = $this->repo->getAthleteById($athleteId);
+        $this->repo->updateAthlete($athleteId, $updateData);
+        Audit::log('UPDATE_BASIC', 'athletes', $athleteId, $before, $data);
+    }
+
+    /**
      * Generate an AI report for the athlete using Gemini.
      * PERF: Checks for an existing summary created in the last 24h to avoid redundant API calls.
      */
