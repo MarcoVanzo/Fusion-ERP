@@ -232,6 +232,8 @@ const Athletes = (() => {
                 try {
                     await AthletesAPI.generateUser(athlete.id);
                     UI.toast("Utente generato correttamente", "success");
+                    Store.invalidate("auth");
+                    Store.invalidate("athletes");
                     await renderProfile(athlete.id, currentTab);
                 } catch (e) {
                     UI.toast(e.message, "error");
@@ -414,7 +416,17 @@ const Athletes = (() => {
     async function renderSubUsers(panel, athlete) {
         panel.innerHTML = '<div class="loader-spinner"></div>';
         try {
-            const subs = await Store.get("getSubUsers", "auth");
+            const user = App.getUser();
+            if (user.role === 'admin' && !athlete.user_id) {
+                panel.innerHTML = Utils.emptyState(
+                    "Utente Atleta Mancante", 
+                    "Devi prima generare un utente per questa atleta dal pulsante 'Genera Utente' prima di poter invitare dei genitori o tutor."
+                );
+                return;
+            }
+
+            const params = user.role === 'admin' ? { athlete_user_id: athlete.user_id } : {};
+            const subs = await Store.get("getSubUsers", "auth", params);
             panel.innerHTML = AthletesView.tabSubUsers(subs);
 
             // Add Invite Listener
@@ -438,7 +450,10 @@ const Athletes = (() => {
 
                     UI.loading(true);
                     try {
-                        await Store.api("inviteSubUser", "auth", { email, full_name: name });
+                        const payload = { email, full_name: name };
+                        if (user.role === 'admin') payload.athlete_user_id = athlete.user_id;
+
+                        await Store.api("inviteSubUser", "auth", payload);
                         UI.toast("Invito inviato con successo!", "success");
                         modal.style.display = "none";
                         await renderSubUsers(panel, athlete);

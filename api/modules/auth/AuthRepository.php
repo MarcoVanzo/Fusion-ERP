@@ -148,6 +148,14 @@ class AuthRepository
         $stmt->execute([':hash' => $hash, ':id' => $userId]);
     }
 
+    public function updateUserEmail(string $userId, string $email): void
+    {
+        $stmt = $this->db->prepare(
+            'UPDATE users SET email = :email, updated_at = NOW() WHERE id = :id AND deleted_at IS NULL'
+        );
+        $stmt->execute([':email' => $email, ':id' => $userId]);
+    }
+
     public function getUserById(string $id): ?array
     {
         $stmt = $this->db->prepare(

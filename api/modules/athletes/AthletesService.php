@@ -40,6 +40,22 @@ class AthletesService
     /**
      * Get the logged-in user's profile (athlete or staff).
      */
+    public function getByUserId(string $userId): array
+    {
+        $athlete = $this->repo->getAthleteByUserId($userId);
+        if (!$athlete) {
+            throw new \Exception('Profilo atleta non associato a questo utente.', 404);
+        }
+
+        $athlete['acwr'] = $this->calculateACWR($athlete['id']);
+        $athlete['metrics'] = $this->repo->getMetricsHistory($athlete['id'], 30);
+        
+        return $athlete;
+    }
+
+    /**
+     * Get the logged-in user's profile based on email fallback (Legacy approach).
+     */
     public function getMyProfile(array $user): array
     {
         $email = $user['email'] ?? '';

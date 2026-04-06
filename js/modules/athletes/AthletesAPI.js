@@ -31,6 +31,8 @@ export const AthletesAPI = {
     logMetric: async (data) => await Store.api("logMetric", "athletes", data),
 
     generateAIReport: async (athleteId) => await Store.api("aiReport", "athletes", { athlete_id: athleteId }),
+    
+    generateUser: async (id) => await Store.api("generateUser", "athletes", { id }),
 
     // --- Upload File ---
     uploadPhoto: async (id, file) => {
