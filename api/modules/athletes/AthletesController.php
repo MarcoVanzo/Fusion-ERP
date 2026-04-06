@@ -93,8 +93,11 @@ class AthletesController
 
         // ROLE-BASED ACCESS CONTROL
         if ($user['role'] === 'atleta') {
-            // Athletes can only update their own profile
-            if ($before['user_id'] !== $user['id']) {
+            // Athletes can only update their own profile OR their parent's profile (if sub-user)
+            $isOwner = $before['user_id'] === $user['id'];
+            $isSubUser = !empty($user['parent_user_id']) && $before['user_id'] === $user['parent_user_id'];
+
+            if (!$isOwner && !$isSubUser) {
                 Response::error('Non hai i permessi per modificare questo profilo.', 403);
             }
             // Restricted update

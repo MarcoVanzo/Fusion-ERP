@@ -549,21 +549,98 @@ export const AthletesView = {
     /**
      * Tab: Pagamenti
      */
-    tabPagamenti: (athlete) => `
-        <div class="card glass-card" style="padding:60px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:24px; border:1px dashed rgba(255,255,255,0.1); background:rgba(255,255,255,0.01);">
-            <div style="width:80px; height:80px; border-radius:50%; background:rgba(255,255,255,0.03); display:flex; align-items:center; justify-content:center; color:rgba(255,255,255,0.2);">
-                <i class="ph ph-currency-eur" style="font-size:40px;"></i>
+    tabPagamenti: (data) => {
+        if (!data || !data.plan) {
+            return `
+                <div class="card glass-card" style="padding:40px; text-align:center;">
+                    <i class="ph ph-currency-eur" style="font-size:48px; color:var(--text-muted); opacity:0.3; margin-bottom:16px;"></i>
+                    <h3 style="font-size:18px; color:var(--color-white); margin-bottom:8px;">Nessun piano pagamenti attivo</h3>
+                    <p style="color:var(--text-muted); font-size:14px;">Contatta la segreteria per attivare il tuo piano rateale.</p>
+                </div>
+            `;
+        }
+
+        const plan = data.plan;
+        const installments = data.installments || [];
+        const stats = data.stats || {};
+
+        return `
+            <div style="display:flex; flex-direction:column; gap:24px;">
+                <!-- Riepilogo Piano -->
+                <div class="card glass-card" style="background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%); padding:24px;">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:24px;">
+                        <div>
+                            <span class="badge badge-primary" style="margin-bottom:8px; font-size:10px;">PIANO ATTIVO</span>
+                            <h3 style="font-size:24px; font-weight:700; color:var(--color-white); margin-bottom:4px;">Stato Pagamenti</h3>
+                            <p style="font-size:13px; color:var(--text-muted);">Piano del ${Utils.formatDate(plan.start_date)} · Frequenza: ${plan.frequency}</p>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-size:12px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:4px;">Totale Piano</div>
+                            <div style="font-size:28px; font-weight:800; color:var(--color-white); font-family:var(--font-display);">€ ${Utils.formatNumber(plan.total_amount)}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stats-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:16px; border-top:1px solid rgba(255,255,255,0.05); padding-top:24px;">
+                        <div class="stat-item">
+                            <div style="font-size:11px; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">Pagato</div>
+                            <div style="font-size:18px; font-weight:700; color:var(--color-success);">€ ${Utils.formatNumber(stats.total_paid)}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div style="font-size:11px; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">In Scadenza / Arretrati</div>
+                            <div style="font-size:18px; font-weight:700; color:${stats.total_overdue > 0 ? 'var(--color-danger)' : 'var(--color-white)'};">€ ${Utils.formatNumber(stats.total_overdue)}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div style="font-size:11px; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">Rimanente</div>
+                            <div style="font-size:18px; font-weight:700; color:var(--color-white);">€ ${Utils.formatNumber(stats.total_remaining)}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lista Rate -->
+                <div class="card glass-card" style="padding:0; overflow:hidden;">
+                    <div style="padding:20px 24px; border-bottom:1px solid rgba(255,255,255,0.05); display:flex; justify-content:space-between; align-items:center;">
+                        <h4 style="font-size:14px; font-weight:600; color:var(--color-white); margin:0;">Dettaglio Rate</h4>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table" style="margin:0;">
+                            <thead>
+                                <tr>
+                                    <th style="padding-left:24px;">Scadenza</th>
+                                    <th>Importo</th>
+                                    <th>Stato</th>
+                                    <th style="text-align:right; padding-right:24px;">Azioni</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${installments.map(inst => {
+                                    const isPaid = inst.status === 'PAID';
+                                    const isOverdue = inst.status === 'OVERDUE';
+                                    return `
+                                        <tr>
+                                            <td style="padding-left:24px; font-weight:500;">${Utils.formatDate(inst.due_date)}</td>
+                                            <td style="font-weight:600; font-family:var(--font-display);">€ ${Utils.formatNumber(inst.amount)}</td>
+                                            <td>
+                                                <span class="badge ${isPaid ? 'badge-success' : (isOverdue ? 'badge-danger' : 'badge-white')}" style="font-size:10px;">
+                                                    ${inst.status}
+                                                </span>
+                                            </td>
+                                            <td style="text-align:right; padding-right:24px;">
+                                                ${inst.receipt_path ? `
+                                                    <a href="${inst.receipt_path}" target="_blank" class="btn btn-ghost btn-sm" style="padding:4px 8px; font-size:11px;">
+                                                        <i class="ph ph-file-pdf"></i> RICEVUTA
+                                                    </a>
+                                                ` : '-'}
+                                            </td>
+                                        </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
-            <div>
-                <h3 style="font-family:var(--font-display); font-size:20px; color:var(--color-white); margin-bottom:8px;">Modulo Pagamenti & Scadenze</h3>
-                <p style="color:var(--color-text-muted); max-width:400px; margin:0 auto; line-height:1.6;">Lo storico dei versamenti, le rate in scadenza e la gestione contabile dell'atleta saranno disponibili nel prossimo modulo di aggiornamento.</p>
-            </div>
-            <div style="display:flex; gap:12px; margin-top:12px;">
-                <span class="badge badge-white" style="opacity:0.4; font-size:10px;">PROSSIMAMENTE</span>
-                <span class="badge badge-white" style="opacity:0.4; font-size:10px;">GESTIONALE CONTABILE</span>
-            </div>
-        </div>
-    `,
+        `;
+    },
 
     /**
      * Tab: Documenti

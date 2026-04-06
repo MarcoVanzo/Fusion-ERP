@@ -113,7 +113,7 @@ const Navbar = () => {
                 </div>
 
                 {/* Center Logo - Static on layout with absolute center fallback for mobile precision */}
-                <div className="flex-none lg:static absolute left-1/2 -translate-x-1/2 flex justify-center z-40">
+                <div className="flex-none lg:static absolute left-1/2 -translate-x-1/2 flex justify-center z-[70]">
                     <Link to="/" className="flex-shrink-0 relative group flex items-center justify-center -mt-2">
                         <div className="absolute inset-0 bg-brand-500/20 blur-xl rounded-full scale-150 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                         <img 
@@ -168,7 +168,7 @@ const Navbar = () => {
                         className="lg:hidden relative group transition-transform hover:scale-110 active:scale-95 px-1 py-1"
                     >
                         <span 
-                            className="relative z-10 text-[14px] xs:text-[18px] sm:text-[22px] text-brand-500 drop-shadow-[0_0_8px_rgba(217,70,239,0.5)] animate-neon-pulse whitespace-nowrap" 
+                            className="relative z-10 text-[20px] sm:text-[24px] text-brand-500 drop-shadow-[0_0_10px_rgba(217,70,239,0.7)] animate-neon-pulse whitespace-nowrap" 
                             style={{ fontFamily: "'Rubik Dirt', system-ui", lineHeight: 1 }}
                         >
                             CANDIDATI

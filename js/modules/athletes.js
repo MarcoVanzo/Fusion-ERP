@@ -192,8 +192,9 @@ const Athletes = (() => {
         const app = document.getElementById("app");
 
         try {
+            const user = App.getUser();
             const athlete = await AthletesAPI.getById(id);
-            app.innerHTML = AthletesView.profileLayout(athlete, currentTab);
+            app.innerHTML = AthletesView.profileLayout(athlete, currentTab, user);
 
             // Listeners per Tab
             addProfileListeners(athlete);
@@ -274,7 +275,7 @@ const Athletes = (() => {
                 addAnagraficaListeners(athlete);
                 break;
             case 'pagamenti':
-                panel.innerHTML = AthletesView.tabPagamenti(athlete);
+                await renderPayments(panel, athlete);
                 break;
             case 'documenti':
                 panel.innerHTML = AthletesView.tabDocumenti(athlete, true);
@@ -435,6 +436,16 @@ const Athletes = (() => {
             }
         } catch (e) {
             panel.innerHTML = Utils.emptyState("Errore caricamento sotto-utenti", e.message);
+        }
+    }
+
+    async function renderPayments(panel, athlete) {
+        panel.innerHTML = '<div class="loader-spinner"></div>';
+        try {
+            const data = await Store.get("getPlan", "payments", { id: athlete.id });
+            panel.innerHTML = AthletesView.tabPagamenti(data);
+        } catch (e) {
+            panel.innerHTML = Utils.emptyState("Errore caricamento pagamenti", e.message);
         }
     }
 
