@@ -11,6 +11,8 @@ export const AthletesAPI = {
     
     getById: async (id) => await Store.get("get", "athletes", { id }),
 
+    getByUserId: async (userId) => await Store.get("getByUserId", "athletes", { user_id: userId }),
+
     getAcwr: async (id) => await Store.get("acwr", "athletes", { id }),
 
     getAiSummary: async (id) => await Store.get("aiSummary", "athletes", { id }),

@@ -2,7 +2,7 @@
 -- Adds support for sub-users and invitations.
 
 -- 1. Add parent_user_id to users to manage hierarchy (up to 2 sub-users)
-ALTER TABLE users ADD COLUMN parent_user_id INT DEFAULT NULL;
+-- ALTER TABLE users ADD COLUMN parent_user_id INT DEFAULT NULL; -- Already applied in previous run
 
 -- 2. Create sub-users invitations table
 CREATE TABLE IF NOT EXISTS user_invitations (
