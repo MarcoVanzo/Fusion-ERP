@@ -395,6 +395,49 @@ const Athletes = (() => {
         });
     }
 
+    async function renderSubUsers(panel, athlete) {
+        panel.innerHTML = '<div class="loader-spinner"></div>';
+        try {
+            const subs = await Store.get("getSubUsers", "auth");
+            panel.innerHTML = AthletesView.tabSubUsers(subs);
+
+            // Add Invite Listener
+            const inviteBtn = document.getElementById("invite-subuser-btn");
+            const modal = document.getElementById("invite-modal");
+            const closeBtn = document.getElementById("close-invite-modal");
+            const confirmBtn = document.getElementById("confirm-invite-btn");
+
+            if (inviteBtn && modal) {
+                inviteBtn.onclick = () => modal.style.display = "flex";
+                closeBtn.onclick = () => modal.style.display = "none";
+                
+                confirmBtn.onclick = async () => {
+                    const email = document.getElementById("invite-email").value;
+                    const name = document.getElementById("invite-name").value;
+
+                    if (!email || !name) {
+                        UI.toast("Inserisci tutti i dati", "error");
+                        return;
+                    }
+
+                    UI.loading(true);
+                    try {
+                        await Store.api("inviteSubUser", "auth", { email, full_name: name });
+                        UI.toast("Invito inviato con successo!", "success");
+                        modal.style.display = "none";
+                        await renderSubUsers(panel, athlete);
+                    } catch (e) {
+                        UI.toast(e.message, "error");
+                    } finally {
+                        UI.loading(false);
+                    }
+                };
+            }
+        } catch (e) {
+            panel.innerHTML = Utils.emptyState("Errore caricamento sotto-utenti", e.message);
+        }
+    }
+
     async function refreshData(variant = 'anagrafica') {
         athletesData = await AthletesAPI.getLightList();
         if (!activeAthleteId) filterAndRenderGrid("", variant);

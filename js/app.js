@@ -21,6 +21,12 @@ const App = (() => {
             return;
         }
 
+        const _inviteToken = _urlParams.get('invite');
+        if (_inviteToken && /^[a-f0-9]{64}$/i.test(_inviteToken)) {
+            _showAcceptInvitationScreen(_inviteToken);
+            return;
+        }
+
         try {
             _currentUser = await Store.get('me', 'auth');
             // If onboarding is not complete, we can either wait or just boot
@@ -773,7 +779,49 @@ const App = (() => {
         });
     }
 
-    function _showConfirmResetScreen(token) {
+    function _showAcceptInvitationScreen(token) {
+        document.getElementById('auth-screen').classList.add('hidden');
+        document.getElementById('app-shell').classList.add('hidden');
+        const resetScreen = document.getElementById('reset-screen');
+        resetScreen.classList.remove('hidden');
+        
+        const title = resetScreen.querySelector('h1');
+        if (title) title.textContent = 'Attivazione Account';
+        
+        const sub = resetScreen.querySelector('p.text-muted');
+        if (sub) sub.textContent = 'Benvenuto! Imposta la tua password per accedere al portale.';
+        
+        const curGroup = document.getElementById('reset-current')?.closest('.form-group');
+        if (curGroup) curGroup.style.display = 'none';
+        
+        const form = document.getElementById('reset-form');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('reset-btn');
+            const errEl = document.getElementById('reset-error');
+            const newPwd = document.getElementById('reset-new').value;
+
+            if (newPwd.length < 10) {
+                errEl.textContent = 'La password deve essere di almeno 10 caratteri';
+                errEl.classList.remove('hidden');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'ATTIVAZIONE...';
+
+            try {
+                await Store.api('acceptSubUserInvitation', 'auth', { token, password: newPwd });
+                UI.toast('Account attivato con successo! Ora puoi accedere.', 'success');
+                setTimeout(() => window.location.href = './', 1500);
+            } catch (err) {
+                errEl.textContent = err.message;
+                errEl.classList.remove('hidden');
+                btn.disabled = false;
+                btn.textContent = 'ATTIVA ACCOUNT';
+            }
+        }, { once: true });
+    }
         document.getElementById('auth-screen').classList.add('hidden');
         document.getElementById('app-shell').classList.add('hidden');
         const resetScreen = document.getElementById('reset-screen');

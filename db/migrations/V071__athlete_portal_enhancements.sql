@@ -1,20 +1,21 @@
 -- Database Migration V071: Athlete Portal Enhancements
 -- Adds support for sub-users and invitations.
 
--- 1. Add parent_user_id to users to manage hierarchy (up to 2 sub-users)
--- ALTER TABLE users ADD COLUMN parent_user_id INT DEFAULT NULL; -- Already applied in previous run
+-- 1. Add/Fix parent_user_id in users (already partially applied as INT in some runs, or VARCHAR(50) in others)
+-- Since it might already exist, we use a more robust approach:
+ALTER TABLE users MODIFY COLUMN parent_user_id VARCHAR(20) DEFAULT NULL;
 
 -- 2. Create sub-users invitations table
 CREATE TABLE IF NOT EXISTS user_invitations (
     id VARCHAR(50) PRIMARY KEY,
-    inviter_user_id INT NOT NULL,
+    inviter_user_id VARCHAR(20) NOT NULL,
     email VARCHAR(255) NOT NULL,
     token VARCHAR(100) NOT NULL,
     status VARCHAR(20) DEFAULT 'pending', -- pending, accepted, expired
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     expires_at DATETIME NOT NULL,
     FOREIGN KEY (inviter_user_id) REFERENCES users(id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 3. Ensure athletes table has user_id if not already present (defensive)
 -- Note: SQLite does not support ADD COLUMN IF NOT EXISTS easily without PRAGMA check, 
