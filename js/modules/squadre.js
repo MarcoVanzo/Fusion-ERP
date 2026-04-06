@@ -10,6 +10,11 @@ const Squadre = {
     _teams: [],
     _currentTab: "squadre", // 'squadre' | 'stagioni'
 
+    _resetAbort: function() {
+        this._abort.abort();
+        this._abort = new AbortController();
+    },
+
     /** signal() helper for event listeners */
     sig: function() { return { signal: this._abort.signal }; },
 
@@ -21,6 +26,7 @@ const Squadre = {
         const appContainer = document.getElementById("app");
         if (!appContainer) return;
 
+        this._resetAbort();
         UI.loading(true);
         appContainer.innerHTML = TeamsView.skeleton();
         

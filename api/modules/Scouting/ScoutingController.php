@@ -374,27 +374,54 @@ class ScoutingController
         }
 
         $pdo = Database::getInstance();
+        $driver = $pdo->getAttribute(\PDO::ATTR_DRIVER_NAME);
 
-        $sql = "
-            INSERT INTO scouting_athletes
-                (tenant_id, cognito_id, cognito_form, nome, cognome, societa_appartenenza, anno_nascita, ruolo, email, cellulare,
-                 note, rilevatore, data_rilevazione, source, synced_at)
-            VALUES
-                (:tenant_id, :cog_id, :cog_form, :nome, :cognome, :societa, :anno, :ruolo, :email, :cellulare,
-                 :note, :rilevatore, :data_ril, :source, NOW())
-            ON DUPLICATE KEY UPDATE
-                nome                  = IF(is_locked_edit = 1, nome, VALUES(nome)),
-                cognome               = IF(is_locked_edit = 1, cognome, VALUES(cognome)),
-                societa_appartenenza  = IF(is_locked_edit = 1, societa_appartenenza, VALUES(societa_appartenenza)),
-                anno_nascita          = IF(is_locked_edit = 1, anno_nascita, VALUES(anno_nascita)),
-                ruolo                 = IF(is_locked_edit = 1, ruolo, VALUES(ruolo)),
-                email                 = IF(is_locked_edit = 1, email, VALUES(email)),
-                cellulare             = IF(is_locked_edit = 1, cellulare, VALUES(cellulare)),
-                note                  = IF(is_locked_edit = 1, note, VALUES(note)),
-                rilevatore            = IF(is_locked_edit = 1, rilevatore, VALUES(rilevatore)),
-                data_rilevazione      = IF(is_locked_edit = 1, data_rilevazione, VALUES(data_rilevazione)),
-                synced_at             = NOW()
-        ";
+        if ($driver === 'mysql') {
+            $sql = "
+                INSERT INTO scouting_athletes
+                    (tenant_id, cognito_id, cognito_form, nome, cognome, societa_appartenenza, anno_nascita, ruolo, email, cellulare,
+                     note, rilevatore, data_rilevazione, source, synced_at)
+                VALUES
+                    (:tenant_id, :cog_id, :cog_form, :nome, :cognome, :societa, :anno, :ruolo, :email, :cellulare,
+                     :note, :rilevatore, :data_ril, :source, NOW())
+                ON DUPLICATE KEY UPDATE
+                    nome                  = IF(is_locked_edit = 1, nome, VALUES(nome)),
+                    cognome               = IF(is_locked_edit = 1, cognome, VALUES(cognome)),
+                    societa_appartenenza  = IF(is_locked_edit = 1, societa_appartenenza, VALUES(societa_appartenenza)),
+                    anno_nascita          = IF(is_locked_edit = 1, anno_nascita, VALUES(anno_nascita)),
+                    ruolo                 = IF(is_locked_edit = 1, ruolo, VALUES(ruolo)),
+                    email                 = IF(is_locked_edit = 1, email, VALUES(email)),
+                    cellulare             = IF(is_locked_edit = 1, cellulare, VALUES(cellulare)),
+                    note                  = IF(is_locked_edit = 1, note, VALUES(note)),
+                    rilevatore            = IF(is_locked_edit = 1, rilevatore, VALUES(rilevatore)),
+                    data_rilevazione      = IF(is_locked_edit = 1, data_rilevazione, VALUES(data_rilevazione)),
+                    synced_at             = NOW()
+            ";
+        } elseif ($driver === 'sqlite') {
+            $sql = "
+                INSERT INTO scouting_athletes
+                    (tenant_id, cognito_id, cognito_form, nome, cognome, societa_appartenenza, anno_nascita, ruolo, email, cellulare,
+                     note, rilevatore, data_rilevazione, source, synced_at)
+                VALUES
+                    (:tenant_id, :cog_id, :cog_form, :nome, :cognome, :societa, :anno, :ruolo, :email, :cellulare,
+                     :note, :rilevatore, :data_ril, :source, datetime('now'))
+                ON CONFLICT(cognito_id, cognito_form) DO UPDATE SET
+                    nome                  = excluded.nome,
+                    cognome               = excluded.cognome,
+                    societa_appartenenza  = excluded.societa_appartenenza,
+                    anno_nascita          = excluded.anno_nascita,
+                    ruolo                 = excluded.ruolo,
+                    email                 = excluded.email,
+                    cellulare             = excluded.cellulare,
+                    note                  = excluded.note,
+                    rilevatore            = excluded.rilevatore,
+                    data_rilevazione      = excluded.data_rilevazione,
+                    synced_at             = datetime('now')
+                WHERE is_locked_edit = 0
+            ";
+        } else {
+            throw new \Exception("Unsupported database driver: $driver");
+        }
 
         $stmt = $pdo->prepare($sql);
         $upserted = 0;

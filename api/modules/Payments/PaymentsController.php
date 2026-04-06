@@ -92,10 +92,21 @@ class PaymentsController
      */
     public function getPlan(): void
     {
-        Auth::requireRead('payments');
+        $user = Auth::requireRead('payments');
         $athleteId = filter_input(INPUT_GET, 'id', FILTER_DEFAULT) ?? '';
         if (empty($athleteId)) {
             Response::error('id atleta obbligatorio', 400);
+        }
+
+        if ($user['role'] === 'atleta') {
+            // Must check if athleteId matches their linked account (fetch it if needed)
+            $db = \FusionERP\Shared\Database::getInstance();
+            $stmt = $db->prepare('SELECT id FROM athletes WHERE user_id = :uid LIMIT 1');
+            $stmt->execute([':uid' => $user['id']]);
+            $linked = $stmt->fetch(\PDO::FETCH_ASSOC);
+            if (!$linked || $linked['id'] !== $athleteId) {
+                Response::error('Non hai i permessi per visualizzare questi pagamenti.', 403);
+            }
         }
 
         $plan = $this->repo->getActivePlan($athleteId);

@@ -439,7 +439,7 @@ HTML;
             $this->repo->updateTransportAiResponse($transportId, json_encode($aiJson));
         }
 
-        Audit::log('AI_ANALYSIS', 'transports', $transportId ?: 'PREVIEW', null, ['model' => 'gemini-2.5-flash']);
+        Audit::log('AI_ANALYSIS', 'transports', $transportId ?: 'PREVIEW', null, ['model' => 'gemini-1.5-flash']);
         return $aiJson;
     }
 }

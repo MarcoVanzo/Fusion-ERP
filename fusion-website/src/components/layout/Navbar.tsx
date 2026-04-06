@@ -20,7 +20,7 @@ const Navbar = () => {
             setIsScrolled(currentScrollY > 20);
             
             if (currentScrollY > lastScrollY.current && currentScrollY > 100 && !isMobileMenuOpen) {
-                // Scrolling giù: nascondo navbar
+                // Scrolling giu: nascondo navbar
                 setIsVisible(false);
             } else {
                 // Scrolling su: mostro navbar
@@ -74,39 +74,62 @@ const Navbar = () => {
 
     return (
         <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'} ${isScrolled ? 'bg-zinc-950/95 backdrop-blur-md border-b-2 border-brand-500 shadow-[0_10px_30px_rgba(0,0,0,0.8)] py-2' : 'bg-gradient-to-b from-zinc-950 via-zinc-950/80 to-transparent py-6'}`}>
-            <div className="max-w-[1400px] mx-auto px-6 lg:px-8 h-12 relative flex items-center justify-between">
+            <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 h-12 relative flex items-center justify-between">
                 
-                {/* Left Links */}
-                <div className="hidden lg:flex flex-1 items-center justify-end gap-6 pr-10">
-                    {splitLeftLinks.map(link => {
-                        const isActive = location.pathname === link.path || (link.path !== '/' && location.pathname.startsWith(link.path));
-                        return (
-                            <Link 
-                                key={link.name} 
-                                to={link.path} 
-                                className={`text-sm font-semibold tracking-widest transition-colors uppercase relative group flex items-center ${isActive ? 'text-brand-500' : 'text-zinc-300 hover:text-white'}`}
-                            >
-                                {link.name}
-                                <span className={`absolute -bottom-2 left-0 h-[2px] bg-brand-500 transition-all duration-300 ${isActive ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
-                            </Link>
-                        )
-                    })}
+                {/* Left Section: Hub Logo + Left Links */}
+                <div className="flex-1 flex items-center justify-start z-50 h-full">
+                    {/* HUB Logo (Desktop/Mobile) */}
+                    {hubLogo && (
+                        <a 
+                            href="https://www.fusionteamvolley.it/network" 
+                            className="block relative group pointer-events-auto"
+                            title="Savino del bene volley HUB"
+                        >
+                            <div className="absolute inset-0 bg-brand-500/30 blur-xl rounded-full scale-150 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                            <div className="relative w-[34px] h-[34px] sm:w-[38px] sm:h-[38px] md:w-[56px] md:h-[56px] lg:w-[72px] lg:h-[72px] bg-gradient-to-b from-white/90 to-white/70 backdrop-blur-md p-[2px] rounded-full border border-white/20 shadow-[0_4px_15px_rgba(0,0,0,0.5)] group-hover:shadow-[0_0_25px_rgba(217,70,239,0.4)] transition-all duration-300 overflow-hidden">
+                                <div className="w-full h-full bg-white rounded-full flex items-center justify-center p-1 shadow-inner overflow-hidden">
+                                    <img src={hubLogo} alt="HUB" className="w-full h-full object-contain lg:filter lg:grayscale lg:opacity-80 lg:group-hover:grayscale-0 lg:group-hover:opacity-100 transition-all duration-500" />
+                                </div>
+                            </div>
+                        </a>
+                    )}
+
+                    {/* Desktop Left Links */}
+                    <div className="hidden lg:flex items-center gap-6 ml-6">
+                        {splitLeftLinks.map(link => {
+                            const isActive = location.pathname === link.path || (link.path !== '/' && location.pathname.startsWith(link.path));
+                            return (
+                                <Link 
+                                    key={link.name} 
+                                    to={link.path} 
+                                    className={`text-sm font-semibold tracking-widest transition-colors uppercase relative group flex items-center ${isActive ? 'text-brand-500' : 'text-zinc-300 hover:text-white'}`}
+                                >
+                                    {link.name}
+                                    <span className={`absolute -bottom-2 left-0 h-[2px] bg-brand-500 transition-all duration-300 ${isActive ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
+                                </Link>
+                            )
+                        })}
+                    </div>
                 </div>
 
-                {/* Center Logo */}
-                <div className="absolute left-1/2 -translate-x-1/2 lg:static lg:translate-x-0 flex lg:flex-none justify-center">
-                    <Link to="/" className="flex-shrink-0 relative group z-50 flex items-center justify-center -mt-2">
+                {/* Center Logo - Static on layout with absolute center fallback for mobile precision */}
+                <div className="flex-none lg:static absolute left-1/2 -translate-x-1/2 flex justify-center z-[70]">
+                    <Link to="/" className="flex-shrink-0 relative group flex items-center justify-center -mt-2">
                         <div className="absolute inset-0 bg-brand-500/20 blur-xl rounded-full scale-150 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                        <img src="/assets/logo-colorato.png" alt="Logo" className={`w-[56px] h-[56px] md:w-[72px] md:h-[72px] object-contain drop-shadow-2xl relative z-10 transition-transform duration-300 ${isScrolled ? 'scale-90 group-hover:scale-100' : 'scale-100 group-hover:scale-105'}`} />
+                        <img 
+                            src="/assets/logo-colorato.png" 
+                            alt="Logo" 
+                            className={`w-[44px] h-[44px] sm:w-[56px] sm:h-[56px] md:w-[72px] md:h-[72px] object-contain drop-shadow-2xl relative z-10 transition-transform duration-300 ${isScrolled ? 'scale-90 group-hover:scale-100' : 'scale-100 group-hover:scale-105'}`} 
+                        />
                     </Link>
                 </div>
 
-                {/* Right Links */}
-                <div className="hidden lg:flex flex-1 items-center justify-start pl-10">
-                    <div className="flex items-center gap-6">
+                {/* Right Section: Links (Desktop) & Actions (Mobile) */}
+                <div className="flex-1 flex items-center justify-end z-[60] h-full gap-2 sm:gap-4 lg:pl-10">
+                    {/* Desktop Right Links */}
+                    <div className="hidden lg:flex items-center gap-6">
                         {splitRightLinks.map(link => {
                             const isActive = location.pathname === link.path || (link.path !== '/' && location.pathname.startsWith(link.path));
-                            // Sostituisco "ENTRA NELLA NOSTRA FAMIGLIA" con "CANDIDATI" per non rompere altri possibili riferimenti
                             const linkName = link.name === 'ENTRA NELLA NOSTRA FAMIGLIA' ? 'CANDIDATI' : link.name;
                             return (
                                 <Link 
@@ -119,14 +142,12 @@ const Navbar = () => {
                                     }
                                 >
                                     {link.isHighlight ? (
-                                        <>
-                                            <span 
-                                                className="relative z-10 text-[28px] md:text-[32px] text-brand-500 hover:text-brand-400 drop-shadow-[0_0_12px_rgba(217,70,239,0.3)] group-hover:drop-shadow-[0_0_20px_rgba(217,70,239,0.6)] transition-all duration-300" 
-                                                style={{ fontFamily: "'Rubik Dirt', system-ui", lineHeight: 1 }}
-                                            >
-                                                {linkName}
-                                            </span>
-                                        </>
+                                        <span 
+                                            className="relative z-10 text-[28px] md:text-[32px] text-brand-500 hover:text-brand-400 drop-shadow-[0_0_12px_rgba(217,70,239,0.3)] group-hover:drop-shadow-[0_0_20px_rgba(217,70,239,0.6)] transition-all duration-300 rotate-[15deg] animate-neon-pulse" 
+                                            style={{ fontFamily: "'Rubik Dirt', system-ui", lineHeight: 1 }}
+                                        >
+                                            {linkName}
+                                        </span>
                                     ) : (
                                         <>
                                             {linkName}
@@ -140,35 +161,27 @@ const Navbar = () => {
                             )
                         })}
                     </div>
-                    
-                    {/* Hub Logo */}
-                    {hubLogo && (
-                        <a 
-                            href="https://www.fusionteamvolley.it/network" 
-                            className="ml-6 block relative group z-50 pointer-events-auto"
-                            title="Savino del bene volley HUB"
-                        >
-                            {/* Glow under logo */}
-                            <div className="absolute inset-0 bg-brand-500/30 blur-xl rounded-full scale-150 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                            
-                            {/* Container */}
-                            <div className="relative w-[48px] h-[48px] bg-gradient-to-b from-white/90 to-white/70 backdrop-blur-md p-[2px] rounded-full border border-white/20 shadow-[0_4px_15px_rgba(0,0,0,0.5)] group-hover:shadow-[0_0_25px_rgba(217,70,239,0.4)] group-hover:-translate-y-1 transition-all duration-300">
-                                <div className="w-full h-full bg-white rounded-full flex items-center justify-center p-1 shadow-inner">
-                                    <img src={hubLogo} alt="HUB" className="w-full h-full object-contain filter grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500" />
-                                </div>
-                            </div>
-                        </a>
-                    )}
-                </div>
 
-                {/* Mobile Menu Toggle */}
-                <div className="absolute right-6 top-1/2 -translate-y-1/2 lg:static lg:translate-y-0 lg:hidden flex items-center justify-end z-50">
+                    {/* Mobile CANDIDATI Button (High Impact) */}
+                    <Link 
+                        to="/candidatura-scouting" 
+                        className="lg:hidden relative group transition-transform hover:scale-110 active:scale-95 px-1 py-1"
+                    >
+                        <span 
+                            className="relative z-10 text-[20px] sm:text-[24px] text-brand-500 drop-shadow-[0_0_10px_rgba(217,70,239,0.7)] animate-neon-pulse whitespace-nowrap" 
+                            style={{ fontFamily: "'Rubik Dirt', system-ui", lineHeight: 1 }}
+                        >
+                            CANDIDATI
+                        </span>
+                    </Link>
+
+                    {/* Mobile Menu Toggle */}
                     <button 
                         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                        className="text-white hover:text-brand-500 transition-colors p-2 rounded-full bg-black/20 md:bg-transparent backdrop-blur-sm drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]"
+                        className="lg:hidden text-white hover:text-brand-500 transition-colors p-1.5 sm:p-2 rounded-full bg-black/20 backdrop-blur-sm drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]"
                         aria-label="Toggle Menu"
                     >
-                        {isMobileMenuOpen ? <X size={32} /> : <Menu size={32} />}
+                        {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
                     </button>
                 </div>
             </div>
@@ -200,11 +213,16 @@ const Navbar = () => {
                                             onClick={() => setIsMobileMenuOpen(false)}
                                             className={
                                                 link.isHighlight 
-                                                ? `font-heading text-2xl uppercase tracking-widest border-b border-zinc-800/50 py-5 px-4 min-h-[56px] flex items-center justify-between transition-all bg-brand-900/30 text-brand-300 border-l-4 border-l-brand-500` 
+                                                ? `font-heading text-2xl uppercase tracking-widest border-b border-zinc-800/50 py-5 px-4 min-h-[56px] flex items-center justify-between transition-all bg-brand-900/30 text-brand-300 border-l-4 border-l-brand-500 group/link` 
                                                 : `font-heading text-2xl uppercase tracking-widest border-b border-zinc-800/50 py-5 px-4 min-h-[56px] flex items-center justify-between transition-all ${isActive ? 'text-brand-500 bg-brand-500/10 border-l-4 border-l-brand-500' : 'text-zinc-300 hover:text-white hover:bg-white/5'}`
                                             }
                                         >
-                                            <span className={link.isHighlight ? "drop-shadow-[0_0_8px_rgba(217,70,239,0.5)]" : ""}>{link.name}</span>
+                                            <span 
+                                                className={link.isHighlight ? "text-brand-500 animate-neon-pulse" : ""}
+                                                style={link.isHighlight ? { fontFamily: "'Rubik Dirt', system-ui", fontSize: '32px' } : {}}
+                                            >
+                                                {link.isHighlight ? 'CANDIDATI' : link.name}
+                                            </span>
                                             {link.badge && (
                                                 <span className="bg-red-600/90 shadow-[0_0_12px_rgba(220,38,38,0.8)] text-white font-sans text-xs font-bold px-3 py-1.5 rounded animate-pulse tracking-normal">
                                                     {link.badge}

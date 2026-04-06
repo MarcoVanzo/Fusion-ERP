@@ -32,9 +32,10 @@ class AthletesController
             $result = $callback();
             Response::success($result);
         } catch (\Exception $e) {
+            error_log("[AthletesController] " . $e->getMessage());
             $code = $e->getCode();
             $httpCode = (is_int($code) && $code >= 400 && $code <= 599) ? $code : 500;
-            Response::error($e->getMessage(), $httpCode);
+            Response::error("Errore interno: " . $e->getMessage(), $httpCode);
         }
     }
 
@@ -81,14 +82,34 @@ class AthletesController
     // ─── POST /api/?module=athletes&action=update ─────────────────────────────
     public function update(): void
     {
-        Auth::requireWrite('athletes');
+        $user = Auth::requireAuth();
         $body = Response::jsonBody();
-        Response::requireFields($body, ['id', 'first_name', 'last_name']);
+        Response::requireFields($body, ['id']);
 
-        $before = $this->repo->getAthleteById($body['id']);
+        $athleteId = $body['id'];
+        $before = $this->repo->getAthleteById($athleteId);
         if (!$before) {
             Response::error('Atleta non trovato', 404);
         }
+
+        // ROLE-BASED ACCESS CONTROL
+        if ($user['role'] === 'atleta') {
+            // Athletes can only update their own profile OR their parent's profile (if sub-user)
+            $isOwner = $before['user_id'] === $user['id'];
+            $isSubUser = !empty($user['parent_user_id']) && $before['user_id'] === $user['parent_user_id'];
+
+            if (!$isOwner && !$isSubUser) {
+                Response::error('Non hai i permessi per modificare questo profilo.', 403);
+            }
+            // Restricted update
+            $this->handleServiceCall(fn() => $this->service->updateAthleteBasic($athleteId, $body));
+            return;
+        }
+
+        // STAFF/ADMIN ACCESS
+        Auth::requireWrite('athletes');
+        
+        Response::requireFields($body, ['first_name', 'last_name']);
 
         // Support multi-team: team_season_ids (array) takes priority over legacy team_id
         if (isset($body['team_season_ids']) && is_array($body['team_season_ids'])) {
@@ -104,51 +125,68 @@ class AthletesController
 
         $primaryTeamId = null;
         if ($primaryTeamSeasonId) {
-            $primaryTeamId = $this->repo->getTeamIdForSeason($primaryTeamSeasonId) ?? $before['team_id'];
+            $primaryTeamId = $this->repo->getTeamIdForSeason($primaryTeamSeasonId) ?? ($before['team_id'] ?? null);
         } else {
             $primaryTeamId = $before['team_id'] ?? null;
         }
 
-        $val = fn($k) => array_key_exists($k, $body) ? $body[$k] : ($before[$k] ?? null);
+        if (!$primaryTeamId) {
+            // Failsafe: if no team is assigned, we MUST keep at least the old one to avoid DB constraint violation
+            $primaryTeamId = $before['team_id'] ?? null;
+        }
 
-        $this->repo->updateAthlete($body['id'], [
-            ':first_name'              => trim($body['first_name']),
-            ':last_name'               => trim($body['last_name']),
-            ':jersey_number' => $val('jersey_number'),
-            ':role' => $val('role'),
-            ':birth_date' => $val('birth_date'),
-            ':birth_place' => $val('birth_place'),
-            ':height_cm' => $val('height_cm'),
-            ':weight_kg' => $val('weight_kg'),
-            ':residence_address' => $val('residence_address'),
-            ':residence_city' => $val('residence_city'),
-            ':phone' => $val('phone'),
-            ':email' => $val('email'),
-            ':identity_document' => $val('identity_document'),
-            ':fiscal_code' => $val('fiscal_code'),
-            ':medical_cert_type' => $val('medical_cert_type'),
-            ':medical_cert_expires_at' => $val('medical_cert_expires_at'),
-            ':federal_id' => $val('federal_id'),
-            ':shirt_size' => $val('shirt_size'),
-            ':shoe_size' => $val('shoe_size'),
-            ':parent_contact'          => $val('parent_contact'),
-            ':parent_phone'            => $val('parent_phone'),
-            ':nationality'             => $val('nationality'),
-            ':blood_group'             => $val('blood_group'),
-            ':allergies'               => $val('allergies'),
-            ':medications'             => $val('medications'),
-            ':emergency_contact_name'  => $val('emergency_contact_name'),
-            ':emergency_contact_phone' => $val('emergency_contact_phone'),
-            ':communication_preference' => $val('communication_preference'),
-            ':image_release_consent'   => isset($body['image_release_consent']) ? (int)$body['image_release_consent'] : 0,
-            ':medical_cert_issued_at'  => $val('medical_cert_issued_at'),
-            ':team_id' => $primaryTeamId,
-        ]);
+        $updateData = [
+            ':first_name' => trim($body['first_name']),
+            ':last_name'  => trim($body['last_name']),
+        ];
+
+        // Only include fields that exist in the database to prevent 500 errors
+        $optionalFields = [
+            'jersey_number', 'role', 'birth_date', 'birth_place', 'height_cm', 'weight_kg',
+            'residence_address', 'residence_city', 'phone', 'email', 'identity_document', 'fiscal_code',
+            'medical_cert_type', 'medical_cert_expires_at', 'medical_cert_issued_at',
+            'federal_id', 'shirt_size', 'shoe_size', 'parent_contact', 'parent_phone',
+            'nationality', 'blood_group', 'allergies', 'medications',
+            'emergency_contact_name', 'emergency_contact_phone', 'communication_preference',
+            'photo_release_file_path', 'privacy_policy_file_path', 'guesthouse_rules_file_path', 
+            'guesthouse_delegate_file_path', 'health_card_file_path'
+        ];
+
+        foreach ($optionalFields as $field) {
+            if (array_key_exists($field, $before)) {
+                $updateData[":$field"] = array_key_exists($field, $body) ? $body[$field] : $before[$field];
+            }
+        }
+
+        // Special handling for bitmask/boolean
+        if (array_key_exists('image_release_consent', $before)) {
+            $updateData[':image_release_consent'] = isset($body['image_release_consent']) 
+                ? (int)$body['image_release_consent'] 
+                : ($before['image_release_consent'] ?? 0);
+        }
+
+        if (array_key_exists('team_id', $before)) {
+            $updateData[':team_id'] = $primaryTeamId;
+        }
+
+        $this->repo->updateAthlete($body['id'], $updateData);
 
         $this->repo->setAthleteTeams($body['id'], $teamSeasonIds, $primaryTeamId);
 
         Audit::log('UPDATE', 'athletes', $body['id'], $before, $body);
         Response::success(['message' => 'Atleta aggiornato']);
+    }
+
+    // ─── POST /api/?module=athletes&action=generateUser ───────────────────────
+    public function generateUser(): void
+    {
+        Auth::requireWrite('athletes');
+        $body = Response::jsonBody();
+        $id = $body['id'] ?? '';
+        if (empty($id)) {
+            Response::error('ID atleta obbligatorio', 400);
+        }
+        $this->handleServiceCall(fn() => $this->service->generateAthleteUser($id));
     }
 
     // ─── POST /api/?module=athletes&action=delete ─────────────────────────────
@@ -291,6 +329,11 @@ class AthletesController
     public function uploadCfDocFront(): void { $this->uploadAthleteDocument('cf_doc_front_file_path'); }
     public function uploadCfDocBack(): void { $this->uploadAthleteDocument('cf_doc_back_file_path'); }
     public function uploadMedicalCert(): void { $this->uploadAthleteDocument('medical_cert_file_path'); }
+    public function uploadPhotoRelease(): void { $this->uploadAthleteDocument('photo_release_file_path'); }
+    public function uploadPrivacyPolicy(): void { $this->uploadAthleteDocument('privacy_policy_file_path'); }
+    public function uploadGuesthouseRules(): void { $this->uploadAthleteDocument('guesthouse_rules_file_path'); }
+    public function uploadGuesthouseDelegate(): void { $this->uploadAthleteDocument('guesthouse_delegate_file_path'); }
+    public function uploadHealthCard(): void { $this->uploadAthleteDocument('health_card_file_path'); }
 
     /** Serve an athlete document file for inline display / download */
     public function downloadDoc(): void
@@ -299,7 +342,10 @@ class AthletesController
         $id    = filter_input(INPUT_GET, 'id',    FILTER_DEFAULT) ?? '';
         $field = filter_input(INPUT_GET, 'field',  FILTER_DEFAULT) ?? '';
 
-        $allowed = ['contract_file_path', 'id_doc_front_file_path', 'id_doc_back_file_path', 'cf_doc_front_file_path', 'cf_doc_back_file_path', 'medical_cert_file_path'];
+        $allowed = ['contract_file_path', 'id_doc_front_file_path', 'id_doc_back_file_path',
+                    'cf_doc_front_file_path', 'cf_doc_back_file_path', 'medical_cert_file_path',
+                    'photo_release_file_path', 'privacy_policy_file_path',
+                    'guesthouse_rules_file_path', 'guesthouse_delegate_file_path', 'health_card_file_path'];
         if (empty($id) || !in_array($field, $allowed, true)) {
             Response::error('Parametri non validi', 400);
         }

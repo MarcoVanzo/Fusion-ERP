@@ -11,6 +11,8 @@ export const AthletesAPI = {
     
     getById: async (id) => await Store.get("get", "athletes", { id }),
 
+    getByUserId: async (userId) => await Store.get("getByUserId", "athletes", { user_id: userId }),
+
     getAcwr: async (id) => await Store.get("acwr", "athletes", { id }),
 
     getAiSummary: async (id) => await Store.get("aiSummary", "athletes", { id }),
@@ -23,6 +25,8 @@ export const AthletesAPI = {
     update: async (data) => await Store.api("update", "athletes", data),
 
     delete: async (id) => await Store.api("delete", "athletes", { id }),
+
+    generateUser: async (id) => await Store.api("generateUser", "athletes", { id }),
 
     logMetric: async (data) => await Store.api("logMetric", "athletes", data),
 
@@ -48,7 +52,12 @@ export const AthletesAPI = {
             "id-doc-back": "uploadIdDocBack",
             "cf-doc-front": "uploadCfDocFront",
             "cf-doc-back": "uploadCfDocBack",
-            "med-cert": "uploadMedicalCert"
+            "med-cert": "uploadMedicalCert",
+            "photo-release": "uploadPhotoRelease",
+            "privacy-policy": "uploadPrivacyPolicy",
+            "guesthouse-rules": "uploadGuesthouseRules",
+            "guesthouse-delegate": "uploadGuesthouseDelegate",
+            "health-card": "uploadHealthCard"
         };
 
         const action = actionMap[type];

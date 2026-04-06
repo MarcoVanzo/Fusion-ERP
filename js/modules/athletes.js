@@ -42,6 +42,8 @@ const Athletes = (() => {
         }
 
         try {
+            const initialTab = getVariantFromRoute();
+            
             // Caricamento dati iniziali
             [teamsData, athletesData] = await Promise.all([
                 AthletesAPI.getTeams(),
@@ -49,8 +51,19 @@ const Athletes = (() => {
             ]);
 
             const params = Router.getParams();
-            if (params.id) {
-                const initialTab = getVariantFromRoute();
+            const user = App.getUser();
+
+            if (user && user.role === 'atleta') {
+                // Se è un atleta, cerchiamo il suo ID atleta tramite il suo user_id
+                // In un sistema reale, potremmo avere un endpoint dedicato o averlo nel JWT
+                // Supponiamo che il backend restituisca l'atleta collegato se richiesto
+                const athlete = await AthletesAPI.getByUserId(user.id);
+                if (athlete) {
+                    await renderProfile(athlete.id, initialTab);
+                } else {
+                    app.innerHTML = Utils.emptyState("Profilo non trovato", "Il tuo account non è ancora collegato a un'anagrafica atleta.");
+                }
+            } else if (params.id) {
                 await renderProfile(params.id, initialTab);
             } else {
                 renderDashboard();
@@ -180,8 +193,9 @@ const Athletes = (() => {
         const app = document.getElementById("app");
 
         try {
+            const user = App.getUser();
             const athlete = await AthletesAPI.getById(id);
-            app.innerHTML = AthletesView.profileLayout(athlete, currentTab);
+            app.innerHTML = AthletesView.profileLayout(athlete, currentTab, user);
 
             // Listeners per Tab
             addProfileListeners(athlete);
@@ -208,6 +222,23 @@ const Athletes = (() => {
         const editBtn = document.getElementById("edit-athlete-btn");
         if (editBtn) {
             editBtn.onclick = () => renderEditForm(athlete);
+        }
+
+        const genUserBtn = document.getElementById("generate-user-btn");
+        if (genUserBtn) {
+            genUserBtn.onclick = async () => {
+                if (!confirm(`Vuoi generare un accesso per ${athlete.full_name}? Verrà inviata una mail a ${athlete.email}`)) return;
+                UI.loading(true);
+                try {
+                    await AthletesAPI.generateUser(athlete.id);
+                    UI.toast("Utente generato correttamente", "success");
+                    await renderProfile(athlete.id, currentTab);
+                } catch (e) {
+                    UI.toast(e.message, "error");
+                } finally {
+                    UI.loading(false);
+                }
+            };
         }
 
         document.querySelectorAll("#athlete-tab-bar .fusion-tab").forEach(btn => {
@@ -245,7 +276,7 @@ const Athletes = (() => {
                 addAnagraficaListeners(athlete);
                 break;
             case 'pagamenti':
-                panel.innerHTML = AthletesView.tabPagamenti(athlete);
+                await renderPayments(panel, athlete);
                 break;
             case 'documenti':
                 panel.innerHTML = AthletesView.tabDocumenti(athlete, true);
@@ -253,6 +284,9 @@ const Athletes = (() => {
                 break;
             case 'metrics':
                 await AthletesMetrics.render(panel, athlete.id);
+                break;
+            case 'subusers':
+                await renderSubUsers(panel, athlete);
                 break;
             // Add other tabs here...
         }
@@ -336,7 +370,21 @@ const Athletes = (() => {
     }
 
     function addDocumentListeners(athlete) {
-        const docTypes = ['contract-file', 'id-doc-front', 'id-doc-back', 'cf-doc-front', 'cf-doc-back', 'med-cert'];
+        const docTypes = [
+            'contract-file', 'id-doc-front', 'id-doc-back', 'cf-doc-front', 'cf-doc-back', 'med-cert',
+            'photo-release', 'privacy-policy', 'guesthouse-rules', 'guesthouse-delegate', 'health-card'
+        ];
+        
+        // Toggle Foresteria
+        document.getElementById("toggle-foresteria-btn")?.addEventListener("click", () => {
+            const container = document.getElementById("foresteria-docs-container");
+            if (container) {
+                const isHidden = container.style.display === "none";
+                container.style.display = isHidden ? "block" : "none";
+                document.getElementById("toggle-foresteria-btn").style.background = isHidden ? "rgba(255, 255, 255, 0.08)" : "rgba(255, 255, 255, 0.02)";
+            }
+        });
+
         docTypes.forEach(type => {
             const btn = document.getElementById(`upload-${type}-btn`);
             const input = document.getElementById(`upload-${type}-input`);
@@ -361,6 +409,59 @@ const Athletes = (() => {
                 };
             }
         });
+    }
+
+    async function renderSubUsers(panel, athlete) {
+        panel.innerHTML = '<div class="loader-spinner"></div>';
+        try {
+            const subs = await Store.get("getSubUsers", "auth");
+            panel.innerHTML = AthletesView.tabSubUsers(subs);
+
+            // Add Invite Listener
+            const inviteBtn = document.getElementById("invite-subuser-btn");
+            const modal = document.getElementById("invite-modal");
+            const closeBtn = document.getElementById("close-invite-modal");
+            const confirmBtn = document.getElementById("confirm-invite-btn");
+
+            if (inviteBtn && modal) {
+                inviteBtn.onclick = () => modal.style.display = "flex";
+                closeBtn.onclick = () => modal.style.display = "none";
+                
+                confirmBtn.onclick = async () => {
+                    const email = document.getElementById("invite-email").value;
+                    const name = document.getElementById("invite-name").value;
+
+                    if (!email || !name) {
+                        UI.toast("Inserisci tutti i dati", "error");
+                        return;
+                    }
+
+                    UI.loading(true);
+                    try {
+                        await Store.api("inviteSubUser", "auth", { email, full_name: name });
+                        UI.toast("Invito inviato con successo!", "success");
+                        modal.style.display = "none";
+                        await renderSubUsers(panel, athlete);
+                    } catch (e) {
+                        UI.toast(e.message, "error");
+                    } finally {
+                        UI.loading(false);
+                    }
+                };
+            }
+        } catch (e) {
+            panel.innerHTML = Utils.emptyState("Errore caricamento sotto-utenti", e.message);
+        }
+    }
+
+    async function renderPayments(panel, athlete) {
+        panel.innerHTML = '<div class="loader-spinner"></div>';
+        try {
+            const data = await Store.get("getPlan", "payments", { id: athlete.id });
+            panel.innerHTML = AthletesView.tabPagamenti(data);
+        } catch (e) {
+            panel.innerHTML = Utils.emptyState("Errore caricamento pagamenti", e.message);
+        }
     }
 
     async function refreshData(variant = 'anagrafica') {

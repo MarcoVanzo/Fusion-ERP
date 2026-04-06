@@ -177,19 +177,31 @@ export const AthletesView = {
     /**
      * Layout del profilo atleta (Header + Tabs)
      */
-    profileLayout: (athlete, currentTab = 'anagrafica') => {
+    profileLayout: (athlete, currentTab = 'anagrafica', user = null) => {
         const photoHtml = athlete.photo_path 
             ? `<img src="${Utils.escapeHtml(athlete.photo_path)}" class="athlete-hero-photo" alt="${athlete.full_name}">`
             : `<div class="athlete-hero-photo" style="display:flex;align-items:center;justify-content:center;background:var(--color-bg-card);"><span style="font-family:var(--font-display);font-size:5rem;font-weight:700;color:rgba(255,255,255,0.1);">${Utils.initials(athlete.full_name)}</span></div>`;
 
         return `
-            <div style="padding: 0 var(--sp-4) var(--sp-4); display:flex; justify-content:space-between; align-items:center;">
+            <div style="padding: 0 var(--sp-4) var(--sp-4); display:flex; justify-content:space-between; align-items:center; gap:12px;">
                 <button class="btn btn-default btn-sm" id="back-to-list" style="background:rgba(255,255,255,0.05); border-color:rgba(255,255,255,0.1);">
                     <i class="ph ph-arrow-left"></i> Torna alla lista
                 </button>
-                <button class="btn btn-primary btn-sm" id="edit-athlete-btn" style="box-shadow: 0 4px 12px rgba(255, 0, 122, 0.2);">
-                    <i class="ph ph-pencil-simple"></i> Modifica Atleta
-                </button>
+                <div style="display:flex; gap:12px;">
+                    ${user && user.role === 'admin' && !athlete.user_id && athlete.email ? `
+                        <button class="btn btn-accent btn-sm" id="generate-user-btn" style="background:var(--color-primary); color:white;">
+                            <i class="ph ph-user-plus"></i> Genera Utente
+                        </button>
+                    ` : ''}
+                    ${user && user.role === 'admin' && !athlete.email && !athlete.user_id ? `
+                        <div class="badge badge-error" style="font-size:11px; padding:4px 10px; opacity:0.7;" title="Inserisci una mail per generare l'utente">
+                            Mancano recapiti per utente
+                        </div>
+                    ` : ''}
+                    <button class="btn btn-primary btn-sm" id="edit-athlete-btn" style="box-shadow: 0 4px 12px rgba(255, 0, 122, 0.2);">
+                        <i class="ph ph-pencil-simple"></i> Modifica Atleta
+                    </button>
+                </div>
             </div>
 
             <div class="athlete-hero">
@@ -214,6 +226,9 @@ export const AthletesView = {
                     <button class="fusion-tab" data-tab="pagamenti">Pagamenti</button>
                     <button class="fusion-tab" data-tab="metrics" style="color:var(--color-pink)">Performance (VALD)</button>
                     <button class="fusion-tab" data-tab="documenti">Documenti</button>
+                    ${user && user.role === 'atleta' ? `
+                        <button class="fusion-tab" data-tab="subusers">Sotto-Utenti</button>
+                    ` : ''}
                 </div>
             </div>
 
@@ -221,6 +236,9 @@ export const AthletesView = {
             <div id="tab-panel-pagamenti" class="athlete-tab-panel" style="display:none;padding:24px 16px;"></div>
             <div id="tab-panel-metrics" class="athlete-tab-panel" style="display:none;padding:24px 16px;"></div>
             <div id="tab-panel-documenti" class="athlete-tab-panel" style="display:none;padding:24px 16px;"></div>
+            ${user && user.role === 'atleta' ? `
+                <div id="tab-panel-subusers" class="athlete-tab-panel" style="display:none;padding:24px 16px;"></div>
+            ` : ''}
         `;
     },
 
@@ -512,15 +530,44 @@ export const AthletesView = {
                                     <option value="none" ${athlete?.communication_preference === 'none' ? 'selected' : ''}>Nessuna</option>
                                 </select>
                             </div>
+                            <div class="form-group">
+                                <label class="form-label">Modulo Privacy (File)</label>
+                                <input name="privacy_policy_file_path" class="form-input" readonly placeholder="Sola lettura - caricare in 'Documenti'" value="${Utils.escapeHtml(athlete?.privacy_policy_file_path || '')}">
+                            </div>
                             <div class="form-group" style="margin-top:10px;">
                                 <label class="multi-team-option ${athlete?.image_release_consent ? 'selected' : ''}" style="padding:16px; display:flex; align-items:center; gap:12px;">
                                     <input type="checkbox" name="image_release_consent" value="1" ${athlete?.image_release_consent ? 'checked' : ''} style="width:20px; height:20px;">
                                     <span style="font-size:13px; font-weight:600;">Consenso riprese video e foto (Social/Sito)</span>
                                 </label>
                             </div>
-                            <div style="margin-top:auto; padding:16px; background:rgba(255,193,7,0.05); border:1px solid rgba(255,193,7,0.1); border-radius:12px;">
-                                <p style="font-size:12px; color:rgba(255,255,255,0.5); line-height:1.5; margin:0;">
-                                    <i class="ph ph-info" style="color:var(--color-warning);"></i> Assicurarsi che l'atleta (o genitore se minorenne) abbia firmato il modulo cartaceo prima di flaggare i consensi digitali.
+                        </div>
+                    </div>
+
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:32px;">
+                        <!-- Sezione 6: Foresteria -->
+                        <div style="display:flex;flex-direction:column;gap:16px;">
+                            <h4 style="font-size:12px;text-transform:uppercase;color:var(--color-pink);letter-spacing:0.1em;border-bottom:1px solid rgba(255,255,255,0.05);padding-bottom:8px;">Ospitalità (Foresteria)</h4>
+                            <div class="form-group">
+                                <label class="form-label">Regolamento Firmato (File)</label>
+                                <input name="guesthouse_rules_file_path" class="form-input" readonly value="${Utils.escapeHtml(athlete?.guesthouse_rules_file_path || '')}">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Delega (File)</label>
+                                <input name="guesthouse_delegate_file_path" class="form-input" readonly value="${Utils.escapeHtml(athlete?.guesthouse_delegate_file_path || '')}">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Tessera Sanitaria (File)</label>
+                                <input name="health_card_file_path" class="form-input" readonly value="${Utils.escapeHtml(athlete?.health_card_file_path || '')}">
+                            </div>
+                        </div>
+
+                         <!-- Informativa -->
+                        <div style="display:flex;flex-direction:column;justify-content:center;">
+                             <div style="padding:24px; background:rgba(255,193,7,0.05); border:1px solid rgba(255,193,7,0.1); border-radius:12px;">
+                                <p style="font-size:13px; color:rgba(255,255,255,0.6); line-height:1.6; margin:0;">
+                                    <i class="ph ph-info" style="color:var(--color-warning); font-size:18px;"></i><br>
+                                    I percorsi dei file sono di sola lettura in questo form per prevenire errori manuali. 
+                                    Per aggiornare i documenti (PDF/Foto), utilizza la scheda <strong>"Documenti"</strong> nel profilo dell'atleta.
                                 </p>
                             </div>
                         </div>
@@ -540,21 +587,98 @@ export const AthletesView = {
     /**
      * Tab: Pagamenti
      */
-    tabPagamenti: (athlete) => `
-        <div class="card glass-card" style="padding:60px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:24px; border:1px dashed rgba(255,255,255,0.1); background:rgba(255,255,255,0.01);">
-            <div style="width:80px; height:80px; border-radius:50%; background:rgba(255,255,255,0.03); display:flex; align-items:center; justify-content:center; color:rgba(255,255,255,0.2);">
-                <i class="ph ph-currency-eur" style="font-size:40px;"></i>
+    tabPagamenti: (data) => {
+        if (!data || !data.plan) {
+            return `
+                <div class="card glass-card" style="padding:40px; text-align:center;">
+                    <i class="ph ph-currency-eur" style="font-size:48px; color:var(--text-muted); opacity:0.3; margin-bottom:16px;"></i>
+                    <h3 style="font-size:18px; color:var(--color-white); margin-bottom:8px;">Nessun piano pagamenti attivo</h3>
+                    <p style="color:var(--text-muted); font-size:14px;">Contatta la segreteria per attivare il tuo piano rateale.</p>
+                </div>
+            `;
+        }
+
+        const plan = data.plan;
+        const installments = data.installments || [];
+        const stats = data.stats || {};
+
+        return `
+            <div style="display:flex; flex-direction:column; gap:24px;">
+                <!-- Riepilogo Piano -->
+                <div class="card glass-card" style="background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%); padding:24px;">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:24px;">
+                        <div>
+                            <span class="badge badge-primary" style="margin-bottom:8px; font-size:10px;">PIANO ATTIVO</span>
+                            <h3 style="font-size:24px; font-weight:700; color:var(--color-white); margin-bottom:4px;">Stato Pagamenti</h3>
+                            <p style="font-size:13px; color:var(--text-muted);">Piano del ${Utils.formatDate(plan.start_date)} · Frequenza: ${plan.frequency}</p>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-size:12px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:4px;">Totale Piano</div>
+                            <div style="font-size:28px; font-weight:800; color:var(--color-white); font-family:var(--font-display);">€ ${Utils.formatNumber(plan.total_amount)}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stats-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:16px; border-top:1px solid rgba(255,255,255,0.05); padding-top:24px;">
+                        <div class="stat-item">
+                            <div style="font-size:11px; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">Pagato</div>
+                            <div style="font-size:18px; font-weight:700; color:var(--color-success);">€ ${Utils.formatNumber(stats.total_paid)}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div style="font-size:11px; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">In Scadenza / Arretrati</div>
+                            <div style="font-size:18px; font-weight:700; color:${stats.total_overdue > 0 ? 'var(--color-danger)' : 'var(--color-white)'};">€ ${Utils.formatNumber(stats.total_overdue)}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div style="font-size:11px; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">Rimanente</div>
+                            <div style="font-size:18px; font-weight:700; color:var(--color-white);">€ ${Utils.formatNumber(stats.total_remaining)}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lista Rate -->
+                <div class="card glass-card" style="padding:0; overflow:hidden;">
+                    <div style="padding:20px 24px; border-bottom:1px solid rgba(255,255,255,0.05); display:flex; justify-content:space-between; align-items:center;">
+                        <h4 style="font-size:14px; font-weight:600; color:var(--color-white); margin:0;">Dettaglio Rate</h4>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table" style="margin:0;">
+                            <thead>
+                                <tr>
+                                    <th style="padding-left:24px;">Scadenza</th>
+                                    <th>Importo</th>
+                                    <th>Stato</th>
+                                    <th style="text-align:right; padding-right:24px;">Azioni</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${installments.map(inst => {
+                                    const isPaid = inst.status === 'PAID';
+                                    const isOverdue = inst.status === 'OVERDUE';
+                                    return `
+                                        <tr>
+                                            <td style="padding-left:24px; font-weight:500;">${Utils.formatDate(inst.due_date)}</td>
+                                            <td style="font-weight:600; font-family:var(--font-display);">€ ${Utils.formatNumber(inst.amount)}</td>
+                                            <td>
+                                                <span class="badge ${isPaid ? 'badge-success' : (isOverdue ? 'badge-danger' : 'badge-white')}" style="font-size:10px;">
+                                                    ${inst.status}
+                                                </span>
+                                            </td>
+                                            <td style="text-align:right; padding-right:24px;">
+                                                ${inst.receipt_path ? `
+                                                    <a href="${inst.receipt_path}" target="_blank" class="btn btn-ghost btn-sm" style="padding:4px 8px; font-size:11px;">
+                                                        <i class="ph ph-file-pdf"></i> RICEVUTA
+                                                    </a>
+                                                ` : '-'}
+                                            </td>
+                                        </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
-            <div>
-                <h3 style="font-family:var(--font-display); font-size:20px; color:var(--color-white); margin-bottom:8px;">Modulo Pagamenti & Scadenze</h3>
-                <p style="color:var(--color-text-muted); max-width:400px; margin:0 auto; line-height:1.6;">Lo storico dei versamenti, le rate in scadenza e la gestione contabile dell'atleta saranno disponibili nel prossimo modulo di aggiornamento.</p>
-            </div>
-            <div style="display:flex; gap:12px; margin-top:12px;">
-                <span class="badge badge-white" style="opacity:0.4; font-size:10px;">PROSSIMAMENTE</span>
-                <span class="badge badge-white" style="opacity:0.4; font-size:10px;">GESTIONALE CONTABILE</span>
-            </div>
-        </div>
-    `,
+        `;
+    },
 
     /**
      * Tab: Documenti
@@ -566,45 +690,137 @@ export const AthletesView = {
             { id: 'id-doc-back', label: 'Documento ID (Retro)', path: athlete.id_doc_back_file_path, icon: 'ph-identification-badge' },
             { id: 'cf-doc-front', label: 'Codice Fiscale (Fronte)', path: athlete.cf_doc_front_file_path, icon: 'ph-identification-card' },
             { id: 'cf-doc-back', label: 'Codice Fiscale (Retro)', path: athlete.cf_doc_back_file_path, icon: 'ph-identification-card' },
-            { id: 'med-cert', label: 'Certificato Medico', path: athlete.medical_cert_file_path, icon: 'ph-article-ny-times' }
+            { id: 'med-cert', label: 'Certificato Medico', path: athlete.medical_cert_file_path, icon: 'ph-article-ny-times' },
+            { id: 'photo-release', label: 'Liberatoria Foto/Video', path: athlete.photo_release_file_path, icon: 'ph-camera' },
+            { id: 'privacy-policy', label: 'Informativa Privacy', path: athlete.privacy_policy_file_path, icon: 'ph-shield-checkered' }
         ];
 
-        return `
-            <div class="docs-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:20px;">
-                ${docs.map(doc => {
-                    const hasFile = !!doc.path;
-                    return `
-                        <div class="doc-card card glass-card" style="padding:24px; display:flex; flex-direction:column; gap:20px; border:1px solid ${hasFile ? 'rgba(0, 230, 118, 0.15)' : 'rgba(255,255,255,0.05)'}; background:${hasFile ? 'rgba(0, 230, 118, 0.02)' : 'rgba(255,255,255,0.01)'}; transition: transform 0.2s, background 0.2s;">
-                            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                                <div style="width:48px; height:48px; border-radius:12px; background:rgba(255,255,255,0.04); display:flex; align-items:center; justify-content:center; color:${hasFile ? 'var(--color-success)' : 'rgba(255,255,255,0.2)'};">
-                                    <i class="ph ${doc.icon}" style="font-size:24px;"></i>
-                                </div>
-                                <span class="badge ${hasFile ? 'badge-success' : 'badge-pink'}" style="font-size:10px; padding:4px 10px;">
-                                    ${hasFile ? 'CARICATO' : 'MANCANTE'}
-                                </span>
-                            </div>
-                            
-                            <div>
-                                <h4 style="font-size:14px; font-weight:600; color:var(--color-white); margin-bottom:4px;">${doc.label}</h4>
-                                <p style="font-size:11px; color:var(--color-text-muted);">${hasFile ? 'Documento verificato e pronto per la consultazione.' : 'Il documento non è ancora stato caricato nel sistema.'}</p>
-                            </div>
+        const foresteriaDocs = [
+            { id: 'guesthouse-rules', label: 'Regolamento Foresteria', path: athlete.guesthouse_rules_file_path, icon: 'ph-house-line' },
+            { id: 'guesthouse-delegate', label: 'Delega', path: athlete.guesthouse_delegate_file_path, icon: 'ph-signature' },
+            { id: 'health-card', label: 'Tessera Sanitaria', path: athlete.health_card_file_path, icon: 'ph-identification-card' }
+        ];
 
-                            <div style="display:flex; gap:10px; margin-top:auto; padding-top:16px; border-top:1px solid rgba(255,255,255,0.05);">
-                                ${hasFile ? `
-                                    <button class="btn btn-default btn-xs" style="flex:1; background:rgba(0, 230, 118, 0.1); border-color:rgba(0, 230, 118, 0.2); color:var(--color-success);" onclick="window.open('api/?module=athletes&action=downloadDoc&id=${athlete.id}&field=${doc.id.replace(/-/g,'_')}_path', '_blank')">
-                                        <i class="ph ph-eye"></i> Visualizza
-                                    </button>
-                                ` : ''}
-                                ${canUpload ? `
-                                    <button class="btn btn-ghost btn-xs" id="upload-${doc.id}-btn" style="flex:${hasFile ? '0.5' : '1'}; background:rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.1);">
-                                        <i class="ph ph-upload-simple"></i> ${hasFile ? 'Sostituisci' : 'Carica PDF/Foto'}
-                                    </button>
-                                    <input type="file" id="upload-${doc.id}-input" style="display:none;" accept=".pdf,image/*">
-                                ` : ''}
-                            </div>
+        const renderDocCard = (doc) => {
+            const hasFile = !!doc.path;
+            return `
+                <div class="doc-card card glass-card" style="padding:24px; display:flex; flex-direction:column; gap:20px; border:1px solid ${hasFile ? 'rgba(0, 230, 118, 0.15)' : 'rgba(255,255,255,0.05)'}; background:${hasFile ? 'rgba(0, 230, 118, 0.02)' : 'rgba(255,255,255,0.01)'}; transition: transform 0.2s, background 0.2s;">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                        <div style="width:48px; height:48px; border-radius:12px; background:rgba(255,255,255,0.04); display:flex; align-items:center; justify-content:center; color:${hasFile ? 'var(--color-success)' : 'rgba(255,255,255,0.2)'};">
+                            <i class="ph ${doc.icon}" style="font-size:24px;"></i>
                         </div>
-                    `;
-                }).join('')}
+                        <span class="badge ${hasFile ? 'badge-success' : 'badge-pink'}" style="font-size:10px; padding:4px 10px;">
+                            ${hasFile ? 'CARICATO' : 'MANCANTE'}
+                        </span>
+                    </div>
+                    
+                    <div>
+                        <h4 style="font-size:14px; font-weight:600; color:var(--color-white); margin-bottom:4px;">${doc.label}</h4>
+                        <p style="font-size:11px; color:var(--color-text-muted);">${hasFile ? 'Documento verificato e pronto per la consultazione.' : 'Il documento non è ancora stato caricato nel sistema.'}</p>
+                    </div>
+
+                    <div style="display:flex; gap:10px; margin-top:auto; padding-top:16px; border-top:1px solid rgba(255,255,255,0.05);">
+                        ${hasFile ? `
+                            <button class="btn btn-default btn-xs" style="flex:1; background:rgba(0, 230, 118, 0.1); border-color:rgba(0, 230, 118, 0.2); color:var(--color-success);" onclick="window.open('api/?module=athletes&action=downloadDoc&id=${athlete.id}&field=${doc.id.replace(/-/g,'_')}_file_path', '_blank')">
+                                <i class="ph ph-eye"></i> Visualizza
+                            </button>
+                        ` : ''}
+                        ${canUpload ? `
+                            <button class="btn btn-ghost btn-xs" id="upload-${doc.id}-btn" style="flex:${hasFile ? '0.5' : '1'}; background:rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.1);">
+                                <i class="ph ph-upload-simple"></i> ${hasFile ? 'Sostituisci' : 'Carica PDF/Foto'}
+                            </button>
+                            <input type="file" id="upload-${doc.id}-input" style="display:none;" accept=".pdf,image/*">
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        };
+
+        return `
+            <div style="display:flex; flex-direction:column; gap:32px;">
+                <!-- Sezione Documenti Principali -->
+                <div class="docs-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:20px;">
+                    ${docs.map(doc => renderDocCard(doc)).join('')}
+                </div>
+
+                <!-- Sezione Sotto-sezione Foresteria -->
+                <div class="foresteria-section-toggle" style="margin-top:20px; padding-top:20px; border-top:1px solid rgba(255,255,255,0.05); text-align:center;">
+                    <button class="btn btn-ghost" id="toggle-foresteria-btn" style="padding:16px 40px; border-radius:30px; font-weight:700; letter-spacing:0.05em; background:rgba(255,255,255,0.02);">
+                        <i class="ph ph-buildings"></i> SEZIONE FORESTERIA
+                    </button>
+                </div>
+
+                <div id="foresteria-docs-container" style="display:none;">
+                    <div style="margin-bottom:24px; padding:0 8px;">
+                        <h3 style="font-family:var(--font-display); font-size:18px; color:var(--color-pink); margin-bottom:4px;">Documenti Foresteria</h3>
+                        <p style="color:var(--color-text-muted); font-size:12px;">Documentazione specifica per le atlete residenti presso la Foresteria Fusion.</p>
+                    </div>
+                    <div class="docs-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:20px;">
+                        ${foresteriaDocs.map(doc => renderDocCard(doc)).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
+    /**
+     * Tab: Sotto-Utenti (Management for Athlete Portal)
+     */
+    tabSubUsers: (subs = []) => {
+        return `
+            <div class="card glass-card" style="padding:24px; border:1px solid rgba(255,255,255,0.05); background:rgba(255,255,255,0.01);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+                    <div>
+                        <h3 style="font-family:var(--font-display); font-size:20px; color:var(--color-white); margin-bottom:4px;">Gestione Sotto-Utenti</h3>
+                        <p style="color:var(--color-text-muted); font-size:13px;">Puoi invitare fino a 2 persone (es. genitori o tutor) a visualizzare il tuo profilo.</p>
+                    </div>
+                    ${subs.length < 2 ? `
+                        <button class="btn btn-primary btn-sm" id="invite-subuser-btn">
+                            <i class="ph ph-user-plus"></i> Invita Persona
+                        </button>
+                    ` : `
+                        <span class="badge badge-white" style="opacity:0.5;">Limite raggiunto (2/2)</span>
+                    `}
+                </div>
+
+                <div class="subs-list" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:16px;">
+                    ${subs.length === 0 ? `
+                        <div style="grid-column: 1 / -1; padding:40px; text-align:center; color:rgba(255,255,255,0.2);">
+                            <i class="ph ph-users" style="font-size:48px; margin-bottom:12px;"></i>
+                            <p>Nessun sotto-utente attivo.</p>
+                        </div>
+                    ` : subs.map(s => `
+                        <div class="card" style="padding:16px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); display:flex; align-items:center; gap:12px;">
+                            <div style="width:40px; height:40px; border-radius:50%; background:var(--color-primary); display:flex; align-items:center; justify-content:center; color:white; font-weight:bold;">
+                                ${Utils.initials(s.full_name)}
+                            </div>
+                            <div style="flex:1;">
+                                <div style="font-weight:600; color:white;">${Utils.escapeHtml(s.full_name)}</div>
+                                <div style="font-size:12px; color:rgba(255,255,255,0.4);">${Utils.escapeHtml(s.email)}</div>
+                            </div>
+                            <span class="badge badge-success" style="font-size:10px;">ATTIVO</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+
+            <!-- Modal Invito (Hidden by default) -->
+            <div id="invite-modal" class="modal-fusion" style="display:none;">
+                <div class="modal-content glass-card" style="max-width:400px; padding:24px;">
+                    <h3 style="margin-bottom:16px;">Invita Sotto-utente</h3>
+                    <div class="form-group">
+                        <label class="form-label">Nome Completo</label>
+                        <input type="text" id="invite-name" class="form-input" placeholder="es. Mario Rossi">
+                    </div>
+                    <div class="form-group" style="margin-top:12px;">
+                        <label class="form-label">Email</label>
+                        <input type="email" id="invite-email" class="form-input" placeholder="mario.rossi@example.com">
+                    </div>
+                    <div style="margin-top:24px; display:flex; justify-content:flex-end; gap:12px;">
+                        <button class="btn btn-ghost" id="close-invite-modal">Annulla</button>
+                        <button class="btn btn-primary" id="confirm-invite-btn">Invia Invito</button>
+                    </div>
+                </div>
             </div>
         `;
     }

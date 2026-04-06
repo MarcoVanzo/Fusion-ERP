@@ -182,6 +182,7 @@ class Auth
             'role' => $user['role'],
             'fullName' => $user['full_name'],
             'tenant_id' => $user['tenantId'] ?? null,
+            'parent_user_id' => $user['parent_user_id'] ?? null,
             'permissions' => $perms,
         ];
     }
@@ -224,6 +225,7 @@ class Auth
             'athlete-payments' => 'read',
             'athlete-metrics' => 'read',
             'athlete-documents' => 'read',
+            'payments' => 'read',
             'biometrics' => 'read',
             'teams' => 'read',
             'results' => 'read',

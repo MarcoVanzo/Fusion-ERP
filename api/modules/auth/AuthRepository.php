@@ -151,7 +151,7 @@ class AuthRepository
     public function getUserById(string $id): ?array
     {
         $stmt = $this->db->prepare(
-            'SELECT id, email, role, full_name, phone, is_active, last_login_at, created_at
+            'SELECT id, email, role, full_name, phone, is_active, last_login_at, created_at, parent_user_id
              FROM users WHERE id = :id AND deleted_at IS NULL LIMIT 1'
         );
         $stmt->execute([':id' => $id]);
@@ -162,7 +162,7 @@ class AuthRepository
 
     public function listUsers(string $role = ''): array
     {
-        $sql = 'SELECT u.id, u.email, u.role, u.full_name, u.phone, u.is_active, u.last_login_at, u.created_at, t.roles as tenant_roles
+        $sql = 'SELECT u.id, u.email, u.role, u.full_name, u.phone, u.is_active, u.last_login_at, u.created_at, u.parent_user_id, t.roles as tenant_roles
                 FROM users u
                 LEFT JOIN tenant_users t ON u.id = t.user_id
                 WHERE u.deleted_at IS NULL';
@@ -195,8 +195,8 @@ class AuthRepository
             $this->db->beginTransaction();
 
             $stmt = $this->db->prepare(
-                'INSERT INTO users (id, email, pwd_hash, role, full_name, phone, is_active)
-                 VALUES (:id, :email, :pwd_hash, :role, :full_name, :phone, 0)'
+                'INSERT INTO users (id, email, pwd_hash, role, full_name, phone, is_active, parent_user_id)
+                 VALUES (:id, :email, :pwd_hash, :role, :full_name, :phone, 0, :parent_id)'
             );
             $stmt->execute([
                 ':id' => $data['id'],
@@ -205,6 +205,7 @@ class AuthRepository
                 ':role' => $data['role'],
                 ':full_name' => $data['full_name'],
                 ':phone' => $data['phone'] ?? null,
+                ':parent_id' => $data['parent_user_id'] ?? null,
             ]);
 
             $permissionsJson = '[]';
@@ -335,5 +336,56 @@ class AuthRepository
              WHERE id = :id'
         );
         $stmt->execute([':id' => $userId]);
+    }
+
+    /**
+     * Sub-users & Invitations
+     */
+
+    public function countSubUsers(string $parentId): int
+    {
+        $stmt = $this->db->prepare('SELECT COUNT(*) FROM users WHERE parent_user_id = :parent_id AND deleted_at IS NULL');
+        $stmt->execute([':parent_id' => $parentId]);
+        return (int)$stmt->fetchColumn();
+    }
+
+    public function createInvitation(array $data): void
+    {
+        $stmt = $this->db->prepare(
+            'INSERT INTO user_invitations (id, inviter_user_id, email, token, status, expires_at)
+             VALUES (:id, :inviter_id, :email, :token, \'pending\', :expires_at)'
+        );
+        $stmt->execute([
+            ':id' => 'INV_' . bin2hex(random_bytes(4)),
+            ':inviter_id' => $data['inviter_id'],
+            ':email' => $data['email'],
+            ':token' => $data['token'],
+            ':expires_at' => $data['expires_at']
+        ]);
+    }
+
+    public function getInvitationByToken(string $token): ?array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT * FROM user_invitations WHERE token = :token AND status = \'pending\' AND expires_at > NOW() LIMIT 1'
+        );
+        $stmt->execute([':token' => $token]);
+        return $stmt->fetch() ?: null;
+    }
+
+    public function updateInvitationStatus(string $id, string $status): void
+    {
+        $stmt = $this->db->prepare('UPDATE user_invitations SET status = :status WHERE id = :id');
+        $stmt->execute([':status' => $status, ':id' => $id]);
+    }
+
+    public function getSubUsers(string $parentId): array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT id, email, full_name, is_active, created_at FROM users 
+             WHERE parent_user_id = :parent_id AND deleted_at IS NULL'
+        );
+        $stmt->execute([':parent_id' => $parentId]);
+        return $stmt->fetchAll();
     }
 }

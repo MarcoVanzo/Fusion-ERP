@@ -24,10 +24,12 @@ class FipavScraperClient
         'corsproxy.io'
     ];
 
-    private string $gasProxyUrl = 'https://script.google.com/macros/s/AKfycbyTnt-3_D9uJgYl1I1n9eH3f6Vl6-L9Z8H1R0Jz_mKkE_1JvG1xK2G5X5W5l1p1s-/exec';
+    private string $gasProxyUrl;
 
     public function __construct()
     {
+        $this->gasProxyUrl = (getenv('GAS_PROXY_URL') ?: ($_SERVER['GAS_PROXY_URL'] ?? $_ENV['GAS_PROXY_URL'] ?? '')) 
+            ?: 'https://script.google.com/macros/s/AKfycbyTnt-3_D9uJgYl1I1n9eH3f6Vl6-L9Z8H1R0Jz_mKkE_1JvG1xK2G5X5W5l1p1s-/exec';
     }
 
     public function fetch(string $url, string&$errorDetails = ''): ?string

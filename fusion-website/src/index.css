@@ -86,6 +86,21 @@
     background: linear-gradient(to right, rgba(24, 24, 27, 0.5) 4%, rgba(39, 39, 42, 0.8) 25%, rgba(24, 24, 27, 0.5) 36%);
     background-size: 1000px 100%;
   }
+
+  /* Neon pulsing animation for "lampeggio" effect */
+  @keyframes neon-pulse {
+    0%, 100% { 
+      opacity: 1; 
+      filter: drop-shadow(0 0 15px rgba(255, 20, 147, 0.8));
+    }
+    50% { 
+      opacity: 0.4; 
+      filter: drop-shadow(0 0 5px rgba(255, 20, 147, 0.2));
+    }
+  }
+  .animate-neon-pulse {
+    animation: neon-pulse 1.5s ease-in-out infinite;
+  }
 }
 
 /* Custom Webkit Scrollbar */

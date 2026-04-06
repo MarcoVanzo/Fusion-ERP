@@ -81,16 +81,16 @@ class AthletesRepository
     }
 
     /**
-     * PERF: Light version for the athlete list view — returns only the fields
-     * needed to render the athlete card (~75% less payload than listAthletes).
-     * Full data is fetched on-demand when opening a single athlete profile.
+     * PERF: Light version for the athlete list view
      */
     public function listAthletesLight(string $teamSeasonId = ''): array
     {
-        // Build document columns dynamically — handles case where V066 migration hasn't been applied yet
+        // Build document columns dynamically
         $docCols = '';
         $docFields = ['contract_file_path', 'id_doc_front_file_path', 'id_doc_back_file_path',
-                       'cf_doc_front_file_path', 'cf_doc_back_file_path', 'medical_cert_file_path'];
+                       'cf_doc_front_file_path', 'cf_doc_back_file_path', 'medical_cert_file_path',
+                       'photo_release_file_path', 'privacy_policy_file_path', 'guesthouse_rules_file_path',
+                       'guesthouse_delegate_file_path', 'health_card_file_path'];
         if ($this->_hasColumn('athletes', 'contract_file_path')) {
             $docCols = ', a.' . implode(', a.', $docFields);
         }
@@ -109,7 +109,6 @@ class AthletesRepository
         $params = [];
         if ($teamSeasonId !== '') {
             if (str_starts_with($teamSeasonId, 'TEAM_')) {
-                // Legacy support for public website API which passes team_id instead of team_season_id
                 $sql .= ' WHERE a.deleted_at IS NULL AND a.is_active = 1 AND a.team_id = :team_id';
                 $params[':team_id'] = $teamSeasonId;
             } else {
@@ -135,11 +134,12 @@ class AthletesRepository
 
     public function getAthleteById(string $id): ?array
     {
-        // Document columns may not exist if V066 migration hasn't been applied
         $docCols = '';
         if ($this->_hasColumn('athletes', 'contract_file_path')) {
             $docCols = ', a.contract_file_path, a.id_doc_front_file_path, a.id_doc_back_file_path,
-                    a.cf_doc_front_file_path, a.cf_doc_back_file_path, a.medical_cert_file_path';
+                    a.cf_doc_front_file_path, a.cf_doc_back_file_path, a.medical_cert_file_path,
+                    a.photo_release_file_path, a.privacy_policy_file_path,
+                    a.guesthouse_rules_file_path, a.guesthouse_delegate_file_path, a.health_card_file_path';
         }
 
         $stmt = $this->db->prepare(
@@ -166,14 +166,11 @@ class AthletesRepository
         );
         $stmt->execute([':id' => $id]);
         $row = $stmt->fetch();
-        if (!$row)
-            return null;
+        if (!$row) return null;
 
-        // Append all teams from athlete_teams junction table (if exists)
         $teams = $this->getAthleteTeams($id);
-        $row['team_ids'] = array_column($teams, 'id');
+        $row['team_ids'] = array_column($teams, 'team_season_id');
         $row['team_names'] = $teams;
-        // Fallback: if no junction rows yet, use legacy team_id
         if (empty($row['team_ids']) && !empty($row['team_id'])) {
             $row['team_ids'] = [$row['team_id']];
         }
@@ -182,11 +179,12 @@ class AthletesRepository
 
     public function getAthleteByUserId(string $userId): ?array
     {
-        // Document columns may not exist if V066 migration hasn't been applied
         $docCols = '';
         if ($this->_hasColumn('athletes', 'contract_file_path')) {
             $docCols = ', a.contract_file_path, a.id_doc_front_file_path, a.id_doc_back_file_path,
-                    a.cf_doc_front_file_path, a.cf_doc_back_file_path, a.medical_cert_file_path';
+                    a.cf_doc_front_file_path, a.cf_doc_back_file_path, a.medical_cert_file_path,
+                    a.photo_release_file_path, a.privacy_policy_file_path,
+                    a.guesthouse_rules_file_path, a.guesthouse_delegate_file_path, a.health_card_file_path';
         }
 
         $stmt = $this->db->prepare(
@@ -213,27 +211,22 @@ class AthletesRepository
         );
         $stmt->execute([':user_id' => $userId]);
         $row = $stmt->fetch();
-        if (!$row)
-            return null;
+        if (!$row) return null;
 
-        // Append all teams from athlete_teams junction table (if exists)
         $teams = $this->getAthleteTeams($row['id']);
-        $row['team_ids'] = array_column($teams, 'id');
+        $row['team_ids'] = array_column($teams, 'team_season_id');
         $row['team_names'] = $teams;
-        // Fallback: if no junction rows yet, use legacy team_id
-        if (empty($row['team_ids']) && !empty($row['team_id'])) {
-            $row['team_ids'] = [$row['team_id']];
-        }
         return $row;
     }
 
     public function getAthleteByEmail(string $email): ?array
     {
-        // Document columns may not exist if V066 migration hasn't been applied
         $docCols = '';
         if ($this->_hasColumn('athletes', 'contract_file_path')) {
             $docCols = ', a.contract_file_path, a.id_doc_front_file_path, a.id_doc_back_file_path,
-                    a.cf_doc_front_file_path, a.cf_doc_back_file_path, a.medical_cert_file_path';
+                    a.cf_doc_front_file_path, a.cf_doc_back_file_path, a.medical_cert_file_path,
+                    a.photo_release_file_path, a.privacy_policy_file_path,
+                    a.guesthouse_rules_file_path, a.guesthouse_delegate_file_path, a.health_card_file_path';
         }
 
         $stmt = $this->db->prepare(
@@ -260,25 +253,14 @@ class AthletesRepository
         );
         $stmt->execute([':email' => $email]);
         $row = $stmt->fetch();
-        if (!$row)
-            return null;
+        if (!$row) return null;
 
-        // Append all teams from athlete_teams junction table (if exists)
         $teams = $this->getAthleteTeams($row['id']);
-        $row['team_ids'] = array_column($teams, 'id');
+        $row['team_ids'] = array_column($teams, 'team_season_id');
         $row['team_names'] = $teams;
-        // Fallback: if no junction rows yet, use legacy team_id
-        if (empty($row['team_ids']) && !empty($row['team_id'])) {
-            $row['team_ids'] = [$row['team_id']];
-        }
         return $row;
     }
 
-
-    /**
-     * Returns all team seasons associated with an athlete via athlete_teams junction.
-     * Gracefully returns empty array if the table does not yet exist.
-     */
     public function getAthleteTeams(string $athleteId): array
     {
         try {
@@ -299,22 +281,13 @@ class AthletesRepository
         }
     }
 
-    /**
-     * Replaces all team season associations for an athlete.
-     * Also keeps athletes.team_id in sync with the first team in the list.
-     *
-     * @param string   $athleteId
-     * @param string[] $teamSeasonIds Array of team_season IDs to associate
-     * @param string|null $primaryTeamId The base team ID to set on the athlete record
-     */
     public function setAthleteTeams(string $athleteId, array $teamSeasonIds, ?string $primaryTeamId = null): void
     {
         try {
-            // Remove existing associations
+            $this->db->beginTransaction();
             $del = $this->db->prepare('DELETE FROM athlete_teams WHERE athlete_id = :id');
             $del->execute([':id' => $athleteId]);
 
-            // Insert new ones
             if (!empty($teamSeasonIds)) {
                 $ins = $this->db->prepare(
                     'INSERT IGNORE INTO athlete_teams (athlete_id, team_season_id) VALUES (:athlete_id, :team_season_id)'
@@ -326,14 +299,14 @@ class AthletesRepository
                 }
             }
             
-            // Sync primary team_id on the athlete record if provided
             if ($primaryTeamId !== null) {
                 $upd = $this->db->prepare('UPDATE athletes SET team_id = :team_id WHERE id = :id');
                 $upd->execute([':team_id' => $primaryTeamId, ':id' => $athleteId]);
             }
+            $this->db->commit();
         }
         catch (\Throwable $e) {
-            // Table might not exist yet — silently ignore
+            $this->db->rollBack();
             error_log('[athlete_teams] setAthleteTeams failed: ' . $e->getMessage());
         }
     }
@@ -342,22 +315,22 @@ class AthletesRepository
     {
         $stmt = $this->db->prepare(
             'INSERT INTO athletes (
-                id, user_id, team_id,
-                first_name, last_name,
-                jersey_number, role,
-                birth_date, birth_place,
-                height_cm, weight_kg,
-                photo_path,
-                residence_address, residence_city,
-                fiscal_code, identity_document, federal_id,
-                email, phone,
-                parent_contact, parent_phone,
-                nationality, blood_group, allergies, medications,
-                emergency_contact_name, emergency_contact_phone,
-                communication_preference, image_release_consent,
-                medical_cert_type, medical_cert_expires_at, medical_cert_issued_at,
-                shirt_size, shoe_size,
-                is_active
+                `id`, `user_id`, `team_id`,
+                `first_name`, `last_name`,
+                `jersey_number`, `role`,
+                `birth_date`, `birth_place`,
+                `height_cm`, `weight_kg`,
+                `photo_path`,
+                `residence_address`, `residence_city`,
+                `fiscal_code`, `identity_document`, `federal_id`,
+                `email`, `phone`,
+                `parent_contact`, `parent_phone`,
+                `nationality`, `blood_group`, `allergies`, `medications`,
+                `emergency_contact_name`, `emergency_contact_phone`,
+                `communication_preference`, `image_release_consent`,
+                `medical_cert_type`, `medical_cert_expires_at`, `medical_cert_issued_at`,
+                `shirt_size`, `shoe_size`,
+                `is_active`
              ) VALUES (
                 :id, :user_id, :team_id,
                 :first_name, :last_name,
@@ -382,43 +355,17 @@ class AthletesRepository
 
     public function updateAthlete(string $id, array $data): void
     {
-        $data[':id'] = $id;
-        $stmt = $this->db->prepare(
-            'UPDATE athletes
-             SET first_name = :first_name,
-                 last_name = :last_name,
-                 jersey_number = :jersey_number,
-                 role = :role,
-                 team_id = :team_id,
-                 birth_date = :birth_date,
-                 birth_place = :birth_place,
-                 height_cm = :height_cm,
-                 weight_kg = :weight_kg,
-                 residence_address = :residence_address,
-                 residence_city = :residence_city,
-                 fiscal_code = :fiscal_code,
-                 identity_document = :identity_document,
-                 federal_id = :federal_id,
-                 email = :email,
-                 phone = :phone,
-                 parent_contact = :parent_contact,
-                 parent_phone = :parent_phone,
-                 nationality = :nationality,
-                 blood_group = :blood_group,
-                 allergies = :allergies,
-                 medications = :medications,
-                 emergency_contact_name = :emergency_contact_name,
-                 emergency_contact_phone = :emergency_contact_phone,
-                 communication_preference = :communication_preference,
-                 image_release_consent = :image_release_consent,
-                 medical_cert_type = :medical_cert_type,
-                 medical_cert_expires_at = :medical_cert_expires_at,
-                 medical_cert_issued_at = :medical_cert_issued_at,
-                 shirt_size = :shirt_size,
-                 shoe_size = :shoe_size
-             WHERE id = :id AND deleted_at IS NULL'
-        );
-        $stmt->execute($data);
+        $params = [':id' => $id];
+        $setClauses = [];
+        foreach ($data as $key => $value) {
+            $cleanKey = ltrim($key, ':');
+            $setClauses[] = "`{$cleanKey}` = :{$cleanKey}";
+            $params[":{$cleanKey}"] = $value;
+        }
+        
+        $sql = 'UPDATE athletes SET ' . implode(', ', $setClauses) . ' WHERE id = :id AND deleted_at IS NULL';
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
     }
 
     public function softDeleteAthlete(string $id): void
@@ -430,17 +377,15 @@ class AthletesRepository
     public function updatePhotoPath(string $id, ?string $photoPath): void
     {
         $stmt = $this->db->prepare(
-            'UPDATE athletes SET photo_path = :photo_path WHERE id = :id AND deleted_at IS NULL'
+            'UPDATE athletes SET `photo_path` = :photo_path WHERE id = :id AND deleted_at IS NULL'
         );
         $stmt->execute([':photo_path' => $photoPath, ':id' => $id]);
     }
 
     public function updateDocumentPath(string $id, string $dbField, ?string $path): void
     {
-        // Must ensure $dbField is dynamically injected safely or matched against allowlist in Controller
-        // Wait, PDO cannot bind column names, so we inject it safely.
         $stmt = $this->db->prepare(
-            "UPDATE athletes SET {$dbField} = :path WHERE id = :id AND deleted_at IS NULL"
+            "UPDATE athletes SET `{$dbField}` = :path WHERE id = :id AND deleted_at IS NULL"
         );
         $stmt->execute([':path' => $path, ':id' => $id]);
     }
@@ -456,12 +401,6 @@ class AthletesRepository
         $stmt->execute($data);
     }
 
-    /**
-     * PERF: Returns both acute (7d) and chronic (28d) loads in a SINGLE query.
-     * Avoids 2 round-trips to the DB per athlete profile load.
-     *
-     * @return array{acute: float, chronic: float}
-     */
     public function getAcwrLoads(string $athleteId): array
     {
         $stmt = $this->db->prepare(
@@ -482,8 +421,6 @@ class AthletesRepository
 
     public function getMetricsHistory(string $athleteId, int $days = 30): array
     {
-        // NOTE: MySQL does not support PDO named parameters inside INTERVAL expressions.
-        // The integer is cast strictly and interpolated directly — safe from SQL injection.
         $daysInt = (int)$days;
         $daysIntStr = (string)$daysInt;
         $stmt = $this->db->prepare(
@@ -497,10 +434,6 @@ class AthletesRepository
         return $stmt->fetchAll();
     }
 
-    /**
-     * Update the acwr_score of an already-inserted metric record.
-     * Called after calcACWR() which must run post-insert.
-     */
     public function updateMetricAcwr(string $metricId, float $acwr): void
     {
         $stmt = $this->db->prepare(
@@ -524,11 +457,22 @@ class AthletesRepository
         return $stmt->fetchAll();
     }
 
+    public function listPendingSync(int $limit = 50): array
+    {
+        $stmt = $this->db->prepare('SELECT * FROM athletes WHERE sync_status = \'pending\' LIMIT :limit');
+        $stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    public function linkUserToAthlete(string $athleteId, string $userId): void
+    {
+        $stmt = $this->db->prepare('UPDATE athletes SET user_id = :user_id, updated_at = NOW() WHERE id = :id');
+        $stmt->execute([':user_id' => $userId, ':id' => $athleteId]);
+    }
+
     // ─── PUBLIC WEBSITE ATHLETES ─────────────────────────────────────────────
-    /**
-     * Returns ONLY public-safe athlete fields for the website roster page.
-     * Does NOT include document paths or internal admin fields.
-     */
+
     public function listPublicAthletes(string $teamSeasonId = ''): array
     {
         $sql = 'SELECT DISTINCT a.id, a.full_name, a.first_name, a.last_name,
@@ -609,12 +553,6 @@ class AthletesRepository
         $stmt->execute([':athlete_id' => $athleteId, ':acwr' => $acwr, ':risk' => $riskLevel]);
     }
 
-    /**
-     * Get ACWR alerts not yet acknowledged, scoped to coachId's tenant.
-     * Filters via the athletes table to prevent cross-tenant data leaks.
-     *
-     * @param string $tenantId  The tenant to scope results to (required)
-     */
     public function getUnacknowledgedAlerts(string $tenantId, string $coachId = ''): array
     {
         $stmt = $this->db->prepare(
@@ -631,22 +569,10 @@ class AthletesRepository
         return $stmt->fetchAll();
     }
 
-    // ─── ACTIVITY LOG (dashboard overview) ───────────────────────────────────
+    // ─── ACTIVITY LOG ────────────────────────────────────────────────────────
 
-    /**
-     * Returns the last 5 audit_log entries for each section of an athlete.
-     *
-     * Sections:
-     *  - anagrafica  : table_name IN ('athletes') AND record_id = athleteId
-     *  - metrics     : table_name = 'metrics_logs' AND JSON_EXTRACT(after_snapshot,'$.athlete_id') = athleteId
-     *  - pagamenti   : table_name IN ('payment_plans','installments') AND JSON_EXTRACT(after_snapshot|before_snapshot,'$.athlete_id') = athleteId
-     *  - documenti   : table_name = 'athlete_documents' AND JSON_EXTRACT(after_snapshot,'$.athlete_id') = athleteId
-     */
     public function getActivityLog(string $athleteId): array
     {
-        // PERF: dopo la migration V039, la colonna generata `json_entity_id` è indicizzata.
-        // Le query usano quella invece di JSON_EXTRACT() inline (full table scan → index lookup).
-        // Fallback: se la colonna non esiste ancora (migration non applicata), usa JSON_EXTRACT.
         $useGeneratedCol = $this->_hasColumn('audit_logs', 'json_entity_id');
 
         $sql = function (string $whereClause) use ($athleteId): array {
@@ -666,7 +592,6 @@ class AthletesRepository
         };
 
         if ($useGeneratedCol) {
-            // Fast path: usa la colonna generata indicizzata (V039 applicata)
             return [
                 'anagrafica' => $sql("al.table_name = 'athletes' AND al.record_id = :athlete_id"),
                 'metrics' => $sql("al.table_name = 'metrics_logs' AND al.json_entity_id = :athlete_id"),
@@ -675,8 +600,6 @@ class AthletesRepository
             ];
         }
 
-        // Slow path (fallback pre-V039): JSON_EXTRACT inline → full table scan
-        // Applicare la migration db/migrations/V039__audit_logs_perf_indexes.sql per eliminare questo path.
         return [
             'anagrafica' => $sql("al.table_name IN ('athletes') AND al.record_id = :athlete_id"),
             'metrics' => $sql("al.table_name = 'metrics_logs' AND JSON_UNQUOTE(JSON_EXTRACT(al.after_snapshot, '$.athlete_id')) = :athlete_id"),
@@ -687,7 +610,7 @@ class AthletesRepository
         ];
     }
 
-    /** Check if a column exists in a table (used for migration-aware code paths). */
+    /** Check if a column exists in a table */
     private function _hasColumn(string $table, string $column): bool
     {
         try {

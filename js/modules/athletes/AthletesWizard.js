@@ -67,16 +67,44 @@ export const AthletesWizard = {
                     <input id="na-rescity" class="form-input" type="text">
                 </div>
             `,
-            // Step 4: Documenti
+            // Step 4: Documenti & Privacy
             () => `
                 <div class="form-grid">
                     <div class="form-group"><label class="form-label" for="na-fiscal">Codice Fiscale</label><input id="na-fiscal" class="form-input" type="text" maxlength="16" style="text-transform:uppercase;"></div>
                     <div class="form-group"><label class="form-label" for="na-idcard">Documento Identità (Nr.)</label><input id="na-idcard" class="form-input" type="text"></div>
                 </div>
-                <div class="form-group"><label class="form-label" for="na-medcert">Scadenza Certificato Medico</label><input id="na-medcert" class="form-input" type="date"></div>
+                <div class="form-grid">
+                    <div class="form-group"><label class="form-label" for="na-medcert">Scadenza Certificato Medico</label><input id="na-medcert" class="form-input" type="date"></div>
+                    <div class="form-group">
+                        <label class="form-label" for="na-privacy">Consenso Privacy & Foto</label>
+                        <label class="multi-team-option" style="padding:10px;display:flex;align-items:center;gap:10px;">
+                            <input type="checkbox" id="na-image-consent" value="1">
+                            <span style="font-size:12px;">Consenso Riprese Social</span>
+                        </label>
+                    </div>
+                </div>
                 <div class="form-grid">
                     <div class="form-group"><label class="form-label" for="na-parent">Contatto Genitore (per minori)</label><input id="na-parent" class="form-input" type="text"></div>
                     <div class="form-group"><label class="form-label" for="na-parent-phone">Cellulare Genitore</label><input id="na-parent-phone" class="form-input" type="tel"></div>
+                </div>
+                
+                <div style="margin-top:15px; padding:12px; border:1px dashed rgba(255,255,255,0.1); border-radius:8px; background:rgba(255,255,255,0.02);">
+                    <label class="form-label" style="display:flex; align-items:center; gap:8px; cursor:pointer; color:var(--color-pink); margin-bottom:10px;">
+                        <input type="checkbox" id="na-is-foresteria" onchange="document.getElementById('na-foresteria-fields').style.display = this.checked ? 'block' : 'none'">
+                        <span>L'atleta risiede in Foresteria?</span>
+                    </label>
+                    <div id="na-foresteria-fields" style="display:none; transition: all 0.3s ease;">
+                        <p style="font-size:11px; color:rgba(255,255,255,0.4); margin-bottom:10px;">Verranno creati i placeholder per i documenti obbligatori della foresteria.</p>
+                        <div class="form-grid">
+                             <div class="form-group"><label class="form-label" style="font-size:10px;">Documentazione Richiesta:</label>
+                                <ul style="font-size:10px; color:rgba(255,255,255,0.5); padding-left:15px;">
+                                    <li>Regolamento Foresteria</li>
+                                    <li>Delega Genitori</li>
+                                    <li>Tessera Sanitaria</li>
+                                </ul>
+                             </div>
+                        </div>
+                    </div>
                 </div>
             `
         ];
@@ -204,6 +232,7 @@ export const AthletesWizard = {
                     fiscal_code: formData["na-fiscal"],
                     identity_document: formData["na-idcard"],
                     medical_cert_expires_at: formData["na-medcert"],
+                    image_release_consent: document.getElementById("na-image-consent")?.checked ? 1 : 0,
                     parent_contact: formData["na-parent"],
                     parent_phone: formData["na-parent-phone"]
                 });
