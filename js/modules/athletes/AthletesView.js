@@ -183,13 +183,20 @@ export const AthletesView = {
             : `<div class="athlete-hero-photo" style="display:flex;align-items:center;justify-content:center;background:var(--color-bg-card);"><span style="font-family:var(--font-display);font-size:5rem;font-weight:700;color:rgba(255,255,255,0.1);">${Utils.initials(athlete.full_name)}</span></div>`;
 
         return `
-            <div style="padding: 0 var(--sp-4) var(--sp-4); display:flex; justify-content:space-between; align-items:center;">
+            <div style="padding: 0 var(--sp-4) var(--sp-4); display:flex; justify-content:space-between; align-items:center; gap:12px;">
                 <button class="btn btn-default btn-sm" id="back-to-list" style="background:rgba(255,255,255,0.05); border-color:rgba(255,255,255,0.1);">
                     <i class="ph ph-arrow-left"></i> Torna alla lista
                 </button>
-                <button class="btn btn-primary btn-sm" id="edit-athlete-btn" style="box-shadow: 0 4px 12px rgba(255, 0, 122, 0.2);">
-                    <i class="ph ph-pencil-simple"></i> Modifica Atleta
-                </button>
+                <div style="display:flex; gap:12px;">
+                    ${!athlete.user_id && athlete.email ? `
+                        <button class="btn btn-accent btn-sm" id="generate-user-btn" style="background:var(--color-primary); color:white;">
+                            <i class="ph ph-user-plus"></i> Genera Utente
+                        </button>
+                    ` : ''}
+                    <button class="btn btn-primary btn-sm" id="edit-athlete-btn" style="box-shadow: 0 4px 12px rgba(255, 0, 122, 0.2);">
+                        <i class="ph ph-pencil-simple"></i> Modifica Atleta
+                    </button>
+                </div>
             </div>
 
             <div class="athlete-hero">
@@ -214,6 +221,7 @@ export const AthletesView = {
                     <button class="fusion-tab" data-tab="pagamenti">Pagamenti</button>
                     <button class="fusion-tab" data-tab="metrics" style="color:var(--color-pink)">Performance (VALD)</button>
                     <button class="fusion-tab" data-tab="documenti">Documenti</button>
+                    <button class="fusion-tab" data-tab="subusers">Sotto-Utenti</button>
                 </div>
             </div>
 
@@ -221,6 +229,7 @@ export const AthletesView = {
             <div id="tab-panel-pagamenti" class="athlete-tab-panel" style="display:none;padding:24px 16px;"></div>
             <div id="tab-panel-metrics" class="athlete-tab-panel" style="display:none;padding:24px 16px;"></div>
             <div id="tab-panel-documenti" class="athlete-tab-panel" style="display:none;padding:24px 16px;"></div>
+            <div id="tab-panel-subusers" class="athlete-tab-panel" style="display:none;padding:24px 16px;"></div>
         `;
     },
 
@@ -605,6 +614,68 @@ export const AthletesView = {
                         </div>
                     `;
                 }).join('')}
+            </div>
+        `;
+    },
+
+    /**
+     * Tab: Sotto-Utenti (Management for Athlete Portal)
+     */
+    tabSubUsers: (subs = []) => {
+        return `
+            <div class="card glass-card" style="padding:24px; border:1px solid rgba(255,255,255,0.05); background:rgba(255,255,255,0.01);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+                    <div>
+                        <h3 style="font-family:var(--font-display); font-size:20px; color:var(--color-white); margin-bottom:4px;">Gestione Sotto-Utenti</h3>
+                        <p style="color:var(--color-text-muted); font-size:13px;">Puoi invitare fino a 2 persone (es. genitori o tutor) a visualizzare il tuo profilo.</p>
+                    </div>
+                    ${subs.length < 2 ? `
+                        <button class="btn btn-primary btn-sm" id="invite-subuser-btn">
+                            <i class="ph ph-user-plus"></i> Invita Persona
+                        </button>
+                    ` : `
+                        <span class="badge badge-white" style="opacity:0.5;">Limite raggiunto (2/2)</span>
+                    `}
+                </div>
+
+                <div class="subs-list" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:16px;">
+                    ${subs.length === 0 ? `
+                        <div style="grid-column: 1 / -1; padding:40px; text-align:center; color:rgba(255,255,255,0.2);">
+                            <i class="ph ph-users" style="font-size:48px; margin-bottom:12px;"></i>
+                            <p>Nessun sotto-utente attivo.</p>
+                        </div>
+                    ` : subs.map(s => `
+                        <div class="card" style="padding:16px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); display:flex; align-items:center; gap:12px;">
+                            <div style="width:40px; height:40px; border-radius:50%; background:var(--color-primary); display:flex; align-items:center; justify-content:center; color:white; font-weight:bold;">
+                                ${Utils.initials(s.full_name)}
+                            </div>
+                            <div style="flex:1;">
+                                <div style="font-weight:600; color:white;">${Utils.escapeHtml(s.full_name)}</div>
+                                <div style="font-size:12px; color:rgba(255,255,255,0.4);">${Utils.escapeHtml(s.email)}</div>
+                            </div>
+                            <span class="badge badge-success" style="font-size:10px;">ATTIVO</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+
+            <!-- Modal Invito (Hidden by default) -->
+            <div id="invite-modal" class="modal-fusion" style="display:none;">
+                <div class="modal-content glass-card" style="max-width:400px; padding:24px;">
+                    <h3 style="margin-bottom:16px;">Invita Sotto-utente</h3>
+                    <div class="form-group">
+                        <label class="form-label">Nome Completo</label>
+                        <input type="text" id="invite-name" class="form-input" placeholder="es. Mario Rossi">
+                    </div>
+                    <div class="form-group" style="margin-top:12px;">
+                        <label class="form-label">Email</label>
+                        <input type="email" id="invite-email" class="form-input" placeholder="mario.rossi@example.com">
+                    </div>
+                    <div style="margin-top:24px; display:flex; justify-content:flex-end; gap:12px;">
+                        <button class="btn btn-ghost" id="close-invite-modal">Annulla</button>
+                        <button class="btn btn-primary" id="confirm-invite-btn">Invia Invito</button>
+                    </div>
+                </div>
             </div>
         `;
     }

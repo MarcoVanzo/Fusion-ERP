@@ -49,7 +49,19 @@ const Athletes = (() => {
             ]);
 
             const params = Router.getParams();
-            if (params.id) {
+            const user = Auth.user();
+
+            if (user && user.role === 'atleta') {
+                // Se è un atleta, cerchiamo il suo ID atleta tramite il suo user_id
+                // In un sistema reale, potremmo avere un endpoint dedicato o averlo nel JWT
+                // Supponiamo che il backend restituisca l'atleta collegato se richiesto
+                const athlete = await AthletesAPI.getByUserId(user.id);
+                if (athlete) {
+                    await renderProfile(athlete.id, initialTab);
+                } else {
+                    app.innerHTML = Utils.emptyState("Profilo non trovato", "Il tuo account non è ancora collegato a un'anagrafica atleta.");
+                }
+            } else if (params.id) {
                 const initialTab = getVariantFromRoute();
                 await renderProfile(params.id, initialTab);
             } else {
@@ -210,6 +222,23 @@ const Athletes = (() => {
             editBtn.onclick = () => renderEditForm(athlete);
         }
 
+        const genUserBtn = document.getElementById("generate-user-btn");
+        if (genUserBtn) {
+            genUserBtn.onclick = async () => {
+                if (!confirm(`Vuoi generare un accesso per ${athlete.full_name}? Verrà inviata una mail a ${athlete.email}`)) return;
+                UI.loading(true);
+                try {
+                    await AthletesAPI.generateUser(athlete.id);
+                    UI.toast("Utente generato correttamente", "success");
+                    await renderProfile(athlete.id, currentTab);
+                } catch (e) {
+                    UI.toast(e.message, "error");
+                } finally {
+                    UI.loading(false);
+                }
+            };
+        }
+
         document.querySelectorAll("#athlete-tab-bar .fusion-tab").forEach(btn => {
             btn.addEventListener("click", () => {
                 const target = btn.dataset.tab;
@@ -253,6 +282,9 @@ const Athletes = (() => {
                 break;
             case 'metrics':
                 await AthletesMetrics.render(panel, athlete.id);
+                break;
+            case 'subusers':
+                await renderSubUsers(panel, athlete);
                 break;
             // Add other tabs here...
         }
