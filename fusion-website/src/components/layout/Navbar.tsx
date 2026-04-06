@@ -76,21 +76,39 @@ const Navbar = () => {
         <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'} ${isScrolled ? 'bg-zinc-950/95 backdrop-blur-md border-b-2 border-brand-500 shadow-[0_10px_30px_rgba(0,0,0,0.8)] py-2' : 'bg-gradient-to-b from-zinc-950 via-zinc-950/80 to-transparent py-6'}`}>
             <div className="max-w-[1400px] mx-auto px-6 lg:px-8 h-12 relative flex items-center justify-between">
                 
-                {/* Left Links */}
-                <div className="hidden lg:flex flex-1 items-center justify-end gap-6 pr-10">
-                    {splitLeftLinks.map(link => {
-                        const isActive = location.pathname === link.path || (link.path !== '/' && location.pathname.startsWith(link.path));
-                        return (
-                            <Link 
-                                key={link.name} 
-                                to={link.path} 
-                                className={`text-sm font-semibold tracking-widest transition-colors uppercase relative group flex items-center ${isActive ? 'text-brand-500' : 'text-zinc-300 hover:text-white'}`}
-                            >
-                                {link.name}
-                                <span className={`absolute -bottom-2 left-0 h-[2px] bg-brand-500 transition-all duration-300 ${isActive ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
-                            </Link>
-                        )
-                    })}
+                {/* Left Section: Hub Logo + Left Links */}
+                <div className="hidden lg:flex flex-1 items-center justify-between pr-10">
+                    {/* Hub Logo - desktop far left, enlarged to match Fusion logo */}
+                    {hubLogo && (
+                        <a 
+                            href="https://www.fusionteamvolley.it/network" 
+                            className="block relative group z-50 pointer-events-auto"
+                            title="Savino del bene volley HUB"
+                        >
+                            <div className="absolute inset-0 bg-brand-500/30 blur-xl rounded-full scale-150 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                            <div className="relative w-[56px] h-[56px] md:w-[72px] md:h-[72px] bg-gradient-to-b from-white/90 to-white/70 backdrop-blur-md p-[2px] rounded-full border border-white/20 shadow-[0_4px_15px_rgba(0,0,0,0.5)] group-hover:shadow-[0_0_25px_rgba(217,70,239,0.4)] group-hover:-translate-y-1 transition-all duration-300">
+                                <div className="w-full h-full bg-white rounded-full flex items-center justify-center p-1 shadow-inner">
+                                    <img src={hubLogo} alt="HUB" className="w-full h-full object-contain filter grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500" />
+                                </div>
+                            </div>
+                        </a>
+                    )}
+
+                    <div className="flex items-center gap-6">
+                        {splitLeftLinks.map(link => {
+                            const isActive = location.pathname === link.path || (link.path !== '/' && location.pathname.startsWith(link.path));
+                            return (
+                                <Link 
+                                    key={link.name} 
+                                    to={link.path} 
+                                    className={`text-sm font-semibold tracking-widest transition-colors uppercase relative group flex items-center ${isActive ? 'text-brand-500' : 'text-zinc-300 hover:text-white'}`}
+                                >
+                                    {link.name}
+                                    <span className={`absolute -bottom-2 left-0 h-[2px] bg-brand-500 transition-all duration-300 ${isActive ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
+                                </Link>
+                            )
+                        })}
+                    </div>
                 </div>
 
                 {/* Center Logo */}
@@ -101,12 +119,12 @@ const Navbar = () => {
                     </Link>
                 </div>
 
-                {/* Right Links */}
+                {/* Right Links Section */}
                 <div className="hidden lg:flex flex-1 items-center justify-start pl-10">
                     <div className="flex items-center gap-6">
                         {splitRightLinks.map(link => {
                             const isActive = location.pathname === link.path || (link.path !== '/' && location.pathname.startsWith(link.path));
-                            // Sostituisco "ENTRA NELLA NOSTRA FAMIGLIA" con "CANDIDATI" per non rompere altri possibili riferimenti
+                            // Sostituisco "ENTRA NELLA NOSTRA FAMIGLIA" con "CANDIDATI"
                             const linkName = link.name === 'ENTRA NELLA NOSTRA FAMIGLIA' ? 'CANDIDATI' : link.name;
                             return (
                                 <Link 
@@ -119,14 +137,12 @@ const Navbar = () => {
                                     }
                                 >
                                     {link.isHighlight ? (
-                                        <>
-                                            <span 
-                                                className="relative z-10 text-[28px] md:text-[32px] text-brand-500 hover:text-brand-400 drop-shadow-[0_0_12px_rgba(217,70,239,0.3)] group-hover:drop-shadow-[0_0_20px_rgba(217,70,239,0.6)] transition-all duration-300" 
-                                                style={{ fontFamily: "'Rubik Dirt', system-ui", lineHeight: 1 }}
-                                            >
-                                                {linkName}
-                                            </span>
-                                        </>
+                                        <span 
+                                            className="relative z-10 text-[28px] md:text-[32px] text-brand-500 hover:text-brand-400 drop-shadow-[0_0_12px_rgba(217,70,239,0.3)] group-hover:drop-shadow-[0_0_20px_rgba(217,70,239,0.6)] transition-all duration-300 rotate-[25deg]" 
+                                            style={{ fontFamily: "'Rubik Dirt', system-ui", lineHeight: 1 }}
+                                        >
+                                            {linkName}
+                                        </span>
                                     ) : (
                                         <>
                                             {linkName}
@@ -140,25 +156,6 @@ const Navbar = () => {
                             )
                         })}
                     </div>
-                    
-                    {/* Hub Logo */}
-                    {hubLogo && (
-                        <a 
-                            href="https://www.fusionteamvolley.it/network" 
-                            className="ml-6 block relative group z-50 pointer-events-auto"
-                            title="Savino del bene volley HUB"
-                        >
-                            {/* Glow under logo */}
-                            <div className="absolute inset-0 bg-brand-500/30 blur-xl rounded-full scale-150 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                            
-                            {/* Container */}
-                            <div className="relative w-[48px] h-[48px] bg-gradient-to-b from-white/90 to-white/70 backdrop-blur-md p-[2px] rounded-full border border-white/20 shadow-[0_4px_15px_rgba(0,0,0,0.5)] group-hover:shadow-[0_0_25px_rgba(217,70,239,0.4)] group-hover:-translate-y-1 transition-all duration-300">
-                                <div className="w-full h-full bg-white rounded-full flex items-center justify-center p-1 shadow-inner">
-                                    <img src={hubLogo} alt="HUB" className="w-full h-full object-contain filter grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500" />
-                                </div>
-                            </div>
-                        </a>
-                    )}
                 </div>
 
                 {/* Mobile Menu Toggle */}

@@ -171,7 +171,7 @@ class AthletesService
         $prompt = $this->buildGeminiPrompt($athlete, $history, $acwr, $notes);
         
         try {
-            // AIService now defaults to gemini-2.5-flash which is stable and state-of-the-art.
+            // AIService now defaults to gemini-flash-latest which is stable and state-of-the-art.
             $summary = AIService::generateContent($prompt, ['maxOutputTokens' => 512, 'temperature' => 0.3]);
         } catch (\Exception $e) {
             $summary = 'Impossibile generare il riepilogo AI al momento. Riprovare più tardi.';
@@ -187,7 +187,7 @@ class AthletesService
             ':period_start' => $periodStart,
             ':period_end' => $periodEnd,
             ':summary_text' => $summary,
-            ':model_version' => 'gemini-2.5-flash',
+            ':model_version' => 'gemini-1.5-flash',
         ]);
 
         Audit::log('AI_REPORT', 'ai_summaries', $summaryId, null, ['athlete_id' => $athleteId]);

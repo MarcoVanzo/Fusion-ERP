@@ -1401,13 +1401,12 @@
 .anatomy-container {
   position: relative;
   width: 100%;
-  background: radial-gradient(circle at center, rgba(0, 242, 254, 0.08) 0%, transparent 80%);
+  background: transparent;
   border-radius: 28px;
-  padding: 10px; /* Reduced internal padding to allow image to be larger */
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 0; 
+  border: none;
   overflow: visible;
-  box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.6);
-  transform: scale(1.1); /* Slight overall zoom */
+  transform: scale(1.1); 
 }
 
 .anatomy-cyber-body {
@@ -1427,14 +1426,13 @@
   mix-blend-mode: screen;
 }
 
-.muscle-blob {
-  /* Rimossa sfocatura per colori più decisi */
+.muscle-region {
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   stroke-linejoin: round;
 }
 
-.muscle-blob.active {
-  filter: drop-shadow(0 0 5px rgba(255,255,255,0.4));
+.muscle-region.active {
+  filter: drop-shadow(0 0 12px var(--color-active, rgba(255,255,255,0.8)));
   opacity: 1 !important;
 }
 
@@ -1734,10 +1732,9 @@
 /* --- Blueprint Anatomy --- */
 .blueprint-card {
   position: relative;
-  background: #09090b;
-  border: 1px solid rgba(0, 229, 255, 0.1);
+  background: transparent;
+  border: none;
   overflow: hidden;
-  box-shadow: inset 0 0 30px rgba(0, 229, 255, 0.03);
 }
 
 .blueprint-card::before {
@@ -1772,25 +1769,25 @@
   mix-blend-mode: screen;
 }
 
-.muscle-blob {
+.muscle-region {
   transition: all 0.5s ease;
-  fill: rgba(0, 255, 188, 0.1);
-  stroke: rgba(0, 255, 188, 0.2);
-  stroke-width: 0.5;
+  fill: rgba(0, 255, 188, 0.05);
+  stroke: rgba(0, 255, 188, 0.1);
+  stroke-width: 0.3;
 }
 
-.muscle-blob.active {
+.muscle-region.active {
   fill: var(--color-active, #FFD700);
-  fill-opacity: 0.4;
+  fill-opacity: 0.8;
   stroke: var(--color-active, #FFD700);
-  stroke-width: 1;
-  filter: blur(1.5px);
+  stroke-width: 1.5;
+  filter: drop-shadow(0 0 8px var(--color-active));
   animation: muscle-plasma 2s infinite alternate ease-in-out;
 }
 
 @keyframes muscle-plasma {
-  0% { fill-opacity: 0.3; filter: blur(2px); }
-  100% { fill-opacity: 0.6; filter: blur(1px); }
+  0% { fill-opacity: 0.6; filter: drop-shadow(0 0 5px var(--color-active)); }
+  100% { fill-opacity: 0.9; filter: drop-shadow(0 0 15px var(--color-active)); }
 }
 
 /* --- SVG Semi-Circle Gauges --- */

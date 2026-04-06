@@ -69,8 +69,8 @@ if (str_contains($imageBase64, ',')) {
     }
 }
 if ($mimeType === 'application/pdf') {
-    // Gemini vision handles images, not pure base64 PDFs directly encoded this way in 2.5 flash unless specifically requested
-    // Wait, gemini 2.5 flash supports PDF via inlineData if application/pdf. 
+    // Gemini vision handles images, not pure base64 PDFs directly encoded this way in 1.5 flash unless specifically requested
+    // Wait, gemini 1.5 flash supports PDF via inlineData if application/pdf. 
     // We will pass it normally.
 }
 
@@ -113,7 +113,7 @@ $options = [
     'responseSchema' => $responseSchema
 ];
 
-$models = ['gemini-2.5-flash', 'gemini-2.5-pro'];
+$models = ['gemini-flash-latest', 'gemini-1.5-pro'];
 $rawText = null;
 
 foreach ($models as $idx => $mdl) {
