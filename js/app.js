@@ -822,6 +822,7 @@ const App = (() => {
             }
         }, { once: true });
     }
+    function _showConfirmResetScreen(token) {
         document.getElementById('auth-screen').classList.add('hidden');
         document.getElementById('app-shell').classList.add('hidden');
         const resetScreen = document.getElementById('reset-screen');

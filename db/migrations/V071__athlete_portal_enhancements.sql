@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS user_invitations (
 -- but from our research, it was already there. We add it just in case as a migration step 
 -- if this was a fresh DB. But V001__init already had it.
 
--- 4. Index for performance
-CREATE INDEX IF NOT EXISTS idx_users_parent_id ON users(parent_user_id);
-CREATE INDEX IF NOT EXISTS idx_invitations_token ON user_invitations(token);
-CREATE INDEX IF NOT EXISTS idx_invitations_email ON user_invitations(email);
+-- 4. Index for performance (Note: MySQL doesn't support IF NOT EXISTS for CREATE INDEX in all versions)
+CREATE INDEX idx_users_parent_id ON users(parent_user_id);
+CREATE INDEX idx_invitations_token ON user_invitations(token);
+CREATE INDEX idx_invitations_email ON user_invitations(email);
