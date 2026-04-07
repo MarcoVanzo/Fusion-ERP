@@ -40,6 +40,22 @@ class AthletesService
     /**
      * Get the logged-in user's profile (athlete or staff).
      */
+    public function getByUserId(string $userId): array
+    {
+        $athlete = $this->repo->getAthleteByUserId($userId);
+        if (!$athlete) {
+            throw new \Exception('Profilo atleta non associato a questo utente.', 404);
+        }
+
+        $athlete['acwr'] = $this->calculateACWR($athlete['id']);
+        $athlete['metrics'] = $this->repo->getMetricsHistory($athlete['id'], 30);
+        
+        return $athlete;
+    }
+
+    /**
+     * Get the logged-in user's profile based on email fallback (Legacy approach).
+     */
     public function getMyProfile(array $user): array
     {
         $email = $user['email'] ?? '';
@@ -133,6 +149,13 @@ class AthletesService
             ':communication_preference' => $body['communication_preference'] ?? 'email',
             ':image_release_consent'   => isset($body['image_release_consent']) ? (int)$body['image_release_consent'] : 0,
             ':medical_cert_issued_at'  => $body['medical_cert_issued_at'] ?? null,
+            ':photo_release_file_path' => $body['photo_release_file_path'] ?? null,
+            ':privacy_policy_file_path' => $body['privacy_policy_file_path'] ?? null,
+            ':guesthouse_rules_file_path' => $body['guesthouse_rules_file_path'] ?? null,
+            ':guesthouse_delegate_file_path' => $body['guesthouse_delegate_file_path'] ?? null,
+            ':health_card_file_path' => $body['health_card_file_path'] ?? null,
+            ':registration_fee_paid' => isset($body['registration_fee_paid']) ? (int)$body['registration_fee_paid'] : 0,
+            ':monthly_fee_amount' => $body['monthly_fee_amount'] ?? null,
         ];
 
         $this->repo->createAthlete($data);

@@ -329,7 +329,10 @@ class AthletesRepository
                 `emergency_contact_name`, `emergency_contact_phone`,
                 `communication_preference`, `image_release_consent`,
                 `medical_cert_type`, `medical_cert_expires_at`, `medical_cert_issued_at`,
+                `photo_release_file_path`, `privacy_policy_file_path`,
+                `guesthouse_rules_file_path`, `guesthouse_delegate_file_path`, `health_card_file_path`,
                 `shirt_size`, `shoe_size`,
+                `registration_fee_paid`, `monthly_fee_amount`,
                 `is_active`
              ) VALUES (
                 :id, :user_id, :team_id,
@@ -346,7 +349,10 @@ class AthletesRepository
                 :emergency_contact_name, :emergency_contact_phone,
                 :communication_preference, :image_release_consent,
                 :medical_cert_type, :medical_cert_expires_at, :medical_cert_issued_at,
+                :photo_release_file_path, :privacy_policy_file_path,
+                :guesthouse_rules_file_path, :guesthouse_delegate_file_path, :health_card_file_path,
                 :shirt_size, :shoe_size,
+                :registration_fee_paid, :monthly_fee_amount,
                 1
              )'
         );

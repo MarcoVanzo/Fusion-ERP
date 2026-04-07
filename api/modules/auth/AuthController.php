@@ -52,7 +52,9 @@ class AuthController
             Response::error('Credenziali non valide.', 401);
         }
 
-        if (!(bool)$dbUser['is_active']) {
+        // Se l'utente non è attivo, controlliamo se è perché è stato disattivato.
+        // Se last_login_at è null, significa che è al suo primo accesso ("Invitato") e quindi può accedere.
+        if (!(bool)$dbUser['is_active'] && $dbUser['last_login_at'] !== null) {
             Response::error('Il tuo account è stato disattivato. Contatta l\'amministratore.', 403);
         }
 
@@ -185,16 +187,22 @@ class AuthController
     public function inviteSubUser(): void
     {
         $user = Auth::requireAuth();
-        if ($user['role'] !== 'atleta') Response::error('Solo per atleti', 403);
+        if ($user['role'] !== 'atleta' && $user['role'] !== 'admin') Response::error('Solo per atleti o admin', 403);
 
         $body = Response::jsonBody();
         Response::requireFields($body, ['email', 'full_name']);
 
-        if ($this->repo->countSubUsers($user['id']) >= 2) Response::error('Limite sub-utenti raggiunto', 400);
+        $parentId = $user['id'];
+        if ($user['role'] === 'admin') {
+            if (empty($body['athlete_user_id'])) Response::error('athlete_user_id mancante per admin', 400);
+            $parentId = $body['athlete_user_id'];
+        }
+
+        if ($this->repo->countSubUsers($parentId) >= 2) Response::error('Limite sub-utenti raggiunto', 400);
 
         $token = bin2hex(random_bytes(32));
         $this->repo->createInvitation([
-            'parent_user_id' => $user['id'],
+            'parent_user_id' => $parentId,
             'email' => strtolower(trim($body['email'])),
             'full_name' => trim($body['full_name']),
             'token' => $token
@@ -211,8 +219,15 @@ class AuthController
     public function getSubUsers(): void
     {
         $user = Auth::requireAuth();
-        if ($user['role'] !== 'atleta') Response::error('Accesso negato', 403);
-        Response::success($this->repo->getSubUsers($user['id']));
+        if ($user['role'] !== 'atleta' && $user['role'] !== 'admin') Response::error('Accesso negato', 403);
+        
+        $parentId = $user['id'];
+        if ($user['role'] === 'admin') {
+            $parentId = filter_input(INPUT_GET, 'athlete_user_id', FILTER_DEFAULT);
+            if (!$parentId) Response::error('athlete_user_id richiesto per admin', 400);
+        }
+        
+        Response::success($this->repo->getSubUsers($parentId));
     }
 
     public function acceptSubUserInvitation(): void

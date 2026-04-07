@@ -60,6 +60,7 @@ class SocietaService
 
     public function upsertProfile(array $body, string $tenantId): void
     {
+        $existing = $this->repo->getProfile();
         $data = [
             ':mission' => isset($body['mission']) ? htmlspecialchars(trim($body['mission']), ENT_QUOTES, 'UTF-8') : null,
             ':vision' => isset($body['vision']) ? htmlspecialchars(trim($body['vision']), ENT_QUOTES, 'UTF-8') : null,
@@ -67,7 +68,7 @@ class SocietaService
             ':founded_year' => isset($body['founded_year']) ? (int)$body['founded_year'] : null,
             ':primary_color' => isset($body['primary_color']) ? htmlspecialchars(trim($body['primary_color']), ENT_QUOTES, 'UTF-8') : null,
             ':secondary_color' => isset($body['secondary_color']) ? htmlspecialchars(trim($body['secondary_color']), ENT_QUOTES, 'UTF-8') : null,
-            ':logo_path' => $body['logo_path'] ?? null,
+            ':logo_path' => array_key_exists('logo_path', $body) ? $body['logo_path'] : ($existing['logo_path'] ?? null),
             ':legal_address' => isset($body['legal_address']) ? htmlspecialchars(trim($body['legal_address']), ENT_QUOTES, 'UTF-8') : null,
             ':operative_address' => isset($body['operative_address']) ? htmlspecialchars(trim($body['operative_address']), ENT_QUOTES, 'UTF-8') : null,
         ];
@@ -81,6 +82,78 @@ class SocietaService
         $ext = $this->validateUploadedFile($file, $allowed);
         $fileName = 'logo_' . date('Ymd_His') . '.' . $ext;
         return $this->storeFile($file, $tenantId, '', $fileName);
+    }
+
+    // ─── COMPANIES LOGIC ─────────────────────────────────────────────────
+
+    public function createCompany(array $body, string $tenantId): array
+    {
+        $id = 'CMP_' . bin2hex(random_bytes(4));
+        $data = [
+            ':id'                => $id,
+            ':tenant_id'         => $tenantId,
+            ':name'              => htmlspecialchars(trim($body['name'] ?? ''), ENT_QUOTES, 'UTF-8'),
+            ':vat_number'        => htmlspecialchars(trim($body['vat_number'] ?? ''), ENT_QUOTES, 'UTF-8'),
+            ':legal_address'     => htmlspecialchars(trim($body['legal_address'] ?? ''), ENT_QUOTES, 'UTF-8'),
+            ':website'           => htmlspecialchars(trim($body['website'] ?? ''), ENT_QUOTES, 'UTF-8'),
+            ':facebook'          => htmlspecialchars(trim($body['facebook'] ?? ''), ENT_QUOTES, 'UTF-8'),
+            ':instagram'         => htmlspecialchars(trim($body['instagram'] ?? ''), ENT_QUOTES, 'UTF-8'),
+            ':logo_path'         => $body['logo_path'] ?? null,
+            ':referent_name'     => htmlspecialchars(trim($body['referent_name'] ?? ''), ENT_QUOTES, 'UTF-8'),
+            ':referent_contact'  => htmlspecialchars(trim($body['referent_contact'] ?? ''), ENT_QUOTES, 'UTF-8'),
+            ':description'       => $body['description'] ?? null,
+        ];
+        
+        $this->repo->createCompany($data);
+        Audit::log('INSERT', 'societa_companies', $id, null, $body);
+        return ['id' => $id];
+    }
+
+    public function updateCompany(string $id, array $body): void
+    {
+        $before = $this->repo->getCompanyById($id);
+        if (!$before) throw new \Exception('Azienda non trovata', 404);
+
+        $data = [
+            ':name'              => htmlspecialchars(trim($body['name'] ?? ''), ENT_QUOTES, 'UTF-8'),
+            ':vat_number'        => htmlspecialchars(trim($body['vat_number'] ?? ''), ENT_QUOTES, 'UTF-8'),
+            ':legal_address'     => htmlspecialchars(trim($body['legal_address'] ?? ''), ENT_QUOTES, 'UTF-8'),
+            ':website'           => htmlspecialchars(trim($body['website'] ?? ''), ENT_QUOTES, 'UTF-8'),
+            ':facebook'          => htmlspecialchars(trim($body['facebook'] ?? ''), ENT_QUOTES, 'UTF-8'),
+            ':instagram'         => htmlspecialchars(trim($body['instagram'] ?? ''), ENT_QUOTES, 'UTF-8'),
+            ':logo_path'         => array_key_exists('logo_path', $body) ? $body['logo_path'] : $before['logo_path'],
+            ':referent_name'     => htmlspecialchars(trim($body['referent_name'] ?? ''), ENT_QUOTES, 'UTF-8'),
+            ':referent_contact'  => htmlspecialchars(trim($body['referent_contact'] ?? ''), ENT_QUOTES, 'UTF-8'),
+            ':description'       => $body['description'] ?? null,
+        ];
+
+        $this->repo->updateCompany($id, $data);
+        Audit::log('UPDATE', 'societa_companies', $id, $before, $body);
+    }
+
+    public function deleteCompany(string $id): void
+    {
+        $before = $this->repo->getCompanyById($id);
+        if (!$before) throw new \Exception('Azienda non trovata', 404);
+        
+        $this->repo->deleteCompany($id);
+        Audit::log('DELETE', 'societa_companies', $id, $before, null);
+    }
+
+    public function uploadCompanyLogo(string $companyId, array $file, string $tenantId): string
+    {
+        $company = $this->repo->getCompanyById($companyId);
+        if (!$company) throw new \Exception('Azienda non trovata', 404);
+
+        $allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/svg+xml'];
+        $ext = $this->validateUploadedFile($file, $allowed);
+        $fileName = 'company_' . $companyId . '_' . time() . '.' . $ext;
+        
+        $relPath = $this->storeFile($file, $tenantId, 'companies', $fileName);
+        $this->repo->updateCompanyLogo($companyId, $relPath);
+        Audit::log('UPDATE', 'societa_companies', $companyId, ['logo_path' => $company['logo_path']], ['logo_path' => $relPath]);
+        
+        return $relPath;
     }
 
     // ─── ROLES LOGIC ─────────────────────────────────────────────────────

@@ -226,7 +226,7 @@ export const AthletesView = {
                     <button class="fusion-tab" data-tab="pagamenti">Pagamenti</button>
                     <button class="fusion-tab" data-tab="metrics" style="color:var(--color-pink)">Performance (VALD)</button>
                     <button class="fusion-tab" data-tab="documenti">Documenti</button>
-                    ${user && user.role === 'atleta' ? `
+                    ${user && (user.role === 'atleta' || user.role === 'admin') ? `
                         <button class="fusion-tab" data-tab="subusers">Sotto-Utenti</button>
                     ` : ''}
                 </div>
@@ -236,7 +236,7 @@ export const AthletesView = {
             <div id="tab-panel-pagamenti" class="athlete-tab-panel" style="display:none;padding:24px 16px;"></div>
             <div id="tab-panel-metrics" class="athlete-tab-panel" style="display:none;padding:24px 16px;"></div>
             <div id="tab-panel-documenti" class="athlete-tab-panel" style="display:none;padding:24px 16px;"></div>
-            ${user && user.role === 'atleta' ? `
+            ${user && (user.role === 'atleta' || user.role === 'admin') ? `
                 <div id="tab-panel-subusers" class="athlete-tab-panel" style="display:none;padding:24px 16px;"></div>
             ` : ''}
         `;
@@ -519,9 +519,9 @@ export const AthletesView = {
                             <div class="form-group"><label class="form-label">Cellulare Genitore</label><input name="parent_phone" class="form-input" type="tel" value="${Utils.escapeHtml(athlete?.parent_phone || '')}"></div>
                         </div>
 
-                        <!-- Sezione 5: Privacy -->
+                        <!-- Sezione 5: Privacy & Amministrazione -->
                         <div style="display:flex;flex-direction:column;gap:16px;">
-                            <h4 style="font-size:12px;text-transform:uppercase;color:var(--color-warning);letter-spacing:0.1em;border-bottom:1px solid rgba(255,255,255,0.05);padding-bottom:8px;">Privacy & Consensi</h4>
+                            <h4 style="font-size:12px;text-transform:uppercase;color:var(--color-warning);letter-spacing:0.1em;border-bottom:1px solid rgba(255,255,255,0.05);padding-bottom:8px;">Privacy & Amministrazione</h4>
                             <div class="form-group">
                                 <label class="form-label">Preferenza Comunicazioni</label>
                                 <select name="communication_preference" class="form-input">
@@ -531,44 +531,23 @@ export const AthletesView = {
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Modulo Privacy (File)</label>
-                                <input name="privacy_policy_file_path" class="form-input" readonly placeholder="Sola lettura - caricare in 'Documenti'" value="${Utils.escapeHtml(athlete?.privacy_policy_file_path || '')}">
-                            </div>
-                            <div class="form-group" style="margin-top:10px;">
-                                <label class="multi-team-option ${athlete?.image_release_consent ? 'selected' : ''}" style="padding:16px; display:flex; align-items:center; gap:12px;">
-                                    <input type="checkbox" name="image_release_consent" value="1" ${athlete?.image_release_consent ? 'checked' : ''} style="width:20px; height:20px;">
-                                    <span style="font-size:13px; font-weight:600;">Consenso riprese video e foto (Social/Sito)</span>
+                                <label class="multi-team-option ${athlete?.image_release_consent ? 'selected' : ''}" style="padding:12px; display:flex; align-items:center; gap:12px; margin-bottom:12px;">
+                                    <input type="checkbox" name="image_release_consent" value="1" ${athlete?.image_release_consent ? 'checked' : ''} style="width:18px; height:18px;">
+                                    <span style="font-size:12px; font-weight:600;">Consenso riprese video e foto</span>
                                 </label>
                             </div>
-                        </div>
-                    </div>
-
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:32px;">
-                        <!-- Sezione 6: Foresteria -->
-                        <div style="display:flex;flex-direction:column;gap:16px;">
-                            <h4 style="font-size:12px;text-transform:uppercase;color:var(--color-pink);letter-spacing:0.1em;border-bottom:1px solid rgba(255,255,255,0.05);padding-bottom:8px;">Ospitalità (Foresteria)</h4>
-                            <div class="form-group">
-                                <label class="form-label">Regolamento Firmato (File)</label>
-                                <input name="guesthouse_rules_file_path" class="form-input" readonly value="${Utils.escapeHtml(athlete?.guesthouse_rules_file_path || '')}">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Delega (File)</label>
-                                <input name="guesthouse_delegate_file_path" class="form-input" readonly value="${Utils.escapeHtml(athlete?.guesthouse_delegate_file_path || '')}">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Tessera Sanitaria (File)</label>
-                                <input name="health_card_file_path" class="form-input" readonly value="${Utils.escapeHtml(athlete?.health_card_file_path || '')}">
-                            </div>
-                        </div>
-
-                         <!-- Informativa -->
-                        <div style="display:flex;flex-direction:column;justify-content:center;">
-                             <div style="padding:24px; background:rgba(255,193,7,0.05); border:1px solid rgba(255,193,7,0.1); border-radius:12px;">
-                                <p style="font-size:13px; color:rgba(255,255,255,0.6); line-height:1.6; margin:0;">
-                                    <i class="ph ph-info" style="color:var(--color-warning); font-size:18px;"></i><br>
-                                    I percorsi dei file sono di sola lettura in questo form per prevenire errori manuali. 
-                                    Per aggiornare i documenti (PDF/Foto), utilizza la scheda <strong>"Documenti"</strong> nel profilo dell'atleta.
-                                </p>
+                            
+                            <div style="padding:16px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:12px;">
+                                <div class="form-group" style="margin-bottom:12px;">
+                                    <label class="form-label" style="display:flex; align-items:center; gap:8px;">
+                                        <input type="checkbox" name="registration_fee_paid" value="1" ${athlete?.registration_fee_paid ? 'checked' : ''}>
+                                        Quota Iscrizione Pagata
+                                    </label>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Retta Mensile Concordata (€)</label>
+                                    <input type="number" name="monthly_fee_amount" class="form-input" placeholder="es. 100.00" step="0.01" value="${athlete?.monthly_fee_amount || ''}">
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -11,6 +11,7 @@ namespace FusionERP\Modules\Athletes;
 use FusionERP\Shared\Auth;
 use FusionERP\Shared\Audit;
 use FusionERP\Shared\Response;
+use FusionERP\Modules\Auth\AuthRepository;
 
 class AthletesController
 {
@@ -31,11 +32,11 @@ class AthletesController
         try {
             $result = $callback();
             Response::success($result);
-        } catch (\Exception $e) {
-            error_log("[AthletesController] " . $e->getMessage());
-            $code = $e->getCode();
+        } catch (\Throwable $t) {
+            error_log("[AthletesController] " . $t->getMessage());
+            $code = $t->getCode();
             $httpCode = (is_int($code) && $code >= 400 && $code <= 599) ? $code : 500;
-            Response::error("Errore interno: " . $e->getMessage(), $httpCode);
+            Response::error("TECHNICAL_ERROR_CONTROLLER: " . $t->getMessage(), $httpCode);
         }
     }
 
@@ -62,6 +63,24 @@ class AthletesController
         Auth::requireRead('athletes');
         $id = filter_input(INPUT_GET, 'id', FILTER_DEFAULT) ?? '';
         $this->handleServiceCall(fn() => $this->service->getProfile($id));
+    }
+
+    // ─── GET /api/?module=athletes&action=getByUserId ─────────────────────
+    public function getByUserId(): void
+    {
+        $user = Auth::requireAuth();
+        $userId = filter_input(INPUT_GET, 'user_id', FILTER_DEFAULT) ?? '';
+        if (empty($userId)) Response::error('user_id mancante', 400);
+
+        // Security check
+        if ($user['role'] !== 'admin' && $user['id'] !== $userId) {
+            // Check if the current user is a sub-user of the requested $userId
+            if (empty($user['parent_user_id']) || $user['parent_user_id'] !== $userId) {
+                Response::error('Accesso negato al profilo', 403);
+            }
+        }
+
+        $this->handleServiceCall(fn() => $this->service->getByUserId($userId));
     }
 
     // ─── GET /api/?module=athletes&action=myProfile ───────────────────────────
@@ -101,7 +120,7 @@ class AthletesController
             if (!$isOwner && !$isSubUser) {
                 Response::error('Non hai i permessi per modificare questo profilo.', 403);
             }
-            // Restricted update
+            // Restricted update via service
             $this->handleServiceCall(fn() => $this->service->updateAthleteBasic($athleteId, $body));
             return;
         }
@@ -109,72 +128,102 @@ class AthletesController
         // STAFF/ADMIN ACCESS
         Auth::requireWrite('athletes');
         
-        Response::requireFields($body, ['first_name', 'last_name']);
-
-        // Support multi-team: team_season_ids (array) takes priority over legacy team_id
-        if (isset($body['team_season_ids']) && is_array($body['team_season_ids'])) {
-            $teamSeasonIds = array_values(array_filter($body['team_season_ids']));
-        }
-        elseif (!empty($body['team_season_id'])) {
-            $teamSeasonIds = [$body['team_season_id']];
-        }
-        else {
-            $teamSeasonIds = $before['team_season_ids'] ?? (isset($before['team_ids']) ? $before['team_ids'] : []);
-        }
-        $primaryTeamSeasonId = $teamSeasonIds[0] ?? null;
-
-        $primaryTeamId = null;
-        if ($primaryTeamSeasonId) {
-            $primaryTeamId = $this->repo->getTeamIdForSeason($primaryTeamSeasonId) ?? ($before['team_id'] ?? null);
-        } else {
-            $primaryTeamId = $before['team_id'] ?? null;
-        }
-
-        if (!$primaryTeamId) {
-            // Failsafe: if no team is assigned, we MUST keep at least the old one to avoid DB constraint violation
-            $primaryTeamId = $before['team_id'] ?? null;
-        }
-
-        $updateData = [
-            ':first_name' => trim($body['first_name']),
-            ':last_name'  => trim($body['last_name']),
-        ];
-
-        // Only include fields that exist in the database to prevent 500 errors
-        $optionalFields = [
-            'jersey_number', 'role', 'birth_date', 'birth_place', 'height_cm', 'weight_kg',
-            'residence_address', 'residence_city', 'phone', 'email', 'identity_document', 'fiscal_code',
-            'medical_cert_type', 'medical_cert_expires_at', 'medical_cert_issued_at',
-            'federal_id', 'shirt_size', 'shoe_size', 'parent_contact', 'parent_phone',
-            'nationality', 'blood_group', 'allergies', 'medications',
-            'emergency_contact_name', 'emergency_contact_phone', 'communication_preference',
-            'photo_release_file_path', 'privacy_policy_file_path', 'guesthouse_rules_file_path', 
-            'guesthouse_delegate_file_path', 'health_card_file_path'
-        ];
-
-        foreach ($optionalFields as $field) {
-            if (array_key_exists($field, $before)) {
-                $updateData[":$field"] = array_key_exists($field, $body) ? $body[$field] : $before[$field];
+        try {
+            // Support multi-team: team_season_ids (array) takes priority over legacy team_id
+            if (isset($body['team_season_ids']) && is_array($body['team_season_ids'])) {
+                $teamSeasonIds = array_values(array_filter($body['team_season_ids']));
+            } elseif (!empty($body['team_season_id'])) {
+                $teamSeasonIds = [$body['team_season_id']];
+            } else {
+                $teamSeasonIds = $before['team_ids'] ?? [];
             }
+
+            $primaryTeamId = null;
+            if (!empty($teamSeasonIds)) {
+                $primaryTeamId = $this->repo->getTeamIdForSeason($teamSeasonIds[0]) ?: ($before['team_id'] ?? null);
+            } else {
+                $primaryTeamId = $before['team_id'] ?? null;
+            }
+
+            $updateData = [];
+
+            // 1. Core Fields (only for staff/admin)
+            if (isset($body['first_name'])) $updateData[':first_name'] = trim($body['first_name']);
+            if (isset($body['last_name']))  $updateData[':last_name']  = trim($body['last_name']);
+            if ($primaryTeamId)             $updateData[':team_id']    = $primaryTeamId;
+            if (isset($body['is_active']))  $updateData[':is_active']  = (int)$body['is_active'];
+
+            // 2. Optional Registry Fields
+            $optionalFields = [
+                'jersey_number', 'role', 'birth_date', 'birth_place', 'height_cm', 'weight_kg',
+                'residence_address', 'residence_city', 'phone', 'email', 'identity_document', 'fiscal_code',
+                'medical_cert_type', 'medical_cert_expires_at', 'medical_cert_issued_at',
+                'federal_id', 'shirt_size', 'shoe_size', 'parent_contact', 'parent_phone',
+                'nationality', 'blood_group', 'allergies', 'medications',
+                'emergency_contact_name', 'emergency_contact_phone',
+                'communication_preference', 'image_release_consent', 'vald_athlete_id',
+                'photo_release_file_path', 'privacy_policy_file_path',
+                'guesthouse_rules_file_path', 'guesthouse_delegate_file_path', 'health_card_file_path',
+                'registration_fee_paid', 'monthly_fee_amount'
+            ];
+
+            foreach ($optionalFields as $field) {
+                if (array_key_exists($field, $body)) {
+                    $value = $body[$field];
+                    
+                    // DATA SANITIZATION:
+                    // Convert empty strings to NULL for numeric and date fields to avoid "Incorrect integer value" or invalid date errors in MySQL strict mode.
+                    $numericFields = ['height_cm', 'weight_kg', 'jersey_number'];
+                    $dateFields = ['birth_date', 'medical_cert_expires_at', 'medical_cert_issued_at'];
+                    
+                    if ($value === '' && (in_array($field, $numericFields) || in_array($field, $dateFields))) {
+                        $value = null;
+                    }
+                    
+                    // --- EMAIL VALIDATION & SYNC ---
+                    if ($field === 'email' && !empty($value) && $value !== ($before['email'] ?? '')) {
+                        $authRepo = new AuthRepository();
+                        $existingUser = $authRepo->getUserByEmail($value);
+                        if ($existingUser && $existingUser['id'] !== ($before['user_id'] ?? null)) {
+                            throw new \Exception("L'email '{$value}' è già associata a un altro account nel sistema.", 400);
+                        }
+                    }
+                    
+                    $updateData[":$field"] = $value;
+                }
+            }
+
+            if (empty($updateData)) {
+                Response::success(['message' => 'Nessuna modifica rilevata']);
+            }
+
+            // DB Update
+            $this->repo->updateAthlete($athleteId, $updateData);
+
+            // --- SYNC EMAIL TO USER TABLE ---
+            if (isset($updateData[':email']) && !empty($before['user_id'])) {
+                $authRepo = new AuthRepository();
+                $authRepo->updateUserEmail($before['user_id'], $updateData[':email']);
+            }
+
+            // Team seasons sync
+            $this->repo->setAthleteTeams($athleteId, $teamSeasonIds, $primaryTeamId);
+
+            Audit::log('UPDATE', 'athletes', $athleteId, $before, $updateData);
+            Response::success(['message' => 'Profilo aggiornato correttamente']);
+
+        } catch (\PDOException $e) {
+            error_log("[AthletesController] SQL Error: " . $e->getMessage());
+            if ($e->getCode() === '23000') {
+                Response::error("Errore di integrità: l'email o un altro campo univoco è già presente nel sistema.", 400);
+            }
+            Response::error("Errore database durante l'aggiornamento.", 500);
+        } catch (\Throwable $e) {
+            error_log("[AthletesController] Error: " . $e->getMessage());
+            $code = $e->getCode();
+            $httpCode = (is_int($code) && $code >= 400 && $code <= 599) ? $code : 500;
+            Response::error($e->getMessage(), $httpCode);
         }
-
-        // Special handling for bitmask/boolean
-        if (array_key_exists('image_release_consent', $before)) {
-            $updateData[':image_release_consent'] = isset($body['image_release_consent']) 
-                ? (int)$body['image_release_consent'] 
-                : ($before['image_release_consent'] ?? 0);
-        }
-
-        if (array_key_exists('team_id', $before)) {
-            $updateData[':team_id'] = $primaryTeamId;
-        }
-
-        $this->repo->updateAthlete($body['id'], $updateData);
-
-        $this->repo->setAthleteTeams($body['id'], $teamSeasonIds, $primaryTeamId);
-
-        Audit::log('UPDATE', 'athletes', $body['id'], $before, $body);
-        Response::success(['message' => 'Atleta aggiornato']);
     }
 
     // ─── POST /api/?module=athletes&action=generateUser ───────────────────────
