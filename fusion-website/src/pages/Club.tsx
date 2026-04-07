@@ -390,7 +390,7 @@ const Club = () => {
                                 <p className="text-zinc-500 uppercase tracking-[0.2em] text-sm">La squadra che lavora dietro le quinte</p>
                             </div>
 
-                            <div className="space-y-12">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-7xl mx-auto items-start">
                                 {orgData.roles
                                     .filter(r => !r.parent_role_id)
                                     .map(rootRole => {
@@ -449,7 +449,7 @@ const Club = () => {
 
                                                 {/* Children Roles Grid */}
                                                 {children.length > 0 && (
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-full mx-auto">
                                                         {children.map(childRole => {
                                                             const childMembers = orgData.members.filter(m => m.role_id === childRole.id);
                                                             return (
