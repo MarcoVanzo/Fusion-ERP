@@ -60,6 +60,7 @@ class SocietaService
 
     public function upsertProfile(array $body, string $tenantId): void
     {
+        $existing = $this->repo->getProfile();
         $data = [
             ':mission' => isset($body['mission']) ? htmlspecialchars(trim($body['mission']), ENT_QUOTES, 'UTF-8') : null,
             ':vision' => isset($body['vision']) ? htmlspecialchars(trim($body['vision']), ENT_QUOTES, 'UTF-8') : null,
@@ -67,7 +68,7 @@ class SocietaService
             ':founded_year' => isset($body['founded_year']) ? (int)$body['founded_year'] : null,
             ':primary_color' => isset($body['primary_color']) ? htmlspecialchars(trim($body['primary_color']), ENT_QUOTES, 'UTF-8') : null,
             ':secondary_color' => isset($body['secondary_color']) ? htmlspecialchars(trim($body['secondary_color']), ENT_QUOTES, 'UTF-8') : null,
-            ':logo_path' => $body['logo_path'] ?? null,
+            ':logo_path' => array_key_exists('logo_path', $body) ? $body['logo_path'] : ($existing['logo_path'] ?? null),
             ':legal_address' => isset($body['legal_address']) ? htmlspecialchars(trim($body['legal_address']), ENT_QUOTES, 'UTF-8') : null,
             ':operative_address' => isset($body['operative_address']) ? htmlspecialchars(trim($body['operative_address']), ENT_QUOTES, 'UTF-8') : null,
         ];
