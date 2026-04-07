@@ -149,6 +149,13 @@ class AthletesService
             ':communication_preference' => $body['communication_preference'] ?? 'email',
             ':image_release_consent'   => isset($body['image_release_consent']) ? (int)$body['image_release_consent'] : 0,
             ':medical_cert_issued_at'  => $body['medical_cert_issued_at'] ?? null,
+            ':photo_release_file_path' => $body['photo_release_file_path'] ?? null,
+            ':privacy_policy_file_path' => $body['privacy_policy_file_path'] ?? null,
+            ':guesthouse_rules_file_path' => $body['guesthouse_rules_file_path'] ?? null,
+            ':guesthouse_delegate_file_path' => $body['guesthouse_delegate_file_path'] ?? null,
+            ':health_card_file_path' => $body['health_card_file_path'] ?? null,
+            ':registration_fee_paid' => isset($body['registration_fee_paid']) ? (int)$body['registration_fee_paid'] : 0,
+            ':monthly_fee_amount' => $body['monthly_fee_amount'] ?? null,
         ];
 
         $this->repo->createAthlete($data);

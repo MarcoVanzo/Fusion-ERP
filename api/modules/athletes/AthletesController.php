@@ -161,7 +161,10 @@ class AthletesController
                 'federal_id', 'shirt_size', 'shoe_size', 'parent_contact', 'parent_phone',
                 'nationality', 'blood_group', 'allergies', 'medications',
                 'emergency_contact_name', 'emergency_contact_phone',
-                'communication_preference', 'image_release_consent', 'vald_athlete_id'
+                'communication_preference', 'image_release_consent', 'vald_athlete_id',
+                'photo_release_file_path', 'privacy_policy_file_path',
+                'guesthouse_rules_file_path', 'guesthouse_delegate_file_path', 'health_card_file_path',
+                'registration_fee_paid', 'monthly_fee_amount'
             ];
 
             foreach ($optionalFields as $field) {

@@ -519,9 +519,9 @@ export const AthletesView = {
                             <div class="form-group"><label class="form-label">Cellulare Genitore</label><input name="parent_phone" class="form-input" type="tel" value="${Utils.escapeHtml(athlete?.parent_phone || '')}"></div>
                         </div>
 
-                        <!-- Sezione 5: Privacy -->
+                        <!-- Sezione 5: Privacy & Amministrazione -->
                         <div style="display:flex;flex-direction:column;gap:16px;">
-                            <h4 style="font-size:12px;text-transform:uppercase;color:var(--color-warning);letter-spacing:0.1em;border-bottom:1px solid rgba(255,255,255,0.05);padding-bottom:8px;">Privacy & Consensi</h4>
+                            <h4 style="font-size:12px;text-transform:uppercase;color:var(--color-warning);letter-spacing:0.1em;border-bottom:1px solid rgba(255,255,255,0.05);padding-bottom:8px;">Privacy & Amministrazione</h4>
                             <div class="form-group">
                                 <label class="form-label">Preferenza Comunicazioni</label>
                                 <select name="communication_preference" class="form-input">
@@ -530,11 +530,24 @@ export const AthletesView = {
                                     <option value="none" ${athlete?.communication_preference === 'none' ? 'selected' : ''}>Nessuna</option>
                                 </select>
                             </div>
-                            <div class="form-group" style="margin-top:10px;">
-                                <label class="multi-team-option ${athlete?.image_release_consent ? 'selected' : ''}" style="padding:16px; display:flex; align-items:center; gap:12px;">
-                                    <input type="checkbox" name="image_release_consent" value="1" ${athlete?.image_release_consent ? 'checked' : ''} style="width:20px; height:20px;">
-                                    <span style="font-size:13px; font-weight:600;">Consenso riprese video e foto (Social/Sito)</span>
+                            <div class="form-group">
+                                <label class="multi-team-option ${athlete?.image_release_consent ? 'selected' : ''}" style="padding:12px; display:flex; align-items:center; gap:12px; margin-bottom:12px;">
+                                    <input type="checkbox" name="image_release_consent" value="1" ${athlete?.image_release_consent ? 'checked' : ''} style="width:18px; height:18px;">
+                                    <span style="font-size:12px; font-weight:600;">Consenso riprese video e foto</span>
                                 </label>
+                            </div>
+                            
+                            <div style="padding:16px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:12px;">
+                                <div class="form-group" style="margin-bottom:12px;">
+                                    <label class="form-label" style="display:flex; align-items:center; gap:8px;">
+                                        <input type="checkbox" name="registration_fee_paid" value="1" ${athlete?.registration_fee_paid ? 'checked' : ''}>
+                                        Quota Iscrizione Pagata
+                                    </label>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Retta Mensile Concordata (€)</label>
+                                    <input type="number" name="monthly_fee_amount" class="form-input" placeholder="es. 100.00" step="0.01" value="${athlete?.monthly_fee_amount || ''}">
+                                </div>
                             </div>
                         </div>
                     </div>

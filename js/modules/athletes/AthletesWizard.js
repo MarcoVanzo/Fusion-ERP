@@ -76,16 +76,34 @@ export const AthletesWizard = {
                 <div class="form-grid">
                     <div class="form-group"><label class="form-label" for="na-medcert">Scadenza Certificato Medico</label><input id="na-medcert" class="form-input" type="date"></div>
                     <div class="form-group">
-                        <label class="form-label" for="na-privacy">Consenso Privacy & Foto</label>
-                        <label class="multi-team-option" style="padding:10px;display:flex;align-items:center;gap:10px;">
+                        <label class="form-label">Consensi Privacy</label>
+                        <label class="multi-team-option" style="padding:10px;display:flex;align-items:center;gap:10px;margin-bottom:6px;">
                             <input type="checkbox" id="na-image-consent" value="1">
-                            <span style="font-size:12px;">Consenso Riprese Social</span>
+                            <span style="font-size:12px;">Consenso Riprese Social & Foto</span>
                         </label>
                     </div>
                 </div>
-                <div class="form-grid">
-                    <div class="form-group"><label class="form-label" for="na-parent">Contatto Genitore (per minori)</label><input id="na-parent" class="form-input" type="text"></div>
-                    <div class="form-group"><label class="form-label" for="na-parent-phone">Cellulare Genitore</label><input id="na-parent-phone" class="form-input" type="tel"></div>
+                <div class="form-group" style="margin-top:10px; padding:12px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:8px;">
+                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+                        <i class="ph ph-buildings" style="color:var(--color-pink);"></i>
+                        <span style="font-size:13px; font-weight:600;">Atleta in Foresteria?</span>
+                        <input type="checkbox" id="na-is-foresteria" style="margin-left:auto;">
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label" style="display:flex; align-items:center; gap:8px; font-size:11px;">
+                                <input type="checkbox" id="na-fee-paid" value="1">
+                                Iscrizione Pagata
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <input type="number" id="na-monthly" class="form-input" placeholder="Retta Mensile €" step="0.01" style="font-size:12px; padding:8px;">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-grid" style="margin-top:10px;">
+                    <div class="form-group"><label class="form-label" for="na-parent">Contatto Genitore (per minori) / Tutor</label><input id="na-parent" class="form-input" type="text"></div>
+                    <div class="form-group"><label class="form-label" for="na-parent-phone">Cellulare Genitore / Tutor</label><input id="na-parent-phone" class="form-input" type="tel"></div>
                 </div>
             `
         ];
@@ -214,6 +232,8 @@ export const AthletesWizard = {
                     identity_document: formData["na-idcard"],
                     medical_cert_expires_at: formData["na-medcert"],
                     image_release_consent: document.getElementById("na-image-consent")?.checked ? 1 : 0,
+                    registration_fee_paid: document.getElementById("na-fee-paid")?.checked ? 1 : 0,
+                    monthly_fee_amount: document.getElementById("na-monthly")?.value || null,
                     parent_contact: formData["na-parent"],
                     parent_phone: formData["na-parent-phone"]
                 });
