@@ -2,10 +2,10 @@
  * Societa Module — Main Orchestrator
  * Fusion ERP v1.1
  */
-import SocietaAPI from './societa/SocietaAPI.js';
-import SocietaView from './societa/SocietaView.js';
-import SocietaOrgChart from './societa/SocietaOrgChart.js';
-import SocietaForesteria from './societa/SocietaForesteria.js';
+import SocietaAPI from './societa/SocietaAPI.js?v=2';
+import SocietaView from './societa/SocietaView.js?v=3';
+import SocietaOrgChart from './societa/SocietaOrgChart.js?v=2';
+import SocietaForesteria from './societa/SocietaForesteria.js?v=2';
 
 const Societa = {
     _abort: new AbortController(),
