@@ -12,6 +12,7 @@ const Societa = {
     _currentTab: 'identita',
     _data: {
         profile: null,
+        companies: [],
         roles: [],
         members: [],
         documents: [],
@@ -28,7 +29,7 @@ const Societa = {
         this._abort.abort();
         // Clear data to release memory
         this._data = {
-            profile: null, roles: [], members: [], documents: [],
+            profile: null, companies: [], roles: [], members: [], documents: [],
             deadlines: [], sponsors: [], titles: [], foresteria: null
         };
     },
@@ -71,6 +72,7 @@ const Societa = {
     reloadData: async function() {
         const promises = {
             profile: SocietaAPI.getProfile().catch(() => ({})),
+            companies: SocietaAPI.listCompanies().catch(() => []),
             roles: SocietaAPI.listRoles().catch(() => []),
             members: SocietaAPI.listMembers().catch(() => []),
             documents: SocietaAPI.listDocuments().catch(() => []),
@@ -107,7 +109,7 @@ const Societa = {
 
         switch (this._currentTab) {
             case 'identita':
-                appContainer.innerHTML = SocietaView.identity(this._data.profile, isAdmin);
+                appContainer.innerHTML = SocietaView.identity(this._data.profile, this._data.companies, isAdmin);
                 this.attachIdentityEvents(appContainer, isAdmin);
                 break;
             case 'organigramma':
@@ -204,6 +206,141 @@ const Societa = {
                 UI.toast(err.message, "error");
             }
         }, this.sig());
+
+        // Gestione Colore HEX txt => input color per il form della Identity
+        const bindColorSync = (txtId, clrId) => {
+            const txt = container.querySelector(txtId);
+            const clr = container.querySelector(clrId);
+            if(txt && clr) {
+                txt.addEventListener("input", (e) => {
+                    if(/^#[0-9A-Fa-f]{6}$/i.test(e.target.value)) clr.value = e.target.value;
+                }, this.sig());
+                clr.addEventListener("input", (e) => txt.value = e.target.value, this.sig());
+            }
+        };
+        bindColorSync("#soc-color-primary-txt", "#soc-color-primary");
+        bindColorSync("#soc-color-secondary-txt", "#soc-color-secondary");
+
+        // COMPANIES GRID
+        container.querySelector("#soc-add-company")?.addEventListener("click", () => {
+            this.openCompanyModal();
+        }, this.sig());
+
+        container.querySelectorAll(".soc-edit-company").forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                const id = e.currentTarget.dataset.id;
+                const company = this._data.companies.find(x => x.id == id);
+                if (company) this.openCompanyModal(company);
+            }, this.sig());
+        });
+
+        container.querySelectorAll(".soc-delete-company").forEach(btn => {
+            btn.addEventListener("click", async (e) => {
+                const id = e.currentTarget.dataset.id;
+                if (!confirm("Sei sicuro di voler eliminare questa società?")) return;
+                try {
+                    await SocietaAPI.deleteCompany(id);
+                    UI.toast("Società eliminata", "success");
+                    this.refreshTab();
+                } catch (err) {
+                    UI.toast(err.message, "error");
+                }
+            }, this.sig());
+        });
+    },
+
+    openCompanyModal: function(company = null) {
+        const isEdit = !!company;
+        const modal = UI.modal({
+            title: isEdit ? "Modifica Società" : "Nuova Società",
+            content: SocietaView.modalCompany(company),
+            buttons: [
+                { text: "Annulla", class: "btn-dash", close: true },
+                { text: "Salva", class: "btn-dash pink", onClick: async () => {
+                    const errEl = document.getElementById("comp-modal-err");
+                    const name = document.getElementById("comp-name").value.trim();
+                    if (!name) {
+                        errEl.textContent = "Il campo Ragione Sociale è obbligatorio.";
+                        errEl.classList.remove("hidden");
+                        return;
+                    }
+                    errEl.classList.add("hidden");
+                    
+                    const data = {
+                        name: name,
+                        vat_number: document.getElementById("comp-vat").value.trim(),
+                        company_type: document.getElementById("comp-type").value.trim(),
+                        primary_color: document.getElementById("comp-color-prim").value,
+                        secondary_color: document.getElementById("comp-color-sec").value,
+                        legal_address: document.getElementById("comp-legal-addr").value.trim(),
+                        operative_address: document.getElementById("comp-oper-addr").value.trim(),
+                        referent_name: document.getElementById("comp-ref-name").value.trim(),
+                        referent_contact: document.getElementById("comp-ref-contact").value.trim(),
+                        notes: document.getElementById("comp-notes").value.trim()
+                    };
+                    if (isEdit) data.id = company.id;
+
+                    const btnSalva = document.querySelector("#dash-modal button.pink");
+                    const originalText = btnSalva.innerHTML;
+                    btnSalva.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Salvataggio...';
+                    btnSalva.disabled = true;
+
+                    try {
+                        let compId = isEdit ? company.id : null;
+                        if (isEdit) {
+                            await SocietaAPI.updateCompany(data);
+                        } else {
+                            const res = await SocietaAPI.createCompany(data);
+                            compId = res.id || res.data?.id; // depending on Response::success format
+                        }
+
+                        // Logo upload if selected
+                        const fileInput = document.getElementById("comp-modal-logo-input");
+                        if (fileInput && fileInput.files.length > 0 && compId) {
+                            const fd = new FormData();
+                            fd.append("company_id", compId);
+                            fd.append("logo", fileInput.files[0]);
+                            await SocietaAPI.uploadCompanyLogo(fd);
+                        }
+
+                        UI.toast(isEdit ? "Società aggiornata" : "Società inserita", "success");
+                        modal.close();
+                        this.refreshTab();
+                    } catch (err) {
+                        errEl.textContent = err.message;
+                        errEl.classList.remove("hidden");
+                        btnSalva.innerHTML = originalText;
+                        btnSalva.disabled = false;
+                    }
+                }}
+            ]
+        });
+
+        // Initialize modal UI events (e.g., file input trigger, color sync)
+        setTimeout(() => {
+            const logoBtn = document.getElementById("comp-modal-logo-btn");
+            const logoInput = document.getElementById("comp-modal-logo-input");
+            if (logoBtn && logoInput) {
+                logoBtn.addEventListener("click", () => logoInput.click(), this.sig());
+                logoInput.addEventListener("change", (e) => {
+                    const f = e.target.files[0];
+                    if(f) logoBtn.textContent = f.name;
+                });
+            }
+
+            const bindColor = (txtId, clrId) => {
+                const txt = document.getElementById(txtId);
+                const clr = document.getElementById(clrId);
+                if(txt && clr) {
+                    txt.addEventListener("input", (e) => {
+                        if(/^#[0-9A-Fa-f]{6}$/i.test(e.target.value)) clr.value = e.target.value;
+                    });
+                    clr.addEventListener("input", (e) => txt.value = e.target.value);
+                }
+            };
+            bindColor("comp-color-prim-txt", "comp-color-prim");
+            bindColor("comp-color-sec-txt", "comp-color-sec");
+        }, 50);
     },
 
     attachOrgEvents: function(container, isAdmin) {

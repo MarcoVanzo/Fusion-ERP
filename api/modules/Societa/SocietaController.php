@@ -75,6 +75,57 @@ class SocietaController
         }, 201);
     }
 
+    // ─── COMPANIES ────────────────────────────────────────────────────────────
+
+    public function listCompanies(): void
+    {
+        Auth::requireRole('operator');
+        Response::success($this->repo->listCompanies());
+    }
+
+    public function createCompany(): void
+    {
+        Auth::requireRole('social media manager');
+        $body = Response::jsonBody();
+        Response::requireFields($body, ['name']);
+        $this->handleServiceCall(fn() => $this->service->createCompany($body, TenantContext::id()), 201);
+    }
+
+    public function updateCompany(): void
+    {
+        Auth::requireRole('social media manager');
+        $body = Response::jsonBody();
+        Response::requireFields($body, ['id', 'name']);
+        $this->handleServiceCall(function() use ($body) {
+            $this->service->updateCompany($body['id'], $body);
+            return ['message' => 'Azienda aggiornata'];
+        });
+    }
+
+    public function deleteCompany(): void
+    {
+        Auth::requireRole('social media manager');
+        $body = Response::jsonBody();
+        Response::requireFields($body, ['id']);
+        $this->handleServiceCall(function() use ($body) {
+            $this->service->deleteCompany($body['id']);
+            return ['message' => 'Azienda eliminata'];
+        });
+    }
+
+    public function uploadCompanyLogo(): void
+    {
+        Auth::requireRole('social media manager');
+        $companyId = filter_input(INPUT_POST, 'company_id', FILTER_DEFAULT) ?: '';
+        if (empty($companyId)) Response::error('company_id obbligatorio', 400);
+        if (empty($_FILES['logo'])) Response::error('Errore upload logo mancante', 400);
+
+        $this->handleServiceCall(function() use ($companyId) {
+            $relPath = $this->service->uploadCompanyLogo($companyId, $_FILES['logo'], TenantContext::id());
+            return ['logo_path' => $relPath];
+        });
+    }
+
     // ─── ROLES ────────────────────────────────────────────────────────────────
 
     public function listRoles(): void

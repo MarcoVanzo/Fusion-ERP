@@ -69,6 +69,81 @@ class SocietaRepository
         $stmt->execute(array_merge($data, [':tid' => $tenantId]));
     }
 
+    // ─── COMPANIES ────────────────────────────────────────────────────────────
+
+    public function listCompanies(): array
+    {
+        $tenantId = TenantContext::id();
+        $stmt = $this->db->prepare(
+            'SELECT * FROM societa_companies
+             WHERE tenant_id = :tid AND is_deleted = 0
+             ORDER BY created_at DESC'
+        );
+        $stmt->execute([':tid' => $tenantId]);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function getCompanyById(string $id): ?array
+    {
+        $tenantId = TenantContext::id();
+        $stmt = $this->db->prepare(
+            'SELECT * FROM societa_companies WHERE id = :id AND tenant_id = :tid AND is_deleted = 0'
+        );
+        $stmt->execute([':id' => $id, ':tid' => $tenantId]);
+        return $stmt->fetch(\PDO::FETCH_ASSOC) ?: null;
+    }
+
+    public function createCompany(array $data): void
+    {
+        $stmt = $this->db->prepare(
+            'INSERT INTO societa_companies
+                (id, tenant_id, name, company_type, vat_number, legal_address, operative_address,
+                 primary_color, secondary_color, logo_path, referent_name, referent_contact, notes)
+             VALUES
+                (:id, :tenant_id, :name, :company_type, :vat_number, :legal_address, :operative_address,
+                 :primary_color, :secondary_color, :logo_path, :referent_name, :referent_contact, :notes)'
+        );
+        $stmt->execute($data);
+    }
+
+    public function updateCompany(string $id, array $data): void
+    {
+        $tenantId = TenantContext::id();
+        $stmt = $this->db->prepare(
+            'UPDATE societa_companies SET
+                name              = :name,
+                company_type      = :company_type,
+                vat_number        = :vat_number,
+                legal_address     = :legal_address,
+                operative_address = :operative_address,
+                primary_color     = :primary_color,
+                secondary_color   = :secondary_color,
+                logo_path         = :logo_path,
+                referent_name     = :referent_name,
+                referent_contact  = :referent_contact,
+                notes             = :notes
+             WHERE id = :id AND tenant_id = :tid AND is_deleted = 0'
+        );
+        $stmt->execute(array_merge($data, [':id' => $id, ':tid' => $tenantId]));
+    }
+
+    public function updateCompanyLogo(string $id, string $logoPath): void
+    {
+        $tenantId = TenantContext::id();
+        $this->db->prepare(
+            'UPDATE societa_companies SET logo_path = :logo_path
+             WHERE id = :id AND tenant_id = :tid AND is_deleted = 0'
+        )->execute([':logo_path' => $logoPath, ':id' => $id, ':tid' => $tenantId]);
+    }
+
+    public function deleteCompany(string $id): void
+    {
+        $tenantId = TenantContext::id();
+        $this->db->prepare(
+            'UPDATE societa_companies SET is_deleted = 1 WHERE id = :id AND tenant_id = :tid'
+        )->execute([':id' => $id, ':tid' => $tenantId]);
+    }
+
     // ─── ROLES ────────────────────────────────────────────────────────────────
 
     public function listRoles(): array

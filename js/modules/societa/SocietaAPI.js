@@ -6,6 +6,12 @@ export default {
     saveProfile: (data) => Store.api("saveProfile", "societa", data),
     uploadLogo: (formData) => Store.api("uploadLogo", "societa", formData),
     
+    listCompanies: () => Store.get("listCompanies", "societa"),
+    createCompany: (data) => Store.api("createCompany", "societa", data),
+    updateCompany: (data) => Store.api("updateCompany", "societa", data),
+    deleteCompany: (id) => Store.api("deleteCompany", "societa", { id }),
+    uploadCompanyLogo: (formData) => Store.api("uploadCompanyLogo", "societa", formData),
+    
     listRoles: () => Store.get("listRoles", "societa"),
     createRole: (data) => Store.api("createRole", "societa", data),
     updateRole: (data) => Store.api("updateRole", "societa", data),

@@ -35,7 +35,7 @@ const SocietaView = {
             <div class="skeleton-shimmer" style="height:400px; border-radius:12px;"></div>
         </div>`,
 
-    identity: (profile, isAdmin) => {
+    identity: (profile, companies, isAdmin) => {
         const contentHtml = `
             <div style="max-width:1100px;">
                 <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: var(--sp-4); align-items: start;">
@@ -96,6 +96,20 @@ const SocietaView = {
                     </div>
                 </div>
                 <div id="soc-profile-err" class="form-error hidden" style="margin-top:var(--sp-2)"></div>
+                
+                <div style="margin-top: 40px; padding-top: 40px; border-top: 1px solid rgba(255,255,255,0.05);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 24px;">
+                        <div>
+                            <h2 style="font-size: 18px; font-weight: 600; margin: 0;">Società del Gruppo</h2>
+                            <p style="color: var(--text-muted); font-size: 13px; margin: 4px 0 0 0;">Gestisci le società e associazioni appartenenti o collegate al gruppo</p>
+                        </div>
+                        ${isAdmin ? '<button class="btn-dash pink" id="soc-add-company" type="button"><i class="ph ph-plus"></i> AGGIUNGI SOCIETÀ</button>' : ''}
+                    </div>
+                    
+                    <div id="soc-companies-grid">
+                        ${SocietaView.renderCompaniesList(companies, isAdmin)}
+                    </div>
+                </div>
             </div>`;
         return SocietaView._shell({
             icon: 'identification-card',
@@ -103,6 +117,149 @@ const SocietaView = {
             subtitle: 'Gestione colori, loghi e informazioni societarie',
             actionHtml: isAdmin ? `<button class="btn-dash pink" id="soc-save-profile" type="button"><i class="ph ph-floppy-disk"></i> SALVA PROFILO</button>` : ''
         }, contentHtml);
+    },
+
+    renderCompaniesList: (companies, isAdmin) => {
+        if (!companies || companies.length === 0) {
+            return `
+                <div style="text-align:center; padding:var(--sp-6) var(--sp-4); background:rgba(255,255,255,0.02); border-radius:12px; border:1px dashed rgba(255,255,255,0.1);">
+                    <i class="ph ph-buildings" style="font-size:32px; color:var(--text-muted); opacity:0.5; margin-bottom:var(--sp-3)"></i>
+                    <p style="color:var(--text-muted); font-size:14px; margin:0;">Nessuna società inserita.<br>Clicca su "Aggiungi Società" per iniziare.</p>
+                </div>
+            `;
+        }
+
+        const cards = companies.map(c => `
+            <div class="dash-card net-card" style="position:relative; display:flex; flex-direction:column; gap:16px;">
+                ${isAdmin ? `
+                <div style="position:absolute; top:12px; right:12px; display:flex; gap:4px">
+                    <button class="btn-icon small soc-edit-company" data-id="${c.id}" title="Modifica" style="width:28px;height:28px"><i class="ph ph-pencil-simple"></i></button>
+                    <button class="btn-icon small soc-delete-company" data-id="${c.id}" title="Elimina" style="width:28px;height:28px;color:var(--color-pink)"><i class="ph ph-trash"></i></button>
+                </div>
+                ` : ''}
+                
+                <div style="display:flex; align-items:center; gap:16px;">
+                    ${c.logo_path 
+                        ? `<img src="${Utils.escapeHtml(c.logo_path)}" alt="Logo" style="width:50px;height:50px;object-fit:cover;border-radius:8px;border:1px solid rgba(255,255,255,0.1)">`
+                        : `<div style="width:50px;height:50px;border-radius:8px;background:rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--text-muted)"><i class="ph ph-buildings"></i></div>`
+                    }
+                    <div>
+                        <h3 style="margin:0; font-size:16px; font-weight:600; color:#fff;">${Utils.escapeHtml(c.name)}</h3>
+                        <span style="font-size:12px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px">${Utils.escapeHtml(c.company_type || 'Società')}</span>
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; font-size:13px;">
+                    <div>
+                        <div style="color:var(--text-muted); font-size:11px; text-transform:uppercase; margin-bottom:2px">Partita IVA / CF</div>
+                        <div style="color:#ddd;">${Utils.escapeHtml(c.vat_number || '—')}</div>
+                    </div>
+                    <div>
+                        <div style="color:var(--text-muted); font-size:11px; text-transform:uppercase; margin-bottom:2px">Referente</div>
+                        <div style="color:#ddd;">${Utils.escapeHtml(c.referent_name || '—')}</div>
+                    </div>
+                </div>
+                
+                <div style="font-size:13px; color:#aaa; line-height:1.4">
+                    <div style="display:flex; gap:6px; margin-bottom:4px;">
+                        <i class="ph ph-map-pin" style="margin-top:2px; flex-shrink:0;"></i>
+                        <span>${Utils.escapeHtml(c.legal_address || '—')}</span>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+
+        return `
+            <div class="net-card-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:24px;">
+                ${cards}
+            </div>
+        `;
+    },
+
+    modalCompany: (company = null) => {
+        const isEdit = !!company;
+        const c = company || {};
+        
+        return `
+        <div style="display:flex; flex-direction:column; gap:20px;">
+            <div style="display:flex; gap:16px; align-items:flex-start;">
+                ${isEdit ? `
+                <div style="flex-shrink:0;">
+                    ${c.logo_path 
+                        ? `<img src="${Utils.escapeHtml(c.logo_path)}" alt="Logo" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid rgba(255,255,255,0.1)">`
+                        : `<div style="width:80px;height:80px;border-radius:8px;background:rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--text-muted)"><i class="ph ph-buildings"></i></div>`
+                    }
+                    <div style="margin-top:8px; text-align:center;">
+                        <input type="file" id="comp-modal-logo-input" accept="image/*" style="display:none">
+                        <button class="btn-dash btn-xs" id="comp-modal-logo-btn" type="button" style="width:100%">Cambia</button>
+                    </div>
+                </div>
+                ` : ''}
+                
+                <div style="flex-grow:1; display:flex; flex-direction:column; gap:12px;">
+                    <div class="form-group" style="margin:0">
+                        <label class="form-label">Ragione Sociale <span style="color:var(--color-pink)">*</span></label>
+                        <input type="text" id="comp-name" class="form-input" value="${Utils.escapeHtml(c.name || '')}" placeholder="Nome azienda...">
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                        <div class="form-group" style="margin:0">
+                            <label class="form-label">Partita IVA / CF</label>
+                            <input type="text" id="comp-vat" class="form-input" value="${Utils.escapeHtml(c.vat_number || '')}" placeholder="P.IVA O CF">
+                        </div>
+                        <div class="form-group" style="margin:0">
+                            <label class="form-label">Tipologia</label>
+                            <input type="text" id="comp-type" class="form-input" value="${Utils.escapeHtml(c.company_type || '')}" placeholder="es: S.R.L. / Associazione">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                <div class="form-group" style="margin:0">
+                    <label class="form-label">Colore Primario</label>
+                    <div style="display:flex; gap:8px;">
+                         <input type="color" id="comp-color-prim" value="${Utils.escapeHtml(c.primary_color || '#333333')}" style="width:40px;height:38px;padding:2px;background:var(--bg-input);border:1px solid var(--color-border);border-radius:6px;cursor:pointer;">
+                         <input type="text" id="comp-color-prim-txt" class="form-input" value="${Utils.escapeHtml(c.primary_color || '#333333')}" style="flex:1">
+                    </div>
+                </div>
+                <div class="form-group" style="margin:0">
+                    <label class="form-label">Colore Secondario</label>
+                    <div style="display:flex; gap:8px;">
+                         <input type="color" id="comp-color-sec" value="${Utils.escapeHtml(c.secondary_color || '#999999')}" style="width:40px;height:38px;padding:2px;background:var(--bg-input);border:1px solid var(--color-border);border-radius:6px;cursor:pointer;">
+                         <input type="text" id="comp-color-sec-txt" class="form-input" value="${Utils.escapeHtml(c.secondary_color || '#999999')}" style="flex:1">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Sede Legale</label>
+                <input type="text" id="comp-legal-addr" class="form-input" value="${Utils.escapeHtml(c.legal_address || '')}" placeholder="Indirizzo legale completo...">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Sede Operativa</label>
+                <input type="text" id="comp-oper-addr" class="form-input" value="${Utils.escapeHtml(c.operative_address || '')}" placeholder="Indirizzo operativo (se diverso)...">
+            </div>
+            
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                <div class="form-group" style="margin:0">
+                    <label class="form-label">Referente</label>
+                    <input type="text" id="comp-ref-name" class="form-input" value="${Utils.escapeHtml(c.referent_name || '')}" placeholder="Nome del referente...">
+                </div>
+                <div class="form-group" style="margin:0">
+                    <label class="form-label">Contatto Referente</label>
+                    <input type="text" id="comp-ref-contact" class="form-input" value="${Utils.escapeHtml(c.referent_contact || '')}" placeholder="Email o Telefono...">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Note Aggiuntive</label>
+                <textarea id="comp-notes" class="form-input" rows="2" placeholder="Note interne opzionali...">${Utils.escapeHtml(c.notes || '')}</textarea>
+            </div>
+            
+            <div id="comp-modal-err" class="form-error hidden"></div>
+        </div>
+        `;
     },
 
     orgChart: (roles, isAdmin) => {
