@@ -97,11 +97,11 @@ class SocietaRepository
     {
         $stmt = $this->db->prepare(
             'INSERT INTO societa_companies
-                (id, tenant_id, name, company_type, vat_number, legal_address, operative_address,
-                 primary_color, secondary_color, logo_path, referent_name, referent_contact, notes)
+                (id, tenant_id, name, vat_number, legal_address,
+                 website, facebook, instagram, logo_path, referent_name, referent_contact, description)
              VALUES
-                (:id, :tenant_id, :name, :company_type, :vat_number, :legal_address, :operative_address,
-                 :primary_color, :secondary_color, :logo_path, :referent_name, :referent_contact, :notes)'
+                (:id, :tenant_id, :name, :vat_number, :legal_address,
+                 :website, :facebook, :instagram, :logo_path, :referent_name, :referent_contact, :description)'
         );
         $stmt->execute($data);
     }
@@ -112,16 +112,15 @@ class SocietaRepository
         $stmt = $this->db->prepare(
             'UPDATE societa_companies SET
                 name              = :name,
-                company_type      = :company_type,
                 vat_number        = :vat_number,
                 legal_address     = :legal_address,
-                operative_address = :operative_address,
-                primary_color     = :primary_color,
-                secondary_color   = :secondary_color,
+                website           = :website,
+                facebook          = :facebook,
+                instagram         = :instagram,
                 logo_path         = :logo_path,
                 referent_name     = :referent_name,
                 referent_contact  = :referent_contact,
-                notes             = :notes
+                description       = :description
              WHERE id = :id AND tenant_id = :tid AND is_deleted = 0'
         );
         $stmt->execute(array_merge($data, [':id' => $id, ':tid' => $tenantId]));

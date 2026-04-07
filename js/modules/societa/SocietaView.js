@@ -145,7 +145,6 @@ const SocietaView = {
                     }
                     <div>
                         <h3 style="margin:0; font-size:16px; font-weight:600; color:#fff;">${Utils.escapeHtml(c.name)}</h3>
-                        <span style="font-size:12px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px">${Utils.escapeHtml(c.company_type || 'Società')}</span>
                     </div>
                 </div>
 
@@ -183,7 +182,15 @@ const SocietaView = {
         return `
         <div style="display:flex; flex-direction:column; gap:20px;">
             <div style="display:flex; gap:16px; align-items:flex-start;">
-                ${isEdit ? `
+                ${!isEdit ? `
+                <div style="flex-shrink:0;">
+                    <div style="width:80px;height:80px;border-radius:8px;background:rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--text-muted)"><i class="ph ph-buildings"></i></div>
+                    <div style="margin-top:8px; text-align:center;">
+                        <input type="file" id="comp-modal-logo-input" accept="image/*" style="display:none">
+                        <button class="btn-dash btn-xs" id="comp-modal-logo-btn" type="button" style="width:100%">Carica</button>
+                    </div>
+                </div>
+                ` : `
                 <div style="flex-shrink:0;">
                     ${c.logo_path 
                         ? `<img src="${Utils.escapeHtml(c.logo_path)}" alt="Logo" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid rgba(255,255,255,0.1)">`
@@ -194,39 +201,16 @@ const SocietaView = {
                         <button class="btn-dash btn-xs" id="comp-modal-logo-btn" type="button" style="width:100%">Cambia</button>
                     </div>
                 </div>
-                ` : ''}
+                `}
                 
                 <div style="flex-grow:1; display:flex; flex-direction:column; gap:12px;">
                     <div class="form-group" style="margin:0">
                         <label class="form-label">Ragione Sociale <span style="color:var(--color-pink)">*</span></label>
                         <input type="text" id="comp-name" class="form-input" value="${Utils.escapeHtml(c.name || '')}" placeholder="Nome azienda...">
                     </div>
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-                        <div class="form-group" style="margin:0">
-                            <label class="form-label">Partita IVA / CF</label>
-                            <input type="text" id="comp-vat" class="form-input" value="${Utils.escapeHtml(c.vat_number || '')}" placeholder="P.IVA O CF">
-                        </div>
-                        <div class="form-group" style="margin:0">
-                            <label class="form-label">Tipologia</label>
-                            <input type="text" id="comp-type" class="form-input" value="${Utils.escapeHtml(c.company_type || '')}" placeholder="es: S.R.L. / Associazione">
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-                <div class="form-group" style="margin:0">
-                    <label class="form-label">Colore Primario</label>
-                    <div style="display:flex; gap:8px;">
-                         <input type="color" id="comp-color-prim" value="${Utils.escapeHtml(c.primary_color || '#333333')}" style="width:40px;height:38px;padding:2px;background:var(--bg-input);border:1px solid var(--color-border);border-radius:6px;cursor:pointer;">
-                         <input type="text" id="comp-color-prim-txt" class="form-input" value="${Utils.escapeHtml(c.primary_color || '#333333')}" style="flex:1">
-                    </div>
-                </div>
-                <div class="form-group" style="margin:0">
-                    <label class="form-label">Colore Secondario</label>
-                    <div style="display:flex; gap:8px;">
-                         <input type="color" id="comp-color-sec" value="${Utils.escapeHtml(c.secondary_color || '#999999')}" style="width:40px;height:38px;padding:2px;background:var(--bg-input);border:1px solid var(--color-border);border-radius:6px;cursor:pointer;">
-                         <input type="text" id="comp-color-sec-txt" class="form-input" value="${Utils.escapeHtml(c.secondary_color || '#999999')}" style="flex:1">
+                    <div class="form-group" style="margin:0">
+                        <label class="form-label">Partita IVA / CF</label>
+                        <input type="text" id="comp-vat" class="form-input" value="${Utils.escapeHtml(c.vat_number || '')}" placeholder="P.IVA O CF">
                     </div>
                 </div>
             </div>
@@ -236,9 +220,23 @@ const SocietaView = {
                 <input type="text" id="comp-legal-addr" class="form-input" value="${Utils.escapeHtml(c.legal_address || '')}" placeholder="Indirizzo legale completo...">
             </div>
 
-            <div class="form-group">
-                <label class="form-label">Sede Operativa</label>
-                <input type="text" id="comp-oper-addr" class="form-input" value="${Utils.escapeHtml(c.operative_address || '')}" placeholder="Indirizzo operativo (se diverso)...">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                <div class="form-group" style="margin:0">
+                    <label class="form-label">Sito Web</label>
+                    <input type="text" id="comp-website" class="form-input" value="${Utils.escapeHtml(c.website || '')}" placeholder="https://...">
+                </div>
+                <div class="form-group" style="margin:0; grid-column: span 2;">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                        <div class="form-group" style="margin:0">
+                            <label class="form-label">Facebook</label>
+                            <input type="text" id="comp-facebook" class="form-input" value="${Utils.escapeHtml(c.facebook || '')}" placeholder="URL Pagina FB...">
+                        </div>
+                        <div class="form-group" style="margin:0">
+                            <label class="form-label">Instagram</label>
+                            <input type="text" id="comp-instagram" class="form-input" value="${Utils.escapeHtml(c.instagram || '')}" placeholder="URL Pagina IG...">
+                        </div>
+                    </div>
+                </div>
             </div>
             
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
@@ -253,8 +251,8 @@ const SocietaView = {
             </div>
 
             <div class="form-group">
-                <label class="form-label">Note Aggiuntive</label>
-                <textarea id="comp-notes" class="form-input" rows="2" placeholder="Note interne opzionali...">${Utils.escapeHtml(c.notes || '')}</textarea>
+                <label class="form-label">Descrizione</label>
+                <textarea id="comp-desc" class="form-input" rows="2" placeholder="Note interne opzionali...">${Utils.escapeHtml(c.description || '')}</textarea>
             </div>
             
             <div id="comp-modal-err" class="form-error hidden"></div>

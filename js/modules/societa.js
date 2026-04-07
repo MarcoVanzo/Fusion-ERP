@@ -271,14 +271,13 @@ const Societa = {
             const data = {
                 name: name,
                 vat_number: document.getElementById("comp-vat").value.trim(),
-                company_type: document.getElementById("comp-type").value.trim(),
-                primary_color: document.getElementById("comp-color-prim").value,
-                secondary_color: document.getElementById("comp-color-sec").value,
                 legal_address: document.getElementById("comp-legal-addr").value.trim(),
-                operative_address: document.getElementById("comp-oper-addr").value.trim(),
+                website: document.getElementById("comp-website").value.trim(),
+                facebook: document.getElementById("comp-facebook").value.trim(),
+                instagram: document.getElementById("comp-instagram").value.trim(),
                 referent_name: document.getElementById("comp-ref-name").value.trim(),
                 referent_contact: document.getElementById("comp-ref-contact").value.trim(),
-                notes: document.getElementById("comp-notes").value.trim()
+                description: document.getElementById("comp-desc").value.trim()
             };
             if (isEdit) data.id = company.id;
 

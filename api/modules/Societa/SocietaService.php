@@ -92,16 +92,13 @@ class SocietaService
             ':id'                => $id,
             ':tenant_id'         => $tenantId,
             ':name'              => htmlspecialchars(trim($body['name'] ?? ''), ENT_QUOTES, 'UTF-8'),
-            ':company_type'      => $body['company_type'] ?? null,
-            ':vat_number'        => htmlspecialchars(trim($body['vat_number'] ?? ''), ENT_QUOTES, 'UTF-8'),
-            ':legal_address'     => htmlspecialchars(trim($body['legal_address'] ?? ''), ENT_QUOTES, 'UTF-8'),
-            ':operative_address' => htmlspecialchars(trim($body['operative_address'] ?? ''), ENT_QUOTES, 'UTF-8'),
-            ':primary_color'     => $body['primary_color'] ?? null,
-            ':secondary_color'   => $body['secondary_color'] ?? null,
+            ':website'           => htmlspecialchars(trim($body['website'] ?? ''), ENT_QUOTES, 'UTF-8'),
+            ':facebook'          => htmlspecialchars(trim($body['facebook'] ?? ''), ENT_QUOTES, 'UTF-8'),
+            ':instagram'         => htmlspecialchars(trim($body['instagram'] ?? ''), ENT_QUOTES, 'UTF-8'),
             ':logo_path'         => $body['logo_path'] ?? null,
             ':referent_name'     => htmlspecialchars(trim($body['referent_name'] ?? ''), ENT_QUOTES, 'UTF-8'),
             ':referent_contact'  => htmlspecialchars(trim($body['referent_contact'] ?? ''), ENT_QUOTES, 'UTF-8'),
-            ':notes'             => $body['notes'] ?? null,
+            ':description'       => $body['description'] ?? null,
         ];
         
         $this->repo->createCompany($data);
@@ -116,16 +113,15 @@ class SocietaService
 
         $data = [
             ':name'              => htmlspecialchars(trim($body['name'] ?? ''), ENT_QUOTES, 'UTF-8'),
-            ':company_type'      => $body['company_type'] ?? null,
             ':vat_number'        => htmlspecialchars(trim($body['vat_number'] ?? ''), ENT_QUOTES, 'UTF-8'),
             ':legal_address'     => htmlspecialchars(trim($body['legal_address'] ?? ''), ENT_QUOTES, 'UTF-8'),
-            ':operative_address' => htmlspecialchars(trim($body['operative_address'] ?? ''), ENT_QUOTES, 'UTF-8'),
-            ':primary_color'     => $body['primary_color'] ?? null,
-            ':secondary_color'   => $body['secondary_color'] ?? null,
+            ':website'           => htmlspecialchars(trim($body['website'] ?? ''), ENT_QUOTES, 'UTF-8'),
+            ':facebook'          => htmlspecialchars(trim($body['facebook'] ?? ''), ENT_QUOTES, 'UTF-8'),
+            ':instagram'         => htmlspecialchars(trim($body['instagram'] ?? ''), ENT_QUOTES, 'UTF-8'),
             ':logo_path'         => array_key_exists('logo_path', $body) ? $body['logo_path'] : $before['logo_path'],
             ':referent_name'     => htmlspecialchars(trim($body['referent_name'] ?? ''), ENT_QUOTES, 'UTF-8'),
             ':referent_contact'  => htmlspecialchars(trim($body['referent_contact'] ?? ''), ENT_QUOTES, 'UTF-8'),
-            ':notes'             => $body['notes'] ?? null,
+            ':description'       => $body['description'] ?? null,
         ];
 
         $this->repo->updateCompany($id, $data);
