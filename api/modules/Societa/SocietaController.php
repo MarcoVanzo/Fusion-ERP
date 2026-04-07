@@ -414,6 +414,28 @@ class SocietaController
         Response::success($profile);
     }
 
+    public function getPublicCompanies(): void
+    {
+        $db = \FusionERP\Shared\Database::getInstance();
+        $tenantId = \FusionERP\Shared\TenantContext::id();
+
+        $stmt = $db->prepare(
+            'SELECT * FROM societa_companies
+             WHERE tenant_id = :tid AND is_deleted = 0
+             ORDER BY created_at ASC'
+        );
+        $stmt->execute([':tid' => $tenantId]);
+        $results = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        // Fallback to TNT_fusion if no companies found for the specific tenant
+        if (empty($results) && $tenantId !== 'TNT_fusion') {
+            $stmt->execute([':tid' => 'TNT_fusion']);
+            $results = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        }
+
+        Response::success($results);
+    }
+
     public function getPublicSponsors(): void
     {
         $db = \FusionERP\Shared\Database::getInstance();

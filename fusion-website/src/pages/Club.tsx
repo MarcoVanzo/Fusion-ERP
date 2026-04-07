@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Seo } from '../components/Seo';
 import { motion } from 'framer-motion';
-import { Shield, Eye, Heart, Calendar, Users, ChevronRight } from 'lucide-react';
+import { Shield, Eye, Heart, Calendar, Users, ChevronRight, Globe, Facebook, Instagram, Building2 } from 'lucide-react';
 
 const ERP_BASE = 'https://www.fusionteamvolley.it/ERP';
 const API_URL = `${ERP_BASE}/api/router.php`;
@@ -37,24 +37,42 @@ interface OrganigrammaData {
     members: Member[];
 }
 
+interface Company {
+    id: string;
+    name: string;
+    vat_number: string | null;
+    legal_address: string | null;
+    website: string | null;
+    facebook: string | null;
+    instagram: string | null;
+    logo_path: string | null;
+    referent_name: string | null;
+    referent_contact: string | null;
+    description: string | null;
+}
+
 const Club = () => {
     const [profile, setProfile] = useState<ClubProfile | null>(null);
     const [orgData, setOrgData] = useState<OrganigrammaData | null>(null);
+    const [companies, setCompanies] = useState<Company[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [profileRes, orgRes] = await Promise.all([
+                const [profileRes, orgRes, companiesRes] = await Promise.all([
                     fetch(`${API_URL}?module=societa&action=getPublicProfile`),
-                    fetch(`${API_URL}?module=societa&action=getPublicOrganigramma`)
+                    fetch(`${API_URL}?module=societa&action=getPublicOrganigramma`),
+                    fetch(`${API_URL}?module=societa&action=getPublicCompanies`)
                 ]);
                 
                 const profileJson = await profileRes.json();
                 const orgJson = await orgRes.json();
+                const companiesJson = await companiesRes.json();
 
                 if (profileJson.success) setProfile(profileJson.data);
                 if (orgJson.success) setOrgData(orgJson.data);
+                if (companiesJson.success) setCompanies(companiesJson.data);
             } catch (error) {
                 console.error('Failed to fetch club data:', error);
             } finally {
@@ -254,6 +272,114 @@ const Club = () => {
                         </motion.div>
                     )}
 
+                    {/* Società Fondatrici */}
+                    {companies.length > 0 && (
+                        <motion.div variants={itemVariants} className="mt-12">
+                            <div className="text-center mb-16">
+                                <h2 className="font-heading text-4xl md:text-6xl text-white uppercase mb-4 tracking-tighter">
+                                    LE <span className="text-brand-500">SOCIETÀ FONDATRICI</span>
+                                </h2>
+                                <p className="text-zinc-500 uppercase tracking-[0.2em] text-sm">Il cuore del Progetto Fusion</p>
+                            </div>
+
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                                {companies.map((company) => (
+                                    <motion.div
+                                        key={company.id}
+                                        variants={itemVariants}
+                                        whileHover={{ y: -10, scale: 1.02 }}
+                                        className="group relative bg-zinc-900/40 overflow-hidden backdrop-blur-sm border border-zinc-800/60 hover:border-brand-500 transition-all duration-500 flex flex-col shadow-2xl hover:shadow-[0_0_30px_rgba(217,70,239,0.3)] rounded-[2rem] min-h-[500px] md:h-[500px]"
+                                    >
+                                        <div className="absolute inset-0 bg-gradient-to-br from-brand-500/0 via-brand-500/5 to-brand-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+
+                                        <div className="relative flex items-center justify-center bg-white shrink-0 p-6 h-40 sm:h-48">
+                                            {company.logo_path ? (
+                                                <img
+                                                    src={company.logo_path.startsWith('http') ? company.logo_path : `${ERP_BASE}/${company.logo_path}`}
+                                                    alt={`Logo ${company.name}`}
+                                                    className="max-h-full max-w-full object-contain filter grayscale-0 md:grayscale md:group-hover:grayscale-0 transition-all duration-700 hover:scale-105 drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]"
+                                                />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center">
+                                                    <span className="font-heading text-zinc-800 font-bold group-hover:text-brand-500 transition-colors duration-500 text-4xl md:text-5xl">
+                                                        {company.name.substring(0, 2).toUpperCase()}
+                                                    </span>
+                                                </div>
+                                            )}
+                                            <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/10 to-transparent"></div>
+                                        </div>
+
+                                        <div className="flex flex-col flex-grow min-h-0 overflow-hidden z-10 p-6 md:p-8">
+                                            <div className="mb-2 shrink-0">
+                                                <span className="inline-block px-3 py-1 bg-zinc-800/80 text-brand-400 text-xs font-bold uppercase tracking-wider rounded-full border border-zinc-700">
+                                                    Società Fondatrice
+                                                </span>
+                                            </div>
+                                            <h3 className="text-2xl font-heading text-white uppercase tracking-wider group-hover:text-brand-400 transition-colors mb-3 shrink-0">
+                                                {company.name}
+                                            </h3>
+                                            
+                                            {company.description ? (
+                                                <div 
+                                                    className="relative mb-6 h-auto md:h-[92px] shrink-0 overflow-visible md:overflow-y-auto pr-0 md:pr-2" 
+                                                    style={{ scrollbarWidth: 'thin', scrollbarColor: '#3f3f46 transparent' }}
+                                                >
+                                                    <p className="text-zinc-400 leading-relaxed font-light text-sm" title={company.description}>
+                                                        {company.description}
+                                                    </p>
+                                                </div>
+                                            ) : (
+                                                <div className="flex-grow flex items-center mb-6 min-h-0">
+                                                    <div className="text-zinc-600 text-sm italic">Nessuna descrizione disponibile.</div>
+                                                </div>
+                                            )}
+
+                                            <div className="flex flex-wrap items-center gap-3 mt-auto pt-4 border-t border-zinc-800/50 shrink-0">
+                                                {company.website && (
+                                                    <a
+                                                        href={company.website.startsWith('http') ? company.website : `https://${company.website}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="flex items-center justify-center w-10 h-10 bg-zinc-800/80 rounded-full text-zinc-400 hover:text-white hover:bg-brand-600 transition-all duration-300 hover:scale-110"
+                                                        title="Sito Web"
+                                                    >
+                                                        <Globe size={18} strokeWidth={2} />
+                                                    </a>
+                                                )}
+                                                {company.facebook && (
+                                                    <a
+                                                        href={company.facebook}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="flex items-center justify-center w-10 h-10 bg-zinc-800/80 rounded-full text-zinc-400 hover:text-white hover:bg-blue-600 transition-all duration-300 hover:scale-110"
+                                                        title="Facebook"
+                                                    >
+                                                        <Facebook size={18} strokeWidth={2} />
+                                                    </a>
+                                                )}
+                                                {company.instagram && (
+                                                    <a
+                                                        href={company.instagram}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="flex items-center justify-center w-10 h-10 bg-zinc-800/80 rounded-full text-zinc-400 hover:text-white hover:bg-pink-600 transition-all duration-300 hover:scale-110"
+                                                        title="Instagram"
+                                                    >
+                                                        <Instagram size={18} strokeWidth={2} />
+                                                    </a>
+                                                )}
+                                                
+                                                {!company.website && !company.facebook && !company.instagram && (
+                                                    <span className="text-xs text-zinc-600 italic">Nessun link social</span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                ))}
+                            </div>
+                        </motion.div>
+                    )}
+
                     {/* Organigramma Section */}
                     {orgData && orgData.roles.length > 0 && (
                         <motion.div variants={itemVariants} className="mt-12">
@@ -365,7 +491,7 @@ const Club = () => {
                     )}
 
                     {/* Fallback if no profile data at all */}
-                    {!profile?.mission && !profile?.vision && valuesList.length === 0 && !profile?.founded_year && !orgData?.roles.length && (
+                    {!profile?.mission && !profile?.vision && valuesList.length === 0 && !profile?.founded_year && !orgData?.roles.length && companies.length === 0 && (
                         <motion.div variants={itemVariants}>
                             <div className="bg-zinc-900/50 p-8 md:p-12 border border-zinc-800 rounded-2xl backdrop-blur-sm text-center">
                                 <Shield className="mx-auto text-zinc-600 mb-4" size={48} />
