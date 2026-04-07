@@ -152,6 +152,7 @@ const Societa = {
     refreshTab: async function() {
         UI.loading(true);
         try {
+            Store.invalidate("societa");
             await this.reloadData();
             this.render();
         } catch (err) {
