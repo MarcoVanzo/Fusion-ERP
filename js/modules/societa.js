@@ -253,68 +253,68 @@ const Societa = {
         const isEdit = !!company;
         const modal = UI.modal({
             title: isEdit ? "Modifica Società" : "Nuova Società",
-            content: SocietaView.modalCompany(company),
-            buttons: [
-                { text: "Annulla", class: "btn-dash", close: true },
-                { text: "Salva", class: "btn-dash pink", onClick: async () => {
-                    const errEl = document.getElementById("comp-modal-err");
-                    const name = document.getElementById("comp-name").value.trim();
-                    if (!name) {
-                        errEl.textContent = "Il campo Ragione Sociale è obbligatorio.";
-                        errEl.classList.remove("hidden");
-                        return;
-                    }
-                    errEl.classList.add("hidden");
-                    
-                    const data = {
-                        name: name,
-                        vat_number: document.getElementById("comp-vat").value.trim(),
-                        company_type: document.getElementById("comp-type").value.trim(),
-                        primary_color: document.getElementById("comp-color-prim").value,
-                        secondary_color: document.getElementById("comp-color-sec").value,
-                        legal_address: document.getElementById("comp-legal-addr").value.trim(),
-                        operative_address: document.getElementById("comp-oper-addr").value.trim(),
-                        referent_name: document.getElementById("comp-ref-name").value.trim(),
-                        referent_contact: document.getElementById("comp-ref-contact").value.trim(),
-                        notes: document.getElementById("comp-notes").value.trim()
-                    };
-                    if (isEdit) data.id = company.id;
-
-                    const btnSalva = document.querySelector("#dash-modal button.pink");
-                    const originalText = btnSalva.innerHTML;
-                    btnSalva.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Salvataggio...';
-                    btnSalva.disabled = true;
-
-                    try {
-                        let compId = isEdit ? company.id : null;
-                        if (isEdit) {
-                            await SocietaAPI.updateCompany(data);
-                        } else {
-                            const res = await SocietaAPI.createCompany(data);
-                            compId = res.id || res.data?.id; // depending on Response::success format
-                        }
-
-                        // Logo upload if selected
-                        const fileInput = document.getElementById("comp-modal-logo-input");
-                        if (fileInput && fileInput.files.length > 0 && compId) {
-                            const fd = new FormData();
-                            fd.append("company_id", compId);
-                            fd.append("logo", fileInput.files[0]);
-                            await SocietaAPI.uploadCompanyLogo(fd);
-                        }
-
-                        UI.toast(isEdit ? "Società aggiornata" : "Società inserita", "success");
-                        modal.close();
-                        this.refreshTab();
-                    } catch (err) {
-                        errEl.textContent = err.message;
-                        errEl.classList.remove("hidden");
-                        btnSalva.innerHTML = originalText;
-                        btnSalva.disabled = false;
-                    }
-                }}
-            ]
+            body: SocietaView.modalCompany(company),
+            footer: '<button class="btn-dash ghost" id="comp-modal-cancel">Annulla</button><button class="btn-dash pink" id="comp-modal-save">Salva</button>'
         });
+
+        document.getElementById("comp-modal-cancel")?.addEventListener("click", () => modal.close(), this.sig());
+        document.getElementById("comp-modal-save")?.addEventListener("click", async () => {
+            const errEl = document.getElementById("comp-modal-err");
+            const name = document.getElementById("comp-name").value.trim();
+            if (!name) {
+                errEl.textContent = "Il campo Ragione Sociale è obbligatorio.";
+                errEl.classList.remove("hidden");
+                return;
+            }
+            errEl.classList.add("hidden");
+            
+            const data = {
+                name: name,
+                vat_number: document.getElementById("comp-vat").value.trim(),
+                company_type: document.getElementById("comp-type").value.trim(),
+                primary_color: document.getElementById("comp-color-prim").value,
+                secondary_color: document.getElementById("comp-color-sec").value,
+                legal_address: document.getElementById("comp-legal-addr").value.trim(),
+                operative_address: document.getElementById("comp-oper-addr").value.trim(),
+                referent_name: document.getElementById("comp-ref-name").value.trim(),
+                referent_contact: document.getElementById("comp-ref-contact").value.trim(),
+                notes: document.getElementById("comp-notes").value.trim()
+            };
+            if (isEdit) data.id = company.id;
+
+            const btnSalva = document.getElementById("comp-modal-save");
+            const originalText = btnSalva.innerHTML;
+            btnSalva.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Salvataggio...';
+            btnSalva.disabled = true;
+
+            try {
+                let compId = isEdit ? company.id : null;
+                if (isEdit) {
+                    await SocietaAPI.updateCompany(data);
+                } else {
+                    const res = await SocietaAPI.createCompany(data);
+                    compId = res.id || res.data?.id; // depending on Response::success format
+                }
+
+                // Logo upload if selected
+                const fileInput = document.getElementById("comp-modal-logo-input");
+                if (fileInput && fileInput.files.length > 0 && compId) {
+                    const fd = new FormData();
+                    fd.append("company_id", compId);
+                    fd.append("logo", fileInput.files[0]);
+                    await SocietaAPI.uploadCompanyLogo(fd);
+                }
+
+                UI.toast(isEdit ? "Società aggiornata" : "Società inserita", "success");
+                modal.close();
+                this.refreshTab();
+            } catch (err) {
+                errEl.textContent = err.message;
+                errEl.classList.remove("hidden");
+                btnSalva.innerHTML = originalText;
+                btnSalva.disabled = false;
+            }
+        }, this.sig());
 
         // Initialize modal UI events (e.g., file input trigger, color sync)
         setTimeout(() => {
