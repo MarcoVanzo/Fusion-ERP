@@ -217,61 +217,6 @@ const Club = () => {
                         </motion.div>
                     )}
 
-                    {/* Values */}
-                    {valuesList.length > 0 && (
-                        <motion.div variants={itemVariants}>
-                            <div className="group bg-zinc-900/80 backdrop-blur-sm rounded-2xl border border-zinc-800 overflow-hidden hover:border-brand-500/30 transition-all duration-500 hover:shadow-[0_0_40px_rgba(217,70,239,0.1)]">
-                                <div className="p-8 md:p-10">
-                                    <div className="flex items-center gap-4 mb-8">
-                                        <div className="p-3 bg-brand-500/10 rounded-xl ring-1 ring-brand-500/30 group-hover:bg-brand-500/20 transition-colors">
-                                            <Heart className="text-brand-400" size={24} />
-                                        </div>
-                                        <h2 className="font-heading text-3xl md:text-4xl text-white uppercase tracking-tight">
-                                            I NOSTRI <span className="text-brand-500">VALORI</span>
-                                        </h2>
-                                    </div>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                                        {valuesList.map((value, idx) => (
-                                            <motion.div
-                                                key={idx}
-                                                initial={{ opacity: 0, scale: 0.9 }}
-                                                animate={{ opacity: 1, scale: 1 }}
-                                                transition={{ delay: 0.3 + idx * 0.08 }}
-                                                className="bg-zinc-950/60 border border-zinc-800 rounded-xl p-5 text-center hover:border-brand-500/40 hover:bg-zinc-900/50 transition-all duration-300 group/val"
-                                            >
-                                                <span className="text-zinc-200 font-heading text-lg uppercase tracking-wide group-hover/val:text-brand-300 transition-colors">
-                                                    {value}
-                                                </span>
-                                            </motion.div>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        </motion.div>
-                    )}
-
-                    {/* Founded Year Card */}
-                    {profile?.founded_year && (
-                        <motion.div variants={itemVariants}>
-                            <div className="bg-gradient-to-r from-brand-500/10 via-zinc-900/80 to-brand-500/10 backdrop-blur-sm rounded-2xl border border-brand-500/20 p-8 md:p-10 text-center">
-                                <div className="inline-flex items-center justify-center p-4 bg-brand-500/10 rounded-full mb-4 ring-1 ring-brand-500/30">
-                                    <Calendar className="text-brand-400" size={28} />
-                                </div>
-                                <div className="font-heading text-6xl md:text-7xl text-brand-500 mb-2 drop-shadow-[0_0_15px_rgba(217,70,239,0.4)]">
-                                    {profile.founded_year}
-                                </div>
-                                <div className="text-zinc-400 text-sm tracking-[0.3em] uppercase font-heading">
-                                    Anno di Fondazione
-                                </div>
-                                {yearsActive && (
-                                    <div className="mt-3 text-zinc-500 text-sm">
-                                        {yearsActive} anni di storia sportiva
-                                    </div>
-                                )}
-                            </div>
-                        </motion.div>
-                    )}
-
                     {/* Società Fondatrici */}
                     {companies.length > 0 && (
                         <motion.div variants={itemVariants} className="mt-12">
@@ -379,6 +324,62 @@ const Club = () => {
                             </div>
                         </motion.div>
                     )}
+
+                    {/* Values */}
+                    {valuesList.length > 0 && (
+                        <motion.div variants={itemVariants}>
+                            <div className="group bg-zinc-900/80 backdrop-blur-sm rounded-2xl border border-zinc-800 overflow-hidden hover:border-brand-500/30 transition-all duration-500 hover:shadow-[0_0_40px_rgba(217,70,239,0.1)]">
+                                <div className="p-8 md:p-10">
+                                    <div className="flex items-center gap-4 mb-8">
+                                        <div className="p-3 bg-brand-500/10 rounded-xl ring-1 ring-brand-500/30 group-hover:bg-brand-500/20 transition-colors">
+                                            <Heart className="text-brand-400" size={24} />
+                                        </div>
+                                        <h2 className="font-heading text-3xl md:text-4xl text-white uppercase tracking-tight">
+                                            I NOSTRI <span className="text-brand-500">VALORI</span>
+                                        </h2>
+                                    </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                                        {valuesList.map((value, idx) => (
+                                            <motion.div
+                                                key={idx}
+                                                initial={{ opacity: 0, scale: 0.9 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                transition={{ delay: 0.3 + idx * 0.08 }}
+                                                className="bg-zinc-950/60 border border-zinc-800 rounded-xl p-5 text-center hover:border-brand-500/40 hover:bg-zinc-900/50 transition-all duration-300 group/val"
+                                            >
+                                                <span className="text-zinc-200 font-heading text-lg uppercase tracking-wide group-hover/val:text-brand-300 transition-colors">
+                                                    {value}
+                                                </span>
+                                            </motion.div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
+
+                    {/* Founded Year Card */}
+                    {profile?.founded_year && (
+                        <motion.div variants={itemVariants}>
+                            <div className="bg-gradient-to-r from-brand-500/10 via-zinc-900/80 to-brand-500/10 backdrop-blur-sm rounded-2xl border border-brand-500/20 p-8 md:p-10 text-center">
+                                <div className="inline-flex items-center justify-center p-4 bg-brand-500/10 rounded-full mb-4 ring-1 ring-brand-500/30">
+                                    <Calendar className="text-brand-400" size={28} />
+                                </div>
+                                <div className="font-heading text-6xl md:text-7xl text-brand-500 mb-2 drop-shadow-[0_0_15px_rgba(217,70,239,0.4)]">
+                                    {profile.founded_year}
+                                </div>
+                                <div className="text-zinc-400 text-sm tracking-[0.3em] uppercase font-heading">
+                                    Anno di Fondazione
+                                </div>
+                                {yearsActive && (
+                                    <div className="mt-3 text-zinc-500 text-sm">
+                                        {yearsActive} anni di storia sportiva
+                                    </div>
+                                )}
+                            </div>
+                        </motion.div>
+                    )}
+
 
                     {/* Organigramma Section */}
                     {orgData && orgData.roles.length > 0 && (
