@@ -95,14 +95,14 @@ const Navbar = () => {
                     )}
 
                     {/* Desktop Left Links */}
-                    <div className="hidden lg:flex items-center gap-4 xl:gap-6 ml-4 xl:ml-8">
+                    <div className="hidden lg:flex items-center gap-3 xl:gap-6 ml-4 xl:ml-8">
                         {splitLeftLinks.map(link => {
                             const isActive = location.pathname === link.path || (link.path !== '/' && location.pathname.startsWith(link.path));
                             return (
                                 <Link 
                                     key={link.name} 
                                     to={link.path} 
-                                    className={`text-xs xl:text-sm font-semibold tracking-wide xl:tracking-widest transition-colors uppercase relative group flex items-center ${isActive ? 'text-brand-500' : 'text-zinc-300 hover:text-white'}`}
+                                    className={`text-[10px] xl:text-[11px] 2xl:text-sm font-semibold tracking-wide xl:tracking-widest transition-colors uppercase relative group flex items-center ${isActive ? 'text-brand-500' : 'text-zinc-300 hover:text-white'}`}
                                 >
                                     {link.name}
                                     <span className={`absolute -bottom-2 left-0 h-[2px] bg-brand-500 transition-all duration-300 ${isActive ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
@@ -111,6 +111,9 @@ const Navbar = () => {
                         })}
                     </div>
                 </div>
+
+                {/* Center layout spacer: prevents left and right content from colliding in the middle */}
+                <div className="flex-none w-[64px] md:w-[84px] h-full opacity-0 pointer-events-none hidden lg:block"></div>
 
                 {/* Center Logo - Absolute center for perfect precision */}
                 <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex justify-center z-[70] pointer-events-none">
@@ -127,7 +130,7 @@ const Navbar = () => {
                 {/* Right Section: Links (Desktop) & Actions (Mobile) */}
                 <div className="flex-1 flex items-center justify-end z-[60] h-full gap-2 sm:gap-4">
                     {/* Desktop Right Links */}
-                    <div className="hidden lg:flex items-center gap-4 xl:gap-6">
+                    <div className="hidden lg:flex items-center gap-3 xl:gap-6">
                         {splitRightLinks.map(link => {
                             const isActive = location.pathname === link.path || (link.path !== '/' && location.pathname.startsWith(link.path));
                             const linkName = link.name === 'ENTRA NELLA NOSTRA FAMIGLIA' ? 'CANDIDATI' : link.name;
@@ -138,12 +141,12 @@ const Navbar = () => {
                                     className={
                                         link.isHighlight 
                                         ? "relative group flex items-center justify-center px-2 xl:px-4 py-2 transition-all duration-300 transform hover:scale-105" 
-                                        : `text-xs xl:text-sm font-semibold tracking-wide xl:tracking-widest transition-colors uppercase relative group flex items-center ${isActive ? 'text-brand-500' : 'text-zinc-300 hover:text-white'}`
+                                        : `text-[10px] xl:text-[11px] 2xl:text-sm font-semibold tracking-wide xl:tracking-widest transition-colors uppercase relative group flex items-center ${isActive ? 'text-brand-500' : 'text-zinc-300 hover:text-white'}`
                                     }
                                 >
                                     {link.isHighlight ? (
                                         <span 
-                                            className="relative z-10 text-[24px] xl:text-[32px] text-brand-500 hover:text-brand-400 drop-shadow-[0_0_12px_rgba(217,70,239,0.3)] group-hover:drop-shadow-[0_0_20px_rgba(217,70,239,0.6)] transition-all duration-300 rotate-[10deg] animate-neon-pulse" 
+                                            className="relative z-10 text-[18px] xl:text-[24px] 2xl:text-[28px] text-brand-500 hover:text-brand-400 drop-shadow-[0_0_12px_rgba(217,70,239,0.3)] group-hover:drop-shadow-[0_0_20px_rgba(217,70,239,0.6)] transition-all duration-300 rotate-[10deg] animate-neon-pulse" 
                                             style={{ fontFamily: "'Rubik Dirt', system-ui", lineHeight: 1 }}
                                         >
                                             {linkName}
