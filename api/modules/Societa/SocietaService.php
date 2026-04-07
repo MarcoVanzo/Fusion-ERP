@@ -92,6 +92,8 @@ class SocietaService
             ':id'                => $id,
             ':tenant_id'         => $tenantId,
             ':name'              => htmlspecialchars(trim($body['name'] ?? ''), ENT_QUOTES, 'UTF-8'),
+            ':vat_number'        => htmlspecialchars(trim($body['vat_number'] ?? ''), ENT_QUOTES, 'UTF-8'),
+            ':legal_address'     => htmlspecialchars(trim($body['legal_address'] ?? ''), ENT_QUOTES, 'UTF-8'),
             ':website'           => htmlspecialchars(trim($body['website'] ?? ''), ENT_QUOTES, 'UTF-8'),
             ':facebook'          => htmlspecialchars(trim($body['facebook'] ?? ''), ENT_QUOTES, 'UTF-8'),
             ':instagram'         => htmlspecialchars(trim($body['instagram'] ?? ''), ENT_QUOTES, 'UTF-8'),
