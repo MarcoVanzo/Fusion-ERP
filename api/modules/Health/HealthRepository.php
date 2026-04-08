@@ -209,6 +209,63 @@ class HealthRepository
         $stmt->execute($data);
     }
 
+    // ─── FOLLOW-UPS (INJURY VISITS) ──────────────────────────────────────────
+
+    public function getInjuryFollowups(string $tenantId, string $injuryId): array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT * FROM injury_followups
+             WHERE tenant_id = :tid AND injury_id = :iid
+             ORDER BY visit_date DESC, id DESC'
+        );
+        $stmt->execute([':tid' => $tenantId, ':iid' => $injuryId]);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function addInjuryFollowup(array $data): void
+    {
+        $stmt = $this->db->prepare(
+            'INSERT INTO injury_followups (tenant_id, injury_id, visit_date, practitioner, notes, outcome)
+             VALUES (:tenant_id, :injury_id, :visit_date, :practitioner, :notes, :outcome)'
+        );
+        $stmt->execute([
+            ':tenant_id' => $data['tenant_id'],
+            ':injury_id' => $data['injury_id'],
+            ':visit_date' => $data['visit_date'],
+            ':practitioner' => $data['practitioner'] ?? null,
+            ':notes' => $data['notes'] ?? null,
+            ':outcome' => $data['outcome'] ?? null
+        ]);
+    }
+
+    // ─── INJURY DOCUMENTS ────────────────────────────────────────────────────
+
+    public function getInjuryDocuments(string $tenantId, string $injuryId): array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT * FROM injury_documents
+             WHERE tenant_id = :tid AND injury_id = :iid
+             ORDER BY uploaded_at DESC'
+        );
+        $stmt->execute([':tid' => $tenantId, ':iid' => $injuryId]);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function addInjuryDocument(array $data): void
+    {
+        $stmt = $this->db->prepare(
+            'INSERT INTO injury_documents (tenant_id, injury_id, document_title, document_type, file_path)
+             VALUES (:tenant_id, :injury_id, :title, :type, :file_path)'
+        );
+        $stmt->execute([
+            ':tenant_id' => $data['tenant_id'],
+            ':injury_id' => $data['injury_id'],
+            ':title' => $data['document_title'],
+            ':type' => $data['document_type'] ?? null,
+            ':file_path' => $data['file_path']
+        ]);
+    }
+
     /**
      * Get a global health summary for the Athletes Dashboard.
      * Scoped to the current tenant to prevent cross-tenant data leaks.

@@ -423,12 +423,90 @@ export const AthletesView = {
      * Tab: Quote (Gestione importi)
      */
     tabQuote: (athlete, isAdmin = false) => {
+        const p1 = parseFloat(athlete.quota_iscrizione_rata1) || 0;
+        const p2 = parseFloat(athlete.quota_iscrizione_rata2) || 0;
+        const v = parseFloat(athlete.quota_vestiario) || 0;
+        const f = parseFloat(athlete.quota_foresteria) || 0;
+
+        const p1_p = athlete.quota_iscrizione_rata1_paid ? p1 : 0;
+        const p2_p = athlete.quota_iscrizione_rata2_paid ? p2 : 0;
+        const v_p = athlete.quota_vestiario_paid ? v : 0;
+        const f_p = athlete.quota_foresteria_paid ? f : 0;
+
+        const total = p1 + p2 + v + f;
+        const paid = p1_p + p2_p + v_p + f_p;
+        const remaining = total - paid;
+
+        const formatCurrency = (val) => '€ ' + val.toFixed(2);
+        const getStatusBadge = (isPaid, amount) => {
+            if (amount === 0) return '<span style="color:var(--color-text-muted)">-</span>';
+            return isPaid ? '<span class="badge badge-success" style="font-size:10px;">PAGATA</span>' : '<span class="badge badge-pink" style="font-size:10px;">DA PAGARE</span>';
+        };
+
         return `
+            <div class="card glass-card" style="padding:24px; border:1px solid rgba(255,255,255,0.05); background:rgba(255,255,255,0.01); margin-bottom:24px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                    <div>
+                        <h3 style="font-family:var(--font-display); font-size:20px; color:var(--color-white); margin-bottom:4px;">Riepilogo Quote</h3>
+                        <p style="color:var(--color-text-muted); font-size:13px;">Stato attuale dei pagamenti concordati per questo atleta.</p>
+                    </div>
+                </div>
+                
+                <div class="table-responsive" style="margin-bottom:24px; border:1px solid rgba(255,255,255,0.05); border-radius:12px; overflow:hidden;">
+                    <table class="table" style="width:100%; border-collapse:collapse; margin:0;">
+                        <thead style="background:rgba(255,255,255,0.03);">
+                            <tr>
+                                <th style="padding:12px 16px; color:rgba(255,255,255,0.4); font-size:11px; text-transform:uppercase; text-align:left;">Descrizione Quota</th>
+                                <th style="padding:12px 16px; color:rgba(255,255,255,0.4); font-size:11px; text-transform:uppercase; text-align:right;">Importo Assegnato</th>
+                                <th style="padding:12px 16px; color:rgba(255,255,255,0.4); font-size:11px; text-transform:uppercase; text-align:center;">Stato</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                                <td style="padding:14px 16px; color:var(--color-white); font-size:14px;">Quota di Iscrizione - Prima Rata</td>
+                                <td style="padding:14px 16px; color:var(--color-white); font-size:15px; text-align:right; font-weight:600; font-family:var(--font-display);">${formatCurrency(p1)}</td>
+                                <td style="padding:14px 16px; text-align:center;">${getStatusBadge(athlete.quota_iscrizione_rata1_paid, p1)}</td>
+                            </tr>
+                            <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                                <td style="padding:14px 16px; color:var(--color-white); font-size:14px;">Quota di Iscrizione - Seconda Rata</td>
+                                <td style="padding:14px 16px; color:var(--color-white); font-size:15px; text-align:right; font-weight:600; font-family:var(--font-display);">${formatCurrency(p2)}</td>
+                                <td style="padding:14px 16px; text-align:center;">${getStatusBadge(athlete.quota_iscrizione_rata2_paid, p2)}</td>
+                            </tr>
+                            <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                                <td style="padding:14px 16px; color:var(--color-white); font-size:14px;">Quota Vestiario</td>
+                                <td style="padding:14px 16px; color:var(--color-white); font-size:15px; text-align:right; font-weight:600; font-family:var(--font-display);">${formatCurrency(v)}</td>
+                                <td style="padding:14px 16px; text-align:center;">${getStatusBadge(athlete.quota_vestiario_paid, v)}</td>
+                            </tr>
+                            <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                                <td style="padding:14px 16px; color:var(--color-white); font-size:14px;">Quota Foresteria</td>
+                                <td style="padding:14px 16px; color:var(--color-white); font-size:15px; text-align:right; font-weight:600; font-family:var(--font-display);">${formatCurrency(f)}</td>
+                                <td style="padding:14px 16px; text-align:center;">${getStatusBadge(athlete.quota_foresteria_paid, f)}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.2); border-radius:12px; padding:20px; border:1px solid rgba(255,255,255,0.05);">
+                     <div style="flex:1; text-align:center; border-right:1px solid rgba(255,255,255,0.05)">
+                          <div style="font-size:11px; color:rgba(255,255,255,0.4); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px;">Totale Assegnato</div>
+                          <div style="font-size:24px; font-weight:800; color:var(--color-white); font-family:var(--font-display);">${formatCurrency(total)}</div>
+                     </div>
+                     <div style="flex:1; text-align:center; border-right:1px solid rgba(255,255,255,0.05)">
+                          <div style="font-size:11px; color:rgba(255,255,255,0.4); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px;">Totale Pagato</div>
+                          <div style="font-size:24px; font-weight:800; color:var(--color-success); font-family:var(--font-display);">${formatCurrency(paid)}</div>
+                     </div>
+                     <div style="flex:1; text-align:center;">
+                          <div style="font-size:11px; color:rgba(255,255,255,0.4); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px;">Rimanente Da Pagare</div>
+                          <div style="font-size:24px; font-weight:800; color:${remaining > 0 ? 'var(--color-pink)' : 'var(--color-success)'}; font-family:var(--font-display);">${formatCurrency(remaining)}</div>
+                     </div>
+                </div>
+            </div>
+
             <div class="card glass-card" style="padding:24px; border:1px solid rgba(255,255,255,0.05); background:rgba(255,255,255,0.01);">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
                     <div>
                         <h3 style="font-family:var(--font-display); font-size:20px; color:var(--color-white); margin-bottom:4px;">Assegnazione Quote</h3>
-                        <p style="color:var(--color-text-muted); font-size:13px;">Definisci gli importi concordati per questo atleta e segna lo stato di pagamento.</p>
+                        <p style="color:var(--color-text-muted); font-size:13px;">Definisci o modifica gli importi concordati e lo stato di pagamento.</p>
                     </div>
                 </div>
 
