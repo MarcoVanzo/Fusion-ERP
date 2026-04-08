@@ -13,6 +13,7 @@
         ],
         "children": [
             { "title": "Squadre", "path": "squadre", "icon": "users-four", "isMobileVisible": false, "roles": ["allenatore", "manager", "admin"] },
+            { "title": "Presenze", "path": "squadre-presenze", "icon": "calendar-check", "isMobileVisible": false, "roles": ["allenatore", "manager", "admin"] },
             { "title": "Anagrafica Atleti", "path": "athlete-profile", "icon": "users", "isMobileVisible": false, "roles": ["atleta", "allenatore", "manager", "admin"] },
             { "title": "Documenti Atleti", "path": "athlete-documents", "icon": "file-text", "isMobileVisible": false, "roles": ["atleta", "allenatore", "manager", "admin"] },
             { "title": "Metrics Atleti", "path": "athlete-metrics", "icon": "trend-up", "isMobileVisible": false, "roles": ["atleta", "allenatore", "manager", "admin"] },

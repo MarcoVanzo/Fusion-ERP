@@ -427,14 +427,16 @@ export const AthletesView = {
         const p2 = parseFloat(athlete.quota_iscrizione_rata2) || 0;
         const v = parseFloat(athlete.quota_vestiario) || 0;
         const f = parseFloat(athlete.quota_foresteria) || 0;
+        const t = parseFloat(athlete.quota_trasporti) || 0;
 
         const p1_p = athlete.quota_iscrizione_rata1_paid ? p1 : 0;
         const p2_p = athlete.quota_iscrizione_rata2_paid ? p2 : 0;
         const v_p = athlete.quota_vestiario_paid ? v : 0;
         const f_p = athlete.quota_foresteria_paid ? f : 0;
+        const t_p = athlete.quota_trasporti_paid ? t : 0;
 
-        const total = p1 + p2 + v + f;
-        const paid = p1_p + p2_p + v_p + f_p;
+        const total = p1 + p2 + v + f + t;
+        const paid = p1_p + p2_p + v_p + f_p + t_p;
         const remaining = total - paid;
 
         const formatCurrency = (val) => '€ ' + val.toFixed(2);
@@ -481,6 +483,11 @@ export const AthletesView = {
                                 <td style="padding:14px 16px; color:var(--color-white); font-size:14px;">Quota Foresteria</td>
                                 <td style="padding:14px 16px; color:var(--color-white); font-size:15px; text-align:right; font-weight:600; font-family:var(--font-display);">${formatCurrency(f)}</td>
                                 <td style="padding:14px 16px; text-align:center;">${getStatusBadge(athlete.quota_foresteria_paid, f)}</td>
+                            </tr>
+                            <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                                <td style="padding:14px 16px; color:var(--color-white); font-size:14px;">Quota Trasporti</td>
+                                <td style="padding:14px 16px; color:var(--color-white); font-size:15px; text-align:right; font-weight:600; font-family:var(--font-display);">${formatCurrency(t)}</td>
+                                <td style="padding:14px 16px; text-align:center;">${getStatusBadge(athlete.quota_trasporti_paid, t)}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -557,7 +564,7 @@ export const AthletesView = {
                         </div>
 
                         <!-- Quota Foresteria -->
-                        <div style="display:flex; gap:16px; align-items:flex-end;">
+                        <div style="display:flex; gap:16px; align-items:flex-end; padding-bottom:16px; border-bottom:1px solid rgba(255,255,255,0.05);">
                             <div class="form-group" style="flex:1;">
                                 <label class="form-label">Quota Foresteria</label>
                                 <input type="number" name="quota_foresteria" class="form-input" placeholder="es. 400.00" step="0.01" value="${athlete.quota_foresteria || ''}" ${isAdmin ? '' : 'disabled'}>
@@ -565,6 +572,21 @@ export const AthletesView = {
                             <div class="form-group" style="margin-bottom:10px;">
                                 <label class="form-label" style="display:flex; align-items:center; gap:8px;">
                                     <input type="checkbox" name="quota_foresteria_paid" value="1" ${athlete.quota_foresteria_paid ? 'checked' : ''} ${isAdmin ? '' : 'disabled'}>
+                                    Pagata
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Quota Trasporti -->
+                        <div style="display:flex; gap:16px; align-items:flex-end;">
+                            <div class="form-group" style="flex:1;">
+                                <label class="form-label">Quota Trasporti</label>
+                                <input type="number" name="quota_trasporti" class="form-input" placeholder="-" step="0.01" value="${athlete.quota_trasporti || ''}" readonly style="opacity:0.7; cursor:not-allowed; background:rgba(255,255,255,0.02)">
+                                <div style="font-size:11px; color:var(--color-pink); margin-top:4px;"><i class="ph ph-info"></i> Importo calcolato e gestito nella tab "Rimborsi Trasporti"</div>
+                            </div>
+                            <div class="form-group" style="margin-bottom:10px;">
+                                <label class="form-label" style="display:flex; align-items:center; gap:8px; opacity:0.7; cursor:not-allowed;">
+                                    <input type="checkbox" name="quota_trasporti_paid" value="1" ${athlete.quota_trasporti_paid ? 'checked' : ''} onclick="return false;">
                                     Pagata
                                 </label>
                             </div>

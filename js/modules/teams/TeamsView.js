@@ -37,9 +37,6 @@ const TeamsView = {
                     <button class="squadre-tab-btn" data-tab="stagioni">
                         <i class="ph ph-calendar-blank"></i> STAGIONI
                     </button>
-                    <button class="squadre-tab-btn" data-tab="presenze">
-                        <i class="ph ph-calendar-check"></i> PRESENZE
-                    </button>
                 </nav>
 
                 <!-- Tab Content area -->

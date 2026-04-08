@@ -103,6 +103,7 @@ const Router = (() => {
         // Squadre & Scouting
         { path: 'squadre',              file: 'js/modules/squadre.js',             permission: 'read', module: 'Squadre', type: 'module' },
         { path: 'squadre-stagioni',     file: 'js/modules/squadre.js',             permission: 'read', module: 'Squadre', type: 'module' },
+        { path: 'squadre-presenze',     file: 'js/modules/squadre.js',             permission: 'read', module: 'Squadre', type: 'module' },
 
         { path: 'scouting-database',    file: 'js/modules/scouting/Scouting.js',            permission: 'read', module: 'Scouting', type: 'module' },
     ];
@@ -162,7 +163,7 @@ const Router = (() => {
             if (r.startsWith('newsletter'))   return 'newsletter';
             if (r.startsWith('societa'))      return 'societa';
             if (r.startsWith('network'))      return 'network';
-            if (r === 'squadre' || r === 'squadre-stagioni') return 'teams';
+            if (r === 'squadre' || r === 'squadre-stagioni' || r === 'squadre-presenze') return 'teams';
             return r;
         };
 
