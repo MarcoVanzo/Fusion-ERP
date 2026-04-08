@@ -144,6 +144,15 @@ class MigrationRunner
 
             // Handle DELIMITER change (e.g., "DELIMITER //" or "DELIMITER ;")
             if (preg_match('/^DELIMITER\s+(\S+)\s*$/i', $trimmed, $m)) {
+                // Execute anything accumulated in buffer before delimiter change
+                $pending = trim($buffer);
+                if (!empty($pending)) {
+                    $cleaned = $this->stripLeadingComments($pending);
+                    if (!empty($cleaned)) {
+                        $this->db->exec($cleaned);
+                    }
+                }
+                $buffer = '';
                 $delimiter = $m[1];
                 continue;
             }
@@ -157,8 +166,11 @@ class MigrationRunner
                 $stmt = substr($stmt, 0, -strlen($delimiter));
                 $stmt = trim($stmt);
 
-                if (!empty($stmt) && !preg_match('/^\s*--/', $stmt)) {
-                    $this->db->exec($stmt);
+                if (!empty($stmt)) {
+                    $cleaned = $this->stripLeadingComments($stmt);
+                    if (!empty($cleaned)) {
+                        $this->db->exec($cleaned);
+                    }
                 }
                 $buffer = '';
             }
@@ -166,12 +178,34 @@ class MigrationRunner
 
         // Execute anything remaining in the buffer
         $remaining = trim($buffer);
-        if (!empty($remaining) && !preg_match('/^\s*--/', $remaining)) {
-            // Remove trailing semicolon if present
-            $remaining = rtrim($remaining, "; \n\r\t");
-            if (!empty($remaining)) {
-                $this->db->exec($remaining);
+        if (!empty($remaining)) {
+            $cleaned = $this->stripLeadingComments($remaining);
+            $cleaned = rtrim($cleaned, "; \n\r\t");
+            if (!empty($cleaned)) {
+                $this->db->exec($cleaned);
             }
         }
+    }
+
+    /**
+     * Strip leading SQL comment lines from a statement block.
+     * Returns the remaining non-comment SQL, or empty string if all comments.
+     */
+    private function stripLeadingComments(string $sql): string
+    {
+        $lines = explode("\n", $sql);
+        $result = [];
+        $foundCode = false;
+
+        foreach ($lines as $line) {
+            $t = trim($line);
+            if (!$foundCode && (str_starts_with($t, '--') || $t === '')) {
+                continue; // skip leading comments and blank lines
+            }
+            $foundCode = true;
+            $result[] = $line;
+        }
+
+        return trim(implode("\n", $result));
     }
 }
