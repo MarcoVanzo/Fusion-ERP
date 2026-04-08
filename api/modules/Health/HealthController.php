@@ -81,7 +81,7 @@ class HealthController
         Response::requireFields($body, ['athlete_id']);
 
         $this->repo->updateAnamnesi($body['athlete_id'], [
-            ':blood_type' => $body['blood_type'] ?? null,
+            ':blood_group' => $body['blood_group'] ?? $body['blood_type'] ?? null,
             ':allergies' => $body['allergies'] ?? null,
             ':medications' => $body['medications'] ?? null,
             ':chronic_diseases' => $body['chronic_conditions'] ?? $body['chronic_diseases'] ?? null, // UI currently sends chronic_conditions

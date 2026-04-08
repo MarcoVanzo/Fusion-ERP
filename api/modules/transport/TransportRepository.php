@@ -453,9 +453,9 @@ class TransportRepository
     public function listVehicles(): array
     {
         return $this->db->query(
-            'SELECT id, model, license_plate, seats, status
+            'SELECT id, name, license_plate, capacity, status
              FROM vehicles
-             ORDER BY model'
+             ORDER BY name'
         )->fetchAll();
     }
 
