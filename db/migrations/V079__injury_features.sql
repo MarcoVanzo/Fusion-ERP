@@ -3,8 +3,8 @@
 
 CREATE TABLE IF NOT EXISTS `injury_followups` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
-    `tenant_id` INT NOT NULL,
-    `injury_id` INT NOT NULL,
+    `tenant_id` VARCHAR(20) NOT NULL,
+    `injury_id` VARCHAR(20) NOT NULL,
     `visit_date` DATE NOT NULL,
     `practitioner` VARCHAR(150),
     `notes` TEXT,
@@ -16,8 +16,8 @@ CREATE TABLE IF NOT EXISTS `injury_followups` (
 
 CREATE TABLE IF NOT EXISTS `injury_documents` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
-    `tenant_id` INT NOT NULL,
-    `injury_id` INT NOT NULL,
+    `tenant_id` VARCHAR(20) NOT NULL,
+    `injury_id` VARCHAR(20) NOT NULL,
     `document_title` VARCHAR(255) NOT NULL,
     `document_type` VARCHAR(100),
     `file_path` VARCHAR(500) NOT NULL,
