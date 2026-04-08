@@ -177,12 +177,12 @@ class HealthRepository
     public function getInjuries(string $athleteId): array
     {
         $stmt = $this->db->prepare(
-            'SELECT id, injury_date, type, body_part, severity, stop_days, return_date, notes, treated_by, created_at,
-                    location_context, side, mechanism, official_diagnosis, diagnosis_date, diagnosed_by, instrumental_tests, test_results,
-                    is_recurrence, treatment_type, surgery_date, physio_plan, assigned_physio, current_status, estimated_recovery_time, estimated_return_date, medical_clearance_given
-             FROM injury_records
-             WHERE athlete_id = :athlete_id
-             ORDER BY injury_date DESC'
+            'SELECT ir.*, 
+                    (SELECT COUNT(*) FROM injury_followups WHERE injury_id = ir.id) as visit_count,
+                    (SELECT COUNT(*) FROM injury_documents WHERE injury_id = ir.id) as doc_count
+             FROM injury_records ir
+             WHERE ir.athlete_id = :athlete_id
+             ORDER BY ir.injury_date DESC'
         );
         $stmt->execute([':athlete_id' => $athleteId]);
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);

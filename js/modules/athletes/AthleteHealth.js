@@ -140,20 +140,32 @@ export const AthleteHealth = {
             statusBadge = `<span class="badge" style="background:rgba(239, 68, 68, 0.1); color:#ef4444; border:1px solid rgba(239, 68, 68, 0.3);">${estStr}</span>`;
         }
 
+        const visitCount = injury.visit_count || 0;
+        const docCount = injury.doc_count || 0;
+
         return `
             <div class="card glass-card injury-card" data-id="${injury.id}" style="padding:20px; border-left:4px solid ${isPast ? '#10b981' : '#ef4444'}; cursor:pointer; transition:all 0.2s;">
                 <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                    <div>
+                    <div style="flex:1;">
                         <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
                             <span style="font-weight:800; color:#fff; font-size:16px;">${Utils.escapeHtml(injury.description || 'Non specificato')}</span>
                             ${statusBadge}
                         </div>
-                        <div style="font-size:13px; color:var(--color-text-muted); display:flex; gap:16px;">
-                            <span><i class="ph ph-calendar"></i> Data Infortunio: ${dDate}</span>
-                            <span><i class="ph ph-first-aid"></i> Tipo: ${injury.injury_type || '—'}</span>
-                            <span><i class="ph ph-activity"></i> Status: ${injury.status || '—'}</span>
+                        <div style="font-size:13px; color:var(--color-text-muted); display:flex; gap:16px; flex-wrap:wrap;">
+                            <span><i class="ph ph-calendar"></i> ${dDate}</span>
+                            <span><i class="ph ph-first-aid"></i> ${injury.injury_type || '—'}</span>
+                            <span><i class="ph ph-activity"></i> ${injury.status || '—'}</span>
                         </div>
                         ${injury.diagnosis ? `<div style="font-size:13px; color:rgba(255,255,255,0.7); margin-top:8px;"><strong>Diagnosi:</strong> ${Utils.escapeHtml(injury.diagnosis)}</div>` : ''}
+                        
+                        <div style="margin-top:12px; display:flex; gap:16px; align-items:center;">
+                            <div style="font-size:11px; color:#10b981; background:rgba(16, 185, 129, 0.1); padding:4px 8px; border-radius:6px; font-weight:700;">
+                                <i class="ph ph-stethoscope"></i> ${visitCount} VISITE / DECORSO
+                            </div>
+                            <div style="font-size:11px; color:#3b82f6; background:rgba(59, 130, 246, 0.1); padding:4px 8px; border-radius:6px; font-weight:700;">
+                                <i class="ph ph-file-text"></i> ${docCount} DOCUMENTI / REFERTI
+                            </div>
+                        </div>
                     </div>
                     <button class="btn btn-ghost btn-xs edit-injury-btn" data-id="${injury.id}" style="background:rgba(255,255,255,0.05);">
                         <i class="ph ph-pencil-simple"></i> Dettagli
@@ -270,13 +282,13 @@ export const AthleteHealth = {
         const expDate = injury?.expected_rtp_date ? injury.expected_rtp_date.substring(0, 10) : '';
         const rtpDate = injury?.estimated_return_date ? injury.estimated_return_date.substring(0, 10) : '';
 
-        const tabsHtml = isEdit ? `
-            <div style="display:flex; border-bottom:1px solid rgba(255,255,255,0.1); margin-bottom:24px; gap:16px;">
-                <button type="button" class="tab-btn active" data-tab="tab-details" style="padding:12px 16px; background:transparent; border:none; color:#fff; font-weight:800; border-bottom:2px solid #ef4444; cursor:pointer; font-size:14px;">Dettagli</button>
-                <button type="button" class="tab-btn" data-tab="tab-checkups" style="padding:12px 16px; background:transparent; border:none; color:var(--color-text-muted); cursor:pointer; font-size:14px; transition:all 0.2s;">Storico Visite</button>
-                <button type="button" class="tab-btn" data-tab="tab-docs" style="padding:12px 16px; background:transparent; border:none; color:var(--color-text-muted); cursor:pointer; font-size:14px; transition:all 0.2s;">Documenti</button>
+        const tabsHtml = `
+            <div class="injury-tabs" style="display:flex; border-bottom:1px solid rgba(255,255,255,0.1); margin-bottom:24px; gap:16px;">
+                <button type="button" class="tab-btn active" data-tab="tab-details" style="padding:12px 16px; background:transparent; border:none; color:#fff; font-weight:800; border-bottom:2px solid #ef4444; cursor:pointer; font-size:14px;">Dettagli Caso</button>
+                <button type="button" class="tab-btn" data-tab="tab-checkups" ${!isEdit ? 'disabled title="Salva infortunio per gestire il decorso"' : ''} style="padding:12px 16px; background:transparent; border:none; color:var(--color-text-muted); cursor:pointer; font-size:14px; transition:all 0.2s; opacity:${!isEdit ? '0.3' : '1'};">Decorso / Visite</button>
+                <button type="button" class="tab-btn" data-tab="tab-docs" ${!isEdit ? 'disabled title="Salva infortunio per allegare referti"' : ''} style="padding:12px 16px; background:transparent; border:none; color:var(--color-text-muted); cursor:pointer; font-size:14px; transition:all 0.2s; opacity:${!isEdit ? '0.3' : '1'};">Doc / Referti</button>
             </div>
-        ` : '';
+        `;
 
         const detailsHtml = `
             <form id="injury-form">
@@ -444,22 +456,25 @@ export const AthleteHealth = {
         const tabBtns = theModal.querySelectorAll('.tab-btn');
         tabBtns.forEach(btn => {
             btn.addEventListener('click', (e) => {
-                const target = e.target.getAttribute('data-tab');
+                const b = e.currentTarget;
+                if (b.disabled) return;
+
+                const target = b.getAttribute('data-tab');
                 
                 // Reset states
-                tabBtns.forEach(b => {
-                    b.classList.remove('active');
-                    b.style.fontWeight = 'normal';
-                    b.style.borderBottom = 'none';
-                    b.style.color = 'var(--color-text-muted)';
+                tabBtns.forEach(other => {
+                    other.classList.remove('active');
+                    other.style.fontWeight = 'normal';
+                    other.style.borderBottom = 'none';
+                    other.style.color = 'var(--color-text-muted)';
                 });
                 theModal.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
                 
                 // Set active
-                e.target.classList.add('active');
-                e.target.style.fontWeight = '800';
-                e.target.style.borderBottom = '2px solid #ef4444';
-                e.target.style.color = '#fff';
+                b.classList.add('active');
+                b.style.fontWeight = '800';
+                b.style.borderBottom = '2px solid #ef4444';
+                b.style.color = '#fff';
                 theModal.querySelector('#' + target).style.display = 'block';
             });
         });
@@ -503,8 +518,19 @@ export const AthleteHealth = {
                     
                     if(res.success) {
                         UI.toast(`Infortunio ${isEdit ? 'aggiornato' : 'inserito'}`);
-                        document.body.removeChild(theModal);
-                        this._loadData(container, athlete);
+                        
+                        if (!isEdit && res.id) {
+                            // Transition from New to Edit mode without closing
+                            document.body.removeChild(theModal);
+                            await this._loadData(container, athlete);
+                            // Auto-open in edit mode
+                            const injuries = await fetch(`api/?module=Health&action=getInjuries&id=${athlete.id}`).then(r => r.json());
+                            const newInj = injuries.data?.find(i => i.id === res.id);
+                            if (newInj) this._openInjuryModal(container, athlete, newInj);
+                        } else {
+                            document.body.removeChild(theModal);
+                            await this._loadData(container, athlete);
+                        }
                     } else {
                         throw new Error(res.error || "Errore sconosciuto");
                     }
@@ -586,17 +612,32 @@ export const AthleteHealth = {
                 if (list.length === 0) {
                     container.innerHTML = '<div style="padding:24px; text-align:center; color:var(--color-text-muted); background:rgba(255,255,255,0.02); border-radius:12px; border:1px dashed rgba(255,255,255,0.1);">Nessuna visita/check-up registrata.</div>';
                 } else {
-                    container.innerHTML = '<div style="display:grid; gap:12px;">' + list.map(c => `
-                        <div class="card glass-card" style="padding:16px; border-left:3px solid #10b981;">
-                            <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-                                <div style="font-weight:800; color:#fff;">${new Date(c.visit_date).toLocaleDateString('it-IT')}</div>
-                                <div style="font-size:12px; color:#10b981;"><i class="ph ph-stethoscope"></i> ${Utils.escapeHtml(c.practitioner || 'Specialista')}</div>
-                            </div>
-                            <div style="font-size:13px; color:var(--color-text-muted);">
-                                ${Utils.escapeHtml(c.outcome || c.notes || '(Nessuna nota)')}
+                    container.innerHTML = `
+                        <div class="timeline-container" style="position:relative; padding-left:32px;">
+                            <div style="position:absolute; left:7px; top:8px; bottom:8px; width:2px; background:rgba(255,255,255,0.1);"></div>
+                            <div style="display:grid; gap:24px;">
+                                ${list.map(c => `
+                                    <div class="timeline-item" style="position:relative;">
+                                        <div style="position:absolute; left:-30px; top:4px; width:12px; height:12px; border-radius:50%; background:#10b981; border:3px solid var(--color-bg-panel); z-index:2;"></div>
+                                        <div class="card glass-card" style="padding:16px; border:1px solid rgba(255,255,255,0.05); background:rgba(255,255,255,0.02);">
+                                            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
+                                                <div>
+                                                    <div style="font-weight:900; color:#fff; font-size:14px; text-transform:uppercase; letter-spacing:0.5px;">${new Date(c.visit_date).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+                                                    <div style="font-size:12px; color:var(--color-text-muted); margin-top:2px;">
+                                                        <i class="ph ph-stethoscope"></i> ${Utils.escapeHtml(c.practitioner || 'Specialista non specificato')}
+                                                    </div>
+                                                </div>
+                                                <div style="font-size:10px; background:rgba(16, 185, 129, 0.1); color:#10b981; padding:2px 8px; border-radius:100px; font-weight:700;">VISITA</div>
+                                            </div>
+                                            <div style="font-size:14px; color:rgba(255,255,255,0.9); line-height:1.5; background:rgba(0,0,0,0.2); padding:12px; border-radius:8px;">
+                                                ${Utils.escapeHtml(c.outcome || c.notes || '(Nessuna nota registrata)')}
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('')}
                             </div>
                         </div>
-                    `).join('') + '</div>';
+                    `;
                 }
             } else {
                 throw new Error(res.error);
@@ -615,20 +656,40 @@ export const AthleteHealth = {
                 if (list.length === 0) {
                     container.innerHTML = '<div style="padding:24px; text-align:center; color:var(--color-text-muted); background:rgba(255,255,255,0.02); border-radius:12px; border:1px dashed rgba(255,255,255,0.1);">Nessun documento caricato.</div>';
                 } else {
-                    container.innerHTML = '<div style="display:grid; gap:12px;">' + list.map(d => `
-                        <div class="card glass-card" style="padding:16px; display:flex; justify-content:space-between; align-items:center;">
-                            <div>
-                                <div style="font-weight:800; color:#fff; display:flex; align-items:center; gap:8px;">
-                                    <i class="ph ph-file-text" style="color:#3b82f6;"></i>
-                                    ${Utils.escapeHtml(d.document_title)}
-                                </div>
-                                <div style="font-size:12px; color:var(--color-text-muted); margin-top:4px;">${Utils.escapeHtml(d.document_type || 'Documento')} • ${new Date(d.created_at).toLocaleDateString('it-IT')}</div>
+                    container.innerHTML = '<div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap:16px;">' + list.map(d => {
+                        const isPdf = d.file_path.toLowerCase().endsWith('.pdf');
+                        const isImg = /\.(jpg|jpeg|png|gif|webp)$/i.test(d.file_path);
+                        const iconClass = isPdf ? 'ph ph-file-pdf' : (isImg ? 'ph ph-file-image' : 'ph ph-file-text');
+                        const iconColor = isPdf ? '#ef4444' : (isImg ? '#10b981' : '#3b82f6');
+                        
+                        return `
+                        <div class="card glass-card" style="padding:16px; display:flex; flex-direction:column; gap:12px; border:1px solid rgba(255,255,255,0.05); position:relative; overflow:hidden;">
+                            <div style="position:absolute; top:0; right:0; padding:12px; opacity:0.05; font-size:40px; pointer-events:none;">
+                                <i class="${iconClass}"></i>
                             </div>
-                            <a href="${d.file_path}" target="_blank" class="btn btn-ghost btn-xs" style="color:#3b82f6; background:rgba(59, 130, 246, 0.1);">
-                                <i class="ph ph-eye"></i> Visualizza
-                            </a>
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <div style="width:32px; height:32px; border-radius:8px; background:rgba(255,255,255,0.05); display:flex; align-items:center; justify-content:center; color:${iconColor};">
+                                    <i class="${iconClass}" style="font-size:18px;"></i>
+                                </div>
+                                <div style="flex:1; min-width:0;">
+                                    <div style="font-weight:800; color:#fff; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${Utils.escapeHtml(d.document_title)}">
+                                        ${Utils.escapeHtml(d.document_title)}
+                                    </div>
+                                    <div style="font-size:10px; color:var(--color-text-muted); text-transform:uppercase; letter-spacing:0.5px;">
+                                        ${Utils.escapeHtml(d.document_type || 'Referto')}
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
+                                <div style="font-size:11px; opacity:0.5;">
+                                    ${new Date(d.uploaded_at || d.created_at).toLocaleDateString('it-IT')}
+                                </div>
+                                <a href="${d.file_path}" target="_blank" class="btn btn-ghost btn-xs" style="color:#fff; background:rgba(255,255,255,0.1); padding:4px 8px; font-size:10px; font-weight:700;">
+                                    <i class="ph ph-eye"></i> APRI
+                                </a>
+                            </div>
                         </div>
-                    `).join('') + '</div>';
+                    `}).join('') + '</div>';
                 }
             } else {
                 throw new Error(res.error);

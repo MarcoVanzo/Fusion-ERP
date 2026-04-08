@@ -205,12 +205,32 @@ export const AthletesView = {
                 <td style="${tdStyle} vertical-align:middle;">${medStatusHtml}</td>
             `;
         } else if (variant === 'quote') {
-            const formatQ = (amount, isPaid) => {
+            const renderEditableQuota = (field, amount, isPaid) => {
                 const val = parseFloat(amount) || 0;
-                if (val === 0) return `<span style="color:rgba(255,255,255,0.1)">-</span>`;
-                return isPaid 
-                    ? `<span style="color:var(--color-success); font-weight:600; font-size:13px;">€${val.toFixed(0)} <i class="ph ph-check-circle-fill"></i></span>`
-                    : `<span style="color:var(--color-pink); font-weight:600; font-size:13px;">€${val.toFixed(0)}</span>`;
+                const color = isPaid ? 'var(--color-success)' : (val > 0 ? 'var(--color-pink)' : 'rgba(255,255,255,0.1)');
+                return `
+                    <div class="inline-edit-group" style="display:flex; align-items:center; justify-content:center; gap:6px;">
+                        <div style="position:relative; width:65px;">
+                            <span style="position:absolute; left:6px; top:50%; transform:translateY(-50%); font-size:10px; opacity:0.5; color:${color}; pointer-events:none;">€</span>
+                            <input type="number" 
+                                   class="quota-inline-input" 
+                                   data-id="${athlete.id}" 
+                                   data-field="${field}" 
+                                   value="${val > 0 ? val.toFixed(0) : ''}" 
+                                   placeholder="0"
+                                   step="1"
+                                   style="width:100%; padding:6px 6px 6px 16px; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.05); border-radius:8px; color:${color}; font-weight:700; font-size:13px; text-align:right; transition: all 0.2s;">
+                        </div>
+                        <button class="quota-status-toggle ${isPaid ? 'paid' : ''}" 
+                                data-id="${athlete.id}" 
+                                data-field="${field}_paid" 
+                                data-value="${isPaid ? 0 : 1}"
+                                style="background:none; border:none; padding:4px; cursor:pointer; color:${color}; font-size:18px; display:flex; align-items:center; transition:transform 0.2s; opacity:${val > 0 ? 1 : 0.2};"
+                                title="${isPaid ? 'Segna come non pagato' : 'Segna come pagato'}">
+                            <i class="ph ${isPaid ? 'ph-check-circle-fill' : 'ph-circle'}"></i>
+                        </button>
+                    </div>
+                `;
             };
 
             const p1 = parseFloat(athlete.quota_iscrizione_rata1) || 0;
@@ -218,16 +238,22 @@ export const AthletesView = {
             const qIscrizione = p1 + p2;
             const qIscriPaid = (athlete.quota_iscrizione_rata1_paid ? p1 : 0) + (athlete.quota_iscrizione_rata2_paid ? p2 : 0);
             
-            const iscrizioneHtml = (qIscrizione === 0) ? `<span style="color:rgba(255,255,255,0.1)">-</span>` : 
-                (qIscriPaid >= qIscrizione) 
-                ? `<span style="color:var(--color-success); font-weight:600; font-size:13px;">€${qIscrizione.toFixed(0)} <i class="ph ph-check-circle-fill"></i></span>`
-                : (qIscriPaid > 0)
-                ? `<span style="color:var(--color-warning); font-weight:600; font-size:13px;">€${qIscrizione.toFixed(0)} <br><span style="font-size:10px; opacity:0.7">(Pagato: €${qIscriPaid.toFixed(0)})</span></span>`
-                : `<span style="color:var(--color-pink); font-weight:600; font-size:13px;">€${qIscrizione.toFixed(0)}</span>`;
+            const iscrizioneHtml = `
+                <div style="display:flex; flex-direction:column; gap:4px; align-items:center;">
+                    <div style="display:flex; align-items:center; gap:4px;">
+                        <span style="font-size:9px; opacity:0.3; font-weight:700;">R1</span>
+                        ${renderEditableQuota('quota_iscrizione_rata1', athlete.quota_iscrizione_rata1, athlete.quota_iscrizione_rata1_paid)}
+                    </div>
+                    <div style="display:flex; align-items:center; gap:4px;">
+                        <span style="font-size:9px; opacity:0.3; font-weight:700;">R2</span>
+                        ${renderEditableQuota('quota_iscrizione_rata2', athlete.quota_iscrizione_rata2, athlete.quota_iscrizione_rata2_paid)}
+                    </div>
+                </div>
+            `;
 
-            const vestiarioHtml = formatQ(athlete.quota_vestiario, athlete.quota_vestiario_paid);
-            const foresteriaHtml = formatQ(athlete.quota_foresteria, athlete.quota_foresteria_paid);
-            const trasportiHtml = formatQ(athlete.quota_trasporti, athlete.quota_trasporti_paid);
+            const vestiarioHtml = renderEditableQuota('quota_vestiario', athlete.quota_vestiario, athlete.quota_vestiario_paid);
+            const foresteriaHtml = renderEditableQuota('quota_foresteria', athlete.quota_foresteria, athlete.quota_foresteria_paid);
+            const trasportiHtml = renderEditableQuota('quota_trasporti', athlete.quota_trasporti, athlete.quota_trasporti_paid);
 
             const v = parseFloat(athlete.quota_vestiario) || 0;
             const f = parseFloat(athlete.quota_foresteria) || 0;

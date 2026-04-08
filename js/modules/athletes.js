@@ -3,8 +3,8 @@
  * Gestisce l'integrazione tra API, View e componenti specializzati (Wizard, Metrics).
  */
 
-import { AthletesAPI } from './athletes/AthletesAPI.js?v=2';
-import { AthletesView } from './athletes/AthletesView.js?v=2';
+import { AthletesAPI } from './athletes/AthletesAPI.js?v=3';
+import { AthletesView } from './athletes/AthletesView.js?v=3';
 import { AthletesWizard } from './athletes/AthletesWizard.js?v=2';
 import { AthletesMetrics } from './athletes/AthletesMetricsV2.js?v=5';
 import { AthleteHealth } from './athletes/AthleteHealth.js?v=2';
@@ -185,6 +185,38 @@ const Athletes = (() => {
                         if (athlete) renderEditForm(athlete);
                     }
                 };
+            }
+
+            // Inline editing per le quote (se nel tab quote)
+            if (variant === 'quote') {
+                card.querySelectorAll(".quota-inline-input").forEach(input => {
+                    input.onclick = (e) => e.stopPropagation();
+                    input.onchange = async (e) => {
+                        const { field } = e.target.dataset;
+                        const val = e.target.value;
+                        try {
+                            await AthletesAPI.update({ id, [field]: val });
+                            UI.toast("Quota salvata", "success", 1000);
+                            await refreshData('quote');
+                        } catch (err) {
+                            UI.toast(err.message, "error");
+                        }
+                    };
+                });
+
+                card.querySelectorAll(".quota-status-toggle").forEach(btn => {
+                    btn.onclick = async (e) => {
+                        e.stopPropagation();
+                        const { field, value } = btn.dataset;
+                        try {
+                            await AthletesAPI.update({ id, [field]: value });
+                            UI.toast("Pagamento aggiornato", "success", 1000);
+                            await refreshData('quote');
+                        } catch (err) {
+                            UI.toast(err.message, "error");
+                        }
+                    };
+                });
             }
 
             card.onclick = () => {
