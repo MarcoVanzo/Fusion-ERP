@@ -259,7 +259,7 @@ export const AthletesMetrics = {
             const color = muscleMap[muscle];
             if (!color) return `class="muscle-region" fill="transparent" stroke="none"`;
             // Enable CSS to pick up our dynamic status color correctly
-            return `class="muscle-region active" style="--color-active: ${color};" fill="${color}" fill-opacity="0.95" stroke="${color}" stroke-width="0.75" stroke-opacity="1"`;
+            return `class="muscle-region active" style="--color-active: ${color};" fill="${color}" fill-opacity="0.4" stroke="${color}" stroke-width="1.5" stroke-opacity="0.9"`;
         };
         
         // Fix: Use existing high-fidelity anatomy assets from assets/img/anatomy/
@@ -294,38 +294,39 @@ export const AthletesMetrics = {
                     aspect-ratio: 100 / 240;
                     z-index:2; 
                     pointer-events:none;
-                    mix-blend-mode: hard-light;
+                    mix-blend-mode: screen;
                     opacity: 1;
+                    filter: drop-shadow(0px 0px 4px rgba(255,255,255,0.2));
                 ">
                     <defs>
                     </defs>
 
                     <!-- MUSCLE REGION HIGHLIGHTS -->
                     ${view === 'front' ? `
-                        <!-- Quads (Calibrated to Realistic Muscle Tiers) -->
-                        <path d="M34,120 c-2,15 -3,40 -1,60 c1,10 4,12 8,12 c4,0 5,-5 6,-15 c1,-20 -2,-45 -4,-65 c-1,-10 -4,-10 -9,8" 
+                        <!-- Quads (Precise Fascia Outline) -->
+                        <path d="M 47,110 Q 40,110 38,130 Q 36,155 38,175 Q 43,173 45,150 Q 46,130 47,110 Z" 
                             ${getStyles('quads_l')} />
-                        <path d="M66,120 c2,15 3,40 1,60 c-1,10 -4,12 -8,12 c-4,0 -5,-5 -6,-15 c-1,-20 2,-45 4,-65 c1,-10 4,-10 9,8" 
+                        <path d="M 53,110 Q 60,110 62,130 Q 64,155 62,175 Q 57,173 55,150 Q 54,130 53,110 Z" 
                             ${getStyles('quads_r')} />
                         
-                        <!-- Core / Abs (Centralized on 3D Model) -->
-                        <path d="M42,65 c0,10 0,30 2,40 c2,15 10,15 12,0 c2,-10 2,-30 0,-40 c-2,-10 -10,-10 -14,0" 
+                        <!-- Core / Abs (Centralized Hexagonal Cut) -->
+                        <path d="M 44,65 L 56,65 L 55,83 L 53,98 L 50,102 L 47,98 L 45,83 Z" 
                             ${getStyles('core')} />
                         
                         <!-- Hips / Lateral Stabilizers -->
-                        <ellipse cx="36" cy="100" rx="5" ry="12" ${getStyles('hips_l')} />
-                        <ellipse cx="64" cy="100" rx="5" ry="12" ${getStyles('hips_r')} />
+                        <path d="M 42,88 Q 33,95 34,110 Q 38,105 40,92 Z" ${getStyles('hips_l')} />
+                        <path d="M 58,88 Q 67,95 66,110 Q 62,105 60,92 Z" ${getStyles('hips_r')} />
                     ` : `
-                        <!-- Glutes (Powerful Base Highlights) -->
-                        <path d="M36,95 c-5,5 -9,25 -5,45 c3,12 15,18 20,8 c5,-8 7,-25 4,-45 c-2,-12 -12,-18 -19,-8" 
+                        <!-- Glutes (Anatomical Wrap) -->
+                        <path d="M 49,95 C 40,95 34,105 34,115 C 38,122 45,118 49,115 Z" 
                             ${getStyles('glutes_l')} />
-                        <path d="M64,95 c5,5 9,25 5,45 c-3,12 -15,18 -20,8 c-5,-8 -7,-25 -4,-45 c2,-12 12,-18 19,-8" 
+                        <path d="M 51,95 C 60,95 66,105 66,115 C 62,122 55,118 51,115 Z" 
                             ${getStyles('glutes_r')} />
                         
-                        <!-- Hamstrings -->
-                        <path d="M35,155 c-2,15 -3,40 -1,60 c1,10 5,8 8,0 c3,-25 2,-50 -1,-70 c-1,-10 -5,-10 -6,10" 
+                        <!-- Hamstrings (Precise Taper) -->
+                        <path d="M 48,118 Q 38,122 36,145 Q 36,165 38,175 Q 43,170 45,150 Q 46,135 48,118 Z" 
                             ${getStyles('hams_l')} />
-                        <path d="M65,155 c2,15 3,40 1,60 c-1,10 -5,8 -8,0 c-3,-25 -2,-50 1,-70 c1,-10 5,-10 6,10" 
+                        <path d="M 52,118 Q 62,122 64,145 Q 64,165 62,175 Q 57,170 55,150 Q 54,135 52,118 Z" 
                             ${getStyles('hams_r')} />
                     `}
                 </svg>
