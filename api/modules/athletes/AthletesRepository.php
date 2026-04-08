@@ -101,6 +101,7 @@ class AthletesRepository
                        COALESCE(t.name, 'Nessuna squadra') AS team_name,
                        COALESCE(t.category, 'Nessuna') AS category,
                        (SELECT GROUP_CONCAT(at_sub.team_season_id SEPARATOR ',') FROM athlete_teams at_sub WHERE at_sub.athlete_id = a.id) AS team_season_ids,
+                       (SELECT GROUP_CONCAT(CONCAT_WS('||', ir.injury_date, ir.type, ir.current_status, IFNULL(ir.return_date, '')) SEPARATOR ';;;') FROM injury_records ir WHERE ir.athlete_id = a.id ORDER BY ir.injury_date DESC) AS injuries_summary,
                        (SELECT metrics FROM vald_test_results WHERE athlete_id = a.id OR (a.vald_athlete_id IS NOT NULL AND athlete_id IN (SELECT id FROM athletes WHERE vald_athlete_id = a.vald_athlete_id)) ORDER BY test_date DESC LIMIT 1) AS latest_vald_metrics,
                        (SELECT test_date FROM vald_test_results WHERE athlete_id = a.id OR (a.vald_athlete_id IS NOT NULL AND athlete_id IN (SELECT id FROM athletes WHERE vald_athlete_id = a.vald_athlete_id)) ORDER BY test_date DESC LIMIT 1) AS latest_vald_date
                 FROM athletes a

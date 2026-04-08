@@ -37,6 +37,29 @@ export const AthletesView = {
                 <th style="${thStyle} text-align:center;">Ultimo Test VALD</th>
                 <th style="${thStyle} text-align:right;">Azioni</th>
             `;
+        } else if (variant === 'infortuni') {
+            title = "Infortuni Atleti";
+            subtitle = "Gestione infortuni, tempi di recupero e stato medico";
+            thRow = `
+                <th style="${thStyle}">Atleta</th>
+                <th style="${thStyle} text-align:center;">Infortuni Attivi</th>
+                <th style="${thStyle}">Ultimo Infortunio Occorso</th>
+                <th style="${thStyle}">Certificato Medico</th>
+                <th style="${thStyle} text-align:right;">Azioni</th>
+            `;
+        } else if (variant === 'quote') {
+            title = "Quote Atleti";
+            subtitle = "Riepilogo generale delle quote da versare (In verde se pagate, in rosso se non pagate)";
+            thRow = `
+                <th style="${thStyle}">Atleta</th>
+                <th style="${thStyle}">Squadra</th>
+                <th style="${thStyle} text-align:center;">Q. Iscrizione</th>
+                <th style="${thStyle} text-align:center;">Q. Vestiario</th>
+                <th style="${thStyle} text-align:center;">Q. Foresteria</th>
+                <th style="${thStyle} text-align:center;">Q. Trasporti</th>
+                <th style="${thStyle} text-align:right;">Bilancio</th>
+                <th style="${thStyle} text-align:right;">Azioni</th>
+            `;
         } else {
             thRow = `
                 <th style="${thStyle}">Atleta</th>
@@ -143,6 +166,94 @@ export const AthletesView = {
                 <td style="${tdStyle} text-align:center; font-weight:700; color:var(--color-pink);">${rsiVal ? rsiVal.toFixed(3) : '—'}</td>
                 <td style="${tdStyle} text-align:center;">—</td>
                 <td style="${tdStyle} text-align:center; font-size:12px;">${testDateFmt || '<span style="opacity:0.3">Mai</span>'}</td>
+            `;
+        } else if (variant === 'infortuni') {
+            let injuries = [];
+            if (athlete.injuries_summary) {
+                athlete.injuries_summary.split(';;;').forEach(ij => {
+                    const parts = ij.split('||');
+                    if (parts.length >= 3) {
+                        injuries.push({
+                            date: parts[0],
+                            type: parts[1],
+                            status: parts[2],
+                            return_date: parts[3] || null
+                        });
+                    }
+                });
+            }
+            
+            const active = injuries.filter(i => !i.return_date);
+            const activeHtml = active.length > 0 
+                ? `<span class="badge badge-pink" style="font-size:11px; padding:4px 8px;">${active.length} In corso</span>` 
+                : `<span style="color:var(--color-text-muted); font-size:12px;">Nessuno</span>`;
+            
+            const lastInjury = injuries.length > 0 ? injuries[0] : null;
+            const lastInjuryHtml = lastInjury 
+                ? `<div style="font-size:13px; color:var(--color-white); font-weight:500;">${Utils.escapeHtml(lastInjury.type)}</div>
+                   <div style="font-size:11px; color:rgba(255,255,255,0.4);"><i class="ph ph-calendar-blank"></i> ${Utils.formatDate(lastInjury.date)} <span style="margin:0 4px;">&middot;</span> ${Utils.escapeHtml(lastInjury.status)}</div>`
+                : `<span style="color:var(--color-text-muted); font-size:12px;">Nessuno in storico</span>`;
+
+            extraCells = `
+                <td style="${tdStyle} text-align:center; vertical-align:middle;">${activeHtml}</td>
+                <td style="${tdStyle} vertical-align:middle;">${lastInjuryHtml}</td>
+                <td style="${tdStyle} vertical-align:middle;">${medStatusHtml}</td>
+            `;
+        } else if (variant === 'quote') {
+            const formatQ = (amount, isPaid) => {
+                const val = parseFloat(amount) || 0;
+                if (val === 0) return `<span style="color:rgba(255,255,255,0.1)">-</span>`;
+                return isPaid 
+                    ? `<span style="color:var(--color-success); font-weight:600; font-size:13px;">€${val.toFixed(0)} <i class="ph ph-check-circle-fill"></i></span>`
+                    : `<span style="color:var(--color-pink); font-weight:600; font-size:13px;">€${val.toFixed(0)}</span>`;
+            };
+
+            const p1 = parseFloat(athlete.quota_iscrizione_rata1) || 0;
+            const p2 = parseFloat(athlete.quota_iscrizione_rata2) || 0;
+            const qIscrizione = p1 + p2;
+            const qIscriPaid = (athlete.quota_iscrizione_rata1_paid ? p1 : 0) + (athlete.quota_iscrizione_rata2_paid ? p2 : 0);
+            
+            const iscrizioneHtml = (qIscrizione === 0) ? `<span style="color:rgba(255,255,255,0.1)">-</span>` : 
+                (qIscriPaid >= qIscrizione) 
+                ? `<span style="color:var(--color-success); font-weight:600; font-size:13px;">€${qIscrizione.toFixed(0)} <i class="ph ph-check-circle-fill"></i></span>`
+                : (qIscriPaid > 0)
+                ? `<span style="color:var(--color-warning); font-weight:600; font-size:13px;">€${qIscrizione.toFixed(0)} <br><span style="font-size:10px; opacity:0.7">(Pagato: €${qIscriPaid.toFixed(0)})</span></span>`
+                : `<span style="color:var(--color-pink); font-weight:600; font-size:13px;">€${qIscrizione.toFixed(0)}</span>`;
+
+            const vestiarioHtml = formatQ(athlete.quota_vestiario, athlete.quota_vestiario_paid);
+            const foresteriaHtml = formatQ(athlete.quota_foresteria, athlete.quota_foresteria_paid);
+            const trasportiHtml = formatQ(athlete.quota_trasporti, athlete.quota_trasporti_paid);
+
+            const v = parseFloat(athlete.quota_vestiario) || 0;
+            const f = parseFloat(athlete.quota_foresteria) || 0;
+            const t = parseFloat(athlete.quota_trasporti) || 0;
+            const v_p = athlete.quota_vestiario_paid ? v : 0;
+            const f_p = athlete.quota_foresteria_paid ? f : 0;
+            const t_p = athlete.quota_trasporti_paid ? t : 0;
+
+            const total = qIscrizione + v + f + t;
+            const paid = qIscriPaid + v_p + f_p + t_p;
+            const remaining = total - paid;
+            
+            let bilancioHtml = '<span style="color:rgba(255,255,255,0.1)">-</span>';
+            if (total > 0) {
+                if (remaining <= 0) {
+                    bilancioHtml = `<span class="badge badge-success" style="font-size:11px;">TUTTO PAGATO</span>`;
+                } else {
+                     bilancioHtml = `<div style="text-align:right; line-height:1.2;">
+                                        <div style="color:var(--color-pink); font-weight:700; font-size:14px; font-family:var(--font-display);">€${remaining.toFixed(0)}</div>
+                                        <div style="font-size:10px; color:rgba(255,255,255,0.4)">DA PAGARE</div>
+                                     </div>`;
+                }
+            }
+
+            extraCells = `
+                <td style="${tdStyle} color:rgba(255,255,255,0.4); font-size:13px;"><i class="ph ph-shield-star"></i> ${Utils.escapeHtml(athlete.team_name)}</td>
+                <td style="${tdStyle} text-align:center;">${iscrizioneHtml}</td>
+                <td style="${tdStyle} text-align:center;">${vestiarioHtml}</td>
+                <td style="${tdStyle} text-align:center;">${foresteriaHtml}</td>
+                <td style="${tdStyle} text-align:center;">${trasportiHtml}</td>
+                <td style="${tdStyle} text-align:right;">${bilancioHtml}</td>
             `;
         } else {
             extraCells = `

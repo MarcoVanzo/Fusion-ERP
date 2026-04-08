@@ -25,7 +25,7 @@ const Athletes = (() => {
         if (route === 'athlete-documents') return 'documenti';
         if (route === 'athlete-metrics') return 'metrics';
         if (route === 'athlete-injuries') return 'infortuni';
-        if (route === 'athlete-payments') return 'pagamenti';
+        if (route === 'athlete-payments') return 'quote';
         if (route === 'athlete-attendances') return 'presenze';
         return 'anagrafica';
     }
