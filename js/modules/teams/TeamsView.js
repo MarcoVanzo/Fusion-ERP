@@ -5,7 +5,7 @@
 
 const TeamsView = {
     /** Main structural skeleton */
-    skeleton: () => `
+    skeleton: (currentTab) => `
         <link rel="stylesheet" href="css/squadre_premium.css">
         <div class="module-wrapper">
             <div class="module-header dash-header" style="background:var(--bg-dark);border-bottom:1px solid var(--color-border);padding:24px 32px;display:flex;align-items:center;justify-content:space-between;margin-bottom:0;">
@@ -14,10 +14,11 @@ const TeamsView = {
                         <i class="ph ph-users-three"></i>
                     </div>
                     <div>
-                        <h1 class="dash-title" style="margin:0;font-size:1.5rem;font-family:var(--font-display);text-transform:uppercase;">Area Sportiva</h1>
-                        <p style="margin:4px 0 0;font-size:0.875rem;color:var(--text-muted);font-family:var(--font-body);">Gestione Categorie, Squadre e Stagioni</p>
+                        <h1 class="dash-title" style="margin:0;font-size:1.5rem;font-family:var(--font-display);text-transform:uppercase;">${currentTab === 'presenze' ? 'Registro Presenze' : 'Area Sportiva'}</h1>
+                        <p style="margin:4px 0 0;font-size:0.875rem;color:var(--text-muted);font-family:var(--font-body);">${currentTab === 'presenze' ? 'Gestione presenze mensili atleti' : 'Gestione Categorie, Squadre e Stagioni'}</p>
                     </div>
                 </div>
+                ${currentTab !== 'presenze' ? `
                 <div style="display:flex;gap:12px;" id="teams-header-actions">
                     <button class="btn btn-primary" id="btn-new-team" style="padding:10px 20px;border-radius:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;font-size:12px;">
                         <i class="ph ph-plus" style="font-size:16px;"></i> NUOVA SQUADRA
@@ -26,10 +27,12 @@ const TeamsView = {
                         <i class="ph ph-calendar-plus" style="font-size:16px;"></i> NUOVA STAGIONE
                     </button>
                 </div>
+                ` : ''}
             </div>
 
             <div class="module-body" style="padding:0;display:flex;flex-direction:column;height:calc(100vh - 72px);overflow:hidden;">
                 <!-- Internal Navigation Tabs -->
+                ${currentTab !== 'presenze' ? `
                 <nav class="squadre-tabs-nav">
                     <button class="squadre-tab-btn active" data-tab="squadre">
                         <i class="ph ph-users-four"></i> SQUADRE
@@ -38,6 +41,7 @@ const TeamsView = {
                         <i class="ph ph-calendar-blank"></i> STAGIONI
                     </button>
                 </nav>
+                ` : ''}
 
                 <!-- Tab Content area -->
                 <div id="squadre-list-container" style="flex:1;overflow-y:auto;padding:32px;background:var(--bg-darker);">

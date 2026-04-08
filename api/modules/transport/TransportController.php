@@ -231,6 +231,7 @@ class TransportController
             ':stats_json' => isset($body['stats_json']) ? json_encode($body['stats_json']) : null,
             ':ai_response' => isset($body['ai_response']) ? json_encode($body['ai_response']) : null,
             ':created_by' => $user['id'],
+            ':driver_id' => $body['driver_id'] ?? null,
         ]);
 
         \FusionERP\Shared\Audit::log('INSERT', 'transports', $id, null, ['destination' => $body['destination_name']]);

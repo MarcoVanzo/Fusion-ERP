@@ -36,12 +36,13 @@ const Squadre = {
 
         this._resetAbort();
         UI.loading(true);
-        appContainer.innerHTML = TeamsView.skeleton();
         
         try {
             // Check initial tab from route
             const route = Router.getCurrentRoute();
             this._currentTab = route === "squadre-stagioni" ? "stagioni" : route === "squadre-presenze" ? "presenze" : "squadre";
+
+            appContainer.innerHTML = TeamsView.skeleton(this._currentTab);
 
             await this.loadData();
             this.render();

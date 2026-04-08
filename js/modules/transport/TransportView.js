@@ -128,6 +128,9 @@ const TransportView = {
 
     renderDriverCard: (t, isAdmin) => {
         const isActive = !!t.is_active;
+        const totalMinutes = parseInt(t.total_minutes || 0);
+        const hourlyRate = parseFloat(t.hourly_rate || 0);
+        const compenso = (totalMinutes / 60) * hourlyRate;
         return `
             <div class="drv-card ${isActive ? "" : "inactive"}" data-driver-id="${Utils.escapeHtml(t.id)}">
                 <div style="display:flex; gap:16px; align-items:flex-start;">
@@ -139,6 +142,7 @@ const TransportView = {
                             ${t.license_number ? `<span><i class="ph ph-identification-card"></i>Patente: ${Utils.escapeHtml(t.license_number)}</span>` : ""}
                             ${t.hourly_rate ? `<span><i class="ph ph-currency-eur"></i>${Utils.formatCurrency(t.hourly_rate)}/h</span>` : ""}
                             ${t.notes ? `<span style="margin-top:4px; color:rgba(255,255,255,0.35); font-size:12px;"><i class="ph ph-note"></i>${Utils.escapeHtml(t.notes)}</span>` : ""}
+                            ${totalMinutes > 0 && hourlyRate > 0 ? `<span style="margin-top:4px; padding:4px 8px; border-radius:6px; background:rgba(236,72,153,0.15); color:var(--accent-pink); font-weight:700; border:1px solid rgba(236,72,153,0.3);"><i class="ph ph-wallet"></i> Compenso: ${Utils.formatCurrency(compenso)}</span>` : ""}
                         </div>
                         <span class="drv-badge ${isActive ? "active" : "inactive"}">
                             <i class="ph ${isActive ? "ph-check-circle" : "ph-pause-circle"}"></i>

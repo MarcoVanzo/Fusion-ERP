@@ -302,11 +302,11 @@ class TransportRepository
             'INSERT INTO transports (id, team_id, destination_name, destination_address,
                                       destination_lat, destination_lng, departure_address,
                                       arrival_time, departure_time, transport_date,
-                                      athletes_json, timeline_json, stats_json, ai_response, created_by)
+                                      athletes_json, timeline_json, stats_json, ai_response, created_by, driver_id)
              VALUES (:id, :team_id, :destination_name, :destination_address,
                      :destination_lat, :destination_lng, :departure_address,
                      :arrival_time, :departure_time, :transport_date,
-                     :athletes_json, :timeline_json, :stats_json, :ai_response, :created_by)'
+                     :athletes_json, :timeline_json, :stats_json, :ai_response, :created_by, :driver_id)'
         );
         $stmt->execute($data);
     }
@@ -315,7 +315,7 @@ class TransportRepository
     {
         $sql = 'SELECT id, team_id, destination_name, destination_address,
                        arrival_time, departure_time, transport_date,
-                       athletes_json, stats_json, created_at
+                       athletes_json, stats_json, created_at, driver_id
                 FROM transports';
         $params = [];
         if ($teamId !== '') {
@@ -350,10 +350,17 @@ class TransportRepository
     public function listDrivers(): array
     {
         $stmt = $this->db->query(
-            'SELECT id, full_name, phone, license_number, hourly_rate, is_active, notes, created_at
-             FROM drivers
-             WHERE deleted_at IS NULL
-             ORDER BY full_name'
+            'SELECT d.id, d.full_name, d.phone, d.license_number, d.hourly_rate, d.is_active, d.notes, d.created_at,
+                    (
+                        SELECT COALESCE(SUM(
+                            CAST(REPLACE(JSON_UNQUOTE(JSON_EXTRACT(t.stats_json, "$.durata")), " min", "") AS UNSIGNED)
+                        ), 0)
+                        FROM transports t
+                        WHERE t.driver_id = d.id
+                    ) AS total_minutes
+             FROM drivers d
+             WHERE d.deleted_at IS NULL
+             ORDER BY d.full_name'
         );
         return $stmt->fetchAll();
     }
