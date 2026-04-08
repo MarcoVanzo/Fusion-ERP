@@ -19,12 +19,24 @@ CREATE PROCEDURE safe_add_column(
     IN p_definition TEXT
 )
 BEGIN
-    SET @col_exists = 0;
-    SELECT COUNT(*) INTO @col_exists
-    FROM information_schema.COLUMNS
+    -- First check if the TABLE exists at all
+    SET @tbl_exists = 0;
+    SELECT COUNT(*) INTO @tbl_exists
+    FROM information_schema.TABLES
     WHERE TABLE_SCHEMA = DATABASE()
-      AND TABLE_NAME = p_table
-      AND COLUMN_NAME = p_column;
+      AND TABLE_NAME = p_table;
+
+    IF @tbl_exists = 0 THEN
+        -- Table doesn't exist yet; skip. CREATE TABLE IF NOT EXISTS will handle it.
+        SET @col_exists = 1;
+    ELSE
+        SET @col_exists = 0;
+        SELECT COUNT(*) INTO @col_exists
+        FROM information_schema.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME = p_table
+          AND COLUMN_NAME = p_column;
+    END IF;
 
     IF @col_exists = 0 THEN
         SET @ddl = CONCAT('ALTER TABLE `', p_table, '` ADD COLUMN `', p_column, '` ', p_definition);
