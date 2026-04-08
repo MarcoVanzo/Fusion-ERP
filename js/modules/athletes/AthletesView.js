@@ -277,7 +277,7 @@ export const AthletesView = {
         
         if (variant === 'infortuni') {
             actionBtnHtml = `
-                <button class="btn btn-ghost btn-xs" title="Nuovo Infortunio" style="background:rgba(239, 68, 68, 0.1); border:1px solid rgba(239, 68, 68, 0.2); color:#ef4444;">
+                <button class="btn btn-ghost btn-xs quick-edit-btn" title="Nuovo Infortunio" style="background:rgba(239, 68, 68, 0.1); border:1px solid rgba(239, 68, 68, 0.2); color:#ef4444;">
                     <i class="ph ph-plus" style="font-size:16px;"></i>
                 </button>
             `;

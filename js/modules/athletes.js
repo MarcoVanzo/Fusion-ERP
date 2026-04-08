@@ -7,7 +7,7 @@ import { AthletesAPI } from './athletes/AthletesAPI.js?v=2';
 import { AthletesView } from './athletes/AthletesView.js?v=2';
 import { AthletesWizard } from './athletes/AthletesWizard.js?v=2';
 import { AthletesMetrics } from './athletes/AthletesMetricsV2.js?v=5';
-import { AthleteHealth } from './athletes/AthleteHealth.js?v=1';
+import { AthleteHealth } from './athletes/AthleteHealth.js?v=2';
 
 const Athletes = (() => {
     let abortController = new AbortController();
@@ -177,6 +177,9 @@ const Athletes = (() => {
                     e.stopPropagation();
                     if (variant === 'quote') {
                         renderProfile(id, 'quote');
+                    } else if (variant === 'infortuni') {
+                        const athlete = athletesData.find(a => String(a.id) === String(id));
+                        if (athlete) AthleteHealth.openNewInjury(athlete);
                     } else {
                         const athlete = athletesData.find(a => String(a.id) === String(id));
                         if (athlete) renderEditForm(athlete);

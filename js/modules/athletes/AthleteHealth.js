@@ -624,8 +624,8 @@ export const AthleteHealth = {
                                 </div>
                                 <div style="font-size:12px; color:var(--color-text-muted); margin-top:4px;">${Utils.escapeHtml(d.document_type || 'Documento')} • ${new Date(d.created_at).toLocaleDateString('it-IT')}</div>
                             </div>
-                            <a href="${'api/' + d.file_path}" target="_blank" class="btn btn-ghost btn-xs" style="color:#3b82f6; background:rgba(59, 130, 246, 0.1);">
-                                <i class="ph ph-download-simple"></i> Scarica
+                            <a href="${d.file_path}" target="_blank" class="btn btn-ghost btn-xs" style="color:#3b82f6; background:rgba(59, 130, 246, 0.1);">
+                                <i class="ph ph-eye"></i> Visualizza
                             </a>
                         </div>
                     `).join('') + '</div>';

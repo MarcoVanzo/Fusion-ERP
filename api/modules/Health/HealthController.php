@@ -77,7 +77,7 @@ class HealthController
     public function updateAnamnesi(): void
     {
         Auth::requireWrite('health');
-        $body = Response::jsonBody();
+        $body = $_POST;
         Response::requireFields($body, ['athlete_id']);
 
         $this->repo->updateAnamnesi($body['athlete_id'], [
@@ -101,7 +101,7 @@ class HealthController
     {
         Auth::requireWrite('health');
         $user = Auth::user();
-        $body = Response::jsonBody();
+        $body = $_POST;
         Response::requireFields($body, ['athlete_id', 'injury_date']);
 
         $id = 'INJ_' . bin2hex(random_bytes(4));
@@ -174,7 +174,7 @@ class HealthController
     public function updateInjury(): void
     {
         Auth::requireWrite('health');
-        $body = Response::jsonBody();
+        $body = $_POST;
         Response::requireFields($body, ['injury_id']); // actually named injury_id from FE form
 
         $keyMap = [
@@ -237,7 +237,7 @@ class HealthController
     public function addFollowup(): void
     {
         Auth::requireWrite('health');
-        $body = Response::jsonBody();
+        $body = $_POST;
         Response::requireFields($body, ['injury_id', 'visit_date']);
 
         $this->repo->addInjuryFollowup([
