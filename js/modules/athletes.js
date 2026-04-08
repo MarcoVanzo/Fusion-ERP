@@ -176,7 +176,7 @@ const Athletes = (() => {
                 editBtn.onclick = (e) => {
                     e.stopPropagation();
                     if (variant === 'quote') {
-                        renderProfile(id, 'pagamenti');
+                        renderProfile(id, 'quote');
                     } else {
                         const athlete = athletesData.find(a => String(a.id) === String(id));
                         if (athlete) renderEditForm(athlete);
@@ -188,7 +188,7 @@ const Athletes = (() => {
                 if (isBulkMode) {
                     toggleSelection(id);
                 } else {
-                    renderProfile(id, variant === 'anagrafica' ? null : (variant === 'quote' ? 'pagamenti' : variant));
+                    renderProfile(id, variant === 'anagrafica' ? null : variant);
                 }
             };
         });
@@ -292,9 +292,7 @@ const Athletes = (() => {
                 panel.innerHTML = AthletesView.tabQuote(athlete, App.getUser().role === 'admin');
                 addQuoteListeners(athlete);
                 break;
-            case 'pagamenti':
-                await renderPayments(panel, athlete);
-                break;
+
             case 'documenti':
                 panel.innerHTML = AthletesView.tabDocumenti(athlete, true);
                 addDocumentListeners(athlete);
@@ -307,6 +305,15 @@ const Athletes = (() => {
                 break;
             case 'subusers':
                 await renderSubUsers(panel, athlete);
+                break;
+            case 'trasporti':
+                panel.innerHTML = '<div class="loader-spinner"></div>';
+                try {
+                    const history = await AthletesAPI.getTransportHistory(athlete.id);
+                    panel.innerHTML = AthletesView.tabTrasporti(athlete, history);
+                } catch (e) {
+                    panel.innerHTML = Utils.emptyState("Errore caricamento trasporti", e.message);
+                }
                 break;
             // Add other tabs here...
         }
@@ -517,36 +524,7 @@ const Athletes = (() => {
         }
     }
 
-    async function renderPayments(panel, athlete) {
-        panel.innerHTML = '<div class="loader-spinner"></div>';
-        try {
-            const data = await Store.get("getPlan", "payments", { id: athlete.id });
-            panel.innerHTML = AthletesView.tabPagamenti(data);
 
-            const form = document.getElementById("assign-quota-form");
-            if (form) {
-                form.addEventListener("submit", async (e) => {
-                    e.preventDefault();
-                    const formData = new FormData(form);
-                    const payload = Object.fromEntries(formData.entries());
-                    
-                    UI.loading(true);
-                    try {
-                        await Store.api("addCustomInstallment", "payments", payload);
-                        UI.toast("Quota aggiunta con successo", "success");
-                        // Refresh both payments tab and the underlying athlete data
-                        await renderPayments(panel, athlete);
-                    } catch (err) {
-                        UI.toast(err.message, "error");
-                    } finally {
-                        UI.loading(false);
-                    }
-                });
-            }
-        } catch (e) {
-            panel.innerHTML = Utils.emptyState("Errore caricamento pagamenti", e.message);
-        }
-    }
 
     async function refreshData(variant = 'anagrafica') {
         athletesData = await AthletesAPI.getLightList();

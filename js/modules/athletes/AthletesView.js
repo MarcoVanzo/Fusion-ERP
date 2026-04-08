@@ -352,10 +352,10 @@ export const AthletesView = {
                 <div class="fusion-tabs-container" id="athlete-tab-bar" style="border:none;background:transparent;width:100%;justify-content:flex-start;padding:8px 16px;">
                     <button class="fusion-tab" data-tab="anagrafica">Anagrafica</button>
                     <button class="fusion-tab" data-tab="quote">Quote</button>
-                    <button class="fusion-tab" data-tab="pagamenti">Pagamenti</button>
                     <button class="fusion-tab" data-tab="metrics" style="color:var(--color-pink)">Performance (VALD)</button>
                     <button class="fusion-tab" data-tab="infortuni" style="color:#ef4444">Infortuni</button>
                     <button class="fusion-tab" data-tab="documenti">Documenti</button>
+                    <button class="fusion-tab" data-tab="trasporti" style="color:#00e676;"><i class="ph ph-bus"></i> Trasporti</button>
                     ${user && (user.role === 'atleta' || user.role === 'admin') ? `
                         <button class="fusion-tab" data-tab="subusers">Sotto-Utenti</button>
                     ` : ''}
@@ -364,10 +364,10 @@ export const AthletesView = {
 
             <div id="tab-panel-anagrafica" class="athlete-tab-panel" style="display:none;padding:24px 16px;"></div>
             <div id="tab-panel-quote" class="athlete-tab-panel" style="display:none;padding:24px 16px;"></div>
-            <div id="tab-panel-pagamenti" class="athlete-tab-panel" style="display:none;padding:24px 16px;"></div>
             <div id="tab-panel-metrics" class="athlete-tab-panel" style="display:none;padding:24px 16px;"></div>
             <div id="tab-panel-infortuni" class="athlete-tab-panel" style="display:none;padding:24px 16px;"></div>
             <div id="tab-panel-documenti" class="athlete-tab-panel" style="display:none;padding:24px 16px;"></div>
+            <div id="tab-panel-trasporti" class="athlete-tab-panel" style="display:none;padding:24px 16px;"></div>
             ${user && (user.role === 'atleta' || user.role === 'admin') ? `
                 <div id="tab-panel-subusers" class="athlete-tab-panel" style="display:none;padding:24px 16px;"></div>
             ` : ''}
@@ -672,7 +672,7 @@ export const AthletesView = {
                             <div style="padding:16px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:12px;">
                                 <div class="form-group">
                                     <label class="form-label" style="display:none;"></label>
-                                    <p style="font-size:12px; color:rgba(255,255,255,0.5);"><i class="ph ph-info"></i> La gestione di Quote e Rate è disponibile nei rispettivi tab "Quote" e "Pagamenti" salvando il profilo.</p>
+                                    <p style="font-size:12px; color:rgba(255,255,255,0.5);"><i class="ph ph-info"></i> La gestione di Quote e Rate è disponibile nel tab "Quote" salvando il profilo.</p>
                                 </div>
                             </div>
                         </div>
@@ -721,7 +721,7 @@ export const AthletesView = {
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
                     <div>
                         <h3 style="font-family:var(--font-display); font-size:20px; color:var(--color-white); margin-bottom:4px;">Riepilogo Quote</h3>
-                        <p style="color:var(--color-text-muted); font-size:13px;">Stato attuale dei pagamenti concordati per questo atleta.</p>
+                        <p style="color:var(--color-text-muted); font-size:13px;">Stato attuale delle quote concordate per questo atleta.</p>
                     </div>
                 </div>
                 
@@ -853,7 +853,7 @@ export const AthletesView = {
                             <div class="form-group" style="flex:1;">
                                 <label class="form-label">Quota Trasporti</label>
                                 <input type="number" name="quota_trasporti" class="form-input" placeholder="-" step="0.01" value="${athlete.quota_trasporti || ''}" readonly style="opacity:0.7; cursor:not-allowed; background:rgba(255,255,255,0.02)">
-                                <div style="font-size:11px; color:var(--color-pink); margin-top:4px;"><i class="ph ph-info"></i> Importo calcolato e gestito nella tab "Rimborsi Trasporti"</div>
+                                <div style="font-size:11px; color:var(--color-pink); margin-top:4px;"><i class="ph ph-info"></i> Importo calcolato e gestito nella tab "Trasporti"</div>
                             </div>
                             <div class="form-group" style="margin-bottom:10px;">
                                 <label class="form-label" style="display:flex; align-items:center; gap:8px; opacity:0.7; cursor:not-allowed;">
@@ -876,126 +876,6 @@ export const AthletesView = {
     },
 
     /**
-     * Tab: Pagamenti
-     */
-    tabPagamenti: (data) => {
-        if (!data || !data.plan) {
-            return `
-                <div class="card glass-card" style="padding:40px; text-align:center;">
-                    <i class="ph ph-currency-eur" style="font-size:48px; color:var(--text-muted); opacity:0.3; margin-bottom:16px;"></i>
-                    <h3 style="font-size:18px; color:var(--color-white); margin-bottom:8px;">Nessun piano pagamenti attivo</h3>
-                    <p style="color:var(--text-muted); font-size:14px;">Contatta la segreteria per attivare il tuo piano rateale.</p>
-                </div>
-            `;
-        }
-
-        const plan = data.plan;
-        const installments = data.installments || [];
-        const stats = data.stats || {};
-
-        return `
-            <div style="display:flex; flex-direction:column; gap:24px;">
-                <!-- Riepilogo Piano -->
-                <div class="card glass-card" style="background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%); padding:24px;">
-                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:24px;">
-                        <div>
-                            <span class="badge badge-primary" style="margin-bottom:8px; font-size:10px;">PIANO ATTIVO</span>
-                            <h3 style="font-size:24px; font-weight:700; color:var(--color-white); margin-bottom:4px;">Stato Pagamenti</h3>
-                            <p style="font-size:13px; color:var(--text-muted);">Piano del ${Utils.formatDate(plan.start_date)} · Frequenza: ${plan.frequency}</p>
-                        </div>
-                        <div style="text-align:right;">
-                            <div style="font-size:12px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:4px;">Totale Piano</div>
-                            <div style="font-size:28px; font-weight:800; color:var(--color-white); font-family:var(--font-display);">€ ${Utils.formatNumber(plan.total_amount)}</div>
-                        </div>
-                    </div>
-                    
-                    <div class="stats-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:16px; border-top:1px solid rgba(255,255,255,0.05); padding-top:24px;">
-                        <div class="stat-item">
-                            <div style="font-size:11px; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">Pagato</div>
-                            <div style="font-size:18px; font-weight:700; color:var(--color-success);">€ ${Utils.formatNumber(stats.total_paid)}</div>
-                        </div>
-                        <div class="stat-item">
-                            <div style="font-size:11px; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">In Scadenza / Arretrati</div>
-                            <div style="font-size:18px; font-weight:700; color:${stats.total_overdue > 0 ? 'var(--color-danger)' : 'var(--color-white)'};">€ ${Utils.formatNumber(stats.total_overdue)}</div>
-                        </div>
-                        <div class="stat-item">
-                            <div style="font-size:11px; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">Rimanente</div>
-                            <div style="font-size:18px; font-weight:700; color:var(--color-white);">€ ${Utils.formatNumber(stats.total_remaining)}</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Lista Rate -->
-                <div class="card glass-card" style="padding:0; overflow:hidden;">
-                    <div style="padding:20px 24px; border-bottom:1px solid rgba(255,255,255,0.05); display:flex; justify-content:space-between; align-items:center;">
-                        <h4 style="font-size:14px; font-weight:600; color:var(--color-white); margin:0;">Dettaglio Rate</h4>
-                    </div>
-                    <div class="table-responsive">
-                        <table class="table" style="margin:0;">
-                            <thead>
-                                <tr>
-                                    <th style="padding-left:24px;">Scadenza</th>
-                                    <th>Importo</th>
-                                    <th>Stato</th>
-                                    <th style="text-align:right; padding-right:24px;">Azioni</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${installments.map(inst => {
-                                    const isPaid = inst.status === 'PAID';
-                                    const isOverdue = inst.status === 'OVERDUE';
-                                    return `
-                                        <tr>
-                                            <td style="padding-left:24px; font-weight:500;">
-                                                <div style="font-size:13px; font-weight:600;">${inst.title || '-'}</div>
-                                                <div style="font-size:11px; color:var(--text-muted);">${Utils.formatDate(inst.due_date)}</div>
-                                            </td>
-                                            <td style="font-weight:600; font-family:var(--font-display);">€ ${Utils.formatNumber(inst.amount)}</td>
-                                            <td>
-                                                <span class="badge ${isPaid ? 'badge-success' : (isOverdue ? 'badge-danger' : 'badge-white')}" style="font-size:10px;">
-                                                    ${inst.status}
-                                                </span>
-                                            </td>
-                                            <td style="text-align:right; padding-right:24px;">
-                                                ${inst.receipt_path ? `
-                                                    <a href="${inst.receipt_path}" target="_blank" class="btn btn-ghost btn-sm" style="padding:4px 8px; font-size:11px;">
-                                                        <i class="ph ph-file-pdf"></i> RICEVUTA
-                                                    </a>
-                                                ` : '-'}
-                                            </td>
-                                        </tr>
-                                    `;
-                                }).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            
-            ${App.getUser() && (App.getUser().role === 'admin' || App.getUser().role === 'manager') ? `
-            <div class="card glass-card" style="padding:24px; border:1px solid rgba(255,255,255,0.05); background:rgba(255,255,255,0.01); margin-top:24px;">
-                <h4 style="font-size:16px; font-weight:600; color:var(--color-white); margin-bottom:16px;">Aggiungi Quota Manuale</h4>
-                <form id="assign-quota-form" style="display:flex; flex-wrap:wrap; gap:16px; align-items:flex-end;">
-                    <input type="hidden" name="athlete_id" value="${plan ? plan.athlete_id : data.athlete_id}">
-                    <div class="form-group" style="flex:2; min-width:200px;">
-                        <label class="form-label">Titolo Quota (es. Quota Vestiario)</label>
-                        <input type="text" name="title" class="form-input" required>
-                    </div>
-                    <div class="form-group" style="flex:1; min-width:120px;">
-                        <label class="form-label">Importo (€)</label>
-                        <input type="number" name="amount" class="form-input" step="0.01" min="0" required>
-                    </div>
-                    <div class="form-group" style="flex:1; min-width:140px;">
-                        <label class="form-label">Scadenza</label>
-                        <input type="date" name="due_date" class="form-input" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary" style="margin-bottom:10px; flex-shrink:0;">
-                        <i class="ph ph-plus"></i> Aggiungi
-                    </button>
-                </form>
-            </div>
-            ` : ''}
-        `;
     },
 
     /**
@@ -1138,6 +1018,59 @@ export const AthletesView = {
                         <button class="btn btn-ghost" id="close-invite-modal">Annulla</button>
                         <button class="btn btn-primary" id="confirm-invite-btn">Invia Invito</button>
                     </div>
+                </div>
+            </div>
+        `;
+    },
+
+    /**
+     * Tab: Trasporti (Riepilogo rimborsi basato sullo storico)
+     */
+    tabTrasporti: (athlete, history = []) => {
+        const FEE_PER_TRIP = 2.50;
+        const totalAmount = history.length * FEE_PER_TRIP;
+        
+        return `
+            <div class="card glass-card" style="padding:24px; border:1px solid rgba(255,255,255,0.05); background:rgba(255,255,255,0.01); margin-bottom:24px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+                    <div>
+                        <h3 style="font-family:var(--font-display); font-size:20px; color:var(--color-white); margin-bottom:4px;">Rimborso Trasporti</h3>
+                        <p style="color:var(--color-text-muted); font-size:13px;">Calcolo basato sui viaggi effettuati dall'atleta (${history.length} viaggi).</p>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px;">Totale Rimborso</div>
+                        <div style="font-size:28px; font-weight:800; color:var(--color-success); font-family:var(--font-display);">€ ${totalAmount.toFixed(2)}</div>
+                    </div>
+                </div>
+
+                <div class="table-wrapper" style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:12px; overflow:hidden;">
+                    <table class="table" style="width:100%; border-collapse:collapse; margin:0;">
+                        <thead style="background:rgba(255,255,255,0.03);">
+                            <tr>
+                                <th style="padding:12px 16px; color:rgba(255,255,255,0.4); font-size:11px; text-transform:uppercase; text-align:left;">Destinazione</th>
+                                <th style="padding:12px 16px; color:rgba(255,255,255,0.4); font-size:11px; text-transform:uppercase; text-align:center;">Data</th>
+                                <th style="padding:12px 16px; color:rgba(255,255,255,0.4); font-size:11px; text-transform:uppercase; text-align:center;">Orario</th>
+                                <th style="padding:12px 16px; color:rgba(255,255,255,0.4); font-size:11px; text-transform:uppercase; text-align:right;">Quota</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${history.length === 0 ? `
+                                <tr>
+                                    <td colspan="4" style="padding:32px; text-align:center; color:rgba(255,255,255,0.2);">
+                                        <i class="ph ph-bus" style="font-size:32px; margin-bottom:8px;"></i>
+                                        <p>Nessun trasporto registrato per questo atleta.</p>
+                                    </td>
+                                </tr>
+                            ` : history.map(t => `
+                                <tr style="border-bottom:1px solid rgba(255,255,255,0.03);">
+                                    <td style="padding:14px 16px; color:var(--color-white); font-weight:600;">${Utils.escapeHtml(t.destination_name)}</td>
+                                    <td style="padding:14px 16px; text-align:center; color:rgba(255,255,255,0.6);">${Utils.formatDate(t.transport_date)}</td>
+                                    <td style="padding:14px 16px; text-align:center; color:rgba(255,255,255,0.4); font-size:12px;">${t.departure_time ? t.departure_time.substring(0,5) : '--:--'}</td>
+                                    <td style="padding:14px 16px; text-align:right; color:var(--color-success); font-weight:700;">€ ${FEE_PER_TRIP.toFixed(2)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         `;

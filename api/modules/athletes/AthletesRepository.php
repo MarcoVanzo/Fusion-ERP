@@ -52,10 +52,10 @@ class AthletesRepository
 
         $params = [];
         if ($teamSeasonId !== '') {
-            if (str_starts_with($teamSeasonId, 'TEAM_')) {
-                // Legacy support for passing team_id instead of team_season_id
+            if (str_starts_with($teamSeasonId, 'TEAM_') || str_starts_with($teamSeasonId, 'TM_')) {
+                // Support both legacy prefix and raw team_id format
                 $sql .= ' WHERE a.deleted_at IS NULL AND a.team_id = :team_id';
-                $params[':team_id'] = substr($teamSeasonId, 5);
+                $params[':team_id'] = str_starts_with($teamSeasonId, 'TEAM_') ? substr($teamSeasonId, 5) : $teamSeasonId;
             } else {
                 $sql .= ' JOIN athlete_teams at2 ON a.id = at2.athlete_id';
                 $sql .= ' WHERE a.deleted_at IS NULL AND at2.team_season_id = :team_season_id';
@@ -108,17 +108,15 @@ class AthletesRepository
                        (SELECT GROUP_CONCAT(at_sub.team_season_id SEPARATOR ',') FROM athlete_teams at_sub WHERE at_sub.athlete_id = a.id) AS team_season_ids,
                        (SELECT GROUP_CONCAT(CONCAT_WS('||', ir.injury_date, ir.type, ir.current_status, IFNULL(ir.return_date, '')) SEPARATOR ';;;') FROM injury_records ir WHERE ir.athlete_id = a.id ORDER BY ir.injury_date DESC) AS injuries_summary,
                        (SELECT metrics FROM vald_test_results WHERE athlete_id = a.id OR (a.vald_athlete_id IS NOT NULL AND athlete_id IN (SELECT id FROM athletes WHERE vald_athlete_id = a.vald_athlete_id)) ORDER BY test_date DESC LIMIT 1) AS latest_vald_metrics,
-                       (SELECT test_date FROM vald_test_results WHERE athlete_id = a.id OR (a.vald_athlete_id IS NOT NULL AND athlete_id IN (SELECT id FROM athletes WHERE vald_athlete_id = a.vald_athlete_id)) ORDER BY test_date DESC LIMIT 1) AS latest_vald_date,
-                       (SELECT COALESCE(SUM(amount), 0) FROM installments i JOIN payment_plans p ON i.plan_id = p.id WHERE p.athlete_id = a.id AND p.status='active') AS total_assigned,
-                       (SELECT COALESCE(SUM(amount), 0) FROM installments i JOIN payment_plans p ON i.plan_id = p.id WHERE p.athlete_id = a.id AND p.status='active' AND i.status='PAID') AS total_paid
+                       (SELECT test_date FROM vald_test_results WHERE athlete_id = a.id OR (a.vald_athlete_id IS NOT NULL AND athlete_id IN (SELECT id FROM athletes WHERE vald_athlete_id = a.vald_athlete_id)) ORDER BY test_date DESC LIMIT 1) AS latest_vald_date
                 FROM athletes a
                 LEFT JOIN teams t ON a.team_id = t.id";
 
         $params = [];
         if ($teamSeasonId !== '') {
-            if (str_starts_with($teamSeasonId, 'TEAM_')) {
+            if (str_starts_with($teamSeasonId, 'TEAM_') || str_starts_with($teamSeasonId, 'TM_')) {
                 $sql .= ' WHERE a.deleted_at IS NULL AND a.is_active = 1 AND a.team_id = :team_id';
-                $params[':team_id'] = substr($teamSeasonId, 5);
+                $params[':team_id'] = str_starts_with($teamSeasonId, 'TEAM_') ? substr($teamSeasonId, 5) : $teamSeasonId;
             } else {
                 $sql .= ' JOIN athlete_teams at2 ON a.id = at2.athlete_id';
                 $sql .= ' WHERE a.deleted_at IS NULL AND a.is_active = 1 AND at2.team_season_id = :team_season_id';
@@ -596,6 +594,20 @@ class AthletesRepository
         return $stmt->fetchAll();
     }
 
+    // ─── TRANSPORT HISTORY ───────────────────────────────────────────────────
+
+    public function getTransportHistory(string $athleteId): array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT destination_name, transport_date, departure_time, arrival_time
+             FROM transports
+             WHERE JSON_CONTAINS(athletes_json, JSON_OBJECT(\'id\', :id))
+             ORDER BY transport_date DESC, departure_time DESC'
+        );
+        $stmt->execute([':id' => $athleteId]);
+        return $stmt->fetchAll();
+    }
+
     // ─── ACTIVITY LOG ────────────────────────────────────────────────────────
 
     public function getActivityLog(string $athleteId): array
@@ -622,7 +634,6 @@ class AthletesRepository
             return [
                 'anagrafica' => $sql("al.table_name = 'athletes' AND al.record_id = :athlete_id"),
                 'metrics' => $sql("al.table_name = 'metrics_logs' AND al.json_entity_id = :athlete_id"),
-                'pagamenti' => $sql("al.table_name IN ('payment_plans','installments') AND al.json_entity_id = :athlete_id"),
                 'documenti' => $sql("al.table_name = 'athlete_documents' AND al.json_entity_id = :athlete_id"),
             ];
         }
@@ -630,9 +641,6 @@ class AthletesRepository
         return [
             'anagrafica' => $sql("al.table_name IN ('athletes') AND al.record_id = :athlete_id"),
             'metrics' => $sql("al.table_name = 'metrics_logs' AND JSON_UNQUOTE(JSON_EXTRACT(al.after_snapshot, '$.athlete_id')) = :athlete_id"),
-            'pagamenti' => $sql("al.table_name IN ('payment_plans','installments')
-                                  AND (JSON_UNQUOTE(JSON_EXTRACT(al.after_snapshot,  '$.athlete_id')) = :athlete_id
-                                    OR JSON_UNQUOTE(JSON_EXTRACT(al.before_snapshot, '$.athlete_id')) = :athlete_id)"),
             'documenti' => $sql("al.table_name = 'athlete_documents' AND JSON_UNQUOTE(JSON_EXTRACT(al.after_snapshot, '$.athlete_id')) = :athlete_id"),
         ];
     }

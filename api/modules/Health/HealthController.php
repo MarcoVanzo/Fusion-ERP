@@ -198,15 +198,15 @@ class HealthController
                 if ($dbKey === 'medical_clearance_given') {
                     $val = !empty($val) ? 1 : 0;
                     if ($val === 1 && empty($body['estimated_return_date'])) {
-                        $updateData[':return_date'] = "'" . date('Y-m-d') . "'";
+                        $updateData[':return_date'] = date('Y-m-d');
                     }
                     if ($val === 1) {
-                        $updateData[':current_status'] = "'CLEARED'";
+                        $updateData[':current_status'] = 'CLEARED';
                     } else {
-                        $updateData[':current_status'] = "'INJURED'";
+                        $updateData[':current_status'] = 'INJURED';
                     }
                 }
-                $updateData[":$dbKey"] = is_null($val) ? "NULL" : "'" . addslashes((string)$val) . "'";
+                $updateData[":$dbKey"] = $val;
             }
         }
 

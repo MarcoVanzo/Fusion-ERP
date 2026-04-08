@@ -150,6 +150,11 @@ class TeamsRepository
 
     public function getAttendances(string $teamId, string $month): array
     {
+        // Sanitize teamId if passed with legacy prefix
+        if (str_starts_with($teamId, 'TEAM_')) {
+            $teamId = substr($teamId, 5);
+        }
+
         // $month is expected as YYYY-MM
         $stmt = $this->db->prepare(
             "SELECT id, athlete_id, attendance_date, status 

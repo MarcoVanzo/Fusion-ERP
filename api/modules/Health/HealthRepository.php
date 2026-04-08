@@ -40,7 +40,7 @@ class HealthRepository
 
     /**
      * Get certificate status for an athlete.
-     * @return array { cert_type, expires_at, issued_at, file_path, valid, days_until_expiry, alert }
+     * @return array
      */
     public function getCertificateStatus(string $athleteId): array
     {
@@ -199,7 +199,7 @@ class HealthRepository
         foreach ($data as $key => $value) {
             if ($key === ':id') continue;
             $colName = ltrim($key, ':');
-            $sets[] = "$colName = $key";
+            $sets[] = "`$colName` = $key";
         }
         $setString = implode(', ', $sets);
 
