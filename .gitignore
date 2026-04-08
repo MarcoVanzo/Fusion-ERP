@@ -40,3 +40,4 @@ package-lock.json
 tmp/
 remote.env
 prod_env.txt
+api/shared/AIConfig.php
