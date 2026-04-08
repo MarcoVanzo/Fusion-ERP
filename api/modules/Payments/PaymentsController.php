@@ -85,6 +85,53 @@ class PaymentsController
         ], 201);
     }
 
+    // ─── POST ?module=payments&action=addCustomInstallment ───────────────────
+
+    public function addCustomInstallment(): void
+    {
+        Auth::requireWrite('payments');
+        $user = Auth::user();
+        $body = Response::jsonBody();
+        Response::requireFields($body, ['athlete_id', 'title', 'amount', 'due_date']);
+        
+        $plan = $this->repo->getActivePlan($body['athlete_id']);
+        if (!$plan) {
+            $planId = 'PP_' . bin2hex(random_bytes(4));
+            $this->repo->createPlan([
+                ':id' => $planId,
+                ':tenant_id' => TenantContext::id(),
+                ':athlete_id' => $body['athlete_id'],
+                ':total_amount' => 0,
+                ':frequency' => 'CUSTOM',
+                ':start_date' => date('Y-m-d'),
+                ':season' => null,
+                ':status' => 'active',
+                ':notes' => 'Piano generato automaticamente per quote',
+                ':created_by' => $user['id'] ?? null,
+            ]);
+        } else {
+            $planId = $plan['id'];
+        }
+
+        $instId = 'INST_' . bin2hex(random_bytes(4));
+        $this->repo->insertInstallment([
+            ':id' => $instId,
+            ':plan_id' => $planId,
+            ':title' => $body['title'],
+            ':due_date' => $body['due_date'],
+            ':amount' => (float)$body['amount'],
+            ':status' => 'PENDING',
+        ]);
+
+        Audit::log('INSERT', 'installments', $instId, null, [
+            'plan_id' => $planId,
+            'title' => $body['title'],
+            'amount' => (float)$body['amount']
+        ]);
+
+        Response::success(['message' => 'Quota aggiunta con successo', 'installment_id' => $instId]);
+    }
+
     // ─── GET ?module=payments&action=getPlan&id=ATH_xxx ──────────────────────
 
     /**
@@ -343,10 +390,12 @@ class PaymentsController
 
             $instId = 'INST_' . bin2hex(random_bytes(4));
             $dueDate = $date->format('Y-m-d');
+            $title = "Rata " . ($i + 1);
 
             $this->repo->insertInstallment([
                 ':id' => $instId,
                 ':plan_id' => $planId,
+                ':title' => $title,
                 ':due_date' => $dueDate,
                 ':amount' => $amount,
                 ':status' => 'PENDING',
@@ -354,6 +403,7 @@ class PaymentsController
 
             $result[] = [
                 'id' => $instId,
+                'title' => $title,
                 'due_date' => $dueDate,
                 'amount' => $amount,
                 'status' => 'PENDING',
@@ -404,7 +454,8 @@ body { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 12px; color:
     <table>
         <tr><td>Atleta</td><td>{$athleteName}</td></tr>
         <tr><td>Codice Fiscale</td><td>{$fiscalCode}</td></tr>
-        <tr><td>Rif. Rata</td><td>{$instId}</td></tr>
+        <tr><td>Quota/Rata</td><td>{$installment['title']}</td></tr>
+        <tr><td>Rif. Pagamento</td><td>{$instId}</td></tr>
         <tr><td>Data Pagamento</td><td>{$paidDate}</td></tr>
         <tr><td>Metodo</td><td>{$method}</td></tr>
     </table>

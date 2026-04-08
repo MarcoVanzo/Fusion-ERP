@@ -114,52 +114,7 @@ const Athletes = (() => {
         }, { signal });
 
         document.getElementById("bulk-quotes-btn")?.addEventListener("click", () => {
-            const teamId = document.getElementById("team-filter")?.value;
-            if (!teamId) {
-                UI.toast("Seleziona prima una specifica squadra dal menu a tendina!", "warning");
-                return;
-            }
-            const selectEl = document.getElementById("team-filter");
-            const teamName = selectEl.options[selectEl.selectedIndex].text;
-            const athletesInTeam = athletesData.filter(a => String(a.team_id) === String(teamId) || (a.team_season_ids && String(a.team_season_ids).split(',').includes(String(teamId))));
-            
-            if (athletesInTeam.length === 0) {
-                UI.toast("Nessun atleta in questa squadra.", "warning");
-                return;
-            }
-
-            const qIscrizione = prompt(`Inserisci QUOTA ISCRIZIONE per tutti gli atleti di "${teamName}"\n\nLascia vuoto per non modificare questa voce.`);
-            if (qIscrizione === null) return;
-            const qVestiario = prompt(`Inserisci QUOTA VESTIARIO per tutti gli atleti di "${teamName}"\n\nLascia vuoto per non modificare questa voce.`);
-            if (qVestiario === null) return;
-            const qForesteria = prompt(`Inserisci QUOTA FORESTERIA per tutti gli atleti di "${teamName}"\n\nLascia vuoto per non modificare questa voce.`);
-            if (qForesteria === null) return;
-            
-            const updates = {};
-            if (qIscrizione !== "") {
-                updates.quota_iscrizione_rata1 = qIscrizione;
-                updates.quota_iscrizione_rata2 = 0;
-            }
-            if (qVestiario !== "") updates.quota_vestiario = qVestiario;
-            if (qForesteria !== "") updates.quota_foresteria = qForesteria;
-
-            if (Object.keys(updates).length === 0) {
-                UI.toast("Nessuna quota inserita, operazione annullata.", "info");
-                return;
-            }
-
-            if (!confirm(`Stai per assegnare queste quote a ${athletesInTeam.length} atleti della squadra "${teamName}". Confermi l'operazione?`)) return;
-
-            UI.loading(true);
-            Promise.all(athletesInTeam.map(a => AthletesAPI.update(a.id, updates)))
-                .then(() => {
-                    UI.toast(`Quote assegnate correttamente a ${athletesInTeam.length} atleti!`, "success");
-                    refreshData(variant);
-                })
-                .catch(e => {
-                    UI.toast("Errore durante l'assegnazione: " + e.message, "error");
-                    refreshData(variant);
-                });
+            UI.toast("L'assegnazione massiva delle quote è temporaneamente disabilitata durante l'aggiornamento del sistema rateale.", "info");
         }, { signal });
 
         document.getElementById("athlete-search")?.addEventListener("input", (e) => {
@@ -221,7 +176,7 @@ const Athletes = (() => {
                 editBtn.onclick = (e) => {
                     e.stopPropagation();
                     if (variant === 'quote') {
-                        renderProfile(id, 'quote');
+                        renderProfile(id, 'pagamenti');
                     } else {
                         const athlete = athletesData.find(a => String(a.id) === String(id));
                         if (athlete) renderEditForm(athlete);
@@ -233,7 +188,7 @@ const Athletes = (() => {
                 if (isBulkMode) {
                     toggleSelection(id);
                 } else {
-                    renderProfile(id, variant === 'anagrafica' ? null : variant);
+                    renderProfile(id, variant === 'anagrafica' ? null : (variant === 'quote' ? 'pagamenti' : variant));
                 }
             };
         });
@@ -333,10 +288,6 @@ const Athletes = (() => {
                 // ma manteniamo addAnagraficaListeners per altri controlli (es. toggle active)
                 addAnagraficaListeners(athlete);
                 break;
-            case 'quote':
-                panel.innerHTML = AthletesView.tabQuote(athlete, ['admin', 'manager'].includes(App.getUser().role));
-                addQuoteListeners(athlete);
-                break;
             case 'pagamenti':
                 await renderPayments(panel, athlete);
                 break;
@@ -377,34 +328,6 @@ const Athletes = (() => {
         }, { signal });
     }
 
-    function addQuoteListeners(athlete) {
-        const form = document.getElementById("athlete-quotas-form");
-        if (form) {
-            form.addEventListener("submit", async (e) => {
-                e.preventDefault();
-                const formData = new FormData(form);
-                const data = Object.fromEntries(formData.entries());
-                
-                // checkbox non spuntate non compaiono in FormData
-                const checkboxes = ['quota_iscrizione_rata1_paid', 'quota_iscrizione_rata2_paid', 'quota_vestiario_paid', 'quota_foresteria_paid'];
-                checkboxes.forEach(cb => {
-                    data[cb] = data[cb] ? 1 : 0;
-                });
-
-                UI.loading(true);
-                try {
-                    await AthletesAPI.update(data);
-                    UI.toast("Quote aggiornate con successo", "success");
-                    const updatedAthlete = await AthletesAPI.getById(athlete.id);
-                    switchTab('quote', updatedAthlete);
-                } catch (err) {
-                    UI.toast(err.message, "error");
-                } finally {
-                    UI.loading(false);
-                }
-            });
-        }
-    }
 
     function renderEditForm(athlete) {
         const app = document.getElementById("app");
@@ -566,6 +489,27 @@ const Athletes = (() => {
         try {
             const data = await Store.get("getPlan", "payments", { id: athlete.id });
             panel.innerHTML = AthletesView.tabPagamenti(data);
+
+            const form = document.getElementById("assign-quota-form");
+            if (form) {
+                form.addEventListener("submit", async (e) => {
+                    e.preventDefault();
+                    const formData = new FormData(form);
+                    const payload = Object.fromEntries(formData.entries());
+                    
+                    UI.loading(true);
+                    try {
+                        await Store.api("addCustomInstallment", "payments", payload);
+                        UI.toast("Quota aggiunta con successo", "success");
+                        // Refresh both payments tab and the underlying athlete data
+                        await renderPayments(panel, athlete);
+                    } catch (err) {
+                        UI.toast(err.message, "error");
+                    } finally {
+                        UI.loading(false);
+                    }
+                });
+            }
         } catch (e) {
             panel.innerHTML = Utils.emptyState("Errore caricamento pagamenti", e.message);
         }

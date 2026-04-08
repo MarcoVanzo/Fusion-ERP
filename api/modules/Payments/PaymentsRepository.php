@@ -84,8 +84,8 @@ class PaymentsRepository
     public function insertInstallment(array $data): void
     {
         $stmt = $this->db->prepare(
-            'INSERT INTO installments (id, plan_id, due_date, amount, status)
-             VALUES (:id, :plan_id, :due_date, :amount, :status)'
+            'INSERT INTO installments (id, plan_id, title, due_date, amount, status)
+             VALUES (:id, :plan_id, :title, :due_date, :amount, :status)'
         );
         $stmt->execute($data);
     }
@@ -96,7 +96,7 @@ class PaymentsRepository
     public function getInstallments(string $planId): array
     {
         $stmt = $this->db->prepare(
-            'SELECT id, due_date, amount, status, paid_date, payment_method, receipt_path, notes
+            'SELECT id, title, due_date, amount, status, paid_date, payment_method, receipt_path, notes
              FROM installments
              WHERE plan_id = :plan_id
              ORDER BY due_date ASC'
@@ -111,7 +111,7 @@ class PaymentsRepository
     public function getInstallmentById(string $installmentId): ?array
     {
         $stmt = $this->db->prepare(
-            'SELECT i.id, i.plan_id, i.due_date, i.amount, i.status, i.paid_date,
+            'SELECT i.id, i.plan_id, i.title, i.due_date, i.amount, i.status, i.paid_date,
                     i.payment_method, i.receipt_path, i.notes,
                     pp.athlete_id, pp.tenant_id
              FROM installments i
@@ -166,7 +166,7 @@ class PaymentsRepository
     public function getOverdueInstallments(): array
     {
         $stmt = $this->db->prepare(
-            "SELECT i.id, i.due_date, i.amount, i.status,
+            "SELECT i.id, i.title, i.due_date, i.amount, i.status,
                     pp.athlete_id, pp.tenant_id,
                     a.full_name, a.email, a.phone, a.parent_phone,
                     DATEDIFF(CURDATE(), i.due_date) AS days_overdue
@@ -187,7 +187,7 @@ class PaymentsRepository
     public function getUpcomingInstallments(int $days = 7): array
     {
         $stmt = $this->db->prepare(
-            "SELECT i.id, i.due_date, i.amount,
+            "SELECT i.id, i.title, i.due_date, i.amount,
                     pp.athlete_id, pp.tenant_id,
                     a.full_name, a.email, a.phone, a.parent_phone,
                     DATEDIFF(i.due_date, CURDATE()) AS days_until_due
@@ -332,6 +332,7 @@ class PaymentsRepository
         $sql = "
             SELECT
                 i.id            AS installment_id,
+                i.title,
                 i.due_date,
                 i.amount,
                 i.status,

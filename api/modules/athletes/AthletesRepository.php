@@ -103,7 +103,9 @@ class AthletesRepository
                        (SELECT GROUP_CONCAT(at_sub.team_season_id SEPARATOR ',') FROM athlete_teams at_sub WHERE at_sub.athlete_id = a.id) AS team_season_ids,
                        (SELECT GROUP_CONCAT(CONCAT_WS('||', ir.injury_date, ir.type, ir.current_status, IFNULL(ir.return_date, '')) SEPARATOR ';;;') FROM injury_records ir WHERE ir.athlete_id = a.id ORDER BY ir.injury_date DESC) AS injuries_summary,
                        (SELECT metrics FROM vald_test_results WHERE athlete_id = a.id OR (a.vald_athlete_id IS NOT NULL AND athlete_id IN (SELECT id FROM athletes WHERE vald_athlete_id = a.vald_athlete_id)) ORDER BY test_date DESC LIMIT 1) AS latest_vald_metrics,
-                       (SELECT test_date FROM vald_test_results WHERE athlete_id = a.id OR (a.vald_athlete_id IS NOT NULL AND athlete_id IN (SELECT id FROM athletes WHERE vald_athlete_id = a.vald_athlete_id)) ORDER BY test_date DESC LIMIT 1) AS latest_vald_date
+                       (SELECT test_date FROM vald_test_results WHERE athlete_id = a.id OR (a.vald_athlete_id IS NOT NULL AND athlete_id IN (SELECT id FROM athletes WHERE vald_athlete_id = a.vald_athlete_id)) ORDER BY test_date DESC LIMIT 1) AS latest_vald_date,
+                       (SELECT COALESCE(SUM(amount), 0) FROM installments i JOIN payment_plans p ON i.plan_id = p.id WHERE p.athlete_id = a.id AND p.status='active') AS total_assigned,
+                       (SELECT COALESCE(SUM(amount), 0) FROM installments i JOIN payment_plans p ON i.plan_id = p.id WHERE p.athlete_id = a.id AND p.status='active' AND i.status='PAID') AS total_paid
                 FROM athletes a
                 LEFT JOIN teams t ON a.team_id = t.id";
 
@@ -158,10 +160,6 @@ class AthletesRepository
                     a.communication_preference, a.image_release_consent,
                     a.medical_cert_type, a.medical_cert_expires_at, a.medical_cert_issued_at{$docCols},
                     a.shirt_size, a.shoe_size,
-                    a.quota_iscrizione_rata1, a.quota_iscrizione_rata1_paid,
-                    a.quota_iscrizione_rata2, a.quota_iscrizione_rata2_paid,
-                    a.quota_vestiario, a.quota_vestiario_paid,
-                    a.quota_foresteria, a.quota_foresteria_paid,
                     a.is_active,
                     t.name AS team_name, t.category
              FROM athletes a
@@ -207,10 +205,6 @@ class AthletesRepository
                     a.communication_preference, a.image_release_consent,
                     a.medical_cert_type, a.medical_cert_expires_at, a.medical_cert_issued_at{$docCols},
                     a.shirt_size, a.shoe_size,
-                    a.quota_iscrizione_rata1, a.quota_iscrizione_rata1_paid,
-                    a.quota_iscrizione_rata2, a.quota_iscrizione_rata2_paid,
-                    a.quota_vestiario, a.quota_vestiario_paid,
-                    a.quota_foresteria, a.quota_foresteria_paid,
                     a.is_active,
                     t.name AS team_name, t.category
              FROM athletes a
@@ -253,10 +247,6 @@ class AthletesRepository
                     a.communication_preference, a.image_release_consent,
                     a.medical_cert_type, a.medical_cert_expires_at, a.medical_cert_issued_at{$docCols},
                     a.shirt_size, a.shoe_size,
-                    a.quota_iscrizione_rata1, a.quota_iscrizione_rata1_paid,
-                    a.quota_iscrizione_rata2, a.quota_iscrizione_rata2_paid,
-                    a.quota_vestiario, a.quota_vestiario_paid,
-                    a.quota_foresteria, a.quota_foresteria_paid,
                     a.is_active,
                     t.name AS team_name, t.category
              FROM athletes a
@@ -345,10 +335,6 @@ class AthletesRepository
                 `photo_release_file_path`, `privacy_policy_file_path`,
                 `guesthouse_rules_file_path`, `guesthouse_delegate_file_path`, `health_card_file_path`,
                 `shirt_size`, `shoe_size`,
-                `quota_iscrizione_rata1`, `quota_iscrizione_rata1_paid`,
-                `quota_iscrizione_rata2`, `quota_iscrizione_rata2_paid`,
-                `quota_vestiario`, `quota_vestiario_paid`,
-                `quota_foresteria`, `quota_foresteria_paid`,
                 `is_active`
              ) VALUES (
                 :id, :user_id, :team_id,
@@ -368,10 +354,6 @@ class AthletesRepository
                 :photo_release_file_path, :privacy_policy_file_path,
                 :guesthouse_rules_file_path, :guesthouse_delegate_file_path, :health_card_file_path,
                 :shirt_size, :shoe_size,
-                :quota_iscrizione_rata1, :quota_iscrizione_rata1_paid,
-                :quota_iscrizione_rata2, :quota_iscrizione_rata2_paid,
-                :quota_vestiario, :quota_vestiario_paid,
-                :quota_foresteria, :quota_foresteria_paid,
                 1
              )'
         );
