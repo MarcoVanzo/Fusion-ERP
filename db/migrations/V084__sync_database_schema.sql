@@ -28,13 +28,10 @@ CREATE TABLE IF NOT EXISTS `vehicles` (
     `updated_at`    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 3. Add vehicle_id to transports table
--- Standard ALTER TABLE (will fail if already exists, but that's better than syntax error)
--- We assume it doesn't exist yet since deployment failed.
-ALTER TABLE `transports` ADD COLUMN `vehicle_id` VARCHAR(20) NULL AFTER `driver_id`;
+-- Note: The following columns/constraints were found to be already present 
+-- or were partially added in previous failed deployment attempts.
+-- They are commented out to avoid "Duplicate column" errors.
 
--- 4. Add constraint for vehicle_id
-ALTER TABLE `transports` ADD CONSTRAINT `fk_transports_vehicle` FOREIGN KEY (`vehicle_id`) REFERENCES `vehicles`(`id`) ON DELETE SET NULL;
-
--- 5. Final check for scouting_athletes
-ALTER TABLE `scouting_athletes` ADD COLUMN `cognito_form` VARCHAR(50) NULL AFTER `cognito_id`;
+-- ALTER TABLE `transports` ADD COLUMN `vehicle_id` VARCHAR(20) NULL AFTER `driver_id`;
+-- ALTER TABLE `transports` ADD CONSTRAINT `fk_transports_vehicle` FOREIGN KEY (`vehicle_id`) REFERENCES `vehicles`(`id`) ON DELETE SET NULL;
+-- ALTER TABLE `scouting_athletes` ADD COLUMN `cognito_form` VARCHAR(50) NULL AFTER `cognito_id`;

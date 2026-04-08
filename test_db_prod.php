@@ -20,7 +20,7 @@ try {
     }
 
     $db = Database::getInstance();
-    $stmt = $db->prepare('DESCRIBE attendances');
+    $stmt = $db->prepare('DESCRIBE scouting_athletes');
     $stmt->execute();
     $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
     echo "Attendances structure:\n";
