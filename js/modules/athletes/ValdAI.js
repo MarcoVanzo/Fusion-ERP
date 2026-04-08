@@ -21,7 +21,6 @@ window.__valdAi = async function (athleteId, part) {
 
   // Hide placeholder and other result to focus on current
   if (placeholder) placeholder.style.display = "none";
-  if (otherResultEl) otherResultEl.style.display = "none";
 
   // Invalidate cache to ensure fresh data
   Store.invalidate("aiAnalysis/vald");
