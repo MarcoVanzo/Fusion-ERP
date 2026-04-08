@@ -37,6 +37,9 @@ const TeamsView = {
                     <button class="squadre-tab-btn" data-tab="stagioni">
                         <i class="ph ph-calendar-blank"></i> STAGIONI
                     </button>
+                    <button class="squadre-tab-btn" data-tab="presenze">
+                        <i class="ph ph-calendar-check"></i> PRESENZE
+                    </button>
                 </nav>
 
                 <!-- Tab Content area -->
@@ -257,6 +260,122 @@ const TeamsView = {
             </div>
             <div id="bulk-season-error" class="form-error hidden" style="margin-top:16px;color:var(--color-danger);"></div>
         `;
+    },
+
+    /** Attendances (Presenze) View */
+    attendancesView: (teams, selectedTeamId, currentMonthStr, athletes, attendancesMap) => {
+        const teamOptions = teams.map(t => `<option value="${t.id}" ${t.id === selectedTeamId ? 'selected' : ''}>${Utils.escapeHtml(t.name)}</option>`).join('');
+        
+        let html = `
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;background:var(--bg-card);padding:16px 24px;border-radius:12px;border:1px solid var(--color-border);">
+                <div style="display:flex;align-items:center;gap:16px;">
+                    <select id="presenze-team-select" class="form-select" style="width:250px;">
+                        <option value="">-- Seleziona Squadra --</option>
+                        ${teamOptions}
+                    </select>
+                </div>
+                <div style="display:flex;align-items:center;gap:16px;">
+                    <button class="icon-btn" id="presenze-prev-month" title="Mese precedente" style="width:36px;height:36px;border-radius:8px;"><i class="ph ph-caret-left"></i></button>
+                    <div style="font-weight:700;font-size:16px;min-width:140px;text-align:center;text-transform:capitalize;" id="presenze-current-month" data-month="${currentMonthStr}">
+                        ${new Date(currentMonthStr + '-01').toLocaleDateString('it-IT', { month: 'long', year: 'numeric' })}
+                    </div>
+                    <button class="icon-btn" id="presenze-next-month" title="Mese successivo" style="width:36px;height:36px;border-radius:8px;"><i class="ph ph-caret-right"></i></button>
+                </div>
+            </div>
+        `;
+
+        if (!selectedTeamId) {
+            return html + Utils.emptyState("Nessuna squadra selezionata", "Seleziona una squadra dal menu a tendina per visualizzare il registro rpesenze.");
+        }
+
+        if (athletes.length === 0) {
+            return html + Utils.emptyState("Nessun atleta", "Non ci sono atleti attivi associati a questa squadra.");
+        }
+
+        // Generate days in month
+        const [year, month] = currentMonthStr.split('-');
+        const daysInMonth = new Date(parseInt(year), parseInt(month), 0).getDate();
+        
+        let daysHeader = '';
+        for(let d=1; d<=daysInMonth; d++) {
+            const dateStr = `${year}-${month}-${String(d).padStart(2, '0')}`;
+            const dateObj = new Date(dateStr);
+            const dayName = dateObj.toLocaleDateString('it-IT', { weekday: 'short' }).charAt(0);
+            const isWeekend = dateObj.getDay() === 0 || dateObj.getDay() === 6;
+            
+            daysHeader += `<div style="width:32px;text-align:center;font-size:11px;font-weight:700;color:${isWeekend ? 'var(--color-pink)' : 'var(--text-muted)'};padding-bottom:8px;border-bottom:1px solid var(--color-border);">${dayName}<br>${d}</div>`;
+        }
+
+        let rowsHTML = '';
+        athletes.forEach(athlete => {
+            let cells = '';
+            for(let d=1; d<=daysInMonth; d++) {
+                const dateStr = `${year}-${month}-${String(d).padStart(2, '0')}`;
+                const att = attendancesMap[athlete.id]?.[dateStr] || { status: null };
+                
+                let icon = '';
+                let bgColor = 'rgba(255,255,255,0.02)';
+                let color = 'inherit';
+                if (att.status === 'present') {
+                    icon = 'V';
+                    bgColor = 'rgba(16, 185, 129, 0.15)'; // emerald
+                    color = '#10b981';
+                } else if (att.status === 'absent') {
+                    icon = 'X';
+                    bgColor = 'rgba(239, 68, 68, 0.15)'; // red
+                    color = '#ef4444';
+                } else if (att.status === 'injured') {
+                    icon = 'I';
+                    bgColor = 'rgba(234, 179, 8, 0.15)'; // yellow
+                    color = '#eab308';
+                }
+
+                cells += `
+                    <div class="attendance-cell" data-athlete="${athlete.id}" data-date="${dateStr}" data-status="${att.status || ''}" style="width:32px;height:32px;border-radius:6px;background:${bgColor};color:${color};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;cursor:pointer;user-select:none;border:1px solid rgba(255,255,255,0.05);transition:all 0.15s;">
+                        ${icon}
+                    </div>
+                `;
+            }
+
+            rowsHTML += `
+                <div style="display:flex;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+                    <div style="width:200px;min-width:200px;font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:16px;">
+                        ${Utils.escapeHtml(athlete.full_name)}
+                    </div>
+                    <div style="display:flex;gap:4px;overflow-x:auto;padding-bottom:4px;" class="hide-scrollbar">
+                        ${cells}
+                    </div>
+                </div>
+            `;
+        });
+
+        html += `
+            <div style="background:var(--bg-card);border:1px solid var(--color-border);border-radius:12px;padding:24px;overflow-x:auto;">
+                <div style="display:flex;align-items:flex-end;margin-bottom:12px;">
+                    <div style="width:200px;min-width:200px;font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;">Atleta</div>
+                    <div style="display:flex;gap:4px;">
+                        ${daysHeader}
+                    </div>
+                </div>
+                <div>
+                    ${rowsHTML}
+                </div>
+                <div style="margin-top:24px;display:flex;gap:24px;font-size:12px;color:var(--text-muted);">
+                    <strong>Legenda:</strong>
+                    <span style="display:flex;align-items:center;gap:6px;"><span style="display:inline-block;width:16px;height:16px;border-radius:4px;background:rgba(16, 185, 129, 0.15);color:#10b981;text-align:center;font-weight:bold;line-height:16px;">V</span> Presente</span>
+                    <span style="display:flex;align-items:center;gap:6px;"><span style="display:inline-block;width:16px;height:16px;border-radius:4px;background:rgba(239, 68, 68, 0.15);color:#ef4444;text-align:center;font-weight:bold;line-height:16px;">X</span> Assente</span>
+                    <span style="display:flex;align-items:center;gap:6px;"><span style="display:inline-block;width:16px;height:16px;border-radius:4px;background:rgba(234, 179, 8, 0.15);color:#eab308;text-align:center;font-weight:bold;line-height:16px;">I</span> Infortunato/a</span>
+                </div>
+            </div>
+            
+            <style>
+            .attendance-cell:hover { opacity: 0.8; transform: scale(1.05); }
+            .hide-scrollbar::-webkit-scrollbar { display: none; }
+            .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+            </style>
+        `;
+
+        return html;
     }
 };
 

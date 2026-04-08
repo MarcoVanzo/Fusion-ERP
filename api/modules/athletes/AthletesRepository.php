@@ -157,6 +157,10 @@ class AthletesRepository
                     a.communication_preference, a.image_release_consent,
                     a.medical_cert_type, a.medical_cert_expires_at, a.medical_cert_issued_at{$docCols},
                     a.shirt_size, a.shoe_size,
+                    a.quota_iscrizione_rata1, a.quota_iscrizione_rata1_paid,
+                    a.quota_iscrizione_rata2, a.quota_iscrizione_rata2_paid,
+                    a.quota_vestiario, a.quota_vestiario_paid,
+                    a.quota_foresteria, a.quota_foresteria_paid,
                     a.is_active,
                     t.name AS team_name, t.category
              FROM athletes a
@@ -202,6 +206,10 @@ class AthletesRepository
                     a.communication_preference, a.image_release_consent,
                     a.medical_cert_type, a.medical_cert_expires_at, a.medical_cert_issued_at{$docCols},
                     a.shirt_size, a.shoe_size,
+                    a.quota_iscrizione_rata1, a.quota_iscrizione_rata1_paid,
+                    a.quota_iscrizione_rata2, a.quota_iscrizione_rata2_paid,
+                    a.quota_vestiario, a.quota_vestiario_paid,
+                    a.quota_foresteria, a.quota_foresteria_paid,
                     a.is_active,
                     t.name AS team_name, t.category
              FROM athletes a
@@ -244,6 +252,10 @@ class AthletesRepository
                     a.communication_preference, a.image_release_consent,
                     a.medical_cert_type, a.medical_cert_expires_at, a.medical_cert_issued_at{$docCols},
                     a.shirt_size, a.shoe_size,
+                    a.quota_iscrizione_rata1, a.quota_iscrizione_rata1_paid,
+                    a.quota_iscrizione_rata2, a.quota_iscrizione_rata2_paid,
+                    a.quota_vestiario, a.quota_vestiario_paid,
+                    a.quota_foresteria, a.quota_foresteria_paid,
                     a.is_active,
                     t.name AS team_name, t.category
              FROM athletes a
@@ -332,7 +344,10 @@ class AthletesRepository
                 `photo_release_file_path`, `privacy_policy_file_path`,
                 `guesthouse_rules_file_path`, `guesthouse_delegate_file_path`, `health_card_file_path`,
                 `shirt_size`, `shoe_size`,
-                `registration_fee_paid`, `monthly_fee_amount`,
+                `quota_iscrizione_rata1`, `quota_iscrizione_rata1_paid`,
+                `quota_iscrizione_rata2`, `quota_iscrizione_rata2_paid`,
+                `quota_vestiario`, `quota_vestiario_paid`,
+                `quota_foresteria`, `quota_foresteria_paid`,
                 `is_active`
              ) VALUES (
                 :id, :user_id, :team_id,
@@ -352,7 +367,10 @@ class AthletesRepository
                 :photo_release_file_path, :privacy_policy_file_path,
                 :guesthouse_rules_file_path, :guesthouse_delegate_file_path, :health_card_file_path,
                 :shirt_size, :shoe_size,
-                :registration_fee_paid, :monthly_fee_amount,
+                :quota_iscrizione_rata1, :quota_iscrizione_rata1_paid,
+                :quota_iscrizione_rata2, :quota_iscrizione_rata2_paid,
+                :quota_vestiario, :quota_vestiario_paid,
+                :quota_foresteria, :quota_foresteria_paid,
                 1
              )'
         );

@@ -7,8 +7,16 @@ import TeamsView from './teams/TeamsView.js';
 
 const Squadre = {
     _abort: new AbortController(),
+// Squadre.js Update
+    _abort: new AbortController(),
     _teams: [],
-    _currentTab: "squadre", // 'squadre' | 'stagioni'
+    _currentTab: "squadre", // 'squadre' | 'stagioni' | 'presenze'
+    
+    // Attendances state
+    _presenzeSelectedTeamId: null,
+    _presenzeCurrentMonth: new Date().toISOString().substring(0, 7),
+    _presenzeAthletes: [],
+    _presenzeAttendancesMap: {}, // athleteId -> date -> status
 
     _resetAbort: function() {
         this._abort.abort();
@@ -33,7 +41,7 @@ const Squadre = {
         try {
             // Check initial tab from route
             const route = Router.getCurrentRoute();
-            this._currentTab = route === "squadre-stagioni" ? "stagioni" : "squadre";
+            this._currentTab = route === "squadre-stagioni" ? "stagioni" : route === "squadre-presenze" ? "presenze" : "squadre";
 
             await this.loadData();
             this.render();
@@ -50,6 +58,33 @@ const Squadre = {
     loadData: async function() {
         this._teams = await TeamsAPI.list();
     },
+    
+    loadPresenzeData: async function() {
+        if (!this._presenzeSelectedTeamId) return;
+        
+        UI.loading(true);
+        try {
+            // we load athletes for this team
+            // Use generic athletes endpoint or Store.api if we can
+            // Usually Store.api("listLight", "athletes", { team_season_id: 'TEAM_' + this._presenzeSelectedTeamId })
+            // Wait, we can use athletes module get list. But let's call API directly
+            this._presenzeAthletes = await Store.api("listLight", "athletes", { team_season_id: 'TEAM_' + this._presenzeSelectedTeamId });
+            
+            const records = await TeamsAPI.getAttendances(this._presenzeSelectedTeamId, this._presenzeCurrentMonth);
+            
+            this._presenzeAttendancesMap = {};
+            records.forEach(r => {
+                if (!this._presenzeAttendancesMap[r.athlete_id]) {
+                    this._presenzeAttendancesMap[r.athlete_id] = {};
+                }
+                this._presenzeAttendancesMap[r.athlete_id][r.attendance_date] = r;
+            });
+        } catch(e) {
+            UI.toast("Errore caricamento presenze: " + e.message, "error");
+        } finally {
+            UI.loading(false);
+        }
+    },
 
     render: function() {
         const container = document.getElementById("squadre-list-container");
@@ -65,11 +100,14 @@ const Squadre = {
         if (this._currentTab === 'squadre') {
             container.innerHTML = TeamsView.teamsList(this._teams, isAdmin);
             this.attachTeamsEvents(container, isAdmin);
-        } else {
+        } else if (this._currentTab === 'stagioni') {
             const seasonMap = this.groupSeasons();
             const seasonNames = Object.keys(seasonMap).sort((a, b) => b.localeCompare(a));
             container.innerHTML = TeamsView.seasonsList(seasonNames, seasonMap, isAdmin, this._teams);
             this.attachSeasonsEvents(container, isAdmin);
+        } else if (this._currentTab === 'presenze') {
+            container.innerHTML = TeamsView.attendancesView(this._teams, this._presenzeSelectedTeamId, this._presenzeCurrentMonth, this._presenzeAthletes, this._presenzeAttendancesMap);
+            this.attachPresenzeEvents(container, isAdmin);
         }
     },
 
@@ -91,17 +129,26 @@ const Squadre = {
         return seasonMap;
     },
 
-    switchTab: function(tab) {
+    switchTab: async function(tab) {
         if (this._currentTab === tab) return;
         this._currentTab = tab;
-        Router.updateHash(tab === "stagioni" ? "squadre-stagioni" : "squadre");
+        
+        if (tab === "presenze" && this._presenzeSelectedTeamId && this._presenzeAthletes.length === 0) {
+           await this.loadPresenzeData();
+        }
+        
+        Router.updateHash(tab === "stagioni" ? "squadre-stagioni" : tab === "presenze" ? "squadre-presenze" : "squadre");
         this.render();
     },
 
     refresh: async function() {
         UI.loading(true);
         try {
-            await this.loadData();
+            if (this._currentTab === 'presenze') {
+                await this.loadPresenzeData();
+            } else {
+                await this.loadData();
+            }
             this.render();
         } catch (err) {
             UI.toast(err.message, "error");
@@ -376,6 +423,73 @@ const Squadre = {
                 UI.loading(false);
             }
         }, this.sig());
+    },
+
+    attachPresenzeEvents: function(container, isAdmin) {
+        if (!isAdmin) return;
+        
+        container.querySelector("#presenze-team-select")?.addEventListener("change", async (e) => {
+            this._presenzeSelectedTeamId = e.target.value;
+            this._presenzeAthletes = []; // reset athletes to force reload
+            await this.refresh();
+        }, this.sig());
+
+        container.querySelector("#presenze-prev-month")?.addEventListener("click", async () => {
+            if (!this._presenzeSelectedTeamId) return;
+            const [y, m] = this._presenzeCurrentMonth.split('-');
+            let date = new Date(parseInt(y), parseInt(m) - 2, 1);
+            this._presenzeCurrentMonth = date.toISOString().substring(0, 7);
+            await this.refresh();
+        }, this.sig());
+
+        container.querySelector("#presenze-next-month")?.addEventListener("click", async () => {
+            if (!this._presenzeSelectedTeamId) return;
+            const [y, m] = this._presenzeCurrentMonth.split('-');
+            let date = new Date(parseInt(y), parseInt(m), 1);
+            this._presenzeCurrentMonth = date.toISOString().substring(0, 7);
+            await this.refresh();
+        }, this.sig());
+
+        container.querySelectorAll(".attendance-cell").forEach(cell => {
+            cell.addEventListener("click", async (e) => {
+                let status = e.target.dataset.status;
+                
+                // Toggle status logic: null -> present -> absent -> injured -> null
+                let newStatus = 'present';
+                if (status === 'present') newStatus = 'absent';
+                else if (status === 'absent') newStatus = 'injured';
+                else if (status === 'injured') newStatus = '';
+                
+                if (newStatus === '') {
+                    // we can't easily delete via upsert currently, so let's stick to real statuses.
+                    // Wait, the UI allows clicking to toggle. So absent -> present -> injured -> etc.
+                    // Let's do: null -> present -> absent -> injured -> present...
+                    if (status === 'injured') newStatus = 'present';
+                }
+
+                try {
+                    const athleteId = e.target.dataset.athlete;
+                    const date = e.target.dataset.date;
+                    const record = this._presenzeAttendancesMap[athleteId]?.[date];
+                    const id = record?.id || null;
+
+                    const res = await TeamsAPI.saveAttendance({
+                        id,
+                        team_id: this._presenzeSelectedTeamId,
+                        athlete_id: athleteId,
+                        attendance_date: date,
+                        status: newStatus
+                    });
+                    
+                    if (!this._presenzeAttendancesMap[athleteId]) this._presenzeAttendancesMap[athleteId] = {};
+                    this._presenzeAttendancesMap[athleteId][date] = { id: res.id, status: newStatus, attendance_date: date, athlete_id: athleteId, team_id: this._presenzeSelectedTeamId };
+                    
+                    this.render(); // re-render the grid
+                } catch(err) {
+                    UI.toast("Errore nel salvataggio: " + err.message, "error");
+                }
+            });
+        });
     }
 };
 

@@ -36,6 +36,8 @@ const Router = (() => {
         { path: 'athlete-payments',     file: 'js/modules/athletes.js',            permission: 'read', module: 'Athletes', type: 'module' },
         { path: 'athlete-metrics',      file: 'js/modules/athletes.js',            permission: 'read', module: 'Athletes', type: 'module' },
         { path: 'athlete-documents',    file: 'js/modules/athletes.js',            permission: 'read', module: 'Athletes', type: 'module' },
+        { path: 'athlete-injuries',     file: 'js/modules/athletes.js',            permission: 'read', module: 'Athletes', type: 'module' },
+        { path: 'athlete-attendances',  file: 'js/modules/athletes.js',            permission: 'read', module: 'Athletes', type: 'module' },
         // Transport & Vehicles
         { path: 'transport',            file: 'js/modules/transport.js',           permission: 'read', module: 'Transport', type: 'module' },
         { path: 'transport-drivers',    file: 'js/modules/transport.js',           permission: 'read', module: 'Transport', type: 'module' },

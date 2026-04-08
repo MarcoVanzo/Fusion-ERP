@@ -223,8 +223,10 @@ export const AthletesView = {
             <div class="card" style="margin: -40px 16px 0; border-radius: 24px; position:relative; z-index: 10; padding: 4px; background: rgba(20,20,20,0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1);">
                 <div class="fusion-tabs-container" id="athlete-tab-bar" style="border:none;background:transparent;width:100%;justify-content:flex-start;padding:8px 16px;">
                     <button class="fusion-tab" data-tab="anagrafica">Anagrafica</button>
+                    <button class="fusion-tab" data-tab="quote">Quote</button>
                     <button class="fusion-tab" data-tab="pagamenti">Pagamenti</button>
                     <button class="fusion-tab" data-tab="metrics" style="color:var(--color-pink)">Performance (VALD)</button>
+                    <button class="fusion-tab" data-tab="infortuni" style="color:#ef4444">Infortuni</button>
                     <button class="fusion-tab" data-tab="documenti">Documenti</button>
                     ${user && (user.role === 'atleta' || user.role === 'admin') ? `
                         <button class="fusion-tab" data-tab="subusers">Sotto-Utenti</button>
@@ -233,8 +235,10 @@ export const AthletesView = {
             </div>
 
             <div id="tab-panel-anagrafica" class="athlete-tab-panel" style="display:none;padding:24px 16px;"></div>
+            <div id="tab-panel-quote" class="athlete-tab-panel" style="display:none;padding:24px 16px;"></div>
             <div id="tab-panel-pagamenti" class="athlete-tab-panel" style="display:none;padding:24px 16px;"></div>
             <div id="tab-panel-metrics" class="athlete-tab-panel" style="display:none;padding:24px 16px;"></div>
+            <div id="tab-panel-infortuni" class="athlete-tab-panel" style="display:none;padding:24px 16px;"></div>
             <div id="tab-panel-documenti" class="athlete-tab-panel" style="display:none;padding:24px 16px;"></div>
             ${user && (user.role === 'atleta' || user.role === 'admin') ? `
                 <div id="tab-panel-subusers" class="athlete-tab-panel" style="display:none;padding:24px 16px;"></div>
@@ -416,6 +420,91 @@ export const AthletesView = {
     },
 
     /**
+     * Tab: Quote (Gestione importi)
+     */
+    tabQuote: (athlete, isAdmin = false) => {
+        return `
+            <div class="card glass-card" style="padding:24px; border:1px solid rgba(255,255,255,0.05); background:rgba(255,255,255,0.01);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+                    <div>
+                        <h3 style="font-family:var(--font-display); font-size:20px; color:var(--color-white); margin-bottom:4px;">Assegnazione Quote</h3>
+                        <p style="color:var(--color-text-muted); font-size:13px;">Definisci gli importi concordati per questo atleta e segna lo stato di pagamento.</p>
+                    </div>
+                </div>
+
+                <form id="athlete-quotas-form">
+                    <input type="hidden" name="id" value="${athlete.id}">
+                    <div style="display:grid; grid-template-columns:1fr; gap:24px;">
+                        
+                        <!-- Quota Iscrizione Rata 1 -->
+                        <div style="display:flex; gap:16px; align-items:flex-end; padding-bottom:16px; border-bottom:1px solid rgba(255,255,255,0.05);">
+                            <div class="form-group" style="flex:1;">
+                                <label class="form-label">Quota di Iscrizione - Prima Rata</label>
+                                <input type="number" name="quota_iscrizione_rata1" class="form-input" placeholder="es. 250.00" step="0.01" value="${athlete.quota_iscrizione_rata1 || ''}" ${isAdmin ? '' : 'disabled'}>
+                            </div>
+                            <div class="form-group" style="margin-bottom:10px;">
+                                <label class="form-label" style="display:flex; align-items:center; gap:8px;">
+                                    <input type="checkbox" name="quota_iscrizione_rata1_paid" value="1" ${athlete.quota_iscrizione_rata1_paid ? 'checked' : ''} ${isAdmin ? '' : 'disabled'}>
+                                    Pagata
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Quota Iscrizione Rata 2 -->
+                        <div style="display:flex; gap:16px; align-items:flex-end; padding-bottom:16px; border-bottom:1px solid rgba(255,255,255,0.05);">
+                            <div class="form-group" style="flex:1;">
+                                <label class="form-label">Quota di Iscrizione - Seconda Rata</label>
+                                <input type="number" name="quota_iscrizione_rata2" class="form-input" placeholder="es. 250.00" step="0.01" value="${athlete.quota_iscrizione_rata2 || ''}" ${isAdmin ? '' : 'disabled'}>
+                            </div>
+                            <div class="form-group" style="margin-bottom:10px;">
+                                <label class="form-label" style="display:flex; align-items:center; gap:8px;">
+                                    <input type="checkbox" name="quota_iscrizione_rata2_paid" value="1" ${athlete.quota_iscrizione_rata2_paid ? 'checked' : ''} ${isAdmin ? '' : 'disabled'}>
+                                    Pagata
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Quota Vestiario -->
+                        <div style="display:flex; gap:16px; align-items:flex-end; padding-bottom:16px; border-bottom:1px solid rgba(255,255,255,0.05);">
+                            <div class="form-group" style="flex:1;">
+                                <label class="form-label">Quota Vestiario</label>
+                                <input type="number" name="quota_vestiario" class="form-input" placeholder="es. 150.00" step="0.01" value="${athlete.quota_vestiario || ''}" ${isAdmin ? '' : 'disabled'}>
+                            </div>
+                            <div class="form-group" style="margin-bottom:10px;">
+                                <label class="form-label" style="display:flex; align-items:center; gap:8px;">
+                                    <input type="checkbox" name="quota_vestiario_paid" value="1" ${athlete.quota_vestiario_paid ? 'checked' : ''} ${isAdmin ? '' : 'disabled'}>
+                                    Pagata
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Quota Foresteria -->
+                        <div style="display:flex; gap:16px; align-items:flex-end;">
+                            <div class="form-group" style="flex:1;">
+                                <label class="form-label">Quota Foresteria</label>
+                                <input type="number" name="quota_foresteria" class="form-input" placeholder="es. 400.00" step="0.01" value="${athlete.quota_foresteria || ''}" ${isAdmin ? '' : 'disabled'}>
+                            </div>
+                            <div class="form-group" style="margin-bottom:10px;">
+                                <label class="form-label" style="display:flex; align-items:center; gap:8px;">
+                                    <input type="checkbox" name="quota_foresteria_paid" value="1" ${athlete.quota_foresteria_paid ? 'checked' : ''} ${isAdmin ? '' : 'disabled'}>
+                                    Pagata
+                                </label>
+                            </div>
+                        </div>
+
+                    </div>
+                    
+                    ${isAdmin ? `
+                        <div style="margin-top:24px; text-align:right;">
+                            <button type="submit" class="btn btn-primary" id="save-quotas-btn">Salva Quote</button>
+                        </div>
+                    ` : ''}
+                </form>
+            </div>
+        `;
+    },
+
+    /**
      * Form per l'inserimento o modifica di un atleta
      */
     athleteForm: (athlete = null, teams = []) => {
@@ -538,15 +627,9 @@ export const AthletesView = {
                             </div>
                             
                             <div style="padding:16px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:12px;">
-                                <div class="form-group" style="margin-bottom:12px;">
-                                    <label class="form-label" style="display:flex; align-items:center; gap:8px;">
-                                        <input type="checkbox" name="registration_fee_paid" value="1" ${athlete?.registration_fee_paid ? 'checked' : ''}>
-                                        Quota Iscrizione Pagata
-                                    </label>
-                                </div>
                                 <div class="form-group">
-                                    <label class="form-label">Retta Mensile Concordata (€)</label>
-                                    <input type="number" name="monthly_fee_amount" class="form-input" placeholder="es. 100.00" step="0.01" value="${athlete?.monthly_fee_amount || ''}">
+                                    <label class="form-label" style="display:none;"></label>
+                                    <p style="font-size:12px; color:rgba(255,255,255,0.5);"><i class="ph ph-info"></i> La gestione di Quote e Mensilità è stata spostata nell'apposito tab "Quote" disponibile nel profilo atleta salvato.</p>
                                 </div>
                             </div>
                         </div>

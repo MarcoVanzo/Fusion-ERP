@@ -160,4 +160,42 @@ class TeamsService
         
         return ['message' => 'Squadra rimossa'];
     }
+
+    public function getAttendances(array $data): array
+    {
+        $teamId = $data['team_id'] ?? '';
+        $month = $data['month'] ?? date('Y-m');
+        
+        if (empty($teamId)) {
+            throw new \Exception('Team ID is required', 400);
+        }
+        
+        return $this->repo->getAttendances($teamId, $month);
+    }
+
+    public function saveAttendance(array $data): array
+    {
+        $teamId = $data['team_id'] ?? '';
+        $athleteId = $data['athlete_id'] ?? '';
+        $date = $data['attendance_date'] ?? '';
+        $status = $data['status'] ?? 'present';
+        
+        if (empty($teamId) || empty($athleteId) || empty($date)) {
+            throw new \Exception('Missing required fields for attendance', 400);
+        }
+
+        $id = $data['id'] ?? 'ATT_' . bin2hex(random_bytes(4));
+        
+        $attendanceData = [
+            'id' => $id,
+            'team_id' => $teamId,
+            'athlete_id' => $athleteId,
+            'attendance_date' => $date,
+            'status' => $status
+        ];
+        
+        $this->repo->saveAttendance($attendanceData);
+        
+        return ['message' => 'Presenza aggiornata', 'id' => $id, 'status' => $status];
+    }
 }

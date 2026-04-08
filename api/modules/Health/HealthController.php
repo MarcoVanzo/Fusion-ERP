@@ -73,6 +73,48 @@ class HealthController
         Response::success($status);
     }
 
+    // ─── ANAMNESI ────────────────────────────────────────────────────────────
+
+    /**
+     * Get athlete's health history (Anamnesi Generale/Ortopedica).
+     */
+    public function getAnamnesi(): void
+    {
+        Auth::requireRead('health');
+        $athleteId = filter_input(INPUT_GET, 'id', FILTER_DEFAULT) ?? '';
+        if (empty($athleteId)) {
+            Response::error('id atleta obbligatorio', 400);
+        }
+
+        $anamnesi = $this->repo->getAnamnesi($athleteId);
+        Response::success($anamnesi);
+    }
+
+    /**
+     * Update athlete's health history.
+     */
+    public function updateAnamnesi(): void
+    {
+        Auth::requireWrite('health');
+        $body = Response::jsonBody();
+        Response::requireFields($body, ['athlete_id']);
+
+        $this->repo->updateAnamnesi($body['athlete_id'], [
+            ':blood_group' => $body['blood_group'] ?? null,
+            ':allergies' => $body['allergies'] ?? null,
+            ':medications' => $body['medications'] ?? null,
+            ':chronic_diseases' => $body['chronic_diseases'] ?? null,
+            ':past_surgeries' => $body['past_surgeries'] ?? null,
+            ':past_injuries' => $body['past_injuries'] ?? null,
+            ':chronic_orthopedic_issues' => $body['chronic_orthopedic_issues'] ?? null,
+            ':orthopedic_aids' => $body['orthopedic_aids'] ?? null,
+        ]);
+
+        Audit::log('UPDATE', 'athletes_health', $body['athlete_id'], null, $body);
+
+        Response::success(['message' => 'Anamnesi aggiornata']);
+    }
+
     // ─── POST ?module=health&action=addInjury ────────────────────────────────
 
     /**
@@ -106,6 +148,24 @@ class HealthController
             ':notes' => $body['notes'] ?? null,
             ':treated_by' => $body['treated_by'] ?? null,
             ':created_by' => $user['id'] ?? null,
+            // New extended fields
+            ':location_context' => $body['location_context'] ?? null,
+            ':side' => $body['side'] ?? null,
+            ':mechanism' => $body['mechanism'] ?? null,
+            ':official_diagnosis' => $body['official_diagnosis'] ?? null,
+            ':diagnosis_date' => $body['diagnosis_date'] ?? null,
+            ':diagnosed_by' => $body['diagnosed_by'] ?? null,
+            ':instrumental_tests' => $body['instrumental_tests'] ?? null,
+            ':test_results' => $body['test_results'] ?? null,
+            ':is_recurrence' => !empty($body['is_recurrence']) ? 1 : 0,
+            ':treatment_type' => $body['treatment_type'] ?? null,
+            ':surgery_date' => $body['surgery_date'] ?? null,
+            ':physio_plan' => $body['physio_plan'] ?? null,
+            ':assigned_physio' => $body['assigned_physio'] ?? null,
+            ':current_status' => $body['current_status'] ?? null,
+            ':estimated_recovery_time' => $body['estimated_recovery_time'] ?? null,
+            ':estimated_return_date' => $body['estimated_return_date'] ?? null,
+            ':medical_clearance_given' => !empty($body['medical_clearance_given']) ? 1 : 0,
         ]);
 
         Audit::log('INSERT', 'injury_records', $id, null, $body);
@@ -140,11 +200,26 @@ class HealthController
         $body = Response::jsonBody();
         Response::requireFields($body, ['injury_id']);
 
-        $this->repo->updateInjury($body['injury_id'], [
-            ':return_date' => $body['return_date'] ?? null,
-            ':notes' => $body['notes'] ?? null,
-            ':stop_days' => isset($body['stop_days']) ? (int)$body['stop_days'] : null,
-        ]);
+        $updateData = [];
+        $allowedFields = ['return_date', 'notes', 'stop_days', 'location_context', 'side', 'mechanism', 'official_diagnosis', 'diagnosis_date', 'diagnosed_by', 'instrumental_tests', 'test_results', 'is_recurrence', 'treatment_type', 'surgery_date', 'physio_plan', 'assigned_physio', 'current_status', 'estimated_recovery_time', 'estimated_return_date', 'medical_clearance_given', 'type', 'body_part', 'severity', 'injury_date', 'treated_by'];
+        
+        foreach ($allowedFields as $field) {
+            if (array_key_exists($field, $body)) {
+                if (in_array($field, ['is_recurrence', 'medical_clearance_given'])) {
+                    $updateData[":$field"] = !empty($body[$field]) ? 1 : 0;
+                } else if ($field === 'stop_days') {
+                    $updateData[":$field"] = isset($body[$field]) ? (int)$body[$field] : null;
+                } else {
+                    $updateData[":$field"] = $body[$field];
+                }
+            }
+        }
+
+        if (empty($updateData)) {
+            Response::success(['message' => 'Niente da aggiornare']);
+        }
+
+        $this->repo->updateInjury($body['injury_id'], $updateData);
 
         Audit::log('UPDATE', 'injury_records', $body['injury_id'], null, $body);
         Response::success(['message' => 'Infortunio aggiornato']);

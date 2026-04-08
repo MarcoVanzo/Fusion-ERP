@@ -115,6 +115,40 @@ class HealthRepository
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
+    // ─── ANAMNESI (MEDICAL & ORTHOPEDIC HISTORY) ─────────────────────────────
+
+    public function getAnamnesi(string $athleteId): array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT blood_group, allergies, medications, chronic_diseases,
+                    past_surgeries, past_injuries, chronic_orthopedic_issues, orthopedic_aids
+             FROM athletes
+             WHERE id = :id AND deleted_at IS NULL
+             LIMIT 1'
+        );
+        $stmt->execute([':id' => $athleteId]);
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+        return $row ?: [];
+    }
+
+    public function updateAnamnesi(string $athleteId, array $data): void
+    {
+        $stmt = $this->db->prepare(
+            'UPDATE athletes
+             SET blood_group = :blood_group,
+                 allergies = :allergies,
+                 medications = :medications,
+                 chronic_diseases = :chronic_diseases,
+                 past_surgeries = :past_surgeries,
+                 past_injuries = :past_injuries,
+                 chronic_orthopedic_issues = :chronic_orthopedic_issues,
+                 orthopedic_aids = :orthopedic_aids
+             WHERE id = :id AND deleted_at IS NULL'
+        );
+        $data[':id'] = $athleteId;
+        $stmt->execute($data);
+    }
+
     // ─── INJURIES ────────────────────────────────────────────────────────────
 
     /**
@@ -123,8 +157,16 @@ class HealthRepository
     public function insertInjury(array $data): void
     {
         $stmt = $this->db->prepare(
-            'INSERT INTO injury_records (id, tenant_id, athlete_id, injury_date, type, body_part, severity, stop_days, return_date, notes, treated_by, created_by)
-             VALUES (:id, :tenant_id, :athlete_id, :injury_date, :type, :body_part, :severity, :stop_days, :return_date, :notes, :treated_by, :created_by)'
+            'INSERT INTO injury_records (
+                id, tenant_id, athlete_id, injury_date, type, body_part, severity, stop_days, return_date, notes, treated_by, created_by,
+                location_context, side, mechanism, official_diagnosis, diagnosis_date, diagnosed_by, instrumental_tests, test_results,
+                is_recurrence, treatment_type, surgery_date, physio_plan, assigned_physio, current_status, estimated_recovery_time, estimated_return_date, medical_clearance_given
+             )
+             VALUES (
+                :id, :tenant_id, :athlete_id, :injury_date, :type, :body_part, :severity, :stop_days, :return_date, :notes, :treated_by, :created_by,
+                :location_context, :side, :mechanism, :official_diagnosis, :diagnosis_date, :diagnosed_by, :instrumental_tests, :test_results,
+                :is_recurrence, :treatment_type, :surgery_date, :physio_plan, :assigned_physio, :current_status, :estimated_recovery_time, :estimated_return_date, :medical_clearance_given
+             )'
         );
         $stmt->execute($data);
     }
@@ -135,7 +177,9 @@ class HealthRepository
     public function getInjuries(string $athleteId): array
     {
         $stmt = $this->db->prepare(
-            'SELECT id, injury_date, type, body_part, severity, stop_days, return_date, notes, treated_by, created_at
+            'SELECT id, injury_date, type, body_part, severity, stop_days, return_date, notes, treated_by, created_at,
+                    location_context, side, mechanism, official_diagnosis, diagnosis_date, diagnosed_by, instrumental_tests, test_results,
+                    is_recurrence, treatment_type, surgery_date, physio_plan, assigned_physio, current_status, estimated_recovery_time, estimated_return_date, medical_clearance_given
              FROM injury_records
              WHERE athlete_id = :athlete_id
              ORDER BY injury_date DESC'
@@ -150,12 +194,17 @@ class HealthRepository
     public function updateInjury(string $injuryId, array $data): void
     {
         $data[':id'] = $injuryId;
+        // Costruzione dinamica dell'update
+        $sets = [];
+        foreach ($data as $key => $value) {
+            if ($key === ':id') continue;
+            $colName = ltrim($key, ':');
+            $sets[] = "$colName = $key";
+        }
+        $setString = implode(', ', $sets);
+
         $stmt = $this->db->prepare(
-            'UPDATE injury_records
-             SET return_date = :return_date,
-                 notes = :notes,
-                 stop_days = :stop_days
-             WHERE id = :id'
+            "UPDATE injury_records SET $setString WHERE id = :id"
         );
         $stmt->execute($data);
     }

@@ -7,6 +7,7 @@ import { AthletesAPI } from './athletes/AthletesAPI.js?v=2';
 import { AthletesView } from './athletes/AthletesView.js?v=2';
 import { AthletesWizard } from './athletes/AthletesWizard.js?v=2';
 import { AthletesMetrics } from './athletes/AthletesMetricsV2.js?v=5';
+import { AthleteHealth } from './athletes/AthleteHealth.js?v=1';
 
 const Athletes = (() => {
     let abortController = new AbortController();
@@ -23,7 +24,9 @@ const Athletes = (() => {
         const route = Router.getCurrentRoute();
         if (route === 'athlete-documents') return 'documenti';
         if (route === 'athlete-metrics') return 'metrics';
+        if (route === 'athlete-injuries') return 'infortuni';
         if (route === 'athlete-payments') return 'pagamenti';
+        if (route === 'athlete-attendances') return 'presenze';
         return 'anagrafica';
     }
 
@@ -277,6 +280,10 @@ const Athletes = (() => {
                 // ma manteniamo addAnagraficaListeners per altri controlli (es. toggle active)
                 addAnagraficaListeners(athlete);
                 break;
+            case 'quote':
+                panel.innerHTML = AthletesView.tabQuote(athlete, App.getUser().role === 'admin');
+                addQuoteListeners(athlete);
+                break;
             case 'pagamenti':
                 await renderPayments(panel, athlete);
                 break;
@@ -286,6 +293,9 @@ const Athletes = (() => {
                 break;
             case 'metrics':
                 await AthletesMetrics.render(panel, athlete.id);
+                break;
+            case 'infortuni':
+                await AthleteHealth.render(panel, athlete);
                 break;
             case 'subusers':
                 await renderSubUsers(panel, athlete);
@@ -312,6 +322,35 @@ const Athletes = (() => {
                 UI.loading(false);
             }
         }, { signal });
+    }
+
+    function addQuoteListeners(athlete) {
+        const form = document.getElementById("athlete-quotas-form");
+        if (form) {
+            form.addEventListener("submit", async (e) => {
+                e.preventDefault();
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData.entries());
+                
+                // checkbox non spuntate non compaiono in FormData
+                const checkboxes = ['quota_iscrizione_rata1_paid', 'quota_iscrizione_rata2_paid', 'quota_vestiario_paid', 'quota_foresteria_paid'];
+                checkboxes.forEach(cb => {
+                    data[cb] = data[cb] ? 1 : 0;
+                });
+
+                UI.loading(true);
+                try {
+                    await AthletesAPI.update(data);
+                    UI.toast("Quote aggiornate con successo", "success");
+                    const updatedAthlete = await AthletesAPI.getById(athlete.id);
+                    switchTab('quote', updatedAthlete);
+                } catch (err) {
+                    UI.toast(err.message, "error");
+                } finally {
+                    UI.loading(false);
+                }
+            });
+        }
     }
 
     function renderEditForm(athlete) {
