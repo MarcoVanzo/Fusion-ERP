@@ -94,7 +94,7 @@ jobs:
           DB_PASS=${{ secrets.DB_PASS }}
 
           # AI / Maps
-          GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+          GEMINI_TOKEN=${{ secrets.GEMINI_API_KEY }}
           GOOGLE_MAPS_API_KEY=${{ secrets.GOOGLE_MAPS_API_KEY }}
 
           # GAS Proxy (FIPAV scraping)
