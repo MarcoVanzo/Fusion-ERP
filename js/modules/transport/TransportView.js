@@ -567,7 +567,7 @@ const TransportView = {
                     </div>
                     <div style="background:rgba(255,255,255,0.05); padding:8px 16px; border-radius:12px; border:1px solid rgba(255,255,255,0.1); display:flex; align-items:center; gap:12px;">
                         <span style="font-size:12px; color:rgba(255,255,255,0.4); text-transform:uppercase;">Totale Maturato Atlete</span>
-                        <span style="font-family:var(--font-display); font-size:20px; font-weight:800; color:var(--accent-pink);">€ ${Utils.formatNumber(totalGlobal)}</span>
+                        <span style="font-family:var(--font-display); font-size:20px; font-weight:800; color:var(--accent-pink);">€ ${Utils.formatNum(totalGlobal)}</span>
                     </div>
                 </div>
 
@@ -613,7 +613,7 @@ const TransportView = {
                     <div style="font-family:var(--font-display); font-weight:700;">${r.tripCount}</div>
                 </td>
                 <td style="text-align:right; padding-right:24px;">
-                    <div style="font-family:var(--font-display); font-weight:800; color:#00e676; font-size:16px;">€ ${Utils.formatNumber(r.totalAmount)}</div>
+                    <div style="font-family:var(--font-display); font-weight:800; color:#00e676; font-size:16px;">€ ${Utils.formatNum(r.totalAmount)}</div>
                 </td>
             </tr>`;
     }
