@@ -302,11 +302,11 @@ class TransportRepository
             'INSERT INTO transports (id, team_id, destination_name, destination_address,
                                       destination_lat, destination_lng, departure_address,
                                       arrival_time, departure_time, transport_date,
-                                      athletes_json, timeline_json, stats_json, ai_response, created_by, driver_id)
+                                      athletes_json, timeline_json, stats_json, ai_response, created_by, driver_id, vehicle_id)
              VALUES (:id, :team_id, :destination_name, :destination_address,
                      :destination_lat, :destination_lng, :departure_address,
                      :arrival_time, :departure_time, :transport_date,
-                     :athletes_json, :timeline_json, :stats_json, :ai_response, :created_by, :driver_id)'
+                     :athletes_json, :timeline_json, :stats_json, :ai_response, :created_by, :driver_id, :vehicle_id)'
         );
         $stmt->execute($data);
     }

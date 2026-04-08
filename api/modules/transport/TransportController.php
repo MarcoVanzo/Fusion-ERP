@@ -232,6 +232,7 @@ class TransportController
             ':ai_response' => isset($body['ai_response']) ? json_encode($body['ai_response']) : null,
             ':created_by' => $user['id'],
             ':driver_id' => $body['driver_id'] ?? null,
+            ':vehicle_id' => $body['vehicle_id'] ?? null,
         ]);
 
         \FusionERP\Shared\Audit::log('INSERT', 'transports', $id, null, ['destination' => $body['destination_name']]);
