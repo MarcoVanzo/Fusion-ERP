@@ -902,9 +902,6 @@ export const AthletesView = {
     },
 
     /**
-    },
-
-    /**
      * Tab: Documenti
      */
     tabDocumenti: (athlete, canUpload = false) => {

@@ -743,21 +743,6 @@ const Transport = {
         }
     },
 
-    showNewEventModal: function() {
-        UI.toast("Funzionalità 'Nuovo Evento' in fase di implementazione", "info");
-    },
-
-    showOfferRouteModal: function() {
-        UI.toast("Funzionalità 'Offri Passaggio' in fase di implementazione", "info");
-    },
-    
-    applyAiSuggestions: function(result, previewData, overlay) {
-        // Implementation for applying AI diffs to the wizard state
-        UI.toast("Suggerimenti AI applicati", "success");
-        overlay.classList.remove("visible");
-        setTimeout(() => overlay.remove(), 300);
-    },
-
     /**
      * Renders the Refunds dashboard
      */
