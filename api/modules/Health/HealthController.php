@@ -64,7 +64,7 @@ class HealthController
     public function getCertificateStatus(): void
     {
         Auth::requireRead('health');
-        $athleteId = filter_input(INPUT_GET, 'id', FILTER_DEFAULT) ?? '';
+        $athleteId = filter_input(INPUT_GET, 'id', FILTER_DEFAULT) ?? filter_input(INPUT_GET, 'athlete_id', FILTER_DEFAULT) ?? '';
         if (empty($athleteId)) {
             Response::error('id atleta obbligatorio', 400);
         }
@@ -81,7 +81,7 @@ class HealthController
     public function getAnamnesi(): void
     {
         Auth::requireRead('health');
-        $athleteId = filter_input(INPUT_GET, 'id', FILTER_DEFAULT) ?? '';
+        $athleteId = filter_input(INPUT_GET, 'id', FILTER_DEFAULT) ?? filter_input(INPUT_GET, 'athlete_id', FILTER_DEFAULT) ?? '';
         if (empty($athleteId)) {
             Response::error('id atleta obbligatorio', 400);
         }
@@ -100,14 +100,10 @@ class HealthController
         Response::requireFields($body, ['athlete_id']);
 
         $this->repo->updateAnamnesi($body['athlete_id'], [
-            ':blood_group' => $body['blood_group'] ?? null,
-            ':allergies' => $body['allergies'] ?? null,
-            ':medications' => $body['medications'] ?? null,
-            ':chronic_diseases' => $body['chronic_diseases'] ?? null,
+            ':blood_type' => $body['blood_type'] ?? null,
+            ':regular_medications' => $body['regular_medications'] ?? null,
+            ':chronic_conditions' => $body['chronic_conditions'] ?? null,
             ':past_surgeries' => $body['past_surgeries'] ?? null,
-            ':past_injuries' => $body['past_injuries'] ?? null,
-            ':chronic_orthopedic_issues' => $body['chronic_orthopedic_issues'] ?? null,
-            ':orthopedic_aids' => $body['orthopedic_aids'] ?? null,
         ]);
 
         Audit::log('UPDATE', 'athletes_health', $body['athlete_id'], null, $body);
@@ -136,29 +132,18 @@ class HealthController
         }
 
         $this->repo->insertInjury([
-            ':id' => $id,
-            ':tenant_id' => $tenantId,
             ':athlete_id' => $body['athlete_id'],
             ':injury_date' => $body['injury_date'],
-            ':type' => $body['type'],
-            ':body_part' => $body['body_part'],
-            ':severity' => $severity,
-            ':stop_days' => isset($body['stop_days']) ? (int)$body['stop_days'] : null,
-            ':return_date' => $body['return_date'] ?? null,
-            ':notes' => $body['notes'] ?? null,
-            ':treated_by' => $body['treated_by'] ?? null,
-            ':created_by' => $user['id'] ?? null,
-            // New extended fields
-            ':location_context' => $body['location_context'] ?? null,
-            ':side' => $body['side'] ?? null,
+            ':description' => $body['description'] ?? null,
+            ':status' => $body['status'] ?? 'active',
+            ':diagnosis' => $body['diagnosis'] ?? null,
+            ':treatment' => $body['treatment'] ?? null,
+            ':injury_type' => $body['injury_type'] ?? null,
+            ':body_part' => $body['body_part'] ?? null,
             ':mechanism' => $body['mechanism'] ?? null,
-            ':official_diagnosis' => $body['official_diagnosis'] ?? null,
-            ':diagnosis_date' => $body['diagnosis_date'] ?? null,
-            ':diagnosed_by' => $body['diagnosed_by'] ?? null,
-            ':instrumental_tests' => $body['instrumental_tests'] ?? null,
-            ':test_results' => $body['test_results'] ?? null,
-            ':is_recurrence' => !empty($body['is_recurrence']) ? 1 : 0,
-            ':treatment_type' => $body['treatment_type'] ?? null,
+            ':expected_rtp_date' => $body['expected_rtp_date'] ?? null,
+            ':rtp_cleared' => !empty($body['rtp_cleared']) ? 1 : 0,
+            ':surgery_required' => !empty($body['surgery_required']) ? 1 : 0,
             ':surgery_date' => $body['surgery_date'] ?? null,
             ':physio_plan' => $body['physio_plan'] ?? null,
             ':assigned_physio' => $body['assigned_physio'] ?? null,
@@ -180,7 +165,7 @@ class HealthController
     public function getInjuries(): void
     {
         Auth::requireRead('health');
-        $athleteId = filter_input(INPUT_GET, 'id', FILTER_DEFAULT) ?? '';
+        $athleteId = filter_input(INPUT_GET, 'id', FILTER_DEFAULT) ?? filter_input(INPUT_GET, 'athlete_id', FILTER_DEFAULT) ?? '';
         if (empty($athleteId)) {
             Response::error('id atleta obbligatorio', 400);
         }
@@ -201,14 +186,12 @@ class HealthController
         Response::requireFields($body, ['injury_id']);
 
         $updateData = [];
-        $allowedFields = ['return_date', 'notes', 'stop_days', 'location_context', 'side', 'mechanism', 'official_diagnosis', 'diagnosis_date', 'diagnosed_by', 'instrumental_tests', 'test_results', 'is_recurrence', 'treatment_type', 'surgery_date', 'physio_plan', 'assigned_physio', 'current_status', 'estimated_recovery_time', 'estimated_return_date', 'medical_clearance_given', 'type', 'body_part', 'severity', 'injury_date', 'treated_by'];
+        $allowedFields = ['description', 'status', 'diagnosis', 'treatment', 'injury_type', 'body_part', 'mechanism', 'expected_rtp_date', 'rtp_cleared', 'surgery_required', 'surgery_date', 'physio_plan', 'assigned_physio', 'current_status', 'estimated_recovery_time', 'estimated_return_date', 'medical_clearance_given', 'injury_date'];
         
         foreach ($allowedFields as $field) {
             if (array_key_exists($field, $body)) {
-                if (in_array($field, ['is_recurrence', 'medical_clearance_given'])) {
+                if (in_array($field, ['rtp_cleared', 'surgery_required', 'medical_clearance_given'])) {
                     $updateData[":$field"] = !empty($body[$field]) ? 1 : 0;
-                } else if ($field === 'stop_days') {
-                    $updateData[":$field"] = isset($body[$field]) ? (int)$body[$field] : null;
                 } else {
                     $updateData[":$field"] = $body[$field];
                 }

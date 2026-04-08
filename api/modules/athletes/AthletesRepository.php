@@ -55,7 +55,7 @@ class AthletesRepository
             if (str_starts_with($teamSeasonId, 'TEAM_')) {
                 // Legacy support for passing team_id instead of team_season_id
                 $sql .= ' WHERE a.deleted_at IS NULL AND a.team_id = :team_id';
-                $params[':team_id'] = $teamSeasonId;
+                $params[':team_id'] = substr($teamSeasonId, 5);
             } else {
                 $sql .= ' JOIN athlete_teams at2 ON a.id = at2.athlete_id';
                 $sql .= ' WHERE a.deleted_at IS NULL AND at2.team_season_id = :team_season_id';
@@ -110,7 +110,7 @@ class AthletesRepository
         if ($teamSeasonId !== '') {
             if (str_starts_with($teamSeasonId, 'TEAM_')) {
                 $sql .= ' WHERE a.deleted_at IS NULL AND a.is_active = 1 AND a.team_id = :team_id';
-                $params[':team_id'] = $teamSeasonId;
+                $params[':team_id'] = substr($teamSeasonId, 5);
             } else {
                 $sql .= ' JOIN athlete_teams at2 ON a.id = at2.athlete_id';
                 $sql .= ' WHERE a.deleted_at IS NULL AND a.is_active = 1 AND at2.team_season_id = :team_season_id';
@@ -508,7 +508,7 @@ class AthletesRepository
         if ($teamSeasonId !== '') {
             if (str_starts_with($teamSeasonId, 'TEAM_')) {
                 $sql .= ' WHERE a.deleted_at IS NULL AND a.is_active = 1 AND a.team_id = :team_id';
-                $params[':team_id'] = $teamSeasonId;
+                $params[':team_id'] = substr($teamSeasonId, 5);
             } else {
                 $sql .= ' JOIN athlete_teams at2 ON a.id = at2.athlete_id';
                 $sql .= ' WHERE a.deleted_at IS NULL AND a.is_active = 1 AND at2.team_season_id = :team_season_id';

@@ -66,9 +66,9 @@ const Squadre = {
         try {
             // we load athletes for this team
             // Use generic athletes endpoint or Store.api if we can
-            // Usually Store.api("listLight", "athletes", { team_season_id: 'TEAM_' + this._presenzeSelectedTeamId })
+            // Usually Store.get("listLight", "athletes", { teamId: 'TEAM_' + this._presenzeSelectedTeamId })
             // Wait, we can use athletes module get list. But let's call API directly
-            this._presenzeAthletes = await Store.api("listLight", "athletes", { team_season_id: 'TEAM_' + this._presenzeSelectedTeamId });
+            this._presenzeAthletes = await Store.get("listLight", "athletes", { teamId: 'TEAM_' + this._presenzeSelectedTeamId });
             
             const records = await TeamsAPI.getAttendances(this._presenzeSelectedTeamId, this._presenzeCurrentMonth);
             
