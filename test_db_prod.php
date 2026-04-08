@@ -20,23 +20,11 @@ try {
     }
 
     $db = Database::getInstance();
-    $stmt = $db->prepare('SELECT tenant_id, COUNT(*) as c FROM societa_sponsors GROUP BY tenant_id');
+    $stmt = $db->prepare('DESCRIBE attendances');
     $stmt->execute();
     $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    echo "Sponsors per tenant:\n";
+    echo "Attendances structure:\n";
     print_r($rows);
-    
-    // Also test a JSON encode 
-    $stmt2 = $db->prepare("SELECT * FROM societa_sponsors WHERE is_deleted=0");
-    $stmt2->execute();
-    $res = $stmt2->fetchAll(PDO::FETCH_ASSOC);
-    echo "\nJSON test (ALL):\n";
-    $json = json_encode($res);
-    if ($json === false) {
-        echo "\nJSON error: " . json_last_error_msg();
-    } else {
-        echo "Valid JSON generated (Length: " . strlen($json) . ")\n";
-    }
 
 } catch (Exception $e) {
     echo "Error: " . $e->getMessage();
