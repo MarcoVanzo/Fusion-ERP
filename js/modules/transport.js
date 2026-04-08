@@ -41,7 +41,7 @@ const Transport = {
             
             const currentRoute = typeof Router !== 'undefined' ? Router.getCurrentRoute() : 'transport';
             
-            if (currentRoute === "transport-drivers") {
+            if (currentRoute === "transport-drivers" || currentRoute === "transport-refunds") {
                 await this.renderDrivers();
             } else if (currentRoute === "transport-history") {
                 await this.renderDashboard(true); // show history

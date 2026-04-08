@@ -270,8 +270,15 @@ export const AthleteHealth = {
         const expDate = injury?.expected_rtp_date ? injury.expected_rtp_date.substring(0, 10) : '';
         const rtpDate = injury?.estimated_return_date ? injury.estimated_return_date.substring(0, 10) : '';
 
-        const theModal = this._createModal(`
-            <h2 style="font-family:var(--font-display); font-size:24px; color:#fff; margin-bottom:24px;">${isEdit ? 'Modifica Infortunio' : 'Nuovo Infortunio'}</h2>
+        const tabsHtml = isEdit ? `
+            <div style="display:flex; border-bottom:1px solid rgba(255,255,255,0.1); margin-bottom:24px; gap:16px;">
+                <button type="button" class="tab-btn active" data-tab="tab-details" style="padding:12px 16px; background:transparent; border:none; color:#fff; font-weight:800; border-bottom:2px solid #ef4444; cursor:pointer; font-size:14px;">Dettagli</button>
+                <button type="button" class="tab-btn" data-tab="tab-checkups" style="padding:12px 16px; background:transparent; border:none; color:var(--color-text-muted); cursor:pointer; font-size:14px; transition:all 0.2s;">Storico Visite</button>
+                <button type="button" class="tab-btn" data-tab="tab-docs" style="padding:12px 16px; background:transparent; border:none; color:var(--color-text-muted); cursor:pointer; font-size:14px; transition:all 0.2s;">Documenti</button>
+            </div>
+        ` : '';
+
+        const detailsHtml = `
             <form id="injury-form">
                 ${isEdit ? `<input type="hidden" name="injury_id" value="${injury.id}">` : ''}
                 <input type="hidden" name="athlete_id" value="${athlete.id}">
@@ -344,15 +351,124 @@ export const AthleteHealth = {
                 </div>
 
                 <div style="display:flex; justify-content:space-between; gap:12px;">
-                    <button type="button" class="btn btn-default" onclick="document.body.removeChild(this.closest('.modal-backdrop'))">Annulla</button>
+                    <button type="button" class="btn btn-default" onclick="document.body.removeChild(this.closest('.modal-backdrop'))">Chiudi</button>
                     <button type="submit" class="btn btn-primary" style="background:${isEdit ? '#3b82f6' : '#ef4444'};">
                         ${isEdit ? '<i class="ph ph-floppy-disk"></i> Salva Modifiche' : '<i class="ph ph-plus"></i> Inserisci Infortunio'}
                     </button>
                 </div>
             </form>
+        `;
+
+        const checkupsHtml = isEdit ? `
+            <div id="checkups-container">
+                <div style="text-align:center; padding:20px; color:var(--color-text-muted);"><i class="ph ph-circle-notch animate-spin"></i> Caricamento storico visite...</div>
+            </div>
+            
+            <form id="checkup-form" style="margin-top:24px; padding-top:24px; border-top:1px solid rgba(255,255,255,0.1);">
+                <h4 style="font-size:14px; font-weight:800; color:#fff; margin-bottom:16px;">Aggiungi Visita</h4>
+                <input type="hidden" name="injury_id" value="${injury.id}">
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px;">
+                    <div class="form-group">
+                        <label style="display:block; font-size:11px; opacity:0.6; text-transform:uppercase; margin-bottom:4px;">Data Visita <span style="color:#ef4444">*</span></label>
+                        <input type="date" name="visit_date" class="input" style="width:100%;" required value="${new Date().toISOString().substring(0, 10)}">
+                    </div>
+                    <div class="form-group">
+                        <label style="display:block; font-size:11px; opacity:0.6; text-transform:uppercase; margin-bottom:4px;">Specialista</label>
+                        <input type="text" name="practitioner" class="input" style="width:100%;" placeholder="Es. Dott. Rossi">
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom:12px;">
+                    <label style="display:block; font-size:11px; opacity:0.6; text-transform:uppercase; margin-bottom:4px;">Esito / Note</label>
+                    <textarea name="outcome" class="input" style="width:100%; height:60px;" placeholder="Risultati della visita"></textarea>
+                </div>
+                <div style="display:flex; justify-content:flex-end;">
+                    <button type="submit" class="btn btn-primary" style="background:#10b981;"><i class="ph ph-plus"></i> Aggiungi Visita</button>
+                </div>
+            </form>
+        ` : '';
+
+        const docsHtml = isEdit ? `
+            <div id="docs-container">
+                <div style="text-align:center; padding:20px; color:var(--color-text-muted);"><i class="ph ph-circle-notch animate-spin"></i> Caricamento documenti...</div>
+            </div>
+
+            <form id="doc-form" style="margin-top:24px; padding-top:24px; border-top:1px solid rgba(255,255,255,0.1);">
+                <h4 style="font-size:14px; font-weight:800; color:#fff; margin-bottom:16px;">Carica Referto/Immagine</h4>
+                <input type="hidden" name="injury_id" value="${injury.id}">
+                
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px;">
+                    <div class="form-group">
+                        <label style="display:block; font-size:11px; opacity:0.6; text-transform:uppercase; margin-bottom:4px;">Agomento / Titolo <span style="color:#ef4444">*</span></label>
+                        <input type="text" name="document_title" class="input" style="width:100%;" required placeholder="Es. Referto Risonanza">
+                    </div>
+                    <div class="form-group">
+                        <label style="display:block; font-size:11px; opacity:0.6; text-transform:uppercase; margin-bottom:4px;">Tipo</label>
+                        <select name="document_type" class="input" style="width:100%;">
+                            <option value="Referto">Referto</option>
+                            <option value="Immagini (Rx, Eco, MRI)">Immagini (Rx, Eco, MRI)</option>
+                            <option value="Certificato">Certificato di Rientro</option>
+                            <option value="Altro">Altro</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom:16px;">
+                    <label style="display:block; font-size:11px; opacity:0.6; text-transform:uppercase; margin-bottom:4px;">File <span style="color:#ef4444">*</span></label>
+                    <input type="file" name="document_file" class="input" style="width:100%; padding:10px; border: 1px dashed rgba(255,255,255,0.2); background:rgba(255,255,255,0.02);" required accept=".pdf,.jpg,.jpeg,.png">
+                </div>
+                <div style="display:flex; justify-content:flex-end;">
+                    <button type="submit" class="btn btn-primary" style="background:#3b82f6;"><i class="ph ph-upload-simple"></i> Carica Documento</button>
+                </div>
+            </form>
+        ` : '';
+
+        const theModal = this._createModal(`
+            <h2 style="font-family:var(--font-display); font-size:24px; color:#fff; margin-bottom:24px;">${isEdit ? 'Gestione Infortunio' : 'Nuovo Infortunio'}</h2>
+            ${tabsHtml}
+            
+            <div id="tab-details" class="tab-content" style="display:block;">
+                ${detailsHtml}
+            </div>
+            
+            <div id="tab-checkups" class="tab-content" style="display:none;">
+                ${checkupsHtml}
+            </div>
+            
+            <div id="tab-docs" class="tab-content" style="display:none;">
+                ${docsHtml}
+            </div>
         `);
         
         document.body.appendChild(theModal);
+
+        // Tab Switching Logic
+        const tabBtns = theModal.querySelectorAll('.tab-btn');
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const target = e.target.getAttribute('data-tab');
+                
+                // Reset states
+                tabBtns.forEach(b => {
+                    b.classList.remove('active');
+                    b.style.fontWeight = 'normal';
+                    b.style.borderBottom = 'none';
+                    b.style.color = 'var(--color-text-muted)';
+                });
+                theModal.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+                
+                // Set active
+                e.target.classList.add('active');
+                e.target.style.fontWeight = '800';
+                e.target.style.borderBottom = '2px solid #ef4444';
+                e.target.style.color = '#fff';
+                theModal.querySelector('#' + target).style.display = 'block';
+            });
+        });
+
+        // Initialize Checkups & Docs Data
+        if(isEdit) {
+            this._loadCheckups(injury.id, theModal);
+            this._loadDocs(injury.id, theModal);
+        }
 
         // Toggle visibility of actual RTP date
         const rtpCb = document.getElementById('rtp-clear-cb');
@@ -366,34 +482,159 @@ export const AthleteHealth = {
             });
         }
 
-        document.getElementById('injury-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            // Default checkbox false behavior
-            if(!formData.has('rtp_cleared')) {
-                formData.append('rtp_cleared', 0);
-            }
-            
-            try {
-                UI.loading(true);
-                const action = isEdit ? 'updateInjury' : 'addInjury';
-                const res = await fetch(`api/?module=Health&action=${action}`, {
-                    method: 'POST',
-                    body: formData
-                }).then(r => r.json());
-                
-                if(res.success) {
-                    UI.toast(`Infortunio ${isEdit ? 'aggiornato' : 'inserito'}`);
-                    document.body.removeChild(theModal);
-                    this._loadData(container, athlete);
-                } else {
-                    throw new Error(res.error || "Errore sconosciuto");
+        // Details Form Submission
+        const detailsForm = document.getElementById('injury-form');
+        if (detailsForm) {
+            detailsForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                // Default checkbox false behavior
+                if(!formData.has('rtp_cleared')) {
+                    formData.append('rtp_cleared', 0);
                 }
-            } catch(err) {
-                UI.toast(err.message, "error");
-            } finally {
-                UI.loading(false);
+                
+                try {
+                    UI.loading(true);
+                    const action = isEdit ? 'updateInjury' : 'addInjury';
+                    const res = await fetch(`api/?module=Health&action=${action}`, {
+                        method: 'POST',
+                        body: formData
+                    }).then(r => r.json());
+                    
+                    if(res.success) {
+                        UI.toast(`Infortunio ${isEdit ? 'aggiornato' : 'inserito'}`);
+                        document.body.removeChild(theModal);
+                        this._loadData(container, athlete);
+                    } else {
+                        throw new Error(res.error || "Errore sconosciuto");
+                    }
+                } catch(err) {
+                    UI.toast(err.message, "error");
+                } finally {
+                    UI.loading(false);
+                }
+            });
+        }
+
+        // Checkup Form Submission
+        const checkupForm = document.getElementById('checkup-form');
+        if (checkupForm) {
+            checkupForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                
+                try {
+                    UI.loading(true);
+                    const res = await fetch(`api/?module=Health&action=addFollowup`, {
+                        method: 'POST',
+                        body: formData
+                    }).then(r => r.json());
+                    
+                    if (res.success) {
+                        UI.toast('Visita aggiunta correttamente');
+                        checkupForm.reset();
+                        // reload checkups
+                        this._loadCheckups(injury.id, theModal);
+                    } else {
+                        throw new Error(res.error || "Errore sconosciuto");
+                    }
+                } catch(err) {
+                    UI.toast(err.message, "error");
+                } finally {
+                    UI.loading(false);
+                }
+            });
+        }
+
+        // Doc Form Submission
+        const docForm = document.getElementById('doc-form');
+        if (docForm) {
+            docForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                
+                try {
+                    UI.loading(true);
+                    const res = await fetch(`api/?module=Health&action=uploadDocument`, {
+                        method: 'POST',
+                        body: formData
+                    }).then(r => r.json());
+                    
+                    if (res.success) {
+                        UI.toast('Documento caricato correttamente');
+                        docForm.reset();
+                        // reload docs
+                        this._loadDocs(injury.id, theModal);
+                    } else {
+                        throw new Error(res.error || "Errore sconosciuto");
+                    }
+                } catch(err) {
+                    UI.toast(err.message, "error");
+                } finally {
+                    UI.loading(false);
+                }
+            });
+        }
+    },
+
+    async _loadCheckups(injuryId, theModal) {
+        const container = theModal.querySelector('#checkups-container');
+        try {
+            const res = await fetch(`api/?module=Health&action=getFollowups&injury_id=${injuryId}`).then(r => r.json());
+            if (res.success) {
+                const list = res.data || [];
+                if (list.length === 0) {
+                    container.innerHTML = '<div style="padding:24px; text-align:center; color:var(--color-text-muted); background:rgba(255,255,255,0.02); border-radius:12px; border:1px dashed rgba(255,255,255,0.1);">Nessuna visita/check-up registrata.</div>';
+                } else {
+                    container.innerHTML = '<div style="display:grid; gap:12px;">' + list.map(c => `
+                        <div class="card glass-card" style="padding:16px; border-left:3px solid #10b981;">
+                            <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                                <div style="font-weight:800; color:#fff;">${new Date(c.visit_date).toLocaleDateString('it-IT')}</div>
+                                <div style="font-size:12px; color:#10b981;"><i class="ph ph-stethoscope"></i> ${Utils.escapeHtml(c.practitioner || 'Specialista')}</div>
+                            </div>
+                            <div style="font-size:13px; color:var(--color-text-muted);">
+                                ${Utils.escapeHtml(c.outcome || c.notes || '(Nessuna nota)')}
+                            </div>
+                        </div>
+                    `).join('') + '</div>';
+                }
+            } else {
+                throw new Error(res.error);
             }
-        });
+        } catch (e) {
+            container.innerHTML = `<div style="color:#ef4444; padding:16px;">Errore caricamento visite: ${e.message}</div>`;
+        }
+    },
+
+    async _loadDocs(injuryId, theModal) {
+        const container = theModal.querySelector('#docs-container');
+        try {
+            const res = await fetch(`api/?module=Health&action=getDocuments&injury_id=${injuryId}`).then(r => r.json());
+            if (res.success) {
+                const list = res.data || [];
+                if (list.length === 0) {
+                    container.innerHTML = '<div style="padding:24px; text-align:center; color:var(--color-text-muted); background:rgba(255,255,255,0.02); border-radius:12px; border:1px dashed rgba(255,255,255,0.1);">Nessun documento caricato.</div>';
+                } else {
+                    container.innerHTML = '<div style="display:grid; gap:12px;">' + list.map(d => `
+                        <div class="card glass-card" style="padding:16px; display:flex; justify-content:space-between; align-items:center;">
+                            <div>
+                                <div style="font-weight:800; color:#fff; display:flex; align-items:center; gap:8px;">
+                                    <i class="ph ph-file-text" style="color:#3b82f6;"></i>
+                                    ${Utils.escapeHtml(d.document_title)}
+                                </div>
+                                <div style="font-size:12px; color:var(--color-text-muted); margin-top:4px;">${Utils.escapeHtml(d.document_type || 'Documento')} • ${new Date(d.created_at).toLocaleDateString('it-IT')}</div>
+                            </div>
+                            <a href="${'api/' + d.file_path}" target="_blank" class="btn btn-ghost btn-xs" style="color:#3b82f6; background:rgba(59, 130, 246, 0.1);">
+                                <i class="ph ph-download-simple"></i> Scarica
+                            </a>
+                        </div>
+                    `).join('') + '</div>';
+                }
+            } else {
+                throw new Error(res.error);
+            }
+        } catch (e) {
+            container.innerHTML = `<div style="color:#ef4444; padding:16px;">Errore caricamento documenti: ${e.message}</div>`;
+        }
     }
 };

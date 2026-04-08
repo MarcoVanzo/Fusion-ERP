@@ -288,6 +288,10 @@ const Athletes = (() => {
                 // ma manteniamo addAnagraficaListeners per altri controlli (es. toggle active)
                 addAnagraficaListeners(athlete);
                 break;
+            case 'quote':
+                panel.innerHTML = AthletesView.tabQuote(athlete, App.getUser().role === 'admin');
+                addQuoteListeners(athlete);
+                break;
             case 'pagamenti':
                 await renderPayments(panel, athlete);
                 break;
@@ -328,6 +332,35 @@ const Athletes = (() => {
         }, { signal });
     }
 
+
+    function addQuoteListeners(athlete) {
+        const form = document.getElementById("athlete-quotas-form");
+        if (form) {
+            form.addEventListener("submit", async (e) => {
+                e.preventDefault();
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData.entries());
+                
+                // checkbox non spuntate non compaiono in FormData
+                const checkboxes = ['quota_iscrizione_rata1_paid', 'quota_iscrizione_rata2_paid', 'quota_vestiario_paid', 'quota_foresteria_paid'];
+                checkboxes.forEach(cb => {
+                    data[cb] = data[cb] ? 1 : 0;
+                });
+
+                UI.loading(true);
+                try {
+                    await AthletesAPI.update(data);
+                    UI.toast("Quote aggiornate con successo", "success");
+                    const updatedAthlete = await AthletesAPI.getById(athlete.id);
+                    switchTab('quote', updatedAthlete);
+                } catch (err) {
+                    UI.toast(err.message, "error");
+                } finally {
+                    UI.loading(false);
+                }
+            });
+        }
+    }
 
     function renderEditForm(athlete) {
         const app = document.getElementById("app");
