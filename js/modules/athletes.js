@@ -113,6 +113,55 @@ const Athletes = (() => {
             });
         }, { signal });
 
+        document.getElementById("bulk-quotes-btn")?.addEventListener("click", () => {
+            const teamId = document.getElementById("team-filter")?.value;
+            if (!teamId) {
+                UI.toast("Seleziona prima una specifica squadra dal menu a tendina!", "warning");
+                return;
+            }
+            const selectEl = document.getElementById("team-filter");
+            const teamName = selectEl.options[selectEl.selectedIndex].text;
+            const athletesInTeam = athletesData.filter(a => String(a.team_id) === String(teamId) || (a.team_season_ids && String(a.team_season_ids).split(',').includes(String(teamId))));
+            
+            if (athletesInTeam.length === 0) {
+                UI.toast("Nessun atleta in questa squadra.", "warning");
+                return;
+            }
+
+            const qIscrizione = prompt(`Inserisci QUOTA ISCRIZIONE per tutti gli atleti di "${teamName}"\n\nLascia vuoto per non modificare questa voce.`);
+            if (qIscrizione === null) return;
+            const qVestiario = prompt(`Inserisci QUOTA VESTIARIO per tutti gli atleti di "${teamName}"\n\nLascia vuoto per non modificare questa voce.`);
+            if (qVestiario === null) return;
+            const qForesteria = prompt(`Inserisci QUOTA FORESTERIA per tutti gli atleti di "${teamName}"\n\nLascia vuoto per non modificare questa voce.`);
+            if (qForesteria === null) return;
+            
+            const updates = {};
+            if (qIscrizione !== "") {
+                updates.quota_iscrizione_rata1 = qIscrizione;
+                updates.quota_iscrizione_rata2 = 0;
+            }
+            if (qVestiario !== "") updates.quota_vestiario = qVestiario;
+            if (qForesteria !== "") updates.quota_foresteria = qForesteria;
+
+            if (Object.keys(updates).length === 0) {
+                UI.toast("Nessuna quota inserita, operazione annullata.", "info");
+                return;
+            }
+
+            if (!confirm(`Stai per assegnare queste quote a ${athletesInTeam.length} atleti della squadra "${teamName}". Confermi l'operazione?`)) return;
+
+            UI.loading(true);
+            Promise.all(athletesInTeam.map(a => AthletesAPI.update(a.id, updates)))
+                .then(() => {
+                    UI.toast(`Quote assegnate correttamente a ${athletesInTeam.length} atleti!`, "success");
+                    refreshData(variant);
+                })
+                .catch(e => {
+                    UI.toast("Errore durante l'assegnazione: " + e.message, "error");
+                    refreshData(variant);
+                });
+        }, { signal });
+
         document.getElementById("athlete-search")?.addEventListener("input", (e) => {
             debounce(() => filterAndRenderGrid(e.target.value, variant), 300);
         }, { signal });
@@ -171,8 +220,12 @@ const Athletes = (() => {
             if (editBtn) {
                 editBtn.onclick = (e) => {
                     e.stopPropagation();
-                    const athlete = athletesData.find(a => String(a.id) === String(id));
-                    if (athlete) renderEditForm(athlete);
+                    if (variant === 'quote') {
+                        renderProfile(id, 'quote');
+                    } else {
+                        const athlete = athletesData.find(a => String(a.id) === String(id));
+                        if (athlete) renderEditForm(athlete);
+                    }
                 };
             }
 
@@ -281,7 +334,7 @@ const Athletes = (() => {
                 addAnagraficaListeners(athlete);
                 break;
             case 'quote':
-                panel.innerHTML = AthletesView.tabQuote(athlete, App.getUser().role === 'admin');
+                panel.innerHTML = AthletesView.tabQuote(athlete, ['admin', 'manager'].includes(App.getUser().role));
                 addQuoteListeners(athlete);
                 break;
             case 'pagamenti':

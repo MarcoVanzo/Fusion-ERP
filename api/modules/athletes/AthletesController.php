@@ -164,7 +164,11 @@ class AthletesController
                 'communication_preference', 'image_release_consent', 'vald_athlete_id',
                 'photo_release_file_path', 'privacy_policy_file_path',
                 'guesthouse_rules_file_path', 'guesthouse_delegate_file_path', 'health_card_file_path',
-                'registration_fee_paid', 'monthly_fee_amount'
+                'registration_fee_paid', 'monthly_fee_amount',
+                'quota_iscrizione_rata1', 'quota_iscrizione_rata2',
+                'quota_vestiario', 'quota_foresteria', 'quota_trasporti',
+                'quota_iscrizione_rata1_paid', 'quota_iscrizione_rata2_paid',
+                'quota_vestiario_paid', 'quota_foresteria_paid', 'quota_trasporti_paid'
             ];
 
             foreach ($optionalFields as $field) {
