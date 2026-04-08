@@ -8,6 +8,7 @@ import { AthletesView } from './athletes/AthletesView.js?v=3';
 import { AthletesWizard } from './athletes/AthletesWizard.js?v=2';
 import { AthletesMetrics } from './athletes/AthletesMetricsV2.js?v=5';
 import { AthleteHealth } from './athletes/AthleteHealth.js?v=2';
+import TransportAPI from './transport/TransportAPI.js';
 
 const Athletes = (() => {
     let abortController = new AbortController();
@@ -53,6 +54,11 @@ const Athletes = (() => {
                 AthletesAPI.getLightList()
             ]);
 
+            // Per la vista quote, arricchisci con rimborsi trasporti reali
+            if (initialTab === 'quote') {
+                await enrichWithTransportReimbursements();
+            }
+
             const params = Router.getParams();
             const user = App.getUser();
 
@@ -83,9 +89,14 @@ const Athletes = (() => {
     /**
      * Renderizza la Dashboard (Lista Atleti)
      */
-    function renderDashboard() {
+    async function renderDashboard() {
         const app = document.getElementById("app");
         const variant = getVariantFromRoute();
+
+        // Per la vista quote, arricchisci con rimborsi trasporti reali
+        if (variant === 'quote') {
+            await enrichWithTransportReimbursements();
+        }
 
         app.innerHTML = AthletesView.dashboard(teamsData, variant);
         
@@ -577,6 +588,33 @@ const Athletes = (() => {
     function debounce(func, delay) {
         clearTimeout(debounceTimer);
         debounceTimer = setTimeout(func, delay);
+    }
+
+    /**
+     * Carica tutti i trasporti e calcola il rimborso per atleta (€2.50/viaggio)
+     * Arricchisce athletesData con il campo _transportReimbursement
+     */
+    async function enrichWithTransportReimbursements() {
+        try {
+            const transports = await TransportAPI.getTransports();
+            const reimbMap = new Map();
+            transports.forEach(tr => {
+                let athletes = [];
+                try {
+                    athletes = typeof tr.athletes_json === 'string' ? JSON.parse(tr.athletes_json) : (tr.athletes_json || []);
+                } catch { athletes = []; }
+                athletes.forEach(a => {
+                    const id = a.id || a.athlete_id;
+                    if (!id) return;
+                    reimbMap.set(String(id), (reimbMap.get(String(id)) || 0) + 2.50);
+                });
+            });
+            athletesData.forEach(a => {
+                a._transportReimbursement = reimbMap.get(String(a.id)) || 0;
+            });
+        } catch (e) {
+            console.warn('Impossibile caricare rimborsi trasporti:', e);
+        }
     }
 
     /**

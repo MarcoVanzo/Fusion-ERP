@@ -253,11 +253,28 @@ export const AthletesView = {
 
             const vestiarioHtml = renderEditableQuota('quota_vestiario', athlete.quota_vestiario, athlete.quota_vestiario_paid);
             const foresteriaHtml = renderEditableQuota('quota_foresteria', athlete.quota_foresteria, athlete.quota_foresteria_paid);
-            const trasportiHtml = renderEditableQuota('quota_trasporti', athlete.quota_trasporti, athlete.quota_trasporti_paid);
+            const trasportiVal = parseFloat(athlete._transportReimbursement) || 0;
+            const trasportiColor = athlete.quota_trasporti_paid ? 'var(--color-success)' : (trasportiVal > 0 ? 'var(--color-pink)' : 'rgba(255,255,255,0.1)');
+            const trasportiHtml = `
+                <div class="inline-edit-group" style="display:flex; align-items:center; justify-content:center; gap:6px;">
+                    <div style="position:relative; width:65px;">
+                        <span style="position:absolute; left:6px; top:50%; transform:translateY(-50%); font-size:10px; opacity:0.5; color:${trasportiColor}; pointer-events:none;">€</span>
+                        <input type="number" 
+                               value="${trasportiVal > 0 ? trasportiVal.toFixed(0) : ''}" 
+                               placeholder="0"
+                               readonly
+                               title="Calcolato da Rimborsi Trasporti"
+                               style="width:100%; padding:6px 6px 6px 16px; background:rgba(0,0,0,0.1); border:1px solid rgba(255,255,255,0.03); border-radius:8px; color:${trasportiColor}; font-weight:700; font-size:13px; text-align:right; cursor:default; opacity:0.8;">
+                    </div>
+                    <span style="color:${trasportiColor}; font-size:18px; display:flex; align-items:center; opacity:${trasportiVal > 0 ? 1 : 0.2};">
+                        <i class="ph ${athlete.quota_trasporti_paid ? 'ph-check-circle-fill' : 'ph-circle'}"></i>
+                    </span>
+                </div>
+            `;
 
             const v = parseFloat(athlete.quota_vestiario) || 0;
             const f = parseFloat(athlete.quota_foresteria) || 0;
-            const t = parseFloat(athlete.quota_trasporti) || 0;
+            const t = trasportiVal;
             const v_p = athlete.quota_vestiario_paid ? v : 0;
             const f_p = athlete.quota_foresteria_paid ? f : 0;
             const t_p = athlete.quota_trasporti_paid ? t : 0;
