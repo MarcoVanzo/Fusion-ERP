@@ -128,17 +128,21 @@ const TransportView = {
 
     renderDriverCard: (t, isAdmin) => {
         const isActive = !!t.is_active;
+        const totalMinutes = parseInt(t.total_minutes || 0);
+        const hourlyRate = parseFloat(t.hourly_rate || 0);
+        const compenso = (totalMinutes / 60) * hourlyRate;
         return `
             <div class="drv-card ${isActive ? "" : "inactive"}" data-driver-id="${Utils.escapeHtml(t.id)}">
                 <div style="display:flex; gap:16px; align-items:flex-start;">
-                    <div class="drv-avatar"><i class="ph ph-steering-wheel"></i></div>
+                    <div class="drv-avatar" data-driver-detail="${Utils.escapeHtml(t.id)}" style="cursor:pointer;"><i class="ph ph-steering-wheel"></i></div>
                     <div style="flex:1; min-width:0;">
-                        <div class="drv-name">${Utils.escapeHtml(t.full_name)}</div>
+                        <div class="drv-name" data-driver-detail="${Utils.escapeHtml(t.id)}" style="cursor:pointer;">${Utils.escapeHtml(t.full_name)}</div>
                         <div class="drv-meta">
                             ${t.phone ? `<span><i class="ph ph-phone"></i>${Utils.escapeHtml(t.phone)}</span>` : ""}
                             ${t.license_number ? `<span><i class="ph ph-identification-card"></i>Patente: ${Utils.escapeHtml(t.license_number)}</span>` : ""}
                             ${t.hourly_rate ? `<span><i class="ph ph-currency-eur"></i>${Utils.formatCurrency(t.hourly_rate)}/h</span>` : ""}
                             ${t.notes ? `<span style="margin-top:4px; color:rgba(255,255,255,0.35); font-size:12px;"><i class="ph ph-note"></i>${Utils.escapeHtml(t.notes)}</span>` : ""}
+                            <span style="margin-top:4px; padding:4px 8px; border-radius:6px; background:rgba(236,72,153,0.15); color:var(--accent-pink); font-weight:700; border:1px solid rgba(236,72,153,0.3);"><i class="ph ph-wallet"></i> Maturato: ${Utils.formatCurrency(compenso)} (${totalMinutes} min)</span>
                         </div>
                         <span class="drv-badge ${isActive ? "active" : "inactive"}">
                             <i class="ph ${isActive ? "ph-check-circle" : "ph-pause-circle"}"></i>
@@ -148,6 +152,12 @@ const TransportView = {
                 </div>
                 ${isAdmin ? `
                 <div class="drv-actions">
+                    <button class="btn-drv" data-driver-detail="${Utils.escapeHtml(t.id)}" type="button">
+                        <i class="ph ph-eye"></i> Dettaglio
+                    </button>
+                    <button class="btn-drv" data-driver-edit="${Utils.escapeHtml(t.id)}" type="button">
+                        <i class="ph ph-pencil-simple"></i> Modifica
+                    </button>
                     <button class="btn-drv" data-driver-toggle="${Utils.escapeHtml(t.id)}" data-driver-active="${isActive ? "1" : "0"}" type="button">
                         <i class="ph ${isActive ? "ph-pause" : "ph-play"}"></i> ${isActive ? "Disattiva" : "Attiva"}
                     </button>
@@ -156,6 +166,122 @@ const TransportView = {
                     </button>
                 </div>` : ""}
             </div>`;
+    },
+
+    renderDriverDetail: (driver, transports) => {
+        const totalMinutes = parseInt(driver.total_minutes || 0);
+        const hourlyRate = parseFloat(driver.hourly_rate || 0);
+        const compenso = (totalMinutes / 60) * hourlyRate;
+        const initials = (driver.full_name || "").split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2);
+
+        return `
+            <div class="drv-page">
+                <div class="drv-top">
+                    <div class="drv-title">
+                        <button class="btn-dash" id="drv-detail-back" type="button" style="padding:10px; -webkit-text-fill-color:unset; font-size:14px;"><i class="ph ph-arrow-left" style="font-size:20px;"></i></button>
+                        Dettaglio <span style="color:#00e5ff;">Autista</span>
+                    </div>
+                </div>
+
+                <div class="dash-grid" style="margin-top:24px;">
+                    <!-- Profilo Autista -->
+                    <div class="dash-card cyan" style="grid-column: 1 / 2;">
+                        <div class="dash-card-header">
+                            <div class="dash-card-title"><i class="ph ph-user-circle" style="color:var(--accent-cyan); margin-right:8px;"></i>INFORMAZIONI</div>
+                        </div>
+                        <div style="display:flex; flex-direction:column; align-items:center; padding:24px 0;">
+                            <div style="width:80px; height:80px; border-radius:50%; background:rgba(255,255,255,0.05); border:2px solid var(--accent-cyan); display:flex; align-items:center; justify-content:center; font-size:32px; font-weight:800; color:var(--accent-cyan); margin-bottom:16px;">${initials}</div>
+                            <h2 style="font-size:22px; margin-bottom:4px;">${Utils.escapeHtml(driver.full_name)}</h2>
+                            <span class="drv-badge ${driver.is_active ? "active" : "inactive"}">${driver.is_active ? "Attivo" : "Non Attivo"}</span>
+                        </div>
+                        <div style="padding-top:20px; border-top:1px solid rgba(255,255,255,0.05); display:flex; flex-direction:column; gap:16px;">
+                            <div style="display:flex; justify-content:space-between;">
+                                <span style="color:rgba(255,255,255,0.4); font-size:13px;">Telefono</span>
+                                <span style="font-weight:600;">${Utils.escapeHtml(driver.phone || "-")}</span>
+                            </div>
+                            <div style="display:flex; justify-content:space-between;">
+                                <span style="color:rgba(255,255,255,0.4); font-size:13px;">Patente</span>
+                                <span style="font-weight:600;">${Utils.escapeHtml(driver.license_number || "-")}</span>
+                            </div>
+                            <div style="display:flex; justify-content:space-between;">
+                                <span style="color:rgba(255,255,255,0.4); font-size:13px;">Tariffa</span>
+                                <span style="font-weight:600;">${Utils.formatCurrency(driver.hourly_rate)}/h</span>
+                            </div>
+                            <div style="display:flex; flex-direction:column; gap:4px;">
+                                <span style="color:rgba(255,255,255,0.4); font-size:13px;">Note</span>
+                                <p style="font-size:13px; color:rgba(255,255,255,0.8);">${Utils.escapeHtml(driver.notes || "Nessuna nota")}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Riepilogo Finanziario -->
+                    <div class="dash-card pink" style="grid-column: 2 / -1;">
+                        <div class="dash-card-header">
+                            <div class="dash-card-title"><i class="ph ph-wallet" style="color:var(--accent-pink); margin-right:8px;"></i>RIEPILOGO MATURATO</div>
+                        </div>
+                        <div style="display:flex; gap:24px; margin-top:16px;">
+                            <div style="flex:1; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.05); padding:20px; border-radius:16px; text-align:center;">
+                                <div style="font-size:12px; text-transform:uppercase; color:rgba(255,255,255,0.4); margin-bottom:8px;">Totale Compenso</div>
+                                <div style="font-family:var(--font-display); font-size:32px; font-weight:800; color:var(--accent-pink);">${Utils.formatCurrency(compenso)}</div>
+                            </div>
+                            <div style="flex:1; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.05); padding:20px; border-radius:16px; text-align:center;">
+                                <div style="font-size:12px; text-transform:uppercase; color:rgba(255,255,255,0.4); margin-bottom:8px;">Tempo Totale</div>
+                                <div style="font-family:var(--font-display); font-size:32px; font-weight:800; color:var(--accent-cyan);">${totalMinutes} <span style="font-size:14px; opacity:0.6;">min</span></div>
+                            </div>
+                            <div style="flex:1; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.05); padding:20px; border-radius:16px; text-align:center;">
+                                <div style="font-size:12px; text-transform:uppercase; color:rgba(255,255,255,0.4); margin-bottom:8px;">Totale Viaggi</div>
+                                <div style="font-family:var(--font-display); font-size:32px; font-weight:800;">${transports.length}</div>
+                            </div>
+                        </div>
+
+                        <!-- Storico Viaggi -->
+                        <div style="margin-top:32px;">
+                            <div style="font-family:var(--font-display); font-size:15px; font-weight:700; margin-bottom:16px; display:flex; align-items:center; gap:8px;">
+                                <i class="ph ph-clock-counter-clockwise"></i> STORICO VIAGGI
+                            </div>
+                            <div style="max-height:400px; overflow-y:auto; padding-right:8px;">
+                                <table class="dash-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Data</th>
+                                            <th>Destinazione</th>
+                                            <th>Durata</th>
+                                            <th>Distanza</th>
+                                            <th>Atlete</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${transports.length === 0 ? '<tr><td colspan="5" style="text-align:center; padding:30px; color:rgba(255,255,255,0.3);">Nessun viaggio registrato</td></tr>' : transports.map(t => TransportView.renderDriverHistoryRow(t)).join("")}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+    },
+
+    renderDriverHistoryRow: (t) => {
+        let stats = {};
+        try { stats = typeof t.stats_json === "string" ? JSON.parse(t.stats_json) : t.stats_json || {}; } catch { stats = {}; }
+        let athletes = [];
+        try { athletes = typeof t.athletes_json === "string" ? JSON.parse(t.athletes_json) : t.athletes_json || []; } catch { athletes = []; }
+        
+        const dateStr = t.transport_date ? new Date(t.transport_date).toLocaleDateString("it-IT", { day: "2-digit", month: "2-digit", year: "2-digit" }) : "-";
+        
+        return `
+            <tr>
+                <td style="font-weight:700; color:rgba(255,255,255,0.6);">${dateStr}</td>
+                <td>
+                    <div style="font-weight:600;">${Utils.escapeHtml(t.destination_name)}</div>
+                    <div style="font-size:11px; color:rgba(255,255,255,0.3);">${Utils.escapeHtml(t.destination_address || "")}</div>
+                </td>
+                <td><span class="badge cyan" style="font-size:11px;">${Utils.escapeHtml(stats.durata || "-")}</span></td>
+                <td>${Utils.escapeHtml(stats.distanza || "-")}</td>
+                <td style="font-size:11px; color:rgba(255,255,255,0.5);">
+                    ${athletes.length} atlete
+                </td>
+            </tr>`;
     },
 
     renderNewTransport: (gymOptions, teamOptions, driverOptions, vehicleOptions) => {
@@ -426,6 +552,68 @@ const TransportView = {
                 </td>
                 <td>
                     ${!hasCar ? `<button class="btn btn-ghost btn-xs" style="font-size:10px; padding:4px 8px;" onclick="Transport.showRequestPassageModal('${a.athlete_id}')">CHIEDI</button>` : ""}
+                </td>
+            </tr>`;
+    },
+
+    refundsDashboard: (reimbursements) => {
+        const totalGlobal = reimbursements.reduce((acc, r) => acc + r.totalAmount, 0);
+        return `
+            <div class="drv-page">
+                <div class="drv-top">
+                    <div class="drv-title">
+                        <button class="btn-dash" id="ref-back" type="button" style="padding:10px; -webkit-text-fill-color:unset; font-size:14px;"><i class="ph ph-arrow-left" style="font-size:20px;"></i></button>
+                        Riepilogo <span style="color:var(--accent-pink);">Rimborsi Trasporti</span>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.05); padding:8px 16px; border-radius:12px; border:1px solid rgba(255,255,255,0.1); display:flex; align-items:center; gap:12px;">
+                        <span style="font-size:12px; color:rgba(255,255,255,0.4); text-transform:uppercase;">Totale Maturato Atlete</span>
+                        <span style="font-family:var(--font-display); font-size:20px; font-weight:800; color:var(--accent-pink);">€ ${Utils.formatNum(totalGlobal)}</span>
+                    </div>
+                </div>
+
+                <div class="dash-card" style="margin-top:24px; padding:0; overflow:hidden;">
+                    <div style="padding:16px 24px; border-bottom:1px solid rgba(255,255,255,0.05); display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.02);">
+                        <div style="position:relative; width:300px;">
+                            <i class="ph ph-magnifying-glass" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); opacity:0.3;"></i>
+                            <input type="text" id="ref-search" class="form-input" placeholder="Cerca atleta o squadra..." style="padding-left:36px; height:40px; font-size:13px; background:rgba(0,0,0,0.2);">
+                        </div>
+                        <div style="font-size:12px; color:rgba(255,255,255,0.3);"><i class="ph ph-info"></i> Calcolo basato su € 2,50 per partecipazione</div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="dash-table">
+                            <thead>
+                                <tr>
+                                    <th style="padding-left:24px;">Atleta</th>
+                                    <th>Squadra</th>
+                                    <th style="text-align:center;">Viaggi</th>
+                                    <th style="text-align:right; padding-right:24px;">Totale Rimborso</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ref-list-body">
+                                ${reimbursements.length === 0 ? 
+                                    '<tr><td colspan="4" style="text-align:center; padding:40px; color:rgba(255,255,255,0.3);">Nessun rimborso calcolato</td></tr>' : 
+                                    reimbursements.map(r => TransportView.renderRefundRow(r)).join("")
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>`;
+    },
+
+    renderRefundRow: (r) => {
+        return `
+            <tr>
+                <td style="padding-left:24px;">
+                    <div style="font-weight:600; color:#fff;">${Utils.escapeHtml(r.athleteName)}</div>
+                    <div style="font-size:11px; color:rgba(255,255,255,0.3);">Ultimo: ${Utils.escapeHtml(r.lastDestination)} (${Utils.formatDate(r.lastDate)})</div>
+                </td>
+                <td><span class="badge" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:rgba(255,255,255,0.7);">${Utils.escapeHtml(r.teamName)}</span></td>
+                <td style="text-align:center;">
+                    <div style="font-family:var(--font-display); font-weight:700;">${r.tripCount}</div>
+                </td>
+                <td style="text-align:right; padding-right:24px;">
+                    <div style="font-family:var(--font-display); font-weight:800; color:#00e676; font-size:16px;">€ ${Utils.formatNum(r.totalAmount)}</div>
                 </td>
             </tr>`;
     }

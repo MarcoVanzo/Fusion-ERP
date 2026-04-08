@@ -302,21 +302,23 @@ class TransportRepository
             'INSERT INTO transports (id, team_id, destination_name, destination_address,
                                       destination_lat, destination_lng, departure_address,
                                       arrival_time, departure_time, transport_date,
-                                      athletes_json, timeline_json, stats_json, ai_response, created_by)
+                                      athletes_json, timeline_json, stats_json, ai_response, created_by, driver_id, vehicle_id)
              VALUES (:id, :team_id, :destination_name, :destination_address,
                      :destination_lat, :destination_lng, :departure_address,
                      :arrival_time, :departure_time, :transport_date,
-                     :athletes_json, :timeline_json, :stats_json, :ai_response, :created_by)'
+                     :athletes_json, :timeline_json, :stats_json, :ai_response, :created_by, :driver_id, :vehicle_id)'
         );
         $stmt->execute($data);
     }
 
     public function listTransports(string $teamId = ''): array
     {
-        $sql = 'SELECT id, team_id, destination_name, destination_address,
-                       arrival_time, departure_time, transport_date,
-                       athletes_json, stats_json, created_at
-                FROM transports';
+        $sql = 'SELECT t.id, t.team_id, t.destination_name, t.destination_address,
+                       t.arrival_time, t.departure_time, t.transport_date,
+                       t.athletes_json, t.stats_json, t.created_at, t.driver_id,
+                       tm.name AS team_name
+                FROM transports t
+                LEFT JOIN teams tm ON tm.id = t.team_id';
         $params = [];
         if ($teamId !== '') {
             $sql .= ' WHERE team_id = :team_id';
@@ -350,10 +352,17 @@ class TransportRepository
     public function listDrivers(): array
     {
         $stmt = $this->db->query(
-            'SELECT id, full_name, phone, license_number, hourly_rate, is_active, notes, created_at
-             FROM drivers
-             WHERE deleted_at IS NULL
-             ORDER BY full_name'
+            'SELECT d.id, d.full_name, d.phone, d.license_number, d.hourly_rate, d.is_active, d.notes, d.created_at,
+                    (
+                        SELECT COALESCE(SUM(
+                            CAST(REPLACE(JSON_UNQUOTE(JSON_EXTRACT(t.stats_json, "$.durata")), " min", "") AS UNSIGNED)
+                        ), 0)
+                        FROM transports t
+                        WHERE t.driver_id = d.id
+                    ) AS total_minutes
+             FROM drivers d
+             WHERE d.deleted_at IS NULL
+             ORDER BY d.full_name'
         );
         return $stmt->fetchAll();
     }
@@ -379,6 +388,54 @@ class TransportRepository
         $stmt->execute([':id' => $id]);
     }
 
+    public function getDriverById(string $id): ?array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT d.*,
+                    (
+                        SELECT COALESCE(SUM(
+                            CAST(REPLACE(JSON_UNQUOTE(JSON_EXTRACT(t.stats_json, "$.durata")), " min", "") AS UNSIGNED)
+                        ), 0)
+                        FROM transports t
+                        WHERE t.driver_id = d.id
+                    ) AS total_minutes
+             FROM drivers d
+             WHERE d.id = :id AND d.deleted_at IS NULL LIMIT 1'
+        );
+        $stmt->execute([':id' => $id]);
+        return $stmt->fetch() ?: null;
+    }
+
+    public function updateDriver(array $data): void
+    {
+        $stmt = $this->db->prepare(
+            'UPDATE drivers 
+             SET full_name = :full_name,
+                 phone = :phone,
+                 license_number = :license_number,
+                 hourly_rate = :hourly_rate,
+                 notes = :notes
+             WHERE id = :id'
+        );
+        $stmt->execute($data);
+    }
+
+    public function listTransportsByDriver(string $driverId): array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT t.id, t.team_id, t.destination_name, t.destination_address,
+                    t.arrival_time, t.departure_time, t.transport_date,
+                    t.athletes_json, t.stats_json, t.created_at,
+                    tm.name AS team_name
+             FROM transports t
+             LEFT JOIN teams tm ON tm.id = t.team_id
+             WHERE t.driver_id = :driver_id
+             ORDER BY t.transport_date DESC, t.created_at DESC'
+        );
+        $stmt->execute([':driver_id' => $driverId]);
+        return $stmt->fetchAll();
+    }
+
     // ─── TEAMS LIST (for dropdowns) ──────────────────────────────────────────
 
     public function listTeams(): array
@@ -396,9 +453,9 @@ class TransportRepository
     public function listVehicles(): array
     {
         return $this->db->query(
-            'SELECT id, model, license_plate, seats, status
+            'SELECT id, name, license_plate, capacity, status
              FROM vehicles
-             ORDER BY model'
+             ORDER BY name'
         )->fetchAll();
     }
 

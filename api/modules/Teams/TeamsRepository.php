@@ -147,4 +147,44 @@ class TeamsRepository
         );
         $stmt->execute([':is_active' => $isActive ? 1 : 0, ':id' => $teamSeasonId]);
     }
+
+    public function getAttendances(string $teamId, string $month): array
+    {
+        // Sanitize teamId if passed with legacy prefix
+        if (str_starts_with($teamId, 'TEAM_')) {
+            $teamId = substr($teamId, 5);
+        }
+
+        // $month is expected as YYYY-MM
+        $stmt = $this->db->prepare(
+            "SELECT id, athlete_id, attendance_date, status 
+             FROM attendances 
+             WHERE team_id = :team_id 
+               AND attendance_date LIKE :month_pattern"
+        );
+        $stmt->execute([
+            ':team_id' => $teamId,
+            ':month_pattern' => $month . '-%'
+        ]);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function saveAttendance(array $data): void
+    {
+        // Use UPSERT (INSERT ... ON DUPLICATE KEY UPDATE)
+        $stmt = $this->db->prepare(
+            'INSERT INTO attendances (id, team_id, athlete_id, attendance_date, status)
+             VALUES (:id, :team_id, :athlete_id, :attendance_date, :status)
+             ON DUPLICATE KEY UPDATE status = :status_update, updated_at = NOW()'
+        );
+        // We reuse the ID if inserting, but if it exists, it keeps the old ID and just updates status
+        $stmt->execute([
+            ':id' => $data['id'],
+            ':team_id' => $data['team_id'],
+            ':athlete_id' => $data['athlete_id'],
+            ':attendance_date' => $data['attendance_date'],
+            ':status' => $data['status'],
+            ':status_update' => $data['status']
+        ]);
+    }
 }

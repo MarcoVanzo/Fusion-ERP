@@ -38,7 +38,7 @@ const SocietaView = {
     identity: (profile, companies, isAdmin) => {
         const contentHtml = `
             <div style="max-width:1100px;">
-                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: var(--sp-4); align-items: start;">
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: var(--sp-4); align-items: stretch;">
                     <div style="display:flex; flex-direction:column; gap:var(--sp-4)">
                         <div class="dash-card" style="padding:var(--sp-4);">
                             <p class="dash-card-title" style="margin-bottom:var(--sp-3)">Identità Visiva</p>
@@ -79,19 +79,19 @@ const SocietaView = {
                             </div>
                         </div>
                     </div>
-                    <div class="dash-card" style="padding:var(--sp-4);">
+                    <div class="dash-card" style="padding:var(--sp-4); display:flex; flex-direction:column; height:100%; box-sizing:border-box;">
                         <p class="dash-card-title" style="margin-bottom:var(--sp-3)">Mission &amp; Vision</p>
-                        <div class="form-group">
+                        <div class="form-group" style="display:flex; flex-direction:column; flex:1;">
                             <label class="form-label" for="soc-mission">Mission</label>
-                            <textarea id="soc-mission" class="form-input" rows="3" placeholder="La missione della nostra società..." style="resize:vertical">${Utils.escapeHtml(profile.mission || "")}</textarea>
+                            <textarea id="soc-mission" class="form-input" placeholder="La missione della nostra società..." style="resize:vertical; flex:1; min-height:80px;">${Utils.escapeHtml(profile.mission || "")}</textarea>
                         </div>
-                        <div class="form-group">
+                        <div class="form-group" style="display:flex; flex-direction:column; flex:1;">
                             <label class="form-label" for="soc-vision">Vision</label>
-                            <textarea id="soc-vision" class="form-input" rows="3" placeholder="La nostra visione per il futuro..." style="resize:vertical">${Utils.escapeHtml(profile.vision || "")}</textarea>
+                            <textarea id="soc-vision" class="form-input" placeholder="La nostra visione per il futuro..." style="resize:vertical; flex:1; min-height:80px;">${Utils.escapeHtml(profile.vision || "")}</textarea>
                         </div>
-                        <div class="form-group">
+                        <div class="form-group" style="display:flex; flex-direction:column; flex:1; margin-bottom:0;">
                             <label class="form-label" for="soc-values">Valori</label>
-                            <textarea id="soc-values" class="form-input" rows="2" placeholder="Rispetto, fairplay, crescita..." style="resize:vertical">${Utils.escapeHtml(profile.values || "")}</textarea>
+                            <textarea id="soc-values" class="form-input" placeholder="Rispetto, fairplay, crescita..." style="resize:vertical; flex:1; min-height:60px;">${Utils.escapeHtml(profile.values || "")}</textarea>
                         </div>
                     </div>
                 </div>

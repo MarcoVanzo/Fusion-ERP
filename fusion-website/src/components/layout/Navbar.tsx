@@ -95,14 +95,14 @@ const Navbar = () => {
                     )}
 
                     {/* Desktop Left Links */}
-                    <div className="hidden lg:flex items-center gap-6 ml-6">
+                    <div className="hidden lg:flex items-center gap-3 xl:gap-6 ml-4 xl:ml-8">
                         {splitLeftLinks.map(link => {
                             const isActive = location.pathname === link.path || (link.path !== '/' && location.pathname.startsWith(link.path));
                             return (
                                 <Link 
                                     key={link.name} 
                                     to={link.path} 
-                                    className={`text-sm font-semibold tracking-widest transition-colors uppercase relative group flex items-center ${isActive ? 'text-brand-500' : 'text-zinc-300 hover:text-white'}`}
+                                    className={`text-[10px] xl:text-[11px] 2xl:text-sm font-semibold tracking-wide xl:tracking-widest transition-colors uppercase relative group flex items-center ${isActive ? 'text-brand-500' : 'text-zinc-300 hover:text-white'}`}
                                 >
                                     {link.name}
                                     <span className={`absolute -bottom-2 left-0 h-[2px] bg-brand-500 transition-all duration-300 ${isActive ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
@@ -112,22 +112,25 @@ const Navbar = () => {
                     </div>
                 </div>
 
-                {/* Center Logo - Static on layout with absolute center fallback for mobile precision */}
-                <div className="flex-none lg:static absolute left-1/2 -translate-x-1/2 flex justify-center z-[70]">
-                    <Link to="/" className="flex-shrink-0 relative group flex items-center justify-center -mt-2">
+                {/* Center layout spacer: prevents left and right content from colliding in the middle */}
+                <div className="flex-none w-[64px] md:w-[84px] h-full opacity-0 pointer-events-none hidden lg:block"></div>
+
+                {/* Center Logo - Absolute center for perfect precision */}
+                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex justify-center z-[70] pointer-events-none">
+                    <Link to="/" className="flex-shrink-0 relative group flex items-center justify-center pointer-events-auto">
                         <div className="absolute inset-0 bg-brand-500/20 blur-xl rounded-full scale-150 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                         <img 
                             src="/assets/logo-colorato.png" 
                             alt="Logo" 
-                            className={`w-[44px] h-[44px] sm:w-[56px] sm:h-[56px] md:w-[72px] md:h-[72px] object-contain drop-shadow-2xl relative z-10 transition-transform duration-300 ${isScrolled ? 'scale-90 group-hover:scale-100' : 'scale-100 group-hover:scale-105'}`} 
+                            className={`w-[56px] h-[56px] sm:w-[64px] sm:h-[64px] md:w-[84px] md:h-[84px] object-contain drop-shadow-2xl relative z-10 transition-transform duration-300 ${isScrolled ? 'scale-90 group-hover:scale-100' : 'scale-100 group-hover:scale-105'}`} 
                         />
                     </Link>
                 </div>
 
                 {/* Right Section: Links (Desktop) & Actions (Mobile) */}
-                <div className="flex-1 flex items-center justify-end z-[60] h-full gap-2 sm:gap-4 lg:pl-10">
+                <div className="flex-1 flex items-center justify-end z-[60] h-full gap-2 sm:gap-4">
                     {/* Desktop Right Links */}
-                    <div className="hidden lg:flex items-center gap-6">
+                    <div className="hidden lg:flex items-center gap-3 xl:gap-6">
                         {splitRightLinks.map(link => {
                             const isActive = location.pathname === link.path || (link.path !== '/' && location.pathname.startsWith(link.path));
                             const linkName = link.name === 'ENTRA NELLA NOSTRA FAMIGLIA' ? 'CANDIDATI' : link.name;
@@ -137,13 +140,13 @@ const Navbar = () => {
                                     to={link.path} 
                                     className={
                                         link.isHighlight 
-                                        ? "relative group flex items-center justify-center px-4 py-2 transition-all duration-300 transform hover:scale-105" 
-                                        : `text-sm font-semibold tracking-widest transition-colors uppercase relative group flex items-center ${isActive ? 'text-brand-500' : 'text-zinc-300 hover:text-white'}`
+                                        ? "relative group flex items-center justify-center px-2 xl:px-4 py-2 transition-all duration-300 transform hover:scale-105" 
+                                        : `text-[10px] xl:text-[11px] 2xl:text-sm font-semibold tracking-wide xl:tracking-widest transition-colors uppercase relative group flex items-center ${isActive ? 'text-brand-500' : 'text-zinc-300 hover:text-white'}`
                                     }
                                 >
                                     {link.isHighlight ? (
                                         <span 
-                                            className="relative z-10 text-[28px] md:text-[32px] text-brand-500 hover:text-brand-400 drop-shadow-[0_0_12px_rgba(217,70,239,0.3)] group-hover:drop-shadow-[0_0_20px_rgba(217,70,239,0.6)] transition-all duration-300 rotate-[15deg] animate-neon-pulse" 
+                                            className="relative z-10 text-[18px] xl:text-[24px] 2xl:text-[28px] text-brand-500 hover:text-brand-400 drop-shadow-[0_0_12px_rgba(217,70,239,0.3)] group-hover:drop-shadow-[0_0_20px_rgba(217,70,239,0.6)] transition-all duration-300 rotate-[10deg] animate-neon-pulse" 
                                             style={{ fontFamily: "'Rubik Dirt', system-ui", lineHeight: 1 }}
                                         >
                                             {linkName}

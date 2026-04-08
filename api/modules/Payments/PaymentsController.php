@@ -85,6 +85,53 @@ class PaymentsController
         ], 201);
     }
 
+    // ─── POST ?module=payments&action=addCustomInstallment ───────────────────
+
+    public function addCustomInstallment(): void
+    {
+        Auth::requireWrite('payments');
+        $user = Auth::user();
+        $body = Response::jsonBody();
+        Response::requireFields($body, ['athlete_id', 'title', 'amount', 'due_date']);
+        
+        $plan = $this->repo->getActivePlan($body['athlete_id']);
+        if (!$plan) {
+            $planId = 'PP_' . bin2hex(random_bytes(4));
+            $this->repo->createPlan([
+                ':id' => $planId,
+                ':tenant_id' => TenantContext::id(),
+                ':athlete_id' => $body['athlete_id'],
+                ':total_amount' => 0,
+                ':frequency' => 'CUSTOM',
+                ':start_date' => date('Y-m-d'),
+                ':season' => null,
+                ':status' => 'active',
+                ':notes' => 'Piano generato automaticamente per quote',
+                ':created_by' => $user['id'] ?? null,
+            ]);
+        } else {
+            $planId = $plan['id'];
+        }
+
+        $instId = 'INST_' . bin2hex(random_bytes(4));
+        $this->repo->insertInstallment([
+            ':id' => $instId,
+            ':plan_id' => $planId,
+            ':title' => $body['title'],
+            ':due_date' => $body['due_date'],
+            ':amount' => (float)$body['amount'],
+            ':status' => 'PENDING',
+        ]);
+
+        Audit::log('INSERT', 'installments', $instId, null, [
+            'plan_id' => $planId,
+            'title' => $body['title'],
+            'amount' => (float)$body['amount']
+        ]);
+
+        Response::success(['message' => 'Quota aggiunta con successo', 'installment_id' => $instId]);
+    }
+
     // ─── GET ?module=payments&action=getPlan&id=ATH_xxx ──────────────────────
 
     /**
@@ -187,7 +234,17 @@ class PaymentsController
             'paid_date' => $paidDate,
         ]);
 
-        Response::success(['message' => 'Rata pagata', 'transaction_id' => $txId]);
+        // Auto-generate receipt 
+        $receiptPath = $this->createAndSaveReceipt($body['installment_id']);
+
+        // Simulate sending generic notification
+        error_log("[Payments] Ricevuta fiscale generata e pronta per invio: " . $receiptPath);
+
+        Response::success([
+            'message' => 'Rata pagata e ricevuta generata', 
+            'transaction_id' => $txId,
+            'receipt_path' => $receiptPath
+        ]);
     }
 
     // ─── POST ?module=payments&action=generateReceipt ────────────────────────
@@ -210,14 +267,25 @@ class PaymentsController
             Response::error('Ricevuta disponibile solo per rate pagate', 400);
         }
 
-        // Get athlete info for receipt
+        $relPath = $this->createAndSaveReceipt($body['installment_id']);
+
+        Response::success(['receipt_path' => $relPath, 'message' => 'Ricevuta ri-generata con successo']);
+    }
+
+    /**
+     * Helper to create and save the PDF receipt
+     */
+    private function createAndSaveReceipt(string $installmentId): string
+    {
+        $installment = $this->repo->getInstallmentById($installmentId);
+        if (!$installment) return '';
+
         $db = \FusionERP\Shared\Database::getInstance();
         $stmt = $db->prepare('SELECT full_name, fiscal_code, email FROM athletes WHERE id = :id LIMIT 1');
         $stmt->execute([':id' => $installment['athlete_id']]);
         $athlete = $stmt->fetch(\PDO::FETCH_ASSOC);
 
-        // Generate PDF
-        $html = $this->buildReceiptHtml($installment, $athlete);
+        $html = $this->buildReceiptHtml($installment, $athlete ?: []);
 
         $mpdf = new \Mpdf\Mpdf([
             'margin_left' => 15,
@@ -228,21 +296,19 @@ class PaymentsController
         ]);
         $mpdf->WriteHTML($html);
 
-        // Save to disk
         $receiptDir = dirname(__DIR__, 3) . '/uploads/receipts/' . $installment['athlete_id'];
         if (!is_dir($receiptDir)) {
             mkdir($receiptDir, 0755, true);
         }
-        $filename = 'ricevuta_' . $body['installment_id'] . '_' . date('Ymd') . '.pdf';
+        $filename = 'ricevuta_' . $installmentId . '_' . date('Ymd_His') . '.pdf';
         $filepath = $receiptDir . '/' . $filename;
         $mpdf->Output($filepath, \Mpdf\Output\Destination::FILE);
 
-        // Update installment receipt_path
         $relPath = 'uploads/receipts/' . $installment['athlete_id'] . '/' . $filename;
         $stmt = $db->prepare('UPDATE installments SET receipt_path = :path WHERE id = :id');
-        $stmt->execute([':path' => $relPath, ':id' => $body['installment_id']]);
+        $stmt->execute([':path' => $relPath, ':id' => $installmentId]);
 
-        Response::success(['receipt_path' => $relPath, 'filename' => $filename]);
+        return $relPath;
     }
 
     // ─── GET ?module=payments&action=dashboard ───────────────────────────────
@@ -324,10 +390,12 @@ class PaymentsController
 
             $instId = 'INST_' . bin2hex(random_bytes(4));
             $dueDate = $date->format('Y-m-d');
+            $title = "Rata " . ($i + 1);
 
             $this->repo->insertInstallment([
                 ':id' => $instId,
                 ':plan_id' => $planId,
+                ':title' => $title,
                 ':due_date' => $dueDate,
                 ':amount' => $amount,
                 ':status' => 'PENDING',
@@ -335,6 +403,7 @@ class PaymentsController
 
             $result[] = [
                 'id' => $instId,
+                'title' => $title,
                 'due_date' => $dueDate,
                 'amount' => $amount,
                 'status' => 'PENDING',
@@ -379,13 +448,14 @@ body { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 12px; color:
 <body>
 <div class="header">
     <h1>RICEVUTA DI PAGAMENTO</h1>
-    <p>Documento non fiscale — Uso interno</p>
+    <p>Ricevuta Fiscale per Erogazione Sportiva o Quota Associativa</p>
 </div>
 <div class="details">
     <table>
         <tr><td>Atleta</td><td>{$athleteName}</td></tr>
         <tr><td>Codice Fiscale</td><td>{$fiscalCode}</td></tr>
-        <tr><td>Rif. Rata</td><td>{$instId}</td></tr>
+        <tr><td>Quota/Rata</td><td>{$installment['title']}</td></tr>
+        <tr><td>Rif. Pagamento</td><td>{$instId}</td></tr>
         <tr><td>Data Pagamento</td><td>{$paidDate}</td></tr>
         <tr><td>Metodo</td><td>{$method}</td></tr>
     </table>
@@ -393,9 +463,12 @@ body { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 12px; color:
 <div class="amount">
     <div style="font-size: 14px; color: #666; margin-bottom: 8px;">Importo pagato</div>
     <div class="value">€ {$amount}</div>
+    <div style="font-size: 11px; color: #666; margin-top: 5px;">
+    Quota istituzionale esente IVA art. 4 DPR 633/72.
+    </div>
 </div>
 <div class="footer">
-    <p>Generato automaticamente da Fusion ERP — {$paidDate}</p>
+    <p>Generata automaticamente da Fusion ERP — {$paidDate}</p>
 </div>
 </body>
 </html>

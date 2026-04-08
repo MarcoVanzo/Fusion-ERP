@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<style>
+  body { background: #000; color: white; margin: 0; padding: 20px; display: flex; gap: 40px; }
+  .view { width: 300px; height: 720px; background: #111; position: relative; border: 1px solid #333;}
+  svg {
+      width: 100%;
+      height: 100%;
+      mix-blend-mode: screen;
+  }
+  .muscle-region {
+      transition: all 0.3s ease;
+  }
+</style>
+</head>
+<body>
+
+<div class="view">
+  <svg viewBox="0 0 100 240">
+      <!-- Front Musculature Highlights -->
+      <path d="M 47,110 Q 40,110 38,130 Q 36,155 38,175 Q 43,173 45,150 Q 46,130 47,110 Z" fill="#FFD600" fill-opacity="0.5" stroke="#FFD600" stroke-width="1" stroke-opacity="0.9" /> <!-- quads_l -->
+      <path d="M 53,110 Q 60,110 62,130 Q 64,155 62,175 Q 57,173 55,150 Q 54,130 53,110 Z" fill="#00E676" fill-opacity="0.5" stroke="#00E676" stroke-width="1" stroke-opacity="0.9" /> <!-- quads_r -->
+      
+      <path d="M 44,65 L 56,65 L 55,83 L 53,98 L 50,102 L 47,98 L 45,83 Z" fill="#FFD600" fill-opacity="0.5" stroke="#FFD600" stroke-width="1" stroke-opacity="0.9" /> <!-- core -->
+      
+      <path d="M 42,88 Q 33,95 34,110 Q 38,105 40,92 Z" fill="#FFD600" fill-opacity="0.5" stroke="#FFD600" stroke-width="1" stroke-opacity="0.9" /> <!-- hips_l -->
+      <path d="M 58,88 Q 67,95 66,110 Q 62,105 60,92 Z" fill="#00E676" fill-opacity="0.5" stroke="#00E676" stroke-width="1" stroke-opacity="0.9" /> <!-- hips_r -->
+  </svg>
+</div>
+
+<div class="view">
+  <svg viewBox="0 0 100 240">
+      <!-- Back Musculature Highlights -->
+      <path d="M 49,95 C 40,95 34,105 34,115 C 38,122 45,118 49,115 Z" fill="#FFD600" fill-opacity="0.5" stroke="#FFD600" stroke-width="1" stroke-opacity="0.9" /> <!-- glutes_l -->
+      <path d="M 51,95 C 60,95 66,105 66,115 C 62,122 55,118 51,115 Z" fill="#00E676" fill-opacity="0.5" stroke="#00E676" stroke-width="1" stroke-opacity="0.9" /> <!-- glutes_r -->
+      
+      <path d="M 48,118 Q 38,122 36,145 Q 36,165 38,175 Q 43,170 45,150 Q 46,135 48,118 Z" fill="#FFD600" fill-opacity="0.5" stroke="#FFD600" stroke-width="1" stroke-opacity="0.9" /> <!-- hams_l -->
+      <path d="M 52,118 Q 62,122 64,145 Q 64,165 62,175 Q 57,170 55,150 Q 54,135 52,118 Z" fill="#00E676" fill-opacity="0.5" stroke="#00E676" stroke-width="1" stroke-opacity="0.9" /> <!-- hams_r -->
+  </svg>
+</div>
+
+</body>
+</html>

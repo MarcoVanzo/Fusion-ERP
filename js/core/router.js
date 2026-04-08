@@ -36,9 +36,12 @@ const Router = (() => {
         { path: 'athlete-payments',     file: 'js/modules/athletes.js',            permission: 'read', module: 'Athletes', type: 'module' },
         { path: 'athlete-metrics',      file: 'js/modules/athletes.js',            permission: 'read', module: 'Athletes', type: 'module' },
         { path: 'athlete-documents',    file: 'js/modules/athletes.js',            permission: 'read', module: 'Athletes', type: 'module' },
+        { path: 'athlete-injuries',     file: 'js/modules/athletes.js',            permission: 'read', module: 'Athletes', type: 'module' },
+        { path: 'athlete-attendances',  file: 'js/modules/athletes.js',            permission: 'read', module: 'Athletes', type: 'module' },
         // Transport & Vehicles
         { path: 'transport',            file: 'js/modules/transport.js',           permission: 'read', module: 'Transport', type: 'module' },
         { path: 'transport-drivers',    file: 'js/modules/transport.js',           permission: 'read', module: 'Transport', type: 'module' },
+        { path: 'transport-refunds',    file: 'js/modules/transport.js',           permission: 'read', module: 'Transport', type: 'module' },
         { path: 'transport-fleet',      file: 'js/modules/vehicles/Vehicles.js',            permission: 'read', module: 'Vehicles', type: 'module' },
         // Admin
         { path: 'admin',                file: 'js/modules/admin/AdminDashboard.js', permission: 'read', module: 'AdminDashboard'   },
@@ -101,6 +104,7 @@ const Router = (() => {
         // Squadre & Scouting
         { path: 'squadre',              file: 'js/modules/squadre.js',             permission: 'read', module: 'Squadre', type: 'module' },
         { path: 'squadre-stagioni',     file: 'js/modules/squadre.js',             permission: 'read', module: 'Squadre', type: 'module' },
+        { path: 'squadre-presenze',     file: 'js/modules/squadre.js',             permission: 'read', module: 'Squadre', type: 'module' },
 
         { path: 'scouting-database',    file: 'js/modules/scouting/Scouting.js',            permission: 'read', module: 'Scouting', type: 'module' },
     ];
@@ -160,7 +164,7 @@ const Router = (() => {
             if (r.startsWith('newsletter'))   return 'newsletter';
             if (r.startsWith('societa'))      return 'societa';
             if (r.startsWith('network'))      return 'network';
-            if (r === 'squadre' || r === 'squadre-stagioni') return 'teams';
+            if (r === 'squadre' || r === 'squadre-stagioni' || r === 'squadre-presenze') return 'teams';
             return r;
         };
 

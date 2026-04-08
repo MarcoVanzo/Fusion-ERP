@@ -43,6 +43,8 @@ const Transport = {
             
             if (currentRoute === "transport-drivers") {
                 await this.renderDrivers();
+            } else if (currentRoute === "transport-refunds") {
+                await this.renderRefunds();
             } else if (currentRoute === "transport-history") {
                 await this.renderDashboard(true); // show history
             } else {
@@ -86,9 +88,22 @@ const Transport = {
     attachDriversEvents: function(isAdmin) {
         document.getElementById("drv-back")?.addEventListener("click", () => this.renderDashboard(), { signal: this.abortController.signal });
         
+        // Detail / History listeners (also for non-admins)
+        Utils.qsa("[data-driver-detail]").forEach(btn => {
+            btn.addEventListener("click", () => {
+                this.renderDriverDetail(btn.dataset.driverDetail);
+            }, { signal: this.abortController.signal });
+        });
+
         if (isAdmin) {
             document.getElementById("drv-add-btn")?.addEventListener("click", () => this.showDriverModal(), { signal: this.abortController.signal });
             
+            Utils.qsa("[data-driver-edit]").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    this.showEditDriverModal(btn.dataset.driverEdit);
+                }, { signal: this.abortController.signal });
+            });
+
             Utils.qsa("[data-driver-toggle]").forEach(btn => {
                 btn.addEventListener("click", async () => {
                     const id = btn.dataset.driverToggle;
@@ -117,6 +132,100 @@ const Transport = {
                     });
                 }, { signal: this.abortController.signal });
             });
+        }
+    },
+
+    renderDriverDetail: async function(driverId) {
+        const app = document.getElementById("app");
+        app.innerHTML = UI.skeletonPage();
+        try {
+            const { driver, transports } = await TransportAPI.getDriverDetail(driverId);
+            app.innerHTML = TransportView.renderDriverDetail(driver, transports);
+            
+            document.getElementById("drv-detail-back")?.addEventListener("click", () => this.renderDrivers(), { signal: this.abortController.signal });
+        } catch (error) {
+            UI.toast("Errore caricamento dettaglio: " + error.message, "error");
+            this.renderDrivers();
+        }
+    },
+
+    showEditDriverModal: async function(driverId) {
+        UI.loading(true);
+        try {
+            const { driver } = await TransportAPI.getDriverDetail(driverId);
+            UI.loading(false);
+            
+            const modal = UI.modal({
+                title: "Modifica Autista",
+                body: `
+                    <div class="form-group">
+                        <label class="form-label" for="drv-name">Nome completo *</label>
+                        <input id="drv-name" class="form-input" type="text" value="${Utils.escapeHtml(driver.full_name)}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="drv-phone">Telefono</label>
+                        <input id="drv-phone" class="form-input" type="tel" value="${Utils.escapeHtml(driver.phone || "")}" placeholder="+39 340 1234567">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="drv-license">Numero Patente</label>
+                        <input id="drv-license" class="form-input" type="text" value="${Utils.escapeHtml(driver.license_number || "")}" placeholder="AB1234567">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="drv-rate">Tariffa oraria (€/h)</label>
+                        <input id="drv-rate" class="form-input" type="number" min="0" step="0.5" value="${driver.hourly_rate || ""}" placeholder="15.00">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="drv-notes">Note</label>
+                        <textarea id="drv-notes" class="form-textarea" placeholder="Disponibilità, preferenze..." style="min-height:60px;">${Utils.escapeHtml(driver.notes || "")}</textarea>
+                    </div>
+                    <div id="drv-error" class="form-error hidden"></div>
+                `,
+                footer: `
+                    <button class="btn btn-ghost btn-sm" id="drv-cancel" type="button">Annulla</button>
+                    <button class="btn btn-primary btn-sm" id="drv-save" type="button">SALVA MODIFICHE</button>
+                `
+            });
+
+            document.getElementById("drv-cancel")?.addEventListener("click", () => modal.close(), { signal: this.abortController.signal });
+            
+            document.getElementById("drv-save")?.addEventListener("click", async () => {
+                const name = document.getElementById("drv-name").value.trim();
+                const errEl = document.getElementById("drv-error");
+                
+                if (!name) {
+                    errEl.textContent = "Il nome è obbligatorio";
+                    errEl.classList.remove("hidden");
+                    return;
+                }
+                
+                const btn = document.getElementById("drv-save");
+                btn.disabled = true;
+                btn.textContent = "Salvataggio...";
+                
+                try {
+                    await TransportAPI.updateDriver({
+                        id: driverId,
+                        full_name: name,
+                        phone: document.getElementById("drv-phone").value.trim() || null,
+                        license_number: document.getElementById("drv-license").value.trim() || null,
+                        hourly_rate: parseFloat(document.getElementById("drv-rate").value) || null,
+                        notes: document.getElementById("drv-notes").value.trim() || null
+                    });
+                    
+                    UI.toast("Dati aggiornati!", "success");
+                    await this.renderDrivers();
+                    modal.close();
+                } catch (err) {
+                    errEl.textContent = err.message;
+                    errEl.classList.remove("hidden");
+                    btn.disabled = false;
+                    btn.textContent = "SALVA MODIFICHE";
+                }
+            }, { signal: this.abortController.signal });
+
+        } catch (err) {
+            UI.loading(false);
+            UI.toast("Errore nel recupero dati autista", "error");
         }
     },
 
@@ -634,19 +743,79 @@ const Transport = {
         }
     },
 
-    showNewEventModal: function() {
-        UI.toast("Funzionalità 'Nuovo Evento' in fase di implementazione", "info");
+    /**
+     * Renders the Refunds dashboard
+     */
+    renderRefunds: async function() {
+        const app = document.getElementById("app");
+        const reimbursements = this.aggregateRefunds();
+        
+        app.innerHTML = TransportView.refundsDashboard(reimbursements);
+        
+        // Add back button listener
+        document.getElementById("ref-back")?.addEventListener("click", () => {
+            Router.navigate("transport");
+        });
+
+        // Add search listener
+        const searchInput = document.getElementById("ref-search");
+        if (searchInput) {
+            searchInput.addEventListener("input", (e) => {
+                const term = e.target.value.toLowerCase();
+                const filtered = reimbursements.filter(r => 
+                    r.athleteName.toLowerCase().includes(term) || 
+                    r.teamName.toLowerCase().includes(term)
+                );
+                const list = document.getElementById("ref-list-body");
+                if (list) {
+                    list.innerHTML = filtered.length > 0 ? 
+                        filtered.map(r => TransportView.renderRefundRow(r)).join("") : 
+                        `<tr><td colspan="4" style="text-align:center; padding:40px; color:rgba(255,255,255,0.3);">Nessun risultato trovato</td></tr>`;
+                }
+            });
+        }
     },
 
-    showOfferRouteModal: function() {
-        UI.toast("Funzionalità 'Offri Passaggio' in fase di implementazione", "info");
-    },
-    
-    applyAiSuggestions: function(result, previewData, overlay) {
-        // Implementation for applying AI diffs to the wizard state
-        UI.toast("Suggerimenti AI applicati", "success");
-        overlay.classList.remove("visible");
-        setTimeout(() => overlay.remove(), 300);
+    /**
+     * Groups all transports by athlete to calculate totals
+     */
+    aggregateRefunds: function() {
+        const map = new Map();
+        
+        this.transports.forEach(tr => {
+            let athletes = [];
+            try {
+                athletes = typeof tr.athletes_json === 'string' ? JSON.parse(tr.athletes_json) : (tr.athletes_json || []);
+            } catch (e) { console.error("Error parsing athletes_json", e); }
+            
+            athletes.forEach(a => {
+                const id = a.id || a.athlete_id;
+                if (!id) return;
+                
+                if (!map.has(id)) {
+                    map.set(id, {
+                        athleteId: id,
+                        athleteName: a.name || a.full_name || "Atleta sconosciuto",
+                        teamName: tr.team_name || "—",
+                        tripCount: 0,
+                        totalAmount: 0,
+                        lastDestination: tr.destination_name,
+                        lastDate: tr.transport_date
+                    });
+                }
+                
+                const entry = map.get(id);
+                entry.tripCount++;
+                entry.totalAmount += 2.50;
+                // Update last trip if this one is more recent
+                if (!entry.lastDate || tr.transport_date > entry.lastDate) {
+                    entry.lastDate = tr.transport_date;
+                    entry.lastDestination = tr.destination_name;
+                }
+            });
+        });
+        
+        return Array.from(map.values()).sort((a, b) => b.totalAmount - a.totalAmount);
     }
 };
 

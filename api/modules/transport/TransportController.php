@@ -231,6 +231,8 @@ class TransportController
             ':stats_json' => isset($body['stats_json']) ? json_encode($body['stats_json']) : null,
             ':ai_response' => isset($body['ai_response']) ? json_encode($body['ai_response']) : null,
             ':created_by' => $user['id'],
+            ':driver_id' => $body['driver_id'] ?? null,
+            ':vehicle_id' => $body['vehicle_id'] ?? null,
         ]);
 
         \FusionERP\Shared\Audit::log('INSERT', 'transports', $id, null, ['destination' => $body['destination_name']]);
@@ -308,6 +310,45 @@ class TransportController
         $this->repo->setDriverActive($id, $active);
         \FusionERP\Shared\Audit::log('UPDATE', 'drivers', $id, null, ['is_active' => $active]);
         Response::success(['message' => 'Stato aggiornato']);
+    }
+
+    public function getDriverDetail(): void
+    {
+        Auth::requireRead('transport');
+        $id = filter_input(INPUT_GET, 'id', FILTER_DEFAULT);
+        if (!$id) {
+            Response::error('id obbligatorio', 400);
+        }
+
+        $driver = $this->repo->getDriverById($id);
+        if (!$driver) {
+            Response::error('Autista non trovato', 404);
+        }
+
+        $transports = $this->repo->listTransportsByDriver($id);
+        Response::success([
+            'driver' => $driver,
+            'transports' => $transports
+        ]);
+    }
+
+    public function updateDriver(): void
+    {
+        $user = Auth::requireWrite('transport');
+        $body = Response::jsonBody();
+        Response::requireFields($body, ['id', 'full_name']);
+
+        $this->repo->updateDriver([
+            ':id' => $body['id'],
+            ':full_name' => htmlspecialchars(trim($body['full_name']), ENT_QUOTES, 'UTF-8'),
+            ':phone' => $body['phone'] ?? null,
+            ':license_number' => $body['license_number'] ?? null,
+            ':hourly_rate' => isset($body['hourly_rate']) ? (float)$body['hourly_rate'] : null,
+            ':notes' => $body['notes'] ?? null
+        ]);
+
+        \FusionERP\Shared\Audit::log('UPDATE', 'drivers', $body['id'], null, $body);
+        Response::success(['message' => 'Dati aggiornati']);
     }
 
     // ─── AI ANALYSIS ─────────────────────────────────────────────────────────

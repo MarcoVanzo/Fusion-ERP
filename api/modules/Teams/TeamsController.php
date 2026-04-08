@@ -103,4 +103,18 @@ class TeamsController
         Auth::requireWrite('societa');
         $this->handleServiceCall('deleteTeam', ['id']);
     }
+
+    // ─── POST /api/?module=teams&action=getAttendances ────────────────────────
+    public function getAttendances(): void
+    {
+        Auth::requireRead('societa');
+        $this->handleServiceCall('getAttendances');
+    }
+
+    // ─── POST /api/?module=teams&action=saveAttendance ────────────────────────
+    public function saveAttendance(): void
+    {
+        Auth::requireWrite('societa');
+        $this->handleServiceCall('saveAttendance', ['team_id', 'athlete_id', 'attendance_date', 'status']);
+    }
 }

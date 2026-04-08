@@ -102,13 +102,17 @@ class MigrationRunner
             throw new Exception("Could not read migration file: {$filename}");
         }
 
-        // We use a transaction if possible, but some DDL (CREATE/ALTER) 
-        // in MySQL commit automatically anyway.
+        // PDO::exec() does NOT support DELIMITER — we must parse it manually.
+        // Strategy: split the SQL into blocks by DELIMITER markers and execute
+        // each block with the correct statement terminator.
         try {
             $this->db->beginTransaction();
-            
-            // Execute the script
-            $this->db->exec($sql);
+
+            if (stripos($sql, 'DELIMITER') !== false) {
+                $this->executeWithDelimiter($sql);
+            } else {
+                $this->db->exec($sql);
+            }
 
             // Record success
             $stmt = $this->db->prepare("INSERT INTO `{$this->tableName}` (filename) VALUES (?)");
@@ -123,5 +127,85 @@ class MigrationRunner
             }
             throw new Exception("Error executing migration {$filename}: " . $e->getMessage());
         }
+    }
+
+    /**
+     * Parse and execute SQL that contains DELIMITER directives.
+     * Splits the file into blocks using DELIMITER markers and executes each separately.
+     */
+    private function executeWithDelimiter(string $sql): void
+    {
+        $delimiter = ';';
+        $lines = explode("\n", $sql);
+        $buffer = '';
+
+        foreach ($lines as $line) {
+            $trimmed = trim($line);
+
+            // Handle DELIMITER change (e.g., "DELIMITER //" or "DELIMITER ;")
+            if (preg_match('/^DELIMITER\s+(\S+)\s*$/i', $trimmed, $m)) {
+                // Execute anything accumulated in buffer before delimiter change
+                $pending = trim($buffer);
+                if (!empty($pending)) {
+                    $cleaned = $this->stripLeadingComments($pending);
+                    if (!empty($cleaned)) {
+                        $this->db->exec($cleaned);
+                    }
+                }
+                $buffer = '';
+                $delimiter = $m[1];
+                continue;
+            }
+
+            $buffer .= $line . "\n";
+
+            // Check if the buffer ends with the current delimiter
+            if (str_ends_with(rtrim($buffer), $delimiter)) {
+                // Remove the trailing delimiter
+                $stmt = rtrim($buffer);
+                $stmt = substr($stmt, 0, -strlen($delimiter));
+                $stmt = trim($stmt);
+
+                if (!empty($stmt)) {
+                    $cleaned = $this->stripLeadingComments($stmt);
+                    if (!empty($cleaned)) {
+                        $this->db->exec($cleaned);
+                    }
+                }
+                $buffer = '';
+            }
+        }
+
+        // Execute anything remaining in the buffer
+        $remaining = trim($buffer);
+        if (!empty($remaining)) {
+            $cleaned = $this->stripLeadingComments($remaining);
+            $cleaned = rtrim($cleaned, "; \n\r\t");
+            if (!empty($cleaned)) {
+                $this->db->exec($cleaned);
+            }
+        }
+    }
+
+    /**
+     * Strip leading SQL comment lines from a statement block.
+     * Returns the remaining non-comment SQL, or empty string if all comments.
+     */
+    private function stripLeadingComments(string $sql): string
+    {
+        $lines = explode("\n", $sql);
+        $result = [];
+        $foundCode = false;
+
+        foreach ($lines as $line) {
+            $t = trim($line);
+            if (!$foundCode && (str_starts_with($t, '--') || $t === '')) {
+                continue; // skip leading comments and blank lines
+            }
+            $foundCode = true;
+            $result[] = $line;
+        }
+
+        return trim(implode("\n", $result));
     }
 }

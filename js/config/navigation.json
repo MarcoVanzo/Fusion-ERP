@@ -13,9 +13,11 @@
         ],
         "children": [
             { "title": "Squadre", "path": "squadre", "icon": "users-four", "isMobileVisible": false, "roles": ["allenatore", "manager", "admin"] },
+            { "title": "Presenze", "path": "squadre-presenze", "icon": "calendar-check", "isMobileVisible": false, "roles": ["allenatore", "manager", "admin"] },
             { "title": "Anagrafica Atleti", "path": "athlete-profile", "icon": "users", "isMobileVisible": false, "roles": ["atleta", "allenatore", "manager", "admin"] },
             { "title": "Documenti Atleti", "path": "athlete-documents", "icon": "file-text", "isMobileVisible": false, "roles": ["atleta", "allenatore", "manager", "admin"] },
             { "title": "Metrics Atleti", "path": "athlete-metrics", "icon": "trend-up", "isMobileVisible": false, "roles": ["atleta", "allenatore", "manager", "admin"] },
+            { "title": "Infortuni Atleti", "path": "athlete-injuries", "icon": "first-aid", "isMobileVisible": false, "roles": ["medico", "allenatore", "manager", "admin"] },
             { "title": "Elenco Staff", "path": "staff", "icon": "identification-badge", "isMobileVisible": false, "roles": ["allenatore", "manager", "admin"] },
             { "title": "Documenti Staff", "path": "staff-documents", "icon": "file-text", "isMobileVisible": false, "roles": ["allenatore", "manager", "admin"] },
             { "title": "Risultati", "path": "results-matches", "icon": "volleyball", "isMobileVisible": false, "roles": ["allenatore", "manager", "admin"] },

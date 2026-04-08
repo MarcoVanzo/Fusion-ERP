@@ -219,7 +219,7 @@ class AthletesService
                     <div style=\"padding: 30px;\">
                         <p>Ciao <strong>{$athlete['full_name']}</strong>,</p>
                         <p>Il tuo account per il portale atleti è stato attivato.</p>
-                        <p>Puoi accedere per visualizzare i tuoi dati, pagamenti e metriche di performance.</p>
+                        <p>Puoi accedere per visualizzare i tuoi dati, le quote e le metriche di performance.</p>
                         <div style=\"background-color: #f9f9f9; padding: 15px; border-left: 4px solid #e5005c;\">
                             <p><strong>Email:</strong> {$email}</p>
                             <p><strong>Password Temporanea:</strong> {$tempPassword}</p>

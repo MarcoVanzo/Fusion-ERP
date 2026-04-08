@@ -18,6 +18,8 @@ export const AthletesAPI = {
     getAiSummary: async (id) => await Store.get("aiSummary", "athletes", { id }),
 
     getActivityLog: async (id) => await Store.get("activityLog", "athletes", { id }),
+    
+    getTransportHistory: async (id) => await Store.get("getTransportHistory", "athletes", { id }),
 
     // --- Scrittura ---
     create: async (data) => await Store.api("create", "athletes", data),
@@ -31,8 +33,6 @@ export const AthletesAPI = {
     logMetric: async (data) => await Store.api("logMetric", "athletes", data),
 
     generateAIReport: async (athleteId) => await Store.api("aiReport", "athletes", { athlete_id: athleteId }),
-    
-    generateUser: async (id) => await Store.api("generateUser", "athletes", { id }),
 
     // --- Upload File ---
     uploadPhoto: async (id, file) => {

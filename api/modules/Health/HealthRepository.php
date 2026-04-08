@@ -40,7 +40,7 @@ class HealthRepository
 
     /**
      * Get certificate status for an athlete.
-     * @return array { cert_type, expires_at, issued_at, file_path, valid, days_until_expiry, alert }
+     * @return array
      */
     public function getCertificateStatus(string $athleteId): array
     {
@@ -115,6 +115,40 @@ class HealthRepository
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
+    // ─── ANAMNESI (MEDICAL & ORTHOPEDIC HISTORY) ─────────────────────────────
+
+    public function getAnamnesi(string $athleteId): array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT blood_group, allergies, medications, chronic_diseases,
+                    past_surgeries, past_injuries, chronic_orthopedic_issues, orthopedic_aids
+             FROM athletes
+             WHERE id = :id AND deleted_at IS NULL
+             LIMIT 1'
+        );
+        $stmt->execute([':id' => $athleteId]);
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+        return $row ?: [];
+    }
+
+    public function updateAnamnesi(string $athleteId, array $data): void
+    {
+        $stmt = $this->db->prepare(
+            'UPDATE athletes
+             SET blood_group = :blood_group,
+                 allergies = :allergies,
+                 medications = :medications,
+                 chronic_diseases = :chronic_diseases,
+                 past_surgeries = :past_surgeries,
+                 past_injuries = :past_injuries,
+                 chronic_orthopedic_issues = :chronic_orthopedic_issues,
+                 orthopedic_aids = :orthopedic_aids
+             WHERE id = :id AND deleted_at IS NULL'
+        );
+        $data[':id'] = $athleteId;
+        $stmt->execute($data);
+    }
+
     // ─── INJURIES ────────────────────────────────────────────────────────────
 
     /**
@@ -123,8 +157,16 @@ class HealthRepository
     public function insertInjury(array $data): void
     {
         $stmt = $this->db->prepare(
-            'INSERT INTO injury_records (id, tenant_id, athlete_id, injury_date, type, body_part, severity, stop_days, return_date, notes, treated_by, created_by)
-             VALUES (:id, :tenant_id, :athlete_id, :injury_date, :type, :body_part, :severity, :stop_days, :return_date, :notes, :treated_by, :created_by)'
+            'INSERT INTO injury_records (
+                id, tenant_id, athlete_id, injury_date, type, body_part, severity, stop_days, return_date, notes, treated_by, created_by,
+                location_context, side, mechanism, official_diagnosis, diagnosis_date, diagnosed_by, instrumental_tests, test_results,
+                is_recurrence, treatment_type, surgery_date, physio_plan, assigned_physio, current_status, estimated_recovery_time, estimated_return_date, medical_clearance_given
+             )
+             VALUES (
+                :id, :tenant_id, :athlete_id, :injury_date, :type, :body_part, :severity, :stop_days, :return_date, :notes, :treated_by, :created_by,
+                :location_context, :side, :mechanism, :official_diagnosis, :diagnosis_date, :diagnosed_by, :instrumental_tests, :test_results,
+                :is_recurrence, :treatment_type, :surgery_date, :physio_plan, :assigned_physio, :current_status, :estimated_recovery_time, :estimated_return_date, :medical_clearance_given
+             )'
         );
         $stmt->execute($data);
     }
@@ -135,10 +177,12 @@ class HealthRepository
     public function getInjuries(string $athleteId): array
     {
         $stmt = $this->db->prepare(
-            'SELECT id, injury_date, type, body_part, severity, stop_days, return_date, notes, treated_by, created_at
-             FROM injury_records
-             WHERE athlete_id = :athlete_id
-             ORDER BY injury_date DESC'
+            'SELECT ir.*, 
+                    (SELECT COUNT(*) FROM injury_followups WHERE injury_id = ir.id) as visit_count,
+                    (SELECT COUNT(*) FROM injury_documents WHERE injury_id = ir.id) as doc_count
+             FROM injury_records ir
+             WHERE ir.athlete_id = :athlete_id
+             ORDER BY ir.injury_date DESC'
         );
         $stmt->execute([':athlete_id' => $athleteId]);
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
@@ -150,14 +194,76 @@ class HealthRepository
     public function updateInjury(string $injuryId, array $data): void
     {
         $data[':id'] = $injuryId;
+        // Costruzione dinamica dell'update
+        $sets = [];
+        foreach ($data as $key => $value) {
+            if ($key === ':id') continue;
+            $colName = ltrim($key, ':');
+            $sets[] = "`$colName` = $key";
+        }
+        $setString = implode(', ', $sets);
+
         $stmt = $this->db->prepare(
-            'UPDATE injury_records
-             SET return_date = :return_date,
-                 notes = :notes,
-                 stop_days = :stop_days
-             WHERE id = :id'
+            "UPDATE injury_records SET $setString WHERE id = :id"
         );
         $stmt->execute($data);
+    }
+
+    // ─── FOLLOW-UPS (INJURY VISITS) ──────────────────────────────────────────
+
+    public function getInjuryFollowups(string $tenantId, string $injuryId): array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT * FROM injury_followups
+             WHERE tenant_id = :tid AND injury_id = :iid
+             ORDER BY visit_date DESC, id DESC'
+        );
+        $stmt->execute([':tid' => $tenantId, ':iid' => $injuryId]);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function addInjuryFollowup(array $data): void
+    {
+        $stmt = $this->db->prepare(
+            'INSERT INTO injury_followups (tenant_id, injury_id, visit_date, practitioner, notes, outcome)
+             VALUES (:tenant_id, :injury_id, :visit_date, :practitioner, :notes, :outcome)'
+        );
+        $stmt->execute([
+            ':tenant_id' => $data['tenant_id'],
+            ':injury_id' => $data['injury_id'],
+            ':visit_date' => $data['visit_date'],
+            ':practitioner' => $data['practitioner'] ?? null,
+            ':notes' => $data['notes'] ?? null,
+            ':outcome' => $data['outcome'] ?? null
+        ]);
+    }
+
+    // ─── INJURY DOCUMENTS ────────────────────────────────────────────────────
+
+    public function getInjuryDocuments(string $tenantId, string $injuryId): array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT * FROM injury_documents
+             WHERE tenant_id = :tid AND injury_id = :iid
+             ORDER BY uploaded_at DESC'
+        );
+        $stmt->execute([':tid' => $tenantId, ':iid' => $injuryId]);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function addInjuryDocument(array $data): void
+    {
+        $stmt = $this->db->prepare(
+            'INSERT INTO injury_documents (tenant_id, injury_id, document_title, document_type, file_path)
+             VALUES (:tenant_id, :injury_id, :title, :type, :file_path)'
+        );
+        $stmt->execute([
+            ':tenant_id' => $data['tenant_id'],
+            ':injury_id' => $data['injury_id'],
+            ':title' => $data['document_title'],
+            ':type' => $data['document_type'] ?? null,
+            ':file_path' => $data['file_path']
+        ]);
     }
 
     /**

@@ -76,6 +76,14 @@ const TransportAPI = {
         return await Store.api("deleteDriver", "transport", data);
     },
 
+    getDriverDetail: async (id) => {
+        return await Store.get("getDriverDetail", "transport", { id });
+    },
+
+    updateDriver: async (data) => {
+        return await Store.api("updateDriver", "transport", data);
+    },
+
     getVehicles: async () => {
         return await Store.get("listVehicles", "vehicles");
     },

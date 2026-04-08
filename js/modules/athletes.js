@@ -3,10 +3,12 @@
  * Gestisce l'integrazione tra API, View e componenti specializzati (Wizard, Metrics).
  */
 
-import { AthletesAPI } from './athletes/AthletesAPI.js?v=2';
-import { AthletesView } from './athletes/AthletesView.js?v=2';
+import { AthletesAPI } from './athletes/AthletesAPI.js?v=3';
+import { AthletesView } from './athletes/AthletesView.js?v=3';
 import { AthletesWizard } from './athletes/AthletesWizard.js?v=2';
 import { AthletesMetrics } from './athletes/AthletesMetricsV2.js?v=5';
+import { AthleteHealth } from './athletes/AthleteHealth.js?v=2';
+import TransportAPI from './transport/TransportAPI.js';
 
 const Athletes = (() => {
     let abortController = new AbortController();
@@ -23,7 +25,9 @@ const Athletes = (() => {
         const route = Router.getCurrentRoute();
         if (route === 'athlete-documents') return 'documenti';
         if (route === 'athlete-metrics') return 'metrics';
-        if (route === 'athlete-payments') return 'pagamenti';
+        if (route === 'athlete-injuries') return 'infortuni';
+        if (route === 'athlete-payments') return 'quote';
+        if (route === 'athlete-attendances') return 'presenze';
         return 'anagrafica';
     }
 
@@ -49,6 +53,11 @@ const Athletes = (() => {
                 AthletesAPI.getTeams(),
                 AthletesAPI.getLightList()
             ]);
+
+            // Per la vista quote, arricchisci con rimborsi trasporti reali
+            if (initialTab === 'quote') {
+                await enrichWithTransportReimbursements();
+            }
 
             const params = Router.getParams();
             const user = App.getUser();
@@ -80,9 +89,14 @@ const Athletes = (() => {
     /**
      * Renderizza la Dashboard (Lista Atleti)
      */
-    function renderDashboard() {
+    async function renderDashboard() {
         const app = document.getElementById("app");
         const variant = getVariantFromRoute();
+
+        // Per la vista quote, arricchisci con rimborsi trasporti reali
+        if (variant === 'quote') {
+            await enrichWithTransportReimbursements();
+        }
 
         app.innerHTML = AthletesView.dashboard(teamsData, variant);
         
@@ -108,6 +122,10 @@ const Athletes = (() => {
             AthletesWizard.openCreate(teamsData, () => {
                 refreshData(variant);
             });
+        }, { signal });
+
+        document.getElementById("bulk-quotes-btn")?.addEventListener("click", () => {
+            UI.toast("L'assegnazione massiva delle quote è temporaneamente disabilitata durante l'aggiornamento del sistema rateale.", "info");
         }, { signal });
 
         document.getElementById("athlete-search")?.addEventListener("input", (e) => {
@@ -168,9 +186,48 @@ const Athletes = (() => {
             if (editBtn) {
                 editBtn.onclick = (e) => {
                     e.stopPropagation();
-                    const athlete = athletesData.find(a => String(a.id) === String(id));
-                    if (athlete) renderEditForm(athlete);
+                    if (variant === 'quote') {
+                        renderProfile(id, 'quote');
+                    } else if (variant === 'infortuni') {
+                        const athlete = athletesData.find(a => String(a.id) === String(id));
+                        if (athlete) AthleteHealth.openNewInjury(athlete);
+                    } else {
+                        const athlete = athletesData.find(a => String(a.id) === String(id));
+                        if (athlete) renderEditForm(athlete);
+                    }
                 };
+            }
+
+            // Inline editing per le quote (se nel tab quote)
+            if (variant === 'quote') {
+                card.querySelectorAll(".quota-inline-input").forEach(input => {
+                    input.onclick = (e) => e.stopPropagation();
+                    input.onchange = async (e) => {
+                        const { field } = e.target.dataset;
+                        const val = e.target.value;
+                        try {
+                            await AthletesAPI.update({ id, [field]: val });
+                            UI.toast("Quota salvata", "success", 1000);
+                            await refreshData('quote');
+                        } catch (err) {
+                            UI.toast(err.message, "error");
+                        }
+                    };
+                });
+
+                card.querySelectorAll(".quota-status-toggle").forEach(btn => {
+                    btn.onclick = async (e) => {
+                        e.stopPropagation();
+                        const { field, value } = btn.dataset;
+                        try {
+                            await AthletesAPI.update({ id, [field]: value });
+                            UI.toast("Pagamento aggiornato", "success", 1000);
+                            await refreshData('quote');
+                        } catch (err) {
+                            UI.toast(err.message, "error");
+                        }
+                    };
+                });
             }
 
             card.onclick = () => {
@@ -277,9 +334,18 @@ const Athletes = (() => {
                 // ma manteniamo addAnagraficaListeners per altri controlli (es. toggle active)
                 addAnagraficaListeners(athlete);
                 break;
-            case 'pagamenti':
-                await renderPayments(panel, athlete);
+            case 'quote': {
+                // Fetch transport history to calculate dynamic reimbursement
+                let transportReimbursement = 0;
+                try {
+                    const transportHist = await AthletesAPI.getTransportHistory(athlete.id);
+                    transportReimbursement = (transportHist || []).length * 2.50;
+                } catch (e) { /* silently fallback to 0 */ }
+                panel.innerHTML = AthletesView.tabQuote(athlete, App.getUser().role === 'admin', transportReimbursement);
+                addQuoteListeners(athlete);
                 break;
+            }
+
             case 'documenti':
                 panel.innerHTML = AthletesView.tabDocumenti(athlete, true);
                 addDocumentListeners(athlete);
@@ -287,8 +353,20 @@ const Athletes = (() => {
             case 'metrics':
                 await AthletesMetrics.render(panel, athlete.id);
                 break;
+            case 'infortuni':
+                await AthleteHealth.render(panel, athlete);
+                break;
             case 'subusers':
                 await renderSubUsers(panel, athlete);
+                break;
+            case 'trasporti':
+                panel.innerHTML = '<div class="loader-spinner"></div>';
+                try {
+                    const history = await AthletesAPI.getTransportHistory(athlete.id);
+                    panel.innerHTML = AthletesView.tabTrasporti(athlete, history);
+                } catch (e) {
+                    panel.innerHTML = Utils.emptyState("Errore caricamento trasporti", e.message);
+                }
                 break;
             // Add other tabs here...
         }
@@ -312,6 +390,36 @@ const Athletes = (() => {
                 UI.loading(false);
             }
         }, { signal });
+    }
+
+
+    function addQuoteListeners(athlete) {
+        const form = document.getElementById("athlete-quotas-form");
+        if (form) {
+            form.addEventListener("submit", async (e) => {
+                e.preventDefault();
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData.entries());
+                
+                // checkbox non spuntate non compaiono in FormData
+                const checkboxes = ['quota_iscrizione_rata1_paid', 'quota_iscrizione_rata2_paid', 'quota_vestiario_paid', 'quota_foresteria_paid'];
+                checkboxes.forEach(cb => {
+                    data[cb] = data[cb] ? 1 : 0;
+                });
+
+                UI.loading(true);
+                try {
+                    await AthletesAPI.update(data);
+                    UI.toast("Quote aggiornate con successo", "success");
+                    const updatedAthlete = await AthletesAPI.getById(athlete.id);
+                    switchTab('quote', updatedAthlete);
+                } catch (err) {
+                    UI.toast(err.message, "error");
+                } finally {
+                    UI.loading(false);
+                }
+            });
+        }
     }
 
     function renderEditForm(athlete) {
@@ -469,15 +577,7 @@ const Athletes = (() => {
         }
     }
 
-    async function renderPayments(panel, athlete) {
-        panel.innerHTML = '<div class="loader-spinner"></div>';
-        try {
-            const data = await Store.get("getPlan", "payments", { id: athlete.id });
-            panel.innerHTML = AthletesView.tabPagamenti(data);
-        } catch (e) {
-            panel.innerHTML = Utils.emptyState("Errore caricamento pagamenti", e.message);
-        }
-    }
+
 
     async function refreshData(variant = 'anagrafica') {
         athletesData = await AthletesAPI.getLightList();
@@ -488,6 +588,33 @@ const Athletes = (() => {
     function debounce(func, delay) {
         clearTimeout(debounceTimer);
         debounceTimer = setTimeout(func, delay);
+    }
+
+    /**
+     * Carica tutti i trasporti e calcola il rimborso per atleta (€2.50/viaggio)
+     * Arricchisce athletesData con il campo _transportReimbursement
+     */
+    async function enrichWithTransportReimbursements() {
+        try {
+            const transports = await TransportAPI.getTransports();
+            const reimbMap = new Map();
+            transports.forEach(tr => {
+                let athletes = [];
+                try {
+                    athletes = typeof tr.athletes_json === 'string' ? JSON.parse(tr.athletes_json) : (tr.athletes_json || []);
+                } catch { athletes = []; }
+                athletes.forEach(a => {
+                    const id = a.id || a.athlete_id;
+                    if (!id) return;
+                    reimbMap.set(String(id), (reimbMap.get(String(id)) || 0) + 2.50);
+                });
+            });
+            athletesData.forEach(a => {
+                a._transportReimbursement = reimbMap.get(String(a.id)) || 0;
+            });
+        } catch (e) {
+            console.warn('Impossibile caricare rimborsi trasporti:', e);
+        }
     }
 
     /**

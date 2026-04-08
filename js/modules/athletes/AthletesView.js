@@ -37,6 +37,29 @@ export const AthletesView = {
                 <th style="${thStyle} text-align:center;">Ultimo Test VALD</th>
                 <th style="${thStyle} text-align:right;">Azioni</th>
             `;
+        } else if (variant === 'infortuni') {
+            title = "Infortuni Atleti";
+            subtitle = "Gestione infortuni, tempi di recupero e stato medico";
+            thRow = `
+                <th style="${thStyle}">Atleta</th>
+                <th style="${thStyle} text-align:center;">Infortuni Attivi</th>
+                <th style="${thStyle}">Ultimo Infortunio Occorso</th>
+                <th style="${thStyle}">Certificato Medico</th>
+                <th style="${thStyle} text-align:right;">Azioni</th>
+            `;
+        } else if (variant === 'quote') {
+            title = "Quote Atleti";
+            subtitle = "Riepilogo generale delle quote da versare (In verde se pagate, in rosso se non pagate)";
+            thRow = `
+                <th style="${thStyle}">Atleta</th>
+                <th style="${thStyle}">Squadra</th>
+                <th style="${thStyle} text-align:center;">Q. Iscrizione</th>
+                <th style="${thStyle} text-align:center;">Q. Vestiario</th>
+                <th style="${thStyle} text-align:center;">Q. Foresteria</th>
+                <th style="${thStyle} text-align:center;">Q. Trasporti</th>
+                <th style="${thStyle} text-align:right;">Bilancio</th>
+                <th style="${thStyle} text-align:right;">Azioni</th>
+            `;
         } else {
             thRow = `
                 <th style="${thStyle}">Atleta</th>
@@ -55,6 +78,11 @@ export const AthletesView = {
                 <p class="dash-subtitle" style="margin-top:4px; color:var(--color-text-muted); font-size:14px;">${subtitle}</p>
             </div>
             <div class="header-actions">
+                ${variant === 'quote' ? `
+                <button class="btn btn-secondary btn-sm" id="bulk-quotes-btn" style="padding:10px 20px; border-radius:12px; font-weight:600; margin-right:8px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:var(--color-white);">
+                    <i class="ph ph-stack"></i> Assegnazione Massiva (per Squadra)
+                </button>
+                ` : ''}
                 <button class="btn btn-primary btn-sm" id="new-athlete-btn" style="padding:10px 20px; border-radius:12px; font-weight:600;">
                     <i class="ph ph-user-plus"></i> Nuovo Atleta
                 </button>
@@ -144,12 +172,157 @@ export const AthletesView = {
                 <td style="${tdStyle} text-align:center;">—</td>
                 <td style="${tdStyle} text-align:center; font-size:12px;">${testDateFmt || '<span style="opacity:0.3">Mai</span>'}</td>
             `;
+        } else if (variant === 'infortuni') {
+            let injuries = [];
+            if (athlete.injuries_summary) {
+                athlete.injuries_summary.split(';;;').forEach(ij => {
+                    const parts = ij.split('||');
+                    if (parts.length >= 3) {
+                        injuries.push({
+                            date: parts[0],
+                            type: parts[1],
+                            status: parts[2],
+                            return_date: parts[3] || null
+                        });
+                    }
+                });
+            }
+            
+            const active = injuries.filter(i => !i.return_date);
+            const activeHtml = active.length > 0 
+                ? `<span class="badge badge-pink" style="font-size:11px; padding:4px 8px;">${active.length} In corso</span>` 
+                : `<span style="color:var(--color-text-muted); font-size:12px;">Nessuno</span>`;
+            
+            const lastInjury = injuries.length > 0 ? injuries[0] : null;
+            const lastInjuryHtml = lastInjury 
+                ? `<div style="font-size:13px; color:var(--color-white); font-weight:500;">${Utils.escapeHtml(lastInjury.type)}</div>
+                   <div style="font-size:11px; color:rgba(255,255,255,0.4);"><i class="ph ph-calendar-blank"></i> ${Utils.formatDate(lastInjury.date)} <span style="margin:0 4px;">&middot;</span> ${Utils.escapeHtml(lastInjury.status)}</div>`
+                : `<span style="color:var(--color-text-muted); font-size:12px;">Nessuno in storico</span>`;
+
+            extraCells = `
+                <td style="${tdStyle} text-align:center; vertical-align:middle;">${activeHtml}</td>
+                <td style="${tdStyle} vertical-align:middle;">${lastInjuryHtml}</td>
+                <td style="${tdStyle} vertical-align:middle;">${medStatusHtml}</td>
+            `;
+        } else if (variant === 'quote') {
+            const renderEditableQuota = (field, amount, isPaid) => {
+                const val = parseFloat(amount) || 0;
+                const color = isPaid ? 'var(--color-success)' : (val > 0 ? 'var(--color-pink)' : 'rgba(255,255,255,0.1)');
+                return `
+                    <div class="inline-edit-group" style="display:flex; align-items:center; justify-content:center; gap:6px;">
+                        <div style="position:relative; width:65px;">
+                            <span style="position:absolute; left:6px; top:50%; transform:translateY(-50%); font-size:10px; opacity:0.5; color:${color}; pointer-events:none;">€</span>
+                            <input type="number" 
+                                   class="quota-inline-input" 
+                                   data-id="${athlete.id}" 
+                                   data-field="${field}" 
+                                   value="${val > 0 ? val.toFixed(0) : ''}" 
+                                   placeholder="0"
+                                   step="1"
+                                   style="width:100%; padding:6px 6px 6px 16px; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.05); border-radius:8px; color:${color}; font-weight:700; font-size:13px; text-align:right; transition: all 0.2s;">
+                        </div>
+                        <button class="quota-status-toggle ${isPaid ? 'paid' : ''}" 
+                                data-id="${athlete.id}" 
+                                data-field="${field}_paid" 
+                                data-value="${isPaid ? 0 : 1}"
+                                style="background:none; border:none; padding:4px; cursor:pointer; color:${color}; font-size:18px; display:flex; align-items:center; transition:transform 0.2s; opacity:${val > 0 ? 1 : 0.2};"
+                                title="${isPaid ? 'Segna come non pagato' : 'Segna come pagato'}">
+                            <i class="ph ${isPaid ? 'ph-check-circle-fill' : 'ph-circle'}"></i>
+                        </button>
+                    </div>
+                `;
+            };
+
+            const p1 = parseFloat(athlete.quota_iscrizione_rata1) || 0;
+            const p2 = parseFloat(athlete.quota_iscrizione_rata2) || 0;
+            const qIscrizione = p1 + p2;
+            const qIscriPaid = (athlete.quota_iscrizione_rata1_paid ? p1 : 0) + (athlete.quota_iscrizione_rata2_paid ? p2 : 0);
+            
+            const iscrizioneHtml = `
+                <div style="display:flex; flex-direction:column; gap:4px; align-items:center;">
+                    <div style="display:flex; align-items:center; gap:4px;">
+                        <span style="font-size:9px; opacity:0.3; font-weight:700;">R1</span>
+                        ${renderEditableQuota('quota_iscrizione_rata1', athlete.quota_iscrizione_rata1, athlete.quota_iscrizione_rata1_paid)}
+                    </div>
+                    <div style="display:flex; align-items:center; gap:4px;">
+                        <span style="font-size:9px; opacity:0.3; font-weight:700;">R2</span>
+                        ${renderEditableQuota('quota_iscrizione_rata2', athlete.quota_iscrizione_rata2, athlete.quota_iscrizione_rata2_paid)}
+                    </div>
+                </div>
+            `;
+
+            const vestiarioHtml = renderEditableQuota('quota_vestiario', athlete.quota_vestiario, athlete.quota_vestiario_paid);
+            const foresteriaHtml = renderEditableQuota('quota_foresteria', athlete.quota_foresteria, athlete.quota_foresteria_paid);
+            const trasportiVal = parseFloat(athlete._transportReimbursement) || 0;
+            const trasportiColor = athlete.quota_trasporti_paid ? 'var(--color-success)' : (trasportiVal > 0 ? 'var(--color-pink)' : 'rgba(255,255,255,0.1)');
+            const trasportiHtml = `
+                <div class="inline-edit-group" style="display:flex; align-items:center; justify-content:center; gap:6px;">
+                    <div style="position:relative; width:65px;">
+                        <span style="position:absolute; left:6px; top:50%; transform:translateY(-50%); font-size:10px; opacity:0.5; color:${trasportiColor}; pointer-events:none;">€</span>
+                        <input type="number" 
+                               value="${trasportiVal > 0 ? trasportiVal.toFixed(0) : ''}" 
+                               placeholder="0"
+                               readonly
+                               title="Calcolato da Rimborsi Trasporti"
+                               style="width:100%; padding:6px 6px 6px 16px; background:rgba(0,0,0,0.1); border:1px solid rgba(255,255,255,0.03); border-radius:8px; color:${trasportiColor}; font-weight:700; font-size:13px; text-align:right; cursor:default; opacity:0.8;">
+                    </div>
+                    <span style="color:${trasportiColor}; font-size:18px; display:flex; align-items:center; opacity:${trasportiVal > 0 ? 1 : 0.2};">
+                        <i class="ph ${athlete.quota_trasporti_paid ? 'ph-check-circle-fill' : 'ph-circle'}"></i>
+                    </span>
+                </div>
+            `;
+
+            const v = parseFloat(athlete.quota_vestiario) || 0;
+            const f = parseFloat(athlete.quota_foresteria) || 0;
+            const t = trasportiVal;
+            const v_p = athlete.quota_vestiario_paid ? v : 0;
+            const f_p = athlete.quota_foresteria_paid ? f : 0;
+            const t_p = athlete.quota_trasporti_paid ? t : 0;
+
+            const total = qIscrizione + v + f + t;
+            const paid = qIscriPaid + v_p + f_p + t_p;
+            const remaining = total - paid;
+            
+            let bilancioHtml = '<span style="color:rgba(255,255,255,0.1)">-</span>';
+            if (total > 0) {
+                if (remaining <= 0) {
+                    bilancioHtml = `<span class="badge badge-success" style="font-size:11px;">TUTTO PAGATO</span>`;
+                } else {
+                     bilancioHtml = `<div style="text-align:right; line-height:1.2;">
+                                        <div style="color:var(--color-pink); font-weight:700; font-size:14px; font-family:var(--font-display);">€${remaining.toFixed(0)}</div>
+                                        <div style="font-size:10px; color:rgba(255,255,255,0.4)">DA PAGARE</div>
+                                     </div>`;
+                }
+            }
+
+            extraCells = `
+                <td style="${tdStyle} color:rgba(255,255,255,0.4); font-size:13px;"><i class="ph ph-shield-star"></i> ${Utils.escapeHtml(athlete.team_name)}</td>
+                <td style="${tdStyle} text-align:center;">${iscrizioneHtml}</td>
+                <td style="${tdStyle} text-align:center;">${vestiarioHtml}</td>
+                <td style="${tdStyle} text-align:center;">${foresteriaHtml}</td>
+                <td style="${tdStyle} text-align:center;">${trasportiHtml}</td>
+                <td style="${tdStyle} text-align:right;">${bilancioHtml}</td>
+            `;
         } else {
             extraCells = `
                 <td style="${tdStyle} color:var(--color-white); font-weight:500;">${Utils.escapeHtml(athlete.role || '—')}</td>
                 <td style="${tdStyle} color:rgba(255,255,255,0.4); font-size:13px;"><i class="ph ph-shield-star"></i> ${Utils.escapeHtml(athlete.team_name)}</td>
                 <td style="${tdStyle}">${athlete.birth_date ? Utils.formatDate(athlete.birth_date) : '—'}</td>
                 <td style="${tdStyle}">${medStatusHtml}</td>
+            `;
+        }
+
+        let actionBtnHtml = `
+            <button class="btn btn-ghost btn-xs quick-edit-btn" title="Modifica Rapida" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05);">
+                <i class="ph ph-pencil-simple" style="font-size:16px;"></i>
+            </button>
+        `;
+        
+        if (variant === 'infortuni') {
+            actionBtnHtml = `
+                <button class="btn btn-ghost btn-xs quick-edit-btn" title="Nuovo Infortunio" style="background:rgba(239, 68, 68, 0.1); border:1px solid rgba(239, 68, 68, 0.2); color:#ef4444;">
+                    <i class="ph ph-plus" style="font-size:16px;"></i>
+                </button>
             `;
         }
 
@@ -166,9 +339,7 @@ export const AthletesView = {
                 </td>
                 ${extraCells}
                 <td style="padding:12px 16px; text-align:right;">
-                    <button class="btn btn-ghost btn-xs quick-edit-btn" title="Modifica Rapida" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05);">
-                        <i class="ph ph-pencil-simple" style="font-size:16px;"></i>
-                    </button>
+                    ${actionBtnHtml}
                 </td>
             </tr>
         `;
@@ -223,9 +394,11 @@ export const AthletesView = {
             <div class="card" style="margin: -40px 16px 0; border-radius: 24px; position:relative; z-index: 10; padding: 4px; background: rgba(20,20,20,0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1);">
                 <div class="fusion-tabs-container" id="athlete-tab-bar" style="border:none;background:transparent;width:100%;justify-content:flex-start;padding:8px 16px;">
                     <button class="fusion-tab" data-tab="anagrafica">Anagrafica</button>
-                    <button class="fusion-tab" data-tab="pagamenti">Pagamenti</button>
+                    <button class="fusion-tab" data-tab="quote">Quote</button>
                     <button class="fusion-tab" data-tab="metrics" style="color:var(--color-pink)">Performance (VALD)</button>
+                    <button class="fusion-tab" data-tab="infortuni" style="color:#ef4444">Infortuni</button>
                     <button class="fusion-tab" data-tab="documenti">Documenti</button>
+                    <button class="fusion-tab" data-tab="trasporti" style="color:#00e676;"><i class="ph ph-bus"></i> Trasporti</button>
                     ${user && (user.role === 'atleta' || user.role === 'admin') ? `
                         <button class="fusion-tab" data-tab="subusers">Sotto-Utenti</button>
                     ` : ''}
@@ -233,9 +406,11 @@ export const AthletesView = {
             </div>
 
             <div id="tab-panel-anagrafica" class="athlete-tab-panel" style="display:none;padding:24px 16px;"></div>
-            <div id="tab-panel-pagamenti" class="athlete-tab-panel" style="display:none;padding:24px 16px;"></div>
+            <div id="tab-panel-quote" class="athlete-tab-panel" style="display:none;padding:24px 16px;"></div>
             <div id="tab-panel-metrics" class="athlete-tab-panel" style="display:none;padding:24px 16px;"></div>
+            <div id="tab-panel-infortuni" class="athlete-tab-panel" style="display:none;padding:24px 16px;"></div>
             <div id="tab-panel-documenti" class="athlete-tab-panel" style="display:none;padding:24px 16px;"></div>
+            <div id="tab-panel-trasporti" class="athlete-tab-panel" style="display:none;padding:24px 16px;"></div>
             ${user && (user.role === 'atleta' || user.role === 'admin') ? `
                 <div id="tab-panel-subusers" class="athlete-tab-panel" style="display:none;padding:24px 16px;"></div>
             ` : ''}
@@ -538,15 +713,9 @@ export const AthletesView = {
                             </div>
                             
                             <div style="padding:16px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:12px;">
-                                <div class="form-group" style="margin-bottom:12px;">
-                                    <label class="form-label" style="display:flex; align-items:center; gap:8px;">
-                                        <input type="checkbox" name="registration_fee_paid" value="1" ${athlete?.registration_fee_paid ? 'checked' : ''}>
-                                        Quota Iscrizione Pagata
-                                    </label>
-                                </div>
                                 <div class="form-group">
-                                    <label class="form-label">Retta Mensile Concordata (€)</label>
-                                    <input type="number" name="monthly_fee_amount" class="form-input" placeholder="es. 100.00" step="0.01" value="${athlete?.monthly_fee_amount || ''}">
+                                    <label class="form-label" style="display:none;"></label>
+                                    <p style="font-size:12px; color:rgba(255,255,255,0.5);"><i class="ph ph-info"></i> La gestione di Quote e Rate è disponibile nel tab "Quote" salvando il profilo.</p>
                                 </div>
                             </div>
                         </div>
@@ -563,98 +732,188 @@ export const AthletesView = {
         `;
     },
 
-    /**
-     * Tab: Pagamenti
-     */
-    tabPagamenti: (data) => {
-        if (!data || !data.plan) {
-            return `
-                <div class="card glass-card" style="padding:40px; text-align:center;">
-                    <i class="ph ph-currency-eur" style="font-size:48px; color:var(--text-muted); opacity:0.3; margin-bottom:16px;"></i>
-                    <h3 style="font-size:18px; color:var(--color-white); margin-bottom:8px;">Nessun piano pagamenti attivo</h3>
-                    <p style="color:var(--text-muted); font-size:14px;">Contatta la segreteria per attivare il tuo piano rateale.</p>
-                </div>
-            `;
-        }
 
-        const plan = data.plan;
-        const installments = data.installments || [];
-        const stats = data.stats || {};
+    /**
+     * Tab: Quote (Gestione importi)
+     */
+    tabQuote: (athlete, isAdmin = false, transportReimbursement = 0) => {
+        const p1 = parseFloat(athlete.quota_iscrizione_rata1) || 0;
+        const p2 = parseFloat(athlete.quota_iscrizione_rata2) || 0;
+        const v = parseFloat(athlete.quota_vestiario) || 0;
+        const f = parseFloat(athlete.quota_foresteria) || 0;
+        const t = transportReimbursement || 0;
+
+        const p1_p = athlete.quota_iscrizione_rata1_paid ? p1 : 0;
+        const p2_p = athlete.quota_iscrizione_rata2_paid ? p2 : 0;
+        const v_p = athlete.quota_vestiario_paid ? v : 0;
+        const f_p = athlete.quota_foresteria_paid ? f : 0;
+        const t_p = athlete.quota_trasporti_paid ? t : 0;
+
+        const total = p1 + p2 + v + f + t;
+        const paid = p1_p + p2_p + v_p + f_p + t_p;
+        const remaining = total - paid;
+
+        const formatCurrency = (val) => '€ ' + val.toFixed(2);
+        const getStatusBadge = (isPaid, amount) => {
+            if (amount === 0) return '<span style="color:var(--color-text-muted)">-</span>';
+            return isPaid ? '<span class="badge badge-success" style="font-size:10px;">PAGATA</span>' : '<span class="badge badge-pink" style="font-size:10px;">DA PAGARE</span>';
+        };
 
         return `
-            <div style="display:flex; flex-direction:column; gap:24px;">
-                <!-- Riepilogo Piano -->
-                <div class="card glass-card" style="background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%); padding:24px;">
-                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:24px;">
-                        <div>
-                            <span class="badge badge-primary" style="margin-bottom:8px; font-size:10px;">PIANO ATTIVO</span>
-                            <h3 style="font-size:24px; font-weight:700; color:var(--color-white); margin-bottom:4px;">Stato Pagamenti</h3>
-                            <p style="font-size:13px; color:var(--text-muted);">Piano del ${Utils.formatDate(plan.start_date)} · Frequenza: ${plan.frequency}</p>
-                        </div>
-                        <div style="text-align:right;">
-                            <div style="font-size:12px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:4px;">Totale Piano</div>
-                            <div style="font-size:28px; font-weight:800; color:var(--color-white); font-family:var(--font-display);">€ ${Utils.formatNumber(plan.total_amount)}</div>
-                        </div>
+            <div class="card glass-card" style="padding:24px; border:1px solid rgba(255,255,255,0.05); background:rgba(255,255,255,0.01); margin-bottom:24px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                    <div>
+                        <h3 style="font-family:var(--font-display); font-size:20px; color:var(--color-white); margin-bottom:4px;">Riepilogo Quote</h3>
+                        <p style="color:var(--color-text-muted); font-size:13px;">Stato attuale delle quote concordate per questo atleta.</p>
                     </div>
-                    
-                    <div class="stats-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:16px; border-top:1px solid rgba(255,255,255,0.05); padding-top:24px;">
-                        <div class="stat-item">
-                            <div style="font-size:11px; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">Pagato</div>
-                            <div style="font-size:18px; font-weight:700; color:var(--color-success);">€ ${Utils.formatNumber(stats.total_paid)}</div>
-                        </div>
-                        <div class="stat-item">
-                            <div style="font-size:11px; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">In Scadenza / Arretrati</div>
-                            <div style="font-size:18px; font-weight:700; color:${stats.total_overdue > 0 ? 'var(--color-danger)' : 'var(--color-white)'};">€ ${Utils.formatNumber(stats.total_overdue)}</div>
-                        </div>
-                        <div class="stat-item">
-                            <div style="font-size:11px; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">Rimanente</div>
-                            <div style="font-size:18px; font-weight:700; color:var(--color-white);">€ ${Utils.formatNumber(stats.total_remaining)}</div>
-                        </div>
+                </div>
+                
+                <div class="table-responsive" style="margin-bottom:24px; border:1px solid rgba(255,255,255,0.05); border-radius:12px; overflow:hidden;">
+                    <table class="table" style="width:100%; border-collapse:collapse; margin:0;">
+                        <thead style="background:rgba(255,255,255,0.03);">
+                            <tr>
+                                <th style="padding:12px 16px; color:rgba(255,255,255,0.4); font-size:11px; text-transform:uppercase; text-align:left;">Descrizione Quota</th>
+                                <th style="padding:12px 16px; color:rgba(255,255,255,0.4); font-size:11px; text-transform:uppercase; text-align:right;">Importo Assegnato</th>
+                                <th style="padding:12px 16px; color:rgba(255,255,255,0.4); font-size:11px; text-transform:uppercase; text-align:center;">Stato</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                                <td style="padding:14px 16px; color:var(--color-white); font-size:14px;">Quota di Iscrizione - Prima Rata</td>
+                                <td style="padding:14px 16px; color:var(--color-white); font-size:15px; text-align:right; font-weight:600; font-family:var(--font-display);">${formatCurrency(p1)}</td>
+                                <td style="padding:14px 16px; text-align:center;">${getStatusBadge(athlete.quota_iscrizione_rata1_paid, p1)}</td>
+                            </tr>
+                            <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                                <td style="padding:14px 16px; color:var(--color-white); font-size:14px;">Quota di Iscrizione - Seconda Rata</td>
+                                <td style="padding:14px 16px; color:var(--color-white); font-size:15px; text-align:right; font-weight:600; font-family:var(--font-display);">${formatCurrency(p2)}</td>
+                                <td style="padding:14px 16px; text-align:center;">${getStatusBadge(athlete.quota_iscrizione_rata2_paid, p2)}</td>
+                            </tr>
+                            <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                                <td style="padding:14px 16px; color:var(--color-white); font-size:14px;">Quota Vestiario</td>
+                                <td style="padding:14px 16px; color:var(--color-white); font-size:15px; text-align:right; font-weight:600; font-family:var(--font-display);">${formatCurrency(v)}</td>
+                                <td style="padding:14px 16px; text-align:center;">${getStatusBadge(athlete.quota_vestiario_paid, v)}</td>
+                            </tr>
+                            <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                                <td style="padding:14px 16px; color:var(--color-white); font-size:14px;">Quota Foresteria</td>
+                                <td style="padding:14px 16px; color:var(--color-white); font-size:15px; text-align:right; font-weight:600; font-family:var(--font-display);">${formatCurrency(f)}</td>
+                                <td style="padding:14px 16px; text-align:center;">${getStatusBadge(athlete.quota_foresteria_paid, f)}</td>
+                            </tr>
+                            <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                                <td style="padding:14px 16px; color:var(--color-white); font-size:14px;">Quota Trasporti</td>
+                                <td style="padding:14px 16px; color:var(--color-white); font-size:15px; text-align:right; font-weight:600; font-family:var(--font-display);">${formatCurrency(t)}</td>
+                                <td style="padding:14px 16px; text-align:center;">${getStatusBadge(athlete.quota_trasporti_paid, t)}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.2); border-radius:12px; padding:20px; border:1px solid rgba(255,255,255,0.05);">
+                     <div style="flex:1; text-align:center; border-right:1px solid rgba(255,255,255,0.05)">
+                          <div style="font-size:11px; color:rgba(255,255,255,0.4); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px;">Totale Assegnato</div>
+                          <div style="font-size:24px; font-weight:800; color:var(--color-white); font-family:var(--font-display);">${formatCurrency(total)}</div>
+                     </div>
+                     <div style="flex:1; text-align:center; border-right:1px solid rgba(255,255,255,0.05)">
+                          <div style="font-size:11px; color:rgba(255,255,255,0.4); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px;">Totale Pagato</div>
+                          <div style="font-size:24px; font-weight:800; color:var(--color-success); font-family:var(--font-display);">${formatCurrency(paid)}</div>
+                     </div>
+                     <div style="flex:1; text-align:center;">
+                          <div style="font-size:11px; color:rgba(255,255,255,0.4); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px;">Rimanente Da Pagare</div>
+                          <div style="font-size:24px; font-weight:800; color:${remaining > 0 ? 'var(--color-pink)' : 'var(--color-success)'}; font-family:var(--font-display);">${formatCurrency(remaining)}</div>
+                     </div>
+                </div>
+            </div>
+
+            <div class="card glass-card" style="padding:24px; border:1px solid rgba(255,255,255,0.05); background:rgba(255,255,255,0.01);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+                    <div>
+                        <h3 style="font-family:var(--font-display); font-size:20px; color:var(--color-white); margin-bottom:4px;">Assegnazione Quote</h3>
+                        <p style="color:var(--color-text-muted); font-size:13px;">Definisci o modifica gli importi concordati e lo stato di pagamento.</p>
                     </div>
                 </div>
 
-                <!-- Lista Rate -->
-                <div class="card glass-card" style="padding:0; overflow:hidden;">
-                    <div style="padding:20px 24px; border-bottom:1px solid rgba(255,255,255,0.05); display:flex; justify-content:space-between; align-items:center;">
-                        <h4 style="font-size:14px; font-weight:600; color:var(--color-white); margin:0;">Dettaglio Rate</h4>
+                <form id="athlete-quotas-form">
+                    <input type="hidden" name="id" value="${athlete.id}">
+                    <div style="display:grid; grid-template-columns:1fr; gap:24px;">
+                        
+                        <!-- Quota Iscrizione Rata 1 -->
+                        <div style="display:flex; gap:16px; align-items:flex-end; padding-bottom:16px; border-bottom:1px solid rgba(255,255,255,0.05);">
+                            <div class="form-group" style="flex:1;">
+                                <label class="form-label">Quota di Iscrizione - Prima Rata</label>
+                                <input type="number" name="quota_iscrizione_rata1" class="form-input" placeholder="es. 250.00" step="0.01" value="${athlete.quota_iscrizione_rata1 || ''}" ${isAdmin ? '' : 'disabled'}>
+                            </div>
+                            <div class="form-group" style="margin-bottom:10px;">
+                                <label class="form-label" style="display:flex; align-items:center; gap:8px;">
+                                    <input type="checkbox" name="quota_iscrizione_rata1_paid" value="1" ${athlete.quota_iscrizione_rata1_paid ? 'checked' : ''} ${isAdmin ? '' : 'disabled'}>
+                                    Pagata
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Quota Iscrizione Rata 2 -->
+                        <div style="display:flex; gap:16px; align-items:flex-end; padding-bottom:16px; border-bottom:1px solid rgba(255,255,255,0.05);">
+                            <div class="form-group" style="flex:1;">
+                                <label class="form-label">Quota di Iscrizione - Seconda Rata</label>
+                                <input type="number" name="quota_iscrizione_rata2" class="form-input" placeholder="es. 250.00" step="0.01" value="${athlete.quota_iscrizione_rata2 || ''}" ${isAdmin ? '' : 'disabled'}>
+                            </div>
+                            <div class="form-group" style="margin-bottom:10px;">
+                                <label class="form-label" style="display:flex; align-items:center; gap:8px;">
+                                    <input type="checkbox" name="quota_iscrizione_rata2_paid" value="1" ${athlete.quota_iscrizione_rata2_paid ? 'checked' : ''} ${isAdmin ? '' : 'disabled'}>
+                                    Pagata
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Quota Vestiario -->
+                        <div style="display:flex; gap:16px; align-items:flex-end; padding-bottom:16px; border-bottom:1px solid rgba(255,255,255,0.05);">
+                            <div class="form-group" style="flex:1;">
+                                <label class="form-label">Quota Vestiario</label>
+                                <input type="number" name="quota_vestiario" class="form-input" placeholder="es. 150.00" step="0.01" value="${athlete.quota_vestiario || ''}" ${isAdmin ? '' : 'disabled'}>
+                            </div>
+                            <div class="form-group" style="margin-bottom:10px;">
+                                <label class="form-label" style="display:flex; align-items:center; gap:8px;">
+                                    <input type="checkbox" name="quota_vestiario_paid" value="1" ${athlete.quota_vestiario_paid ? 'checked' : ''} ${isAdmin ? '' : 'disabled'}>
+                                    Pagata
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Quota Foresteria -->
+                        <div style="display:flex; gap:16px; align-items:flex-end; padding-bottom:16px; border-bottom:1px solid rgba(255,255,255,0.05);">
+                            <div class="form-group" style="flex:1;">
+                                <label class="form-label">Quota Foresteria</label>
+                                <input type="number" name="quota_foresteria" class="form-input" placeholder="es. 400.00" step="0.01" value="${athlete.quota_foresteria || ''}" ${isAdmin ? '' : 'disabled'}>
+                            </div>
+                            <div class="form-group" style="margin-bottom:10px;">
+                                <label class="form-label" style="display:flex; align-items:center; gap:8px;">
+                                    <input type="checkbox" name="quota_foresteria_paid" value="1" ${athlete.quota_foresteria_paid ? 'checked' : ''} ${isAdmin ? '' : 'disabled'}>
+                                    Pagata
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Quota Trasporti -->
+                        <div style="display:flex; gap:16px; align-items:flex-end;">
+                            <div class="form-group" style="flex:1;">
+                                <label class="form-label">Quota Trasporti</label>
+                                <input type="number" name="quota_trasporti" class="form-input" placeholder="-" step="0.01" value="${t.toFixed(2)}" readonly style="opacity:0.7; cursor:not-allowed; background:rgba(255,255,255,0.02)">
+                                <div style="font-size:11px; color:var(--color-pink); margin-top:4px;"><i class="ph ph-info"></i> Importo calcolato automaticamente da Rimborsi Trasporti (€ 2,50 × viaggio)</div>
+                            </div>
+                            <div class="form-group" style="margin-bottom:10px;">
+                                <label class="form-label" style="display:flex; align-items:center; gap:8px; opacity:0.7; cursor:not-allowed;">
+                                    <input type="checkbox" name="quota_trasporti_paid" value="1" ${athlete.quota_trasporti_paid ? 'checked' : ''} onclick="return false;">
+                                    Pagata
+                                </label>
+                            </div>
+                        </div>
+
                     </div>
-                    <div class="table-responsive">
-                        <table class="table" style="margin:0;">
-                            <thead>
-                                <tr>
-                                    <th style="padding-left:24px;">Scadenza</th>
-                                    <th>Importo</th>
-                                    <th>Stato</th>
-                                    <th style="text-align:right; padding-right:24px;">Azioni</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${installments.map(inst => {
-                                    const isPaid = inst.status === 'PAID';
-                                    const isOverdue = inst.status === 'OVERDUE';
-                                    return `
-                                        <tr>
-                                            <td style="padding-left:24px; font-weight:500;">${Utils.formatDate(inst.due_date)}</td>
-                                            <td style="font-weight:600; font-family:var(--font-display);">€ ${Utils.formatNumber(inst.amount)}</td>
-                                            <td>
-                                                <span class="badge ${isPaid ? 'badge-success' : (isOverdue ? 'badge-danger' : 'badge-white')}" style="font-size:10px;">
-                                                    ${inst.status}
-                                                </span>
-                                            </td>
-                                            <td style="text-align:right; padding-right:24px;">
-                                                ${inst.receipt_path ? `
-                                                    <a href="${inst.receipt_path}" target="_blank" class="btn btn-ghost btn-sm" style="padding:4px 8px; font-size:11px;">
-                                                        <i class="ph ph-file-pdf"></i> RICEVUTA
-                                                    </a>
-                                                ` : '-'}
-                                            </td>
-                                        </tr>
-                                    `;
-                                }).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                    
+                    ${isAdmin ? `
+                        <div style="margin-top:24px; text-align:right;">
+                            <button type="submit" class="btn btn-primary" id="save-quotas-btn">Salva Quote</button>
+                        </div>
+                    ` : ''}
+                </form>
             </div>
         `;
     },
@@ -799,6 +1058,59 @@ export const AthletesView = {
                         <button class="btn btn-ghost" id="close-invite-modal">Annulla</button>
                         <button class="btn btn-primary" id="confirm-invite-btn">Invia Invito</button>
                     </div>
+                </div>
+            </div>
+        `;
+    },
+
+    /**
+     * Tab: Trasporti (Riepilogo rimborsi basato sullo storico)
+     */
+    tabTrasporti: (athlete, history = []) => {
+        const FEE_PER_TRIP = 2.50;
+        const totalAmount = history.length * FEE_PER_TRIP;
+        
+        return `
+            <div class="card glass-card" style="padding:24px; border:1px solid rgba(255,255,255,0.05); background:rgba(255,255,255,0.01); margin-bottom:24px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+                    <div>
+                        <h3 style="font-family:var(--font-display); font-size:20px; color:var(--color-white); margin-bottom:4px;">Rimborso Trasporti</h3>
+                        <p style="color:var(--color-text-muted); font-size:13px;">Calcolo basato sui viaggi effettuati dall'atleta (${history.length} viaggi).</p>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px;">Totale Rimborso</div>
+                        <div style="font-size:28px; font-weight:800; color:var(--color-success); font-family:var(--font-display);">€ ${totalAmount.toFixed(2)}</div>
+                    </div>
+                </div>
+
+                <div class="table-wrapper" style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:12px; overflow:hidden;">
+                    <table class="table" style="width:100%; border-collapse:collapse; margin:0;">
+                        <thead style="background:rgba(255,255,255,0.03);">
+                            <tr>
+                                <th style="padding:12px 16px; color:rgba(255,255,255,0.4); font-size:11px; text-transform:uppercase; text-align:left;">Destinazione</th>
+                                <th style="padding:12px 16px; color:rgba(255,255,255,0.4); font-size:11px; text-transform:uppercase; text-align:center;">Data</th>
+                                <th style="padding:12px 16px; color:rgba(255,255,255,0.4); font-size:11px; text-transform:uppercase; text-align:center;">Orario</th>
+                                <th style="padding:12px 16px; color:rgba(255,255,255,0.4); font-size:11px; text-transform:uppercase; text-align:right;">Quota</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${history.length === 0 ? `
+                                <tr>
+                                    <td colspan="4" style="padding:32px; text-align:center; color:rgba(255,255,255,0.2);">
+                                        <i class="ph ph-bus" style="font-size:32px; margin-bottom:8px;"></i>
+                                        <p>Nessun trasporto registrato per questo atleta.</p>
+                                    </td>
+                                </tr>
+                            ` : history.map(t => `
+                                <tr style="border-bottom:1px solid rgba(255,255,255,0.03);">
+                                    <td style="padding:14px 16px; color:var(--color-white); font-weight:600;">${Utils.escapeHtml(t.destination_name)}</td>
+                                    <td style="padding:14px 16px; text-align:center; color:rgba(255,255,255,0.6);">${Utils.formatDate(t.transport_date)}</td>
+                                    <td style="padding:14px 16px; text-align:center; color:rgba(255,255,255,0.4); font-size:12px;">${t.departure_time ? t.departure_time.substring(0,5) : '--:--'}</td>
+                                    <td style="padding:14px 16px; text-align:right; color:var(--color-success); font-weight:700;">€ ${FEE_PER_TRIP.toFixed(2)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         `;

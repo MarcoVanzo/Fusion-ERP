@@ -90,6 +90,54 @@ class FinanceService
             return $inv;
         }, $invoices);
     }
+
+    /**
+     * Calculate taxes for sport workers (Riforma dello Sport)
+     */
+    public function calculateSportTaxes(float $amount, float $previousIncome = 0.0): array
+    {
+        $totalIncome = $previousIncome + $amount;
+        $inpsExemptionThreshold = 5000.00;
+        $irpefExemptionThreshold = 15000.00;
+
+        $taxableInps = 0.0;
+        $taxableIrpef = 0.0;
+
+        if ($totalIncome > $inpsExemptionThreshold) {
+            $taxableInps = min($amount, $totalIncome - $inpsExemptionThreshold);
+            if ($previousIncome > $inpsExemptionThreshold) {
+                $taxableInps = $amount;
+            }
+        }
+
+        if ($totalIncome > $irpefExemptionThreshold) {
+            $taxableIrpef = min($amount, $totalIncome - $irpefExemptionThreshold);
+            if ($previousIncome > $irpefExemptionThreshold) {
+                $taxableIrpef = $amount;
+            }
+        }
+
+        $inpsRate = 0.25;
+        $inpsTaxableBase = $taxableInps * 0.5;
+        $inpsContribution = $inpsTaxableBase * $inpsRate;
+
+        $irpefRate = 0.23;
+        $irpefContribution = $taxableIrpef * $irpefRate;
+
+        $workerInpsShare = $inpsContribution / 3;
+
+        return [
+            'amount' => $amount,
+            'previous_income' => $previousIncome,
+            'total_income' => $totalIncome,
+            'taxable_inps' => $taxableInps,
+            'inps_contribution' => $inpsContribution,
+            'inps_worker_share' => $workerInpsShare,
+            'taxable_irpef' => $taxableIrpef,
+            'irpef_contribution' => $irpefContribution,
+            'net_amount' => $amount - $workerInpsShare - $irpefContribution
+        ];
+    }
 }
 
 

@@ -42,6 +42,16 @@ const TeamsAPI = {
     /** Soft delete a team */
     deleteTeam: async (id) => {
         return await Store.api("delete", "teams", { id });
+    },
+
+    /** Get attendances for a team within a month */
+    getAttendances: async (teamId, month) => {
+        return await Store.api("getAttendances", "teams", { team_id: teamId, month });
+    },
+
+    /** Save an attendance record */
+    saveAttendance: async (data) => {
+        return await Store.api("saveAttendance", "teams", data);
     }
 };
 
