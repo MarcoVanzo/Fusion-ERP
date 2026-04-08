@@ -719,12 +719,12 @@ export const AthletesView = {
     /**
      * Tab: Quote (Gestione importi)
      */
-    tabQuote: (athlete, isAdmin = false) => {
+    tabQuote: (athlete, isAdmin = false, transportReimbursement = 0) => {
         const p1 = parseFloat(athlete.quota_iscrizione_rata1) || 0;
         const p2 = parseFloat(athlete.quota_iscrizione_rata2) || 0;
         const v = parseFloat(athlete.quota_vestiario) || 0;
         const f = parseFloat(athlete.quota_foresteria) || 0;
-        const t = parseFloat(athlete.quota_trasporti) || 0;
+        const t = transportReimbursement || 0;
 
         const p1_p = athlete.quota_iscrizione_rata1_paid ? p1 : 0;
         const p2_p = athlete.quota_iscrizione_rata2_paid ? p2 : 0;
@@ -878,8 +878,8 @@ export const AthletesView = {
                         <div style="display:flex; gap:16px; align-items:flex-end;">
                             <div class="form-group" style="flex:1;">
                                 <label class="form-label">Quota Trasporti</label>
-                                <input type="number" name="quota_trasporti" class="form-input" placeholder="-" step="0.01" value="${athlete.quota_trasporti || ''}" readonly style="opacity:0.7; cursor:not-allowed; background:rgba(255,255,255,0.02)">
-                                <div style="font-size:11px; color:var(--color-pink); margin-top:4px;"><i class="ph ph-info"></i> Importo calcolato e gestito nella tab "Trasporti"</div>
+                                <input type="number" name="quota_trasporti" class="form-input" placeholder="-" step="0.01" value="${t.toFixed(2)}" readonly style="opacity:0.7; cursor:not-allowed; background:rgba(255,255,255,0.02)">
+                                <div style="font-size:11px; color:var(--color-pink); margin-top:4px;"><i class="ph ph-info"></i> Importo calcolato automaticamente da Rimborsi Trasporti (€ 2,50 × viaggio)</div>
                             </div>
                             <div class="form-group" style="margin-bottom:10px;">
                                 <label class="form-label" style="display:flex; align-items:center; gap:8px; opacity:0.7; cursor:not-allowed;">

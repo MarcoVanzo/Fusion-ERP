@@ -323,10 +323,17 @@ const Athletes = (() => {
                 // ma manteniamo addAnagraficaListeners per altri controlli (es. toggle active)
                 addAnagraficaListeners(athlete);
                 break;
-            case 'quote':
-                panel.innerHTML = AthletesView.tabQuote(athlete, App.getUser().role === 'admin');
+            case 'quote': {
+                // Fetch transport history to calculate dynamic reimbursement
+                let transportReimbursement = 0;
+                try {
+                    const transportHist = await AthletesAPI.getTransportHistory(athlete.id);
+                    transportReimbursement = (transportHist || []).length * 2.50;
+                } catch (e) { /* silently fallback to 0 */ }
+                panel.innerHTML = AthletesView.tabQuote(athlete, App.getUser().role === 'admin', transportReimbursement);
                 addQuoteListeners(athlete);
                 break;
+            }
 
             case 'documenti':
                 panel.innerHTML = AthletesView.tabDocumenti(athlete, true);
