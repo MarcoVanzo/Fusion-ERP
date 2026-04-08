@@ -187,7 +187,17 @@ class PaymentsController
             'paid_date' => $paidDate,
         ]);
 
-        Response::success(['message' => 'Rata pagata', 'transaction_id' => $txId]);
+        // Auto-generate receipt 
+        $receiptPath = $this->createAndSaveReceipt($body['installment_id']);
+
+        // Simulate sending generic notification
+        error_log("[Payments] Ricevuta fiscale generata e pronta per invio: " . $receiptPath);
+
+        Response::success([
+            'message' => 'Rata pagata e ricevuta generata', 
+            'transaction_id' => $txId,
+            'receipt_path' => $receiptPath
+        ]);
     }
 
     // ─── POST ?module=payments&action=generateReceipt ────────────────────────
@@ -210,14 +220,25 @@ class PaymentsController
             Response::error('Ricevuta disponibile solo per rate pagate', 400);
         }
 
-        // Get athlete info for receipt
+        $relPath = $this->createAndSaveReceipt($body['installment_id']);
+
+        Response::success(['receipt_path' => $relPath, 'message' => 'Ricevuta ri-generata con successo']);
+    }
+
+    /**
+     * Helper to create and save the PDF receipt
+     */
+    private function createAndSaveReceipt(string $installmentId): string
+    {
+        $installment = $this->repo->getInstallmentById($installmentId);
+        if (!$installment) return '';
+
         $db = \FusionERP\Shared\Database::getInstance();
         $stmt = $db->prepare('SELECT full_name, fiscal_code, email FROM athletes WHERE id = :id LIMIT 1');
         $stmt->execute([':id' => $installment['athlete_id']]);
         $athlete = $stmt->fetch(\PDO::FETCH_ASSOC);
 
-        // Generate PDF
-        $html = $this->buildReceiptHtml($installment, $athlete);
+        $html = $this->buildReceiptHtml($installment, $athlete ?: []);
 
         $mpdf = new \Mpdf\Mpdf([
             'margin_left' => 15,
@@ -228,21 +249,19 @@ class PaymentsController
         ]);
         $mpdf->WriteHTML($html);
 
-        // Save to disk
         $receiptDir = dirname(__DIR__, 3) . '/uploads/receipts/' . $installment['athlete_id'];
         if (!is_dir($receiptDir)) {
             mkdir($receiptDir, 0755, true);
         }
-        $filename = 'ricevuta_' . $body['installment_id'] . '_' . date('Ymd') . '.pdf';
+        $filename = 'ricevuta_' . $installmentId . '_' . date('Ymd_His') . '.pdf';
         $filepath = $receiptDir . '/' . $filename;
         $mpdf->Output($filepath, \Mpdf\Output\Destination::FILE);
 
-        // Update installment receipt_path
         $relPath = 'uploads/receipts/' . $installment['athlete_id'] . '/' . $filename;
         $stmt = $db->prepare('UPDATE installments SET receipt_path = :path WHERE id = :id');
-        $stmt->execute([':path' => $relPath, ':id' => $body['installment_id']]);
+        $stmt->execute([':path' => $relPath, ':id' => $installmentId]);
 
-        Response::success(['receipt_path' => $relPath, 'filename' => $filename]);
+        return $relPath;
     }
 
     // ─── GET ?module=payments&action=dashboard ───────────────────────────────
@@ -379,7 +398,7 @@ body { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 12px; color:
 <body>
 <div class="header">
     <h1>RICEVUTA DI PAGAMENTO</h1>
-    <p>Documento non fiscale — Uso interno</p>
+    <p>Ricevuta Fiscale per Erogazione Sportiva o Quota Associativa</p>
 </div>
 <div class="details">
     <table>
@@ -393,9 +412,12 @@ body { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 12px; color:
 <div class="amount">
     <div style="font-size: 14px; color: #666; margin-bottom: 8px;">Importo pagato</div>
     <div class="value">€ {$amount}</div>
+    <div style="font-size: 11px; color: #666; margin-top: 5px;">
+    Quota istituzionale esente IVA art. 4 DPR 633/72.
+    </div>
 </div>
 <div class="footer">
-    <p>Generato automaticamente da Fusion ERP — {$paidDate}</p>
+    <p>Generata automaticamente da Fusion ERP — {$paidDate}</p>
 </div>
 </body>
 </html>

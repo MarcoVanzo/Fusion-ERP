@@ -82,4 +82,12 @@ class FinanceController
             'invoices' => $this->service->getInvoices()
         ]);
     }
+
+    public function calculateSportTaxes(): void
+    {
+        $amount = (float)filter_input(INPUT_GET, 'amount', FILTER_VALIDATE_FLOAT) ?: 0.0;
+        $previousIncome = (float)filter_input(INPUT_GET, 'previous_income', FILTER_VALIDATE_FLOAT) ?: 0.0;
+
+        $this->handleServiceCall(fn() => $this->service->calculateSportTaxes($amount, $previousIncome));
+    }
 }
