@@ -83,14 +83,24 @@ class App {
     else if (hash === '#dashboard') this.renderDashboard();
     else if (hash === '#spese') this.renderSpese();
     else if (hash === '#profilo') this.renderProfilo();
-    else if (hash === '#alerts') this.renderAlerts(); // NEW VIEW
+    else if (hash === '#alerts') this.renderAlerts(); 
+    else if (hash === '#squadra') this.renderSquadra();
+    else if (hash === '#presenze-team') this.renderPresenzeTeam();
     else this.renderLogin();
   }
 
   getBottomNav(activeHash) {
+    let role = 'atleta';
+    try {
+      const u = JSON.parse(localStorage.getItem('erp_user') || '{}');
+      if (u.role) role = u.role.toLowerCase();
+    } catch(e){}
+
+    const isCoach = role.includes('allenatore') || role.includes('coach');
+
     const items = [
       { id: '#dashboard', icon: 'fa-home', text: 'Home' },
-      { id: '#profilo', icon: 'fa-user-circle', text: 'Profilo' },
+      isCoach ? { id: '#squadra', icon: 'fa-users', text: 'Squadra' } : { id: '#profilo', icon: 'fa-user-circle', text: 'Profilo' },
       { id: '#spese', icon: 'fa-receipt', text: 'Spese' }
     ];
 
@@ -621,65 +631,372 @@ class App {
     }
   }
 
-  // Profilo View
-  async renderProfilo() {
+  // Profilo View (Extended with SubTabs)
+  async renderProfilo(forceUserId = null) {
+    let uId = forceUserId;
+    if (!uId) {
+      try {
+        const u = JSON.parse(localStorage.getItem('erp_user') || '{}');
+        uId = u.id;
+      } catch(e){}
+    }
+
+    const isOwningProfile = !forceUserId; // Se non forceUserId, stiamo guardando il nostro
+
     this.container.innerHTML = `
       <div class="screen profilo-screen">
         <header class="app-header glass-header">
-          <div class="app-title">PROFILO</div>
-          <div class="header-icon" onclick="window.location.hash='#settings'"><i class="fas fa-cog"></i></div>
+          <div class="app-title">${isOwningProfile ? 'MIO PROFILO' : 'SCHEDA ATLETA'}</div>
+          ${isOwningProfile 
+            ? `<div class="header-icon" onclick="window.location.hash='#settings'"><i class="fas fa-cog"></i></div>` 
+            : `<div class="header-icon" onclick="window.history.back()"><i class="fas fa-arrow-left"></i></div>`
+          }
         </header>
+
+        <div class="profile-subtabs-container stagger-item delay-1" style="padding: 15px 20px 5px 20px;">
+          <div class="subtab-btn active" onclick="app.switchSubTab('anagrafica', this)">Anagrafica</div>
+          <div class="subtab-btn" onclick="app.switchSubTab('quote', this)">Quote</div>
+          <div class="subtab-btn" onclick="app.switchSubTab('performance', this)">Performance</div>
+          <div class="subtab-btn" onclick="app.switchSubTab('infortuni', this)">Infortuni</div>
+          <div class="subtab-btn" onclick="app.switchSubTab('documenti', this)">Documenti</div>
+          <div class="subtab-btn" onclick="app.switchSubTab('trasporti', this)">Trasporti</div>
+          <div class="subtab-btn" onclick="app.switchSubTab('sotto_utenti', this)">Famiglia</div>
+          <div class="subtab-btn" onclick="app.switchSubTab('presenze', this)">Presenze</div>
+        </div>
 
         <div class="p-20" id="profilo-content">
           <div class="glass-card skeleton" style="height: 200px;"></div>
-          <div class="glass-card skeleton" style="height: 300px;"></div>
         </div>
       </div>
-
-      ${this.getBottomNav('#profilo')}
+      ${isOwningProfile ? this.getBottomNav('#profilo') : ''}
     `;
 
     try {
-      const response = await fetch('../api/?module=athletes&action=myProfile');
+      const url = isOwningProfile ? '../api/?module=athletes&action=myProfile' : \`../api/?module=athletes&action=myProfile&id=\${uId}\`;
+      const response = await fetch(url);
       const result = await response.json();
 
       if (response.ok && result.success && result.data) {
-        const p = result.data;
-        const progress = this.calculateDocProgress(p);
+        this.currentAthleteProfile = result.data;
+        this.currentProfileIsOwn = isOwningProfile;
         
-        const html = `
-          <div class="glass-card stagger-item delay-1" style="text-align: center; position: relative; overflow: hidden;">
-            <div class="profile-avatar-container">
-              ${p.photo_path ? '<img src="../' + p.photo_path + '">' : '<i class="fas fa-user"></i>'}
-            </div>
-            <h2 style="font-size: 24px; margin-bottom: 4px;">${p.first_name} ${p.last_name}</h2>
-            <div style="color: var(--accent-primary); font-weight: 700; font-size: 13px; text-transform: uppercase;">
-              ${p.role || 'Atleta'} • ${p.team_name || 'Fusion'}
-            </div>
-          </div>
-
-          <div class="glass-card stagger-item delay-2">
-            <h3 class="section-title"><i class="fas fa-chart-pie"></i> COMPLETAMENTO PROFILO</h3>
-            <div class="progress-bar-container" style="margin: 15px 0;">
-              <div class="progress-fill" style="width: ${progress}%; background: var(--gradient-primary); height: 8px; border-radius: 4px;"></div>
-            </div>
-            <p style="font-size: 12px; color: var(--text-light);">${progress}% dei documenti caricati</p>
-          </div>
-
-          <div class="glass-card stagger-item delay-3">
-             <h3 class="section-title"><i class="fas fa-folder-open"></i> DOCUMENTI</h3>
-             <div class="doc-list">
-               ${this.renderDocRow("Carta Identità (FR)", p.id_doc_front_file_path, 'id_doc_front_file_path', 'uploadIdDocFront')}
-               ${this.renderDocRow("Certificato Medico", p.medical_cert_file_path, 'medical_cert_file_path', 'uploadMedicalCert')}
-               ${this.renderDocRow("Contratto / Tesseramento", p.contract_file_path, 'contract_file_path', 'uploadContract')}
-             </div>
-          </div>
-        `;
-        document.getElementById('profilo-content').innerHTML = html;
+        // Render subtab anagrafica by default
+        this.renderSubTabAnagrafica();
+      } else {
+        document.getElementById('profilo-content').innerHTML = \`<div class="glass-card text-center"><p>Dati non accessibili.</p></div>\`;
       }
     } catch (e) {
       console.error(e);
+      document.getElementById('profilo-content').innerHTML = \`<div class="glass-card text-center"><p>Errore di connessione.</p></div>\`;
     }
+  }
+
+  switchSubTab(tabId, btnElement) {
+    this.vibrate(20);
+    // Update active class
+    const container = document.querySelector('.profile-subtabs-container');
+    if (container) {
+      container.querySelectorAll('.subtab-btn').forEach(b => b.classList.remove('active'));
+      btnElement.classList.add('active');
+      // scroll into view smoothly
+      btnElement.scrollIntoView({ inline: 'center', behavior: 'smooth' });
+    }
+
+    const contentDiv = document.getElementById('profilo-content');
+    contentDiv.classList.remove('stagger-item');
+    // force reflow to trigger animation again
+    void contentDiv.offsetWidth;
+    contentDiv.classList.add('stagger-item');
+
+    if (tabId === 'anagrafica') this.renderSubTabAnagrafica();
+    else if (tabId === 'documenti') this.renderSubTabDocumenti();
+    else if (tabId === 'quote') this.renderSubTabQuote();
+    else if (tabId === 'performance') this.renderSubTabPerformance();
+    else if (tabId === 'infortuni') this.renderSubTabInfortuni();
+    else if (tabId === 'trasporti') this.renderSubTabTrasporti();
+    else if (tabId === 'sotto_utenti') this.renderSubTabSottoUtenti();
+    else if (tabId === 'presenze') this.renderSubTabPresenze();
+  }
+
+  renderSubTabAnagrafica() {
+    const p = this.currentAthleteProfile;
+    const isMio = this.currentProfileIsOwn;
+
+    const html = \`
+      <div class="glass-card text-center" style="position: relative; overflow: hidden;">
+        <div class="profile-avatar-container">
+          \${p.photo_path ? '<img src="../' + p.photo_path + '">' : '<i class="fas fa-user"></i>'}
+        </div>
+        <h2 style="font-size: 24px; margin-bottom: 4px;">\${p.first_name} \${p.last_name}</h2>
+        <div style="color: var(--accent-primary); font-weight: 700; font-size: 13px; text-transform: uppercase;">
+          \${p.role || 'Atleta'} • \${p.team_name || 'Fusion'}
+        </div>
+      </div>
+      
+      <div class="glass-card">
+        <h3 class="section-title"><i class="fas fa-id-card"></i> DATI PERSONALI</h3>
+        <div class="inline-edit-group">
+          <label class="input-label">Email</label>
+          <div style="color:var(--text-primary); margin-bottom:10px;">\${p.email || 'N/D'}</div>
+        </div>
+        <div class="inline-edit-group">
+          <label class="input-label">Data di Nascita</label>
+          <div style="color:var(--text-primary); margin-bottom:10px;">\${p.birth_date ? new Date(p.birth_date).toLocaleDateString() : 'N/D'}</div>
+        </div>
+        
+        \${isMio ? \`
+        <form id="form-edit-anagrafica" onsubmit="return false">
+          <div class="inline-edit-group">
+            <label class="input-label">Telefono (Modificabile)</label>
+            <input type="tel" class="inline-edit-input" id="edit-phone" value="\${p.phone || ''}" placeholder="Tocca per inserire">
+          </div>
+          <div class="inline-edit-group">
+            <label class="input-label">Taglia Abbigliamento (Modificabile)</label>
+            <input type="text" class="inline-edit-input" id="edit-size" value="\${p.shirt_size || ''}" placeholder="Es: M, L, XL">
+          </div>
+          <button class="btn btn-secondary mt-10" onclick="app.saveAnagraficaPartial()">Salva Dati Modificati</button>
+        </form>
+        \` : \`
+          <div class="inline-edit-group">
+            <label class="input-label">Telefono</label>
+            <div style="color:var(--text-primary); margin-bottom:10px;">\${p.phone || 'N/D'}</div>
+          </div>
+          <div class="inline-edit-group">
+            <label class="input-label">Taglia Abbigliamento</label>
+            <div style="color:var(--text-primary); margin-bottom:10px;">\${p.shirt_size || 'N/D'}</div>
+          </div>
+        \`}
+      </div>
+    \`;
+    document.getElementById('profilo-content').innerHTML = html;
+  }
+
+  saveAnagraficaPartial() {
+    this.vibrate(50);
+    // TODO: implement PATCH to athletes partial update. 
+    alert("Funzione di aggiornamento anagrafica pronta (Mock). Il backend salverebbe i campi consentiti.");
+  }
+
+  renderSubTabDocumenti() {
+    const p = this.currentAthleteProfile;
+    const progress = this.calculateDocProgress(p);
+    
+    document.getElementById('profilo-content').innerHTML = \`
+      <div class="glass-card">
+        <h3 class="section-title"><i class="fas fa-chart-pie"></i> COMPLETAMENTO PROFILO</h3>
+        <div class="progress-bar-container" style="margin: 15px 0;">
+          <div class="progress-fill" style="width: \${progress}%; background: var(--gradient-primary); height: 8px; border-radius: 4px;"></div>
+        </div>
+        <p style="font-size: 12px; color: var(--text-light);">\${progress}% dei documenti caricati</p>
+      </div>
+
+      <div class="glass-card">
+         <h3 class="section-title"><i class="fas fa-folder-open"></i> DOCUMENTI</h3>
+         <div class="doc-list">
+           \${this.renderDocRow("Carta Identità (FR)", p.id_doc_front_file_path, 'id_doc_front_file_path', 'uploadIdDocFront')}
+           \${this.renderDocRow("Certificato Medico", p.medical_cert_file_path, 'medical_cert_file_path', 'uploadMedicalCert')}
+           \${this.renderDocRow("Contratto / Tesseramento", p.contract_file_path, 'contract_file_path', 'uploadContract')}
+         </div>
+      </div>
+    \`;
+  }
+
+  renderSubTabQuote() {
+    document.getElementById('profilo-content').innerHTML = \`
+      <div class="glass-card text-center">
+        <i class="fas fa-money-bill-wave" style="font-size:40px; color:var(--success); margin-bottom:15px; opacity:0.8;"></i>
+        <h3>Quote e Pagamenti</h3>
+        <p class="text-muted mt-10">Vista in fase di sincronizzazione con il comparto Quote.</p>
+      </div>
+    \`;
+  }
+
+  renderSubTabPerformance() {
+    document.getElementById('profilo-content').innerHTML = \`
+      <div class="glass-card text-center">
+        <i class="fas fa-tachometer-alt" style="font-size:40px; color:var(--accent-primary); margin-bottom:15px; opacity:0.8;"></i>
+        <h3>ACWR & Salti</h3>
+        <p class="text-muted mt-10">L'elaborazione delle tue performance fisiche (Vald, salti, carico di lavoro) apparirà qui graficamente.</p>
+        <canvas id="perf-chart" style="width:100%; height:200px; margin-top:20px;"></canvas>
+      </div>
+    \`;
+    // Mock Chart
+    setTimeout(() => {
+      const ctx = document.getElementById('perf-chart');
+      if (ctx && window.Chart) {
+        new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: ['G1','G2','G3','G4','G5'],
+            datasets: [{
+               label: 'Salto in Alto (cm)',
+               data: [50, 52, 51, 55, 54],
+               borderColor: '#00f2fe', tension: 0.4
+            }]
+          },
+          options: { plugins:{legend:{display:false}} }
+        });
+      }
+    }, 100);
+  }
+
+  renderSubTabInfortuni() {
+    document.getElementById('profilo-content').innerHTML = \`
+      <div class="glass-card text-center">
+        <i class="fas fa-briefcase-medical" style="font-size:40px; color:var(--danger); margin-bottom:15px; opacity:0.8;"></i>
+        <h3>Storico Medico</h3>
+        <p class="text-muted mt-10">Elenco infortuni e riabilitazione connessa.</p>
+      </div>
+    \`;
+  }
+
+  renderSubTabTrasporti() {
+    document.getElementById('profilo-content').innerHTML = \`
+      <div class="glass-card text-center">
+        <i class="fas fa-shuttle-van" style="font-size:40px; color:var(--warning); margin-bottom:15px; opacity:0.8;"></i>
+        <h3>Trasporti e Corse</h3>
+        <p class="text-muted mt-10">Non hai turni di trasporto assegnati per i prossimi eventi.</p>
+      </div>
+    \`;
+  }
+
+  renderSubTabSottoUtenti() {
+    document.getElementById('profilo-content').innerHTML = \`
+      <div class="glass-card">
+        <h3 class="section-title"><i class="fas fa-users"></i> LEGAMI FAMIGLIARI</h3>
+        <p class="text-light" style="font-size:13px; margin-bottom:15px;">Gestisci i profili associati al tuo account (es. figli).</p>
+        \${this.currentProfileIsOwn ? \`<button class="btn btn-secondary"><i class="fas fa-link"></i> ASSOCIA NUOVO MINORE</button>\` : ''}
+      </div>
+    \`;
+  }
+
+  renderSubTabPresenze() {
+    document.getElementById('profilo-content').innerHTML = \`
+      <div class="glass-card text-center">
+        <i class="fas fa-check-square" style="font-size:40px; color:var(--accent-secondary); margin-bottom:15px; opacity:0.8;"></i>
+        <h3>Presenze Personali</h3>
+        <p class="text-muted mt-10">Statistiche 92% presenze questo mese.</p>
+      </div>
+    \`;
+  }
+
+  // SQUADRA E PRESENZE COATCH (NEW VUES)
+  async renderSquadra() {
+    this.container.innerHTML = \`
+      <div class="screen squadra-screen">
+        <header class="app-header glass-header">
+          <div class="app-title">LA TUA SQUADRA</div>
+          <div class="header-icon" onclick="window.location.hash='#presenze-team'"><i class="fas fa-clipboard-check"></i></div>
+        </header>
+
+        <div class="p-20">
+          <div class="glass-card stagger-item delay-1" style="background: rgba(0, 242, 254, 0.05); border-color: rgba(0, 242, 254, 0.2);">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <h3 style="color:var(--accent-primary); font-size:14px; margin-bottom:2px;">APPELLO DI SQUADRA</h3>
+                <p style="font-size:12px; color:var(--text-light);">Registra le presenze per l'allenamento odierno</p>
+              </div>
+              <button class="icon-btn" style="background:var(--accent-primary); color:#000;" onclick="window.location.hash='#presenze-team'"><i class="fas fa-arrow-right"></i></button>
+            </div>
+          </div>
+
+          <h3 class="section-title mt-20 stagger-item delay-2">ELENCO ATLETI ROSTER</h3>
+          <div id="squadra-list" class="team-list stagger-item delay-3">
+             <div class="glass-card skeleton" style="height:60px;"></div>
+             <div class="glass-card skeleton" style="height:60px;"></div>
+             <div class="glass-card skeleton" style="height:60px;"></div>
+          </div>
+        </div>
+      </div>
+      \${this.getBottomNav('#squadra')}
+    \`;
+
+    try {
+      // Fetch mock list or real API for athletes
+      // Assuming a generic fetch to /athletes or similar
+      const res = await fetch('../api/?module=athletes&action=list');
+      const data = await res.json();
+
+      let html = '';
+      if (data.success && data.data && data.data.length > 0) {
+        data.data.forEach(athlete => {
+          html += \`
+            <div class="athlete-item" onclick="app.renderProfilo('\${athlete.id}')">
+              <div class="athlete-avatar">
+                \${athlete.photo_path ? \`<img src="../\${athlete.photo_path}">\` : '<i class="fas fa-user"></i>'}
+              </div>
+              <div class="athlete-details">
+                <div class="athlete-name">\${athlete.first_name} \${athlete.last_name}</div>
+                <div class="athlete-meta">\${athlete.role || 'Giocatore'}</div>
+              </div>
+              <i class="fas fa-chevron-right" style="color: var(--border-subtle)"></i>
+            </div>
+          \`;
+        });
+      } else {
+        html = '<p class="text-muted text-center" style="margin-top:20px;">Nessun atleta trovato in squadra.</p>';
+      }
+      document.getElementById('squadra-list').innerHTML = html;
+    } catch(e) {
+      document.getElementById('squadra-list').innerHTML = '<p class="text-danger text-center">Nessuna connessione.</p>';
+    }
+  }
+
+  async renderPresenzeTeam() {
+    this.container.innerHTML = \`
+      <div class="screen presenze-team-screen">
+        <header class="app-header glass-header">
+          <div class="app-title">APPELLO OGGI</div>
+          <div class="header-icon" onclick="window.location.hash='#squadra'"><i class="fas fa-times"></i></div>
+        </header>
+
+        <div class="p-20">
+          <h2 style="font-size:20px; text-transform:uppercase; margin-bottom:20px;" class="stagger-item text-center">\${new Date().toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' })}</h2>
+          
+          <div id="attendance-grid" class="attendance-grid stagger-item delay-1">
+             <div class="glass-card skeleton" style="height:100px;"></div>
+             <div class="glass-card skeleton" style="height:100px;"></div>
+          </div>
+          
+          <button class="btn mt-20 stagger-item delay-2" style="background:var(--success)"><i class="fas fa-save"></i> CONFERMA MASCHERA PRESENZE</button>
+        </div>
+      </div>
+    \`;
+
+    // Load same list of athletes and render them as attendance cards
+    try {
+      const res = await fetch('../api/?module=athletes&action=list');
+      const data = await res.json();
+      let html = '';
+      if (data.success && data.data && data.data.length > 0) {
+        data.data.forEach(athlete => {
+          html += \`
+            <div class="attendance-card" id="att-card-\${athlete.id}">
+              <div class="athlete-avatar" style="margin:0 auto 10px; width:50px; height:50px;">
+                \${athlete.photo_path ? \`<img src="../\${athlete.photo_path}">\` : '<i class="fas fa-user"></i>'}
+              </div>
+              <div class="athlete-name" style="font-size:13px;">\${athlete.first_name}</div>
+              <div class="athlete-name" style="font-size:13px; opacity:0.8;">\${athlete.last_name}</div>
+              
+              <div class="attendance-actions">
+                <button class="btn-att btn-att-yes" onclick="app.markAttendance('\${athlete.id}', 'present')"><i class="fas fa-check"></i></button>
+                <button class="btn-att btn-att-no" onclick="app.markAttendance('\${athlete.id}', 'absent')"><i class="fas fa-times"></i></button>
+              </div>
+            </div>
+          \`;
+        });
+      }
+      document.getElementById('attendance-grid').innerHTML = html;
+    } catch(e) {}
+  }
+
+  markAttendance(id, status) {
+    this.vibrate(20);
+    const card = document.getElementById('att-card-' + id);
+    if (!card) return;
+    
+    card.classList.remove('present', 'absent');
+    card.classList.add(status);
   }
 
   renderDocRow(title, path, field, action) {
