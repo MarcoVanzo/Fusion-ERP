@@ -94,11 +94,15 @@ if (str_contains($clientIp, ',')) {
 }
 
 // Strict rate limit for authentication endpoints (5 req / 15 min per IP)
+// Note: AuthController has its own DB-based rate limiter for failed login attempts.
+// This file-based one adds defense-in-depth at the router level (protects against
+// brute-force before hitting the DB).
 if ($module === 'auth' && in_array($action, ['login', 'requestPasswordReset'], true)) {
     RateLimiter::strict($clientIp . '_auth');
+} else {
+    // Normal rate limit for all other API calls (60 req / min per IP)
+    RateLimiter::normal($clientIp);
 }
-// Normal rate limit for all other API calls (60 req / min per IP)
-RateLimiter::normal($clientIp);
 
 // ─── MODULE DISPATCH ──────────────────────────────────────────────────────────
 try {

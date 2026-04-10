@@ -45,7 +45,7 @@ class RateLimiter
                 $decoded = json_decode($raw, true);
                 if (is_array($decoded)) {
                     // Keep only timestamps within the current window
-                    $timestamps = array_filter($decoded, fn(int $ts) => ($now - $ts) < $windowSec);
+                    $timestamps = array_filter($decoded, fn($ts) => ($now - $ts) < $windowSec);
                 }
             }
         }

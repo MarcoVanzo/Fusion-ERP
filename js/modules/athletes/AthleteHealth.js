@@ -72,19 +72,19 @@ export const AthleteHealth = {
                         <h4 style="font-size:12px; font-weight:900; color:#ef4444; text-transform:uppercase; letter-spacing:1px; margin-bottom:12px;">Generale</h4>
                         <div style="margin-bottom:12px;">
                             <div style="font-size:11px; opacity:0.5; margin-bottom:4px; text-transform:uppercase;">Gruppo Sanguigno</div>
-                            <div style="font-size:14px; color:#fff;">${anamnesi.blood_type || '—'}</div>
+                            <div style="font-size:14px; color:#fff;">${Utils.escapeHtml(anamnesi.blood_type || '—')}</div>
                         </div>
                         <div style="margin-bottom:12px;">
                             <div style="font-size:11px; opacity:0.5; margin-bottom:4px; text-transform:uppercase;">Malattie Croniche</div>
-                            <div style="font-size:14px; color:#fff;">${anamnesi.chronic_conditions || '—'}</div>
+                            <div style="font-size:14px; color:#fff;">${Utils.escapeHtml(anamnesi.chronic_conditions || '—')}</div>
                         </div>
                         <div style="margin-bottom:12px;">
                             <div style="font-size:11px; opacity:0.5; margin-bottom:4px; text-transform:uppercase;">Farmaci Assunti</div>
-                            <div style="font-size:14px; color:#fff;">${anamnesi.regular_medications || '—'}</div>
+                            <div style="font-size:14px; color:#fff;">${Utils.escapeHtml(anamnesi.regular_medications || '—')}</div>
                         </div>
                         <div>
                             <div style="font-size:11px; opacity:0.5; margin-bottom:4px; text-transform:uppercase;">Interventi Chirurgici Pregressi</div>
-                            <div style="font-size:14px; color:#fff;">${anamnesi.past_surgeries || '—'}</div>
+                            <div style="font-size:14px; color:#fff;">${Utils.escapeHtml(anamnesi.past_surgeries || '—')}</div>
                         </div>
                     </div>
                 </div>
@@ -153,8 +153,8 @@ export const AthleteHealth = {
                         </div>
                         <div style="font-size:13px; color:var(--color-text-muted); display:flex; gap:16px; flex-wrap:wrap;">
                             <span><i class="ph ph-calendar"></i> ${dDate}</span>
-                            <span><i class="ph ph-first-aid"></i> ${injury.injury_type || '—'}</span>
-                            <span><i class="ph ph-activity"></i> ${injury.status || '—'}</span>
+                            <span><i class="ph ph-first-aid"></i> ${Utils.escapeHtml(injury.injury_type || '—')}</span>
+                            <span><i class="ph ph-activity"></i> ${Utils.escapeHtml(injury.status || '—')}</span>
                         </div>
                         ${injury.diagnosis ? `<div style="font-size:13px; color:rgba(255,255,255,0.7); margin-top:8px;"><strong>Diagnosi:</strong> ${Utils.escapeHtml(injury.diagnosis)}</div>` : ''}
                         

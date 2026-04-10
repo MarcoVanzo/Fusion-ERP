@@ -68,13 +68,27 @@ try {
 }
 
 // ─── Disk ────────────────────────────────────────────────────────────────────
-$uploadsDir = dirname(__DIR__) . '/uploads';
-$freeMb = round(disk_free_space($uploadsDir) / 1048576);
-$checks['disk'] = [
-    'ok'      => $freeMb > 100,  // Alert if less than 100MB free
-    'free_mb' => $freeMb,
-];
-if (!$checks['disk']['ok']) $overallOk = false;
+try {
+    $uploadsDir = dirname(__DIR__) . '/uploads';
+    if (!function_exists('disk_free_space') || !is_dir($uploadsDir)) {
+        throw new \RuntimeException('disk_free_space unavailable');
+    }
+    $freeBytes = @disk_free_space($uploadsDir);
+    if ($freeBytes === false) {
+        throw new \RuntimeException('disk_free_space returned false');
+    }
+    $freeMb = (int) round($freeBytes / 1048576);
+    $checks['disk'] = [
+        'ok'      => $freeMb > 100,  // Alert if less than 100MB free
+        'free_mb' => $freeMb,
+    ];
+} catch (\Throwable $e) {
+    $checks['disk'] = [
+        'ok'   => true,  // Don't fail health check if we can't read disk
+        'note' => 'disk_free_space unavailable on this host',
+    ];
+}
+if (isset($checks['disk']['ok']) && !$checks['disk']['ok']) $overallOk = false;
 
 // ─── Environment ─────────────────────────────────────────────────────────────
 $requiredEnv = ['DB_HOST', 'DB_NAME', 'DB_USER'];
