@@ -57,7 +57,7 @@ const TeamsView = {
             return Utils.emptyState("Nessuna squadra", "Aggiungi la prima squadra per iniziare a gestire le stagioni.");
         }
 
-        let html = '<div class="teams-list" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(400px, 1fr));gap:24px;">';
+        let html = '<div class="teams-list" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(400px, 1fr));gap:28px;">';
         teams.forEach(team => {
             const activeSeasons = team.seasons ? team.seasons.filter(s => parseInt(s.is_active) === 1) : [];
             const teamColor = team.color_hex || 'var(--color-pink)';
@@ -65,42 +65,47 @@ const TeamsView = {
             html += `
                 <div class="dash-card team-item-card" style="--team-color: ${teamColor}">
                     <!-- Team Identity -->
-                    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;">
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;position:relative;z-index:2;">
                         <div>
-                            <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
-                                <h3 style="margin:0;font-size:20px;font-weight:800;font-family:var(--font-display);">${Utils.escapeHtml(team.name)}</h3>
-                                ${team.gender === 'M' ? '<span class="badge" style="background:rgba(0,242,254,0.1);color:var(--accent-primary);border:1px solid var(--accent-primary)">M</span>' : team.gender === 'F' ? '<span class="badge" style="background:rgba(255,0,122,0.1);color:var(--color-pink);border:1px solid var(--color-pink)">F</span>' : ''}
+                            <div style="display:flex;align-items:center;gap:16px;margin-bottom:10px;">
+                                <h3 style="margin:0;font-size:24px;font-weight:900;font-family:var(--font-display);letter-spacing:0.5px;color:#fff;">${Utils.escapeHtml(team.name)}</h3>
+                                ${team.gender === 'M' ? '<span class="badge" style="background:rgba(0,242,254,0.1);color:var(--accent-primary);border:1px solid rgba(0,242,254,0.3);padding:4px 8px;border-radius:6px;font-weight:800;">M</span>' : team.gender === 'F' ? '<span class="badge" style="background:rgba(255,0,122,0.1);color:var(--color-pink);border:1px solid rgba(255,0,122,0.3);padding:4px 8px;border-radius:6px;font-weight:800;">F</span>' : ''}
                             </div>
-                            <div style="font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:6px;text-transform:uppercase;letter-spacing:1px;font-weight:600;">
-                                <i class="ph ph-tag"></i> ${team.category || 'Categoria non definita'}
+                            <div style="font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:8px;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">
+                                <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${teamColor};box-shadow:0 0 8px ${teamColor};"></span>
+                                ${Utils.escapeHtml(team.category || 'Categoria non definita')}
                             </div>
                         </div>
                         
                         <!-- Actions -->
                         ${isAdmin ? `
-                        <div style="display:flex;gap:4px;">
-                            <button class="icon-btn" data-edit-team-profile="${team.id}" title="Modifica Squadra" style="width:32px;height:32px;border-radius:8px;"><i class="ph ph-pencil-simple" style="font-size:16px;"></i></button>
-                            <button class="icon-btn" data-delete-team-full="${team.id}" title="Elimina Squadra" style="width:32px;height:32px;border-radius:8px;color:var(--color-danger)"><i class="ph ph-trash" style="font-size:16px;"></i></button>
+                        <div style="display:flex;gap:8px;background:rgba(0,0,0,0.3);padding:6px;border-radius:12px;border:1px solid rgba(255,255,255,0.05);backdrop-filter:blur(10px);">
+                            <button class="icon-btn" data-edit-team-profile="${team.id}" title="Modifica Squadra" style="width:34px;height:34px;border-radius:8px;background:rgba(255,255,255,0.02);transition:all 0.2s;"><i class="ph ph-pencil-simple" style="font-size:16px;"></i></button>
+                            <button class="icon-btn" data-delete-team-full="${team.id}" title="Elimina Squadra" style="width:34px;height:34px;border-radius:8px;color:var(--color-danger);background:rgba(255,255,255,0.02);transition:all 0.2s;"><i class="ph ph-trash" style="font-size:16px;"></i></button>
                         </div>
                         ` : ''}
                     </div>
                     
                     <!-- Seasons Info -->
-                    <div style="background:rgba(0,0,0,0.2);border-radius:12px;padding:16px;border:1px solid var(--color-border);">
-                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-                            <div class="section-label">Stagioni Attive</div>
-                            ${isAdmin ? `<button class="icon-btn" data-add-season-to-team="${team.id}" style="width:24px;height:24px;border-radius:6px;" title="Aggiungi Stagione"><i class="ph ph-plus" style="font-size:12px;"></i></button>` : ''}
+                    <div style="background:rgba(0,0,0,0.25);border-radius:16px;padding:20px;border:1px solid rgba(255,255,255,0.05);position:relative;z-index:2;box-shadow:inset 0 2px 10px rgba(0,0,0,0.2);">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+                            <div class="section-label" style="display:flex;align-items:center;gap:8px;color:var(--color-text-dim);font-size:11px;">
+                                <i class="ph ph-calendar-blank" style="font-size:14px;color:var(--text-muted)"></i> STAGIONI ATTIVE
+                            </div>
+                            ${isAdmin ? `<button class="icon-btn" data-add-season-to-team="${team.id}" style="width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,0.05);color:#fff;" title="Aggiungi Stagione"><i class="ph ph-plus" style="font-size:14px;"></i></button>` : ''}
                         </div>
-                        <div style="display:flex;flex-direction:column;gap:8px">
+                        <div style="display:flex;flex-direction:column;gap:10px">
                             ${activeSeasons.length > 0 ? activeSeasons.map(s => `
                                 <div class="season-pill">
-                                    <div style="font-weight:700;font-size:14px;display:flex;align-items:center;gap:10px;font-family:var(--font-mono);color:var(--success)">
-                                        <i class="ph ph-calendar-check" style="color:var(--success);font-size:16px;"></i>
+                                    <div style="font-weight:800;font-size:15px;display:flex;align-items:center;gap:12px;font-family:var(--font-mono);color:var(--success);text-shadow:0 0 10px rgba(16, 185, 129, 0.2);">
+                                        <div style="width:32px;height:32px;border-radius:8px;background:rgba(16, 185, 129, 0.1);display:flex;align-items:center;justify-content:center;border:1px solid rgba(16, 185, 129, 0.2);">
+                                            <i class="ph ph-calendar-check" style="color:var(--success);font-size:16px;"></i>
+                                        </div>
                                         ${Utils.escapeHtml(s.season)}
                                     </div>
-                                    ${isAdmin ? `<button class="icon-btn" data-toggle-season-status="${s.id}" data-action="0" title="Disattiva" style="color:var(--warning);width:28px;height:28px;border-radius:6px;"><i class="ph ph-eye-slash" style="font-size:14px;"></i></button>` : ''}
+                                    ${isAdmin ? `<button class="icon-btn" data-toggle-season-status="${s.id}" data-action="0" title="Disattiva" style="color:var(--warning);width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,0.03);"><i class="ph ph-eye-slash" style="font-size:16px;"></i></button>` : ''}
                                 </div>
-                            `).join('') : '<div style="font-size:13px;color:var(--text-muted);font-style:italic;text-align:center;padding:8px;">Nessuna stagione attiva</div>'}
+                            `).join('') : '<div style="font-size:13px;color:var(--text-muted);font-style:italic;text-align:center;padding:12px;background:rgba(255,255,255,0.02);border-radius:10px;">Nessuna stagione attiva</div>'}
                         </div>
                     </div>
                 </div>
