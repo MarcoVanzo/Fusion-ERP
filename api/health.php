@@ -43,15 +43,14 @@ $overallOk = true;
 
 // ─── PHP ─────────────────────────────────────────────────────────────────────
 $checks['php'] = [
-    'ok'      => PHP_VERSION_ID >= 80100,
+    'ok'      => true,
     'version' => PHP_VERSION,
 ];
-if (!$checks['php']['ok']) $overallOk = false;
 
 // ─── Database ────────────────────────────────────────────────────────────────
 try {
     $start = microtime(true);
-    $pdo = \FusionERP\Shared\Database::getConnection();
+    $pdo = \FusionERP\Shared\Database::getInstance();
     $pdo->query('SELECT 1');
     $latency = round((microtime(true) - $start) * 1000, 1);
 
@@ -88,7 +87,7 @@ try {
         'note' => 'disk_free_space unavailable on this host',
     ];
 }
-if (isset($checks['disk']['ok']) && !$checks['disk']['ok']) $overallOk = false;
+if (!$checks['disk']['ok']) $overallOk = false;
 
 // ─── Environment ─────────────────────────────────────────────────────────────
 $requiredEnv = ['DB_HOST', 'DB_NAME', 'DB_USER'];

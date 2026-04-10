@@ -58,8 +58,6 @@ class RateLimiter
                 "Troppe richieste. Riprova tra " . ceil($retryAfter / 60) . " minuti.",
                 429
             );
-            // Response::error exits, but just in case:
-            return;
         }
 
         // Record this request
