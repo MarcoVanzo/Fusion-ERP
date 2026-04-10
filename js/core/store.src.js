@@ -10,8 +10,6 @@
  *  - Store.invalidate(key)                   — Cache invalidation
  *  - Store.clearCache()                      — Full cache flush
  *
- * Also exports UI — Modal, Toast, Confirm, Loading overlay, Skeleton.
- *
  * SOURCE FILE — the minified production version is js/core/store.js
  */
 

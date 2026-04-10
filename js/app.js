@@ -1,3 +1,5 @@
+'use strict';
+
 /**
  * App — Bootstrap & Orchestrator
  * Fusion ERP v1.0
@@ -11,8 +13,6 @@
  *
  * Dependencies: Store, UI, Utils, Router (loaded before this file)
  */
-
-'use strict';
 
 const App = (() => {
     let _currentUser = null;

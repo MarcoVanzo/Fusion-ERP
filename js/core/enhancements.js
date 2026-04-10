@@ -127,15 +127,6 @@ const Enhancements = (() => {
                     }
                 }
             }
-
-            // ESC — close any open modal
-            if (e.key === 'Escape') {
-                const modal = document.querySelector('.modal-overlay:not(.hidden)');
-                if (modal) {
-                    const closeBtn = modal.querySelector('.modal-close, [data-modal-close]');
-                    if (closeBtn) closeBtn.click();
-                }
-            }
         };
         document.addEventListener('keydown', _kbShortcuts);
         (window._appKbHandlers ??= []).push([_kbShortcuts]);

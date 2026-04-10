@@ -111,7 +111,7 @@ const AuthFlow = (() => {
                 btn.innerHTML = 'ACCEDI';
                 btn.style.opacity = '1';
             }
-        });
+        }, { signal: _abortAuth.signal });
     }
 
     /**

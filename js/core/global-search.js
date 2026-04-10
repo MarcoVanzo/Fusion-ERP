@@ -103,7 +103,8 @@ const GlobalSearch = (() => {
             if (!q) { _closeResults(); return; }
             _debounceTimer = setTimeout(async () => {
                 await _ensureIndex();
-                const filtered = (_athleteIndex || []).filter(a =>
+                const combined = [...(_athleteIndex || []), ...(_internalStaffIndex || [])];
+                const filtered = combined.filter(a =>
                     (a.full_name || '').toLowerCase().includes(q.toLowerCase()) ||
                     (a.role || '').toLowerCase().includes(q.toLowerCase()) ||
                     (a.team_name || '').toLowerCase().includes(q.toLowerCase())
@@ -159,26 +160,29 @@ const GlobalSearch = (() => {
     /**
      * Extend the global search to also include staff members.
      * Lazy-loads staff index on first focus.
+     * MUST be called after init() so the shared _staffIndex variable is accessible.
      */
     function extendWithStaff() {
         const input = document.getElementById('global-search');
         if (!input) return;
 
-        let _staffIndex = null;
-
         input.addEventListener('focus', async () => {
-            if (_staffIndex) return;
+            if (_internalStaffIndex) return;
             try {
-                _staffIndex = await Store.get('list', 'staff');
+                _internalStaffIndex = await Store.get('list', 'staff');
             } catch {
-                _staffIndex = [];
+                _internalStaffIndex = [];
             }
         });
-
-        // Expose staff index for the search function to pick up
-        window._fusionStaffSearchIndex = () => _staffIndex;
     }
 
-    return { init, extendWithStaff };
+    // Module-level staff index reference — written by extendWithStaff, read by init's search filter
+    let _internalStaffIndex = null;
+
+    return {
+        init,
+        extendWithStaff,
+        /** @internal */ _getStaffIndex: () => _internalStaffIndex
+    };
 })();
 window.GlobalSearch = GlobalSearch;

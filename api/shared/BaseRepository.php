@@ -93,7 +93,7 @@ abstract class BaseRepository
     ): array {
         $where = $this->buildWhereClause($conditions);
         $order = $orderBy ?? "{$this->defaultOrderBy} {$this->defaultOrderDir}";
-        $limitClause = $limit !== null ? " LIMIT {$limit}" : '';
+        $limitClause = $limit !== null ? ' LIMIT ' . (int) $limit : '';
 
         $sql = "SELECT {$columns} FROM {$this->table} WHERE {$where} ORDER BY {$order}{$limitClause}";
         $stmt = $this->db->prepare($sql);

@@ -30,8 +30,8 @@ const Navigation = (() => {
             let base = '';
             const scripts = document.getElementsByTagName('script');
             for (let s of scripts) {
-                if (s.src && s.src.includes('js/app.js')) {
-                    base = s.src.split('js/app.js')[0];
+                if (s.src && s.src.includes('js/core/store.js')) {
+                    base = s.src.split('js/core/store.js')[0];
                     break;
                 }
             }
