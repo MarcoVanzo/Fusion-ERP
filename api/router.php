@@ -12,6 +12,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../vendor/autoload.php';
 
 use FusionERP\Shared\Auth;
+use FusionERP\Shared\RateLimiter;
 use FusionERP\Shared\Response;
 
 // Load environment variables from .env
@@ -85,6 +86,19 @@ $action = filter_input(INPUT_GET, 'action', FILTER_DEFAULT) ?? '';
 if (empty($module) || empty($action)) {
     Response::error('Parametri di routing mancanti', 400);
 }
+
+// ─── RATE LIMITING ────────────────────────────────────────────────────────────
+$clientIp = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+if (str_contains($clientIp, ',')) {
+    $clientIp = trim(explode(',', $clientIp)[0]); // First IP in X-Forwarded-For chain
+}
+
+// Strict rate limit for authentication endpoints (5 req / 15 min per IP)
+if ($module === 'auth' && in_array($action, ['login', 'requestPasswordReset'], true)) {
+    RateLimiter::strict($clientIp . '_auth');
+}
+// Normal rate limit for all other API calls (60 req / min per IP)
+RateLimiter::normal($clientIp);
 
 // ─── MODULE DISPATCH ──────────────────────────────────────────────────────────
 try {

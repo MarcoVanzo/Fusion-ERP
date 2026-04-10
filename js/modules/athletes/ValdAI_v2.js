@@ -72,7 +72,7 @@ window.__valdAi = async function (athleteId, part) {
     `;
 
   } catch (err) {
-    resultEl.innerHTML = `<div class="error-box" style="margin-top:20px;">${err.message}</div>`;
+    resultEl.innerHTML = `<div class="error-box" style="margin-top:20px;">${Utils.escapeHtml(err.message)}</div>`;
   }
 };
 
@@ -98,7 +98,7 @@ window.__valdChat = async function (athleteId, typeClass) {
   // Push User message
   const userMsg = document.createElement("div");
   userMsg.className = "chat-bubble user";
-  userMsg.innerHTML = `<span style="font-size:10px; opacity:0.4; display:block; margin-bottom:4px;">Tu</span>${question}`;
+  userMsg.innerHTML = `<span style="font-size:10px; opacity:0.4; display:block; margin-bottom:4px;">Tu</span>${Utils.escapeHtml(question)}`;
   history.appendChild(userMsg);
   history.scrollTop = history.scrollHeight;
 
@@ -111,10 +111,10 @@ window.__valdChat = async function (athleteId, typeClass) {
 
   try {
     const resp = await Store.api("aiChat", "vald", { athleteId, question, context });
-    aiMsg.innerHTML = `<span style="font-size:10px; opacity:0.4; display:block; margin-bottom:4px;">Assistant</span>${resp?.answer || "Spiacente, non ho potuto rispondere."}`;
+    aiMsg.innerHTML = `<span style="font-size:10px; opacity:0.4; display:block; margin-bottom:4px;">Assistant</span>${renderAiMarkdown(resp?.answer || "Spiacente, non ho potuto rispondere.")}`;
   } catch (err) {
     aiMsg.classList.add("text-danger");
-    aiMsg.innerHTML = `<span style="font-size:10px; opacity:0.4; display:block; margin-bottom:4px;">Assistant</span>Errore: ${err.message}`;
+    aiMsg.innerHTML = `<span style="font-size:10px; opacity:0.4; display:block; margin-bottom:4px;">Assistant</span>Errore: ${Utils.escapeHtml(err.message)}`;
   } finally {
     input.disabled = false;
     input.focus();

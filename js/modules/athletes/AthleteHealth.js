@@ -30,7 +30,7 @@ export const AthleteHealth = {
             this._renderUi(container, athlete, anamnesi, injuries);
         } catch (e) {
             console.error("Errore _loadData:", e);
-            container.innerHTML = `<div class="error-box">Errore caricamento dati medici: ${e.message}</div>`;
+            container.innerHTML = `<div class="error-box">Errore caricamento dati medici: ${Utils.escapeHtml(e.message)}</div>`;
         }
     },
 
@@ -643,7 +643,7 @@ export const AthleteHealth = {
                 throw new Error(res.error);
             }
         } catch (e) {
-            container.innerHTML = `<div style="color:#ef4444; padding:16px;">Errore caricamento visite: ${e.message}</div>`;
+            container.innerHTML = `<div style="color:#ef4444; padding:16px;">Errore caricamento visite: ${Utils.escapeHtml(e.message)}</div>`;
         }
     },
 
@@ -695,7 +695,7 @@ export const AthleteHealth = {
                 throw new Error(res.error);
             }
         } catch (e) {
-            container.innerHTML = `<div style="color:#ef4444; padding:16px;">Errore caricamento documenti: ${e.message}</div>`;
+            container.innerHTML = `<div style="color:#ef4444; padding:16px;">Errore caricamento documenti: ${Utils.escapeHtml(e.message)}</div>`;
         }
     }
 };

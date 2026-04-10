@@ -19,6 +19,11 @@ Options -Indexes
     Require all denied
 </FilesMatch>
 
+# Block any test/debug scripts that might leak into production
+<FilesMatch "^(test_|debug_|check_|query_|find_|list_models).*\.php$">
+    Require all denied
+</FilesMatch>
+
 # Block PHP execution in uploads directory
 # NOTE: FilesMatch with relative paths does NOT reliably block subdirectories in .htaccess.
 # A dedicated uploads/.htaccess (php_flag engine off) is the correct approach.
