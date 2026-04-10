@@ -509,7 +509,15 @@ class DashboardController
                         'date'  => $row['date'] ?? date('Y-m-d H:i:s'),
                     ];
                 }
-            } catch (\Throwable $e) { /* Tabella mancante o colonna diversa: ignoriamo su dev server */ }
+            } catch (\Throwable $e) { 
+                $nodes[] = [
+                    'icon' => 'warning',
+                    'text' => 'ERR: ' . $e->getMessage(),
+                    'badge' => 'DEBUG SQL',
+                    'color' => '#FF0000',
+                    'date' => date('Y-m-d H:i:s')
+                ];
+            }
             return $nodes;
         };
 
@@ -624,3 +632,40 @@ class DashboardController
             'ecommerce'     => array_slice($ecommerce, 0, 10),
         ]);
     }
+
+    public function debugDashboard(): void
+    {
+        $db  = Database::getInstance();
+        $tid = 'TNT_fusion';
+        $res = [];
+        $queryNodes = function(string $sql, array $params, string $name) use ($db, &$res) {
+            try {
+                $s = $db->prepare($sql);
+                $s->execute($params);
+                $count = $s->rowCount();
+                $res[$name] = "OK ($count rows)";
+            } catch (\Throwable $e) {
+                $res[$name] = "ERR: " . $e->getMessage();
+            }
+        };
+
+        $queryNodes("SELECT CONCAT('Nuovo Tesseramento: ', full_name) as text, created_at as date FROM athletes WHERE tenant_id=:t AND created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 5", [':t' => $tid], 'athletes');
+        $queryNodes("SELECT CONCAT('Alert ACWR: ', a.full_name) as text, al.log_date as date FROM acwr_alerts al JOIN athletes a ON a.id = al.athlete_id WHERE a.tenant_id=:t AND al.log_date >= DATE_SUB(CURDATE(), INTERVAL 14 DAY) LIMIT 3", [':t' => $tid], 'acwr');
+        $queryNodes("SELECT fm.home_score as text, fm.match_date as date FROM federation_matches fm WHERE fm.tenant_id=:t AND fm.match_date BETWEEN DATE_SUB(CURDATE(), INTERVAL 14 DAY) AND CURDATE() LIMIT 4", [':t' => $tid], 'matches');
+        $queryNodes("SELECT location as text, event_date as date FROM events WHERE tenant_id=:t AND created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 4", [':t' => $tid], 'events');
+        $queryNodes("SELECT title as text, created_at as date FROM tasks WHERE tenant_id=:t AND created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 4", [':t' => $tid], 'tasks');
+        $queryNodes("SELECT vehicle_id as text, created_at as date FROM vehicle_logs WHERE tenant_id=:t AND created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 4", [':t' => $tid], 'vehicle_logs');
+        $queryNodes("SELECT recipient as text, created_at as date FROM whatsapp_messages WHERE tenant_id=:t AND created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 5", [':t' => $tid], 'whatsapp');
+        $queryNodes("SELECT subject as text, sent_at as date FROM newsletter_campaigns WHERE tenant_id=:t AND sent_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 3", [':t' => $tid], 'newsletter');
+        $queryNodes("SELECT title as text, created_at as date FROM website_news WHERE tenant_id=:t AND created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 3", [':t' => $tid], 'website_news');
+        $queryNodes("SELECT amount as text, payment_date as date FROM staff_payments WHERE tenant_id=:t AND created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 4", [':t' => $tid], 'staff_payments');
+        $queryNodes("SELECT amount as text, created_at as date FROM hostess_expenses WHERE tenant_id=:t AND created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 4", [':t' => $tid], 'hostess_expenses');
+        $queryNodes("SELECT file_name as text, uploaded_at as date FROM documents WHERE tenant_id=:t AND uploaded_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 3", [':t' => $tid], 'documents');
+        $queryNodes("SELECT company_name as text, created_at as date FROM sponsors WHERE tenant_id=:t AND created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 3", [':t' => $tid], 'sponsors');
+        $queryNodes("SELECT first_name as text, created_at as date FROM staff_members WHERE tenant_id=:t AND created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 3", [':t' => $tid], 'staff');
+        $queryNodes("SELECT order_number as text, created_at as date FROM ec_orders WHERE tenant_id=:t AND created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 5", [':t' => $tid], 'ec_orders');
+        $queryNodes("SELECT full_name as text, created_at as date FROM outseason_entries WHERE tenant_id=:t AND created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 5", [':t' => $tid], 'outseason');
+
+        Response::success($res);
+    }
+}
