@@ -1,0 +1,43 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Fusion ERP — CSS Entry Point
+   All styles organized by layer: tokens → base → components → modules
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* ─── 1. Design System Foundation ─── */
+@import url('base/_tokens.css');
+@import url('base/_reset.css');
+@import url('base/_typography.css');
+
+/* ─── 2. Layout ─── */
+@import url('base/_shell.css');
+
+/* ─── 3. Components (shared, reusable) ─── */
+@import url('components/_search.css');
+@import url('components/_buttons.css');
+@import url('components/_dropdown.css');
+@import url('components/_forms.css');
+@import url('components/_badges.css');
+@import url('components/_toast.css');
+@import url('components/_modal.css');
+@import url('components/_skeleton.css');
+@import url('components/_tabs.css');
+@import url('components/_bottom-nav.css');
+@import url('components/_filters.css');
+@import url('components/_empty-state.css');
+@import url('components/_upload.css');
+
+/* ─── 4. Base Utilities ─── */
+@import url('base/_scrollbar.css');
+@import url('base/_utils.css');
+@import url('base/_accessibility.css');
+
+/* ─── 5. Module Styles ─── */
+@import url('modules/_auth.css');
+@import url('modules/_athlete-profile.css');
+@import url('modules/_splash.css');
+@import url('modules/_onboarding.css');
+@import url('modules/_social.css');
+@import url('modules/_tasks.css');
+@import url('modules/_finance.css');
+@import url('modules/_profile.css');
+@import url('modules/_extended.css');

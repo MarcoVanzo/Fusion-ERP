@@ -274,9 +274,23 @@ def deploy_files_via_ftp(dry_run=False):
         file_cache: dict[str, str] = load_cache()
         new_cache: dict[str, str] = file_cache.copy() # Start with old cache
         
-        ignore_dirs = ['.git', 'node_modules', 'tests', '__pycache__', '.pytest_cache', '.gemini', '.venv', 'venv_video', 'uploads']
-        ignore_extensions = ['.zip', '.log']
-        ignore_files = ['deploy.py', 'deploy.mp', 'deploy_ftp.sh', CACHE_FILE, '.env.prod']
+        ignore_dirs = [
+            '.git', 'node_modules', 'tests', '__pycache__', '.pytest_cache',
+            '.gemini', '.venv', 'venv_video', 'uploads',
+            # Added in P0-P2 refactoring:
+            '.npm-cache', '.phpunit.cache', '.github',
+            'dist', 'docker', 'scripts', 'docs', 'types',
+        ]
+        ignore_extensions = ['.zip', '.log', '.pyc', '.sqlite', '.db']
+        ignore_files = [
+            'deploy.py', 'deploy.mp', 'deploy_ftp.sh', CACHE_FILE, '.env.prod',
+            # Dev/build config files — NOT needed on production:
+            'Dockerfile', 'docker-compose.yml', '.dockerignore',
+            'vite.config.js', 'tsconfig.json', 'phpstan.neon', 'phpunit.xml',
+            'eslint.config.mjs', 'package.json', 'package-lock.json',
+            'composer.json', 'composer.lock', 'composer.phar',
+            'style_v2.backup.css',
+        ]
 
         upload_jobs: list[tuple[str, str, str, str]] = []
         required_dirs: set[str] = set()

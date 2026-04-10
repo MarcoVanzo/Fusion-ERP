@@ -2,7 +2,12 @@
   "name": "fusion-erp",
   "private": true,
   "scripts": {
-    "lint:css": "stylelint \"css/**/*.css\""
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint:css": "stylelint \"css/**/*.css\"",
+    "lint:js": "eslint js/",
+    "css:build": "python3 scripts/dev/css_build.py"
   },
   "dependencies": {
     "acorn": "^8.16.0",
@@ -16,6 +21,7 @@
     "globals": "^17.4.0",
     "stylelint": "^16.0.0",
     "stylelint-config-standard": "^36.0.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vite": "^8.0.8"
   }
 }

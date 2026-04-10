@@ -1,0 +1,130 @@
+/* Onboarding screens + push badges
+ * Extracted from style_v2.css (lines 2755-2881)
+ */
+
+/* ─── ONBOARDING SCREENS ────────────────────────────────────────────────────── */
+.onboarding-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 8000;
+  background: var(--color-black);
+  display: flex;
+  flex-direction: column;
+}
+
+.onboarding-screen.hidden {
+  display: none;
+}
+
+.onboarding-slides {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.onboarding-slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity var(--transition-slow);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: var(--sp-6) var(--sp-4);
+  pointer-events: none;
+}
+
+.onboarding-slide.active {
+  opacity: 1;
+  pointer-events: all;
+  z-index: 2;
+}
+
+.onboarding-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.onboarding-content {
+  position: relative;
+  z-index: 2;
+  max-width: 400px;
+}
+
+.onboarding-title {
+  font-family: var(--font-display);
+  font-size: 48px;
+  font-weight: 700;
+  color: var(--color-white);
+  text-transform: uppercase;
+  line-height: 1;
+  margin-bottom: var(--sp-2);
+}
+
+.auth-logo-img {
+  height: 48px;
+  width: auto;
+  object-fit: contain;
+  margin-bottom: var(--sp-4);
+}
+
+.splash-logo {
+  height: 80px;
+  width: auto;
+  object-fit: contain;
+  margin-bottom: var(--sp-4);
+  filter: drop-shadow(0 0 20px rgba(230, 0, 126, 0.5));
+}
+
+.onboarding-text {
+  font-family: var(--font-body);
+  font-size: 16px;
+  color: var(--color-silver);
+}
+
+.onboarding-controls {
+  position: relative;
+  z-index: 10;
+  padding: var(--sp-4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 20%, transparent);
+}
+
+.onboarding-dots {
+  display: flex;
+  gap: 8px;
+}
+
+.onboarding-dots .dot {
+  width: 8px;
+  height: 8px;
+  background: var(--color-white);
+  opacity: 0.3;
+  transition: background-color var(--transition-base), opacity var(--transition-base);
+}
+
+.onboarding-dots .dot.active {
+  background: var(--color-pink);
+  opacity: 1;
+}
+
+.onboarding-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+/* ─── PUSH BADGES ───────────────────────────────────────────────────────────── */
+.push-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 8px;
+  height: 8px;
+  background: var(--color-pink);
+  border-radius: 50%;
+  pointer-events: none;
+}

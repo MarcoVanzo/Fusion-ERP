@@ -1,0 +1,35 @@
+/* Filter bar
+ * Extracted from style_v2.css (lines 1992-2023)
+ */
+
+/* ─── FILTER BAR ────────────────────────────────────────────────────────────── */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  margin-bottom: var(--sp-3);
+  flex-wrap: wrap;
+}
+
+.filter-chip {
+  padding: 6px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border: 1px solid var(--color-border);
+  cursor: pointer;
+  transition: border-color var(--transition-base), color var(--transition-base), background-color var(--transition-base);
+  color: var(--color-text-muted);
+  background: transparent;
+}
+
+.filter-chip:hover,
+.filter-chip.active {
+  border-color: var(--color-pink);
+  color: var(--color-pink);
+}
+
+.filter-chip.active {
+  background: rgba(230, 0, 126, 0.1);
+}
