@@ -334,3 +334,4 @@ class VehiclesModule {
 
 // Instantiate and expose globally for the Router
 window.Vehicles = new VehiclesModule();
+export default window.Vehicles;

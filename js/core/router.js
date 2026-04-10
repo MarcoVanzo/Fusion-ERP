@@ -15,6 +15,9 @@ const Router = (() => {
     /** @type {Record<string, boolean>} Tracks which module scripts have already been injected */
     const _loaded = {};
 
+    /** @type {Record<string, object>} Caches imported/loaded module objects by file path */
+    const _moduleCache = {};
+
     /** App version for cache-busting lazy-loaded modules */
     const _appVersion = document.querySelector('meta[name="app-version"]')?.content || Date.now();
 
@@ -78,7 +81,7 @@ const Router = (() => {
         { path: 'finance',              file: 'js/modules/finance.js',             permission: 'admin', module: 'Finance', type: 'module' },
         { path: 'finance-invoices',     file: 'js/modules/finance.js',             permission: 'admin', module: 'Finance', type: 'module' },
         { path: 'finance-bank',         file: 'js/modules/finance.js',             permission: 'admin', module: 'Finance', type: 'module' },
-        { path: 'finance-foresteria',   file: 'js/modules/finance.js',             permission: 'read', module: 'Finance'           },
+        { path: 'finance-foresteria',   file: 'js/modules/finance.js',             permission: 'read', module: 'Finance', type: 'module' },
         // WhatsApp
         { path: 'whatsapp-inbox',       file: 'js/modules/whatsapp.js',            permission: 'read', module: 'WhatsApp'          },
         { path: 'whatsapp-contacts',    file: 'js/modules/whatsapp.js',            permission: 'read', module: 'WhatsApp'          },
@@ -253,9 +256,10 @@ const Router = (() => {
 
             // Destroy the previous module (memory cleanup)
             if (_currentRoute) {
-                const prevModuleName = _moduleMap[_currentRoute];
-                if (prevModuleName && window[prevModuleName] && typeof window[prevModuleName].destroy === 'function') {
-                    try { window[prevModuleName].destroy(); } catch (e) { console.error('[Router] Error during module destroy:', e); }
+                const prevFilePath = _fileMap[_currentRoute];
+                const prevMod = _moduleCache[prevFilePath];
+                if (prevMod && typeof prevMod.destroy === 'function') {
+                    try { prevMod.destroy(); } catch (e) { console.error('[Router] Error during module destroy:', e); }
                 }
             }
 
@@ -272,26 +276,36 @@ const Router = (() => {
             appEl.innerHTML = UI.skeletonPage();
 
             try {
-                // Lazy-load the module script (once per session)
-                if (!_loaded[path]) {
-                    const filePath = _fileMap[path];
-                    if (!filePath) {
-                        appEl.innerHTML = Utils.emptyState(
-                            'Sezione in arrivo',
-                            'Questa funzionalità è in fase di sviluppo.',
-                            'Torna alla Dashboard',
-                            'dashboard'
-                        );
-                        return;
-                    }
-                    await _loadScript(filePath, _typeMap[path] === 'module');
-                    _loaded[path] = true;
+                // Lazy-load the module (once per session per file)
+                const filePath = _fileMap[path];
+                if (!filePath) {
+                    appEl.innerHTML = Utils.emptyState(
+                        'Sezione in arrivo',
+                        'Questa funzionalità è in fase di sviluppo.',
+                        'Torna alla Dashboard',
+                        'dashboard'
+                    );
+                    return;
                 }
 
+                if (!_moduleCache[filePath]) {
+                    if (_typeMap[path] === 'module') {
+                        // ES Module → native dynamic import() (no script injection needed)
+                        const mod = await import('/' + filePath + '?v=' + _appVersion);
+                        _moduleCache[filePath] = mod.default || mod;
+                    } else {
+                        // Legacy script → inject <script> tag, read from window global
+                        await _loadScript(filePath);
+                        const moduleName = _moduleMap[path];
+                        _moduleCache[filePath] = moduleName ? window[moduleName] : null;
+                    }
+                }
+                _loaded[path] = true;
+
                 // Initialize the module
-                const moduleName = _moduleMap[path];
-                if (moduleName && window[moduleName] && typeof window[moduleName].init === 'function') {
-                    await window[moduleName].init();
+                const mod = _moduleCache[filePath];
+                if (mod && typeof mod.init === 'function') {
+                    await mod.init();
                 }
             } catch (err) {
                 console.error('[Router] Navigation error:', err);

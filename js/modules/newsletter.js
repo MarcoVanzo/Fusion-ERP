@@ -239,3 +239,4 @@ const Newsletter = (() => {
 })();
 
 window.Newsletter = Newsletter;
+export default Newsletter;

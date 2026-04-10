@@ -557,3 +557,4 @@ class NetworkModule {
 }
 
 window.Network = new NetworkModule();
+export default window.Network;
