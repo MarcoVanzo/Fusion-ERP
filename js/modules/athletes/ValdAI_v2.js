@@ -72,7 +72,7 @@ window.__valdAi = async function (athleteId, part) {
     `;
 
   } catch (err) {
-    resultEl.innerHTML = `<div class="error-box" style="margin-top:20px;">${err.message}</div>`;
+    resultEl.innerHTML = `<div class="error-box" style="margin-top:20px;">${Utils.escapeHtml(err.message)}</div>`;
   }
 };
 
@@ -98,7 +98,7 @@ window.__valdChat = async function (athleteId, typeClass) {
   // Push User message
   const userMsg = document.createElement("div");
   userMsg.className = "chat-bubble user";
-  userMsg.innerHTML = `<span style="font-size:10px; opacity:0.4; display:block; margin-bottom:4px;">Tu</span>${question}`;
+  userMsg.innerHTML = `<span style="font-size:10px; opacity:0.4; display:block; margin-bottom:4px;">Tu</span>${Utils.escapeHtml(question)}`;
   history.appendChild(userMsg);
   history.scrollTop = history.scrollHeight;
 
@@ -111,10 +111,10 @@ window.__valdChat = async function (athleteId, typeClass) {
 
   try {
     const resp = await Store.api("aiChat", "vald", { athleteId, question, context });
-    aiMsg.innerHTML = `<span style="font-size:10px; opacity:0.4; display:block; margin-bottom:4px;">Assistant</span>${resp?.answer || "Spiacente, non ho potuto rispondere."}`;
+    aiMsg.innerHTML = `<span style="font-size:10px; opacity:0.4; display:block; margin-bottom:4px;">Assistant</span>${renderAiMarkdown(resp?.answer || "Spiacente, non ho potuto rispondere.")}`;
   } catch (err) {
     aiMsg.classList.add("text-danger");
-    aiMsg.innerHTML = `<span style="font-size:10px; opacity:0.4; display:block; margin-bottom:4px;">Assistant</span>Errore: ${err.message}`;
+    aiMsg.innerHTML = `<span style="font-size:10px; opacity:0.4; display:block; margin-bottom:4px;">Assistant</span>Errore: ${Utils.escapeHtml(err.message)}`;
   } finally {
     input.disabled = false;
     input.focus();
@@ -127,6 +127,7 @@ window.__valdChat = async function (athleteId, typeClass) {
  */
 function renderAiMarkdown(md) {
   if (!md) return "";
+  const esc = (s) => Utils.escapeHtml(s);
   
   // Replace tables with premium styling
   md = md.replace(/\|(.+)\|/g, (match) => {
@@ -137,7 +138,7 @@ function renderAiMarkdown(md) {
       const cols = row.split('|').filter(c => c.trim() !== "");
       const isHeader = i === 0;
       html += `<tr style="${isHeader ? 'background:rgba(255,255,255,0.03);' : 'border-top:1px solid rgba(255,255,255,0.03);'}">`;
-      html += cols.map(c => `<td style="padding:10px; ${isHeader ? 'font-weight:800; color:var(--color-pink); text-transform:uppercase; font-size:10px;' : ''}">${c.trim()}</td>`).join('');
+      html += cols.map(c => `<td style="padding:10px; ${isHeader ? 'font-weight:800; color:var(--color-pink); text-transform:uppercase; font-size:10px;' : ''}">${esc(c.trim())}</td>`).join('');
       html += '</tr>';
     });
     return html + '</table></div>';
@@ -151,11 +152,11 @@ function renderAiMarkdown(md) {
         const items = p.split("\n").map(li => `
           <li style="list-style:none; padding-left:24px; position:relative; margin-bottom:12px;">
             <i class="ph ph-caret-right" style="position:absolute; left:0; top:4px; font-size:12px; color:var(--accent-cyan);"></i>
-            ${li.replace(/^[-*]\s+/, "")}
+            ${esc(li.replace(/^[-*]\s+/, ""))}
           </li>`).join("");
         return `<ul style="margin:16px 0; padding:0;">${items}</ul>`;
       }
-      return `<p style="margin-bottom:16px; line-height:1.6;">${p.trim()}</p>`;
+      return `<p style="margin-bottom:16px; line-height:1.6;">${esc(p.trim())}</p>`;
     })
     .join("");
 }

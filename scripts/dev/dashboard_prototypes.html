@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fusion ERP | Dashboard v2 (Macro-Tabs)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://unpkg.com/@phosphor-icons/web" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #09090b; color: #f4f4f5; }
+    .glass-card { background: #18181b; border: 1px solid #27272a; border-radius: 12px; overflow: hidden; }
+    .hide { display: none !important; }
+    
+    /* Masonry grid */
+    .masonry { 
+      column-count: 1;
+      column-gap: 1.5rem;
+    }
+    @media (min-width: 768px) { .masonry { column-count: 2; } }
+    @media (min-width: 1024px) { .masonry { column-count: 3; } }
+    .masonry-item { break-inside: avoid; margin-bottom: 1.5rem; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col pt-8 px-4 md:px-8 pb-12">
+
+  <header class="max-w-7xl mx-auto w-full flex flex-col sm:flex-row justify-between items-start sm:items-center mb-10 gap-4">
+    <div>
+      <h1 class="text-2xl font-bold tracking-tight">Macro-Tab Dashboard</h1>
+      <p class="text-zinc-400 text-sm">3 esempi basati sul concetto "Un box per ogni modulo principale".</p>
+    </div>
+
+    <!-- Toggles -->
+    <div class="flex bg-zinc-900 border border-zinc-800 rounded-lg p-1">
+      <button onclick="switchView('grid')" id="btn-grid" class="px-4 py-2 text-sm font-medium rounded-md bg-zinc-800 text-white transition-all shadow">1. Griglia Strutturata</button>
+      <button onclick="switchView('masonry')" id="btn-masonry" class="px-4 py-2 text-sm font-medium rounded-md text-zinc-400 hover:text-white transition-all">2. Bacheca Organica</button>
+      <button onclick="switchView('accordion')" id="btn-accordion" class="px-4 py-2 text-sm font-medium rounded-md text-zinc-400 hover:text-white transition-all">3. Pannelli Collassabili</button>
+    </div>
+  </header>
+
+  <!-- ============================================
+       OPZIONE 1: GRIGLIA STRUTTURATA (GRID)
+       Layout rigoroso e ordinato per trovare subito quello che serve.
+       ============================================ -->
+  <main id="view-grid" class="max-w-7xl mx-auto w-full transition-opacity duration-300">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+      <!-- MODULO 1: ATLETI -->
+      <div class="glass-card shadow-lg hover:border-zinc-600 transition-colors">
+        <div class="bg-zinc-800/40 p-4 border-b border-zinc-700/50 flex justify-between items-center">
+          <h2 class="font-bold flex items-center gap-2"><i class="ph-fill ph-users text-indigo-400"></i> Atleti</h2>
+          <span class="bg-red-500/20 text-red-500 text-[10px] font-bold px-2 py-1 rounded">3 ALERT</span>
+        </div>
+        <div class="p-4 space-y-4">
+          <div class="flex justify-between items-center text-sm">
+            <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-red-400"></span> Documenti/Visite</div>
+            <span class="text-red-400 font-bold">2 Scaduti</span>
+          </div>
+          <div class="flex justify-between items-center text-sm">
+            <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-amber-400"></span> Infortuni</div>
+            <span class="text-zinc-300">1 Fermo Medico</span>
+          </div>
+          <div class="flex justify-between items-center text-sm">
+            <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> Presenze Settimana</div>
+            <span class="text-emerald-400 font-bold">96%</span>
+          </div>
+          <div class="flex justify-between items-center text-sm">
+            <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> Pagamenti Rette</div>
+            <span class="text-zinc-300">Regolari</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODULO 2: SQUADRE E GARE -->
+      <div class="glass-card shadow-lg hover:border-zinc-600 transition-colors">
+        <div class="bg-zinc-800/40 p-4 border-b border-zinc-700/50 flex justify-between items-center">
+          <h2 class="font-bold flex items-center gap-2"><i class="ph-fill ph-trophy text-amber-500"></i> Squadre e Gare</h2>
+        </div>
+        <div class="p-4 space-y-4">
+          <div class="bg-zinc-800/50 p-3 rounded-lg border border-zinc-700">
+            <div class="text-[10px] text-zinc-500 uppercase font-bold mb-1">PROSSIMO MATCH</div>
+            <div class="font-bold text-sm">A1: SDB vs Conegliano</div>
+            <div class="text-xs text-zinc-400 mt-1">Oggi 20:30 (Firenze)</div>
+          </div>
+          <div class="flex justify-between items-center text-sm border-t border-zinc-800 pt-3">
+            <div class="flex items-center gap-2"> Risultati Weekend</div>
+            <span class="text-emerald-400 font-bold">4 Vinte, 1 Persa</span>
+          </div>
+          <div class="flex justify-between items-center text-sm">
+            <div class="flex items-center gap-2"> Scouting</div>
+            <span class="text-zinc-400 text-xs">Video Caricati (14:00)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODULO 3: FINANCE & ADMIN -->
+      <div class="glass-card shadow-lg hover:border-zinc-600 transition-colors border-l-2 border-l-red-500">
+        <div class="bg-zinc-800/40 p-4 border-b border-zinc-700/50 flex justify-between items-center">
+          <h2 class="font-bold flex items-center gap-2"><i class="ph-fill ph-coins text-yellow-400"></i> Finance & Admin</h2>
+          <span class="bg-amber-500/20 text-amber-500 text-[10px] font-bold px-2 py-1 rounded">2 DA APPROVARE</span>
+        </div>
+        <div class="p-4 space-y-3">
+          <div class="flex justify-between items-center text-sm">
+            <div class="flex items-center gap-2 text-zinc-300">Fatture Passeggere</div>
+            <span class="text-zinc-400 font-bold">-</span>
+          </div>
+          <div class="flex justify-between items-center text-sm">
+            <div class="flex items-center gap-2 text-amber-400 font-bold">Rimborsi Trasferte</div>
+            <span class="text-amber-400 font-bold">€ 145 (Da Pagare)</span>
+          </div>
+          <div class="flex justify-between items-center text-sm">
+            <div class="flex items-center gap-2 text-zinc-300">Foresteria</div>
+            <span class="text-zinc-400">Nessun Alert</span>
+          </div>
+          <div class="mt-4 pt-3 border-t border-zinc-800 text-xs text-center text-zinc-500">
+            Ultimo backup: Questa mattina (02:00)
+          </div>
+        </div>
+      </div>
+
+      <!-- MODULO 4: TRASPORTI -->
+      <div class="glass-card shadow-lg hover:border-zinc-600 transition-colors">
+        <div class="bg-zinc-800/40 p-4 border-b border-zinc-700/50 flex justify-between items-center">
+          <h2 class="font-bold flex items-center gap-2"><i class="ph-fill ph-van text-emerald-400"></i> Trasporti e Logistica</h2>
+        </div>
+        <div class="p-4 space-y-4">
+          <div class="flex justify-between items-center text-sm opacity-60">
+            <span class="font-bold text-zinc-300">Ducato (FK123XX)</span>
+            <span class="text-xs">Libero</span>
+          </div>
+          <div class="flex justify-between items-center text-sm">
+            <span class="font-bold text-emerald-400">Ducato (AA999XX)</span>
+            <span class="text-xs px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded">In Viaggio (Firenze)</span>
+          </div>
+          <div class="flex justify-between items-center text-sm pt-3 border-t border-zinc-800">
+            <span class="font-medium text-zinc-400">Trasferte di oggi</span>
+            <span>2 prenotate</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODULO 5: COMUNICAZIONE -->
+      <div class="glass-card shadow-lg hover:border-zinc-600 transition-colors border-t-2 border-t-indigo-500">
+        <div class="bg-zinc-800/40 p-4 border-b border-zinc-700/50 flex justify-between items-center">
+          <h2 class="font-bold flex items-center gap-2"><i class="ph-fill ph-chat-teardrop text-blue-400"></i> Comunicazione</h2>
+        </div>
+        <div class="p-4 space-y-4">
+          <div class="flex justify-between items-center text-sm">
+             <div class="flex items-center gap-2"><i class="ph-fill ph-whatsapp-logo text-emerald-500"></i> Inbox WhatsApp</div>
+             <span class="bg-indigo-500 rounded-full text-xs font-bold px-2 py-0.5 text-white">5 Non Letti</span>
+          </div>
+          <div class="flex justify-between items-center text-sm">
+             <div class="flex items-center gap-2"><i class="ph-fill ph-envelope-simple text-amber-500"></i> Newsletter</div>
+             <span class="text-xs text-zinc-400">Inviata Lunedì (Op. 68%)</span>
+          </div>
+          <div class="flex justify-between items-center text-sm">
+             <div class="flex items-center gap-2"><i class="ph-fill ph-globe text-cyan-500"></i> Sito / Social</div>
+             <span class="text-xs text-zinc-400">Nuovi iscritti: +12</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODULO 6: NETWORK ED ECOMMERCE -->
+      <div class="glass-card shadow-lg hover:border-zinc-600 transition-colors">
+        <div class="bg-zinc-800/40 p-4 border-b border-zinc-700/50 flex justify-between items-center">
+          <h2 class="font-bold flex items-center gap-2"><i class="ph-fill ph-shopping-bag text-fuchsia-400"></i> Network & Shop</h2>
+        </div>
+        <div class="p-4 space-y-4">
+          <div class="flex justify-between items-center text-sm">
+            <div class="text-zinc-300">Shop Merchandising</div>
+            <span class="font-bold text-fuchsia-400">+ € 350 Oggi</span>
+          </div>
+          <div class="flex justify-between items-center text-sm">
+            <div class="text-zinc-300">Ordini da Spedire</div>
+            <span class="text-white font-bold bg-zinc-700 px-2 rounded">4</span>
+          </div>
+          <div class="flex justify-between items-center text-sm border-t border-zinc-800 pt-3">
+            <div class="text-zinc-300">Summer Camp (Outseason)</div>
+            <span class="text-zinc-400">120 Iscritti</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ============================================
+       OPZIONE 2: BACHECA ORGANICA (MASONRY)
+       Più fluida. Le card crescono in base al contenuto.
+       Se non c'è niente in Trasporti, il blocco è piccolo.
+       ============================================ -->
+  <main id="view-masonry" class="max-w-7xl mx-auto w-full transition-opacity duration-300 hide">
+    <div class="masonry">
+      
+      <!-- SQUADRE E GARE (Large Content) -->
+      <div class="masonry-item glass-card p-5 border-t-4 border-t-amber-500">
+        <h2 class="font-black uppercase tracking-widest text-lg mb-4 text-amber-500 flex items-center justify-between">
+          Squadre & Gare <i class="ph-fill ph-trophy"></i>
+        </h2>
+        <div class="space-y-4">
+          <div class="p-4 bg-[url('https://images.unsplash.com/photo-1592656094267-764a45160876?auto=format&fit=crop&w=400&q=80')] bg-cover bg-center rounded-xl relative overflow-hidden">
+            <div class="absolute inset-0 bg-black/70"></div>
+            <div class="relative z-10 text-center">
+              <span class="bg-red-600 text-white text-[10px] uppercase font-bold px-2 py-0.5 rounded">Oggi Modalità Partita</span>
+              <div class="text-2xl font-black mt-2">SDB vs CONEGLIANO</div>
+              <div class="text-sm font-medium mt-1">Pala Wanny - Ore 20:30</div>
+            </div>
+          </div>
+          <h3 class="text-xs font-bold text-zinc-500 pt-2 border-t border-zinc-800">Recenti Risultati Settore Giovanile</h3>
+          <ul class="text-sm space-y-2">
+            <li class="flex justify-between"><span>U18 vs Scandicci</span> <span class="text-emerald-400 font-bold">3-0</span></li>
+            <li class="flex justify-between"><span>U16 vs Prato</span> <span class="text-red-400 font-bold">1-3</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- ATLETI (Medium Content) -->
+      <div class="masonry-item glass-card p-5 border-t-4 border-t-indigo-500">
+        <h2 class="font-black uppercase tracking-widest text-lg mb-4 text-indigo-400 flex items-center justify-between">
+          Atleti <i class="ph-fill ph-users"></i>
+        </h2>
+        <div class="p-3 bg-red-500/10 border border-red-500/20 rounded-lg mb-4">
+          <div class="font-bold text-red-500 text-sm mb-1">Azione Richiesta: Documenti</div>
+          <div class="text-xs text-red-300">2 atlete non schierabili (Visita Scaduta).</div>
+        </div>
+        <div class="space-y-3">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-zinc-800 rounded-full flex items-center justify-center font-bold text-sm text-zinc-400">GB</div>
+            <div>
+              <div class="text-sm font-bold">Giulia Bianchi (U16)</div>
+              <div class="text-xs text-amber-500">Infortunio spalla - Valutazione in corso</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- COMUNICAZIONE (Medium Content) -->
+      <div class="masonry-item glass-card p-5 border-t-4 border-t-blue-500">
+        <h2 class="font-black uppercase tracking-widest text-lg mb-4 text-blue-400 flex items-center justify-between">
+          Comunicazione <i class="ph-fill ph-chats"></i>
+        </h2>
+        <div class="bg-indigo-600 text-white p-3 rounded-lg flex items-center justify-between mb-4 shadow-lg shadow-indigo-900/50">
+          <div class="font-bold text-md flex items-center gap-2"><i class="ph-bold ph-whatsapp-logo"></i> Inbox </div>
+          <span class="bg-white text-indigo-600 font-black px-2 py-0.5 rounded text-sm">5</span>
+        </div>
+        <div class="text-sm text-zinc-400 border-t border-zinc-800 pt-3">
+          Sito web: Iscrizioni outseason chiuse con successo (140 atleti).
+        </div>
+      </div>
+
+       <!-- FINANCE (Medium Content) -->
+      <div class="masonry-item glass-card p-5 border-t-4 border-t-emerald-500">
+        <h2 class="font-black uppercase tracking-widest text-lg mb-4 text-emerald-400 flex items-center justify-between">
+          Finance & Logistics <i class="ph-fill ph-currency-eur"></i>
+        </h2>
+        <ul class="space-y-3 text-sm">
+          <li class="flex justify-between border-b border-zinc-800 pb-2">
+            <span class="text-zinc-400">In Cassa / Conti</span>
+            <span class="font-bold">€ 142.000</span>
+          </li>
+          <li class="flex justify-between border-b border-zinc-800 pb-2">
+            <span class="text-amber-500">Rimborsi da Autorizzare</span>
+            <span class="font-bold text-amber-500">€ 145,00</span>
+          </li>
+          <li class="flex justify-between pt-1">
+            <span class="text-zinc-400">Status Mezzi</span>
+            <span class="bg-zinc-800 px-2 py-0.5 rounded text-xs">2 di 3 In Uso</span>
+          </li>
+        </ul>
+      </div>
+
+       <!-- ECOMMERCE (Small Content) -->
+      <div class="masonry-item glass-card p-5 border-t-4 border-t-fuchsia-500">
+        <h2 class="font-black uppercase tracking-widest text-lg mb-4 text-fuchsia-400 flex items-center justify-between">
+          Shop & Network <i class="ph-fill ph-shopping-bag"></i>
+        </h2>
+        <div class="flex justify-between items-end">
+          <div>
+            <div class="text-xs text-zinc-500 uppercase">Ordini Settimana</div>
+            <div class="text-2xl font-black">24</div>
+          </div>
+          <div class="text-right">
+            <div class="text-xs text-zinc-500 uppercase">Da Spedire</div>
+            <div class="text-xl font-bold text-fuchsia-400">4</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ============================================
+       OPZIONE 3: PANNELLI COLLASSABILI (ACCORDION)
+       Il massimo della produttività. Lista compatta che puoi espandere 
+       per entrare nello specifico del modulo.
+       ============================================ -->
+  <main id="view-accordion" class="max-w-4xl mx-auto w-full transition-opacity duration-300 hide">
+    <div class="space-y-4">
+      
+      <!-- Modulo ATLETI (Expanded by default to show example) -->
+      <div class="bg-zinc-900 border border-zinc-700 rounded-xl overflow-hidden hover:border-zinc-500 transition-colors">
+        <label class="w-full flex items-center justify-between p-5 cursor-pointer hover:bg-zinc-800/50">
+          <div class="flex items-center gap-4">
+            <div class="w-10 h-10 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center"><i class="ph-fill ph-users text-xl"></i></div>
+            <div>
+              <h2 class="font-bold text-lg">Area Atleti <span class="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full ml-2">3 Alert</span></h2>
+              <div class="flex gap-2 text-xs text-zinc-400 mt-1">
+                <span>Profile</span> &bull; <span>Pagamenti</span> &bull; <span>Certificati</span> &bull; <span>Infortuni</span> &bull; <span>Presenze</span>
+              </div>
+            </div>
+          </div>
+          <i class="ph ph-caret-down text-zinc-500"></i>
+          <!-- Hidden checkbox for CSS accordion logic (simplified for mockup) -->
+          <input type="checkbox" class="peer hidden" checked>
+        </label>
+        
+        <div class="bg-zinc-950 p-6 border-t border-zinc-800">
+           <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+             <div>
+               <h4 class="text-xs text-zinc-500 uppercase font-bold mb-2">Visite & Certificati</h4>
+               <ul class="text-sm space-y-2">
+                 <li class="text-red-400 font-medium border-l-2 border-red-500 pl-2">Giulia Bianchi (Scaduto)</li>
+                 <li class="text-red-400 font-medium border-l-2 border-red-500 pl-2">Sofia Rossi (Manca doc)</li>
+               </ul>
+             </div>
+             <div>
+               <h4 class="text-xs text-zinc-500 uppercase font-bold mb-2">Presenze Medie (Sett.)</h4>
+               <div class="text-3xl font-black text-emerald-400">96%</div>
+             </div>
+             <div>
+               <h4 class="text-xs text-zinc-500 uppercase font-bold mb-2">Azioni Rapide</h4>
+               <button class="w-full text-left p-2 rounded hover:bg-zinc-800 text-sm"><i class="ph ph-plus"></i> Nuovo Atleta</button>
+               <button class="w-full text-left p-2 rounded hover:bg-zinc-800 text-sm"><i class="ph ph-file-pdf"></i> Esporta Report</button>
+             </div>
+           </div>
+        </div>
+      </div>
+
+      <!-- Modulo ADMIN & FINANCE -->
+      <div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden hover:border-zinc-700 transition-colors">
+        <label class="w-full flex items-center justify-between p-5 cursor-pointer hover:bg-zinc-800/50">
+          <div class="flex items-center gap-4">
+            <div class="w-10 h-10 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center"><i class="ph-fill ph-wallet text-xl"></i></div>
+            <div>
+              <h2 class="font-bold text-lg">Amministrazione & Finance <span class="bg-amber-500 text-white text-xs font-bold px-2 py-0.5 rounded-full ml-2">Approvazioni</span></h2>
+              <div class="flex gap-2 text-xs text-zinc-400 mt-1">
+                <span>Invoices</span> &bull; <span>Banca</span> &bull; <span>Foresteria</span> &bull; <span>Task</span>
+              </div>
+            </div>
+          </div>
+          <i class="ph ph-caret-right text-zinc-500"></i>
+        </label>
+      </div>
+
+      <!-- Modulo SQUADRE & GARE -->
+      <div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden hover:border-zinc-700 transition-colors">
+        <label class="w-full flex items-center justify-between p-5 cursor-pointer hover:bg-zinc-800/50">
+          <div class="flex items-center gap-4">
+            <div class="w-10 h-10 rounded-full bg-amber-500/20 text-amber-500 flex items-center justify-center"><i class="ph-fill ph-trophy text-xl"></i></div>
+            <div>
+              <h2 class="font-bold text-lg">Squadre & Risultati <span class="bg-zinc-700 text-zinc-300 text-xs font-bold px-2 py-0.5 rounded-full ml-2">Match Day</span></h2>
+              <div class="flex gap-2 text-xs text-zinc-400 mt-1">
+                <span>Stagioni</span> &bull; <span>Risultati</span> &bull; <span>Scouting</span> &bull; <span>Staff</span>
+              </div>
+            </div>
+          </div>
+          <i class="ph ph-caret-right text-zinc-500"></i>
+        </label>
+      </div>
+
+      <!-- Modulo LOGISTICA E TRASPORTI -->
+      <div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden hover:border-zinc-700 transition-colors">
+        <label class="w-full flex items-center justify-between p-5 cursor-pointer hover:bg-zinc-800/50">
+          <div class="flex items-center gap-4">
+            <div class="w-10 h-10 rounded-full bg-zinc-700 text-zinc-300 flex items-center justify-center"><i class="ph-fill ph-van text-xl"></i></div>
+            <div>
+              <h2 class="font-bold text-lg">Logistica & Trasporti <span class="bg-zinc-800 text-zinc-400 text-xs font-medium px-2 py-0.5 rounded-full ml-2">Tutto OK</span></h2>
+              <div class="flex gap-2 text-xs text-zinc-400 mt-1">
+                <span>Flotta</span> &bull; <span>Driver</span> &bull; <span>Rimborsi</span>
+              </div>
+            </div>
+          </div>
+          <i class="ph ph-caret-right text-zinc-500"></i>
+        </label>
+      </div>
+
+       <!-- Modulo COMUNICAZIONE & SHOP -->
+       <div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden hover:border-zinc-700 transition-colors">
+        <label class="w-full flex items-center justify-between p-5 cursor-pointer hover:bg-zinc-800/50">
+          <div class="flex items-center gap-4">
+            <div class="w-10 h-10 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center"><i class="ph-fill ph-globe text-xl"></i></div>
+            <div>
+              <h2 class="font-bold text-lg">Comunicazione & Shop <span class="bg-indigo-500 text-white text-xs font-bold px-2 py-0.5 rounded-full ml-2">Inbox (5)</span></h2>
+              <div class="flex gap-2 text-xs text-zinc-400 mt-1">
+                <span>WhatsApp</span> &bull; <span>Website</span> &bull; <span>eCommerce</span> &bull; <span>Newsletter</span>
+              </div>
+            </div>
+          </div>
+          <i class="ph ph-caret-right text-zinc-500"></i>
+        </label>
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    function switchView(viewName) {
+      document.getElementById('view-grid').classList.add('hide');
+      document.getElementById('view-masonry').classList.add('hide');
+      document.getElementById('view-accordion').classList.add('hide');
+      
+      document.getElementById('btn-grid').className = "px-4 py-2 text-sm font-medium rounded-md text-zinc-400 hover:text-white transition-all";
+      document.getElementById('btn-masonry').className = "px-4 py-2 text-sm font-medium rounded-md text-zinc-400 hover:text-white transition-all";
+      document.getElementById('btn-accordion').className = "px-4 py-2 text-sm font-medium rounded-md text-zinc-400 hover:text-white transition-all";
+
+      document.getElementById('view-' + viewName).classList.remove('hide');
+      document.getElementById('btn-' + viewName).className = "px-4 py-2 text-sm font-medium rounded-md bg-zinc-800 text-white transition-all shadow";
+    }
+  </script>
+</body>
+</html>

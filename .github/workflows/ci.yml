@@ -1,0 +1,109 @@
+name: CI — Lint & Test
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ─── PHP Static Analysis ───────────────────────────────────
+  phpstan:
+    name: PHPStan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          tools: composer
+      
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: composer-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-
+      
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist
+      
+      - name: Run PHPStan
+        run: vendor/bin/phpstan analyse -c phpstan.neon --no-progress --error-format=github
+
+  # ─── PHP Unit Tests ────────────────────────────────────────
+  phpunit:
+    name: PHPUnit
+    runs-on: ubuntu-latest
+    # Run in parallel with phpstan, not after it
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: test
+          MYSQL_DATABASE: fusion_erp_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          extensions: pdo, pdo_mysql
+          tools: composer
+      
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: composer-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-
+      
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist
+      
+      - name: Create test .env
+        run: |
+          cat > .env << 'EOF'
+          DB_HOST=127.0.0.1
+          DB_PORT=3306
+          DB_NAME=fusion_erp_test
+          DB_USER=root
+          DB_PASS=test
+          APP_ENV=test
+          EOF
+      
+      - name: Run PHPUnit
+        run: vendor/bin/phpunit --testdox
+
+  # ─── JavaScript Linting ────────────────────────────────────
+  eslint:
+    name: ESLint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run ESLint
+        run: npm run lint:js

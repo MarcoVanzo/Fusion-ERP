@@ -1,0 +1,602 @@
+/* Social module (connect, dashboard, posts)
+ * Extracted from style_v2.css (lines 2882-3480)
+ */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SOCIAL ANALYTICS MODULE
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── CONNECT SCREEN ───────────────────────────────────────────────────────── */
+.social-connect-card {
+  max-width: 520px;
+  width: 100%;
+  padding: var(--sp-6);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  text-align: center;
+  animation: slide-up 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+}
+
+.social-connect-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: var(--sp-3);
+}
+
+.social-connect-title {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  margin-bottom: var(--sp-1);
+  text-transform: uppercase;
+}
+
+.social-connect-desc {
+  color: var(--color-text-muted);
+  font-size: 14px;
+  margin-bottom: var(--sp-3);
+  line-height: 1.5;
+}
+
+.social-connect-features {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: var(--sp-4);
+  text-align: left;
+}
+
+.social-feature {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.social-feature i {
+  color: var(--color-pink);
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.social-connect-btn {
+  width: 100%;
+  padding: 16px !important;
+  font-size: 14px !important;
+}
+
+.social-demo-btn {
+  width: 100%;
+  font-size: 12px !important;
+}
+
+.social-connect-note {
+  margin-top: var(--sp-2);
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+/* ─── MOCK BANNER ──────────────────────────────────────────────────────────── */
+.social-mock-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: rgba(255, 214, 0, 0.08);
+  border: 1px solid rgba(255, 214, 0, 0.2);
+  font-size: 13px;
+  color: #FFD600;
+  margin-bottom: var(--sp-3);
+  animation: slide-up 0.4s ease backwards;
+}
+
+.social-mock-banner a {
+  color: var(--color-pink);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* ─── DASHBOARD LAYOUT ─────────────────────────────────────────────────────── */
+.social-dashboard {
+  padding: var(--sp-4);
+  max-width: 1200px;
+  margin: 0 auto;
+  animation: fade-in 0.5s ease;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ─── HEADER ───────────────────────────────────────────────────────────────── */
+.social-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-4);
+}
+
+.social-profile {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.social-avatar {
+  width: 48px;
+  height: 48px;
+  border: 2px solid var(--color-pink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(230, 0, 126, 0.1);
+  flex-shrink: 0;
+}
+
+.social-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.social-page-title {
+  font-size: 1.4rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.social-page-title i {
+  color: var(--color-pink);
+}
+
+.social-profile-handle {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+.social-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+/* ─── PERIOD SELECTOR ──────────────────────────────────────────────────────── */
+.social-period-selector {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--color-border);
+}
+
+.period-btn {
+  padding: 8px 16px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: transparent;
+  border: none;
+  border-right: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.period-btn:last-child {
+  border-right: none;
+}
+
+.period-btn:hover {
+  color: var(--color-white);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.period-btn.active {
+  color: var(--color-pink);
+  background: rgba(230, 0, 126, 0.1);
+}
+
+/* ─── KPI CARDS ────────────────────────────────────────────────────────────── */
+.social-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-4);
+}
+
+.social-kpi-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  padding: var(--sp-3);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.4s ease, box-shadow 0.4s ease;
+  animation: slide-up 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+  position: relative;
+  overflow: hidden;
+}
+
+.social-kpi-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+}
+
+.social-kpi-card:nth-child(1) {
+  animation-delay: 0.05s;
+}
+
+.social-kpi-card:nth-child(2) {
+  animation-delay: 0.10s;
+}
+
+.social-kpi-card:nth-child(3) {
+  animation-delay: 0.15s;
+}
+
+.social-kpi-card:nth-child(4) {
+  animation-delay: 0.20s;
+}
+
+.social-kpi-card:hover {
+  border-color: var(--color-pink);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+}
+
+.social-kpi-followers::before {
+  background: var(--color-pink);
+}
+
+.social-kpi-views::before {
+  background: #1877F2;
+}
+
+.social-kpi-reach::before {
+  background: #00E676;
+}
+
+.social-kpi-engagement::before {
+  background: #FFD600;
+}
+
+.social-kpi-icon {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
+}
+
+.social-kpi-icon i {
+  font-size: 22px;
+  color: var(--color-pink);
+}
+
+.social-kpi-views .social-kpi-icon i {
+  color: #1877F2;
+}
+
+.social-kpi-reach .social-kpi-icon i {
+  color: #00E676;
+}
+
+.social-kpi-engagement .social-kpi-icon i {
+  color: #FFD600;
+}
+
+.social-kpi-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.social-kpi-value {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.social-kpi-label {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-top: 4px;
+}
+
+/* ─── CHART ────────────────────────────────────────────────────────────────── */
+.social-chart-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  padding: var(--sp-3);
+  margin-bottom: var(--sp-4);
+  animation: slide-up 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) 0.25s backwards;
+}
+
+.social-chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--sp-2);
+}
+
+.social-chart-header h3 {
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.social-chart-header h3 i {
+  color: var(--color-pink);
+}
+
+.social-chart-legend {
+  display: flex;
+  align-items: center;
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+.legend-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 6px;
+}
+
+.legend-views {
+  background: #E6007E;
+}
+
+.legend-reach {
+  background: #00E676;
+}
+
+.social-chart-container {
+  width: 100%;
+  overflow: hidden;
+}
+
+.social-chart-container canvas {
+  width: 100%;
+  display: block;
+}
+
+/* ─── FACEBOOK SECTION ─────────────────────────────────────────────────────── */
+.social-fb-section {
+  margin-bottom: var(--sp-4);
+  animation: slide-up 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s backwards;
+}
+
+.social-section-title {
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: var(--sp-2);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.social-fb-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--sp-2);
+}
+
+.social-fb-stat {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  padding: var(--sp-2) var(--sp-3);
+  display: flex;
+  flex-direction: column;
+  transition: border-color var(--transition-base);
+}
+
+.social-fb-stat:hover {
+  border-color: #1877F2;
+}
+
+.social-fb-value {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.social-fb-label {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-top: 2px;
+}
+
+/* ─── POSTS GRID ───────────────────────────────────────────────────────────── */
+.social-posts-section {
+  animation: slide-up 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) 0.35s backwards;
+}
+
+.social-posts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--sp-2);
+}
+
+.social-post-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.social-post-card:hover {
+  border-color: var(--color-pink);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+}
+
+.social-post-thumb {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  background: rgba(255, 255, 255, 0.03);
+  overflow: hidden;
+}
+
+.social-post-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.social-post-card:hover .social-post-thumb img {
+  transform: scale(1.05);
+}
+
+.social-post-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.15);
+  background: linear-gradient(135deg, rgba(230, 0, 126, 0.05) 0%, rgba(24, 119, 242, 0.05) 100%);
+}
+
+.social-post-type {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  padding: 4px 8px;
+  font-size: 12px;
+  color: var(--color-white);
+}
+
+.social-post-meta {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.social-post-stats {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.social-post-stats span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.social-post-stats i {
+  font-size: 14px;
+}
+
+.social-post-caption {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.social-post-date {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.25);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* ─── SOCIAL RESPONSIVE ────────────────────────────────────────────────────── */
+@media (width <= 1024px) {
+  .social-kpi-grid,
+  .social-fb-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (width <= 768px) {
+  .social-dashboard {
+    padding: var(--sp-2);
+  }
+
+  .social-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .social-kpi-grid,
+  .social-fb-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .social-posts-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  }
+
+  .social-kpi-value {
+    font-size: 1.3rem;
+  }
+}
+
+@media (width <= 480px) {
+  .social-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .social-fb-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .social-period-selector {
+    width: 100%;
+  }
+
+  .period-btn {
+    flex: 1;
+    padding: 8px;
+  }
+}

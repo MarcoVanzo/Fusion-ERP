@@ -85,7 +85,7 @@ export const AthletesMetrics = {
                             </div>
                             <div style="flex:1;">
                                 <strong style="display:block; font-size:11px; text-transform:uppercase; letter-spacing:1px; color:#FFD600; margin-bottom:2px;">Movement Strategy Shift Detected</strong>
-                                <span style="font-size:14px; color:rgba(255,255,255,0.9); line-height:1.4; display:block;">${data.strategyShiftAlert}</span>
+                                <span style="font-size:14px; color:rgba(255,255,255,0.9); line-height:1.4; display:block;">${Utils.escapeHtml(data.strategyShiftAlert)}</span>
                             </div>
                         </div>
                     </div>
@@ -229,7 +229,7 @@ export const AthletesMetrics = {
                             return `
                                 <div class="timeline-entry" style="display:grid; grid-template-columns: 120px 1.5fr 1fr 1fr 1fr; padding:15px 20px; align-items:center;">
                                     <div class="timeline-date" style="opacity:0.6;">${new Date(res.test_date).toLocaleDateString('it-IT')}</div>
-                                    <div class="timeline-type" style="font-weight:700;">${res.test_type}</div>
+                                    <div class="timeline-type" style="font-weight:700;">${Utils.escapeHtml(res.test_type)}</div>
                                     <div class="timeline-val" style="color:var(--color-pink); text-align:right; font-weight:800;">${jh}<small>cm</small></div>
                                     <div class="timeline-val" style="color:#FFD600; text-align:right; font-weight:800;">${rsi}</div>
                                     <div class="timeline-val" style="color:${parseFloat(asy) > 15 ? '#FF1744' : '#00e5ff'}; text-align:right; font-weight:800;">${asy}<small>%</small></div>
@@ -245,7 +245,7 @@ export const AthletesMetrics = {
 
         } catch (e) {
             console.error("Errore critico in _loadValdData:", e);
-            container.innerHTML = `<div class="error-box">ERROR::DATA_LOAD_FAILED ${e.message}</div>`;
+            container.innerHTML = `<div class="error-box">ERROR::DATA_LOAD_FAILED ${Utils.escapeHtml(e.message)}</div>`;
         }
     },
 

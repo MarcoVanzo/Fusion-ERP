@@ -484,4 +484,187 @@ class DashboardController
             'alerts'            => $alerts,
         ]);
     }
+
+    // ─── GET /api/?module=dashboard&action=matrixData ─────────────────────────
+    // Aggrega dati e variazioni reali delle ultime 2 settimane filtrando per tenant
+    // ed estraendole dinamicamente.
+    public function matrixData(): void
+    {
+        Auth::requireAuth();
+        $db  = Database::getInstance();
+        $tid = TenantContext::id();
+
+        // Helper per estrarre velocemente array di oggetti "Notifica" strutturati
+        $queryNodes = function(string $sql, array $params, string $icon, string $badge, string $color) use ($db) {
+            $nodes = [];
+            try {
+                $s = $db->prepare($sql);
+                $s->execute($params);
+                foreach ($s->fetchAll(\PDO::FETCH_ASSOC) as $row) {
+                    $nodes[] = [
+                        'icon'  => $icon,
+                        'text'  => $row['text'],
+                        'badge' => $badge,
+                        'color' => $color,
+                        'date'  => $row['date'] ?? date('Y-m-d H:i:s'),
+                    ];
+                }
+            } catch (\Throwable $e) { 
+                $nodes[] = [
+                    'icon' => 'warning',
+                    'text' => 'ERR: ' . $e->getMessage(),
+                    'badge' => 'DEBUG SQL',
+                    'color' => '#FF0000',
+                    'date' => date('Y-m-d H:i:s')
+                ];
+            }
+            return $nodes;
+        };
+
+        // --- 1. AREA SPORTIVA ---
+        $sportiva = [];
+        $sportiva = array_merge($sportiva, $queryNodes(
+            "SELECT CONCAT('Nuovo Tesseramento: ', full_name) as text, created_at as date FROM athletes WHERE tenant_id=:t AND created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 5", 
+            [':t' => $tid], 'user', 'Nuovo Atleta', '#A78BFA'
+        ));
+        $sportiva = array_merge($sportiva, $queryNodes(
+            "SELECT CONCAT('Alert ACWR: ', a.full_name) as text, al.log_date as date FROM acwr_alerts al JOIN athletes a ON a.id = al.athlete_id WHERE a.tenant_id=:t AND al.log_date >= DATE_SUB(CURDATE(), INTERVAL 14 DAY) LIMIT 3", 
+            [':t' => $tid], 'heart', 'Fermo Medico', '#EF4444'
+        ));
+        $sportiva = array_merge($sportiva, $queryNodes(
+            "SELECT CONCAT('Risultato: ', IFNULL(fm.home_team,'[N/D]'), ' vs ', IFNULL(fm.away_team,'[N/D]'), ' (', fm.home_score, '-', fm.away_score, ')') as text, fm.match_date as date 
+             FROM federation_matches fm 
+             JOIN federation_championships c ON fm.championship_id = c.id 
+             WHERE c.tenant_id=:t AND fm.match_date >= DATE_SUB(CURDATE(), INTERVAL 14 DAY) AND fm.home_score IS NOT NULL LIMIT 4", 
+            [':t' => $tid], 'trophy', 'Match Giocato', '#10B981'
+        ));
+
+        // --- 2. OPERATIVITÀ ---
+        $operativita = [];
+        $operativita = array_merge($operativita, $queryNodes(
+            "SELECT CONCAT('Aggiornato Evento: ', COALESCE(title, location_name)) as text, event_date as date 
+             FROM events 
+             WHERE event_date >= DATE_SUB(CURDATE(), INTERVAL 14 DAY) LIMIT 4", 
+            [], 'calendar-plus', 'Eventi', '#60A5FA'
+        ));
+        $operativita = array_merge($operativita, $queryNodes(
+            "SELECT CONCAT('Nuova Task: ', title) as text, created_at as date FROM tasks WHERE created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 4", 
+            [], 'list-checks', 'Task', '#10B981'
+        ));
+        $operativita = array_merge($operativita, $queryNodes(
+            "SELECT CONCAT('Trasferta per: ', destination_name) as text, transport_date as date 
+             FROM transports 
+             WHERE created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 4", 
+            [], 'van', 'Flotta', '#FCD34D'
+        ));
+
+        // --- 3. COMUNICAZIONE ---
+        $comunicazione = [];
+        $comunicazione = array_merge($comunicazione, $queryNodes(
+            "SELECT CONCAT('WhatsApp da: ', from_phone) as text, FROM_UNIXTIME(timestamp) as date FROM whatsapp_messages WHERE FROM_UNIXTIME(timestamp) >= DATE_SUB(CURDATE(), INTERVAL 14 DAY) LIMIT 5", 
+            [], 'whatsapp-logo', 'WhatsApp', '#10B981'
+        ));
+        $comunicazione = array_merge($comunicazione, $queryNodes(
+            "SELECT CONCAT('Email a: ', recipient) as text, sent_at as date FROM email_logs WHERE sent_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 3", 
+            [], 'envelope-simple', 'Mail', '#A78BFA'
+        ));
+        $comunicazione = array_merge($comunicazione, $queryNodes(
+            "SELECT CONCAT('Nuova News: ', title) as text, created_at as date FROM website_news WHERE tenant_id=:t AND created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 3", 
+            [':t' => $tid], 'instagram-logo', 'Sito', '#EC4899'
+        ));
+
+        // --- 4. AMMINISTRAZIONE ---
+        $admin = [];
+        $admin = array_merge($admin, $queryNodes(
+            "SELECT CONCAT('Fattura a: ', recipient_name) as text, created_at as date FROM invoices WHERE tenant_id=:t AND created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 4", 
+            [':t' => $tid], 'file-pdf', 'Fatture', '#60A5FA'
+        ));
+        $admin = array_merge($admin, $queryNodes(
+            "SELECT CONCAT('Rata incassata: ', amount, ' €') as text, paid_date as date 
+             FROM installments i JOIN payment_plans pp ON pp.id=i.plan_id 
+             WHERE pp.tenant_id=:t AND i.status='PAID' AND i.paid_date >= DATE_SUB(CURDATE(), INTERVAL 14 DAY) LIMIT 4", 
+            [':t' => $tid], 'bank', 'Cassa', '#10B981'
+        ));
+        $admin = array_merge($admin, $queryNodes(
+            "SELECT CONCAT('Doc Archiviato: ', file_name) as text, uploaded_at as date FROM societa_documents WHERE tenant_id=:t AND uploaded_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 3", 
+            [':t' => $tid], 'receipt', 'Archivio', '#F59E0B'
+        ));
+
+        // --- 5. IL CLUB ---
+        $club = [];
+        $club = array_merge($club, $queryNodes(
+            "SELECT CONCAT('Network/Sponsor: ', name) as text, created_at as date FROM societa_companies WHERE tenant_id=:t AND created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 3", 
+            [':t' => $tid], 'handshake', 'Sponsor', '#FCD34D'
+        ));
+        $club = array_merge($club, $queryNodes(
+            "SELECT CONCAT('Integrazione Staff: ', full_name) as text, start_date as date FROM societa_members WHERE tenant_id=:t AND start_date >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 3", 
+            [':t' => $tid], 'users-three', 'Governance', '#F59E0B'
+        ));
+
+        // --- 6. ECOMMERCE & OUTSEASON ---
+        $ecommerce = [];
+        $ecommerce = array_merge($ecommerce, $queryNodes(
+            "SELECT CONCAT('Acquisto eShop di ', totale, ' €') as text, data_ordine as date FROM ec_orders WHERE data_ordine >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 5", 
+            [], 'shopping-bag', 'eCommerce', '#F472B6'
+        ));
+        $ecommerce = array_merge($ecommerce, $queryNodes(
+            "SELECT 'Nuova iscrizione OutSeason ricevuta' as text, entry_date as date FROM outseason_entries WHERE entry_date >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 5", 
+            [], 'tent', 'Camp', '#10B981'
+        ));
+
+        // Funzione di sorting per data Decrescente
+        $sortFn = fn($a, $b) => strtotime($b['date']) <=> strtotime($a['date']);
+        
+        usort($sportiva, $sortFn);
+        usort($operativita, $sortFn);
+        usort($comunicazione, $sortFn);
+        usort($admin, $sortFn);
+        usort($club, $sortFn);
+        usort($ecommerce, $sortFn);
+
+        Response::success([
+            'sportiva'      => array_slice($sportiva, 0, 10),
+            'operativita'   => array_slice($operativita, 0, 10),
+            'comunicazione' => array_slice($comunicazione, 0, 10),
+            'admin'         => array_slice($admin, 0, 10),
+            'club'          => array_slice($club, 0, 10),
+            'ecommerce'     => array_slice($ecommerce, 0, 10),
+        ]);
+    }
+
+    public function debugDashboard(): void
+    {
+        $db  = Database::getInstance();
+        $tid = 'TNT_fusion';
+        $res = [];
+        $queryNodes = function(string $sql, array $params, string $name) use ($db, &$res) {
+            try {
+                $s = $db->prepare($sql);
+                $s->execute($params);
+                $count = $s->rowCount();
+                $res[$name] = "OK ($count rows)";
+            } catch (\Throwable $e) {
+                $res[$name] = "ERR: " . $e->getMessage();
+            }
+        };
+
+        $queryNodes("SELECT CONCAT('Nuovo Tesseramento: ', full_name) as text, created_at as date FROM athletes WHERE tenant_id=:t AND created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 5", [':t' => $tid], 'athletes');
+        $queryNodes("SELECT CONCAT('Alert ACWR: ', a.full_name) as text, al.log_date as date FROM acwr_alerts al JOIN athletes a ON a.id = al.athlete_id WHERE a.tenant_id=:t AND al.log_date >= DATE_SUB(CURDATE(), INTERVAL 14 DAY) LIMIT 3", [':t' => $tid], 'acwr');
+        $queryNodes("SELECT fm.home_score as text, fm.match_date as date FROM federation_matches fm WHERE fm.tenant_id=:t AND fm.match_date BETWEEN DATE_SUB(CURDATE(), INTERVAL 14 DAY) AND CURDATE() LIMIT 4", [':t' => $tid], 'matches');
+        $queryNodes("SELECT location as text, event_date as date FROM events WHERE tenant_id=:t AND created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 4", [':t' => $tid], 'events');
+        $queryNodes("SELECT title as text, created_at as date FROM tasks WHERE tenant_id=:t AND created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 4", [':t' => $tid], 'tasks');
+        $queryNodes("SELECT vehicle_id as text, created_at as date FROM vehicle_logs WHERE tenant_id=:t AND created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 4", [':t' => $tid], 'vehicle_logs');
+        $queryNodes("SELECT recipient as text, created_at as date FROM whatsapp_messages WHERE tenant_id=:t AND created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 5", [':t' => $tid], 'whatsapp');
+        $queryNodes("SELECT subject as text, sent_at as date FROM newsletter_campaigns WHERE tenant_id=:t AND sent_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 3", [':t' => $tid], 'newsletter');
+        $queryNodes("SELECT title as text, created_at as date FROM website_news WHERE tenant_id=:t AND created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 3", [':t' => $tid], 'website_news');
+        $queryNodes("SELECT amount as text, payment_date as date FROM staff_payments WHERE tenant_id=:t AND created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 4", [':t' => $tid], 'staff_payments');
+        $queryNodes("SELECT amount as text, created_at as date FROM hostess_expenses WHERE tenant_id=:t AND created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 4", [':t' => $tid], 'hostess_expenses');
+        $queryNodes("SELECT file_name as text, uploaded_at as date FROM documents WHERE tenant_id=:t AND uploaded_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 3", [':t' => $tid], 'documents');
+        $queryNodes("SELECT company_name as text, created_at as date FROM sponsors WHERE tenant_id=:t AND created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 3", [':t' => $tid], 'sponsors');
+        $queryNodes("SELECT first_name as text, created_at as date FROM staff_members WHERE tenant_id=:t AND created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 3", [':t' => $tid], 'staff');
+        $queryNodes("SELECT order_number as text, created_at as date FROM ec_orders WHERE tenant_id=:t AND created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 5", [':t' => $tid], 'ec_orders');
+        $queryNodes("SELECT full_name as text, created_at as date FROM outseason_entries WHERE tenant_id=:t AND created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 5", [':t' => $tid], 'outseason');
+
+        Response::success($res);
+    }
 }

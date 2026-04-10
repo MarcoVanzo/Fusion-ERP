@@ -1,0 +1,40 @@
+/* Icon buttons, topbar actions
+ * Extracted from style_v2.css (lines 721-757)
+ */
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.icon-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--bg-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition);
+  position: relative;
+}
+
+.icon-btn:hover {
+  background: var(--bg-surface-hover);
+  transform: translateY(-2px);
+  color: var(--accent-primary);
+}
+
+.notification-dot {
+  display: none;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 8px;
+  height: 8px;
+  background: var(--accent-secondary);
+  border-radius: 50%;
+  border: 2px solid var(--bg-dark);
+}

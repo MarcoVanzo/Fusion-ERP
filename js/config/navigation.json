@@ -13,15 +13,15 @@
         ],
         "children": [
             { "title": "Squadre", "path": "squadre", "icon": "users-four", "isMobileVisible": false, "roles": ["allenatore", "manager", "admin"] },
-            { "title": "Presenze", "path": "squadre-presenze", "icon": "calendar-check", "isMobileVisible": false, "roles": ["allenatore", "manager", "admin"] },
+            { "title": "Presenze", "path": "squadre-presenze", "icon": "calendar-check", "isMobileVisible": false, "roles": ["atleta", "allenatore", "manager", "admin"] },
             { "title": "Anagrafica Atleti", "path": "athlete-profile", "icon": "users", "isMobileVisible": false, "roles": ["atleta", "allenatore", "manager", "admin"] },
             { "title": "Documenti Atleti", "path": "athlete-documents", "icon": "file-text", "isMobileVisible": false, "roles": ["atleta", "allenatore", "manager", "admin"] },
             { "title": "Metrics Atleti", "path": "athlete-metrics", "icon": "trend-up", "isMobileVisible": false, "roles": ["atleta", "allenatore", "manager", "admin"] },
-            { "title": "Infortuni Atleti", "path": "athlete-injuries", "icon": "first-aid", "isMobileVisible": false, "roles": ["medico", "allenatore", "manager", "admin"] },
+            { "title": "Infortuni Atleti", "path": "athlete-injuries", "icon": "first-aid", "isMobileVisible": false, "roles": ["atleta", "medico", "allenatore", "manager", "admin"] },
             { "title": "Elenco Staff", "path": "staff", "icon": "identification-badge", "isMobileVisible": false, "roles": ["allenatore", "manager", "admin"] },
             { "title": "Documenti Staff", "path": "staff-documents", "icon": "file-text", "isMobileVisible": false, "roles": ["allenatore", "manager", "admin"] },
-            { "title": "Risultati", "path": "results-matches", "icon": "volleyball", "isMobileVisible": false, "roles": ["allenatore", "manager", "admin"] },
-            { "title": "Classifiche", "path": "results-standings", "icon": "list-numbers", "isMobileVisible": false, "roles": ["allenatore", "manager", "admin"] },
+            { "title": "Risultati", "path": "results-matches", "icon": "volleyball", "isMobileVisible": false, "roles": ["atleta", "allenatore", "manager", "admin"] },
+            { "title": "Classifiche", "path": "results-standings", "icon": "list-numbers", "isMobileVisible": false, "roles": ["atleta", "allenatore", "manager", "admin"] },
             { "title": "Database Scouting", "path": "scouting-database", "icon": "database", "isMobileVisible": false, "implemented": true, "roles": ["allenatore", "manager", "admin"] },
             { "title": "Valutazioni Scouting", "path": "scouting-evaluations", "icon": "star", "isMobileVisible": false, "implemented": false, "roles": ["allenatore", "admin"] },
             { "title": "Watchlist Scouting", "path": "scouting-watchlist", "icon": "eye", "isMobileVisible": false, "implemented": false, "roles": ["allenatore", "admin"] },
@@ -35,16 +35,18 @@
         "icon": "calendar-check",
         "isMobileVisible": true,
         "roles": [
+            "atleta",
+            "allenatore",
             "operatore",
             "manager",
             "admin"
         ],
         "children": [
             { "title": "Task Operativi", "path": "tasks", "icon": "check-square", "isMobileVisible": false, "roles": ["operatore", "manager", "admin"] },
-            { "title": "Gestione Trasporti", "path": "transport", "icon": "van", "isMobileVisible": false, "roles": ["operatore", "manager", "admin"] },
+            { "title": "Gestione Trasporti", "path": "transport", "icon": "van", "isMobileVisible": false, "roles": ["atleta", "allenatore", "operatore", "manager", "admin"] },
             { "title": "Gestione Autisti", "path": "transport-drivers", "icon": "steering-wheel", "isMobileVisible": false, "roles": ["operatore", "manager", "admin"] },
             { "title": "Gestione Mezzi", "path": "transport-fleet", "icon": "bus", "isMobileVisible": false, "roles": ["operatore", "manager", "admin"] },
-            { "title": "Rimborsi Trasporti", "path": "transport-refunds", "icon": "receipt", "isMobileVisible": false, "roles": ["operatore", "manager", "admin"] },
+            { "title": "Rimborsi Trasporti", "path": "transport-refunds", "icon": "receipt", "isMobileVisible": false, "roles": ["atleta", "operatore", "manager", "admin"] },
             { "title": "OutSeason", "path": "outseason-camps", "icon": "tent", "isMobileVisible": false, "roles": ["operatore", "manager", "admin"] },
             { "title": "Gestione Tornei", "path": "outseason-tournaments", "icon": "medal", "isMobileVisible": false, "roles": ["operatore", "manager", "admin"] }
         ]
@@ -75,13 +77,14 @@
         "icon": "vault",
         "isMobileVisible": false,
         "roles": [
+            "atleta",
             "manager",
             "admin"
         ],
         "children": [
             { "title": "Contabilità", "path": "finance", "icon": "calculator", "isMobileVisible": false, "roles": ["manager", "admin"] },
             { "title": "Fatturazione", "path": "finance-invoices", "icon": "receipt", "isMobileVisible": false, "roles": ["manager", "admin"] },
-            { "title": "Quote Atleti", "path": "athlete-payments", "icon": "credit-card", "isMobileVisible": false, "roles": ["manager", "admin"] },
+            { "title": "Quote Atleti", "path": "athlete-payments", "icon": "credit-card", "isMobileVisible": false, "roles": ["atleta", "manager", "admin"] },
             { "title": "Articoli eCommerce", "path": "ecommerce-articles", "icon": "tag", "isMobileVisible": false, "roles": ["manager", "admin"] },
             { "title": "Ordini eCommerce", "path": "ecommerce-orders", "icon": "package", "isMobileVisible": false, "roles": ["manager", "admin"] },
             { "title": "Partner & Sponsor", "path": "societa-sponsor", "icon": "storefront", "isMobileVisible": false, "roles": ["manager", "admin"] },

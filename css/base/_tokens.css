@@ -1,0 +1,104 @@
+/* Design tokens (:root variables)
+ * Extracted from style_v2.css (lines 1-101)
+ */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Fusion ERP — Design System
+   Brand: Minimalismo aggressivo | Fusion Pink | Deep Black
+   Fonts: Barlow Condensed (headers) + Inter (body)
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* Font caricato via <link> in index.html con preconnect — NON usare @import qui */
+
+
+/* ─── DESIGN TOKENS ────────────────────────────────────────────────────────── */
+:root {
+  /* NovaPM Premium Palette */
+  --accent-primary: #00f2fe;
+
+  /* Electric Cyan */
+  --accent-secondary: #ff007a;
+
+  /* Fusion Pink */
+  --bg-darker: #050505;
+  --bg-dark: #0a0a0c;
+  --bg-surface: rgba(255, 255, 255, 0.03);
+  --bg-surface-hover: rgba(255, 255, 255, 0.06);
+  --text-primary: #fff;
+  --text-secondary: rgba(255, 255, 255, 0.65);
+  --text-muted: rgba(255, 255, 255, 0.65);
+
+  /* WCAG fix: raised from 0.30 → 0.55 (contrast ~4.8:1 on #050505) */
+  --text-dim: rgba(255, 255, 255, 0.55);
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-glow: rgba(0, 242, 254, 0.2);
+
+  /* Layout */
+  --sidebar-width: 240px;
+  --sidebar-collapsed: 68px;
+  --topbar-height: 72px;
+
+  /* Effects */
+  --glass: blur(20px) saturate(180%);
+  --shadow-premium: 0 20px 40px rgba(0, 0, 0, 0.4);
+  --transition: 0.26s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ─── SHADOW TOKENS ─── */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.6), 0 6px 12px rgba(0, 0, 0, 0.3);
+
+  /* ─── GLOW TOKENS (Pink / Cyan / Card) ─── */
+  --glow-pink: 0 0 12px rgba(255, 0, 122, 0.45);
+  --glow-pink-strong: 0 0 24px rgba(255, 0, 122, 0.65), 0 0 48px rgba(255, 0, 122, 0.25);
+  --glow-cyan: 0 0 12px rgba(0, 242, 254, 0.45);
+  --glow-card-hover: 0 0 20px rgba(255, 0, 255, 0.12);
+  --glow-input: 0 0 0 3px rgba(255, 0, 122, 0.2);
+
+  /* Status */
+  --success: #00ffbc;
+  --warning: #ffb800;
+  --danger: #ff4d4d;
+
+  /* Typography */
+  --font-display: 'Syne', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-body: 'Inter', sans-serif;
+
+  /* ─── COMPATIBILITY LAYER (Legacy Tokens) ─── */
+  --color-bg: var(--bg-darker);
+  --color-bg-card: var(--bg-surface);
+  --color-bg-card-hover: var(--bg-surface-hover);
+
+  /* Input background — slightly lighter than surface for depth */
+  --color-bg-input: rgba(255, 255, 255, 0.05);
+  --color-border: var(--border-subtle);
+  --color-border-active: var(--accent-primary);
+  --color-text: var(--text-primary);
+  --color-text-muted: var(--text-secondary);
+  --color-text-dim: var(--text-dim);
+  --color-pink: var(--accent-secondary);
+  --color-pink-hover: #f37;
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --glass-blur: var(--glass);
+
+  /* Semantic convenience aliases */
+  --color-white: #fff;
+  --color-black: #050505;
+  --color-silver: rgba(255, 255, 255, 0.55);
+  --sp-1: 8px;
+  --sp-2: 16px;
+  --sp-3: 24px;
+  --sp-4: 32px;
+  --sp-5: 40px;
+  --sp-6: 48px;
+  --sp-8: 64px;
+  --radius-sm: 6px;
+  --radius: 12px;
+  --radius-lg: 16px;
+  --transition-base: var(--transition);
+  --transition-fast: 0.2s ease;
+  --color-anatomy-default: rgba(255, 255, 255, 0.1);
+}

@@ -1,0 +1,66 @@
+# ═══════════════════════════════════════════════════════════════
+# Fusion ERP — Docker Ignore
+# Prevents large/irrelevant files from entering the build context.
+# ═══════════════════════════════════════════════════════════════
+
+# Version control
+.git
+.gitignore
+
+# Dependencies (installed inside container)
+node_modules/
+vendor/
+
+# Build artifacts
+dist/
+.npm-cache/
+
+# Development tools
+scripts/dev/
+tests/
+docs/
+assets/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs & sessions
+logs/
+sessions/
+*.log
+
+# Environment
+.env
+.env.prod
+remote.env
+prod_env.txt
+.credentials
+credentials/
+
+# SQLite (dev only)
+*.sqlite
+*.db
+
+# Python cache
+__pycache__/
+*.pyc
+.venv/
+
+# Config files (not needed in container)
+phpunit.xml
+phpstan.neon
+eslint.config.mjs
+tsconfig.json
+vite.config.js
+docker-compose.yml
+Dockerfile
+.dockerignore
+.github/
+
+# Temp
+tmp/
+storage/
+uploads/

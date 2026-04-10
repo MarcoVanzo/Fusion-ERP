@@ -1,0 +1,24 @@
+/* Upload zone
+ * Extracted from style_v2.css (lines 2059-2079)
+ */
+
+/* ─── UPLOAD ZONE ───────────────────────────────────────────────────────────── */
+.upload-zone {
+  border: 1px dashed rgba(255, 255, 255, 0.25);
+  padding: var(--sp-4);
+  text-align: center;
+  cursor: pointer;
+  transition: border-color var(--transition-base), background-color var(--transition-base);
+}
+
+.upload-zone:hover,
+.upload-zone.drag-over {
+  border-color: var(--color-pink);
+  background: rgba(230, 0, 126, 0.05);
+}
+
+.upload-zone p {
+  color: var(--color-text-muted);
+  font-size: 13px;
+  margin-top: 8px;
+}
