@@ -608,7 +608,7 @@ class DashboardController
             [], 'shopping-bag', 'eCommerce', '#F472B6'
         ));
         $ecommerce = array_merge($ecommerce, $queryNodes(
-            "SELECT 'Nuova iscrizione OutSeason ricevuta' as text, created_at as date FROM outseason_entries WHERE created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 5", 
+            "SELECT 'Nuova iscrizione OutSeason ricevuta' as text, entry_date as date FROM outseason_entries WHERE entry_date >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 5", 
             [], 'tent', 'Camp', '#10B981'
         ));
 
