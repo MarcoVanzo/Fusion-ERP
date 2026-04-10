@@ -48,6 +48,9 @@ jobs:
       - name: 🔍 Run PHPStan analysis
         run: composer phpstan
 
+      - name: 🧪 Run PHPUnit tests
+        run: composer test
+
       - name: 🧹 Prepare production vendor (no dev)
         run: composer install --no-dev --optimize-autoloader --no-interaction
 
