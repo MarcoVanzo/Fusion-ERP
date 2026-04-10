@@ -291,7 +291,8 @@ const Router = (() => {
                 if (!_moduleCache[filePath]) {
                     if (_typeMap[path] === 'module') {
                         // ES Module → native dynamic import() (no script injection needed)
-                        const mod = await import('/' + filePath + '?v=' + _appVersion);
+                        const url = './' + filePath + '?v=' + _appVersion;
+                        const mod = await new Function('url', 'return import(url)')(url);
                         _moduleCache[filePath] = mod.default || mod;
                     } else {
                         // Legacy script → inject <script> tag, read from window global
