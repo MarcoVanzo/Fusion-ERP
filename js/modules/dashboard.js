@@ -38,7 +38,7 @@ const Dashboard = (() => {
     return `<div style="text-align:center; padding:24px 0; color:var(--color-text-muted); font-size:12px; font-style:italic;">${text}</div>`;
   }
 
-  // ── Render Full Page ──────────────────────────────────────────────────────
+    // ── Render Full Page ──────────────────────────────────────────────────────
   function render(data) {
     _abort.abort();
     _abort = new AbortController();
@@ -46,45 +46,17 @@ const Dashboard = (() => {
     const el = document.getElementById("app");
     if (!el) return;
 
-    // Estrapoliamo dati fittizi/reali calcolati sulle 14 settimane
-    // (nel sistema reale qui si incrocerebbero data.alerts, data.kpi ecc.)
-    
-    // In un ambiente reale filtreremmo per `isWithinLast14Days(item.created_at)`
-    const sportivaHtml = `
-      ${recentItem('users', 'Nuovo Tesseramento: Rossi Giulia (U16)', 'Nuovo Atleta', '#A78BFA')}
-      ${recentItem('heart', 'Infortunio Spalla: Bianchi Sofia (Serie C)', 'Fermo Medico', '#EF4444')}
-      ${recentItem('trophy', 'Vittoria Serie C vs Scandicci (3-1)', 'Match Giocato', '#10B981')}
-    `;
+    function buildList(items, emptyMsg = "Nessuna variazione negli ultimi 14 gg") {
+      if (!items || items.length === 0) return emptyState(emptyMsg);
+      return items.map(i => recentItem(i.icon, i.text, i.badge, i.color)).join('');
+    }
 
-    const operativitaHtml = `
-      ${recentItem('van', 'Ducato AF293ZX rientrato da manutenzione', 'Flotta', '#60A5FA')}
-      ${recentItem('list-checks', 'Completate 12 task di magazzino', 'Task Chiuse', '#10B981')}
-      ${recentItem('calendar-plus', 'Prenotate 3 nuove trasferte mese prossimo', 'Logistica', '#FCD34D')}
-    `;
-
-    const comunicazioneHtml = `
-      ${recentItem('whatsapp-logo', 'Inviato broadcast a genitori U14', 'WhatsApp (200 Inviati)', '#10B981')}
-      ${recentItem('instagram-logo', 'Nuovo post: "Vittoria Weekend"', 'Social', '#EC4899')}
-      ${recentItem('envelope-simple', 'Newsletter settimanale aperta dal 68%', 'Mail', '#A78BFA')}
-    `;
-
-    const adminHtml = `
-      ${recentItem('receipt', 'Spese Hostess approvate: € 240,00', 'Rimborsi', '#F59E0B')}
-      ${recentItem('file-pdf', 'Caricato Bilancio Mensile', 'Documenti', '#60A5FA')}
-      ${recentItem('bank', 'Incassate 14 rette atleti', 'Cassa (+ € 1400)', '#10B981')}
-    `;
-
-    const clubHtml = `
-      ${recentItem('handshake', 'Nuovo sponsor: "Pizzeria Da Mario"', 'Sponsor', '#FCD34D')}
-      ${recentItem('house-line', 'Foresteria: Assegnata camera 2', 'Strutture', '#A78BFA')}
-      ${recentItem('users-three', 'Meeting direttivo convocato per venerdì', 'Governance', '#F59E0B')}
-    `;
-
-    const ecommerceHtml = `
-      ${recentItem('shopping-bag', 'Evasi 12 ordini Merchandising', 'eCommerce', '#F472B6')}
-      ${recentItem('t-shirt', 'Aggiunto nuovo articolo: Felpa Ufficiale', 'Shop', '#60A5FA')}
-      ${recentItem('tent', 'Iscrizioni Summer Camp: +34 iscritti', 'OutSeason', '#10B981')}
-    `;
+    const sportivaHtml = buildList(data?.sportiva);
+    const operativitaHtml = buildList(data?.operativita);
+    const comunicazioneHtml = buildList(data?.comunicazione);
+    const adminHtml = buildList(data?.admin);
+    const clubHtml = buildList(data?.club);
+    const ecommerceHtml = buildList(data?.ecommerce);
 
     el.innerHTML = `
       <div style="padding: 24px; max-width: 1400px; margin: 0 auto; animation: fade-in 0.4s ease-out;" id="dash-main-container">
@@ -93,11 +65,11 @@ const Dashboard = (() => {
           <div>
             <h1 style="font-size: 28px; font-weight: 800; font-family:var(--font-display); letter-spacing:-0.5px; text-transform:uppercase; margin:0">Dashboard</h1>
             <p style="font-size: 14px; color: var(--color-text-muted); margin: 4px 0 0;">
-              Attività e Variazioni delle <strong>Ultime 2 Settimane</strong>
+              Attività e Variazioni reali delle <strong>Ultime 2 Settimane</strong>
             </p>
           </div>
           <div style="font-size:12px; color:gray; background:rgba(255,255,255,0.05); padding:8px 16px; border-radius:8px;">
-            <i class="ph ph-clock text-amber-500"></i> Dati al ${new Date().toLocaleDateString("it-IT")}
+            <i class="ph ph-clock text-amber-500"></i> Dati DB al ${new Date().toLocaleDateString("it-IT")}
           </div>
         </div>
 
@@ -125,7 +97,7 @@ const Dashboard = (() => {
           </div>
 
           <!-- 3. COMUNICAZIONE -->
-          <div class="dash-box" data-route="athletes" style="border-top-color: #34D399;">
+          <div class="dash-box" data-route="website" style="border-top-color: #34D399;">
             <div class="dash-box-header">
               <i class="ph-bold ph-megaphone" style="color:#34D399"></i> Comunicazione
             </div>
@@ -145,7 +117,7 @@ const Dashboard = (() => {
           </div>
 
           <!-- 5. IL CLUB -->
-          <div class="dash-box" data-route="athletes" style="border-top-color: #F87171;">
+          <div class="dash-box" data-route="societa" style="border-top-color: #F87171;">
             <div class="dash-box-header">
               <i class="ph-bold ph-buildings" style="color:#F87171"></i> Il Club
             </div>
@@ -261,7 +233,7 @@ const Dashboard = (() => {
       if (!el) return;
       el.innerHTML = UI.skeletonPage();
       try {
-        const data = await Store.get("weeklyFull", "dashboard").catch(
+        const data = await Store.get("matrixData", "dashboard").catch(
           () => null,
         );
         render(data);
