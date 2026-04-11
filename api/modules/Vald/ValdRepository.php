@@ -32,8 +32,8 @@ class ValdRepository
                    SELECT id FROM athletes 
                    WHERE tenant_id = :t2 
                      AND (
-                         (vald_athlete_id IS NOT NULL AND vald_athlete_id = (
-                             SELECT vald_athlete_id FROM athletes 
+                         (vald_profile_id IS NOT NULL AND vald_profile_id = (
+                             SELECT vald_profile_id FROM athletes 
                              WHERE id = :athlete_id2 AND tenant_id = :t3 LIMIT 1
                          ))
                          OR id = :athlete_id3
@@ -63,8 +63,8 @@ class ValdRepository
                    SELECT id FROM athletes 
                    WHERE tenant_id = :t2 
                      AND (
-                         (vald_athlete_id IS NOT NULL AND vald_athlete_id = (
-                             SELECT vald_athlete_id FROM athletes 
+                         (vald_profile_id IS NOT NULL AND vald_profile_id = (
+                             SELECT vald_profile_id FROM athletes 
                              WHERE id = :athlete_id2 AND tenant_id = :t3 LIMIT 1
                          ))
                          OR id = :athlete_id3
@@ -96,8 +96,8 @@ class ValdRepository
                    SELECT id FROM athletes 
                    WHERE tenant_id = :t2 
                      AND (
-                         (vald_athlete_id IS NOT NULL AND vald_athlete_id = (
-                             SELECT vald_athlete_id FROM athletes 
+                         (vald_profile_id IS NOT NULL AND vald_profile_id = (
+                             SELECT vald_profile_id FROM athletes 
                              WHERE id = :athlete_id2 AND tenant_id = :t3 LIMIT 1
                          ))
                          OR id = :athlete_id3
@@ -243,8 +243,8 @@ class ValdRepository
                    SELECT id FROM athletes 
                    WHERE tenant_id = :t2 
                      AND (
-                         (vald_athlete_id IS NOT NULL AND vald_athlete_id = (
-                             SELECT vald_athlete_id FROM athletes 
+                         (vald_profile_id IS NOT NULL AND vald_profile_id = (
+                             SELECT vald_profile_id FROM athletes 
                              WHERE id = :athlete_id2 AND tenant_id = :t3 LIMIT 1
                          ))
                          OR id = :athlete_id3
@@ -285,7 +285,7 @@ class ValdRepository
     public function linkAthleteToVald(string $athleteId, ?string $valdAthleteId): void
     {
         $stmt = $this->db->prepare(
-            'UPDATE athletes SET vald_athlete_id = :vid WHERE id = :id AND tenant_id = :tid'
+            'UPDATE athletes SET vald_profile_id = :vid WHERE id = :id AND tenant_id = :tid'
         );
         $stmt->execute([
             ':vid' => $valdAthleteId,

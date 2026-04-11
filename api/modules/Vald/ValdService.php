@@ -399,11 +399,11 @@ PROMPT;
         $db = \FusionERP\Shared\Database::getInstance();
         @set_time_limit(300);
 
-        $mapStmt = $db->prepare('SELECT id, vald_athlete_id FROM athletes WHERE tenant_id = :tid AND vald_athlete_id IS NOT NULL AND deleted_at IS NULL');
+        $mapStmt = $db->prepare('SELECT id, vald_profile_id FROM athletes WHERE tenant_id = :tid AND vald_profile_id IS NOT NULL AND deleted_at IS NULL');
         $mapStmt->execute([':tid' => $tenantId]);
         $athleteMap = [];
         foreach ($mapStmt->fetchAll(\PDO::FETCH_ASSOC) as $row) {
-            $athleteMap[$row['vald_athlete_id']] = $row['id'];
+            $athleteMap[$row['vald_profile_id']] = $row['id'];
         }
 
         $existingStmt = $db->prepare('SELECT test_id FROM vald_test_results WHERE tenant_id = :tid');

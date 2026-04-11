@@ -40,7 +40,7 @@ class ValdController
         $del->execute([':tid' => $tenantId]);
         $deleted = $del->rowCount();
 
-        $unlink = $db->prepare('UPDATE athletes SET vald_athlete_id = NULL WHERE tenant_id = :tid');
+        $unlink = $db->prepare('UPDATE athletes SET vald_profile_id = NULL WHERE tenant_id = :tid');
         $unlink->execute([':tid' => $tenantId]);
         $unlinked = $unlink->rowCount();
 
@@ -266,7 +266,7 @@ PROMPT;
         }
 
         $stmt = $db->prepare(
-            'SELECT a.id, a.full_name, a.vald_athlete_id, COALESCE(t.name, \'\') AS team_name
+            'SELECT a.id, a.full_name, a.vald_profile_id, COALESCE(t.name, \'\') AS team_name
              FROM athletes a LEFT JOIN teams t ON t.id = a.team_id
              WHERE a.tenant_id = :tid AND a.deleted_at IS NULL GROUP BY a.id ORDER BY a.full_name'
         );
@@ -275,11 +275,11 @@ PROMPT;
 
         $erpByValdId = []; $erpByName = [];
         foreach ($erpAthletes as $a) {
-            if ($a['vald_athlete_id'] && !isset($erpByValdId[$a['vald_athlete_id']])) {
-                $erpByValdId[$a['vald_athlete_id']] = $a;
+            if ($a['vald_profile_id'] && !isset($erpByValdId[$a['vald_profile_id']])) {
+                $erpByValdId[$a['vald_profile_id']] = $a;
             }
             $norm = str_replace(['à','è','é','ì','ò','ù'], ['a','e','e','i','o','u'], mb_strtolower(trim($a['full_name'])));
-            if (!isset($erpByName[$norm]) || $a['vald_athlete_id']) {
+            if (!isset($erpByName[$norm]) || $a['vald_profile_id']) {
                 $erpByName[$norm] = $a;
             }
         }
@@ -329,7 +329,7 @@ PROMPT;
         $saved = 0;
         foreach ($body as $link) {
             if (!empty($link['athlete_id'])) {
-                $this->repo->linkAthleteToVald($link['athlete_id'], $link['vald_athlete_id'] ?? null);
+                $this->repo->linkAthleteToVald($link['athlete_id'], $link['vald_profile_id'] ?? null);
                 $saved++;
             }
         }

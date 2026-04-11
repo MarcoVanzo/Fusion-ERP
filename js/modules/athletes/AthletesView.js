@@ -193,9 +193,9 @@ export const AthletesView = {
                 return 'var(--color-white)'; // white for normal
             };
 
-            const jhColor = getColor(jhVal, 22, 32);     // Thresholds for Jump Height
-            const rsiColor = getColor(rsiVal, 0.30, 0.45); // Thresholds for RSIMOD
-            const biColor = getColor(biVal, 1.5, 2.5);     // Thresholds for Braking Imp.
+            const jhColor = getColor(jhVal, 25, 30);       // Thresholds for Jump Height: <25 Red, >=30 Green
+            const rsiColor = getColor(rsiVal, 0.30, 0.45); // Thresholds for RSIMOD: <0.30 Red, >=0.45 Green
+            const biColor = getColor(biVal, 25, 35);       // Thresholds for Braking Imp: <25 Red, >=35 Green
 
             extraCells = `
                 <td style="${tdStyle} color:rgba(255,255,255,0.4); font-size:13px;"><i class="ph ph-shield-star"></i> ${Utils.escapeHtml(athlete.team_name)}</td>
