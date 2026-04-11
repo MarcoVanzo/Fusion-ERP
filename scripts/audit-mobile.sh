@@ -191,7 +191,8 @@ if [ -f "$APP_JS" ]; then
   navigated_routes=$(grep -oE "hash[[:space:]]*=[[:space:]]*'#[a-zA-Z0-9_-]+'" "$APP_JS" | grep -oE "'#[a-zA-Z0-9_-]+'" | tr -d "'" | sort -u)
   defined_routes=$(grep -oE "case[[:space:]]*'#[a-zA-Z0-9_-]+'" "$APP_JS" | grep -oE "'#[a-zA-Z0-9_-]+'" | tr -d "'" | sort -u)
   defined_routes2=$(grep -oE "startsWith\('#[a-zA-Z0-9_-]+'\)" "$APP_JS" | grep -oE "'#[a-zA-Z0-9_-]+'" | tr -d "'" | sort -u)
-  all_defined=$(printf '%s\n%s\n' "$defined_routes" "$defined_routes2" | sort -u)
+  defined_routes3=$(grep -oE "hash === '#[a-zA-Z0-9_-]+'" "$APP_JS" | grep -oE "'#[a-zA-Z0-9_-]+'" | tr -d "'" | sort -u)
+  all_defined=$(printf '%s\n%s\n%s\n' "$defined_routes" "$defined_routes2" "$defined_routes3" | sort -u)
 
   for route in $navigated_routes; do
     found=false

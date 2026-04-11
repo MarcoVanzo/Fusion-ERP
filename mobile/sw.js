@@ -1,8 +1,8 @@
-const CACHE_NAME = 'fusion-erp-mobile-v8';
+const CACHE_NAME = 'fusion-erp-mobile-v9';
 const ASSETS_TO_CACHE = [
   './index.html',
-  './css/style.css?v=8',
-  './js/app.js?v=8',
+  './css/style.css?v=9',
+  './js/app.js?v=9',
   './manifest.json'
 ];
 
@@ -33,7 +33,11 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Try network first, map to cache fallback
+  // Skip API routes — always go to network, never serve stale cached data
+  if (event.request.url.includes('/api/') || event.request.url.includes('api/?')) {
+    return;
+  }
+  // Try network first, fall back to cache for static assets
   event.respondWith(
     fetch(event.request)
       .then((response) => {

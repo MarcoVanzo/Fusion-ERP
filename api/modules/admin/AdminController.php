@@ -29,7 +29,7 @@ class AdminController
 
     public function listCertificates(): void
     {
-        Auth::requireRole('operator');
+        Auth::requireRole('admin');
         $athleteId = filter_input(INPUT_GET, 'athleteId', FILTER_DEFAULT) ?? '';
         $expiringSoon = filter_input(INPUT_GET, 'expiringSoon', FILTER_VALIDATE_BOOLEAN) ?: false;
         Response::success($this->repo->listCertificates($athleteId, $expiringSoon));
@@ -41,7 +41,7 @@ class AdminController
      */
     public function uploadCertificate(): void
     {
-        $user = Auth::requireRole('operator');
+        $user = Auth::requireRole('admin');
 
         // Validate upload
         if (empty($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
@@ -164,7 +164,7 @@ class AdminController
 
     public function listContracts(): void
     {
-        Auth::requireRole('social media manager');
+        Auth::requireRole('operator');
         $userId = filter_input(INPUT_GET, 'userId', FILTER_DEFAULT) ?? '';
         Response::success($this->repo->listContracts($userId));
     }
@@ -174,7 +174,7 @@ class AdminController
      */
     public function generateContract(): void
     {
-        $adminUser = Auth::requireRole('social media manager');
+        $adminUser = Auth::requireRole('operator');
         $body = Response::jsonBody();
         Response::requireFields($body, ['user_id', 'valid_from', 'valid_to', 'role_description']);
 
@@ -271,7 +271,7 @@ HTML;
 
     public function expiringCertificates(): void
     {
-        Auth::requireRole('operator');
+        Auth::requireRole('admin');
         $certs = $this->repo->listCertificates('', true);
         Response::success($certs);
     }

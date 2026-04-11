@@ -614,7 +614,7 @@ class App {
                 <i class="fas ${icon}"></i>
               </div>
               <div class="expense-details">
-                <div class="expense-desc">${exp.description || 'Spesa'}</div>
+                <div class="expense-desc">${this.escapeHtml(exp.description || 'Spesa')}</div>
                 <div class="expense-meta">${catLabel} • ${dateStr}</div>
               </div>
               <div class="expense-amount">€ ${amount}</div>
@@ -1110,7 +1110,7 @@ class App {
     \`;
 
     try {
-      // Fetch mock list or real API for athletes
+      // Fetch athletes roster from API
       // Assuming a generic fetch to /athletes or similar
       const res = await fetch('../api/?module=athletes&action=list', { credentials: 'include', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
       const data = await res.json();
@@ -1233,7 +1233,6 @@ class App {
               }),
             });
           }
-          // Even if the specific endpoint isn't ready, we show success for the mock
           alert(`Presenze salvate: ${records.length} registrazioni.`);
           window.location.hash = '#squadra';
         } catch(err) {
@@ -1344,7 +1343,7 @@ class App {
           hidden.type = 'file';
           hidden.id = action;
           hidden.style.display = 'none';
-          hidden.onchange = (e) => this.uploadProfileDoc(e.target, action);
+          hidden.onchange = (e) => this.uploadProfileDoc(e.target, action, this.currentAthleteProfile?.id, 'athletes');
           document.body.appendChild(hidden);
         }
         hidden.click();
