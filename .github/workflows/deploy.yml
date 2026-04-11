@@ -43,7 +43,7 @@ jobs:
           restore-keys: vendor-
 
       - name: 📦 Install all Composer dependencies (with dev)
-        run: composer install --optimize-autoloader --no-interaction
+        run: composer update --optimize-autoloader --no-interaction
 
       - name: 🔍 Run PHPStan analysis
         run: composer phpstan
@@ -52,7 +52,7 @@ jobs:
         run: composer test
 
       - name: 🧹 Prepare production vendor (no dev)
-        run: composer install --no-dev --optimize-autoloader --no-interaction
+        run: composer update --no-dev --optimize-autoloader --no-interaction
 
       # ── 3. Set up Python ───────────────────────────────────────────────────
       - name: 🐍 Set up Python 3.12

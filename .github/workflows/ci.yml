@@ -32,7 +32,7 @@ jobs:
           restore-keys: composer-
       
       - name: Install Composer dependencies
-        run: composer install --no-interaction --prefer-dist
+        run: composer update --no-interaction --prefer-dist
       
       - name: Run PHPStan
         run: vendor/bin/phpstan analyse -c phpstan.neon --no-progress --error-format=github
@@ -73,7 +73,7 @@ jobs:
           restore-keys: composer-
       
       - name: Install Composer dependencies
-        run: composer install --no-interaction --prefer-dist
+        run: composer update --no-interaction --prefer-dist
       
       - name: Create test .env
         run: |
