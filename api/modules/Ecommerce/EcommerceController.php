@@ -734,8 +734,8 @@ class EcommerceController
             [, $base64] = explode(',', $base64, 2);
         }
 
-        $imageData = base64_decode($base64);
-        if ($imageData === '') {
+        $imageData = base64_decode($base64, true);
+        if ($imageData === false || $imageData === '') {
             http_response_code(500);
             echo "Invalid image data";
             exit;

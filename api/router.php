@@ -233,8 +233,18 @@ function dispatchStripeWebhook(string $action): void
 function dispatch(string $controllerName, string $action): void
 {
     // FIX: Auth middleware globale. Richiede login per TUTTE le action tranne quelle esplicitamente pubbliche.
-    $publicActions = ['login', 'requestPasswordReset', 'confirmPasswordReset', 'confirmSubUserInvitation', 'acceptSubUserInvitation', 'getPublicTeams', 'getPublicTeamAthletes', 'getPublicSponsors', 'getPublicProfile', 'getPublicCompanies', 'getPublicForesteria', 'getPublicOrganigramma', 'getPublicTitoli', 'getPublicCollaborations', 'getPublicHubConfig', 'getPublicNews', 'getArticle', 'getSitemapUrls', 'getPublicShop', 'getProductImage', 'getPublicMatchCenter', 'getPublicStaff', 'getPublicRecentResults', 'subscribeNewsletter', 'teams', 'applyScouting'];
-    if (!in_array($action, $publicActions, true)) {
+    $publicActions = ['login', 'requestPasswordReset', 'confirmPasswordReset', 'confirmSubUserInvitation', 'acceptSubUserInvitation', 'getPublicTeams', 'getPublicTeamAthletes', 'getPublicSponsors', 'getPublicProfile', 'getPublicCompanies', 'getPublicForesteria', 'getPublicOrganigramma', 'getPublicTitoli', 'getPublicCollaborations', 'getPublicHubConfig', 'getPublicNews', 'getArticle', 'getSitemapUrls', 'getPublicShop', 'getProductImage', 'getPublicMatchCenter', 'getPublicStaff', 'getPublicRecentResults', 'subscribeNewsletter', 'applyScouting'];
+
+    // Module-specific public exceptions for external webhooks/OAuth callbacks.
+    // These cannot authenticate — they originate from third-party servers (OpenAPI.it, Meta).
+    $modulePublicExceptions = [
+        'ESignature' => ['callback'],   // OpenAPI.it e-signature webhook
+        'Social'     => ['callback'],   // Meta OAuth redirect
+    ];
+    $isModuleException = isset($modulePublicExceptions[$controllerName])
+        && in_array($action, $modulePublicExceptions[$controllerName], true);
+
+    if (!$isModuleException && !in_array($action, $publicActions, true)) {
         Auth::requireAuth();
     }
 
