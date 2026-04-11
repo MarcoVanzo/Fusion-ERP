@@ -635,7 +635,7 @@ class AthletesRepository
             "SELECT e.id AS event_id, e.title AS tournament_name, e.start_date AS tournament_date, td.fee_per_athlete, {$hasPaidField}
              FROM event_attendees ea
              JOIN events e ON e.id = ea.event_id
-             JOIN tournament_details td ON td.tournament_id = e.id
+             JOIN tournament_details td ON td.event_id = e.id
              WHERE ea.athlete_id = :id AND ea.status = 'confirmed'
              ORDER BY e.start_date DESC"
         );

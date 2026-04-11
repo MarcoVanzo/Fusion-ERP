@@ -1169,8 +1169,8 @@ export const AthletesView = {
             </div>
 
             <!-- Modal Invito (Hidden by default) -->
-            <div id="invite-modal" class="modal-fusion" style="display:none;">
-                <div class="modal-content glass-card" style="max-width:400px; padding:24px;">
+            <div id="invite-modal" class="modal-overlay" style="display:none;">
+                <div class="modal glass-card" style="max-width:400px; padding:24px;">
                     <h3 style="margin-bottom:16px;">Invita Sotto-utente</h3>
                     <div class="form-group">
                         <label class="form-label">Nome Completo</label>
@@ -1247,8 +1247,8 @@ export const AthletesView = {
      */
     bulkQuotesModal: (teams = []) => {
         return `
-            <div id="bulk-quotes-modal" class="modal-fusion" style="display:none; align-items:flex-start; padding-top:5vh;">
-                <div class="modal-content glass-card" style="max-width:800px; width:100%; border:1px solid rgba(255,255,255,0.1); background:#0F1219;">
+            <div id="bulk-quotes-modal" class="modal-overlay" style="display:none; align-items:flex-start; padding-top:5vh;">
+                <div class="modal glass-card" style="max-width:800px; width:100%; border:1px solid rgba(255,255,255,0.1); background:#0F1219;">
                     
                     <div style="padding:24px; border-bottom:1px solid rgba(255,255,255,0.05); display:flex; justify-content:space-between; align-items:flex-start;">
                         <div>

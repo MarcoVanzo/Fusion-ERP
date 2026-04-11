@@ -61,7 +61,7 @@ class TournamentsController
         $body = Response::jsonBody();
         
         $this->handleServiceCall(fn() => [
-            'id' => $this->service->saveTournament($body, (int)$user['id']),
+            'id' => $this->service->saveTournament($body, $user['id']),
             'message' => 'Tournament saved successfully.'
         ]);
     }

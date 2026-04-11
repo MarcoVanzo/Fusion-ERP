@@ -39,7 +39,7 @@ class TournamentsService
     /**
      * Save tournament with atomic transaction
      */
-    public function saveTournament(array $data, int $userId): string
+    public function saveTournament(array $data, string $userId): string
     {
         // Validation
         if (empty($data['team_id']) || empty($data['title']) || empty($data['event_date'])) {
