@@ -10,6 +10,7 @@ namespace FusionERP\Modules\Tasks;
 
 use FusionERP\Shared\Auth;
 use FusionERP\Shared\Database;
+use FusionERP\Shared\TenantContext;
 use PDO;
 
 class TasksRepository
@@ -42,9 +43,9 @@ class TasksRepository
             FROM tasks t
             LEFT JOIN users uc ON uc.id = t.user_id
             LEFT JOIN users ua ON ua.id = t.assigned_to
-            WHERE 1=1';
+            WHERE t.tenant_id = :tenant_id';
 
-        $params = [];
+        $params = [':tenant_id' => TenantContext::id()];
 
         if ($status !== '') {
             $sql .= ' AND t.status = :status';
@@ -82,8 +83,8 @@ class TasksRepository
 
     public function getTask(string $id): ?array
     {
-        $stmt = $this->db->prepare('SELECT * FROM tasks WHERE id = ?');
-        $stmt->execute([$id]);
+        $stmt = $this->db->prepare('SELECT * FROM tasks WHERE id = ? AND tenant_id = ?');
+        $stmt->execute([$id, TenantContext::id()]);
         $row = $stmt->fetch();
         return $row ?: null;
     }
@@ -103,11 +104,12 @@ class TasksRepository
         $userId = Auth::user()['id'] ?? null;
 
         $stmt = $this->db->prepare('
-            INSERT INTO tasks (id, user_id, title, category, priority, status, due_date, notes, attachment, assigned_to)
-            VALUES (:id, :user_id, :title, :category, :priority, :status, :due_date, :notes, :attachment, :assigned_to)
+            INSERT INTO tasks (id, tenant_id, user_id, title, category, priority, status, due_date, notes, attachment, assigned_to)
+            VALUES (:id, :tenant_id, :user_id, :title, :category, :priority, :status, :due_date, :notes, :attachment, :assigned_to)
         ');
         $stmt->execute([
             ':id'          => $id,
+            ':tenant_id'   => TenantContext::id(),
             ':user_id'     => $userId,
             ':title'       => $title,
             ':category'    => $category,
@@ -138,13 +140,14 @@ class TasksRepository
         if (empty($sets))
             return;
 
-        $sql = 'UPDATE tasks SET ' . implode(', ', $sets) . ' WHERE id = :id';
+        $sql = 'UPDATE tasks SET ' . implode(', ', $sets) . ' WHERE id = :id AND tenant_id = :tenant_id';
+        $params[':tenant_id'] = TenantContext::id();
         $this->db->prepare($sql)->execute($params);
     }
 
     public function deleteTask(string $id): void
     {
-        $this->db->prepare('DELETE FROM tasks WHERE id = ?')->execute([$id]);
+        $this->db->prepare('DELETE FROM tasks WHERE id = ? AND tenant_id = ?')->execute([$id, TenantContext::id()]);
     }
 
     // ─── TASK LOGS ────────────────────────────────────────────────────────────

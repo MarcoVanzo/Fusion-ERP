@@ -35,7 +35,17 @@ class StripeWebhookController
         $endpoint_secret = $_ENV['STRIPE_WEBHOOK_SECRET'] ?? '';
 
         if (empty($endpoint_secret)) {
-            // Local fallback / logging for dev without strict webhook secrets
+            // ═══ SECURITY GUARD ═══
+            // In production, NEVER accept unsigned webhooks — reject immediately.
+            $appEnv = $_ENV['APP_ENV'] ?? getenv('APP_ENV') ?: 'production';
+            if ($appEnv !== 'local' && $appEnv !== 'development') {
+                error_log('[STRIPE] CRITICAL: STRIPE_WEBHOOK_SECRET is empty in production — rejecting webhook.');
+                http_response_code(500);
+                echo 'Webhook secret not configured';
+                exit();
+            }
+            // Local/dev fallback only — log a warning
+            error_log('[STRIPE] WARNING: Processing unsigned webhook in dev mode.');
             $event = json_decode($payload, true);
         } else {
             // Production strict validation

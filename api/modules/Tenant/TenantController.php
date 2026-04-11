@@ -29,6 +29,7 @@ class TenantController
     // Creates a new tenant (society registration / signup).
     public function create(): void
     {
+        Auth::requireAuth(); // Defense-in-depth: tenant creation must be authenticated
         $body = Response::jsonBody();
         Response::requireFields($body, ['name', 'sport_type', 'legal_form']);
 

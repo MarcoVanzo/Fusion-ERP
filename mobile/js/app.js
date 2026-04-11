@@ -104,7 +104,7 @@ class App {
       if (u.role) role = u.role.toLowerCase();
     } catch(e){}
 
-    const isStaff = role.includes('allenatore') || role.includes('manager') || role.includes('operatore') || role === 'admin';
+    const isStaff = role.includes('allenatore') || role.includes('social media manager') || role.includes('operatore') || role === 'admin';
 
     const items = [
       { id: '#dashboard', icon: 'fa-home', text: 'Home' },
@@ -254,10 +254,10 @@ class App {
     const userStr = localStorage.getItem('erp_user');
     if (!userStr) return;
     const user = JSON.parse(userStr);
-    if (!user || !['social media manager', 'operatore', 'allenatore', 'admin', 'manager', 'operator'].includes(user.role?.toLowerCase())) return;
+    if (!user || !['social media manager', 'operatore', 'allenatore', 'admin', 'operator'].includes(user.role?.toLowerCase())) return;
 
     try {
-      const res = await fetch(`../api/?module=athletes&action=alerts`, { credentials: 'include' });
+      const res = await fetch(`../api/?module=athletes&action=alerts`, { credentials: 'include', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
       const data = await res.json();
       const bell = document.querySelector('.header-icon');
       if (!bell) return;
@@ -568,7 +568,7 @@ class App {
     };
 
     try {
-      const response = await fetch('../api/?module=societa&action=getForesteria', { credentials: 'include' });
+      const response = await fetch('../api/?module=societa&action=getForesteria', { credentials: 'include', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
       const result = await response.json();
 
       if (response.ok && result.success && result.data) {
@@ -682,7 +682,7 @@ class App {
 
     try {
       const url = isOwningProfile ? '../api/?module=athletes&action=myProfile' : \`../api/?module=athletes&action=myProfile&id=\${uId}\`;
-      const response = await fetch(url, { credentials: 'include' });
+      const response = await fetch(url, { credentials: 'include', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
       const result = await response.json();
 
       if (response.ok && result.success && result.data) {
@@ -887,43 +887,93 @@ class App {
     `;
   }
 
-  renderSubTabPerformance() {
-    document.getElementById('profilo-content').innerHTML = \`
-      <div class="glass-card text-center">
-        <i class="fas fa-tachometer-alt" style="font-size:40px; color:var(--accent-primary); margin-bottom:15px; opacity:0.8;"></i>
-        <h3>ACWR & Salti</h3>
-        <p class="text-muted mt-10">L'elaborazione delle tue performance fisiche (Vald, salti, carico di lavoro) apparirà qui graficamente.</p>
-        <canvas id="perf-chart" style="width:100%; height:200px; margin-top:20px;"></canvas>
-      </div>
-    \`;
-    // Mock Chart
-    setTimeout(() => {
-      const ctx = document.getElementById('perf-chart');
-      if (ctx && window.Chart) {
-        new Chart(ctx, {
-          type: 'line',
-          data: {
-            labels: ['G1','G2','G3','G4','G5'],
-            datasets: [{
-               label: 'Salto in Alto (cm)',
-               data: [50, 52, 51, 55, 54],
-               borderColor: '#00f2fe', tension: 0.4
-            }]
-          },
-          options: { plugins:{legend:{display:false}} }
-        });
+  async renderSubTabPerformance() {
+    const content = document.getElementById('profilo-content');
+    const p = this.currentAthleteProfile;
+    if (!p || !p.id) { content.innerHTML = '<div class="glass-card text-center"><p class="text-muted">Profilo non caricato.</p></div>'; return; }
+
+    content.innerHTML = '<div class="glass-card skeleton" style="height:200px;"></div>';
+
+    try {
+      const res = await fetch(`../api/?module=athletes&action=acwr&id=${p.id}`, { credentials: 'include', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+      const data = await res.json();
+
+      if (res.ok && data.success && data.data) {
+        const acwr = data.data;
+        const riskColor = acwr.risk === 'high' || acwr.risk === 'extreme' ? 'var(--danger)' : acwr.risk === 'moderate' ? 'var(--warning)' : 'var(--success)';
+        content.innerHTML = `
+          <div class="glass-card text-center">
+            <i class="fas fa-tachometer-alt" style="font-size:40px; color:var(--accent-primary); margin-bottom:15px; opacity:0.8;"></i>
+            <h3>ACWR & Performance</h3>
+            <div style="display:flex; justify-content:space-around; margin-top:20px;">
+              <div>
+                <div style="font-size:32px; font-weight:700; color:${riskColor};">${(acwr.score || 0).toFixed(2)}</div>
+                <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">ACWR Score</div>
+              </div>
+              <div>
+                <div style="font-size:32px; font-weight:700; color:var(--accent-primary);">${acwr.acute_load || 0}</div>
+                <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">Carico Acuto (7gg)</div>
+              </div>
+              <div>
+                <div style="font-size:32px; font-weight:700; color:var(--accent-secondary);">${acwr.chronic_load || 0}</div>
+                <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">Carico Cronico (28gg)</div>
+              </div>
+            </div>
+            <div style="margin-top:15px; padding:10px; border-radius:8px; background:${riskColor}15;">
+              <span style="font-size:13px; font-weight:600; color:${riskColor}; text-transform:uppercase;">${acwr.risk || 'N/D'} Risk</span>
+            </div>
+          </div>
+        `;
+      } else {
+        content.innerHTML = '<div class="glass-card text-center"><p class="text-muted">Nessun dato di performance disponibile.</p></div>';
       }
-    }, 100);
+    } catch(e) {
+      console.error(e);
+      content.innerHTML = '<div class="glass-card text-center"><p class="text-muted">Errore di connessione.</p></div>';
+    }
   }
 
-  renderSubTabInfortuni() {
-    document.getElementById('profilo-content').innerHTML = \`
-      <div class="glass-card text-center">
-        <i class="fas fa-briefcase-medical" style="font-size:40px; color:var(--danger); margin-bottom:15px; opacity:0.8;"></i>
-        <h3>Storico Medico</h3>
-        <p class="text-muted mt-10">Elenco infortuni e riabilitazione connessa.</p>
-      </div>
-    \`;
+  async renderSubTabInfortuni() {
+    const content = document.getElementById('profilo-content');
+    const p = this.currentAthleteProfile;
+    if (!p || !p.id) { content.innerHTML = '<div class="glass-card text-center"><p class="text-muted">Profilo non caricato.</p></div>'; return; }
+
+    content.innerHTML = '<div class="glass-card skeleton" style="height:120px;"></div>';
+
+    try {
+      const res = await fetch(`../api/?module=health&action=getInjuries&athlete_id=${p.id}`, { credentials: 'include', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+      const data = await res.json();
+
+      if (res.ok && data.success && data.data && data.data.length > 0) {
+        let html = '<div class="glass-card"><h3 class="section-title"><i class="fas fa-briefcase-medical"></i> STORICO MEDICO</h3>';
+        data.data.forEach(injury => {
+          const dateStr = injury.injury_date ? new Date(injury.injury_date).toLocaleDateString('it-IT', { day:'2-digit', month:'short', year:'numeric' }) : '';
+          const statusIcon = injury.status === 'recovered' ? '<i class="fas fa-check-circle" style="color:var(--success)"></i>' : '<i class="fas fa-clock" style="color:var(--warning)"></i>';
+          html += `
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid var(--border-subtle);">
+              <div>
+                <div style="font-weight:600; font-size:14px;">${injury.type || injury.description || 'Infortunio'}</div>
+                <div style="font-size:12px; color:var(--text-muted);">${dateStr} ${statusIcon} ${injury.status || ''}</div>
+              </div>
+              <div style="font-size:12px; color:var(--text-light);">${injury.recovery_days ? injury.recovery_days + ' gg' : ''}</div>
+            </div>
+          `;
+        });
+        html += '</div>';
+        content.innerHTML = html;
+      } else {
+        content.innerHTML = `
+          <div class="glass-card text-center">
+            <i class="fas fa-briefcase-medical" style="font-size:40px; color:var(--success); margin-bottom:15px; opacity:0.8;"></i>
+            <h3>Nessun Infortunio</h3>
+            <p class="text-muted mt-10">Non ci sono infortuni registrati per questo atleta.</p>
+          </div>
+        `;
+      }
+    } catch(e) {
+      console.error(e);
+      content.innerHTML = '<div class="glass-card text-center"><p class="text-muted">Errore di connessione.</p></div>';
+    }
   }
 
   async renderSubTabTrasporti() {
@@ -934,7 +984,7 @@ class App {
     content.innerHTML = '<div class="glass-card skeleton" style="height:120px;"></div>';
 
     try {
-      const res = await fetch(`../api/?module=athletes&action=getTransportHistory&id=${p.id}`, { credentials: 'include' });
+      const res = await fetch(`../api/?module=athletes&action=getTransportHistory&id=${p.id}`, { credentials: 'include', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
       const data = await res.json();
 
       if (res.ok && data.success && data.data && data.data.length > 0) {
@@ -969,23 +1019,60 @@ class App {
   }
 
   renderSubTabSottoUtenti() {
-    document.getElementById('profilo-content').innerHTML = \`
+    document.getElementById('profilo-content').innerHTML = `
       <div class="glass-card">
         <h3 class="section-title"><i class="fas fa-users"></i> LEGAMI FAMIGLIARI</h3>
-        <p class="text-light" style="font-size:13px; margin-bottom:15px;">Gestisci i profili associati al tuo account (es. figli).</p>
-        \${this.currentProfileIsOwn ? \`<button class="btn btn-secondary"><i class="fas fa-link"></i> ASSOCIA NUOVO MINORE</button>\` : ''}
+        <p class="text-light" style="font-size:13px;">Gestisci i profili associati al tuo account (es. figli).</p>
+        <p class="text-muted" style="font-size:12px; margin-top:10px;">Per associare un nuovo minore, contattare la segreteria.</p>
       </div>
-    \`;
+    `;
   }
 
-  renderSubTabPresenze() {
-    document.getElementById('profilo-content').innerHTML = \`
-      <div class="glass-card text-center">
-        <i class="fas fa-check-square" style="font-size:40px; color:var(--accent-secondary); margin-bottom:15px; opacity:0.8;"></i>
-        <h3>Presenze Personali</h3>
-        <p class="text-muted mt-10">Statistiche 92% presenze questo mese.</p>
-      </div>
-    \`;
+  async renderSubTabPresenze() {
+    const content = document.getElementById('profilo-content');
+    const p = this.currentAthleteProfile;
+    if (!p || !p.id) { content.innerHTML = '<div class="glass-card text-center"><p class="text-muted">Profilo non caricato.</p></div>'; return; }
+
+    content.innerHTML = '<div class="glass-card skeleton" style="height:120px;"></div>';
+
+    try {
+      const teamId = p.team_id || '';
+      const res = await fetch(`../api/?module=teams&action=getAttendances&team_id=${teamId}&athlete_id=${p.id}`, {
+        credentials: 'include',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+      });
+      const data = await res.json();
+
+      if (res.ok && data.success && data.data && data.data.length > 0) {
+        const total = data.data.length;
+        const present = data.data.filter(a => a.status === 'present').length;
+        const pct = total > 0 ? Math.round((present / total) * 100) : 0;
+        const barColor = pct >= 80 ? 'var(--success)' : pct >= 50 ? 'var(--warning)' : 'var(--danger)';
+
+        content.innerHTML = `
+          <div class="glass-card text-center">
+            <i class="fas fa-check-square" style="font-size:40px; color:var(--accent-secondary); margin-bottom:15px; opacity:0.8;"></i>
+            <h3>Presenze Personali</h3>
+            <div style="font-size:48px; font-weight:700; color:${barColor}; margin:15px 0;">${pct}%</div>
+            <div class="progress-bar-container" style="margin:10px 0;">
+              <div class="progress-fill" style="width:${pct}%; background:${barColor}; height:8px; border-radius:4px;"></div>
+            </div>
+            <p class="text-muted" style="font-size:12px;">${present} presenze su ${total} sessioni registrate</p>
+          </div>
+        `;
+      } else {
+        content.innerHTML = `
+          <div class="glass-card text-center">
+            <i class="fas fa-check-square" style="font-size:40px; color:var(--accent-secondary); margin-bottom:15px; opacity:0.8;"></i>
+            <h3>Presenze Personali</h3>
+            <p class="text-muted mt-10">Nessun dato di presenze disponibile.</p>
+          </div>
+        `;
+      }
+    } catch(e) {
+      console.error(e);
+      content.innerHTML = '<div class="glass-card text-center"><p class="text-muted">Errore di connessione.</p></div>';
+    }
   }
 
   // SQUADRA E PRESENZE COATCH (NEW VUES)
@@ -1022,7 +1109,7 @@ class App {
     try {
       // Fetch mock list or real API for athletes
       // Assuming a generic fetch to /athletes or similar
-      const res = await fetch('../api/?module=athletes&action=list', { credentials: 'include' });
+      const res = await fetch('../api/?module=athletes&action=list', { credentials: 'include', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
       const data = await res.json();
 
       let html = '';
@@ -1073,7 +1160,7 @@ class App {
 
     // Load same list of athletes and render them as attendance cards
     try {
-      const res = await fetch('../api/?module=athletes&action=list', { credentials: 'include' });
+      const res = await fetch('../api/?module=athletes&action=list', { credentials: 'include', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
       const data = await res.json();
       let html = '';
       if (data.success && data.data && data.data.length > 0) {
@@ -1206,7 +1293,7 @@ class App {
     `;
 
     try {
-      const res = await fetch('../api/?module=athletes&action=alerts', { credentials: 'include' });
+      const res = await fetch('../api/?module=athletes&action=alerts', { credentials: 'include', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
       const data = await res.json();
       
       let html = '';

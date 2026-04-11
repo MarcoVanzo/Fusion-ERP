@@ -20,7 +20,7 @@ class DashboardController
     // Sostituisce la precedente chiamata a athletes/list dal frontend.
     public function summary(): void
     {
-        Auth::requireAuth();
+        Auth::requireRole('operatore');
         $db = Database::getInstance();
         $tid = TenantContext::id();
 
@@ -86,7 +86,7 @@ class DashboardController
     // ─── GET /api/?module=dashboard&action=stats ──────────────────────────────
     public function stats(): void
     {
-        Auth::requireAuth();
+        Auth::requireRole('operatore');
         $db = Database::getInstance();
         $tid = TenantContext::id();
 
@@ -146,7 +146,7 @@ class DashboardController
     // ─── GET /api/?module=dashboard&action=deadlines ──────────────────────────
     public function deadlines(): void
     {
-        Auth::requireAuth();
+        Auth::requireRole('operatore');
         $db = Database::getInstance();
         $tid = TenantContext::id();
 
@@ -244,7 +244,7 @@ class DashboardController
     // ─── GET /api/?module=dashboard&action=weeklyKpis ───────────────────────
     public function weeklyKpis(): void
     {
-        Auth::requireAuth();
+        Auth::requireRole('operatore');
         $db = Database::getInstance();
         $tid = TenantContext::id();
 
@@ -332,7 +332,7 @@ class DashboardController
     // settimana scorsa, KPI rapidi, alert urgenti (cert + contratti ≤30gg).
     public function weeklyFull(): void
     {
-        Auth::requireAuth();
+        Auth::requireRole('operatore');
         $db  = Database::getInstance();
         $tid = TenantContext::id();
 
@@ -490,7 +490,7 @@ class DashboardController
     // ed estraendole dinamicamente.
     public function matrixData(): void
     {
-        Auth::requireAuth();
+        Auth::requireRole('operatore');
         $db  = Database::getInstance();
         $tid = TenantContext::id();
 

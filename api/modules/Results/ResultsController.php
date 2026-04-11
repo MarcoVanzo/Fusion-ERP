@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace FusionERP\Modules\Results;
 
+use FusionERP\Shared\Auth;
 use FusionERP\Shared\Response;
 
 class ResultsController
@@ -37,6 +38,7 @@ class ResultsController
 
     public function getCampionati(): void
     {
+        Auth::requireRead('results');
         $this->handleServiceCall(fn() => [
             'campionati' => $this->repository->getActiveChampionshipsWithTeamFlags()
         ]);
@@ -44,6 +46,7 @@ class ResultsController
 
     public function addCampionato(): void
     {
+        Auth::requireWrite('results');
         $body = Response::jsonBody();
         $label = trim($_POST['label'] ?? $body['label'] ?? '');
         $url = trim($_POST['url'] ?? $body['url'] ?? '');
@@ -64,6 +67,7 @@ class ResultsController
 
     public function deleteCampionato(): void
     {
+        Auth::requireWrite('results');
         $body = Response::jsonBody();
         $id = $_POST['id'] ?? $body['id'] ?? null;
         if (!$id) {
@@ -79,6 +83,7 @@ class ResultsController
 
     public function getResults(): void
     {
+        Auth::requireRead('results');
         $campionatoId = filter_input(INPUT_GET, 'campionato_id', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
         if (!$campionatoId) {
             Response::error('Parametro campionato_id mancante.', 400);
@@ -125,6 +130,7 @@ class ResultsController
 
     public function getStandings(): void
     {
+        Auth::requireRead('results');
         $campionatoId = filter_input(INPUT_GET, 'campionato_id', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
         if (!$campionatoId) {
             Response::error('Parametro campionato_id mancante.', 400);
@@ -152,6 +158,7 @@ class ResultsController
 
     public function recentResults(): void
     {
+        Auth::requireRead('results');
         $limit = max(1, min(50, (int)(filter_input(INPUT_GET, 'limit', FILTER_SANITIZE_NUMBER_INT) ?? 10)));
         
         try {
@@ -180,6 +187,7 @@ class ResultsController
 
     public function syncCampionato(): void
     {
+        Auth::requireWrite('results');
         $body = Response::jsonBody();
         $id = $_POST['id'] ?? $body['id'] ?? null;
         if (!$id) {
@@ -200,6 +208,7 @@ class ResultsController
 
     public function syncAllCampionati(): void
     {
+        Auth::requireWrite('results');
         set_time_limit(300);
         
         try {

@@ -348,7 +348,7 @@ class AthletesController
             Response::error('Formato non supportato (solo PDF, JPG, PNG, WEBP)', 415);
         }
 
-        $storagePath = dirname(__DIR__, 3) . '/storage/docs/athletes/';
+        $storagePath = rtrim(getenv('UPLOAD_STORAGE_PATH') ?: (dirname(__DIR__, 3) . '/storage/docs/athletes'), '/') . '/';
         if (!is_dir($storagePath)) {
             mkdir($storagePath, 0755, true);
         }
@@ -542,7 +542,7 @@ class AthletesController
     // ─── GET /api/?module=athletes&action=alerts ──────────────────────────────
     public function alerts(): void
     {
-        Auth::requireRole('social media manager');
+        Auth::requireRole('allenatore');
         $tenantId = \FusionERP\Shared\TenantContext::id();
         Response::success($this->repo->getUnacknowledgedAlerts($tenantId));
     }

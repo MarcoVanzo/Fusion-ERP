@@ -30,7 +30,7 @@ class TasksController
      */
     public function listTasks(): void
     {
-        Auth::requireAuth();
+        Auth::requireRole('operatore');
 
         $status = filter_input(INPUT_GET, 'status', FILTER_DEFAULT) ?? '';
         $priority = filter_input(INPUT_GET, 'priority', FILTER_DEFAULT) ?? '';
@@ -48,7 +48,7 @@ class TasksController
      */
     public function createTask(): void
     {
-        Auth::requireAuth();
+        Auth::requireRole('operatore');
 
         $body = json_decode(file_get_contents('php://input'), true) ?? [];
 
@@ -80,7 +80,7 @@ class TasksController
      */
     public function updateTask(): void
     {
-        Auth::requireAuth();
+        Auth::requireRole('operatore');
 
         $body = json_decode(file_get_contents('php://input'), true) ?? [];
         $id = trim($body['id'] ?? '');
@@ -103,7 +103,7 @@ class TasksController
      */
     public function deleteTask(): void
     {
-        Auth::requireAuth();
+        Auth::requireRole('allenatore');
 
         $body = json_decode(file_get_contents('php://input'), true) ?? [];
         $id = trim($body['id'] ?? '');
@@ -128,7 +128,7 @@ class TasksController
      */
     public function listTaskLogs(): void
     {
-        Auth::requireAuth();
+        Auth::requireRole('operatore');
 
         $taskId = filter_input(INPUT_GET, 'task_id', FILTER_DEFAULT) ?? '';
         if ($taskId === '')
@@ -143,7 +143,7 @@ class TasksController
      */
     public function createTaskLog(): void
     {
-        Auth::requireAuth();
+        Auth::requireRole('operatore');
 
         $body = json_decode(file_get_contents('php://input'), true) ?? [];
         $taskId = trim($body['task_id'] ?? '');
@@ -172,7 +172,7 @@ class TasksController
      */
     public function deleteTaskLog(): void
     {
-        Auth::requireAuth();
+        Auth::requireRole('allenatore');
 
         $body = json_decode(file_get_contents('php://input'), true) ?? [];
         $id = trim($body['id'] ?? '');
