@@ -103,12 +103,36 @@ class MigrationRunner
             'V087__fix_transport_schema.sql'      => 'V099__fix_transport_schema.sql',
         ];
 
-        $stmt = $this->db->prepare(
+        $checkStmt = $this->db->prepare(
+            "SELECT COUNT(*) FROM `{$this->tableName}` WHERE filename = :name"
+        );
+        $updateStmt = $this->db->prepare(
             "UPDATE `{$this->tableName}` SET filename = :new WHERE filename = :old"
+        );
+        $deleteStmt = $this->db->prepare(
+            "DELETE FROM `{$this->tableName}` WHERE filename = :old"
         );
 
         foreach ($renames as $old => $new) {
-            $stmt->execute([':old' => $old, ':new' => $new]);
+            // Check if old entry exists
+            $checkStmt->execute([':name' => $old]);
+            $oldExists = (int)$checkStmt->fetchColumn() > 0;
+
+            if (!$oldExists) {
+                continue; // Nothing to rename
+            }
+
+            // Check if new entry already exists (from a partial/failed deploy)
+            $checkStmt->execute([':name' => $new]);
+            $newExists = (int)$checkStmt->fetchColumn() > 0;
+
+            if ($newExists) {
+                // Both exist — just remove the old duplicate entry
+                $deleteStmt->execute([':old' => $old]);
+            } else {
+                // Only old exists — rename it
+                $updateStmt->execute([':old' => $old, ':new' => $new]);
+            }
         }
     }
 

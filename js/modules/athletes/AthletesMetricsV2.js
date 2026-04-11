@@ -222,17 +222,39 @@ export const AthletesMetrics = {
                         </div>
                         ${data.results.map(res => {
                             const m = res.metrics || {};
-                            const asy = res.asymmetry?.landing?.asymmetry?.toFixed(1) || '0.0';
-                            const jh = (m.JumpHeight?.Value || m.JumpHeightTotal?.Value || 0).toFixed(1);
-                            const rsi = (m.RSIModified?.Value || 0).toFixed(3);
+                            const asyNum = res.asymmetry?.landing?.asymmetry ?? 0;
+                            const asy = asyNum.toFixed(1);
+                            const jhNum = m.JumpHeight?.Value || m.JumpHeightTotal?.Value || 0;
+                            const jh = jhNum.toFixed(1);
+                            const rsiNum = m.RSIModified?.Value || 0;
+                            const rsi = rsiNum.toFixed(3);
+
+                            // Same color logic as the summary table (AthletesView)
+                            const getColor = (val, lowThresh, highThresh) => {
+                                if (!val) return 'rgba(255,255,255,0.2)';
+                                if (val < lowThresh) return '#ef4444';
+                                if (val >= highThresh) return 'var(--color-success)';
+                                return 'var(--color-white)';
+                            };
+                            // Asymmetry is inverted: lower is better
+                            const getAsyColor = (val) => {
+                                if (!val && val !== 0) return 'rgba(255,255,255,0.2)';
+                                if (val <= 10) return 'var(--color-success)';
+                                if (val > 15) return '#ef4444';
+                                return 'var(--color-white)';
+                            };
+
+                            const jhColor = getColor(jhNum, 25, 30);
+                            const rsiColor = getColor(rsiNum, 0.30, 0.45);
+                            const asyColor = getAsyColor(asyNum);
                             
                             return `
                                 <div class="timeline-entry" style="display:grid; grid-template-columns: 120px 1.5fr 1fr 1fr 1fr; padding:15px 20px; align-items:center;">
                                     <div class="timeline-date" style="opacity:0.6;">${new Date(res.test_date).toLocaleDateString('it-IT')}</div>
                                     <div class="timeline-type" style="font-weight:700;">${Utils.escapeHtml(res.test_type)}</div>
-                                    <div class="timeline-val" style="color:var(--color-pink); text-align:right; font-weight:800;">${jh}<small>cm</small></div>
-                                    <div class="timeline-val" style="color:#FFD600; text-align:right; font-weight:800;">${rsi}</div>
-                                    <div class="timeline-val" style="color:${parseFloat(asy) > 15 ? '#FF1744' : '#00e5ff'}; text-align:right; font-weight:800;">${asy}<small>%</small></div>
+                                    <div class="timeline-val" style="color:${jhColor}; text-align:right; font-weight:800;">${jh}<small>cm</small></div>
+                                    <div class="timeline-val" style="color:${rsiColor}; text-align:right; font-weight:800;">${rsi}</div>
+                                    <div class="timeline-val" style="color:${asyColor}; text-align:right; font-weight:800;">${asy}<small>%</small></div>
                                 </div>
                             `;
                         }).join('')}
