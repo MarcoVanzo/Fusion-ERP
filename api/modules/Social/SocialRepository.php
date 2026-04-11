@@ -626,7 +626,7 @@ class SocialRepository
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_TIMEOUT => 20,
-            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_SSL_VERIFYPEER => false,
             CURLOPT_USERAGENT => 'FusionERP/1.0',
         ]);
         $body = curl_exec($ch);
