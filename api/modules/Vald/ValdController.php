@@ -48,42 +48,6 @@ class ValdController
     }
 
     /**
-     * GET /api/?module=vald&action=debugMetrics&athleteId=ATH_xxx
-     * TEMPORARY: Inspect stored metrics keys to debug missing fields
-     */
-    public function debugMetrics(): void
-    {
-        Auth::requireRole('admin');
-        $athleteId = filter_input(INPUT_GET, 'athleteId', FILTER_DEFAULT) ?? '';
-        
-        $results = $this->repo->getResultsByAthlete($athleteId);
-        $debug = [];
-        
-        foreach (array_slice($results, 0, 3) as $res) {
-            $m = json_decode($res['metrics'] ?? '{}', true) ?: [];
-            $debug[] = [
-                'test_date' => $res['test_date'],
-                'test_type' => $res['test_type'],
-                'metric_keys' => array_keys($m),
-                'all_values' => $m,
-            ];
-        }
-        
-        // Also get the deep analytics output
-        $deep = $this->service->getDeepAnalytics($athleteId);
-        $athleteWeight = (float)$this->service->getAthleteWeight($athleteId);
-        
-        Response::success([
-            'athlete_id' => $athleteId,
-            'athlete_weight' => $athleteWeight,
-            'total_results' => count($results),
-            'sample_results' => $debug,
-            'deep_analytics_keys' => $deep ? array_keys($deep) : null,
-            'deep_analytics' => $deep,
-        ]);
-    }
-
-    /**
      * GET /api/?module=vald&action=results&athleteId=ATH_xxx
      */
     public function results(): void
@@ -152,10 +116,6 @@ class ValdController
 
             $baselineBraking = $this->repo->getBaselineBrakingImpulse($athleteId);
 
-            // DEBUG: raw metrics keys from latest test for investigating missing fields
-            $debugMetricKeys = array_keys($metrics);
-            $debugDeep = $deep;
-
             Response::success([
                 'hasData' => true,
                 'testDate' => $latest['test_date'],
@@ -173,13 +133,6 @@ class ValdController
                 'profile' => $profile,
                 'muscleMap' => $muscleMap,
                 'results' => $allResults,
-                // TEMP DEBUG - remove after fix
-                '_debug' => [
-                    'latestMetricKeys' => $debugMetricKeys,
-                    'latestMetrics' => $metrics,
-                    'athleteWeight' => $athleteWeight,
-                    'deepAnalytics' => $debugDeep,
-                ],
             ]);
         } catch (\Throwable $e) {
             Response::error('Critico VALD: ' . $e->getMessage(), 500);
