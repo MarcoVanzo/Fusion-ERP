@@ -65,12 +65,14 @@ class TournamentsRepository
      */
     public function getMatches(string $tournamentId): array
     {
+        $tid = TenantContext::id();
         $stmt = $this->db->prepare("
-            SELECT * FROM tournament_matches
-            WHERE event_id = :id
-            ORDER BY match_time ASC
+            SELECT tm.* FROM tournament_matches tm
+            JOIN events e ON e.id = tm.event_id
+            WHERE tm.event_id = :id AND e.tenant_id = :tid
+            ORDER BY tm.match_time ASC
         ");
-        $stmt->execute([':id' => $tournamentId]);
+        $stmt->execute([':id' => $tournamentId, ':tid' => $tid]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 

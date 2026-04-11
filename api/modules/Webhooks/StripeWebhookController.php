@@ -82,52 +82,56 @@ class StripeWebhookController
             return; // Already paid or not found
         }
 
-        $paidDate = date('Y-m-d');
-        $method = 'STRIPE';
+        $db = Database::getInstance();
+        $db->beginTransaction();
+        $receiptPath = '';
+        try {
+            $paidDate = date('Y-m-d');
+            $method = 'STRIPE';
 
-        // 1. Mark as Paid
-        $this->repo->payInstallment($installmentId, $paidDate, $method, null);
+            // 1. Mark as Paid
+            $this->repo->payInstallment($installmentId, $paidDate, $method, null);
 
-        // 2. Fetch progressive
-        $receiptYear = (int)date('Y', strtotime($paidDate));
-        $receiptNumber = $this->repo->getNextReceiptNumber($installment['tenant_id'], $receiptYear);
+            // 2. Fetch progressive
+            $receiptYear = (int)date('Y', strtotime($paidDate));
+            $receiptNumber = $this->repo->getNextReceiptNumber($installment['tenant_id'], $receiptYear);
 
-        // 3. Log transaction
-        $txId = 'TX_' . bin2hex(random_bytes(4));
-        $this->repo->insertTransaction([
-            ':id' => $txId,
-            ':tenant_id' => $installment['tenant_id'],
-            ':athlete_id' => $athleteId,
-            ':installment_id' => $installmentId,
-            ':amount' => $installment['amount'],
-            ':transaction_date' => $paidDate,
-            ':payment_method' => $method,
-            ':reference' => $paymentIntent,
-            ':created_by' => 'STRIPE_WEBHOOK',
-            ':receipt_year' => $receiptYear,
-            ':receipt_number' => $receiptNumber
-        ]);
+            // 3. Log transaction
+            $txId = 'TX_' . bin2hex(random_bytes(4));
+            $this->repo->insertTransaction([
+                ':id' => $txId,
+                ':tenant_id' => $installment['tenant_id'],
+                ':athlete_id' => $athleteId,
+                ':installment_id' => $installmentId,
+                ':amount' => $installment['amount'],
+                ':transaction_date' => $paidDate,
+                ':payment_method' => $method,
+                ':reference' => $paymentIntent,
+                ':created_by' => 'STRIPE_WEBHOOK',
+                ':receipt_year' => $receiptYear,
+                ':receipt_number' => $receiptNumber
+            ]);
 
-        // 4. Force receipt generation (simulate the internal call)
-        // Since createAndSaveReceipt is private in PaymentsController, we might need a workaround 
-        // to call it or make it public.
-        // Easiest is to bypass calling the controller method, 
-        // but this breaks DRY. Let's send an HTTP request to ourselves OR 
-        // instantiate the controller and use Reflection OR just change visibility of createAndSaveReceipt.
-        // Assuming we will change `createAndSaveReceipt` to public in PaymentsController next.
-        
-        $pc = new PaymentsController();
-        $receiptPath = $pc->createAndSaveReceipt($installmentId);
+            // 4. Generate receipt
+            $pc = new PaymentsController();
+            $receiptPath = $pc->createAndSaveReceipt($installmentId);
 
-        // 5. Send Email
+            $db->commit();
+        } catch (\Throwable $e) {
+            $db->rollBack();
+            error_log("[STRIPE] fulfillOrder failed: " . $e->getMessage());
+            return;
+        }
+
+        // 5. Send Email (outside transaction — non-critical)
         $this->sendEmailWithReceipt($athleteId, $installment, $receiptPath);
     }
 
     private function sendEmailWithReceipt(string $athleteId, array $installment, string $receiptPath): void
     {
         $db = Database::getInstance();
-        $stmt = $db->prepare('SELECT full_name, email FROM athletes WHERE id = :id LIMIT 1');
-        $stmt->execute([':id' => $athleteId]);
+        $stmt = $db->prepare('SELECT full_name, email FROM athletes WHERE id = :id AND tenant_id = :tid LIMIT 1');
+        $stmt->execute([':id' => $athleteId, ':tid' => $installment['tenant_id']]);
         $athlete = $stmt->fetch(\PDO::FETCH_ASSOC);
 
         if (!$athlete || empty($athlete['email'])) {

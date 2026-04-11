@@ -148,8 +148,9 @@ class PaymentsController
         if ($user['role'] === 'atleta') {
             // Must check if athleteId matches their linked account (fetch it if needed)
             $db = \FusionERP\Shared\Database::getInstance();
-            $stmt = $db->prepare('SELECT id FROM athletes WHERE user_id = :uid LIMIT 1');
-            $stmt->execute([':uid' => $user['id']]);
+            $tid = \FusionERP\Shared\TenantContext::id();
+            $stmt = $db->prepare('SELECT id FROM athletes WHERE user_id = :uid AND tenant_id = :tid LIMIT 1');
+            $stmt->execute([':uid' => $user['id'], ':tid' => $tid]);
             $linked = $stmt->fetch(\PDO::FETCH_ASSOC);
             if (!$linked || $linked['id'] !== $athleteId) {
                 Response::error('Non hai i permessi per visualizzare questi pagamenti.', 403);
@@ -331,8 +332,9 @@ class PaymentsController
         }
 
         $db = \FusionERP\Shared\Database::getInstance();
-        $stmt = $db->prepare('SELECT id FROM athletes WHERE user_id = :uid LIMIT 1');
-        $stmt->execute([':uid' => $user['id']]);
+        $tid = \FusionERP\Shared\TenantContext::id();
+        $stmt = $db->prepare('SELECT id FROM athletes WHERE user_id = :uid AND tenant_id = :tid LIMIT 1');
+        $stmt->execute([':uid' => $user['id'], ':tid' => $tid]);
         $athlete = $stmt->fetch(\PDO::FETCH_ASSOC);
 
         if (!$athlete) {
@@ -384,8 +386,9 @@ class PaymentsController
         if (!$installment) return '';
 
         $db = \FusionERP\Shared\Database::getInstance();
-        $stmt = $db->prepare('SELECT full_name, fiscal_code, email FROM athletes WHERE id = :id LIMIT 1');
-        $stmt->execute([':id' => $installment['athlete_id']]);
+        $tid = \FusionERP\Shared\TenantContext::id();
+        $stmt = $db->prepare('SELECT full_name, fiscal_code, email FROM athletes WHERE id = :id AND tenant_id = :tid LIMIT 1');
+        $stmt->execute([':id' => $installment['athlete_id'], ':tid' => $tid]);
         $athlete = $stmt->fetch(\PDO::FETCH_ASSOC);
 
         $stmt2 = $db->prepare('SELECT receipt_year, receipt_number FROM transactions WHERE installment_id = :id LIMIT 1');

@@ -41,6 +41,7 @@
   --glass: blur(30px) saturate(200%);
   --glass-border: rgba(255, 255, 255, 0.12);
   --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  --glass-surface: rgba(25, 25, 30, 0.5);
 }
 
 .glass-card {

@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace FusionERP\Modules\Transport;
 
 use FusionERP\Shared\Database;
+use FusionERP\Shared\TenantContext;
 
 class TransportRepository
 {
@@ -23,13 +24,14 @@ class TransportRepository
 
     public function listEvents(string $teamId = '', string $type = ''): array
     {
+        $tid = TenantContext::id();
         $sql = 'SELECT e.id, e.team_id, e.type, e.title, e.event_date, e.event_end,
                        e.location_name, e.location_lat, e.location_lng, e.status, e.notes,
                        t.name AS team_name, t.category
                 FROM events e
                 JOIN teams t ON t.id = e.team_id
-                WHERE e.deleted_at IS NULL';
-        $params = [];
+                WHERE e.deleted_at IS NULL AND e.tenant_id = :tid';
+        $params = [':tid' => $tid];
         if ($teamId !== '') {
             $sql .= ' AND e.team_id = :team_id';
             $params[':team_id'] = $teamId;
@@ -313,15 +315,17 @@ class TransportRepository
 
     public function listTransports(string $teamId = ''): array
     {
+        $tid = TenantContext::id();
         $sql = 'SELECT t.id, t.team_id, t.destination_name, t.destination_address,
                        t.arrival_time, t.departure_time, t.transport_date,
                        t.athletes_json, t.stats_json, t.created_at, t.driver_id,
                        tm.name AS team_name
                 FROM transports t
-                LEFT JOIN teams tm ON tm.id = t.team_id';
-        $params = [];
+                LEFT JOIN teams tm ON tm.id = t.team_id
+                WHERE tm.tenant_id = :tid';
+        $params = [':tid' => $tid];
         if ($teamId !== '') {
-            $sql .= ' WHERE team_id = :team_id';
+            $sql .= ' AND t.team_id = :team_id';
             $params[':team_id'] = $teamId;
         }
         $sql .= ' ORDER BY transport_date DESC, created_at DESC';
@@ -351,7 +355,8 @@ class TransportRepository
 
     public function listDrivers(): array
     {
-        $stmt = $this->db->query(
+        $tid = TenantContext::id();
+        $stmt = $this->db->prepare(
             'SELECT d.id, d.full_name, d.phone, d.license_number, d.hourly_rate, d.is_active, d.notes, d.created_at,
                     (
                         SELECT COALESCE(SUM(
@@ -361,9 +366,10 @@ class TransportRepository
                         WHERE t.driver_id = d.id
                     ) AS total_minutes
              FROM drivers d
-             WHERE d.deleted_at IS NULL
+             WHERE d.deleted_at IS NULL AND d.tenant_id = :tid
              ORDER BY d.full_name'
         );
+        $stmt->execute([':tid' => $tid]);
         return $stmt->fetchAll();
     }
 
@@ -440,33 +446,45 @@ class TransportRepository
 
     public function listTeams(): array
     {
-        $stmt = $this->db->query(
+        $tid = TenantContext::id();
+        $stmt = $this->db->prepare(
             'SELECT ts.id AS team_season_id, t.id AS team_id, t.name, t.category, ts.season 
              FROM team_seasons ts
              JOIN teams t ON ts.team_id = t.id
-             WHERE t.is_active = 1 AND t.deleted_at IS NULL 
+             WHERE t.is_active = 1 AND t.deleted_at IS NULL AND t.tenant_id = :tid
              ORDER BY ts.season DESC, t.name'
         );
+        $stmt->execute([':tid' => $tid]);
         return $stmt->fetchAll();
     }
 
     public function listVehicles(): array
     {
-        return $this->db->query(
+        $tid = TenantContext::id();
+        $stmt = $this->db->prepare(
             'SELECT id, name, license_plate, capacity, status
              FROM vehicles
+             WHERE tenant_id = :tid
              ORDER BY name'
-        )->fetchAll();
+        );
+        $stmt->execute([':tid' => $tid]);
+        return $stmt->fetchAll();
     }
 
     public function getStats(): array
     {
-        $total = $this->db->query('SELECT COUNT(*) FROM transports')->fetchColumn();
-        $upcoming = $this->db->prepare('SELECT COUNT(*) FROM transports WHERE transport_date >= ?');
-        $upcoming->execute([date('Y-m-d')]);
+        $tid = TenantContext::id();
+        $stTotal = $this->db->prepare('SELECT COUNT(*) FROM transports t JOIN teams tm ON tm.id = t.team_id WHERE tm.tenant_id = :tid');
+        $stTotal->execute([':tid' => $tid]);
+        $total = $stTotal->fetchColumn();
+
+        $upcoming = $this->db->prepare('SELECT COUNT(*) FROM transports t JOIN teams tm ON tm.id = t.team_id WHERE tm.tenant_id = :tid AND t.transport_date >= :today');
+        $upcoming->execute([':tid' => $tid, ':today' => date('Y-m-d')]);
         $upCount = (int)$upcoming->fetchColumn();
 
-        $eventsCount = $this->db->query('SELECT COUNT(*) FROM events')->fetchColumn();
+        $stEvents = $this->db->prepare('SELECT COUNT(*) FROM events WHERE tenant_id = :tid AND deleted_at IS NULL');
+        $stEvents->execute([':tid' => $tid]);
+        $eventsCount = $stEvents->fetchColumn();
 
         return [
             'o' => (int)$eventsCount,
