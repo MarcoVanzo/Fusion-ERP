@@ -1187,7 +1187,7 @@ export const AthletesView = {
                                         1. Seleziona Squadre
                                     </label>
                                     <select id="bulk-team-select" multiple class="form-input" style="height:120px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); outline:none;">
-                                        ${teams.map(t => \`<option value="\${Utils.escapeHtml(t.id)}">\${Utils.escapeHtml(t.season)} — \${Utils.escapeHtml(t.name)}</option>\`).join('')}
+                                        ${teams.map(t => `<option value="${Utils.escapeHtml(t.id)}">${Utils.escapeHtml(t.season)} — ${Utils.escapeHtml(t.name)}</option>`).join('')}
                                     </select>
                                     <div style="font-size:11px; color:rgba(255,255,255,0.4); margin-top:4px;">Tieni premuto <kbd>Ctrl</kbd> o <kbd>Cmd</kbd> per selezioni multiple</div>
                                 </div>

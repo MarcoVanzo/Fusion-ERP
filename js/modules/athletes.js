@@ -191,15 +191,15 @@ const Athletes = (() => {
                 return;
             }
 
-            container.innerHTML = filtered.map(a => \`
+            container.innerHTML = filtered.map(a => `
                 <div style="display:flex; align-items:center; gap:12px; padding:8px 12px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:6px;">
-                    <input type="checkbox" class="bulk-athlete-cb" value="\${a.id}" checked style="accent-color:var(--color-primary); width:16px; height:16px;">
+                    <input type="checkbox" class="bulk-athlete-cb" value="${a.id}" checked style="accent-color:var(--color-primary); width:16px; height:16px;">
                     <div style="flex:1;">
-                        <div style="font-weight:600; color:var(--color-white); font-size:13px;">\${Utils.escapeHtml(a.full_name)}</div>
-                        <div style="font-size:11px; color:rgba(255,255,255,0.4);">\${Utils.escapeHtml(a.team_name)}</div>
+                        <div style="font-weight:600; color:var(--color-white); font-size:13px;">${Utils.escapeHtml(a.full_name)}</div>
+                        <div style="font-size:11px; color:rgba(255,255,255,0.4);">${Utils.escapeHtml(a.team_name)}</div>
                     </div>
                 </div>
-            \`).join('');
+            `).join('');
 
             updateBulkSelectionCount();
             container.querySelectorAll('.bulk-athlete-cb').forEach(cb => cb.addEventListener('change', updateBulkSelectionCount));
@@ -241,7 +241,7 @@ const Athletes = (() => {
                 const promises = selectedIds.map(id => AthletesAPI.update({ id, ...payload }));
                 await Promise.all(promises);
                 
-                UI.toast(\`Quote assegnate a \${selectedIds.length} atlete con successo!\`, "success");
+                UI.toast(`Quote assegnate a ${selectedIds.length} atlete con successo!`, "success");
                 document.getElementById("bulk-quotes-modal").style.display = "none";
                 refreshData(variant);
             } catch (err) {
