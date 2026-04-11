@@ -376,8 +376,8 @@ class TransportRepository
     public function createDriver(array $data): void
     {
         $stmt = $this->db->prepare(
-            'INSERT INTO drivers (id, full_name, phone, license_number, hourly_rate, notes, is_active, created_by)
-             VALUES (:id, :full_name, :phone, :license_number, :hourly_rate, :notes, 1, :created_by)'
+            'INSERT INTO drivers (id, tenant_id, full_name, phone, license_number, hourly_rate, notes, is_active, created_by)
+             VALUES (:id, :tenant_id, :full_name, :phone, :license_number, :hourly_rate, :notes, 1, :created_by)'
         );
         $stmt->execute($data);
     }

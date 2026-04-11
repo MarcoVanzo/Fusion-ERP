@@ -271,6 +271,7 @@ class TransportController
         $id = 'DRV_' . bin2hex(random_bytes(4));
         $this->repo->createDriver([
             ':id' => $id,
+            ':tenant_id' => \FusionERP\Shared\TenantContext::id(),
             ':full_name' => htmlspecialchars(trim($body['full_name']), ENT_QUOTES, 'UTF-8'),
             ':phone' => $body['phone'] ?? null,
             ':license_number' => $body['license_number'] ?? null,
