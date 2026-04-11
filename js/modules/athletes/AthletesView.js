@@ -183,13 +183,25 @@ export const AthletesView = {
 
             const jhVal = metricsData.JumpHeight?.Value ?? metricsData.JumpHeightTotal?.Value ?? null;
             const rsiVal = metricsData.RSIModified?.Value ?? null;
+            const biVal = metricsData.BrakingImpulse?.Value ?? metricsData.EccentricBrakingImpulse?.Value ?? metricsData.BrakingPhaseImpulse?.Value ?? null;
             const testDateFmt = athlete.latest_vald_date ? Utils.formatDate(athlete.latest_vald_date) : null;
+
+            const getColor = (val, lowThresh, highThresh) => {
+                if (!val) return 'rgba(255,255,255,0.2)';
+                if (val < lowThresh) return '#ef4444'; // red for low
+                if (val >= highThresh) return 'var(--color-success)'; // green for good
+                return 'var(--color-white)'; // white for normal
+            };
+
+            const jhColor = getColor(jhVal, 22, 32);     // Thresholds for Jump Height
+            const rsiColor = getColor(rsiVal, 0.30, 0.45); // Thresholds for RSIMOD
+            const biColor = getColor(biVal, 1.5, 2.5);     // Thresholds for Braking Imp.
 
             extraCells = `
                 <td style="${tdStyle} color:rgba(255,255,255,0.4); font-size:13px;"><i class="ph ph-shield-star"></i> ${Utils.escapeHtml(athlete.team_name)}</td>
-                <td style="${tdStyle} text-align:center; font-weight:700; color:var(--color-white);">${jhVal ? jhVal.toFixed(1) : '—'}</td>
-                <td style="${tdStyle} text-align:center; font-weight:700; color:var(--color-pink);">${rsiVal ? rsiVal.toFixed(3) : '—'}</td>
-                <td style="${tdStyle} text-align:center;">—</td>
+                <td style="${tdStyle} text-align:center; font-weight:700; color:${jhColor};">${jhVal ? jhVal.toFixed(1) : '—'}</td>
+                <td style="${tdStyle} text-align:center; font-weight:700; color:${rsiColor};">${rsiVal ? rsiVal.toFixed(3) : '—'}</td>
+                <td style="${tdStyle} text-align:center; font-weight:700; color:${biColor};">${biVal ? biVal.toFixed(1) : '—'}</td>
                 <td style="${tdStyle} text-align:center; font-size:12px;">${testDateFmt || '<span style="opacity:0.3">Mai</span>'}</td>
             `;
         } else if (variant === 'infortuni') {

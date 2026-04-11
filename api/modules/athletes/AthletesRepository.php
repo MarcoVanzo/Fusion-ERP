@@ -543,7 +543,7 @@ class AthletesRepository
     public function listTeams(): array
     {
         $stmt = $this->db->prepare(
-            'SELECT ts.id AS id, t.name, t.category, t.color_hex, ts.season
+            'SELECT ts.id AS id, t.id AS team_id, t.name, t.category, t.color_hex, ts.season
              FROM team_seasons ts
              JOIN teams t ON ts.team_id = t.id
              WHERE t.deleted_at IS NULL AND t.is_active = 1

@@ -78,9 +78,8 @@ class TournamentsRepository
             SELECT a.id, a.full_name, a.jersey_number, a.role,
                    ea.status as attendance_status
             FROM athletes a
-            JOIN team_members tm ON a.user_id = tm.user_id AND tm.team_id = :team_id
             LEFT JOIN event_attendees ea ON a.id = ea.athlete_id AND ea.event_id = :event_id
-            WHERE a.deleted_at IS NULL AND a.is_active = 1
+            WHERE a.team_id = :team_id AND a.deleted_at IS NULL AND a.is_active = 1
             
             UNION ALL
             
@@ -163,8 +162,7 @@ class TournamentsRepository
         $rosterStmt = $this->db->prepare("
             SELECT a.id
             FROM athletes a
-            JOIN team_members tm ON a.user_id = tm.user_id AND tm.team_id = :team_id
-            WHERE a.deleted_at IS NULL AND a.is_active = 1
+            WHERE a.team_id = :team_id AND a.deleted_at IS NULL AND a.is_active = 1
             
             UNION ALL
             
