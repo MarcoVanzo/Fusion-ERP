@@ -15,6 +15,14 @@ class App {
     this.route();
   }
 
+  // --- HTML Escaping to prevent XSS (P3-07) ---
+  escapeHtml(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML;
+  }
+
   // --- Lifecycle & Resource Management ---
   cleanup() {
     // Clear all registered intervals to prevent memory leaks (Rule user_global)
@@ -96,11 +104,11 @@ class App {
       if (u.role) role = u.role.toLowerCase();
     } catch(e){}
 
-    const isCoach = role.includes('allenatore') || role.includes('coach');
+    const isStaff = role.includes('allenatore') || role.includes('social media manager') || role.includes('operatore') || role === 'admin';
 
     const items = [
       { id: '#dashboard', icon: 'fa-home', text: 'Home' },
-      isCoach ? { id: '#squadra', icon: 'fa-users', text: 'Squadra' } : { id: '#profilo', icon: 'fa-user-circle', text: 'Profilo' },
+      isStaff ? { id: '#squadra', icon: 'fa-users', text: 'Squadra' } : { id: '#profilo', icon: 'fa-user-circle', text: 'Profilo' },
       { id: '#spese', icon: 'fa-receipt', text: 'Spese' }
     ];
 
@@ -161,7 +169,8 @@ class App {
       try {
         const response = await fetch('../api/?module=auth&action=login', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
           body: JSON.stringify({ email: email, password: pass }),
         });
 
@@ -206,7 +215,7 @@ class App {
           <div class="glass-card stagger-item delay-3" style="text-align: center; padding: 30px 20px;">
             <i class="fas fa-chart-line" style="font-size: 32px; color: var(--accent-primary); margin-bottom: 16px; opacity: 0.8;"></i>
             <h4 style="margin-bottom: 8px;">Statistiche</h4>
-            <p class="text-muted" style="font-size: 13px;">I widget KPI arriveranno post lancio.</p>
+            <p class="text-muted" style="font-size: 13px;">I widget KPI saranno disponibili a breve.</p>
           </div>
 
           <button class="btn btn-secondary mt-20 stagger-item delay-4" id="logout-btn">
@@ -235,7 +244,7 @@ class App {
 
     document.getElementById('logout-btn').addEventListener('click', async () => {
       try {
-        await fetch('../api/?module=auth&action=logout', { method: 'POST' });
+        await fetch('../api/?module=auth&action=logout', { method: 'POST', credentials: 'include', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
       } catch(e) {}
       localStorage.removeItem('erp_user');
       window.location.hash = '#login';
@@ -246,10 +255,10 @@ class App {
     const userStr = localStorage.getItem('erp_user');
     if (!userStr) return;
     const user = JSON.parse(userStr);
-    if (!user || (user.role !== 'social media manager' && user.role !== 'operaio')) return;
+    if (!user || !['social media manager', 'operatore', 'allenatore', 'admin', 'operator'].includes(user.role?.toLowerCase())) return;
 
     try {
-      const res = await fetch(`../api/?module=athletes&action=alerts`);
+      const res = await fetch(`../api/?module=athletes&action=alerts`, { credentials: 'include', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
       const data = await res.json();
       const bell = document.querySelector('.header-icon');
       if (!bell) return;
@@ -500,6 +509,8 @@ class App {
 
         const response = await fetch('../api/?module=societa&action=addExpense', {
           method: 'POST',
+          credentials: 'include',
+          headers: { 'X-Requested-With': 'XMLHttpRequest' },
           body: formData,
         });
 
@@ -559,7 +570,7 @@ class App {
     };
 
     try {
-      const response = await fetch('../api/?module=societa&action=getForesteria');
+      const response = await fetch('../api/?module=societa&action=getForesteria', { credentials: 'include', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
       const result = await response.json();
 
       if (response.ok && result.success && result.data) {
@@ -603,7 +614,7 @@ class App {
                 <i class="fas ${icon}"></i>
               </div>
               <div class="expense-details">
-                <div class="expense-desc">${exp.description || 'Spesa'}</div>
+                <div class="expense-desc">${this.escapeHtml(exp.description || 'Spesa')}</div>
                 <div class="expense-meta">${catLabel} • ${dateStr}</div>
               </div>
               <div class="expense-amount">€ ${amount}</div>
@@ -648,7 +659,7 @@ class App {
         <header class="app-header glass-header">
           <div class="app-title">${isOwningProfile ? 'MIO PROFILO' : 'SCHEDA ATLETA'}</div>
           ${isOwningProfile 
-            ? `<div class="header-icon" onclick="window.location.hash='#settings'"><i class="fas fa-cog"></i></div>` 
+            ? `<div class="header-icon" onclick="window.location.hash='#dashboard'"><i class="fas fa-home"></i></div>` 
             : `<div class="header-icon" onclick="window.history.back()"><i class="fas fa-arrow-left"></i></div>`
           }
         </header>
@@ -673,7 +684,7 @@ class App {
 
     try {
       const url = isOwningProfile ? '../api/?module=athletes&action=myProfile' : \`../api/?module=athletes&action=myProfile&id=\${uId}\`;
-      const response = await fetch(url);
+      const response = await fetch(url, { credentials: 'include', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
       const result = await response.json();
 
       if (response.ok && result.success && result.data) {
@@ -727,7 +738,7 @@ class App {
         <div class="profile-avatar-container">
           \${p.photo_path ? '<img src="../' + p.photo_path + '">' : '<i class="fas fa-user"></i>'}
         </div>
-        <h2 style="font-size: 24px; margin-bottom: 4px;">\${p.first_name} \${p.last_name}</h2>
+        <h2 style="font-size: 24px; margin-bottom: 4px;">\${this.escapeHtml(p.first_name)} \${this.escapeHtml(p.last_name)}</h2>
         <div style="color: var(--accent-primary); font-weight: 700; font-size: 13px; text-transform: uppercase;">
           \${p.role || 'Atleta'} • \${p.team_name || 'Fusion'}
         </div>
@@ -771,10 +782,35 @@ class App {
     document.getElementById('profilo-content').innerHTML = html;
   }
 
-  saveAnagraficaPartial() {
+  async saveAnagraficaPartial() {
     this.vibrate(50);
-    // TODO: implement PATCH to athletes partial update. 
-    alert("Funzione di aggiornamento anagrafica pronta (Mock). Il backend salverebbe i campi consentiti.");
+    const phone = document.getElementById('edit-phone')?.value?.trim() || '';
+    const shirtSize = document.getElementById('edit-size')?.value?.trim() || '';
+    const p = this.currentAthleteProfile;
+    if (!p || !p.id) {
+      alert('Errore: profilo non caricato.');
+      return;
+    }
+
+    try {
+      const response = await fetch('../api/?module=athletes&action=update', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        body: JSON.stringify({ id: p.id, phone: phone, shirt_size: shirtSize }),
+      });
+      const result = await response.json();
+      if (response.ok && result.success !== false) {
+        alert('Dati aggiornati con successo!');
+        this.currentAthleteProfile.phone = phone;
+        this.currentAthleteProfile.shirt_size = shirtSize;
+      } else {
+        alert(result.error || 'Errore durante il salvataggio.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Impossibile connettersi al server.');
+    }
   }
 
   renderSubTabDocumenti() {
@@ -795,89 +831,251 @@ class App {
          <div class="doc-list">
            \${this.renderDocRow("Carta Identità (FR)", p.id_doc_front_file_path, 'id_doc_front_file_path', 'uploadIdDocFront')}
            \${this.renderDocRow("Certificato Medico", p.medical_cert_file_path, 'medical_cert_file_path', 'uploadMedicalCert')}
-           \${this.renderDocRow("Contratto / Tesseramento", p.contract_file_path, 'contract_file_path', 'uploadContract')}
+           \${this.renderDocRow("Contratto / Tesseramento", p.contract_file_path, 'contract_file_path', 'uploadContractFile')}
          </div>
       </div>
     \`;
   }
 
-  renderSubTabQuote() {
-    document.getElementById('profilo-content').innerHTML = \`
-      <div class="glass-card text-center">
-        <i class="fas fa-money-bill-wave" style="font-size:40px; color:var(--success); margin-bottom:15px; opacity:0.8;"></i>
-        <h3>Quote e Pagamenti</h3>
-        <p class="text-muted mt-10">Vista in fase di sincronizzazione con il comparto Quote.</p>
+  async renderSubTabQuote() {
+    const content = document.getElementById('profilo-content');
+    const p = this.currentAthleteProfile;
+    if (!p) { content.innerHTML = '<p class="text-muted text-center">Profilo non caricato.</p>'; return; }
+
+    // Show quota data from athlete profile fields
+    const quotaFields = [
+      { label: 'Iscrizione Rata 1', amount: p.quota_iscrizione_rata1, paid: p.quota_iscrizione_rata1_paid },
+      { label: 'Iscrizione Rata 2', amount: p.quota_iscrizione_rata2, paid: p.quota_iscrizione_rata2_paid },
+      { label: 'Vestiario', amount: p.quota_vestiario, paid: p.quota_vestiario_paid },
+      { label: 'Foresteria', amount: p.quota_foresteria, paid: p.quota_foresteria_paid },
+      { label: 'Trasporti', amount: p.quota_trasporti, paid: p.quota_trasporti_paid },
+    ];
+
+    let totalDue = 0, totalPaid = 0;
+    let rowsHtml = '';
+    quotaFields.forEach(q => {
+      const amt = parseFloat(q.amount || 0);
+      const isPaid = parseInt(q.paid || 0) === 1;
+      totalDue += amt;
+      if (isPaid) totalPaid += amt;
+      const statusIcon = isPaid ? '<i class="fas fa-check-circle" style="color:var(--success)"></i>' : '<i class="fas fa-clock" style="color:var(--warning)"></i>';
+      const statusText = isPaid ? 'Pagato' : 'Da pagare';
+      rowsHtml += `
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid var(--border-subtle);">
+          <div>
+            <div style="font-weight:600; font-size:14px;">${q.label}</div>
+            <div style="font-size:12px; color:var(--text-muted);">${statusIcon} ${statusText}</div>
+          </div>
+          <div style="font-family:'Syne',sans-serif; font-weight:700; font-size:16px; color:${isPaid ? 'var(--success)' : 'var(--accent-primary)'};">€ ${amt.toFixed(2)}</div>
+        </div>
+      `;
+    });
+
+    const deadlineStr = p.quota_payment_deadline ? new Date(p.quota_payment_deadline).toLocaleDateString('it-IT', { day:'2-digit', month:'long', year:'numeric' }) : 'N/D';
+
+    content.innerHTML = `
+      <div class="glass-card">
+        <h3 class="section-title"><i class="fas fa-money-bill-wave"></i> QUOTE STAGIONALI</h3>
+        <div class="expense-total-bar" style="margin-bottom:15px;">
+          <span class="label">Totale Dovuto</span>
+          <span class="value">€ ${totalDue.toFixed(2)}</span>
+        </div>
+        <div class="expense-total-bar" style="margin-bottom:15px; background: linear-gradient(135deg, rgba(0,255,188,0.08), rgba(0,242,254,0.08));">
+          <span class="label">Pagato</span>
+          <span class="value" style="color:var(--success)">€ ${totalPaid.toFixed(2)}</span>
+        </div>
+        <p style="font-size:12px; color:var(--text-muted); margin-bottom:15px;"><i class="fas fa-calendar-alt"></i> Scadenza: ${deadlineStr}</p>
+        ${rowsHtml}
       </div>
-    \`;
+    `;
   }
 
-  renderSubTabPerformance() {
-    document.getElementById('profilo-content').innerHTML = \`
-      <div class="glass-card text-center">
-        <i class="fas fa-tachometer-alt" style="font-size:40px; color:var(--accent-primary); margin-bottom:15px; opacity:0.8;"></i>
-        <h3>ACWR & Salti</h3>
-        <p class="text-muted mt-10">L'elaborazione delle tue performance fisiche (Vald, salti, carico di lavoro) apparirà qui graficamente.</p>
-        <canvas id="perf-chart" style="width:100%; height:200px; margin-top:20px;"></canvas>
-      </div>
-    \`;
-    // Mock Chart
-    setTimeout(() => {
-      const ctx = document.getElementById('perf-chart');
-      if (ctx && window.Chart) {
-        new Chart(ctx, {
-          type: 'line',
-          data: {
-            labels: ['G1','G2','G3','G4','G5'],
-            datasets: [{
-               label: 'Salto in Alto (cm)',
-               data: [50, 52, 51, 55, 54],
-               borderColor: '#00f2fe', tension: 0.4
-            }]
-          },
-          options: { plugins:{legend:{display:false}} }
-        });
+  async renderSubTabPerformance() {
+    const content = document.getElementById('profilo-content');
+    const p = this.currentAthleteProfile;
+    if (!p || !p.id) { content.innerHTML = '<div class="glass-card text-center"><p class="text-muted">Profilo non caricato.</p></div>'; return; }
+
+    content.innerHTML = '<div class="glass-card skeleton" style="height:200px;"></div>';
+
+    try {
+      const res = await fetch(`../api/?module=athletes&action=acwr&id=${p.id}`, { credentials: 'include', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+      const data = await res.json();
+
+      if (res.ok && data.success && data.data) {
+        const acwr = data.data;
+        const riskColor = acwr.risk === 'high' || acwr.risk === 'extreme' ? 'var(--danger)' : acwr.risk === 'moderate' ? 'var(--warning)' : 'var(--success)';
+        content.innerHTML = `
+          <div class="glass-card text-center">
+            <i class="fas fa-tachometer-alt" style="font-size:40px; color:var(--accent-primary); margin-bottom:15px; opacity:0.8;"></i>
+            <h3>ACWR & Performance</h3>
+            <div style="display:flex; justify-content:space-around; margin-top:20px;">
+              <div>
+                <div style="font-size:32px; font-weight:700; color:${riskColor};">${(acwr.score || 0).toFixed(2)}</div>
+                <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">ACWR Score</div>
+              </div>
+              <div>
+                <div style="font-size:32px; font-weight:700; color:var(--accent-primary);">${acwr.acute_load || 0}</div>
+                <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">Carico Acuto (7gg)</div>
+              </div>
+              <div>
+                <div style="font-size:32px; font-weight:700; color:var(--accent-secondary);">${acwr.chronic_load || 0}</div>
+                <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">Carico Cronico (28gg)</div>
+              </div>
+            </div>
+            <div style="margin-top:15px; padding:10px; border-radius:8px; background:${riskColor}15;">
+              <span style="font-size:13px; font-weight:600; color:${riskColor}; text-transform:uppercase;">${acwr.risk || 'N/D'} Risk</span>
+            </div>
+          </div>
+        `;
+      } else {
+        content.innerHTML = '<div class="glass-card text-center"><p class="text-muted">Nessun dato di performance disponibile.</p></div>';
       }
-    }, 100);
+    } catch(e) {
+      console.error(e);
+      content.innerHTML = '<div class="glass-card text-center"><p class="text-muted">Errore di connessione.</p></div>';
+    }
   }
 
-  renderSubTabInfortuni() {
-    document.getElementById('profilo-content').innerHTML = \`
-      <div class="glass-card text-center">
-        <i class="fas fa-briefcase-medical" style="font-size:40px; color:var(--danger); margin-bottom:15px; opacity:0.8;"></i>
-        <h3>Storico Medico</h3>
-        <p class="text-muted mt-10">Elenco infortuni e riabilitazione connessa.</p>
-      </div>
-    \`;
+  async renderSubTabInfortuni() {
+    const content = document.getElementById('profilo-content');
+    const p = this.currentAthleteProfile;
+    if (!p || !p.id) { content.innerHTML = '<div class="glass-card text-center"><p class="text-muted">Profilo non caricato.</p></div>'; return; }
+
+    content.innerHTML = '<div class="glass-card skeleton" style="height:120px;"></div>';
+
+    try {
+      const res = await fetch(`../api/?module=health&action=getInjuries&athlete_id=${p.id}`, { credentials: 'include', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+      const data = await res.json();
+
+      if (res.ok && data.success && data.data && data.data.length > 0) {
+        let html = '<div class="glass-card"><h3 class="section-title"><i class="fas fa-briefcase-medical"></i> STORICO MEDICO</h3>';
+        data.data.forEach(injury => {
+          const dateStr = injury.injury_date ? new Date(injury.injury_date).toLocaleDateString('it-IT', { day:'2-digit', month:'short', year:'numeric' }) : '';
+          const statusIcon = injury.status === 'recovered' ? '<i class="fas fa-check-circle" style="color:var(--success)"></i>' : '<i class="fas fa-clock" style="color:var(--warning)"></i>';
+          html += `
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid var(--border-subtle);">
+              <div>
+                <div style="font-weight:600; font-size:14px;">${this.escapeHtml(injury.type || injury.description || 'Infortunio')}</div>
+                <div style="font-size:12px; color:var(--text-muted);">${dateStr} ${statusIcon} ${this.escapeHtml(injury.status || '')}</div>
+              </div>
+              <div style="font-size:12px; color:var(--text-light);">${injury.recovery_days ? injury.recovery_days + ' gg' : ''}</div>
+            </div>
+          `;
+        });
+        html += '</div>';
+        content.innerHTML = html;
+      } else {
+        content.innerHTML = `
+          <div class="glass-card text-center">
+            <i class="fas fa-briefcase-medical" style="font-size:40px; color:var(--success); margin-bottom:15px; opacity:0.8;"></i>
+            <h3>Nessun Infortunio</h3>
+            <p class="text-muted mt-10">Non ci sono infortuni registrati per questo atleta.</p>
+          </div>
+        `;
+      }
+    } catch(e) {
+      console.error(e);
+      content.innerHTML = '<div class="glass-card text-center"><p class="text-muted">Errore di connessione.</p></div>';
+    }
   }
 
-  renderSubTabTrasporti() {
-    document.getElementById('profilo-content').innerHTML = \`
-      <div class="glass-card text-center">
-        <i class="fas fa-shuttle-van" style="font-size:40px; color:var(--warning); margin-bottom:15px; opacity:0.8;"></i>
-        <h3>Trasporti e Corse</h3>
-        <p class="text-muted mt-10">Non hai turni di trasporto assegnati per i prossimi eventi.</p>
-      </div>
-    \`;
+  async renderSubTabTrasporti() {
+    const content = document.getElementById('profilo-content');
+    const p = this.currentAthleteProfile;
+    if (!p || !p.id) { content.innerHTML = '<p class="text-muted text-center">Profilo non caricato.</p>'; return; }
+
+    content.innerHTML = '<div class="glass-card skeleton" style="height:120px;"></div>';
+
+    try {
+      const res = await fetch(`../api/?module=athletes&action=getTransportHistory&id=${p.id}`, { credentials: 'include', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+      const data = await res.json();
+
+      if (res.ok && data.success && data.data && data.data.length > 0) {
+        let html = '<div class="glass-card"><h3 class="section-title"><i class="fas fa-shuttle-van"></i> TRASPORTI ASSEGNATI</h3>';
+        data.data.forEach(t => {
+          const dateStr = t.date ? new Date(t.date).toLocaleDateString('it-IT', { day:'2-digit', month:'short', year:'numeric' }) : '';
+          html += `
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid var(--border-subtle);">
+              <div>
+                <div style="font-weight:600; font-size:14px;">${this.escapeHtml(t.destination || t.event_name || 'Trasporto')}</div>
+                <div style="font-size:12px; color:var(--text-muted);">${dateStr} ${t.driver_name ? '• Autista: ' + this.escapeHtml(t.driver_name) : ''}</div>
+              </div>
+              <div style="font-size:12px; color:var(--accent-primary); font-weight:600;">${t.status || ''}</div>
+            </div>
+          `;
+        });
+        html += '</div>';
+        content.innerHTML = html;
+      } else {
+        content.innerHTML = `
+          <div class="glass-card text-center">
+            <i class="fas fa-shuttle-van" style="font-size:40px; color:var(--warning); margin-bottom:15px; opacity:0.8;"></i>
+            <h3>Trasporti e Corse</h3>
+            <p class="text-muted mt-10">Non hai turni di trasporto assegnati per i prossimi eventi.</p>
+          </div>
+        `;
+      }
+    } catch(e) {
+      console.error(e);
+      content.innerHTML = '<div class="glass-card text-center"><p class="text-muted">Errore di connessione.</p></div>';
+    }
   }
 
   renderSubTabSottoUtenti() {
-    document.getElementById('profilo-content').innerHTML = \`
+    document.getElementById('profilo-content').innerHTML = `
       <div class="glass-card">
         <h3 class="section-title"><i class="fas fa-users"></i> LEGAMI FAMIGLIARI</h3>
-        <p class="text-light" style="font-size:13px; margin-bottom:15px;">Gestisci i profili associati al tuo account (es. figli).</p>
-        \${this.currentProfileIsOwn ? \`<button class="btn btn-secondary"><i class="fas fa-link"></i> ASSOCIA NUOVO MINORE</button>\` : ''}
+        <p class="text-light" style="font-size:13px;">Gestisci i profili associati al tuo account (es. figli).</p>
+        <p class="text-muted" style="font-size:12px; margin-top:10px;">Per associare un nuovo minore, contattare la segreteria.</p>
       </div>
-    \`;
+    `;
   }
 
-  renderSubTabPresenze() {
-    document.getElementById('profilo-content').innerHTML = \`
-      <div class="glass-card text-center">
-        <i class="fas fa-check-square" style="font-size:40px; color:var(--accent-secondary); margin-bottom:15px; opacity:0.8;"></i>
-        <h3>Presenze Personali</h3>
-        <p class="text-muted mt-10">Statistiche 92% presenze questo mese.</p>
-      </div>
-    \`;
+  async renderSubTabPresenze() {
+    const content = document.getElementById('profilo-content');
+    const p = this.currentAthleteProfile;
+    if (!p || !p.id) { content.innerHTML = '<div class="glass-card text-center"><p class="text-muted">Profilo non caricato.</p></div>'; return; }
+
+    content.innerHTML = '<div class="glass-card skeleton" style="height:120px;"></div>';
+
+    try {
+      const teamId = p.team_id || '';
+      const res = await fetch(`../api/?module=teams&action=getAttendances&team_id=${teamId}&athlete_id=${p.id}`, {
+        credentials: 'include',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+      });
+      const data = await res.json();
+
+      if (res.ok && data.success && data.data && data.data.length > 0) {
+        const total = data.data.length;
+        const present = data.data.filter(a => a.status === 'present').length;
+        const pct = total > 0 ? Math.round((present / total) * 100) : 0;
+        const barColor = pct >= 80 ? 'var(--success)' : pct >= 50 ? 'var(--warning)' : 'var(--danger)';
+
+        content.innerHTML = `
+          <div class="glass-card text-center">
+            <i class="fas fa-check-square" style="font-size:40px; color:var(--accent-secondary); margin-bottom:15px; opacity:0.8;"></i>
+            <h3>Presenze Personali</h3>
+            <div style="font-size:48px; font-weight:700; color:${barColor}; margin:15px 0;">${pct}%</div>
+            <div class="progress-bar-container" style="margin:10px 0;">
+              <div class="progress-fill" style="width:${pct}%; background:${barColor}; height:8px; border-radius:4px;"></div>
+            </div>
+            <p class="text-muted" style="font-size:12px;">${present} presenze su ${total} sessioni registrate</p>
+          </div>
+        `;
+      } else {
+        content.innerHTML = `
+          <div class="glass-card text-center">
+            <i class="fas fa-check-square" style="font-size:40px; color:var(--accent-secondary); margin-bottom:15px; opacity:0.8;"></i>
+            <h3>Presenze Personali</h3>
+            <p class="text-muted mt-10">Nessun dato di presenze disponibile.</p>
+          </div>
+        `;
+      }
+    } catch(e) {
+      console.error(e);
+      content.innerHTML = '<div class="glass-card text-center"><p class="text-muted">Errore di connessione.</p></div>';
+    }
   }
 
   // SQUADRA E PRESENZE COATCH (NEW VUES)
@@ -912,26 +1110,26 @@ class App {
     \`;
 
     try {
-      // Fetch mock list or real API for athletes
+      // Fetch athletes roster from API
       // Assuming a generic fetch to /athletes or similar
-      const res = await fetch('../api/?module=athletes&action=list');
+      const res = await fetch('../api/?module=athletes&action=list', { credentials: 'include', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
       const data = await res.json();
 
       let html = '';
       if (data.success && data.data && data.data.length > 0) {
         data.data.forEach(athlete => {
-          html += \`
-            <div class="athlete-item" onclick="app.renderProfilo('\${athlete.id}')">
+          html += `
+            <div class="athlete-item" onclick="app.renderProfilo('${athlete.id}')">
               <div class="athlete-avatar">
-                \${athlete.photo_path ? \`<img src="../\${athlete.photo_path}">\` : '<i class="fas fa-user"></i>'}
+                ${athlete.photo_path ? `<img src="../${athlete.photo_path}">` : '<i class="fas fa-user"></i>'}
               </div>
               <div class="athlete-details">
-                <div class="athlete-name">\${athlete.first_name} \${athlete.last_name}</div>
-                <div class="athlete-meta">\${athlete.role || 'Giocatore'}</div>
+                <div class="athlete-name">${this.escapeHtml(athlete.first_name)} ${this.escapeHtml(athlete.last_name)}</div>
+                <div class="athlete-meta">${this.escapeHtml(athlete.role || 'Giocatore')}</div>
               </div>
               <i class="fas fa-chevron-right" style="color: var(--border-subtle)"></i>
             </div>
-          \`;
+          `;
         });
       } else {
         html = '<p class="text-muted text-center" style="margin-top:20px;">Nessun atleta trovato in squadra.</p>';
@@ -943,7 +1141,7 @@ class App {
   }
 
   async renderPresenzeTeam() {
-    this.container.innerHTML = \`
+    this.container.innerHTML = `
       <div class="screen presenze-team-screen">
         <header class="app-header glass-header">
           <div class="app-title">APPELLO OGGI</div>
@@ -951,43 +1149,102 @@ class App {
         </header>
 
         <div class="p-20">
-          <h2 style="font-size:20px; text-transform:uppercase; margin-bottom:20px;" class="stagger-item text-center">\${new Date().toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' })}</h2>
+          <h2 style="font-size:20px; text-transform:uppercase; margin-bottom:20px;" class="stagger-item text-center">${new Date().toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' })}</h2>
           
           <div id="attendance-grid" class="attendance-grid stagger-item delay-1">
              <div class="glass-card skeleton" style="height:100px;"></div>
              <div class="glass-card skeleton" style="height:100px;"></div>
           </div>
           
-          <button class="btn mt-20 stagger-item delay-2" style="background:var(--success)"><i class="fas fa-save"></i> CONFERMA MASCHERA PRESENZE</button>
+          <button class="btn mt-20 stagger-item delay-2" style="background:var(--success)" id="btn-confirm-attendance"><i class="fas fa-save"></i> CONFERMA MASCHERA PRESENZE</button>
         </div>
       </div>
-    \`;
+    `;
 
     // Load same list of athletes and render them as attendance cards
     try {
-      const res = await fetch('../api/?module=athletes&action=list');
+      const res = await fetch('../api/?module=athletes&action=list', { credentials: 'include', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
       const data = await res.json();
       let html = '';
       if (data.success && data.data && data.data.length > 0) {
         data.data.forEach(athlete => {
-          html += \`
-            <div class="attendance-card" id="att-card-\${athlete.id}">
+          html += `
+            <div class="attendance-card" id="att-card-${athlete.id}">
               <div class="athlete-avatar" style="margin:0 auto 10px; width:50px; height:50px;">
-                \${athlete.photo_path ? \`<img src="../\${athlete.photo_path}">\` : '<i class="fas fa-user"></i>'}
+                ${athlete.photo_path ? `<img src="../${athlete.photo_path}">` : '<i class="fas fa-user"></i>'}
               </div>
-              <div class="athlete-name" style="font-size:13px;">\${athlete.first_name}</div>
-              <div class="athlete-name" style="font-size:13px; opacity:0.8;">\${athlete.last_name}</div>
+              <div class="athlete-name" style="font-size:13px;">${this.escapeHtml(athlete.first_name)}</div>
+              <div class="athlete-name" style="font-size:13px; opacity:0.8;">${this.escapeHtml(athlete.last_name)}</div>
               
               <div class="attendance-actions">
-                <button class="btn-att btn-att-yes" onclick="app.markAttendance('\${athlete.id}', 'present')"><i class="fas fa-check"></i></button>
-                <button class="btn-att btn-att-no" onclick="app.markAttendance('\${athlete.id}', 'absent')"><i class="fas fa-times"></i></button>
+                <button class="btn-att btn-att-yes" onclick="app.markAttendance('${athlete.id}', 'present')"><i class="fas fa-check"></i></button>
+                <button class="btn-att btn-att-no" onclick="app.markAttendance('${athlete.id}', 'absent')"><i class="fas fa-times"></i></button>
               </div>
             </div>
-          \`;
+          `;
         });
       }
       document.getElementById('attendance-grid').innerHTML = html;
     } catch(e) {}
+
+    // P3.1: Attach listener to confirm button
+    const confirmBtn = document.getElementById('btn-confirm-attendance');
+    if (confirmBtn) {
+      confirmBtn.addEventListener('click', async () => {
+        this.vibrate(50);
+        const cards = document.querySelectorAll('.attendance-card');
+        const records = [];
+        cards.forEach(card => {
+          const id = card.id.replace('att-card-', '');
+          let status = 'unknown';
+          if (card.classList.contains('present')) status = 'present';
+          else if (card.classList.contains('absent')) status = 'absent';
+          if (status !== 'unknown') records.push({ athlete_id: id, status });
+        });
+
+        if (records.length === 0) {
+          alert('Segna almeno una presenza prima di confermare.');
+          return;
+        }
+
+        confirmBtn.disabled = true;
+        confirmBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> SALVATAGGIO...';
+
+        try {
+          // Save attendance for today — send individual records to correct endpoint
+          const today = new Date().toISOString().split('T')[0];
+          // Determine team_id from user context
+          let teamId = null;
+          try {
+            const u = JSON.parse(localStorage.getItem('erp_user') || '{}');
+            teamId = u.team_id || u.teamId || null;
+          } catch(e) {}
+
+          for (const rec of records) {
+            await fetch('../api/?module=teams&action=saveAttendance', {
+              method: 'POST',
+              credentials: 'include',
+              headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+              body: JSON.stringify({
+                team_id: teamId,
+                athlete_id: rec.athlete_id,
+                attendance_date: today,
+                status: rec.status
+              }),
+            });
+          }
+          alert(`Presenze salvate: ${records.length} registrazioni.`);
+          window.location.hash = '#squadra';
+        } catch(err) {
+          alert('Errore durante il salvataggio delle presenze.');
+        } finally {
+          if (confirmBtn) {
+            confirmBtn.disabled = false;
+            confirmBtn.innerHTML = '<i class="fas fa-save"></i> CONFERMA MASCHERA PRESENZE';
+          }
+        }
+      });
+    }
   }
 
   markAttendance(id, status) {
@@ -1039,7 +1296,7 @@ class App {
     `;
 
     try {
-      const res = await fetch('../api/?module=athletes&action=alerts');
+      const res = await fetch('../api/?module=athletes&action=alerts', { credentials: 'include', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
       const data = await res.json();
       
       let html = '';
@@ -1052,9 +1309,9 @@ class App {
                   <i class="fas fa-triangle-exclamation" style="color: var(--danger); font-size: 20px;"></i>
                 </div>
                 <div>
-                  <h4 style="margin: 0; font-size: 16px;">${alert.athlete_name}</h4>
-                  <p style="font-size: 13px; color: var(--text-light); margin-top: 5px;">Rischio infortunio: <b>${alert.status_label || 'ALTO'}</b></p>
-                  <p style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Metriche ACWR: ${alert.acwr_value || '1.8+'}</p>
+                  <h4 style="margin: 0; font-size: 16px;">${this.escapeHtml(alert.athlete_name)}</h4>
+                  <p style="font-size: 13px; color: var(--text-light); margin-top: 5px;">Rischio infortunio: <b>${this.escapeHtml(alert.status_label || 'ALTO')}</b></p>
+                  <p style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Metriche ACWR: ${this.escapeHtml(alert.acwr_value || '1.8+')}</p>
                 </div>
               </div>
             </div>
@@ -1075,7 +1332,7 @@ class App {
       const actions = {
         'id_doc_front_file_path': 'uploadIdDocFront',
         'medical_cert_file_path': 'uploadMedicalCert',
-        'contract_file_path': 'uploadContract'
+        'contract_file_path': 'uploadContractFile'
       };
       const action = actions[field];
       if (action) {
@@ -1086,7 +1343,7 @@ class App {
           hidden.type = 'file';
           hidden.id = action;
           hidden.style.display = 'none';
-          hidden.onchange = (e) => this.uploadProfileDoc(e.target, action);
+          hidden.onchange = (e) => this.uploadProfileDoc(e.target, action, this.currentAthleteProfile?.id, 'athletes');
           document.body.appendChild(hidden);
         }
         hidden.click();
@@ -1098,18 +1355,19 @@ class App {
     
     const file = inputEl.files[0];
     const btn = document.getElementById('btn-' + action);
-    const originalText = btn.innerHTML;
+    const originalText = btn ? btn.innerHTML : '';
     
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Verifica AI...';
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Verifica AI...';
+    }
 
     try {
       // 1. Lettura Base64 per Verifica AI
       const reader = new FileReader();
       reader.onerror = () => {
         alert("Errore nella lettura del file per la verifica AI.");
-        btn.disabled = false;
-        btn.innerHTML = originalText;
+        if (btn) { btn.disabled = false; btn.innerHTML = originalText; }
       };
       
       reader.onload = async (e) => {
@@ -1126,7 +1384,8 @@ class App {
         try {
           const verifyRes = await fetch('../api/verify_document.php', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
             body: JSON.stringify({
               image: base64Data,
               document_type: docType,
@@ -1137,14 +1396,13 @@ class App {
           
           if (!verifyData.success || (verifyData.data && !verifyData.data.verified)) {
               alert(verifyData.data?.message || verifyData.error || 'Verifica AI fallita: il documento non sembra corretto.');
-              btn.disabled = false;
-              btn.innerHTML = originalText;
+              if (btn) { btn.disabled = false; btn.innerHTML = originalText; }
               inputEl.value = '';
               return;
           }
 
           // 2. Procedi col caricamento (Salviamo il file vero)
-          btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Salvataggio...';
+          if (btn) btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Salvataggio...';
           const formData = new FormData();
           formData.append('id', athleteId);
           formData.append('file', file);
@@ -1152,6 +1410,8 @@ class App {
           const finalModule = (!apiModule || apiModule === 'undefined' || apiModule === 'null') ? 'athletes' : apiModule;
           const response = await fetch(`../api/?module=${finalModule}&action=${action}`, {
             method: 'POST',
+            credentials: 'include',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
             body: formData
           });
 
@@ -1162,14 +1422,12 @@ class App {
             this.renderProfilo();
           } else {
             alert(result.error || 'Errore durante il caricamento del documento.');
-            btn.disabled = false;
-            btn.innerHTML = originalText;
+            if (btn) { btn.disabled = false; btn.innerHTML = originalText; }
           }
         } catch (err) {
           console.error(err);
           alert("Impossibile connettersi al Server AI o Endpoint Errato.");
-          btn.disabled = false;
-          btn.innerHTML = originalText;
+          if (btn) { btn.disabled = false; btn.innerHTML = originalText; }
         }
       };
       
@@ -1177,8 +1435,7 @@ class App {
 
     } catch (err) {
       alert("Errore d'impostazione caricamento.");
-      btn.disabled = false;
-      btn.innerHTML = originalText;
+      if (btn) { btn.disabled = false; btn.innerHTML = originalText; }
     }
   }
 }

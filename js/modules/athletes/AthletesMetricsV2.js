@@ -164,16 +164,16 @@ export const AthletesMetrics = {
 
                 <!-- NEW: Full-Width Massive Anatomy Blueprint Section -->
                 <div class="blueprint-card" style="margin-top:32px; width:100%;">
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:40px; align-items:center; min-height:900px; width:100%; margin:0 auto;">
-                        <div class="anatomy-entry" style="position:relative; width:100%; height:900px;">
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:40px; align-items:start; width:100%; margin:0 auto;">
+                        <div class="anatomy-entry" style="position:relative; width:100%;">
                             ${this._renderAnatomy('front', data.muscleMap)}
-                            <div style="position:absolute; bottom:-40px; left:50%; transform:translateX(-50%); white-space:nowrap;">
+                            <div style="text-align:center; margin-top:8px;">
                                 <span style="font-size:12px; font-weight:900; letter-spacing:6px; color:var(--accent-cyan); opacity:0.4;">ANTERIOR_VIEW_SILHOUETTE</span>
                             </div>
                         </div>
-                        <div class="anatomy-entry" style="position:relative; width:100%; height:900px;">
+                        <div class="anatomy-entry" style="position:relative; width:100%;">
                             ${this._renderAnatomy('back', data.muscleMap)}
-                            <div style="position:absolute; bottom:-40px; left:50%; transform:translateX(-50%); white-space:nowrap;">
+                            <div style="text-align:center; margin-top:8px;">
                                 <span style="font-size:12px; font-weight:900; letter-spacing:6px; color:var(--accent-cyan); opacity:0.4;">POSTERIOR_VIEW_SILHOUETTE</span>
                             </div>
                         </div>
@@ -222,17 +222,39 @@ export const AthletesMetrics = {
                         </div>
                         ${data.results.map(res => {
                             const m = res.metrics || {};
-                            const asy = res.asymmetry?.landing?.asymmetry?.toFixed(1) || '0.0';
-                            const jh = (m.JumpHeight?.Value || m.JumpHeightTotal?.Value || 0).toFixed(1);
-                            const rsi = (m.RSIModified?.Value || 0).toFixed(3);
+                            const asyNum = res.asymmetry?.landing?.asymmetry ?? 0;
+                            const asy = asyNum.toFixed(1);
+                            const jhNum = m.JumpHeight?.Value || m.JumpHeightTotal?.Value || 0;
+                            const jh = jhNum.toFixed(1);
+                            const rsiNum = m.RSIModified?.Value || 0;
+                            const rsi = rsiNum.toFixed(3);
+
+                            // Same color logic as the summary table (AthletesView)
+                            const getColor = (val, lowThresh, highThresh) => {
+                                if (!val) return 'rgba(255,255,255,0.2)';
+                                if (val < lowThresh) return '#ef4444';
+                                if (val >= highThresh) return 'var(--color-success)';
+                                return 'var(--color-white)';
+                            };
+                            // Asymmetry is inverted: lower is better
+                            const getAsyColor = (val) => {
+                                if (!val && val !== 0) return 'rgba(255,255,255,0.2)';
+                                if (val <= 10) return 'var(--color-success)';
+                                if (val > 15) return '#ef4444';
+                                return 'var(--color-white)';
+                            };
+
+                            const jhColor = getColor(jhNum, 25, 30);
+                            const rsiColor = getColor(rsiNum, 0.30, 0.45);
+                            const asyColor = getAsyColor(asyNum);
                             
                             return `
                                 <div class="timeline-entry" style="display:grid; grid-template-columns: 120px 1.5fr 1fr 1fr 1fr; padding:15px 20px; align-items:center;">
                                     <div class="timeline-date" style="opacity:0.6;">${new Date(res.test_date).toLocaleDateString('it-IT')}</div>
                                     <div class="timeline-type" style="font-weight:700;">${Utils.escapeHtml(res.test_type)}</div>
-                                    <div class="timeline-val" style="color:var(--color-pink); text-align:right; font-weight:800;">${jh}<small>cm</small></div>
-                                    <div class="timeline-val" style="color:#FFD600; text-align:right; font-weight:800;">${rsi}</div>
-                                    <div class="timeline-val" style="color:${parseFloat(asy) > 15 ? '#FF1744' : '#00e5ff'}; text-align:right; font-weight:800;">${asy}<small>%</small></div>
+                                    <div class="timeline-val" style="color:${jhColor}; text-align:right; font-weight:800;">${jh}<small>cm</small></div>
+                                    <div class="timeline-val" style="color:${rsiColor}; text-align:right; font-weight:800;">${rsi}</div>
+                                    <div class="timeline-val" style="color:${asyColor}; text-align:right; font-weight:800;">${asy}<small>%</small></div>
                                 </div>
                             `;
                         }).join('')}
@@ -267,69 +289,67 @@ export const AthletesMetrics = {
 
         // Interactive High-Performance Highlighting (Calibrated to 3D Assets)
         return `
-            <div class="anatomy-container ${view}" style="width:100%; height:100%; position:relative; overflow:hidden; background:transparent; display:flex; align-items:center; justify-content:center;">
-                <!-- High-Fidelity 3D Medical Render (Muscle Fibers - Myology) -->
-                <img src="${imgSrc}" alt="${view} anatomy" style="
-                    position:absolute; 
-                    top:0; 
-                    left:50%; 
-                    transform:translateX(-50%); 
-                    height:100%; 
-                    width:auto; 
-                    object-fit:contain; 
-                    opacity:0.85; 
-                    mix-blend-mode:screen;
-                    filter: brightness(1.1) contrast(1.15);
-                    z-index:1;
-                ">
+            <div class="anatomy-container ${view}" style="width:100%; position:relative; overflow:hidden; background:transparent;">
+                <div style="position:relative; width:100%; display:flex; justify-content:center;">
+                    <!-- High-Fidelity 3D Medical Render (Muscle Fibers - Myology) -->
+                    <img src="${imgSrc}" alt="${view} anatomy" style="
+                        display:block;
+                        width:100%; 
+                        height:auto; 
+                        object-fit:contain; 
+                        opacity:0.85; 
+                        mix-blend-mode:screen;
+                        filter: brightness(1.1) contrast(1.15);
+                    ">
 
-                <!-- Interactive SVG Telemetry Overlay -->
-                <svg viewBox="0 0 100 240" style="
-                    position:absolute; 
-                    top:0; 
-                    left:50%; 
-                    transform:translateX(-50%);
-                    width:auto;
-                    height:100%; 
-                    aspect-ratio: 100 / 240;
-                    z-index:2; 
-                    pointer-events:none;
-                    mix-blend-mode: screen;
-                    opacity: 1;
-                    filter: drop-shadow(0px 0px 4px rgba(255,255,255,0.2));
-                ">
-                    <defs>
-                    </defs>
+                    <!-- Interactive SVG Telemetry Overlay -->
+                    <svg viewBox="0 0 100 240" style="
+                        position:absolute; 
+                        top:0; 
+                        left:50%; 
+                        transform:translateX(-50%);
+                        width:auto;
+                        height:100%; 
+                        aspect-ratio: 100 / 240;
+                        z-index:2; 
+                        pointer-events:none;
+                        mix-blend-mode: screen;
+                        opacity: 1;
+                        filter: drop-shadow(0px 0px 4px rgba(255,255,255,0.2));
+                    ">
+                        <defs>
+                        </defs>
 
-                    <!-- MUSCLE REGION HIGHLIGHTS -->
-                    ${view === 'front' ? `
-                        <!-- Quads (Precise Fascia Outline) -->
-                        <path d="M 47,110 Q 40,110 38,130 Q 36,155 38,175 Q 43,173 45,150 Q 46,130 47,110 Z" 
-                            ${getStyles('quads_l')} />
-                        <path d="M 53,110 Q 60,110 62,130 Q 64,155 62,175 Q 57,173 55,150 Q 54,130 53,110 Z" 
-                            ${getStyles('quads_r')} />
-                        
-                        <!-- Core / Abs (Centralized Hexagonal Cut) -->
-                        <path d="M 44,65 L 56,65 L 55,83 L 53,98 L 50,102 L 47,98 L 45,83 Z" 
-                            ${getStyles('core')} />
-                        
-                        <!-- Hips / Lateral Stabilizers -->
-                        <path d="M 42,88 Q 33,95 34,110 Q 38,105 40,92 Z" ${getStyles('hips_l')} />
-                        <path d="M 58,88 Q 67,95 66,110 Q 62,105 60,92 Z" ${getStyles('hips_r')} />
-                    ` : `
-                        <!-- Glutes (Anatomical Wrap) -->
-                        <path d="M 49,95 C 40,95 34,105 34,115 C 38,122 45,118 49,115 Z" 
-                            ${getStyles('glutes_l')} />
-                        <path d="M 51,95 C 60,95 66,105 66,115 C 62,122 55,118 51,115 Z" 
-                            ${getStyles('glutes_r')} />
-                        
-                        <!-- Hamstrings (Precise Taper) -->
-                        <path d="M 48,118 Q 38,122 36,145 Q 36,165 38,175 Q 43,170 45,150 Q 46,135 48,118 Z" 
-                            ${getStyles('hams_l')} />
-                        <path d="M 52,118 Q 62,122 64,145 Q 64,165 62,175 Q 57,170 55,150 Q 54,135 52,118 Z" 
-                            ${getStyles('hams_r')} />
-                    `}
-                </svg>
+                        <!-- MUSCLE REGION HIGHLIGHTS -->
+                        ${view === 'front' ? `
+                            <!-- Quads (Precise Fascia Outline) -->
+                            <path d="M 47,110 Q 40,110 38,130 Q 36,155 38,175 Q 43,173 45,150 Q 46,130 47,110 Z" 
+                                ${getStyles('quads_l')} />
+                            <path d="M 53,110 Q 60,110 62,130 Q 64,155 62,175 Q 57,173 55,150 Q 54,130 53,110 Z" 
+                                ${getStyles('quads_r')} />
+                            
+                            <!-- Core / Abs (Centralized Hexagonal Cut) -->
+                            <path d="M 44,65 L 56,65 L 55,83 L 53,98 L 50,102 L 47,98 L 45,83 Z" 
+                                ${getStyles('core')} />
+                            
+                            <!-- Hips / Lateral Stabilizers -->
+                            <path d="M 42,88 Q 33,95 34,110 Q 38,105 40,92 Z" ${getStyles('hips_l')} />
+                            <path d="M 58,88 Q 67,95 66,110 Q 62,105 60,92 Z" ${getStyles('hips_r')} />
+                        ` : `
+                            <!-- Glutes (Anatomical Wrap) -->
+                            <path d="M 49,95 C 40,95 34,105 34,115 C 38,122 45,118 49,115 Z" 
+                                ${getStyles('glutes_l')} />
+                            <path d="M 51,95 C 60,95 66,105 66,115 C 62,122 55,118 51,115 Z" 
+                                ${getStyles('glutes_r')} />
+                            
+                            <!-- Hamstrings (Precise Taper) -->
+                            <path d="M 48,118 Q 38,122 36,145 Q 36,165 38,175 Q 43,170 45,150 Q 46,135 48,118 Z" 
+                                ${getStyles('hams_l')} />
+                            <path d="M 52,118 Q 62,122 64,145 Q 64,165 62,175 Q 57,170 55,150 Q 54,135 52,118 Z" 
+                                ${getStyles('hams_r')} />
+                        `}
+                    </svg>
+                </div>
             </div>
         `;
     },

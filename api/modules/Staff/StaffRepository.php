@@ -189,16 +189,18 @@ class StaffRepository
     // ─── Public ───────────────────────────────────────────────────────────────
     public function getPublicStaffByTeam(string $teamId): array
     {
+        $tenantId = TenantContext::id();
         $sql = "SELECT s.id, s.first_name, s.last_name,
                        CONCAT(s.first_name, ' ', s.last_name) AS full_name,
                        s.role, s.photo_path, s.fiscal_code
                 FROM staff_members s
                 INNER JOIN staff_teams st ON s.id = st.staff_id
                 WHERE s.is_deleted = 0
+                  AND s.tenant_id = :tenant_id
                   AND st.team_season_id = :team_season_id
                 ORDER BY s.last_name ASC, s.first_name ASC";
         $stmt = $this->db->prepare($sql);
-        $stmt->execute([':team_season_id' => $teamId]);
+        $stmt->execute([':team_season_id' => $teamId, ':tenant_id' => $tenantId]);
 
         $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
         foreach ($rows as &$row) {

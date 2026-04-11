@@ -480,7 +480,7 @@ const OutSeason = (() => {
           const t = o[n];
           t &&
             0 !== t.length &&
-            ((i += `<tr class="os-role-header"><td colspan="5"><span class="os-role-emoji">${s[n] || "⚪"}</span>${n} <span style="opacity:.5;font-weight:400;font-size:12px;margin-left:8px;">(${t.length})</span></td></tr>`),
+            ((i += `<tr class="os-role-header"><td colspan="6"><span class="os-role-emoji">${s[n] || "⚪"}</span>${n} <span style="opacity:.5;font-weight:400;font-size:12px;margin-left:8px;">(${t.length})</span></td></tr>`),
             t.forEach((n) => {
               const t = (n.data_di_nascita || n.DataDiNascita || "").substring(
                 0,
@@ -490,6 +490,11 @@ const OutSeason = (() => {
                         <td>${t || "—"}</td>
                         <td><span class="os-badge-formula ${d(n) ? "os-badge-full" : "os-badge-daily"}">${b(n)}</span></td>
                         <td>${r(n) || isVer(c(n)) ? '<span class="os-badge-paid">✓</span>' : '<span class="os-badge-unpaid">✗</span>'}</td>
+                        <td>
+                            <button class="btn btn-ghost btn-xs os-genera-atleta" style="background:rgba(99,102,241,0.1); border:1px solid rgba(99,102,241,0.3); color:#818cf8; white-space:nowrap; padding: 4px 8px; border-radius: 6px;">
+                                <i class="ph ph-user-plus"></i> Genera
+                            </button>
+                        </td>
                     </tr>`;
             }));
         });
@@ -504,7 +509,7 @@ const OutSeason = (() => {
                     <div style="padding:10px 20px;font-size:12px;opacity:.7;border-bottom:1px solid rgba(255,255,255,0.05);">${l}</div>
                     <div style="overflow-x:auto;">
                     <table class="os-table">
-                        <thead><tr><th>Nome</th><th>Club</th><th>Anno Nascita</th><th>Formula</th><th>Pagato</th></tr></thead>
+                        <thead><tr><th>Nome</th><th>Club</th><th>Anno Nascita</th><th>Formula</th><th>Pagato</th><th>Azioni</th></tr></thead>
                         <tbody>${i}</tbody>
                     </table>
                     </div>
@@ -556,6 +561,11 @@ const OutSeason = (() => {
                     return n.codice_sconto || n.CodiceSconto || null;
                   })(n) || "—"
                 }</td>
+                <td>
+                    <button class="btn btn-ghost btn-xs os-genera-atleta" style="background:rgba(99,102,241,0.1); border:1px solid rgba(99,102,241,0.3); color:#818cf8; white-space:nowrap; padding: 4px 8px; border-radius: 6px;">
+                        <i class="ph ph-user-plus"></i> Genera
+                    </button>
+                </td>
             </tr>`,
         )
         .join(""),
@@ -569,7 +579,7 @@ const OutSeason = (() => {
             <div style="overflow-x:auto;">
             <table class="os-table">
                 <thead><tr>
-                    <th>#</th><th>Nome</th><th>Club</th><th>Formula</th><th>Caparra</th><th>Metodo</th><th>Stato</th><th>Data Iscr.</th><th>Sconto</th>
+                    <th>#</th><th>Nome</th><th>Club</th><th>Formula</th><th>Caparra</th><th>Metodo</th><th>Stato</th><th>Data Iscr.</th><th>Sconto</th><th>Azioni</th>
                 </tr></thead>
                 <tbody>
                     ${s}
@@ -579,7 +589,7 @@ const OutSeason = (() => {
                         <td>${(i + p).toLocaleString("it-IT")} €</td>
                         <td></td>
                         <td><span class="os-badge-paid">${i.toLocaleString("it-IT")} €</span> <span class="os-badge-unpaid">${p.toLocaleString("it-IT")} €</span></td>
-                        <td colspan="2"></td>
+                        <td colspan="3"></td>
                     </tr>
                 </tbody>
             </table>
@@ -618,7 +628,23 @@ const OutSeason = (() => {
               ?.addEventListener("click", y, { signal: n.signal }),
             document
               .getElementById("os-export-btn")
-              ?.addEventListener("click", f, { signal: n.signal }));
+              ?.addEventListener("click", f, { signal: n.signal }),
+            document.getElementById("app")?.addEventListener("click", async (ev) => {
+                const btn = ev.target.closest(".os-genera-atleta");
+                if (btn) {
+                    try {
+                        const { AthletesAPI } = await import('./athletes/AthletesAPI.js?v=3');
+                        const { AthletesWizard } = await import('./athletes/AthletesWizard.js?v=3');
+                        const teams = await AthletesAPI.getTeams();
+                        AthletesWizard.openCreate(teams, () => {
+                            if (typeof UI !== 'undefined' && UI.toast) UI.toast("Atleta aggiunta con successo!", "success");
+                        });
+                    } catch(err) {
+                        console.error("[OutSeason] Error opening wizard", err);
+                        if (typeof UI !== 'undefined' && UI.toast) UI.toast("Errore apertura maschera atleta", "error");
+                    }
+                }
+            }, { signal: n.signal }));
         })(),
         await m());
     },

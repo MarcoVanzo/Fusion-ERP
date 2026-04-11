@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace FusionERP\Modules\Admin;
 
 use FusionERP\Shared\Database;
+use FusionERP\Shared\TenantContext;
 
 class AdminRepository
 {
@@ -23,14 +24,16 @@ class AdminRepository
 
     public function listCertificates(string $athleteId = '', bool $expiringSoon = false): array
     {
+        $tenantId = TenantContext::id();
         $sql = 'SELECT mc.id, mc.athlete_id, mc.type, mc.issue_date, mc.expiry_date,
                        mc.ocr_extracted_date, mc.file_path, mc.status, mc.notes,
                        a.full_name AS athlete_name, t.name AS team_name, t.category
                 FROM medical_certificates mc
                 JOIN athletes a ON a.id = mc.athlete_id
                 JOIN teams t ON t.id = a.team_id
-                WHERE mc.deleted_at IS NULL';
-        $params = [];
+                WHERE mc.deleted_at IS NULL
+                  AND a.tenant_id = :tenant_id';
+        $params = [':tenant_id' => $tenantId];
         if ($athleteId !== '') {
             $sql .= ' AND mc.athlete_id = :athlete_id';
             $params[':athlete_id'] = $athleteId;
@@ -72,13 +75,15 @@ class AdminRepository
 
     public function listContracts(string $userId = ''): array
     {
+        $tenantId = TenantContext::id();
         $sql = 'SELECT c.id, c.user_id, c.type, c.role_description, c.valid_from, c.valid_to,
                        c.monthly_fee_eur, c.pdf_path, c.status, c.signed_at,
                        u.full_name AS user_name, u.email AS user_email
                 FROM contracts c
                 JOIN users u ON u.id = c.user_id
+                JOIN tenant_users tu ON tu.user_id = u.id AND tu.tenant_id = :tenant_id
                 WHERE c.deleted_at IS NULL';
-        $params = [];
+        $params = [':tenant_id' => $tenantId];
         if ($userId !== '') {
             $sql .= ' AND c.user_id = :user_id';
             $params[':user_id'] = $userId;
@@ -137,6 +142,7 @@ class AdminRepository
         int $offset = 0
         ): array
     {
+        $tenantId = TenantContext::id();
         $sql = '
             SELECT
                 al.id,
@@ -151,9 +157,10 @@ class AdminRepository
                 al.created_at
             FROM audit_logs al
             LEFT JOIN users u ON u.id = al.user_id
-            WHERE 1=1';
+            LEFT JOIN tenant_users tu ON tu.user_id = al.user_id
+            WHERE (tu.tenant_id = :tenant_id OR al.user_id IS NULL)';
 
-        $params = [];
+        $params = [':tenant_id' => $tenantId];
 
         if ($action !== '') {
             $sql .= ' AND al.action = :action';
@@ -288,25 +295,32 @@ class AdminRepository
      */
     public function getUsersSummary(): array
     {
+        $tenantId = TenantContext::id();
         // Total + by status
-        $byStatus = $this->db->query(
+        $stmt = $this->db->prepare(
             "SELECT
-                SUM(CASE WHEN status = 'Attivo'      THEN 1 ELSE 0 END) AS active,
-                SUM(CASE WHEN status = 'Invitato'    THEN 1 ELSE 0 END) AS invited,
-                SUM(CASE WHEN status = 'Disattivato' THEN 1 ELSE 0 END) AS disabled,
+                SUM(CASE WHEN u.status = 'Attivo'      THEN 1 ELSE 0 END) AS active,
+                SUM(CASE WHEN u.status = 'Invitato'    THEN 1 ELSE 0 END) AS invited,
+                SUM(CASE WHEN u.status = 'Disattivato' THEN 1 ELSE 0 END) AS disabled,
                 COUNT(*) AS total
-             FROM users
-             WHERE deleted_at IS NULL"
-        )->fetch(\PDO::FETCH_ASSOC);
+             FROM users u
+             JOIN tenant_users tu ON tu.user_id = u.id AND tu.tenant_id = :tenant_id
+             WHERE u.deleted_at IS NULL"
+        );
+        $stmt->execute([':tenant_id' => $tenantId]);
+        $byStatus = $stmt->fetch(\PDO::FETCH_ASSOC);
 
         // By role
-        $roleRows = $this->db->query(
-            "SELECT role, COUNT(*) AS cnt
-             FROM users
-             WHERE deleted_at IS NULL
-             GROUP BY role
+        $stmtRole = $this->db->prepare(
+            "SELECT u.role, COUNT(*) AS cnt
+             FROM users u
+             JOIN tenant_users tu ON tu.user_id = u.id AND tu.tenant_id = :tenant_id
+             WHERE u.deleted_at IS NULL
+             GROUP BY u.role
              ORDER BY cnt DESC"
-        )->fetchAll(\PDO::FETCH_ASSOC);
+        );
+        $stmtRole->execute([':tenant_id' => $tenantId]);
+        $roleRows = $stmtRole->fetchAll(\PDO::FETCH_ASSOC);
 
         return [
             'total' => (int)($byStatus['total'] ?? 0),

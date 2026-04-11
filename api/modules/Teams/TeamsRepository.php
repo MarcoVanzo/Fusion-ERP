@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace FusionERP\Modules\Teams;
 
 use FusionERP\Shared\Database;
+use FusionERP\Shared\TenantContext;
 
 class TeamsRepository
 {
@@ -25,14 +26,14 @@ class TeamsRepository
      */
     public function listTeamsWithSeasons(string $tenantId): array
     {
-        // 1. Get all teams
+        // 1. Get all teams filtered by tenant
         $stmtTeams = $this->db->prepare(
             'SELECT id, name, category, color_hex, is_active 
              FROM teams 
-             WHERE deleted_at IS NULL 
+             WHERE deleted_at IS NULL AND tenant_id = :tenant_id
              ORDER BY category, name'
         );
-        $stmtTeams->execute();
+        $stmtTeams->execute([':tenant_id' => $tenantId]);
         $teams = $stmtTeams->fetchAll(\PDO::FETCH_ASSOC);
 
         if (empty($teams)) {
@@ -79,10 +80,10 @@ class TeamsRepository
             'SELECT ts.id AS team_season_id, t.id AS team_id, t.name, t.category, ts.season 
              FROM team_seasons ts
              JOIN teams t ON ts.team_id = t.id
-             WHERE t.deleted_at IS NULL AND t.is_active = 1
+             WHERE t.deleted_at IS NULL AND t.is_active = 1 AND t.tenant_id = :tenant_id
              ORDER BY ts.season DESC, t.category, t.name'
         );
-        $stmt->execute();
+        $stmt->execute([':tenant_id' => $tenantId]);
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
@@ -91,18 +92,19 @@ class TeamsRepository
         $stmt = $this->db->prepare(
             'SELECT id, name, category, color_hex, is_active 
              FROM teams 
-             WHERE id = :id AND deleted_at IS NULL'
+             WHERE id = :id AND tenant_id = :tenant_id AND deleted_at IS NULL'
         );
-        $stmt->execute([':id' => $teamId]);
+        $stmt->execute([':id' => $teamId, ':tenant_id' => $tenantId]);
         return $stmt->fetch(\PDO::FETCH_ASSOC) ?: null;
     }
 
     public function createTeam(array $data): void
     {
         $stmt = $this->db->prepare(
-            'INSERT INTO teams (id, name, gender, category, color_hex) 
-             VALUES (:id, :name, :gender, :category, :color_hex)'
+            'INSERT INTO teams (id, tenant_id, name, gender, category, color_hex) 
+             VALUES (:id, :tenant_id, :name, :gender, :category, :color_hex)'
         );
+        $data[':tenant_id'] = $data[':tenant_id'] ?? TenantContext::id();
         $stmt->execute($data);
     }
 
@@ -111,17 +113,18 @@ class TeamsRepository
         $stmt = $this->db->prepare(
             'UPDATE teams 
              SET name = :name, gender = :gender, category = :category, color_hex = :color_hex 
-             WHERE id = :id AND deleted_at IS NULL'
+             WHERE id = :id AND tenant_id = :tenant_id AND deleted_at IS NULL'
         );
+        $data[':tenant_id'] = $data[':tenant_id'] ?? TenantContext::id();
         $stmt->execute($data);
     }
 
     public function softDeleteTeam(string $teamId, string $tenantId): void
     {
         $stmt = $this->db->prepare(
-            'UPDATE teams SET deleted_at = NOW() WHERE id = :id'
+            'UPDATE teams SET deleted_at = NOW() WHERE id = :id AND tenant_id = :tenant_id'
         );
-        $stmt->execute([':id' => $teamId]);
+        $stmt->execute([':id' => $teamId, ':tenant_id' => $tenantId]);
     }
 
     public function addTeamSeason(array $data): void

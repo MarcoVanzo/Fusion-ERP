@@ -135,7 +135,7 @@ class SocialController
             // in the redirect URL (potential XSS if frontend renders the hash without sanitisation).
             $errorCode = bin2hex(random_bytes(4)); // opaque reference for support
             error_log('[SOCIAL] OAuth callback error [' . $errorCode . ']: ' . $e->getMessage());
-            header('Location: ' . $returnUrl . '#social?error=' . urlencode('Errore di autenticazione (' . $errorCode . '): ' . $e->getMessage()));
+            header('Location: ' . $returnUrl . '#social?error=' . urlencode('Errore di autenticazione (' . $errorCode . '). Contattare il supporto.'));
             exit;
         }
     }

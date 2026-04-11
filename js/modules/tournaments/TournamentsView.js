@@ -191,7 +191,7 @@ const TournamentsView = {
     },
 
     tournamentModal: (t, teams) => {
-        const teamOptions = teams.map(team => `<option value="${team.id}" ${t && t.team_id === team.id ? "selected" : ""}>${Utils.escapeHtml(team.name)}</option>`).join("");
+        const teamOptions = teams.map(team => `<option value="${team.team_id || team.id}" ${t && t.team_id == (team.team_id || team.id) ? "selected" : ""}>${Utils.escapeHtml(team.name)}</option>`).join("");
         
         const formatDateTime = (dateStr) => {
             if (!dateStr) return "";

@@ -376,6 +376,7 @@
 .form-input,
 .form-select,
 .form-textarea {
+  color-scheme: dark;
   background: var(--color-bg-input);
   backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);

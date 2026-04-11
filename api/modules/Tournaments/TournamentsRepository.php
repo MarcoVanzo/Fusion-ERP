@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace FusionERP\Modules\Tournaments;
 
 use FusionERP\Shared\Database;
+use FusionERP\Shared\TenantContext;
 use PDO;
 
 class TournamentsRepository
@@ -25,6 +26,7 @@ class TournamentsRepository
      */
     public function listTournaments(): array
     {
+        $tid = TenantContext::id();
         $stmt = $this->db->prepare("
             SELECT e.*, t.name as team_name,
                    td.website_url, td.fee_per_athlete, td.accommodation_info
@@ -32,9 +34,10 @@ class TournamentsRepository
             LEFT JOIN teams t ON e.team_id = t.id
             LEFT JOIN tournament_details td ON e.id = td.event_id
             WHERE e.type = 'tournament' AND e.deleted_at IS NULL
+              AND (e.tenant_id = :tid OR e.tenant_id = 'TNT_fusion' OR e.tenant_id IS NULL)
             ORDER BY e.event_date DESC
         ");
-        $stmt->execute();
+        $stmt->execute([':tid' => $tid]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
@@ -43,16 +46,26 @@ class TournamentsRepository
      */
     public function getTournament(string $id): ?array
     {
+        $tid = TenantContext::id();
         $stmt = $this->db->prepare("
             SELECT e.*, t.name as team_name,
                    td.website_url, td.fee_per_athlete, td.accommodation_info
             FROM events e
-            JOIN teams t ON e.team_id = t.id
+            LEFT JOIN teams t ON e.team_id = t.id
             LEFT JOIN tournament_details td ON e.id = td.event_id
             WHERE e.id = :id AND e.type = 'tournament' AND e.deleted_at IS NULL
+              AND e.tenant_id = :tid
         ");
-        $stmt->execute([':id' => $id]);
-        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+        $stmt->execute([':id' => $id, ':tid' => $tid]);
+        $res = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        // Fallback for detail view
+        if (!$res && $tid !== 'TNT_fusion') {
+            $stmt->execute([':id' => $id, ':tid' => 'TNT_fusion']);
+            $res = $stmt->fetch(PDO::FETCH_ASSOC);
+        }
+
+        return $res ?: null;
     }
 
     /**
@@ -60,12 +73,14 @@ class TournamentsRepository
      */
     public function getMatches(string $tournamentId): array
     {
+        $tid = TenantContext::id();
         $stmt = $this->db->prepare("
-            SELECT * FROM tournament_matches
-            WHERE event_id = :id
-            ORDER BY match_time ASC
+            SELECT tm.* FROM tournament_matches tm
+            JOIN events e ON e.id = tm.event_id
+            WHERE tm.event_id = :id AND (e.tenant_id = :tid OR e.tenant_id = 'TNT_fusion')
+            ORDER BY tm.match_time ASC
         ");
-        $stmt->execute([':id' => $tournamentId]);
+        $stmt->execute([':id' => $tournamentId, ':tid' => $tid]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
@@ -78,14 +93,26 @@ class TournamentsRepository
             SELECT a.id, a.full_name, a.jersey_number, a.role,
                    ea.status as attendance_status
             FROM athletes a
-            JOIN team_members tm ON a.user_id = tm.user_id AND tm.team_id = :team_id
-            LEFT JOIN event_attendees ea ON a.id = ea.athlete_id AND ea.event_id = :event_id
-            WHERE a.deleted_at IS NULL AND a.is_active = 1
-            ORDER BY a.full_name ASC
+            LEFT JOIN event_attendees ea ON a.id = ea.athlete_id AND ea.event_id = :event_id1
+            WHERE a.team_id = :team_id1 AND a.deleted_at IS NULL AND a.is_active = 1
+            
+            UNION ALL
+            
+            SELECT s.id, CONCAT(s.first_name, ' ', s.last_name) AS full_name, NULL as jersey_number, s.role,
+                   ea.status as attendance_status
+            FROM staff_members s
+            JOIN staff_teams st ON s.id = st.staff_id
+            JOIN team_seasons ts ON st.team_season_id = ts.id AND ts.team_id = :team_id2
+            LEFT JOIN event_attendees ea ON s.id = ea.athlete_id AND ea.event_id = :event_id2
+            WHERE s.is_deleted = 0
+            
+            ORDER BY full_name ASC
         ");
         $stmt->execute([
-            ':team_id' => $teamId,
-            ':event_id' => $tournamentId
+            ':team_id1' => $teamId,
+            ':event_id1' => $tournamentId,
+            ':team_id2' => $teamId,
+            ':event_id2' => $tournamentId
         ]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -99,12 +126,14 @@ class TournamentsRepository
         $isUpdate = $data['is_update'] ?? false;
 
         if (!$isUpdate) {
+            $tid = TenantContext::id();
             $stmt = $this->db->prepare("
-                INSERT INTO events (id, team_id, type, title, event_date, event_end, location_name, created_by)
-                VALUES (:id, :team_id, 'tournament', :title, :event_date, :event_end, :location_name, :created_by)
+                INSERT INTO events (id, tenant_id, team_id, type, title, event_date, event_end, location_name, created_by)
+                VALUES (:id, :tenant_id, :team_id, 'tournament', :title, :event_date, :event_end, :location_name, :created_by)
             ");
             $stmt->execute([
                 ':id' => $id,
+                ':tenant_id' => $tid,
                 ':team_id' => $data['team_id'],
                 ':title' => $data['title'],
                 ':event_date' => $data['event_date'],
@@ -152,10 +181,20 @@ class TournamentsRepository
         $rosterStmt = $this->db->prepare("
             SELECT a.id
             FROM athletes a
-            JOIN team_members tm ON a.user_id = tm.user_id AND tm.team_id = :team_id
-            WHERE a.deleted_at IS NULL AND a.is_active = 1
+            WHERE a.team_id = :team_id1 AND a.deleted_at IS NULL AND a.is_active = 1
+            
+            UNION ALL
+            
+            SELECT s.id
+            FROM staff_members s
+            JOIN staff_teams st ON s.id = st.staff_id
+            JOIN team_seasons ts ON st.team_season_id = ts.id AND ts.team_id = :team_id2
+            WHERE s.is_deleted = 0
         ");
-        $rosterStmt->execute([':team_id' => $teamId]);
+        $rosterStmt->execute([
+            ':team_id1' => $teamId,
+            ':team_id2' => $teamId
+        ]);
         $athletes = $rosterStmt->fetchAll(PDO::FETCH_COLUMN);
 
         $attStmt = $this->db->prepare("

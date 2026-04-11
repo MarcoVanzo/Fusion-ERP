@@ -288,3 +288,4 @@ class ScoutingModule {
 
 // Attach purely constructed instance to window environment mapping Router mechanics
 window.Scouting = new ScoutingModule();
+export default window.Scouting;

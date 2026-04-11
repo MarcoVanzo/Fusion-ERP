@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace FusionERP\Modules\Athletes;
 
 use FusionERP\Shared\Database;
+use FusionERP\Shared\TenantContext;
 
 class AthletesRepository
 {
@@ -40,6 +41,7 @@ class AthletesRepository
 
     public function listAthletes(string $teamSeasonId = '', bool $includeInactive = false): array
     {
+        $tid = TenantContext::id();
         $sql = 'SELECT DISTINCT a.id, a.team_id, a.full_name, a.jersey_number, a.role, a.birth_date,
                        a.height_cm, a.weight_kg, a.photo_path, a.is_active,
                        a.phone, a.email, a.fiscal_code, a.medical_cert_expires_at,
@@ -50,20 +52,20 @@ class AthletesRepository
                 FROM athletes a
                 LEFT JOIN teams t ON a.team_id = t.id';
 
-        $params = [];
+        $params = [':tid' => $tid];
         if ($teamSeasonId !== '') {
             if (str_starts_with($teamSeasonId, 'TEAM_') || str_starts_with($teamSeasonId, 'TM_')) {
                 // Support both legacy prefix and raw team_id format
-                $sql .= ' WHERE a.deleted_at IS NULL AND a.team_id = :team_id';
+                $sql .= ' WHERE a.deleted_at IS NULL AND a.tenant_id = :tid AND a.team_id = :team_id';
                 $params[':team_id'] = str_starts_with($teamSeasonId, 'TEAM_') ? substr($teamSeasonId, 5) : $teamSeasonId;
             } else {
                 $sql .= ' JOIN athlete_teams at2 ON a.id = at2.athlete_id';
-                $sql .= ' WHERE a.deleted_at IS NULL AND at2.team_season_id = :team_season_id';
+                $sql .= ' WHERE a.deleted_at IS NULL AND a.tenant_id = :tid AND at2.team_season_id = :team_season_id';
                 $params[':team_season_id'] = $teamSeasonId;
             }
         }
         else {
-            $sql .= ' WHERE a.deleted_at IS NULL';
+            $sql .= ' WHERE a.deleted_at IS NULL AND a.tenant_id = :tid';
         }
 
         if (!$includeInactive) {
@@ -95,6 +97,21 @@ class AthletesRepository
             $docCols = ', a.' . implode(', a.', $docFields);
         }
 
+        $hasPaidField = '0';
+        if ($this->_hasColumn('event_attendees', 'has_paid')) {
+            $hasPaidField = 'ea.has_paid';
+        }
+
+        // VALD subqueries: only reference vald_profile_id if the column exists in production
+        $hasValdProfileId = $this->_hasColumn('athletes', 'vald_profile_id');
+        if ($hasValdProfileId) {
+            $valdMetricsSub = "(SELECT metrics FROM vald_test_results WHERE athlete_id = a.id OR (a.vald_profile_id IS NOT NULL AND athlete_id IN (SELECT id FROM athletes WHERE vald_profile_id = a.vald_profile_id)) ORDER BY test_date DESC LIMIT 1)";
+            $valdDateSub = "(SELECT test_date FROM vald_test_results WHERE athlete_id = a.id OR (a.vald_profile_id IS NOT NULL AND athlete_id IN (SELECT id FROM athletes WHERE vald_profile_id = a.vald_profile_id)) ORDER BY test_date DESC LIMIT 1)";
+        } else {
+            $valdMetricsSub = "(SELECT metrics FROM vald_test_results WHERE athlete_id = a.id ORDER BY test_date DESC LIMIT 1)";
+            $valdDateSub = "(SELECT test_date FROM vald_test_results WHERE athlete_id = a.id ORDER BY test_date DESC LIMIT 1)";
+        }
+
         $sql = "SELECT DISTINCT a.id, a.team_id, a.full_name, a.jersey_number, a.role, a.photo_path, a.is_active,
                        a.birth_date, a.height_cm, a.weight_kg,
                        a.quota_iscrizione_rata1, a.quota_iscrizione_rata1_paid,
@@ -102,29 +119,32 @@ class AthletesRepository
                        a.quota_vestiario, a.quota_vestiario_paid,
                        a.quota_foresteria, a.quota_foresteria_paid,
                        a.quota_trasporti, a.quota_trasporti_paid,
+                       a.quota_payment_deadline,
+                       (SELECT GROUP_CONCAT(CONCAT_WS('||', td.event_id, e.title, IFNULL(td.fee_per_athlete, 0), IFNULL({$hasPaidField}, 0)) SEPARATOR ';;;') FROM event_attendees ea JOIN tournament_details td ON ea.event_id = td.event_id JOIN events e ON td.event_id = e.id WHERE ea.athlete_id = a.id AND ea.status = 'confirmed') AS tournaments_summary,
                        a.medical_cert_expires_at{$docCols},
                        COALESCE(t.name, 'Nessuna squadra') AS team_name,
                        COALESCE(t.category, 'Nessuna') AS category,
                        (SELECT GROUP_CONCAT(at_sub.team_season_id SEPARATOR ',') FROM athlete_teams at_sub WHERE at_sub.athlete_id = a.id) AS team_season_ids,
                        (SELECT GROUP_CONCAT(CONCAT_WS('||', ir.injury_date, ir.type, ir.current_status, IFNULL(ir.return_date, '')) SEPARATOR ';;;') FROM injury_records ir WHERE ir.athlete_id = a.id ORDER BY ir.injury_date DESC) AS injuries_summary,
-                       (SELECT metrics FROM vald_test_results WHERE athlete_id = a.id OR (a.vald_athlete_id IS NOT NULL AND athlete_id IN (SELECT id FROM athletes WHERE vald_athlete_id = a.vald_athlete_id)) ORDER BY test_date DESC LIMIT 1) AS latest_vald_metrics,
-                       (SELECT test_date FROM vald_test_results WHERE athlete_id = a.id OR (a.vald_athlete_id IS NOT NULL AND athlete_id IN (SELECT id FROM athletes WHERE vald_athlete_id = a.vald_athlete_id)) ORDER BY test_date DESC LIMIT 1) AS latest_vald_date
+                       {$valdMetricsSub} AS latest_vald_metrics,
+                       {$valdDateSub} AS latest_vald_date
                 FROM athletes a
                 LEFT JOIN teams t ON a.team_id = t.id";
 
-        $params = [];
+        $tid = TenantContext::id();
+        $params = [':tid' => $tid];
         if ($teamSeasonId !== '') {
             if (str_starts_with($teamSeasonId, 'TEAM_') || str_starts_with($teamSeasonId, 'TM_')) {
-                $sql .= ' WHERE a.deleted_at IS NULL AND a.is_active = 1 AND a.team_id = :team_id';
+                $sql .= ' WHERE a.deleted_at IS NULL AND a.tenant_id = :tid AND a.is_active = 1 AND a.team_id = :team_id';
                 $params[':team_id'] = str_starts_with($teamSeasonId, 'TEAM_') ? substr($teamSeasonId, 5) : $teamSeasonId;
             } else {
                 $sql .= ' JOIN athlete_teams at2 ON a.id = at2.athlete_id';
-                $sql .= ' WHERE a.deleted_at IS NULL AND a.is_active = 1 AND at2.team_season_id = :team_season_id';
+                $sql .= ' WHERE a.deleted_at IS NULL AND a.tenant_id = :tid AND a.is_active = 1 AND at2.team_season_id = :team_season_id';
                 $params[':team_season_id'] = $teamSeasonId;
             }
         }
         else {
-            $sql .= ' WHERE a.deleted_at IS NULL AND a.is_active = 1';
+            $sql .= ' WHERE a.deleted_at IS NULL AND a.tenant_id = :tid AND a.is_active = 1';
         }
         $sql .= ' ORDER BY a.full_name';
 
@@ -167,15 +187,17 @@ class AthletesRepository
                     a.quota_vestiario, a.quota_vestiario_paid,
                     a.quota_foresteria, a.quota_foresteria_paid,
                     a.quota_trasporti, a.quota_trasporti_paid,
+
+                    a.quota_payment_deadline,
                     a.shirt_size, a.shoe_size,
                     a.is_active,
                     t.name AS team_name, t.category
              FROM athletes a
              LEFT JOIN teams t ON a.team_id = t.id
-             WHERE a.id = :id AND a.deleted_at IS NULL
+             WHERE a.id = :id AND a.tenant_id = :tid AND a.deleted_at IS NULL
              LIMIT 1"
         );
-        $stmt->execute([':id' => $id]);
+        $stmt->execute([':id' => $id, ':tid' => TenantContext::id()]);
         $row = $stmt->fetch();
         if (!$row) return null;
 
@@ -217,15 +239,17 @@ class AthletesRepository
                     a.quota_vestiario, a.quota_vestiario_paid,
                     a.quota_foresteria, a.quota_foresteria_paid,
                     a.quota_trasporti, a.quota_trasporti_paid,
+
+                    a.quota_payment_deadline,
                     a.shirt_size, a.shoe_size,
                     a.is_active,
                     t.name AS team_name, t.category
              FROM athletes a
              LEFT JOIN teams t ON a.team_id = t.id
-             WHERE a.user_id = :user_id AND a.deleted_at IS NULL
+             WHERE a.user_id = :user_id AND a.tenant_id = :tid AND a.deleted_at IS NULL
              LIMIT 1"
         );
-        $stmt->execute([':user_id' => $userId]);
+        $stmt->execute([':user_id' => $userId, ':tid' => TenantContext::id()]);
         $row = $stmt->fetch();
         if (!$row) return null;
 
@@ -264,15 +288,17 @@ class AthletesRepository
                     a.quota_vestiario, a.quota_vestiario_paid,
                     a.quota_foresteria, a.quota_foresteria_paid,
                     a.quota_trasporti, a.quota_trasporti_paid,
+
+                    a.quota_payment_deadline,
                     a.shirt_size, a.shoe_size,
                     a.is_active,
                     t.name AS team_name, t.category
              FROM athletes a
              LEFT JOIN teams t ON a.team_id = t.id
-             WHERE a.email = :email AND a.deleted_at IS NULL
+             WHERE a.email = :email AND a.tenant_id = :tid AND a.deleted_at IS NULL
              LIMIT 1"
         );
-        $stmt->execute([':email' => $email]);
+        $stmt->execute([':email' => $email, ':tid' => TenantContext::id()]);
         $row = $stmt->fetch();
         if (!$row) return null;
 
@@ -337,7 +363,7 @@ class AthletesRepository
         $stmt = $this->db->prepare(
             'INSERT INTO athletes (
                 `id`, `user_id`, `team_id`,
-                `first_name`, `last_name`,
+                `first_name`, `last_name`, `full_name`,
                 `jersey_number`, `role`,
                 `birth_date`, `birth_place`,
                 `height_cm`, `weight_kg`,
@@ -356,7 +382,7 @@ class AthletesRepository
                 `is_active`
              ) VALUES (
                 :id, :user_id, :team_id,
-                :first_name, :last_name,
+                :first_name, :last_name, :full_name,
                 :jersey_number, :role,
                 :birth_date, :birth_place,
                 :height_cm, :weight_kg,
@@ -482,13 +508,7 @@ class AthletesRepository
         return $stmt->fetchAll();
     }
 
-    public function listPendingSync(int $limit = 50): array
-    {
-        $stmt = $this->db->prepare('SELECT * FROM athletes WHERE sync_status = \'pending\' LIMIT :limit');
-        $stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
-        $stmt->execute();
-        return $stmt->fetchAll();
-    }
+
 
     public function linkUserToAthlete(string $athleteId, string $userId): void
     {
@@ -505,18 +525,19 @@ class AthletesRepository
                        a.height_cm, a.weight_kg
                 FROM athletes a';
 
-        $params = [];
+        $tid = TenantContext::id();
+        $params = [':tid' => $tid];
         if ($teamSeasonId !== '') {
             if (str_starts_with($teamSeasonId, 'TEAM_')) {
-                $sql .= ' WHERE a.deleted_at IS NULL AND a.is_active = 1 AND a.team_id = :team_id';
+                $sql .= ' WHERE a.deleted_at IS NULL AND a.tenant_id = :tid AND a.is_active = 1 AND a.team_id = :team_id';
                 $params[':team_id'] = substr($teamSeasonId, 5);
             } else {
                 $sql .= ' JOIN athlete_teams at2 ON a.id = at2.athlete_id';
-                $sql .= ' WHERE a.deleted_at IS NULL AND a.is_active = 1 AND at2.team_season_id = :team_season_id';
+                $sql .= ' WHERE a.deleted_at IS NULL AND a.tenant_id = :tid AND a.is_active = 1 AND at2.team_season_id = :team_season_id';
                 $params[':team_season_id'] = $teamSeasonId;
             }
         } else {
-            $sql .= ' WHERE a.deleted_at IS NULL AND a.is_active = 1';
+            $sql .= ' WHERE a.deleted_at IS NULL AND a.tenant_id = :tid AND a.is_active = 1';
         }
         $sql .= ' ORDER BY a.jersey_number ASC, a.full_name ASC';
 
@@ -530,7 +551,7 @@ class AthletesRepository
     public function listTeams(): array
     {
         $stmt = $this->db->prepare(
-            'SELECT ts.id AS id, t.name, t.category, t.color_hex, ts.season
+            'SELECT ts.id AS id, t.id AS team_id, t.name, t.category, t.color_hex, ts.season
              FROM team_seasons ts
              JOIN teams t ON ts.team_id = t.id
              WHERE t.deleted_at IS NULL AND t.is_active = 1
@@ -608,6 +629,41 @@ class AthletesRepository
         return $stmt->fetchAll();
     }
 
+    // ─── TOURNAMENT HISTORY ──────────────────────────────────────────────────
+
+    public function getTournamentHistory(string $athleteId): array
+    {
+        // Safety check logic against missing column during migration run
+        $hasPaidField = '0 AS has_paid';
+        if ($this->_hasColumn('event_attendees', 'has_paid')) {
+            $hasPaidField = 'ea.has_paid';
+        }
+
+        $stmt = $this->db->prepare(
+            "SELECT e.id AS event_id, e.title AS tournament_name, e.event_date AS tournament_date, td.fee_per_athlete, {$hasPaidField}
+             FROM event_attendees ea
+             JOIN events e ON e.id = ea.event_id
+             JOIN tournament_details td ON td.event_id = e.id
+             WHERE ea.athlete_id = :id AND ea.status = 'confirmed'
+             ORDER BY e.event_date DESC"
+        );
+        $stmt->execute([':id' => $athleteId]);
+        return $stmt->fetchAll();
+    }
+
+    public function setTournamentPayment(string $athleteId, string $eventId, bool $hasPaid): void
+    {
+        $stmt = $this->db->prepare(
+            'UPDATE event_attendees SET has_paid = :has_paid 
+             WHERE athlete_id = :athlete_id AND event_id = :event_id'
+        );
+        $stmt->execute([
+            ':has_paid' => $hasPaid ? 1 : 0,
+            ':athlete_id' => $athleteId,
+            ':event_id' => $eventId
+        ]);
+    }
+
     // ─── ACTIVITY LOG ────────────────────────────────────────────────────────
 
     public function getActivityLog(string $athleteId): array
@@ -645,9 +701,16 @@ class AthletesRepository
         ];
     }
 
-    /** Check if a column exists in a table */
+    /** Check if a column exists in a table (cached per request to avoid N+1 information_schema queries) */
+    private static array $_columnCache = [];
+
     private function _hasColumn(string $table, string $column): bool
     {
+        $key = "{$table}.{$column}";
+        if (isset(self::$_columnCache[$key])) {
+            return self::$_columnCache[$key];
+        }
+
         try {
             $stmt = $this->db->prepare(
                 "SELECT COUNT(*) FROM information_schema.COLUMNS
@@ -656,7 +719,9 @@ class AthletesRepository
                    AND COLUMN_NAME  = :col"
             );
             $stmt->execute([':tbl' => $table, ':col' => $column]);
-            return (int)$stmt->fetchColumn() > 0;
+            $result = (int)$stmt->fetchColumn() > 0;
+            self::$_columnCache[$key] = $result;
+            return $result;
         }
         catch (\Throwable) {
             return false;

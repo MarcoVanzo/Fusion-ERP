@@ -20,7 +20,7 @@ class DashboardController
     // Sostituisce la precedente chiamata a athletes/list dal frontend.
     public function summary(): void
     {
-        Auth::requireAuth();
+        Auth::requireRole('operatore');
         $db = Database::getInstance();
         $tid = TenantContext::id();
 
@@ -50,9 +50,9 @@ class DashboardController
 
         // Conteggio squadre
         $stmtTeams = $db->prepare(
-            'SELECT COUNT(*) FROM teams WHERE deleted_at IS NULL'
+            'SELECT COUNT(*) FROM teams WHERE deleted_at IS NULL AND tenant_id = :tid'
         );
-        $stmtTeams->execute();
+        $stmtTeams->execute([':tid' => $tid]);
         $totalTeams = (int)$stmtTeams->fetchColumn();
 
         $pcts = [
@@ -86,7 +86,7 @@ class DashboardController
     // ─── GET /api/?module=dashboard&action=stats ──────────────────────────────
     public function stats(): void
     {
-        Auth::requireAuth();
+        Auth::requireRole('operatore');
         $db = Database::getInstance();
         $tid = TenantContext::id();
 
@@ -146,7 +146,7 @@ class DashboardController
     // ─── GET /api/?module=dashboard&action=deadlines ──────────────────────────
     public function deadlines(): void
     {
-        Auth::requireAuth();
+        Auth::requireRole('operatore');
         $db = Database::getInstance();
         $tid = TenantContext::id();
 
@@ -244,31 +244,23 @@ class DashboardController
     // ─── GET /api/?module=dashboard&action=weeklyKpis ───────────────────────
     public function weeklyKpis(): void
     {
-        Auth::requireAuth();
+        Auth::requireRole('operatore');
         $db = Database::getInstance();
         $tid = TenantContext::id();
 
-        // 1. Trasporti della settimana — try multiple query strategies for tenant scoping
+        // 1. Trasporti della settimana — tenant-scoped, fail closed
         $weeklyTransports = 0;
         try {
-            // Try direct tenant_id on events first
             $stmt = $db->prepare("SELECT COUNT(e.id) FROM events e WHERE e.tenant_id = :tid AND e.deleted_at IS NULL AND e.event_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)");
             $stmt->execute([':tid' => $tid]);
             $weeklyTransports = (int)$stmt->fetchColumn();
         }
         catch (\Throwable) {
-            // Fallback: events may not have tenant_id — count all non-deleted events
-            try {
-                $stmt = $db->prepare("SELECT COUNT(id) FROM events WHERE deleted_at IS NULL AND event_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)");
-                $stmt->execute();
-                $weeklyTransports = (int)$stmt->fetchColumn();
-            }
-            catch (\Throwable) {
-                $weeklyTransports = 0;
-            }
+            // Fail closed — never bypass tenant isolation
+            $weeklyTransports = 0;
         }
 
-        // 2. Nuovi ordini eCommerce — scoped to tenant
+        // 2. Nuovi ordini eCommerce — tenant-scoped, fail closed
         $newOrders = 0;
         try {
             $stmt = $db->prepare("SELECT COUNT(id) FROM ec_orders WHERE tenant_id = :tid AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)");
@@ -276,15 +268,8 @@ class DashboardController
             $newOrders = (int)$stmt->fetchColumn();
         }
         catch (\Throwable) {
-            // Fallback without tenant_id
-            try {
-                $stmt = $db->prepare("SELECT COUNT(id) FROM ec_orders WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)");
-                $stmt->execute();
-                $newOrders = (int)$stmt->fetchColumn();
-            }
-            catch (\Throwable) {
-                $newOrders = 0;
-            }
+            // Fail closed — never bypass tenant isolation
+            $newOrders = 0;
         }
 
         // 3. Messaggi WA da leggere
@@ -300,8 +285,8 @@ class DashboardController
 
         // 4. Nuovi iscritti Out Season
         try {
-            $stmt = $db->prepare("SELECT COUNT(id) FROM outseason_entries WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)");
-            $stmt->execute();
+            $stmt = $db->prepare("SELECT COUNT(id) FROM outseason_entries WHERE tenant_id = :tid AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)");
+            $stmt->execute([':tid' => $tid]);
             $newOutseason = (int)$stmt->fetchColumn();
         }
         catch (\Throwable $e) {
@@ -332,7 +317,7 @@ class DashboardController
     // settimana scorsa, KPI rapidi, alert urgenti (cert + contratti ≤30gg).
     public function weeklyFull(): void
     {
-        Auth::requireAuth();
+        Auth::requireRole('operatore');
         $db  = Database::getInstance();
         $tid = TenantContext::id();
 
@@ -349,20 +334,20 @@ class DashboardController
         } catch (\Throwable) {}
 
         try {
-            $s = $db->prepare('SELECT COUNT(*) FROM teams WHERE deleted_at IS NULL');
-            $s->execute();
+            $s = $db->prepare('SELECT COUNT(*) FROM teams WHERE deleted_at IS NULL AND tenant_id = :t');
+            $s->execute([':t' => $tid]);
             $totalTeams = (int)$s->fetchColumn();
         } catch (\Throwable) {}
 
         try {
-            $s = $db->prepare("SELECT COUNT(*) FROM ec_orders WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)");
-            $s->execute();
+            $s = $db->prepare("SELECT COUNT(*) FROM ec_orders WHERE tenant_id = :t AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)");
+            $s->execute([':t' => $tid]);
             $newOrders = (int)$s->fetchColumn();
         } catch (\Throwable) {}
 
         try {
-            $s = $db->prepare("SELECT COUNT(*) FROM outseason_entries WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)");
-            $s->execute();
+            $s = $db->prepare("SELECT COUNT(*) FROM outseason_entries WHERE tenant_id = :t AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)");
+            $s->execute([':t' => $tid]);
             $newOutseason = (int)$s->fetchColumn();
         } catch (\Throwable) {}
 
@@ -490,7 +475,7 @@ class DashboardController
     // ed estraendole dinamicamente.
     public function matrixData(): void
     {
-        Auth::requireAuth();
+        Auth::requireRole('operatore');
         $db  = Database::getInstance();
         $tid = TenantContext::id();
 
@@ -510,13 +495,8 @@ class DashboardController
                     ];
                 }
             } catch (\Throwable $e) { 
-                $nodes[] = [
-                    'icon' => 'warning',
-                    'text' => 'ERR: ' . $e->getMessage(),
-                    'badge' => 'DEBUG SQL',
-                    'color' => '#FF0000',
-                    'date' => date('Y-m-d H:i:s')
-                ];
+                // Log server-side only — never expose SQL internals to the client
+                error_log('[DashboardMatrix] Query error: ' . $e->getMessage());
             }
             return $nodes;
         };
@@ -544,29 +524,29 @@ class DashboardController
         $operativita = array_merge($operativita, $queryNodes(
             "SELECT CONCAT('Aggiornato Evento: ', COALESCE(title, location_name)) as text, event_date as date 
              FROM events 
-             WHERE event_date >= DATE_SUB(CURDATE(), INTERVAL 14 DAY) LIMIT 4", 
-            [], 'calendar-plus', 'Eventi', '#60A5FA'
+             WHERE tenant_id = :t AND event_date >= DATE_SUB(CURDATE(), INTERVAL 14 DAY) LIMIT 4", 
+            [':t' => $tid], 'calendar-plus', 'Eventi', '#60A5FA'
         ));
         $operativita = array_merge($operativita, $queryNodes(
-            "SELECT CONCAT('Nuova Task: ', title) as text, created_at as date FROM tasks WHERE created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 4", 
-            [], 'list-checks', 'Task', '#10B981'
+            "SELECT CONCAT('Nuova Task: ', title) as text, created_at as date FROM tasks WHERE tenant_id = :t AND created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 4", 
+            [':t' => $tid], 'list-checks', 'Task', '#10B981'
         ));
         $operativita = array_merge($operativita, $queryNodes(
             "SELECT CONCAT('Trasferta per: ', destination_name) as text, transport_date as date 
              FROM transports 
-             WHERE created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 4", 
-            [], 'van', 'Flotta', '#FCD34D'
+             WHERE tenant_id = :t AND created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 4", 
+            [':t' => $tid], 'van', 'Flotta', '#FCD34D'
         ));
 
         // --- 3. COMUNICAZIONE ---
         $comunicazione = [];
         $comunicazione = array_merge($comunicazione, $queryNodes(
-            "SELECT CONCAT('WhatsApp da: ', from_phone) as text, FROM_UNIXTIME(timestamp) as date FROM whatsapp_messages WHERE FROM_UNIXTIME(timestamp) >= DATE_SUB(CURDATE(), INTERVAL 14 DAY) LIMIT 5", 
-            [], 'whatsapp-logo', 'WhatsApp', '#10B981'
+            "SELECT CONCAT('WhatsApp da: ', from_phone) as text, FROM_UNIXTIME(timestamp) as date FROM whatsapp_messages WHERE tenant_id = :t AND FROM_UNIXTIME(timestamp) >= DATE_SUB(CURDATE(), INTERVAL 14 DAY) LIMIT 5", 
+            [':t' => $tid], 'whatsapp-logo', 'WhatsApp', '#10B981'
         ));
         $comunicazione = array_merge($comunicazione, $queryNodes(
-            "SELECT CONCAT('Email a: ', recipient) as text, sent_at as date FROM email_logs WHERE sent_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 3", 
-            [], 'envelope-simple', 'Mail', '#A78BFA'
+            "SELECT CONCAT('Email a: ', recipient) as text, sent_at as date FROM email_logs WHERE tenant_id = :t AND sent_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 3", 
+            [':t' => $tid], 'envelope-simple', 'Mail', '#A78BFA'
         ));
         $comunicazione = array_merge($comunicazione, $queryNodes(
             "SELECT CONCAT('Nuova News: ', title) as text, created_at as date FROM website_news WHERE tenant_id=:t AND created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 3", 
@@ -604,12 +584,12 @@ class DashboardController
         // --- 6. ECOMMERCE & OUTSEASON ---
         $ecommerce = [];
         $ecommerce = array_merge($ecommerce, $queryNodes(
-            "SELECT CONCAT('Acquisto eShop di ', totale, ' €') as text, data_ordine as date FROM ec_orders WHERE data_ordine >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 5", 
-            [], 'shopping-bag', 'eCommerce', '#F472B6'
+            "SELECT CONCAT('Acquisto eShop di ', totale, ' €') as text, data_ordine as date FROM ec_orders WHERE tenant_id = :t AND data_ordine >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 5", 
+            [':t' => $tid], 'shopping-bag', 'eCommerce', '#F472B6'
         ));
         $ecommerce = array_merge($ecommerce, $queryNodes(
-            "SELECT 'Nuova iscrizione OutSeason ricevuta' as text, entry_date as date FROM outseason_entries WHERE entry_date >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 5", 
-            [], 'tent', 'Camp', '#10B981'
+            "SELECT 'Nuova iscrizione OutSeason ricevuta' as text, entry_date as date FROM outseason_entries WHERE tenant_id = :t AND entry_date >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 5", 
+            [':t' => $tid], 'tent', 'Camp', '#10B981'
         ));
 
         // Funzione di sorting per data Decrescente
@@ -634,8 +614,9 @@ class DashboardController
 
     public function debugDashboard(): void
     {
+        Auth::requireRole('admin');
         $db  = Database::getInstance();
-        $tid = 'TNT_fusion';
+        $tid = TenantContext::id();
         $res = [];
         $queryNodes = function(string $sql, array $params, string $name) use ($db, &$res) {
             try {
@@ -658,7 +639,7 @@ class DashboardController
         $queryNodes("SELECT subject as text, sent_at as date FROM newsletter_campaigns WHERE tenant_id=:t AND sent_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 3", [':t' => $tid], 'newsletter');
         $queryNodes("SELECT title as text, created_at as date FROM website_news WHERE tenant_id=:t AND created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 3", [':t' => $tid], 'website_news');
         $queryNodes("SELECT amount as text, payment_date as date FROM staff_payments WHERE tenant_id=:t AND created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 4", [':t' => $tid], 'staff_payments');
-        $queryNodes("SELECT amount as text, created_at as date FROM hostess_expenses WHERE tenant_id=:t AND created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 4", [':t' => $tid], 'hostess_expenses');
+
         $queryNodes("SELECT file_name as text, uploaded_at as date FROM documents WHERE tenant_id=:t AND uploaded_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 3", [':t' => $tid], 'documents');
         $queryNodes("SELECT company_name as text, created_at as date FROM sponsors WHERE tenant_id=:t AND created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 3", [':t' => $tid], 'sponsors');
         $queryNodes("SELECT first_name as text, created_at as date FROM staff_members WHERE tenant_id=:t AND created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 3", [':t' => $tid], 'staff');

@@ -2,3 +2,5 @@ parameters:
     level: 5
     paths:
         - api/
+    bootstrapFiles:
+        - vendor/autoload.php

@@ -31,16 +31,27 @@ class TournamentsController
             $result = $callback();
             Response::success($result);
         } catch (\Exception $e) {
-            error_log("[Tournaments] API Error: " . $e->getMessage());
-            Response::error($e->getMessage(), 500);
+            $code = $e->getCode();
+            $httpCode = ($code >= 400 && $code < 600) ? $code : 500;
+            error_log("[Tournaments] API Error ({$httpCode}): " . $e->getMessage());
+            Response::error($e->getMessage(), $httpCode);
         }
     }
 
     public function getTournaments(): void
     {
         Auth::requireRead('tournaments');
+        $tournaments = $this->repository->listTournaments();
+        
+        // Debug logging to trace "empty list" issues in production
+        if (getenv('APP_DEBUG') === 'true') {
+            $count = count($tournaments);
+            $tid = \FusionERP\Shared\TenantContext::id();
+            error_log("[Tournaments] Found {$count} tournaments for tenant '{$tid}' (incl. global)");
+        }
+
         $this->handleServiceCall(fn() => [
-            'tournaments' => $this->repository->listTournaments()
+            'tournaments' => $tournaments
         ]);
     }
 
@@ -61,7 +72,7 @@ class TournamentsController
         $body = Response::jsonBody();
         
         $this->handleServiceCall(fn() => [
-            'id' => $this->service->saveTournament($body, (int)$user['id']),
+            'id' => $this->service->saveTournament($body, $user['id']),
             'message' => 'Tournament saved successfully.'
         ]);
     }

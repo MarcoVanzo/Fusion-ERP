@@ -88,9 +88,19 @@ if (empty($module) || empty($action)) {
 }
 
 // ─── RATE LIMITING ────────────────────────────────────────────────────────────
-$clientIp = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+// Determine client IP respecting TRUSTED_PROXY — mirrors Audit::getClientIp()
+// to prevent spoofing via X-Forwarded-For when NOT behind a trusted proxy.
+$trustedProxy = strtolower(trim((string)(getenv('TRUSTED_PROXY') ?: '')));
+if ($trustedProxy === 'cloudflare') {
+    $clientIp = $_SERVER['HTTP_CF_CONNECTING_IP'] ?? $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+} elseif ($trustedProxy === 'proxy') {
+    $clientIp = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+} else {
+    // Default: REMOTE_ADDR only — immune to client-side spoofing
+    $clientIp = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+}
 if (str_contains($clientIp, ',')) {
-    $clientIp = trim(explode(',', $clientIp)[0]); // First IP in X-Forwarded-For chain
+    $clientIp = trim(explode(',', $clientIp)[0]); // First IP in chain
 }
 
 // Strict rate limit for authentication endpoints (5 req / 15 min per IP)
@@ -136,6 +146,7 @@ try {
             'esignature' => dispatch('ESignature', $action),
             'tenant' => dispatch('Tenant', $action),
             'whatsapp' => dispatchWebhook($action),
+            'webhooks' => dispatchStripeWebhook($action),
             default => Response::error("Modulo '{$module}' non trovato", 404),
         };
 }
@@ -199,13 +210,41 @@ function dispatchWebhook(string $action): void
 }
 
 /**
+ * Dispatch Stripe Webhook
+ */
+function dispatchStripeWebhook(string $action): void
+{
+    if ($action !== 'stripe') {
+        Response::error("Azione webhook non trovata", 404);
+    }
+    
+    $class = "FusionERP\\Modules\\Webhooks\\StripeWebhookController";
+    if (!class_exists($class)) {
+        Response::error("Controller Webhook non trovato", 500);
+    }
+    
+    $controller = new $class();
+    $controller->stripe();
+}
+
+/**
  * Load and call the appropriate controller method.
  */
 function dispatch(string $controllerName, string $action): void
 {
     // FIX: Auth middleware globale. Richiede login per TUTTE le action tranne quelle esplicitamente pubbliche.
-    $publicActions = ['login', 'requestPasswordReset', 'confirmPasswordReset', 'confirmSubUserInvitation', 'acceptSubUserInvitation', 'getPublicTeams', 'getPublicTeamAthletes', 'getPublicSponsors', 'getPublicProfile', 'getPublicCompanies', 'getPublicForesteria', 'getPublicOrganigramma', 'getPublicTitoli', 'getPublicCollaborations', 'getPublicHubConfig', 'getPublicNews', 'getArticle', 'getSitemapUrls', 'getPublicShop', 'getProductImage', 'getPublicMatchCenter', 'getPublicStaff', 'getPublicRecentResults', 'subscribeNewsletter', 'teams', 'applyScouting'];
-    if (!in_array($action, $publicActions, true)) {
+    $publicActions = ['login', 'requestPasswordReset', 'confirmPasswordReset', 'confirmSubUserInvitation', 'acceptSubUserInvitation', 'getPublicTeams', 'getPublicTeamAthletes', 'getPublicSponsors', 'getPublicProfile', 'getPublicCompanies', 'getPublicForesteria', 'getPublicOrganigramma', 'getPublicTitoli', 'getPublicCollaborations', 'getPublicHubConfig', 'getPublicNews', 'getArticle', 'getSitemapUrls', 'getPublicShop', 'getProductImage', 'getPublicMatchCenter', 'getPublicStaff', 'getPublicRecentResults', 'subscribeNewsletter', 'applyScouting'];
+
+    // Module-specific public exceptions for external webhooks/OAuth callbacks.
+    // These cannot authenticate — they originate from third-party servers (OpenAPI.it, Meta).
+    $modulePublicExceptions = [
+        'ESignature' => ['callback'],   // OpenAPI.it e-signature webhook
+        'Social'     => ['callback'],   // Meta OAuth redirect
+    ];
+    $isModuleException = isset($modulePublicExceptions[$controllerName])
+        && in_array($action, $modulePublicExceptions[$controllerName], true);
+
+    if (!$isModuleException && !in_array($action, $publicActions, true)) {
         Auth::requireAuth();
     }
 

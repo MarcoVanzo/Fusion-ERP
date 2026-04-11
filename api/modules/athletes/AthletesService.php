@@ -120,6 +120,7 @@ class AthletesService
             ':team_id'                 => $primaryTeamId,
             ':first_name'              => trim($body['first_name']),
             ':last_name'               => trim($body['last_name']),
+            ':full_name'               => trim($body['first_name']) . ' ' . trim($body['last_name']),
             ':jersey_number'           => isset($body['jersey_number']) ? (int)$body['jersey_number'] : null,
             ':role'                    => $body['role'] ?? null,
             ':birth_date'              => $body['birth_date'] ?? null,
@@ -154,8 +155,6 @@ class AthletesService
             ':guesthouse_rules_file_path' => $body['guesthouse_rules_file_path'] ?? null,
             ':guesthouse_delegate_file_path' => $body['guesthouse_delegate_file_path'] ?? null,
             ':health_card_file_path' => $body['health_card_file_path'] ?? null,
-            ':registration_fee_paid' => isset($body['registration_fee_paid']) ? (int)$body['registration_fee_paid'] : 0,
-            ':monthly_fee_amount' => $body['monthly_fee_amount'] ?? null,
         ];
 
         $this->repo->createAthlete($data);

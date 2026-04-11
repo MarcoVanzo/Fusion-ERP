@@ -29,7 +29,7 @@ class AdminController
 
     public function listCertificates(): void
     {
-        Auth::requireRole('operator');
+        Auth::requireRole('admin');
         $athleteId = filter_input(INPUT_GET, 'athleteId', FILTER_DEFAULT) ?? '';
         $expiringSoon = filter_input(INPUT_GET, 'expiringSoon', FILTER_VALIDATE_BOOLEAN) ?: false;
         Response::success($this->repo->listCertificates($athleteId, $expiringSoon));
@@ -41,7 +41,7 @@ class AdminController
      */
     public function uploadCertificate(): void
     {
-        $user = Auth::requireRole('operator');
+        $user = Auth::requireRole('admin');
 
         // Validate upload
         if (empty($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
@@ -65,7 +65,7 @@ class AdminController
         }
 
         // Rename file with hash, never expose original name on disk
-        $storagePath = rtrim(getenv('UPLOAD_STORAGE_PATH') ?: '/tmp/', '/') . '/';
+        $storagePath = rtrim(getenv('UPLOAD_STORAGE_PATH') ?: (dirname(__DIR__, 3) . '/storage/uploads/'), '/') . '/';
         $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
         $safeFilename = bin2hex(random_bytes(16)) . '.' . strtolower($ext);
         $fullPath = $storagePath . $safeFilename;
@@ -164,7 +164,7 @@ class AdminController
 
     public function listContracts(): void
     {
-        Auth::requireRole('social media manager');
+        Auth::requireRole('operator');
         $userId = filter_input(INPUT_GET, 'userId', FILTER_DEFAULT) ?? '';
         Response::success($this->repo->listContracts($userId));
     }
@@ -174,7 +174,7 @@ class AdminController
      */
     public function generateContract(): void
     {
-        $adminUser = Auth::requireRole('social media manager');
+        $adminUser = Auth::requireRole('operator');
         $body = Response::jsonBody();
         Response::requireFields($body, ['user_id', 'valid_from', 'valid_to', 'role_description']);
 
@@ -255,7 +255,7 @@ class AdminController
 HTML;
 
             $mpdf->WriteHTML($html);
-            $storagePath = getenv('PDF_STORAGE_PATH') ?: '/tmp/';
+            $storagePath = getenv('PDF_STORAGE_PATH') ?: (dirname(__DIR__, 3) . '/storage/pdfs/');
             $filename = "contratto_{$contractId}_" . date('Ymd') . '.pdf';
             $fullPath = rtrim($storagePath, '/') . '/' . $filename;
             $mpdf->Output($fullPath, 'F');
@@ -271,7 +271,7 @@ HTML;
 
     public function expiringCertificates(): void
     {
-        Auth::requireRole('operator');
+        Auth::requireRole('admin');
         $certs = $this->repo->listCertificates('', true);
         Response::success($certs);
     }
@@ -386,7 +386,7 @@ HTML;
      */
     public function adminSummary(): void
     {
-        Auth::requireRole('social media manager');
+        Auth::requireRole('admin');
 
         $users = $this->repo->getUsersSummary();
         $backups = $this->repo->getLastBackup();
@@ -417,7 +417,7 @@ HTML;
      */
     public function listLogs(): void
     {
-        Auth::requireRole('social media manager');
+        Auth::requireRole('admin');
 
         $action = filter_input(INPUT_GET, 'action', FILTER_DEFAULT) ?? '';
         $tableName = filter_input(INPUT_GET, 'table_name', FILTER_DEFAULT) ?? '';
@@ -457,7 +457,7 @@ HTML;
      */
     public function listBackups(): void
     {
-        Auth::requireRole('social media manager');
+        Auth::requireRole('admin');
 
         $backups = $this->repo->listBackupRecords();
         $tables = $this->repo->listDatabaseTables();
@@ -538,7 +538,7 @@ HTML;
             Response::error('Backup non trovato', 404);
         }
 
-        $storagePath = rtrim(getenv('BACKUP_STORAGE_PATH') ?: '/var/www/fusion/storage/backups/', '/') . '/';
+        $storagePath = rtrim(getenv('BACKUP_STORAGE_PATH') ?: (dirname(__DIR__, 3) . '/storage/backups/'), '/') . '/';
 
         // ── Path-traversal guard ───────────────────────────────────────────────
         // Use basename() to strip any directory components, then verify the
@@ -589,7 +589,7 @@ HTML;
         }
 
         // Delete physical file — path-traversal guard (same logic as downloadBackup)
-        $storagePath = rtrim(getenv('BACKUP_STORAGE_PATH') ?: '/var/www/fusion/storage/backups/', '/') . '/';
+        $storagePath = rtrim(getenv('BACKUP_STORAGE_PATH') ?: (dirname(__DIR__, 3) . '/storage/backups/'), '/') . '/';
         $safeFilename = basename((string)$backup['filename']);
         $filePath = $storagePath . $safeFilename;
         $realFile = realpath($filePath);

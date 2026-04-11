@@ -129,7 +129,8 @@ class ValdService
     public function computeSemaphore(array $metrics, ?array $baseline): array
     {
         $currentRSI = (float)($metrics['RSIModified']['Value'] ?? 0);
-        $currentTttO = (float)($metrics['TimeToTakeoff']['Value'] ?? 0);
+        // TimeToTakeoff fallback chain: TimeToTakeoff → EccentricDuration → ContractionTime
+        $currentTttO = (float)($metrics['TimeToTakeoff']['Value'] ?? $metrics['EccentricDuration']['Value'] ?? $metrics['ContractionTime']['Value'] ?? 0);
         $baselineRSI = $baseline['rsimod_avg'] ?? null;
         $baselineTttO = $baseline['ttto_avg'] ?? null;
 
@@ -399,11 +400,11 @@ PROMPT;
         $db = \FusionERP\Shared\Database::getInstance();
         @set_time_limit(300);
 
-        $mapStmt = $db->prepare('SELECT id, vald_athlete_id FROM athletes WHERE tenant_id = :tid AND vald_athlete_id IS NOT NULL AND deleted_at IS NULL');
+        $mapStmt = $db->prepare('SELECT id, vald_profile_id FROM athletes WHERE tenant_id = :tid AND vald_profile_id IS NOT NULL AND deleted_at IS NULL');
         $mapStmt->execute([':tid' => $tenantId]);
         $athleteMap = [];
         foreach ($mapStmt->fetchAll(\PDO::FETCH_ASSOC) as $row) {
-            $athleteMap[$row['vald_athlete_id']] = $row['id'];
+            $athleteMap[$row['vald_profile_id']] = $row['id'];
         }
 
         $existingStmt = $db->prepare('SELECT test_id FROM vald_test_results WHERE tenant_id = :tid');
@@ -491,8 +492,11 @@ PROMPT;
                                             if ($def === 'PEAK_FORCE') $keyToStore = 'PeakForce';
                                             if (in_array($def, ['BRAKING_IMPULSE', 'ECCENTRIC_BRAKING_IMPULSE', 'BRAKING_PHASE_IMPULSE', 'BRAKING_PHASE_NET_IMPULSE', 'NET_BRAKING_IMPULSE', 'ECC_BRAKING_IMPULSE'])) $keyToStore = 'BrakingImpulse';
                                             if ($def === 'CONCENTRIC_PEAK_FORCE') $keyToStore = 'ConcentricPeakForce';
-                                            if (in_array($def, ['CONCENTRIC_PEAK_POWER', 'CONCENTRIC_PEAK_POWER_BM', 'CONCENTRIC_PEAK_POWER_PER_BM', 'RELATIVE_CONCENTRIC_PEAK_POWER'])) {
+                                            if ($def === 'CONCENTRIC_PEAK_POWER') {
                                                 $keyToStore = 'ConcentricPeakPower';
+                                            }
+                                            if (in_array($def, ['CONCENTRIC_PEAK_POWER_BM', 'CONCENTRIC_PEAK_POWER_PER_BM', 'RELATIVE_CONCENTRIC_PEAK_POWER'])) {
+                                                $keyToStore = 'ConcentricPeakPowerBM';
                                             }
                                             if ($def === 'CONCENTRIC_PEAK_VELOCITY') $keyToStore = 'ConcentricPeakVelocity';
                                             if (in_array($def, ['PEAK_LANDING_FORCE', 'LANDING_PEAK_FORCE'])) $keyToStore = 'PeakLandingForce';
@@ -619,11 +623,12 @@ PROMPT;
 
         // 3. Refresh caches
         if ($stats['updated'] > 0) {
-            $db->query("UPDATE athletes a 
+            $updCache = $db->prepare("UPDATE athletes a 
                         SET 
                           latest_vald_metrics = (SELECT metrics FROM vald_test_results WHERE athlete_id = a.id ORDER BY test_date DESC LIMIT 1),
                           latest_vald_date = (SELECT test_date FROM vald_test_results WHERE athlete_id = a.id ORDER BY test_date DESC LIMIT 1)
-                        WHERE tenant_id = '$tenantId'");
+                        WHERE tenant_id = :tid");
+            $updCache->execute([':tid' => $tenantId]);
         }
 
         return $stats;
@@ -668,6 +673,7 @@ PROMPT;
                     'RSI-modified' => [],
                     'Eccentric Duration (ms)' => [],
                     'Concentric Peak Power / BM (W/kg)' => [],
+                    'Concentric Peak Power (W)' => [],
                     'Peak Vertical Force (N)' => [],
                     'Net Impulse (N s)' => [],
                     'RFD (N/s)' => []
@@ -679,7 +685,18 @@ PROMPT;
             $daily[$date]['Jump Height (Imp-Mom) (cm)'][] = (float)($m['JumpHeight']['Value'] ?? $m['JumpHeightTotal']['Value'] ?? 0);
             $daily[$date]['RSI-modified'][]              = (float)($m['RSIModified']['Value'] ?? 0);
             $daily[$date]['Eccentric Duration (ms)'][]    = (float)($m['EccentricDuration']['Value'] ?? $m['TimeToTakeoff']['Value'] ?? 0);
-            $daily[$date]['Concentric Peak Power / BM (W/kg)'][] = (float)($m['ConcentricPeakPower']['Value'] ?? 0);
+            // Relative power: prefer explicit per-BM metric, fallback to absolute/weight
+            $ppBM = (float)($m['ConcentricPeakPowerBM']['Value'] ?? 0);
+            if ($ppBM <= 0) {
+                // Fallback: compute W/kg from absolute power and weight
+                $ppAbsolute = (float)($m['ConcentricPeakPower']['Value'] ?? 0);
+                $testWeight = (float)($m['weight'] ?? 0);
+                if ($ppAbsolute > 0 && $testWeight > 0) {
+                    $ppBM = round($ppAbsolute / $testWeight, 2);
+                }
+            }
+            $daily[$date]['Concentric Peak Power / BM (W/kg)'][] = $ppBM;
+            $daily[$date]['Concentric Peak Power (W)'][] = (float)($m['ConcentricPeakPower']['Value'] ?? 0);
             $daily[$date]['Peak Vertical Force (N)'][]   = (float)($m['PeakForce']['Value'] ?? 0);
             $daily[$date]['Net Impulse (N s)'][]         = (float)($m['NetImpulse']['Value'] ?? 0);
             $daily[$date]['RFD (N/s)'][]                 = (float)($m['RFD']['Value'] ?? 0);
@@ -693,6 +710,7 @@ PROMPT;
                 'RSI-modified' => $this->_calculateMean($vals['RSI-modified']),
                 'Eccentric Duration (ms)' => $this->_calculateMean($vals['Eccentric Duration (ms)']),
                 'Concentric Peak Power / BM (W/kg)' => \max($vals['Concentric Peak Power / BM (W/kg)']),
+                'Concentric Peak Power (W)' => \max($vals['Concentric Peak Power (W)']),
                 'Peak Vertical Force (N)' => $this->_calculateMean($vals['Peak Vertical Force (N)']),
                 'Net Impulse (N s)' => $this->_calculateMean($vals['Net Impulse (N s)']),
                 'RFD (N/s)' => $this->_calculateMean($vals['RFD (N/s)'])
@@ -785,6 +803,8 @@ PROMPT;
             $data = \array_combine($headers, $row);
             
             // Map common ForceDecks CSV columns to our internal format
+            // TimeToTakeoff: use dedicated CSV column if present, fallback to Eccentric Duration
+            $tttoMs = (float)($data['Time to Takeoff (ms)'] ?? $data['Time To Takeoff (ms)'] ?? $data['Eccentric Duration (ms)'] ?? 0);
             $rows[] = [
                 'test_date' => $data['Test Date'] ?? 'now',
                 'test_type' => $data['Test Type'] ?? 'CMJ',
@@ -792,8 +812,15 @@ PROMPT;
                     'JumpHeight' => ['Value' => (float)($data['Jump Height (Imp-Mom) (cm)'] ?? 0)],
                     'RSIModified' => ['Value' => (float)($data['RSI-modified'] ?? 0)],
                     'EccentricDuration' => ['Value' => (float)($data['Eccentric Duration (ms)'] ?? 0)],
+                    'TimeToTakeoff' => ['Value' => $tttoMs],
                     'ConcentricPeakPower' => ['Value' => (float)($data['Concentric Peak Power / BM (W/kg)'] ?? 0)],
                     'PeakForce' => ['Value' => (float)($data['Peak Vertical Force (N)'] ?? 0)],
+                    'BrakingImpulse' => ['Value' => (float)($data['Braking Net Impulse (N s)'] ?? $data['Eccentric Braking Impulse (N s)'] ?? $data['Braking Phase Net Impulse (N s)'] ?? 0)],
+                    'PeakLandingForce' => ['Value' => (float)($data['Peak Landing Force (N)'] ?? $data['Landing Peak Force (N)'] ?? 0)],
+                    'LandingForceLeft' => ['Value' => (float)($data['Peak Landing Force Left (N)'] ?? 0)],
+                    'LandingForceRight' => ['Value' => (float)($data['Peak Landing Force Right (N)'] ?? 0)],
+                    'PeakForceLeft' => ['Value' => (float)($data['Peak Force Left (N)'] ?? 0)],
+                    'PeakForceRight' => ['Value' => (float)($data['Peak Force Right (N)'] ?? 0)],
                 ]
             ];
         }

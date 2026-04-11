@@ -6,7 +6,7 @@ export const AthletesView = {
     /**
      * Template principale della Dashboard Atleti
      */
-    dashboard: (teams, variant = 'anagrafica') => {
+    dashboard: (teams, variant = 'anagrafica', athletes = []) => {
         let title = "Anagrafica Atleti";
         let subtitle = "Gestione dei tesserati, documenti e dati biometrici";
         let thRow = ``;
@@ -48,6 +48,25 @@ export const AthletesView = {
                 <th style="${thStyle} text-align:right;">Azioni</th>
             `;
         } else if (variant === 'quote') {
+            // Estrazione tornei univoci da tutti gli atleti caricati per generare intestazioni orizzontali dinamicamente
+            const tournamentsMap = new Map();
+            athletes.forEach(a => {
+                if (a.tournaments_summary) {
+                    const parts = a.tournaments_summary.split(';;;');
+                    parts.forEach(p => {
+                        const tDetails = p.split('||');
+                        if (tDetails.length >= 4) {
+                            tournamentsMap.set(tDetails[0], tDetails[1]); // ID => Nome
+                        }
+                    });
+                }
+            });
+            AthletesView._currentTournaments = Array.from(tournamentsMap.entries()).map(([id, title]) => ({ id, title }));
+            
+            const torneiHeaders = AthletesView._currentTournaments.map(t => 
+                `<th style="${thStyle} text-align:center;" title="${Utils.escapeHtml(t.title)}">${Utils.escapeHtml(t.title.length > 10 ? t.title.substring(0, 8) + '..' : t.title)}</th>`
+            ).join('');
+
             title = "Quote Atleti";
             subtitle = "Riepilogo generale delle quote da versare (In verde se pagate, in rosso se non pagate)";
             thRow = `
@@ -57,6 +76,7 @@ export const AthletesView = {
                 <th style="${thStyle} text-align:center;">Q. Vestiario</th>
                 <th style="${thStyle} text-align:center;">Q. Foresteria</th>
                 <th style="${thStyle} text-align:center;">Q. Trasporti</th>
+                ${torneiHeaders}
                 <th style="${thStyle} text-align:right;">Bilancio</th>
                 <th style="${thStyle} text-align:right;">Azioni</th>
             `;
@@ -163,13 +183,25 @@ export const AthletesView = {
 
             const jhVal = metricsData.JumpHeight?.Value ?? metricsData.JumpHeightTotal?.Value ?? null;
             const rsiVal = metricsData.RSIModified?.Value ?? null;
+            const biVal = metricsData.BrakingImpulse?.Value ?? metricsData.EccentricBrakingImpulse?.Value ?? metricsData.BrakingPhaseImpulse?.Value ?? null;
             const testDateFmt = athlete.latest_vald_date ? Utils.formatDate(athlete.latest_vald_date) : null;
+
+            const getColor = (val, lowThresh, highThresh) => {
+                if (!val) return 'rgba(255,255,255,0.2)';
+                if (val < lowThresh) return '#ef4444'; // red for low
+                if (val >= highThresh) return 'var(--color-success)'; // green for good
+                return 'var(--color-white)'; // white for normal
+            };
+
+            const jhColor = getColor(jhVal, 25, 30);       // Thresholds for Jump Height: <25 Red, >=30 Green
+            const rsiColor = getColor(rsiVal, 0.30, 0.45); // Thresholds for RSIMOD: <0.30 Red, >=0.45 Green
+            const biColor = getColor(biVal, 25, 35);       // Thresholds for Braking Imp: <25 Red, >=35 Green
 
             extraCells = `
                 <td style="${tdStyle} color:rgba(255,255,255,0.4); font-size:13px;"><i class="ph ph-shield-star"></i> ${Utils.escapeHtml(athlete.team_name)}</td>
-                <td style="${tdStyle} text-align:center; font-weight:700; color:var(--color-white);">${jhVal ? jhVal.toFixed(1) : '—'}</td>
-                <td style="${tdStyle} text-align:center; font-weight:700; color:var(--color-pink);">${rsiVal ? rsiVal.toFixed(3) : '—'}</td>
-                <td style="${tdStyle} text-align:center;">—</td>
+                <td style="${tdStyle} text-align:center; font-weight:700; color:${jhColor};">${jhVal ? jhVal.toFixed(1) : '—'}</td>
+                <td style="${tdStyle} text-align:center; font-weight:700; color:${rsiColor};">${rsiVal ? rsiVal.toFixed(3) : '—'}</td>
+                <td style="${tdStyle} text-align:center; font-weight:700; color:${biColor};">${biVal ? biVal.toFixed(1) : '—'}</td>
                 <td style="${tdStyle} text-align:center; font-size:12px;">${testDateFmt || '<span style="opacity:0.3">Mai</span>'}</td>
             `;
         } else if (variant === 'infortuni') {
@@ -278,9 +310,60 @@ export const AthletesView = {
             const v_p = athlete.quota_vestiario_paid ? v : 0;
             const f_p = athlete.quota_foresteria_paid ? f : 0;
             const t_p = athlete.quota_trasporti_paid ? t : 0;
+            
+            // Loop tornei generati e check dell'atleta
+            let torneiHtml = '';
+            let torneiTotal = 0;
+            let torneiPaid = 0;
+            const athleteTournaments = new Map();
+            
+            if (athlete.tournaments_summary) {
+                const parts = athlete.tournaments_summary.split(';;;');
+                parts.forEach(p => {
+                    const tDetails = p.split('||');
+                    if (tDetails.length >= 4) {
+                        athleteTournaments.set(tDetails[0], { fee: parseFloat(tDetails[2]) || 0, is_paid: parseInt(tDetails[3]) === 1 });
+                    }
+                });
+            }
 
-            const total = qIscrizione + v + f + t;
-            const paid = qIscriPaid + v_p + f_p + t_p;
+            const currentTournaments = AthletesView._currentTournaments || [];
+            currentTournaments.forEach(torneo => {
+                if (athleteTournaments.has(torneo.id)) {
+                    const data = athleteTournaments.get(torneo.id);
+                    const fee = data.fee;
+                    torneiTotal += fee;
+                    if (data.is_paid) torneiPaid += fee;
+                    
+                    const tColor = data.is_paid ? 'var(--color-success)' : (fee > 0 ? 'var(--color-pink)' : 'rgba(255,255,255,0.1)');
+                    const tIcon = data.is_paid ? 'ph-check-circle-fill' : 'ph-circle';
+                    
+                    torneiHtml += `
+                        <td style="${tdStyle} text-align:center;">
+                            <div class="inline-edit-group" style="display:flex; align-items:center; justify-content:center; gap:6px;">
+                                <div style="position:relative; width:45px;">
+                                    <span style="position:absolute; left:4px; top:50%; transform:translateY(-50%); font-size:10px; opacity:0.5; color:${tColor}; pointer-events:none;">€</span>
+                                    <input type="number" 
+                                           value="${fee > 0 ? fee.toFixed(0) : ''}" 
+                                           readonly
+                                           title="${Utils.escapeHtml(torneo.title)}"
+                                           style="width:100%; padding:4px 4px 4px 12px; background:rgba(0,0,0,0.1); border:1px solid rgba(255,255,255,0.03); border-radius:6px; color:${tColor}; font-weight:700; font-size:12px; text-align:right; cursor:default; opacity:0.8;">
+                                </div>
+                                <span style="color:${tColor}; font-size:16px; display:flex; align-items:center; opacity:${fee > 0 ? 1 : 0.2};" title="${data.is_paid ? 'Pagato' : 'Non Pagato'}">
+                                    <i class="ph ${tIcon}"></i>
+                                </span>
+                            </div>
+                        </td>
+                    `;
+                } else {
+                    torneiHtml += `
+                        <td style="${tdStyle} text-align:center; color:rgba(255,255,255,0.1); font-size:16px;">-</td>
+                    `;
+                }
+            });
+
+            const total = qIscrizione + v + f + t + torneiTotal;
+            const paid = qIscriPaid + v_p + f_p + t_p + torneiPaid;
             const remaining = total - paid;
             
             let bilancioHtml = '<span style="color:rgba(255,255,255,0.1)">-</span>';
@@ -301,6 +384,7 @@ export const AthletesView = {
                 <td style="${tdStyle} text-align:center;">${vestiarioHtml}</td>
                 <td style="${tdStyle} text-align:center;">${foresteriaHtml}</td>
                 <td style="${tdStyle} text-align:center;">${trasportiHtml}</td>
+                ${torneiHtml}
                 <td style="${tdStyle} text-align:right;">${bilancioHtml}</td>
             `;
         } else {
@@ -736,12 +820,24 @@ export const AthletesView = {
     /**
      * Tab: Quote (Gestione importi)
      */
-    tabQuote: (athlete, isAdmin = false, transportReimbursement = 0) => {
+    tabQuote: (athlete, isAdmin = false, transportReimbursement = 0, tournamentHistory = []) => {
         const p1 = parseFloat(athlete.quota_iscrizione_rata1) || 0;
         const p2 = parseFloat(athlete.quota_iscrizione_rata2) || 0;
         const v = parseFloat(athlete.quota_vestiario) || 0;
         const f = parseFloat(athlete.quota_foresteria) || 0;
         const t = transportReimbursement || 0;
+
+        let tornei = 0;
+        let tornei_p = 0;
+        let tournamentRowsTable = '';
+        let tournamentRowsForm = '';
+
+        tournamentHistory.forEach(tour => {
+            const fee = parseFloat(tour.fee_per_athlete) || 0;
+            const has_paid = tour.has_paid ? true : false;
+            tornei += fee;
+            if (has_paid) tornei_p += fee;
+        });
 
         const p1_p = athlete.quota_iscrizione_rata1_paid ? p1 : 0;
         const p2_p = athlete.quota_iscrizione_rata2_paid ? p2 : 0;
@@ -749,8 +845,8 @@ export const AthletesView = {
         const f_p = athlete.quota_foresteria_paid ? f : 0;
         const t_p = athlete.quota_trasporti_paid ? t : 0;
 
-        const total = p1 + p2 + v + f + t;
-        const paid = p1_p + p2_p + v_p + f_p + t_p;
+        const total = p1 + p2 + v + f + t + tornei;
+        const paid = p1_p + p2_p + v_p + f_p + t_p + tornei_p;
         const remaining = total - paid;
 
         const formatCurrency = (val) => '€ ' + val.toFixed(2);
@@ -803,6 +899,16 @@ export const AthletesView = {
                                 <td style="padding:14px 16px; color:var(--color-white); font-size:15px; text-align:right; font-weight:600; font-family:var(--font-display);">${formatCurrency(t)}</td>
                                 <td style="padding:14px 16px; text-align:center;">${getStatusBadge(athlete.quota_trasporti_paid, t)}</td>
                             </tr>
+
+                            ${tournamentHistory.map(tour => {
+                                const fee = parseFloat(tour.fee_per_athlete) || 0;
+                                return `
+                                <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                                    <td style="padding:14px 16px; color:var(--color-white); font-size:14px;">Quota Torneo: ${Utils.escapeHtml(tour.tournament_name)}</td>
+                                    <td style="padding:14px 16px; color:var(--color-white); font-size:15px; text-align:right; font-weight:600; font-family:var(--font-display);">${formatCurrency(fee)}</td>
+                                    <td style="padding:14px 16px; text-align:center;">${getStatusBadge(tour.has_paid, fee)}</td>
+                                </tr>`;
+                            }).join('')}
                         </tbody>
                     </table>
                 </div>
@@ -892,19 +998,39 @@ export const AthletesView = {
                         </div>
 
                         <!-- Quota Trasporti -->
-                        <div style="display:flex; gap:16px; align-items:flex-end;">
+                        <div style="display:flex; gap:16px; align-items:flex-end; padding-bottom:16px; border-bottom:1px solid rgba(255,255,255,0.05);">
                             <div class="form-group" style="flex:1;">
                                 <label class="form-label">Quota Trasporti</label>
                                 <input type="number" name="quota_trasporti" class="form-input" placeholder="-" step="0.01" value="${t.toFixed(2)}" readonly style="opacity:0.7; cursor:not-allowed; background:rgba(255,255,255,0.02)">
                                 <div style="font-size:11px; color:var(--color-pink); margin-top:4px;"><i class="ph ph-info"></i> Importo calcolato automaticamente da Rimborsi Trasporti (€ 2,50 × viaggio)</div>
                             </div>
                             <div class="form-group" style="margin-bottom:10px;">
-                                <label class="form-label" style="display:flex; align-items:center; gap:8px; opacity:0.7; cursor:not-allowed;">
-                                    <input type="checkbox" name="quota_trasporti_paid" value="1" ${athlete.quota_trasporti_paid ? 'checked' : ''} onclick="return false;">
+                                <label class="form-label" style="display:flex; align-items:center; gap:8px;">
+                                    <input type="checkbox" name="quota_trasporti_paid" value="1" ${athlete.quota_trasporti_paid ? 'checked' : ''} ${isAdmin ? '' : 'disabled'}>
                                     Pagata
                                 </label>
                             </div>
                         </div>
+
+                        <!-- Quote Tornei -->
+                        ${tournamentHistory.map(tour => {
+                            const fee = parseFloat(tour.fee_per_athlete) || 0;
+                            return `
+                            <div style="display:flex; gap:16px; align-items:flex-end;">
+                                <div class="form-group" style="flex:1;">
+                                    <label class="form-label">Quota Torneo: ${Utils.escapeHtml(tour.tournament_name)}</label>
+                                    <input type="number" class="form-input" placeholder="-" step="0.01" value="${fee.toFixed(2)}" readonly style="opacity:0.7; cursor:not-allowed; background:rgba(255,255,255,0.02)">
+                                    <div style="font-size:11px; color:var(--color-pink); margin-top:4px;"><i class="ph ph-info"></i> Importo del torneo a cui l'atleta partecipa.</div>
+                                </div>
+                                <div class="form-group" style="margin-bottom:10px;">
+                                    <label class="form-label" style="display:flex; align-items:center; gap:8px;">
+                                        <input type="checkbox" class="tournament-payment-cb" data-event-id="${tour.event_id}" value="1" ${tour.has_paid ? 'checked' : ''} ${isAdmin ? '' : 'disabled'}>
+                                        Pagata
+                                    </label>
+                                </div>
+                            </div>`;
+                        }).join('')}
+
 
                     </div>
                     
@@ -1043,8 +1169,8 @@ export const AthletesView = {
             </div>
 
             <!-- Modal Invito (Hidden by default) -->
-            <div id="invite-modal" class="modal-fusion" style="display:none;">
-                <div class="modal-content glass-card" style="max-width:400px; padding:24px;">
+            <div id="invite-modal" class="modal-overlay" style="display:none;">
+                <div class="modal glass-card" style="max-width:400px; padding:24px;">
                     <h3 style="margin-bottom:16px;">Invita Sotto-utente</h3>
                     <div class="form-group">
                         <label class="form-label">Nome Completo</label>
@@ -1111,6 +1237,94 @@ export const AthletesView = {
                             `).join('')}
                         </tbody>
                     </table>
+                </div>
+            </div>
+        `;
+    },
+
+    /**
+     * Modal: Assegnazione Massiva Quote
+     */
+    bulkQuotesModal: (teams = []) => {
+        return `
+            <div id="bulk-quotes-modal" class="modal-overlay" style="display:none; align-items:flex-start; padding-top:5vh;">
+                <div class="modal glass-card" style="max-width:800px; width:100%; border:1px solid rgba(255,255,255,0.1); background:#0F1219;">
+                    
+                    <div style="padding:24px; border-bottom:1px solid rgba(255,255,255,0.05); display:flex; justify-content:space-between; align-items:flex-start;">
+                        <div>
+                            <h3 style="font-family:var(--font-display); font-size:24px; font-weight:800; color:var(--color-white); letter-spacing:-0.5px; margin-bottom:4px;">
+                                Assegnazione Massiva Quote
+                            </h3>
+                            <p style="color:var(--color-text-muted); font-size:14px; margin:0;">
+                                Seleziona squadra, atlete e imposta gli importi da assegnare.
+                            </p>
+                        </div>
+                        <button id="close-bulk-modal" style="background:none; border:none; color:rgba(255,255,255,0.4); font-size:24px; cursor:pointer;"><i class="ph ph-x"></i></button>
+                    </div>
+
+                    <div style="padding:24px;">
+                        <!-- Colonna Sinistra: Selezione -->
+                        <div style="display:flex; gap:24px; flex-wrap:wrap;">
+                            <div style="flex:1; min-width:300px;">
+                                <div class="form-group" style="margin-bottom:20px;">
+                                    <label class="form-label" style="display:block; margin-bottom:8px; font-size:12px; font-weight:600; color:rgba(255,255,255,0.6); text-transform:uppercase;">
+                                        1. Seleziona Squadre
+                                    </label>
+                                    <select id="bulk-team-select" multiple class="form-input" style="height:120px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); outline:none;">
+                                        ${teams.map(t => `<option value="${Utils.escapeHtml(t.id)}">${Utils.escapeHtml(t.season)} — ${Utils.escapeHtml(t.name)}</option>`).join('')}
+                                    </select>
+                                    <div style="font-size:11px; color:rgba(255,255,255,0.4); margin-top:4px;">Tieni premuto <kbd>Ctrl</kbd> o <kbd>Cmd</kbd> per selezioni multiple</div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label" style="display:block; margin-bottom:8px; font-size:12px; font-weight:600; color:rgba(255,255,255,0.6); text-transform:uppercase;">
+                                        2. Seleziona Atlete (<span id="bulk-selected-count">0</span>)
+                                    </label>
+                                    <div id="bulk-athletes-container" style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:8px; padding:12px; height:220px; overflow-y:auto; display:flex; flex-direction:column; gap:8px;">
+                                        <div style="color:var(--color-text-muted); font-size:13px; text-align:center; padding:20px;">
+                                            Seleziona una o più squadre per visualizzare le atlete.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Colonna Destra: Valori -->
+                            <div style="flex:1; min-width:300px; background:rgba(255,255,255,0.02); padding:20px; border-radius:12px; border:1px solid rgba(255,255,255,0.05);">
+                                <label class="form-label" style="display:block; margin-bottom:16px; font-size:12px; font-weight:600; color:var(--color-primary); text-transform:uppercase;">
+                                    3. Imposta Quote
+                                </label>
+                                
+                                <div class="form-group" style="margin-bottom:16px;">
+                                    <label class="form-label">Quota Iscrizione (Totale) €</label>
+                                    <input type="number" id="bulk-quota-iscrizione" class="form-input" placeholder="0" min="0" step="1">
+                                    <div style="font-size:11px; color:rgba(255,255,255,0.3); margin-top:4px;">Il sistema dividerà l'importo a metà tra Rata 1 e Rata 2</div>
+                                </div>
+                                
+                                <div class="form-group" style="margin-bottom:16px;">
+                                    <label class="form-label">Quota Vestiario €</label>
+                                    <input type="number" id="bulk-quota-vestiario" class="form-input" placeholder="0" min="0" step="1">
+                                </div>
+                                
+                                <div class="form-group" style="margin-bottom:16px;">
+                                    <label class="form-label">Quota Foresteria €</label>
+                                    <input type="number" id="bulk-quota-foresteria" class="form-input" placeholder="0" min="0" step="1">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="form-label" style="color:var(--color-pink);">Data Scadenza Pagamenti</label>
+                                    <input type="date" id="bulk-quota-deadline" class="form-input" style="color:var(--color-white); background:rgba(255,64,129,0.05); border-color:rgba(255,64,129,0.2);">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="padding:20px 24px; border-top:1px solid rgba(255,255,255,0.05); display:flex; justify-content:flex-end; gap:12px; background:rgba(0,0,0,0.2);">
+                        <button class="btn btn-ghost" id="cancel-bulk-modal">Annulla</button>
+                        <button class="btn btn-primary" id="save-bulk-modal" style="display:flex; align-items:center; gap:8px;">
+                            <i class="ph ph-check"></i> <span id="save-bulk-modal-text">Assegna Quote</span>
+                        </button>
+                    </div>
+
                 </div>
             </div>
         `;

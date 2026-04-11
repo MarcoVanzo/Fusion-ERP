@@ -7,8 +7,6 @@ import TeamsView from './teams/TeamsView.js';
 
 const Squadre = {
     _abort: new AbortController(),
-// Squadre.js Update
-    _abort: new AbortController(),
     _teams: [],
     _currentTab: "squadre", // 'squadre' | 'stagioni' | 'presenze'
     

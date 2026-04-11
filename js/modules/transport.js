@@ -422,7 +422,12 @@ const Transport = {
             this.gyms = gyms;
             this.teams = teams;
 
-            app.innerHTML = TransportView.renderNewTransport(gyms, teams, drivers, vehicles);
+            const gymOptions = gyms.map(g => `<option value="${g.id}" data-address="${Utils.escapeHtml(g.address || '')}" data-lat="${g.lat || ''}" data-lng="${g.lng || ''}">${Utils.escapeHtml(g.name)}</option>`).join('');
+            const teamOptions = teams.map(t => `<option value="${t.team_id || t.id}">${Utils.escapeHtml(t.name || t.category || t.categoria || 'Squadra')} ${t.season ? '(' + Utils.escapeHtml(t.season) + ')' : ''}</option>`).join('');
+            const driverOptions = drivers.map(d => `<option value="${d.id}">${Utils.escapeHtml(d.full_name || d.name)}</option>`).join('');
+            const vehicleOptions = vehicles.map(v => `<option value="${v.id}">${Utils.escapeHtml(v.name)} ${v.license_plate ? '(' + Utils.escapeHtml(v.license_plate) + ')' : ''}</option>`).join('');
+
+            app.innerHTML = TransportView.renderNewTransport(gymOptions, teamOptions, driverOptions, vehicleOptions);
             this.attachWizardEvents();
         } catch (error) {
             UI.toast("Errore caricamento wizard", "error");

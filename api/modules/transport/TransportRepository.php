@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace FusionERP\Modules\Transport;
 
 use FusionERP\Shared\Database;
+use FusionERP\Shared\TenantContext;
 
 class TransportRepository
 {
@@ -23,13 +24,14 @@ class TransportRepository
 
     public function listEvents(string $teamId = '', string $type = ''): array
     {
+        $tid = TenantContext::id();
         $sql = 'SELECT e.id, e.team_id, e.type, e.title, e.event_date, e.event_end,
                        e.location_name, e.location_lat, e.location_lng, e.status, e.notes,
                        t.name AS team_name, t.category
                 FROM events e
                 JOIN teams t ON t.id = e.team_id
-                WHERE e.deleted_at IS NULL';
-        $params = [];
+                WHERE e.deleted_at IS NULL AND e.tenant_id = :tid';
+        $params = [':tid' => $tid];
         if ($teamId !== '') {
             $sql .= ' AND e.team_id = :team_id';
             $params[':team_id'] = $teamId;
@@ -46,21 +48,23 @@ class TransportRepository
 
     public function getEventById(string $id): ?array
     {
+        $tid = TenantContext::id();
         $stmt = $this->db->prepare(
             'SELECT e.*, t.name AS team_name, t.category
              FROM events e JOIN teams t ON t.id = e.team_id
-             WHERE e.id = :id AND e.deleted_at IS NULL LIMIT 1'
+             WHERE e.id = :id AND e.tenant_id = :tid AND e.deleted_at IS NULL LIMIT 1'
         );
-        $stmt->execute([':id' => $id]);
+        $stmt->execute([':id' => $id, ':tid' => $tid]);
         return $stmt->fetch() ?: null;
     }
 
     public function createEvent(array $data): void
     {
+        $data[':tenant_id'] = TenantContext::id();
         $stmt = $this->db->prepare(
-            'INSERT INTO events (id, team_id, type, title, event_date, event_end,
+            'INSERT INTO events (id, tenant_id, team_id, type, title, event_date, event_end,
                                   location_name, location_lat, location_lng, status, notes, created_by)
-             VALUES (:id, :team_id, :type, :title, :event_date, :event_end,
+             VALUES (:id, :tenant_id, :team_id, :type, :title, :event_date, :event_end,
                      :location_name, :location_lat, :location_lng, :status, :notes, :created_by)'
         );
         $stmt->execute($data);
@@ -68,14 +72,16 @@ class TransportRepository
 
     public function updateEventStatus(string $id, string $status): void
     {
-        $stmt = $this->db->prepare('UPDATE events SET status = :status WHERE id = :id');
-        $stmt->execute([':status' => $status, ':id' => $id]);
+        $tid = TenantContext::id();
+        $stmt = $this->db->prepare('UPDATE events SET status = :status WHERE id = :id AND tenant_id = :tid');
+        $stmt->execute([':status' => $status, ':id' => $id, ':tid' => $tid]);
     }
 
     public function softDeleteEvent(string $id): void
     {
-        $stmt = $this->db->prepare('UPDATE events SET deleted_at = NOW() WHERE id = :id');
-        $stmt->execute([':id' => $id]);
+        $tid = TenantContext::id();
+        $stmt = $this->db->prepare('UPDATE events SET deleted_at = NOW() WHERE id = :id AND tenant_id = :tid');
+        $stmt->execute([':id' => $id, ':tid' => $tid]);
     }
 
     // ─── CARPOOL ROUTES ───────────────────────────────────────────────────────
@@ -99,22 +105,26 @@ class TransportRepository
 
     public function getRouteById(string $id): ?array
     {
+        $tid = TenantContext::id();
         $stmt = $this->db->prepare(
             'SELECT cr.*, u.full_name AS driver_name, u.phone AS driver_phone
-             FROM carpool_routes cr JOIN users u ON u.id = cr.driver_user_id
-             WHERE cr.id = :id AND cr.deleted_at IS NULL LIMIT 1'
+             FROM carpool_routes cr 
+             JOIN users u ON u.id = cr.driver_user_id
+             JOIN events e ON e.id = cr.event_id
+             WHERE cr.id = :id AND e.tenant_id = :tid AND cr.deleted_at IS NULL LIMIT 1'
         );
-        $stmt->execute([':id' => $id]);
+        $stmt->execute([':id' => $id, ':tid' => $tid]);
         return $stmt->fetch() ?: null;
     }
 
     public function createRoute(array $data): void
     {
+        $data[':tenant_id'] = TenantContext::id();
         $stmt = $this->db->prepare(
-            'INSERT INTO carpool_routes (id, event_id, driver_user_id, meeting_point_name,
+            'INSERT INTO carpool_routes (id, tenant_id, event_id, driver_user_id, meeting_point_name,
                                          meeting_point_lat, meeting_point_lng, departure_time,
                                          seats_total, seats_available, notes)
-             VALUES (:id, :event_id, :driver_user_id, :meeting_point_name,
+             VALUES (:id, :tenant_id, :event_id, :driver_user_id, :meeting_point_name,
                      :meeting_point_lat, :meeting_point_lng, :departure_time,
                      :seats_total, :seats_available, :notes)'
         );
@@ -123,10 +133,12 @@ class TransportRepository
 
     public function updateRouteDistance(string $id, float $km, float $reimbursementEur): void
     {
+        $tid = TenantContext::id();
         $stmt = $this->db->prepare(
-            'UPDATE carpool_routes SET distance_km = :km, reimbursement_eur = :reimb WHERE id = :id'
+            'UPDATE carpool_routes SET distance_km = :km, reimbursement_eur = :reimb 
+             WHERE id = :id AND tenant_id = :tid'
         );
-        $stmt->execute([':km' => $km, ':reimb' => $reimbursementEur, ':id' => $id]);
+        $stmt->execute([':km' => $km, ':reimb' => $reimbursementEur, ':id' => $id, ':tid' => $tid]);
     }
 
     // ─── PASSENGERS ───────────────────────────────────────────────────────────
@@ -147,10 +159,15 @@ class TransportRepository
 
     public function addPassenger(array $data): void
     {
+        $data[':tenant_id'] = TenantContext::id();
         $stmt = $this->db->prepare(
-            'INSERT INTO carpool_passengers (route_id, athlete_id, requested_by, pickup_lat, pickup_lng, pickup_address)
-             VALUES (:route_id, :athlete_id, :requested_by, :pickup_lat, :pickup_lng, :pickup_address)'
+            'INSERT INTO carpool_passengers (id, tenant_id, route_id, athlete_id, requested_by, pickup_lat, pickup_lng, pickup_address)
+             VALUES (:id, :tenant_id, :route_id, :athlete_id, :requested_by, :pickup_lat, :pickup_lng, :pickup_address)'
         );
+        // Ensure ID is generated if not present
+        if (!isset($data[':id'])) {
+            $data[':id'] = 'CPA_' . bin2hex(random_bytes(4));
+        }
         $stmt->execute($data);
     }
 
@@ -196,17 +213,19 @@ class TransportRepository
 
     public function createReimbursement(array $data): void
     {
+        $data[':tenant_id'] = TenantContext::id();
         $stmt = $this->db->prepare(
-            'INSERT INTO mileage_reimbursements (id, carpool_id, user_id, distance_km, rate_eur_km, total_eur)
-             VALUES (:id, :carpool_id, :user_id, :distance_km, :rate_eur_km, :total_eur)'
+            'INSERT INTO mileage_reimbursements (id, tenant_id, carpool_id, user_id, distance_km, rate_eur_km, total_eur)
+             VALUES (:id, :tenant_id, :carpool_id, :user_id, :distance_km, :rate_eur_km, :total_eur)'
         );
         $stmt->execute($data);
     }
 
     public function updateReimbursementPdf(string $id, string $pdfPath): void
     {
-        $stmt = $this->db->prepare('UPDATE mileage_reimbursements SET pdf_path = :path WHERE id = :id');
-        $stmt->execute([':path' => $pdfPath, ':id' => $id]);
+        $tid = TenantContext::id();
+        $stmt = $this->db->prepare('UPDATE mileage_reimbursements SET pdf_path = :path WHERE id = :id AND tenant_id = :tid');
+        $stmt->execute([':path' => $pdfPath, ':id' => $id, ':tid' => $tid]);
     }
 
     /**
@@ -215,11 +234,12 @@ class TransportRepository
      */
     public function getReimbursementByCarpool(string $carpoolId): ?array
     {
+        $tid = TenantContext::id();
         $stmt = $this->db->prepare(
             'SELECT id, carpool_id, total_eur, pdf_path FROM mileage_reimbursements
-             WHERE carpool_id = :carpool_id LIMIT 1'
+             WHERE carpool_id = :carpool_id AND tenant_id = :tid LIMIT 1'
         );
-        $stmt->execute([':carpool_id' => $carpoolId]);
+        $stmt->execute([':carpool_id' => $carpoolId, ':tid' => $tid]);
         return $stmt->fetch() ?: null;
     }
 
@@ -252,25 +272,29 @@ class TransportRepository
 
     public function listGyms(): array
     {
-        $stmt = $this->db->query(
-            'SELECT id, name, address, lat, lng FROM gyms ORDER BY name'
+        $tid = TenantContext::id();
+        $stmt = $this->db->prepare(
+            'SELECT id, name, address, lat, lng FROM gyms WHERE tenant_id = :tid ORDER BY name'
         );
+        $stmt->execute([':tid' => $tid]);
         return $stmt->fetchAll();
     }
 
     public function createGym(array $data): void
     {
+        $data[':tenant_id'] = TenantContext::id();
         $stmt = $this->db->prepare(
-            'INSERT INTO gyms (id, name, address, lat, lng, created_by)
-             VALUES (:id, :name, :address, :lat, :lng, :created_by)'
+            'INSERT INTO gyms (id, tenant_id, name, address, lat, lng, created_by)
+             VALUES (:id, :tenant_id, :name, :address, :lat, :lng, :created_by)'
         );
         $stmt->execute($data);
     }
 
     public function deleteGym(string $id): bool
     {
-        $stmt = $this->db->prepare('DELETE FROM gyms WHERE id = :id');
-        $stmt->execute([':id' => $id]);
+        $tid = TenantContext::id();
+        $stmt = $this->db->prepare('DELETE FROM gyms WHERE id = :id AND tenant_id = :tid');
+        $stmt->execute([':id' => $id, ':tid' => $tid]);
         return $stmt->rowCount() > 0;
     }
 
@@ -298,12 +322,13 @@ class TransportRepository
 
     public function saveTransport(array $data): void
     {
+        $data[':tenant_id'] = TenantContext::id();
         $stmt = $this->db->prepare(
-            'INSERT INTO transports (id, team_id, destination_name, destination_address,
+            'INSERT INTO transports (id, tenant_id, team_id, destination_name, destination_address,
                                       destination_lat, destination_lng, departure_address,
                                       arrival_time, departure_time, transport_date,
                                       athletes_json, timeline_json, stats_json, ai_response, created_by, driver_id, vehicle_id)
-             VALUES (:id, :team_id, :destination_name, :destination_address,
+             VALUES (:id, :tenant_id, :team_id, :destination_name, :destination_address,
                      :destination_lat, :destination_lng, :departure_address,
                      :arrival_time, :departure_time, :transport_date,
                      :athletes_json, :timeline_json, :stats_json, :ai_response, :created_by, :driver_id, :vehicle_id)'
@@ -313,15 +338,17 @@ class TransportRepository
 
     public function listTransports(string $teamId = ''): array
     {
+        $tid = TenantContext::id();
         $sql = 'SELECT t.id, t.team_id, t.destination_name, t.destination_address,
                        t.arrival_time, t.departure_time, t.transport_date,
                        t.athletes_json, t.stats_json, t.created_at, t.driver_id,
                        tm.name AS team_name
                 FROM transports t
-                LEFT JOIN teams tm ON tm.id = t.team_id';
-        $params = [];
+                LEFT JOIN teams tm ON tm.id = t.team_id
+                WHERE tm.tenant_id = :tid';
+        $params = [':tid' => $tid];
         if ($teamId !== '') {
-            $sql .= ' WHERE team_id = :team_id';
+            $sql .= ' AND t.team_id = :team_id';
             $params[':team_id'] = $teamId;
         }
         $sql .= ' ORDER BY transport_date DESC, created_at DESC';
@@ -332,26 +359,35 @@ class TransportRepository
 
     public function getTransportById(string $id): ?array
     {
+        $tid = TenantContext::id();
         $stmt = $this->db->prepare(
-            'SELECT * FROM transports WHERE id = :id LIMIT 1'
+            'SELECT t.* FROM transports t
+             JOIN teams tm ON tm.id = t.team_id
+             WHERE t.id = :id AND tm.tenant_id = :tid LIMIT 1'
         );
-        $stmt->execute([':id' => $id]);
+        $stmt->execute([':id' => $id, ':tid' => $tid]);
         return $stmt->fetch() ?: null;
     }
 
     public function updateTransportAiResponse(string $id, string $json): void
     {
+        $tid = TenantContext::id();
+        // Secure update: ensure transport belongs to tenant by joining with teams
         $stmt = $this->db->prepare(
-            'UPDATE transports SET ai_response = :ai_response WHERE id = :id'
+            'UPDATE transports t
+             JOIN teams tm ON tm.id = t.team_id
+             SET t.ai_response = :ai_response 
+             WHERE t.id = :id AND tm.tenant_id = :tid'
         );
-        $stmt->execute([':ai_response' => $json, ':id' => $id]);
+        $stmt->execute([':ai_response' => $json, ':id' => $id, ':tid' => $tid]);
     }
 
     // ─── DRIVERS ─────────────────────────────────────────────────────────────
 
     public function listDrivers(): array
     {
-        $stmt = $this->db->query(
+        $tid = TenantContext::id();
+        $stmt = $this->db->prepare(
             'SELECT d.id, d.full_name, d.phone, d.license_number, d.hourly_rate, d.is_active, d.notes, d.created_at,
                     (
                         SELECT COALESCE(SUM(
@@ -361,17 +397,21 @@ class TransportRepository
                         WHERE t.driver_id = d.id
                     ) AS total_minutes
              FROM drivers d
-             WHERE d.deleted_at IS NULL
+             WHERE d.deleted_at IS NULL AND d.tenant_id = :tid
              ORDER BY d.full_name'
         );
+        $stmt->execute([':tid' => $tid]);
         return $stmt->fetchAll();
     }
 
     public function createDriver(array $data): void
     {
+        if (!isset($data[':tenant_id'])) {
+            $data[':tenant_id'] = TenantContext::id();
+        }
         $stmt = $this->db->prepare(
-            'INSERT INTO drivers (id, full_name, phone, license_number, hourly_rate, notes, is_active, created_by)
-             VALUES (:id, :full_name, :phone, :license_number, :hourly_rate, :notes, 1, :created_by)'
+            'INSERT INTO drivers (id, tenant_id, full_name, phone, license_number, hourly_rate, notes, is_active, created_by)
+             VALUES (:id, :tenant_id, :full_name, :phone, :license_number, :hourly_rate, :notes, 1, :created_by)'
         );
         $stmt->execute($data);
     }
@@ -390,6 +430,7 @@ class TransportRepository
 
     public function getDriverById(string $id): ?array
     {
+        $tid = TenantContext::id();
         $stmt = $this->db->prepare(
             'SELECT d.*,
                     (
@@ -400,9 +441,9 @@ class TransportRepository
                         WHERE t.driver_id = d.id
                     ) AS total_minutes
              FROM drivers d
-             WHERE d.id = :id AND d.deleted_at IS NULL LIMIT 1'
+             WHERE d.id = :id AND d.tenant_id = :tid AND d.deleted_at IS NULL LIMIT 1'
         );
-        $stmt->execute([':id' => $id]);
+        $stmt->execute([':id' => $id, ':tid' => $tid]);
         return $stmt->fetch() ?: null;
     }
 
@@ -440,33 +481,45 @@ class TransportRepository
 
     public function listTeams(): array
     {
-        $stmt = $this->db->query(
+        $tid = TenantContext::id();
+        $stmt = $this->db->prepare(
             'SELECT ts.id AS team_season_id, t.id AS team_id, t.name, t.category, ts.season 
              FROM team_seasons ts
              JOIN teams t ON ts.team_id = t.id
-             WHERE t.is_active = 1 AND t.deleted_at IS NULL 
+             WHERE t.is_active = 1 AND t.deleted_at IS NULL AND t.tenant_id = :tid
              ORDER BY ts.season DESC, t.name'
         );
+        $stmt->execute([':tid' => $tid]);
         return $stmt->fetchAll();
     }
 
     public function listVehicles(): array
     {
-        return $this->db->query(
+        $tid = TenantContext::id();
+        $stmt = $this->db->prepare(
             'SELECT id, name, license_plate, capacity, status
              FROM vehicles
+             WHERE tenant_id = :tid
              ORDER BY name'
-        )->fetchAll();
+        );
+        $stmt->execute([':tid' => $tid]);
+        return $stmt->fetchAll();
     }
 
     public function getStats(): array
     {
-        $total = $this->db->query('SELECT COUNT(*) FROM transports')->fetchColumn();
-        $upcoming = $this->db->prepare('SELECT COUNT(*) FROM transports WHERE transport_date >= ?');
-        $upcoming->execute([date('Y-m-d')]);
+        $tid = TenantContext::id();
+        $stTotal = $this->db->prepare('SELECT COUNT(*) FROM transports t JOIN teams tm ON tm.id = t.team_id WHERE tm.tenant_id = :tid');
+        $stTotal->execute([':tid' => $tid]);
+        $total = $stTotal->fetchColumn();
+
+        $upcoming = $this->db->prepare('SELECT COUNT(*) FROM transports t JOIN teams tm ON tm.id = t.team_id WHERE tm.tenant_id = :tid AND t.transport_date >= :today');
+        $upcoming->execute([':tid' => $tid, ':today' => date('Y-m-d')]);
         $upCount = (int)$upcoming->fetchColumn();
 
-        $eventsCount = $this->db->query('SELECT COUNT(*) FROM events')->fetchColumn();
+        $stEvents = $this->db->prepare('SELECT COUNT(*) FROM events WHERE tenant_id = :tid AND deleted_at IS NULL');
+        $stEvents->execute([':tid' => $tid]);
+        $eventsCount = $stEvents->fetchColumn();
 
         return [
             'o' => (int)$eventsCount,

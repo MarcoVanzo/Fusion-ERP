@@ -29,6 +29,7 @@ class TenantController
     // Creates a new tenant (society registration / signup).
     public function create(): void
     {
+        Auth::requireAuth(); // Defense-in-depth: tenant creation must be authenticated
         $body = Response::jsonBody();
         Response::requireFields($body, ['name', 'sport_type', 'legal_form']);
 
@@ -171,7 +172,31 @@ class TenantController
                 ':invited_by' => Auth::user()['id'] ?? null,
             ]);
 
-            // TODO: Send invitation email via Mailer
+            // Send invitation email
+            $appUrl = $_ENV['APP_URL'] ?? 'https://www.fusionteamvolley.it/ERP';
+            $tenant = TenantContext::get();
+            $tenantName = $tenant['name'] ?? 'Fusion ERP';
+            $inviterName = Auth::user()['full_name'] ?? 'Un amministratore';
+
+            $htmlBody = "
+                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;'>
+                    <h2 style='color: #E6007E;'>Sei stato invitato su {$tenantName}</h2>
+                    <p>Ciao,</p>
+                    <p><strong>{$inviterName}</strong> ti ha invitato a unirti alla piattaforma <strong>{$tenantName}</strong> su Fusion ERP.</p>
+                    <p>Ruoli assegnati: <strong>" . implode(', ', $roles) . "</strong></p>
+                    <p style='margin: 30px 0;'>
+                        <a href='{$appUrl}' style='background: #E6007E; color: white; padding: 12px 30px; text-decoration: none; border-radius: 8px; font-weight: bold;'>Accedi a Fusion ERP</a>
+                    </p>
+                    <p style='font-size: 12px; color: #999;'>Se non riconosci questo invito, puoi ignorare questa email.</p>
+                </div>
+            ";
+
+            \FusionERP\Shared\Mailer::send(
+                $email,
+                '',
+                "Invito a {$tenantName} — Fusion ERP",
+                $htmlBody
+            );
 
             Audit::log('INVITE', 'tenant_invitations', $inviteId, null, [
                 'email' => $email,

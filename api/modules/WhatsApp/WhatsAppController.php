@@ -34,7 +34,7 @@ class WhatsAppController
 
     public function getConversations(): void
     {
-        $user = Auth::requireAuth();
+        $user = Auth::requireRole('operatore');
         $tenantId = $user['tenant_id'] ?? 'TNT_default';
 
         $stmt = $this->db->prepare("
@@ -89,7 +89,7 @@ class WhatsAppController
 
     public function getMessages(): void
     {
-        $user = Auth::requireAuth();
+        $user = Auth::requireRole('operatore');
         $tenantId = $user['tenant_id'] ?? 'TNT_default';
         $fromPhone = $_GET['from_phone'] ?? '';
 
@@ -123,7 +123,7 @@ class WhatsAppController
 
     public function reply(): void
     {
-        $user = Auth::requireAuth();
+        $user = Auth::requireRole('operatore');
         $tenantId = $user['tenant_id'] ?? 'TNT_default';
         $body = Response::jsonBody();
         $toPhone = $body['to_phone'] ?? '';
@@ -164,7 +164,7 @@ class WhatsAppController
 
     public function getContacts(): void
     {
-        $user = Auth::requireAuth();
+        $user = Auth::requireRole('operatore');
         $tenantId = $user['tenant_id'] ?? 'TNT_default';
 
         $stmt = $this->db->prepare("
@@ -186,7 +186,7 @@ class WhatsAppController
 
     public function importContacts(): void
     {
-        $user = Auth::requireAuth();
+        $user = Auth::requireRole('operatore');
         $tenantId = $user['tenant_id'] ?? 'TNT_default';
 
         $isPreview = isset($_GET['preview']) && $_GET['preview'] === '1';
@@ -254,7 +254,7 @@ class WhatsAppController
 
     public function linkContact(): void
     {
-        $user = Auth::requireAuth();
+        $user = Auth::requireRole('operatore');
         $tenantId = $user['tenant_id'] ?? 'TNT_default';
         $body = Response::jsonBody();
 

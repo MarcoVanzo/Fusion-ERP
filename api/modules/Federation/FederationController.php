@@ -279,7 +279,7 @@ class FederationController
      */
     public function rasdStatus(): void
     {
-        Auth::requireRead('compliance');
+        Auth::requireRead('federation');
         $tid = TenantContext::id();
 
         $stmt = $this->db->prepare(

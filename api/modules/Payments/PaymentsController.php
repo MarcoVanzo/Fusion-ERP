@@ -148,8 +148,9 @@ class PaymentsController
         if ($user['role'] === 'atleta') {
             // Must check if athleteId matches their linked account (fetch it if needed)
             $db = \FusionERP\Shared\Database::getInstance();
-            $stmt = $db->prepare('SELECT id FROM athletes WHERE user_id = :uid LIMIT 1');
-            $stmt->execute([':uid' => $user['id']]);
+            $tid = \FusionERP\Shared\TenantContext::id();
+            $stmt = $db->prepare('SELECT id FROM athletes WHERE user_id = :uid AND tenant_id = :tid LIMIT 1');
+            $stmt->execute([':uid' => $user['id'], ':tid' => $tid]);
             $linked = $stmt->fetch(\PDO::FETCH_ASSOC);
             if (!$linked || $linked['id'] !== $athleteId) {
                 Response::error('Non hai i permessi per visualizzare questi pagamenti.', 403);
@@ -212,21 +213,39 @@ class PaymentsController
         }
 
         $paidDate = $body['paid_date'] ?? date('Y-m-d');
-        $this->repo->payInstallment($body['installment_id'], $paidDate, $method, null);
 
-        // Log transaction
-        $txId = 'TX_' . bin2hex(random_bytes(4));
-        $this->repo->insertTransaction([
-            ':id' => $txId,
-            ':tenant_id' => $installment['tenant_id'],
-            ':athlete_id' => $installment['athlete_id'],
-            ':installment_id' => $body['installment_id'],
-            ':amount' => $installment['amount'],
-            ':transaction_date' => $paidDate,
-            ':payment_method' => $method,
-            ':reference' => $body['reference'] ?? null,
-            ':created_by' => $user['id'] ?? null,
-        ]);
+        // Wrap payment + receipt number in a transaction for atomicity.
+        // The FOR UPDATE in getNextReceiptNumber prevents duplicate receipt numbers.
+        $db = \FusionERP\Shared\Database::getInstance();
+        $db->beginTransaction();
+        try {
+            $this->repo->payInstallment($body['installment_id'], $paidDate, $method, null);
+
+            // Fetch year and next receipt number (uses FOR UPDATE lock)
+            $receiptYear = (int)date('Y', strtotime($paidDate));
+            $receiptNumber = $this->repo->getNextReceiptNumber($installment['tenant_id'], $receiptYear);
+
+            // Log transaction
+            $txId = 'TX_' . bin2hex(random_bytes(4));
+            $this->repo->insertTransaction([
+                ':id' => $txId,
+                ':tenant_id' => $installment['tenant_id'],
+                ':athlete_id' => $installment['athlete_id'],
+                ':installment_id' => $body['installment_id'],
+                ':amount' => $installment['amount'],
+                ':transaction_date' => $paidDate,
+                ':payment_method' => $method,
+                ':reference' => $body['reference'] ?? null,
+                ':created_by' => $user['id'] ?? null,
+                ':receipt_year' => $receiptYear,
+                ':receipt_number' => $receiptNumber
+            ]);
+
+            $db->commit();
+        } catch (\Throwable $e) {
+            $db->rollBack();
+            throw $e;
+        }
 
         Audit::log('UPDATE', 'installments', $body['installment_id'], $installment, [
             'status' => 'PAID',
@@ -243,8 +262,94 @@ class PaymentsController
         Response::success([
             'message' => 'Rata pagata e ricevuta generata', 
             'transaction_id' => $txId,
-            'receipt_path' => $receiptPath
+            'receipt_path' => $receiptPath,
+            'receipt_number' => sprintf("%04d/%d", $receiptNumber, $receiptYear)
         ]);
+    }
+
+    // ─── POST ?module=payments&action=createCheckoutSession ──────────────────
+    
+    public function createCheckoutSession(): void
+    {
+        // Athletes have 'read' on payments but must be able to pay their own installments.
+        // requireRead is sufficient; the installment ownership check below provides authorization.
+        $user = Auth::requireRead('payments');
+        if (!$user) {
+            Response::error('Non autorizzato', 401);
+        }
+
+        $body = Response::jsonBody();
+        Response::requireFields($body, ['installment_id']);
+
+        $installment = $this->repo->getInstallmentById($body['installment_id']);
+        if (!$installment) {
+            Response::error('Rata non trovata', 404);
+        }
+        if ($installment['status'] === 'PAID') {
+            Response::error('Questa rata è già stata pagata', 400);
+        }
+
+        \Stripe\Stripe::setApiKey($_ENV['STRIPE_SECRET_KEY'] ?? '');
+
+        try {
+            $session = \Stripe\Checkout\Session::create([
+                'payment_method_types' => ['card'],
+                'line_items' => [[
+                    'price_data' => [
+                        'currency' => 'eur',
+                        'product_data' => [
+                            'name' => 'Quota: ' . $installment['title'],
+                            'description' => 'Pagamento per Fusion ERP',
+                        ],
+                        'unit_amount' => (int)($installment['amount'] * 100),
+                    ],
+                    'quantity' => 1,
+                ]],
+                'mode' => 'payment',
+                'success_url' => $_ENV['APP_URL'] . '/pagamento-completato?session_id={CHECKOUT_SESSION_ID}',
+                'cancel_url' => $_ENV['APP_URL'] . '/i-miei-pagamenti',
+                'metadata' => [
+                    'installment_id' => $installment['id'],
+                    'athlete_id' => $installment['athlete_id'],
+                    'tenant_id' => $installment['tenant_id'],
+                ],
+            ]);
+
+            Response::success(['url' => $session->url]);
+
+        } catch (\Exception $e) {
+            Response::error('Stripe Error: ' . $e->getMessage(), 500);
+        }
+    }
+
+    // ─── GET ?module=payments&action=myPending ───────────────────────────────
+    
+    public function myPending(): void
+    {
+        $user = Auth::requireRead('payments');
+        if ($user['role'] !== 'atleta') {
+            Response::error('Azione riservata agli atleti', 403);
+        }
+
+        $db = \FusionERP\Shared\Database::getInstance();
+        $tid = \FusionERP\Shared\TenantContext::id();
+        $stmt = $db->prepare('SELECT id FROM athletes WHERE user_id = :uid AND tenant_id = :tid LIMIT 1');
+        $stmt->execute([':uid' => $user['id'], ':tid' => $tid]);
+        $athlete = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        if (!$athlete) {
+            Response::success([]); // No linked athlete
+        }
+
+        $plan = $this->repo->getActivePlan($athlete['id']);
+        if (!$plan) {
+            Response::success([]);
+        }
+
+        $installments = $this->repo->getInstallments($plan['id']);
+        $pending = array_filter($installments, fn($i) => in_array($i['status'], ['PENDING', 'OVERDUE']));
+
+        Response::success(array_values($pending));
     }
 
     // ─── POST ?module=payments&action=generateReceipt ────────────────────────
@@ -275,17 +380,22 @@ class PaymentsController
     /**
      * Helper to create and save the PDF receipt
      */
-    private function createAndSaveReceipt(string $installmentId): string
+    public function createAndSaveReceipt(string $installmentId): string
     {
         $installment = $this->repo->getInstallmentById($installmentId);
         if (!$installment) return '';
 
         $db = \FusionERP\Shared\Database::getInstance();
-        $stmt = $db->prepare('SELECT full_name, fiscal_code, email FROM athletes WHERE id = :id LIMIT 1');
-        $stmt->execute([':id' => $installment['athlete_id']]);
+        $tid = \FusionERP\Shared\TenantContext::id();
+        $stmt = $db->prepare('SELECT full_name, fiscal_code, email FROM athletes WHERE id = :id AND tenant_id = :tid LIMIT 1');
+        $stmt->execute([':id' => $installment['athlete_id'], ':tid' => $tid]);
         $athlete = $stmt->fetch(\PDO::FETCH_ASSOC);
 
-        $html = $this->buildReceiptHtml($installment, $athlete ?: []);
+        $stmt2 = $db->prepare('SELECT receipt_year, receipt_number FROM transactions WHERE installment_id = :id LIMIT 1');
+        $stmt2->execute([':id' => $installmentId]);
+        $transaction = $stmt2->fetch(\PDO::FETCH_ASSOC);
+
+        $html = $this->buildReceiptHtml($installment, $athlete ?: [], $transaction ?: []);
 
         $mpdf = new \Mpdf\Mpdf([
             'margin_left' => 15,
@@ -420,14 +530,28 @@ class PaymentsController
     /**
      * Build a clean HTML receipt for PDF generation.
      */
-    private function buildReceiptHtml(array $installment, ?array $athlete): string
+    private function buildReceiptHtml(array $installment, ?array $athlete, ?array $transaction): string
     {
         $athleteName = $athlete['full_name'] ?? 'N/A';
         $fiscalCode = $athlete['fiscal_code'] ?? 'N/A';
-        $amount = number_format((float)$installment['amount'], 2, ',', '.');
+        $amountRaw = (float)$installment['amount'];
+        $amount = number_format($amountRaw, 2, ',', '.');
         $paidDate = $installment['paid_date'] ?? date('Y-m-d');
         $method = $installment['payment_method'] ?? 'N/A';
-        $instId = $installment['id'];
+        $title = htmlspecialchars($installment['title'] ?? 'Quota Associativa/Erogazione Sportiva');
+        
+        $receiptYear = $transaction['receipt_year'] ?? date('Y');
+        $receiptNum = $transaction['receipt_number'] ?? null;
+        if ($receiptNum === null) {
+            error_log('[PAYMENTS] WARNING: receipt_number mancante per installment ' . ($installment['id'] ?? '?'));
+            $receiptNum = 0; // Will render as 0000/YYYY — signals a data issue in the PDF
+        }
+        $receiptStr = sprintf("%04d/%d", $receiptNum, $receiptYear);
+
+        $bolloStr = '';
+        if ($amountRaw > 77.47) {
+            $bolloStr = '<br><strong>Imposta di bollo di € 2,00 assolta sull\'originale.</strong>';
+        }
 
         return <<<HTML
 <!DOCTYPE html>
@@ -447,15 +571,15 @@ body { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 12px; color:
 </style></head>
 <body>
 <div class="header">
-    <h1>RICEVUTA DI PAGAMENTO</h1>
-    <p>Ricevuta Fiscale per Erogazione Sportiva o Quota Associativa</p>
+    <h1>RICEVUTA DI PAGAMENTO N° {$receiptStr}</h1>
+    <p>Associazione Sportiva Dilettantistica Fusion Volley</p>
+    <p style="font-size: 10px;">Sede: Via Example 1, 30100 Venezia | C.F. 90000000000 | P.IVA 00000000000</p>
 </div>
 <div class="details">
     <table>
         <tr><td>Atleta</td><td>{$athleteName}</td></tr>
         <tr><td>Codice Fiscale</td><td>{$fiscalCode}</td></tr>
-        <tr><td>Quota/Rata</td><td>{$installment['title']}</td></tr>
-        <tr><td>Rif. Pagamento</td><td>{$instId}</td></tr>
+        <tr><td>Descrizione</td><td>{$title}</td></tr>
         <tr><td>Data Pagamento</td><td>{$paidDate}</td></tr>
         <tr><td>Metodo</td><td>{$method}</td></tr>
     </table>
@@ -463,8 +587,9 @@ body { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 12px; color:
 <div class="amount">
     <div style="font-size: 14px; color: #666; margin-bottom: 8px;">Importo pagato</div>
     <div class="value">€ {$amount}</div>
-    <div style="font-size: 11px; color: #666; margin-top: 5px;">
-    Quota istituzionale esente IVA art. 4 DPR 633/72.
+    <div style="font-size: 11px; color: #666; margin-top: 10px;">
+        Esente da IVA ex art. 4, comma 4, D.P.R. 633/72.
+        {$bolloStr}
     </div>
 </div>
 <div class="footer">

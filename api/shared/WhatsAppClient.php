@@ -89,10 +89,10 @@ class WhatsAppClient
      */
     private function request(array $payload): array
     {
-        if (empty($this->token) || empty($this->phoneNumberId)) {
+        if (empty($this->token) || empty($this->phoneNumberId) || str_starts_with($this->phoneNumberId, 'YOUR_')) {
             return [
                 'success' => false,
-                'error' => 'WhatsApp Cloud API not configured (Check .env)'
+                'error' => 'WhatsApp Cloud API not configured (WHATSAPP_PHONE_NUMBER_ID is missing or placeholder — check .env)'
             ];
         }
 

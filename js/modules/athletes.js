@@ -97,8 +97,7 @@ const Athletes = (() => {
         if (variant === 'quote') {
             await enrichWithTransportReimbursements();
         }
-
-        app.innerHTML = AthletesView.dashboard(teamsData, variant);
+        app.innerHTML = AthletesView.dashboard(teamsData, variant, athletesData);
         
         // Applicazione filtri iniziali
         filterAndRenderGrid("", variant);
@@ -125,9 +124,19 @@ const Athletes = (() => {
         }, { signal });
 
         document.getElementById("bulk-quotes-btn")?.addEventListener("click", () => {
-            UI.toast("L'assegnazione massiva delle quote è temporaneamente disabilitata durante l'aggiornamento del sistema rateale.", "info");
+            if (!document.getElementById("bulk-quotes-modal")) {
+                document.body.insertAdjacentHTML('beforeend', AthletesView.bulkQuotesModal(teamsData));
+                bindBulkQuotesModal(variant);
+            }
+            document.getElementById("bulk-team-select").value = "";
+            document.getElementById("bulk-athletes-container").innerHTML = '<div style="color:var(--color-text-muted); font-size:13px; text-align:center; padding:20px;">Seleziona una o più squadre per visualizzare le atlete.</div>';
+            document.getElementById("bulk-selected-count").textContent = "0";
+            document.getElementById("bulk-quota-iscrizione").value = "";
+            document.getElementById("bulk-quota-vestiario").value = "";
+            document.getElementById("bulk-quota-foresteria").value = "";
+            document.getElementById("bulk-quota-deadline").value = "";
+            document.getElementById("bulk-quotes-modal").style.display = "flex";
         }, { signal });
-
         document.getElementById("athlete-search")?.addEventListener("input", (e) => {
             debounce(() => filterAndRenderGrid(e.target.value, variant), 300);
         }, { signal });
@@ -145,6 +154,102 @@ const Athletes = (() => {
             if (typeof FilterState !== "undefined") FilterState.save("athletes", "team", "");
             filterAndRenderGrid("", variant);
         }, { signal });
+    }
+
+    /**
+     * Binds bulk quotes modal events
+     */
+    function bindBulkQuotesModal(variant) {
+        document.getElementById("close-bulk-modal")?.addEventListener("click", () => {
+            document.getElementById("bulk-quotes-modal").style.display = "none";
+        });
+        document.getElementById("cancel-bulk-modal")?.addEventListener("click", () => {
+            document.getElementById("bulk-quotes-modal").style.display = "none";
+        });
+
+        const teamSelect = document.getElementById("bulk-team-select");
+        const container = document.getElementById("bulk-athletes-container");
+        const countSpan = document.getElementById("bulk-selected-count");
+
+        teamSelect.addEventListener("change", () => {
+            const selectedTeams = Array.from(teamSelect.selectedOptions).map(opt => opt.value);
+            if (selectedTeams.length === 0) {
+                container.innerHTML = '<div style="color:var(--color-text-muted); font-size:13px; text-align:center; padding:20px;">Seleziona una o più squadre per visualizzare le atlete.</div>';
+                countSpan.textContent = "0";
+                return;
+            }
+
+            const filtered = athletesData.filter(a => {
+                const seasonIds = a.team_season_ids ? String(a.team_season_ids).split(',') : [];
+                return selectedTeams.includes(String(a.team_id)) || seasonIds.some(id => selectedTeams.includes(id));
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<div style="color:var(--color-text-muted); font-size:13px; text-align:center; padding:20px;">Nessuna atleta in queste squadre.</div>';
+                countSpan.textContent = "0";
+                return;
+            }
+
+            container.innerHTML = filtered.map(a => `
+                <div style="display:flex; align-items:center; gap:12px; padding:8px 12px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:6px;">
+                    <input type="checkbox" class="bulk-athlete-cb" value="${a.id}" checked style="accent-color:var(--color-primary); width:16px; height:16px;">
+                    <div style="flex:1;">
+                        <div style="font-weight:600; color:var(--color-white); font-size:13px;">${Utils.escapeHtml(a.full_name)}</div>
+                        <div style="font-size:11px; color:rgba(255,255,255,0.4);">${Utils.escapeHtml(a.team_name)}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            updateBulkSelectionCount();
+            container.querySelectorAll('.bulk-athlete-cb').forEach(cb => cb.addEventListener('change', updateBulkSelectionCount));
+        });
+
+        function updateBulkSelectionCount() {
+            countSpan.textContent = container.querySelectorAll('.bulk-athlete-cb:checked').length;
+        }
+
+        document.getElementById("save-bulk-modal")?.addEventListener("click", async () => {
+            const selectedIds = Array.from(container.querySelectorAll('.bulk-athlete-cb:checked')).map(cb => cb.value);
+            if (selectedIds.length === 0) {
+                UI.toast("Seleziona almeno un'atleta.", "error");
+                return;
+            }
+
+            const btnText = document.getElementById("save-bulk-modal-text");
+            const originalText = btnText.textContent;
+            btnText.textContent = "Salvataggio...";
+            document.getElementById("save-bulk-modal").disabled = true;
+
+            const iscrizioneTotal = document.getElementById("bulk-quota-iscrizione").value;
+            const vestiario = document.getElementById("bulk-quota-vestiario").value;
+            const foresteria = document.getElementById("bulk-quota-foresteria").value;
+            const deadline = document.getElementById("bulk-quota-deadline").value;
+
+            const payload = {};
+            if (vestiario !== "") payload.quota_vestiario = vestiario;
+            if (foresteria !== "") payload.quota_foresteria = foresteria;
+            if (deadline !== "") payload.quota_payment_deadline = deadline;
+
+            if (iscrizioneTotal !== "") {
+                const total = parseFloat(iscrizioneTotal) || 0;
+                payload.quota_iscrizione_rata1 = total / 2;
+                payload.quota_iscrizione_rata2 = total / 2;
+            }
+
+            try {
+                const promises = selectedIds.map(id => AthletesAPI.update({ id, ...payload }));
+                await Promise.all(promises);
+                
+                UI.toast(`Quote assegnate a ${selectedIds.length} atlete con successo!`, "success");
+                document.getElementById("bulk-quotes-modal").style.display = "none";
+                refreshData(variant);
+            } catch (err) {
+                UI.toast("Errore durante l'assegnazione: " + err.message, "error");
+            } finally {
+                btnText.textContent = originalText;
+                document.getElementById("save-bulk-modal").disabled = false;
+            }
+        });
     }
 
     /**
@@ -335,13 +440,17 @@ const Athletes = (() => {
                 addAnagraficaListeners(athlete);
                 break;
             case 'quote': {
-                // Fetch transport history to calculate dynamic reimbursement
                 let transportReimbursement = 0;
+                let tournamentHistory = [];
                 try {
-                    const transportHist = await AthletesAPI.getTransportHistory(athlete.id);
+                    const [transportHist, tournamentHist] = await Promise.all([
+                        AthletesAPI.getTransportHistory(athlete.id),
+                        AthletesAPI.getTournamentHistory(athlete.id)
+                    ]);
                     transportReimbursement = (transportHist || []).length * 2.50;
-                } catch (e) { /* silently fallback to 0 */ }
-                panel.innerHTML = AthletesView.tabQuote(athlete, App.getUser().role === 'admin', transportReimbursement);
+                    tournamentHistory = tournamentHist || [];
+                } catch (e) { /* fallback silenzioso */ }
+                panel.innerHTML = AthletesView.tabQuote(athlete, App.getUser().role === 'admin', transportReimbursement, tournamentHistory);
                 addQuoteListeners(athlete);
                 break;
             }
@@ -407,9 +516,26 @@ const Athletes = (() => {
                     data[cb] = data[cb] ? 1 : 0;
                 });
 
+                // Rimuovi finti campi transport e altri per pulire i dati
+                delete data.quota_trasporti;
+                delete data.quota_trasporti_paid;
+
+                // Estrai e salva dinamicamente il pagamento dei tornei (tabella separata event_attendees)
+                const tournamentPromises = Array.from(document.querySelectorAll('.tournament-payment-cb')).map(cb => {
+                    return AthletesAPI.setTournamentPayment({
+                        athlete_id: athlete.id,
+                        event_id: cb.dataset.eventId,
+                        has_paid: cb.checked ? 1 : 0
+                    });
+                });
+
                 UI.loading(true);
                 try {
-                    await AthletesAPI.update(data);
+                    // Esegui in parallelo il salvataggio anagrafica + tornei
+                    await Promise.all([
+                        AthletesAPI.update(data),
+                        ...tournamentPromises
+                    ]);
                     UI.toast("Quote aggiornate con successo", "success");
                     const updatedAthlete = await AthletesAPI.getById(athlete.id);
                     switchTab('quote', updatedAthlete);

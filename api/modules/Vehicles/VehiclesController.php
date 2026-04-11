@@ -56,6 +56,7 @@ class VehiclesController
         $id = 'VEH_' . bin2hex(random_bytes(4));
         $this->repo()->createVehicle([
             ':id' => $id,
+            ':tenant_id' => \FusionERP\Shared\TenantContext::id(),
             ':name' => htmlspecialchars(trim($body['name']), ENT_QUOTES, 'UTF-8'),
             ':license_plate' => htmlspecialchars(trim(strtoupper($body['license_plate'])), ENT_QUOTES, 'UTF-8'),
             ':capacity' => isset($body['capacity']) ? (int)$body['capacity'] : 9,
@@ -141,7 +142,7 @@ class VehiclesController
 
     public function addAnomaly(): void
     {
-        $user = Auth::requireRead('transport');
+        $user = Auth::requireWrite('transport');
         $body = Response::jsonBody();
         Response::requireFields($body, ['vehicle_id', 'description']);
 

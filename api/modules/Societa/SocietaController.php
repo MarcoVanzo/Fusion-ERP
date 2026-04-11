@@ -8,15 +8,6 @@ declare(strict_types=1);
 
 namespace FusionERP\Modules\Societa;
 
-$_societaShared = dirname(__DIR__, 2) . '/Shared/';
-require_once $_societaShared . 'Auth.php';
-require_once $_societaShared . 'Audit.php';
-require_once $_societaShared . 'Response.php';
-require_once $_societaShared . 'TenantContext.php';
-unset($_societaShared);
-require_once __DIR__ . '/SocietaRepository.php';
-require_once __DIR__ . '/SocietaService.php';
-
 use FusionERP\Shared\Auth;
 use FusionERP\Shared\Response;
 use FusionERP\Shared\TenantContext;
