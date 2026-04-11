@@ -380,7 +380,7 @@ class PaymentsController
     /**
      * Helper to create and save the PDF receipt
      */
-    private function createAndSaveReceipt(string $installmentId): string
+    public function createAndSaveReceipt(string $installmentId): string
     {
         $installment = $this->repo->getInstallmentById($installmentId);
         if (!$installment) return '';
@@ -541,7 +541,11 @@ class PaymentsController
         $title = htmlspecialchars($installment['title'] ?? 'Quota Associativa/Erogazione Sportiva');
         
         $receiptYear = $transaction['receipt_year'] ?? date('Y');
-        $receiptNum = $transaction['receipt_number'] ?? 'XXX';
+        $receiptNum = $transaction['receipt_number'] ?? null;
+        if ($receiptNum === null) {
+            error_log('[PAYMENTS] WARNING: receipt_number mancante per installment ' . ($installment['id'] ?? '?'));
+            $receiptNum = 0; // Will render as 0000/YYYY — signals a data issue in the PDF
+        }
         $receiptStr = sprintf("%04d/%d", $receiptNum, $receiptYear);
 
         $bolloStr = '';

@@ -94,7 +94,7 @@ class StaffController
     // ─── POST /api/?module=staff&action=update ────────────────────────────────
     public function update(): void
     {
-        // Auth::requireRole('social media manager');
+        Auth::requireRole('social media manager');
         $body = Response::jsonBody();
         Response::requireFields($body, ['id', 'first_name', 'last_name']);
 
