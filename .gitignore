@@ -68,3 +68,4 @@ css/style_v2.backup.css
 # PHPUnit cache
 .phpunit.cache/
 .credentials
+.env.prod
