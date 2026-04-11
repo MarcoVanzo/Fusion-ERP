@@ -136,6 +136,7 @@ try {
             'esignature' => dispatch('ESignature', $action),
             'tenant' => dispatch('Tenant', $action),
             'whatsapp' => dispatchWebhook($action),
+            'webhooks' => dispatchStripeWebhook($action),
             default => Response::error("Modulo '{$module}' non trovato", 404),
         };
 }
@@ -196,6 +197,24 @@ function dispatchWebhook(string $action): void
     }
     
     $controller->$action();
+}
+
+/**
+ * Dispatch Stripe Webhook
+ */
+function dispatchStripeWebhook(string $action): void
+{
+    if ($action !== 'stripe') {
+        Response::error("Azione webhook non trovata", 404);
+    }
+    
+    $class = "FusionERP\\Modules\\Webhooks\\StripeWebhookController";
+    if (!class_exists($class)) {
+        Response::error("Controller Webhook non trovato", 500);
+    }
+    
+    $controller = new $class();
+    $controller->stripe();
 }
 
 /**

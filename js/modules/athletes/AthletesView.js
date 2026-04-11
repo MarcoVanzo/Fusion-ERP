@@ -6,7 +6,7 @@ export const AthletesView = {
     /**
      * Template principale della Dashboard Atleti
      */
-    dashboard: (teams, variant = 'anagrafica') => {
+    dashboard: (teams, variant = 'anagrafica', athletes = []) => {
         let title = "Anagrafica Atleti";
         let subtitle = "Gestione dei tesserati, documenti e dati biometrici";
         let thRow = ``;
@@ -48,6 +48,25 @@ export const AthletesView = {
                 <th style="${thStyle} text-align:right;">Azioni</th>
             `;
         } else if (variant === 'quote') {
+            // Estrazione tornei univoci da tutti gli atleti caricati per generare intestazioni orizzontali dinamicamente
+            const tournamentsMap = new Map();
+            athletes.forEach(a => {
+                if (a.tournaments_summary) {
+                    const parts = a.tournaments_summary.split(';;;');
+                    parts.forEach(p => {
+                        const tDetails = p.split('||');
+                        if (tDetails.length >= 4) {
+                            tournamentsMap.set(tDetails[0], tDetails[1]); // ID => Nome
+                        }
+                    });
+                }
+            });
+            AthletesView._currentTournaments = Array.from(tournamentsMap.entries()).map(([id, title]) => ({ id, title }));
+            
+            const torneiHeaders = AthletesView._currentTournaments.map(t => 
+                `<th style="${thStyle} text-align:center;" title="${Utils.escapeHtml(t.title)}">${Utils.escapeHtml(t.title.length > 10 ? t.title.substring(0, 8) + '..' : t.title)}</th>`
+            ).join('');
+
             title = "Quote Atleti";
             subtitle = "Riepilogo generale delle quote da versare (In verde se pagate, in rosso se non pagate)";
             thRow = `
@@ -57,6 +76,7 @@ export const AthletesView = {
                 <th style="${thStyle} text-align:center;">Q. Vestiario</th>
                 <th style="${thStyle} text-align:center;">Q. Foresteria</th>
                 <th style="${thStyle} text-align:center;">Q. Trasporti</th>
+                ${torneiHeaders}
                 <th style="${thStyle} text-align:right;">Bilancio</th>
                 <th style="${thStyle} text-align:right;">Azioni</th>
             `;
@@ -278,9 +298,60 @@ export const AthletesView = {
             const v_p = athlete.quota_vestiario_paid ? v : 0;
             const f_p = athlete.quota_foresteria_paid ? f : 0;
             const t_p = athlete.quota_trasporti_paid ? t : 0;
+            
+            // Loop tornei generati e check dell'atleta
+            let torneiHtml = '';
+            let torneiTotal = 0;
+            let torneiPaid = 0;
+            const athleteTournaments = new Map();
+            
+            if (athlete.tournaments_summary) {
+                const parts = athlete.tournaments_summary.split(';;;');
+                parts.forEach(p => {
+                    const tDetails = p.split('||');
+                    if (tDetails.length >= 4) {
+                        athleteTournaments.set(tDetails[0], { fee: parseFloat(tDetails[2]) || 0, is_paid: parseInt(tDetails[3]) === 1 });
+                    }
+                });
+            }
 
-            const total = qIscrizione + v + f + t;
-            const paid = qIscriPaid + v_p + f_p + t_p;
+            const currentTournaments = AthletesView._currentTournaments || [];
+            currentTournaments.forEach(torneo => {
+                if (athleteTournaments.has(torneo.id)) {
+                    const data = athleteTournaments.get(torneo.id);
+                    const fee = data.fee;
+                    torneiTotal += fee;
+                    if (data.is_paid) torneiPaid += fee;
+                    
+                    const tColor = data.is_paid ? 'var(--color-success)' : (fee > 0 ? 'var(--color-pink)' : 'rgba(255,255,255,0.1)');
+                    const tIcon = data.is_paid ? 'ph-check-circle-fill' : 'ph-circle';
+                    
+                    torneiHtml += `
+                        <td style="${tdStyle} text-align:center;">
+                            <div class="inline-edit-group" style="display:flex; align-items:center; justify-content:center; gap:6px;">
+                                <div style="position:relative; width:45px;">
+                                    <span style="position:absolute; left:4px; top:50%; transform:translateY(-50%); font-size:10px; opacity:0.5; color:${tColor}; pointer-events:none;">€</span>
+                                    <input type="number" 
+                                           value="${fee > 0 ? fee.toFixed(0) : ''}" 
+                                           readonly
+                                           title="${Utils.escapeHtml(torneo.title)}"
+                                           style="width:100%; padding:4px 4px 4px 12px; background:rgba(0,0,0,0.1); border:1px solid rgba(255,255,255,0.03); border-radius:6px; color:${tColor}; font-weight:700; font-size:12px; text-align:right; cursor:default; opacity:0.8;">
+                                </div>
+                                <span style="color:${tColor}; font-size:16px; display:flex; align-items:center; opacity:${fee > 0 ? 1 : 0.2};" title="${data.is_paid ? 'Pagato' : 'Non Pagato'}">
+                                    <i class="ph ${tIcon}"></i>
+                                </span>
+                            </div>
+                        </td>
+                    `;
+                } else {
+                    torneiHtml += `
+                        <td style="${tdStyle} text-align:center; color:rgba(255,255,255,0.1); font-size:16px;">-</td>
+                    `;
+                }
+            });
+
+            const total = qIscrizione + v + f + t + torneiTotal;
+            const paid = qIscriPaid + v_p + f_p + t_p + torneiPaid;
             const remaining = total - paid;
             
             let bilancioHtml = '<span style="color:rgba(255,255,255,0.1)">-</span>';
@@ -301,6 +372,7 @@ export const AthletesView = {
                 <td style="${tdStyle} text-align:center;">${vestiarioHtml}</td>
                 <td style="${tdStyle} text-align:center;">${foresteriaHtml}</td>
                 <td style="${tdStyle} text-align:center;">${trasportiHtml}</td>
+                ${torneiHtml}
                 <td style="${tdStyle} text-align:right;">${bilancioHtml}</td>
             `;
         } else {

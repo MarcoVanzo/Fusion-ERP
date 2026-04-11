@@ -95,6 +95,11 @@ class AthletesRepository
             $docCols = ', a.' . implode(', a.', $docFields);
         }
 
+        $hasPaidField = '0';
+        if ($this->_hasColumn('event_attendees', 'has_paid')) {
+            $hasPaidField = 'ea.has_paid';
+        }
+
         $sql = "SELECT DISTINCT a.id, a.team_id, a.full_name, a.jersey_number, a.role, a.photo_path, a.is_active,
                        a.birth_date, a.height_cm, a.weight_kg,
                        a.quota_iscrizione_rata1, a.quota_iscrizione_rata1_paid,
@@ -103,6 +108,7 @@ class AthletesRepository
                        a.quota_foresteria, a.quota_foresteria_paid,
                        a.quota_trasporti, a.quota_trasporti_paid,
                        a.quota_payment_deadline,
+                       (SELECT GROUP_CONCAT(CONCAT_WS('||', td.event_id, e.title, IFNULL(td.fee_per_athlete, 0), IFNULL({$hasPaidField}, 0)) SEPARATOR ';;;') FROM event_attendees ea JOIN tournament_details td ON ea.event_id = td.event_id JOIN events e ON td.event_id = e.id WHERE ea.athlete_id = a.id AND ea.status = 'confirmed') AS tournaments_summary,
                        a.medical_cert_expires_at{$docCols},
                        COALESCE(t.name, 'Nessuna squadra') AS team_name,
                        COALESCE(t.category, 'Nessuna') AS category,

@@ -16,6 +16,7 @@ const Tournaments = {
 
     destroy: function() {
         this._abort.abort();
+        this._abort = new AbortController();
     },
 
     init: async function() {

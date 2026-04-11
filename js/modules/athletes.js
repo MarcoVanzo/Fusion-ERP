@@ -97,8 +97,7 @@ const Athletes = (() => {
         if (variant === 'quote') {
             await enrichWithTransportReimbursements();
         }
-
-        app.innerHTML = AthletesView.dashboard(teamsData, variant);
+        app.innerHTML = AthletesView.dashboard(teamsData, variant, athletesData);
         
         // Applicazione filtri iniziali
         filterAndRenderGrid("", variant);

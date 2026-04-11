@@ -81,7 +81,18 @@ class TournamentsRepository
             JOIN team_members tm ON a.user_id = tm.user_id AND tm.team_id = :team_id
             LEFT JOIN event_attendees ea ON a.id = ea.athlete_id AND ea.event_id = :event_id
             WHERE a.deleted_at IS NULL AND a.is_active = 1
-            ORDER BY a.full_name ASC
+            
+            UNION ALL
+            
+            SELECT s.id, CONCAT(s.first_name, ' ', s.last_name) AS full_name, NULL as jersey_number, s.role,
+                   ea.status as attendance_status
+            FROM staff_members s
+            JOIN staff_teams st ON s.id = st.staff_id
+            JOIN team_seasons ts ON st.team_season_id = ts.id AND ts.team_id = :team_id
+            LEFT JOIN event_attendees ea ON s.id = ea.athlete_id AND ea.event_id = :event_id
+            WHERE s.is_deleted = 0
+            
+            ORDER BY full_name ASC
         ");
         $stmt->execute([
             ':team_id' => $teamId,
@@ -154,6 +165,14 @@ class TournamentsRepository
             FROM athletes a
             JOIN team_members tm ON a.user_id = tm.user_id AND tm.team_id = :team_id
             WHERE a.deleted_at IS NULL AND a.is_active = 1
+            
+            UNION ALL
+            
+            SELECT s.id
+            FROM staff_members s
+            JOIN staff_teams st ON s.id = st.staff_id
+            JOIN team_seasons ts ON st.team_season_id = ts.id AND ts.team_id = :team_id
+            WHERE s.is_deleted = 0
         ");
         $rosterStmt->execute([':team_id' => $teamId]);
         $athletes = $rosterStmt->fetchAll(PDO::FETCH_COLUMN);

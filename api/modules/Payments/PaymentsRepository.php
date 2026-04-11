@@ -206,16 +206,31 @@ class PaymentsRepository
 
     // ─── TRANSACTIONS ────────────────────────────────────────────────────────
 
-    /**
-     * Insert a transaction record.
-     */
     public function insertTransaction(array $data): void
     {
         $stmt = $this->db->prepare(
-            'INSERT INTO transactions (id, tenant_id, athlete_id, installment_id, amount, transaction_date, payment_method, reference, created_by)
-             VALUES (:id, :tenant_id, :athlete_id, :installment_id, :amount, :transaction_date, :payment_method, :reference, :created_by)'
+            'INSERT INTO transactions (id, tenant_id, athlete_id, installment_id, amount, transaction_date, payment_method, reference, created_by, receipt_year, receipt_number)
+             VALUES (:id, :tenant_id, :athlete_id, :installment_id, :amount, :transaction_date, :payment_method, :reference, :created_by, :receipt_year, :receipt_number)'
         );
         $stmt->execute($data);
+    }
+
+    /**
+     * Get the next progressive receipt number for a specific year in a tenant context.
+     * Uses table lock internally per InnoDB to ensure no collision.
+     * 
+     * @param int $year Format YYYY
+     * @return int Next progressive number
+     */
+    public function getNextReceiptNumber(string $tenantId, int $year): int
+    {
+        $stmt = $this->db->prepare(
+            "SELECT COALESCE(MAX(receipt_number), 0) + 1 
+             FROM transactions 
+             WHERE tenant_id = :tenant_id AND receipt_year = :year"
+        );
+        $stmt->execute([':tenant_id' => $tenantId, ':year' => $year]);
+        return (int)$stmt->fetchColumn();
     }
 
     // ─── DASHBOARD ───────────────────────────────────────────────────────────
