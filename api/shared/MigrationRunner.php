@@ -95,6 +95,12 @@ class MigrationRunner
             'V062b__teams_gender.sql'            => 'V062_1__teams_gender.sql',
             'V063b__scouting_add_cognito_id.sql' => 'V063_1__scouting_add_cognito_id.sql',
             'V065b__societa_sponsors_add_fields.sql' => 'V065_1__societa_sponsors_add_fields.sql',
+            // Fix duplicate V086/V087 prefixes → renumbered to V095-V099
+            'V086__quota_tornei.sql'              => 'V095__quota_tornei.sql',
+            'V086__fix_remaining_discrepancies.sql' => 'V096__fix_remaining_discrepancies.sql',
+            'V086__add_receipt_numbers.sql'       => 'V097__add_receipt_numbers.sql',
+            'V087__tornei_pagamenti.sql'          => 'V098__tornei_pagamenti.sql',
+            'V087__fix_transport_schema.sql'      => 'V099__fix_transport_schema.sql',
         ];
 
         $stmt = $this->db->prepare(
