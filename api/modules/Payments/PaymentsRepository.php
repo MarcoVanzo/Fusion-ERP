@@ -224,10 +224,14 @@ class PaymentsRepository
      */
     public function getNextReceiptNumber(string $tenantId, int $year): int
     {
+        // Use FOR UPDATE to prevent race conditions: two concurrent payments
+        // must never receive the same progressive receipt number (legal requirement for ASD).
+        // The caller (payInstallment) should wrap this in a transaction.
         $stmt = $this->db->prepare(
             "SELECT COALESCE(MAX(receipt_number), 0) + 1 
              FROM transactions 
-             WHERE tenant_id = :tenant_id AND receipt_year = :year"
+             WHERE tenant_id = :tenant_id AND receipt_year = :year
+             FOR UPDATE"
         );
         $stmt->execute([':tenant_id' => $tenantId, ':year' => $year]);
         return (int)$stmt->fetchColumn();

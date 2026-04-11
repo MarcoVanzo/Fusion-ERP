@@ -212,27 +212,39 @@ class PaymentsController
         }
 
         $paidDate = $body['paid_date'] ?? date('Y-m-d');
-        $this->repo->payInstallment($body['installment_id'], $paidDate, $method, null);
 
-        // Fetch year and next receipt number
-        $receiptYear = (int)date('Y', strtotime($paidDate));
-        $receiptNumber = $this->repo->getNextReceiptNumber($installment['tenant_id'], $receiptYear);
+        // Wrap payment + receipt number in a transaction for atomicity.
+        // The FOR UPDATE in getNextReceiptNumber prevents duplicate receipt numbers.
+        $db = \FusionERP\Shared\Database::getInstance();
+        $db->beginTransaction();
+        try {
+            $this->repo->payInstallment($body['installment_id'], $paidDate, $method, null);
 
-        // Log transaction
-        $txId = 'TX_' . bin2hex(random_bytes(4));
-        $this->repo->insertTransaction([
-            ':id' => $txId,
-            ':tenant_id' => $installment['tenant_id'],
-            ':athlete_id' => $installment['athlete_id'],
-            ':installment_id' => $body['installment_id'],
-            ':amount' => $installment['amount'],
-            ':transaction_date' => $paidDate,
-            ':payment_method' => $method,
-            ':reference' => $body['reference'] ?? null,
-            ':created_by' => $user['id'] ?? null,
-            ':receipt_year' => $receiptYear,
-            ':receipt_number' => $receiptNumber
-        ]);
+            // Fetch year and next receipt number (uses FOR UPDATE lock)
+            $receiptYear = (int)date('Y', strtotime($paidDate));
+            $receiptNumber = $this->repo->getNextReceiptNumber($installment['tenant_id'], $receiptYear);
+
+            // Log transaction
+            $txId = 'TX_' . bin2hex(random_bytes(4));
+            $this->repo->insertTransaction([
+                ':id' => $txId,
+                ':tenant_id' => $installment['tenant_id'],
+                ':athlete_id' => $installment['athlete_id'],
+                ':installment_id' => $body['installment_id'],
+                ':amount' => $installment['amount'],
+                ':transaction_date' => $paidDate,
+                ':payment_method' => $method,
+                ':reference' => $body['reference'] ?? null,
+                ':created_by' => $user['id'] ?? null,
+                ':receipt_year' => $receiptYear,
+                ':receipt_number' => $receiptNumber
+            ]);
+
+            $db->commit();
+        } catch (\Throwable $e) {
+            $db->rollBack();
+            throw $e;
+        }
 
         Audit::log('UPDATE', 'installments', $body['installment_id'], $installment, [
             'status' => 'PAID',
@@ -258,11 +270,9 @@ class PaymentsController
     
     public function createCheckoutSession(): void
     {
-        Auth::requireWrite('payments'); // Wait, athletes need this? Athletes should be able to pay!
-        // We will just require read because athletes only read payments but they should write checkouts implicitly.
-        // Let's modify manually for robust roles later
-        // Actually, let's just use Auth::user() and check existence
-        $user = Auth::user();
+        // Athletes have 'read' on payments but must be able to pay their own installments.
+        // requireRead is sufficient; the installment ownership check below provides authorization.
+        $user = Auth::requireRead('payments');
         if (!$user) {
             Response::error('Non autorizzato', 401);
         }

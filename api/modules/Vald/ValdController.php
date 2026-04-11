@@ -8,10 +8,6 @@ declare(strict_types=1);
 
 namespace FusionERP\Modules\Vald;
 
-// Shared classes are PSR-4 autoloaded via composer
-require_once __DIR__ . '/ValdRepository.php';
-require_once __DIR__ . '/ValdService.php';
-
 use FusionERP\Shared\Auth;
 use FusionERP\Shared\Response;
 use FusionERP\Shared\TenantContext;
@@ -48,6 +44,42 @@ class ValdController
             'deleted_tests' => $deleted,
             'unlinked_athletes' => $unlinked,
             'message' => 'Reset completato: ' . $deleted . ' test eliminati, ' . $unlinked . ' atleti sganciati.',
+        ]);
+    }
+
+    /**
+     * GET /api/?module=vald&action=debugMetrics&athleteId=ATH_xxx
+     * TEMPORARY: Inspect stored metrics keys to debug missing fields
+     */
+    public function debugMetrics(): void
+    {
+        Auth::requireRole('admin');
+        $athleteId = filter_input(INPUT_GET, 'athleteId', FILTER_DEFAULT) ?? '';
+        
+        $results = $this->repo->getResultsByAthlete($athleteId);
+        $debug = [];
+        
+        foreach (array_slice($results, 0, 3) as $res) {
+            $m = json_decode($res['metrics'] ?? '{}', true) ?: [];
+            $debug[] = [
+                'test_date' => $res['test_date'],
+                'test_type' => $res['test_type'],
+                'metric_keys' => array_keys($m),
+                'all_values' => $m,
+            ];
+        }
+        
+        // Also get the deep analytics output
+        $deep = $this->service->getDeepAnalytics($athleteId);
+        $athleteWeight = (float)$this->service->getAthleteWeight($athleteId);
+        
+        Response::success([
+            'athlete_id' => $athleteId,
+            'athlete_weight' => $athleteWeight,
+            'total_results' => count($results),
+            'sample_results' => $debug,
+            'deep_analytics_keys' => $deep ? array_keys($deep) : null,
+            'deep_analytics' => $deep,
         ]);
     }
 
@@ -120,13 +152,17 @@ class ValdController
 
             $baselineBraking = $this->repo->getBaselineBrakingImpulse($athleteId);
 
+            // DEBUG: raw metrics keys from latest test for investigating missing fields
+            $debugMetricKeys = array_keys($metrics);
+            $debugDeep = $deep;
+
             Response::success([
                 'hasData' => true,
                 'testDate' => $latest['test_date'],
                 'testType' => $latest['test_type'],
                 'jumpHeight' => $deep['Jump Height (Imp-Mom) (cm)'] ?? $profile['jumpHeight'] ?? null,
-                'jhTrend' => $deep['Jump Height (Imp-Mom) (cm)_zscore'] ?? 0, // Placeholder for trend
-                'peakPowerBM' => $deep['Concentric Peak Power / BM (W/kg)'] ?? 0,
+                'jhTrend' => $deep['Jump Height (Imp-Mom) (cm)_zscore'] ?? 0,
+                'peakPowerBM' => $this->_computeRelativePeakPower($deep, $metrics, $athleteWeight),
                 'rsiZScore' => $deep['RSI-modified_zscore'] ?? null,
                 'strategyShiftAlert' => $deep['Strategy_Shift_Alert'] ?? null,
                 'brakingImpulse' => $profile['brakingImpulse'] ?? null,
@@ -137,10 +173,57 @@ class ValdController
                 'profile' => $profile,
                 'muscleMap' => $muscleMap,
                 'results' => $allResults,
+                // TEMP DEBUG - remove after fix
+                '_debug' => [
+                    'latestMetricKeys' => $debugMetricKeys,
+                    'latestMetrics' => $metrics,
+                    'athleteWeight' => $athleteWeight,
+                    'deepAnalytics' => $debugDeep,
+                ],
             ]);
         } catch (\Throwable $e) {
             Response::error('Critico VALD: ' . $e->getMessage(), 500);
         }
+    }
+
+    /**
+     * Compute Relative Peak Power (W/kg) with fallback chain:
+     * 1. Deep analytics per-BM value (already in W/kg)
+     * 2. Deep analytics absolute power / athlete weight
+     * 3. Latest metrics ConcentricPeakPowerBM (already in W/kg)
+     * 4. Latest metrics ConcentricPeakPower / athlete weight
+     * 5. Physics estimate from JumpHeight + BM (Harman equation)
+     */
+    private function _computeRelativePeakPower(?array $deep, array $metrics, float $athleteWeight): float
+    {
+        // 1. Direct per-BM value from deep analytics
+        $perBM = (float)($deep['Concentric Peak Power / BM (W/kg)'] ?? 0);
+        if ($perBM > 0) return round($perBM, 1);
+
+        // 2. Absolute power from deep analytics / weight
+        $absW = (float)($deep['Concentric Peak Power (W)'] ?? 0);
+        if ($absW > 0 && $athleteWeight > 0) return round($absW / $athleteWeight, 1);
+
+        // 3. ConcentricPeakPowerBM from raw metrics (already W/kg)
+        $rawBM = (float)($metrics['ConcentricPeakPowerBM']['Value'] ?? 0);
+        if ($rawBM > 0) return round($rawBM, 1);
+
+        // 4. ConcentricPeakPower (absolute W) from raw metrics / weight
+        $rawAbs = (float)($metrics['ConcentricPeakPower']['Value'] ?? 0);
+        if ($rawAbs > 0 && $athleteWeight > 0) return round($rawAbs / $athleteWeight, 1);
+
+        // 5. Physics-based estimate: Harman equation (validated for CMJ)
+        //    PPeak (W) = 61.9 × JH_cm + 36.0 × BM_kg − 1822
+        //    Relative = PPeak / BM
+        $jhCm = (float)($deep['Jump Height (Imp-Mom) (cm)'] ?? $metrics['JumpHeight']['Value'] ?? $metrics['JumpHeightTotal']['Value'] ?? 0);
+        if ($jhCm > 0 && $athleteWeight > 0) {
+            $peakPowerW = 61.9 * $jhCm + 36.0 * $athleteWeight - 1822;
+            if ($peakPowerW > 0) {
+                return round($peakPowerW / $athleteWeight, 1);
+            }
+        }
+
+        return 0;
     }
 
     /**
