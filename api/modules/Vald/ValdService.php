@@ -129,7 +129,8 @@ class ValdService
     public function computeSemaphore(array $metrics, ?array $baseline): array
     {
         $currentRSI = (float)($metrics['RSIModified']['Value'] ?? 0);
-        $currentTttO = (float)($metrics['TimeToTakeoff']['Value'] ?? 0);
+        // TimeToTakeoff fallback chain: TimeToTakeoff → EccentricDuration → ContractionTime
+        $currentTttO = (float)($metrics['TimeToTakeoff']['Value'] ?? $metrics['EccentricDuration']['Value'] ?? $metrics['ContractionTime']['Value'] ?? 0);
         $baselineRSI = $baseline['rsimod_avg'] ?? null;
         $baselineTttO = $baseline['ttto_avg'] ?? null;
 
@@ -785,6 +786,8 @@ PROMPT;
             $data = \array_combine($headers, $row);
             
             // Map common ForceDecks CSV columns to our internal format
+            // TimeToTakeoff: use dedicated CSV column if present, fallback to Eccentric Duration
+            $tttoMs = (float)($data['Time to Takeoff (ms)'] ?? $data['Time To Takeoff (ms)'] ?? $data['Eccentric Duration (ms)'] ?? 0);
             $rows[] = [
                 'test_date' => $data['Test Date'] ?? 'now',
                 'test_type' => $data['Test Type'] ?? 'CMJ',
@@ -792,8 +795,15 @@ PROMPT;
                     'JumpHeight' => ['Value' => (float)($data['Jump Height (Imp-Mom) (cm)'] ?? 0)],
                     'RSIModified' => ['Value' => (float)($data['RSI-modified'] ?? 0)],
                     'EccentricDuration' => ['Value' => (float)($data['Eccentric Duration (ms)'] ?? 0)],
+                    'TimeToTakeoff' => ['Value' => $tttoMs],
                     'ConcentricPeakPower' => ['Value' => (float)($data['Concentric Peak Power / BM (W/kg)'] ?? 0)],
                     'PeakForce' => ['Value' => (float)($data['Peak Vertical Force (N)'] ?? 0)],
+                    'BrakingImpulse' => ['Value' => (float)($data['Braking Net Impulse (N s)'] ?? $data['Eccentric Braking Impulse (N s)'] ?? $data['Braking Phase Net Impulse (N s)'] ?? 0)],
+                    'PeakLandingForce' => ['Value' => (float)($data['Peak Landing Force (N)'] ?? $data['Landing Peak Force (N)'] ?? 0)],
+                    'LandingForceLeft' => ['Value' => (float)($data['Peak Landing Force Left (N)'] ?? 0)],
+                    'LandingForceRight' => ['Value' => (float)($data['Peak Landing Force Right (N)'] ?? 0)],
+                    'PeakForceLeft' => ['Value' => (float)($data['Peak Force Left (N)'] ?? 0)],
+                    'PeakForceRight' => ['Value' => (float)($data['Peak Force Right (N)'] ?? 0)],
                 ]
             ];
         }

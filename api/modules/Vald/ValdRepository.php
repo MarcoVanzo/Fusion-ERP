@@ -127,8 +127,10 @@ class ValdRepository
             $m = json_decode($row['metrics'] ?? '{}', true) ?: [];
             if (isset($m['RSIModified']['Value']))
                 $rsiVals[] = (float)$m['RSIModified']['Value'];
-            if (isset($m['TimeToTakeoff']['Value']))
-                $tttoVals[] = (float)$m['TimeToTakeoff']['Value'];
+            // TimeToTakeoff fallback chain: TimeToTakeoff → EccentricDuration → ContractionTime
+            $tttoVal = $m['TimeToTakeoff']['Value'] ?? $m['EccentricDuration']['Value'] ?? $m['ContractionTime']['Value'] ?? null;
+            if ($tttoVal !== null)
+                $tttoVals[] = (float)$tttoVal;
             if (isset($m['PeakForce']['Value']))
                 $peakForceVals[] = (float)$m['PeakForce']['Value'];
         }
