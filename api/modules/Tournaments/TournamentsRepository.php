@@ -34,19 +34,11 @@ class TournamentsRepository
             LEFT JOIN teams t ON e.team_id = t.id
             LEFT JOIN tournament_details td ON e.id = td.event_id
             WHERE e.type = 'tournament' AND e.deleted_at IS NULL
-              AND e.tenant_id = :tid
+              AND (e.tenant_id = :tid OR e.tenant_id = 'TNT_fusion' OR e.tenant_id IS NULL)
             ORDER BY e.event_date DESC
         ");
         $stmt->execute([':tid' => $tid]);
-        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        // Fallback: If no results for current tenant, try global 'TNT_fusion'
-        if (empty($results) && $tid !== 'TNT_fusion') {
-            $stmt->execute([':tid' => 'TNT_fusion']);
-            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        }
-
-        return $results;
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     /**

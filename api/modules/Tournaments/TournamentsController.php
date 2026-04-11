@@ -41,8 +41,17 @@ class TournamentsController
     public function getTournaments(): void
     {
         Auth::requireRead('tournaments');
+        $tournaments = $this->repository->listTournaments();
+        
+        // Debug logging to trace "empty list" issues in production
+        if (getenv('APP_DEBUG') === 'true') {
+            $count = count($tournaments);
+            $tid = \FusionERP\Shared\TenantContext::id();
+            error_log("[Tournaments] Found {$count} tournaments for tenant '{$tid}' (incl. global)");
+        }
+
         $this->handleServiceCall(fn() => [
-            'tournaments' => $this->repository->listTournaments()
+            'tournaments' => $tournaments
         ]);
     }
 

@@ -46,8 +46,8 @@ class VehiclesRepository
         }
 
         // Fetch maintenance
-        $stmt = $this->db->prepare("SELECT * FROM vehicle_maintenance WHERE vehicle_id = :id ORDER BY maintenance_date DESC");
-        $stmt->execute([':id' => $id]);
+        $stmt = $this->db->prepare("SELECT * FROM vehicle_maintenance WHERE vehicle_id = :id AND tenant_id = :tid ORDER BY maintenance_date DESC");
+        $stmt->execute([':id' => $id, ':tid' => TenantContext::id()]);
         $vehicle['maintenance'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         // Fetch anomalies
@@ -55,10 +55,10 @@ class VehiclesRepository
             SELECT a.*, u.full_name as reporter_name
             FROM vehicle_anomalies a
             LEFT JOIN users u ON a.reporter_id = u.id
-            WHERE a.vehicle_id = :id
+            WHERE a.vehicle_id = :id AND a.tenant_id = :tid
             ORDER BY a.report_date DESC
         ");
-        $stmt->execute([':id' => $id]);
+        $stmt->execute([':id' => $id, ':tid' => TenantContext::id()]);
         $vehicle['anomalies'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         return $vehicle;
@@ -109,8 +109,9 @@ class VehiclesRepository
 
     public function addMaintenance(array $params): void
     {
-        $sql = "INSERT INTO vehicle_maintenance (id, vehicle_id, maintenance_date, type, description, cost, mileage, next_maintenance_date, next_maintenance_mileage)
-                VALUES (:id, :vehicle_id, :maintenance_date, :type, :description, :cost, :mileage, :next_maintenance_date, :next_maintenance_mileage)";
+        $params[':tenant_id'] = TenantContext::id();
+        $sql = "INSERT INTO vehicle_maintenance (id, tenant_id, vehicle_id, maintenance_date, type, description, cost, mileage, next_maintenance_date, next_maintenance_mileage)
+                VALUES (:id, :tenant_id, :vehicle_id, :maintenance_date, :type, :description, :cost, :mileage, :next_maintenance_date, :next_maintenance_mileage)";
         $stmt = $this->db->prepare($sql);
         $stmt->execute($params);
     }
@@ -119,8 +120,9 @@ class VehiclesRepository
 
     public function addAnomaly(array $params): void
     {
-        $sql = "INSERT INTO vehicle_anomalies (id, vehicle_id, reporter_id, description, severity, status)
-                VALUES (:id, :vehicle_id, :reporter_id, :description, :severity, :status)";
+        $params[':tenant_id'] = TenantContext::id();
+        $sql = "INSERT INTO vehicle_anomalies (id, tenant_id, vehicle_id, reporter_id, description, severity, status)
+                VALUES (:id, :tenant_id, :vehicle_id, :reporter_id, :description, :severity, :status)";
         $stmt = $this->db->prepare($sql);
         $stmt->execute($params);
     }
@@ -131,12 +133,12 @@ class VehiclesRepository
         $params[':id'] = $id;
         $params[':tid'] = $tid;
         $sql = "UPDATE vehicle_anomalies a
-                INNER JOIN vehicles v ON a.vehicle_id = v.id AND v.tenant_id = :tid
+                INNER JOIN vehicles v ON a.vehicle_id = v.id
                 SET
                     a.status = :status,
                     a.resolution_notes = :resolution_notes,
                     a.resolved_date = :resolved_date
-                WHERE a.id = :id";
+                WHERE a.id = :id AND a.tenant_id = :tid AND v.tenant_id = :tid";
         $stmt = $this->db->prepare($sql);
         $stmt->execute($params);
         return $stmt->rowCount() > 0;
