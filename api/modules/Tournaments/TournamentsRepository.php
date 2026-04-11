@@ -38,7 +38,15 @@ class TournamentsRepository
             ORDER BY e.event_date DESC
         ");
         $stmt->execute([':tid' => $tid]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Fallback: If no results for current tenant, try global 'TNT_fusion'
+        if (empty($results) && $tid !== 'TNT_fusion') {
+            $stmt->execute([':tid' => 'TNT_fusion']);
+            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
+
+        return $results;
     }
 
     /**
@@ -57,7 +65,15 @@ class TournamentsRepository
               AND e.tenant_id = :tid
         ");
         $stmt->execute([':id' => $id, ':tid' => $tid]);
-        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+        $res = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        // Fallback for detail view
+        if (!$res && $tid !== 'TNT_fusion') {
+            $stmt->execute([':id' => $id, ':tid' => 'TNT_fusion']);
+            $res = $stmt->fetch(PDO::FETCH_ASSOC);
+        }
+
+        return $res ?: null;
     }
 
     /**
@@ -69,7 +85,7 @@ class TournamentsRepository
         $stmt = $this->db->prepare("
             SELECT tm.* FROM tournament_matches tm
             JOIN events e ON e.id = tm.event_id
-            WHERE tm.event_id = :id AND e.tenant_id = :tid
+            WHERE tm.event_id = :id AND (e.tenant_id = :tid OR e.tenant_id = 'TNT_fusion')
             ORDER BY tm.match_time ASC
         ");
         $stmt->execute([':id' => $tournamentId, ':tid' => $tid]);
