@@ -40,7 +40,7 @@ try {
        
        "PAYMENTS" => "SELECT CONCAT('Erogato rimborso: ', amount, ' €') as text, payment_date as date FROM staff_payments WHERE tenant_id='$tid' AND created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 4",
        
-       "HOSTESS" => "SELECT CONCAT('Fattura/Spesa Hostess: ', amount, ' €') as text, created_at as date FROM hostess_expenses WHERE tenant_id='$tid' AND created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 4",
+
        
        "DOCUMENTS" => "SELECT CONCAT('Documento aggiornato: ', file_name) as text, uploaded_at as date FROM documents WHERE tenant_id='$tid' AND uploaded_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 3",
        

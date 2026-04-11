@@ -168,7 +168,8 @@ class AthletesController
                 'quota_iscrizione_rata1', 'quota_iscrizione_rata2',
                 'quota_vestiario', 'quota_foresteria', 'quota_trasporti',
                 'quota_iscrizione_rata1_paid', 'quota_iscrizione_rata2_paid',
-                'quota_vestiario_paid', 'quota_foresteria_paid', 'quota_trasporti_paid'
+                'quota_vestiario_paid', 'quota_foresteria_paid', 'quota_trasporti_paid',
+                'quota_payment_deadline'
             ];
 
             foreach ($optionalFields as $field) {
@@ -178,7 +179,7 @@ class AthletesController
                     // DATA SANITIZATION:
                     // Convert empty strings to NULL for numeric and date fields to avoid "Incorrect integer value" or invalid date errors in MySQL strict mode.
                     $numericFields = ['height_cm', 'weight_kg', 'jersey_number'];
-                    $dateFields = ['birth_date', 'medical_cert_expires_at', 'medical_cert_issued_at'];
+                    $dateFields = ['birth_date', 'medical_cert_expires_at', 'medical_cert_issued_at', 'quota_payment_deadline'];
                     
                     if ($value === '' && (in_array($field, $numericFields) || in_array($field, $dateFields))) {
                         $value = null;
@@ -511,6 +512,32 @@ class AthletesController
             Response::error('id obbligatorio', 400);
         }
         Response::success($this->repo->getTransportHistory($id));
+    }
+
+    // ─── GET /api/?module=athletes&action=getTournamentHistory&id=ATH_xxx ────
+    public function getTournamentHistory(): void
+    {
+        Auth::requireRead('athletes');
+        $id = filter_input(INPUT_GET, 'id', FILTER_DEFAULT) ?? '';
+        if (empty($id)) {
+            Response::error('id obbligatorio', 400);
+        }
+        Response::success($this->repo->getTournamentHistory($id));
+    }
+
+    // ─── POST /api/?module=athletes&action=setTournamentPayment ──────────────
+    public function setTournamentPayment(): void
+    {
+        Auth::requireWrite('athletes');
+        $body = json_decode(file_get_contents('php://input'), true);
+        if (!$body || empty($body['athlete_id']) || empty($body['event_id'])) {
+            Response::error('Dati mancanti', 400);
+        }
+        $athleteId = $body['athlete_id'];
+        $eventId = $body['event_id'];
+        $hasPaid = !empty($body['has_paid']);
+        $this->repo->setTournamentPayment($athleteId, $eventId, $hasPaid);
+        Response::success(['message' => 'Pagamento torneo aggiornato']);
     }
 
     // ─── GET /api/?module=athletes&action=alerts ──────────────────────────────

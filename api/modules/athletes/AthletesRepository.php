@@ -102,6 +102,7 @@ class AthletesRepository
                        a.quota_vestiario, a.quota_vestiario_paid,
                        a.quota_foresteria, a.quota_foresteria_paid,
                        a.quota_trasporti, a.quota_trasporti_paid,
+                       a.quota_payment_deadline,
                        a.medical_cert_expires_at{$docCols},
                        COALESCE(t.name, 'Nessuna squadra') AS team_name,
                        COALESCE(t.category, 'Nessuna') AS category,
@@ -167,6 +168,8 @@ class AthletesRepository
                     a.quota_vestiario, a.quota_vestiario_paid,
                     a.quota_foresteria, a.quota_foresteria_paid,
                     a.quota_trasporti, a.quota_trasporti_paid,
+
+                    a.quota_payment_deadline,
                     a.shirt_size, a.shoe_size,
                     a.is_active,
                     t.name AS team_name, t.category
@@ -217,6 +220,8 @@ class AthletesRepository
                     a.quota_vestiario, a.quota_vestiario_paid,
                     a.quota_foresteria, a.quota_foresteria_paid,
                     a.quota_trasporti, a.quota_trasporti_paid,
+
+                    a.quota_payment_deadline,
                     a.shirt_size, a.shoe_size,
                     a.is_active,
                     t.name AS team_name, t.category
@@ -264,6 +269,8 @@ class AthletesRepository
                     a.quota_vestiario, a.quota_vestiario_paid,
                     a.quota_foresteria, a.quota_foresteria_paid,
                     a.quota_trasporti, a.quota_trasporti_paid,
+
+                    a.quota_payment_deadline,
                     a.shirt_size, a.shoe_size,
                     a.is_active,
                     t.name AS team_name, t.category
@@ -606,6 +613,41 @@ class AthletesRepository
         );
         $stmt->execute([':id' => $athleteId]);
         return $stmt->fetchAll();
+    }
+
+    // ─── TOURNAMENT HISTORY ──────────────────────────────────────────────────
+
+    public function getTournamentHistory(string $athleteId): array
+    {
+        // Safety check logic against missing column during migration run
+        $hasPaidField = '0 AS has_paid';
+        if ($this->_hasColumn('event_attendees', 'has_paid')) {
+            $hasPaidField = 'ea.has_paid';
+        }
+
+        $stmt = $this->db->prepare(
+            "SELECT e.id AS event_id, e.title AS tournament_name, e.start_date AS tournament_date, td.fee_per_athlete, {$hasPaidField}
+             FROM event_attendees ea
+             JOIN events e ON e.id = ea.event_id
+             JOIN tournament_details td ON td.tournament_id = e.id
+             WHERE ea.athlete_id = :id AND ea.status = 'confirmed'
+             ORDER BY e.start_date DESC"
+        );
+        $stmt->execute([':id' => $athleteId]);
+        return $stmt->fetchAll();
+    }
+
+    public function setTournamentPayment(string $athleteId, string $eventId, bool $hasPaid): void
+    {
+        $stmt = $this->db->prepare(
+            'UPDATE event_attendees SET has_paid = :has_paid 
+             WHERE athlete_id = :athlete_id AND event_id = :event_id'
+        );
+        $stmt->execute([
+            ':has_paid' => $hasPaid ? 1 : 0,
+            ':athlete_id' => $athleteId,
+            ':event_id' => $eventId
+        ]);
     }
 
     // ─── ACTIVITY LOG ────────────────────────────────────────────────────────

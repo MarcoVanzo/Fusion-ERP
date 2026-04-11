@@ -658,7 +658,7 @@ class DashboardController
         $queryNodes("SELECT subject as text, sent_at as date FROM newsletter_campaigns WHERE tenant_id=:t AND sent_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 3", [':t' => $tid], 'newsletter');
         $queryNodes("SELECT title as text, created_at as date FROM website_news WHERE tenant_id=:t AND created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 3", [':t' => $tid], 'website_news');
         $queryNodes("SELECT amount as text, payment_date as date FROM staff_payments WHERE tenant_id=:t AND created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 4", [':t' => $tid], 'staff_payments');
-        $queryNodes("SELECT amount as text, created_at as date FROM hostess_expenses WHERE tenant_id=:t AND created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 4", [':t' => $tid], 'hostess_expenses');
+
         $queryNodes("SELECT file_name as text, uploaded_at as date FROM documents WHERE tenant_id=:t AND uploaded_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 3", [':t' => $tid], 'documents');
         $queryNodes("SELECT company_name as text, created_at as date FROM sponsors WHERE tenant_id=:t AND created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 3", [':t' => $tid], 'sponsors');
         $queryNodes("SELECT first_name as text, created_at as date FROM staff_members WHERE tenant_id=:t AND created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) LIMIT 3", [':t' => $tid], 'staff');

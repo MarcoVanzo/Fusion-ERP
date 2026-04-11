@@ -21,8 +21,12 @@ export const AthletesAPI = {
     
     getTransportHistory: async (id) => await Store.get("getTransportHistory", "athletes", { id }),
 
+    getTournamentHistory: async (id) => await Store.get("getTournamentHistory", "athletes", { id }),
+
     // --- Scrittura ---
     create: async (data) => await Store.api("create", "athletes", data),
+    
+    setTournamentPayment: async (data) => await Store.api("setTournamentPayment", "athletes", data),
     
     update: async (data) => await Store.api("update", "athletes", data),
 
