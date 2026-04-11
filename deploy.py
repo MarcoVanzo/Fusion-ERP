@@ -290,6 +290,8 @@ def deploy_files_via_ftp(dry_run=False):
             'eslint.config.mjs', 'package.json', 'package-lock.json',
             'composer.json', 'composer.lock', 'composer.phar',
             'style_v2.backup.css',
+            # Security: debug/test/diagnostic files — NEVER deploy to production
+            'test.php', 'gas_proxy.gs', '.stylelintrc.json',
         ]
 
         upload_jobs: list[tuple[str, str, str, str]] = []
@@ -344,6 +346,11 @@ def deploy_files_via_ftp(dry_run=False):
                     or file.startswith('.')
                     or any(file.endswith(ext) for ext in ignore_extensions)
                 ):
+                    skip_count += 1
+                    continue
+
+                # Defense-in-depth: block debug/test PHP scripts by naming pattern
+                if file.endswith('.php') and re.match(r'^(test_|debug_|check_|query_|find_|list_models)', file):
                     skip_count += 1
                     continue
 

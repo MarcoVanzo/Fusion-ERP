@@ -169,6 +169,7 @@ class App {
       try {
         const response = await fetch('../api/?module=auth&action=login', {
           method: 'POST',
+          credentials: 'include',
           headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
           body: JSON.stringify({ email: email, password: pass }),
         });
@@ -243,7 +244,7 @@ class App {
 
     document.getElementById('logout-btn').addEventListener('click', async () => {
       try {
-        await fetch('../api/?module=auth&action=logout', { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+        await fetch('../api/?module=auth&action=logout', { method: 'POST', credentials: 'include', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
       } catch(e) {}
       localStorage.removeItem('erp_user');
       window.location.hash = '#login';
@@ -508,6 +509,7 @@ class App {
 
         const response = await fetch('../api/?module=societa&action=addExpense', {
           method: 'POST',
+          credentials: 'include',
           headers: { 'X-Requested-With': 'XMLHttpRequest' },
           body: formData,
         });
@@ -793,6 +795,7 @@ class App {
     try {
       const response = await fetch('../api/?module=athletes&action=update', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
         body: JSON.stringify({ id: p.id, phone: phone, shirt_size: shirtSize }),
       });
@@ -952,8 +955,8 @@ class App {
           html += `
             <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid var(--border-subtle);">
               <div>
-                <div style="font-weight:600; font-size:14px;">${injury.type || injury.description || 'Infortunio'}</div>
-                <div style="font-size:12px; color:var(--text-muted);">${dateStr} ${statusIcon} ${injury.status || ''}</div>
+                <div style="font-weight:600; font-size:14px;">${this.escapeHtml(injury.type || injury.description || 'Infortunio')}</div>
+                <div style="font-size:12px; color:var(--text-muted);">${dateStr} ${statusIcon} ${this.escapeHtml(injury.status || '')}</div>
               </div>
               <div style="font-size:12px; color:var(--text-light);">${injury.recovery_days ? injury.recovery_days + ' gg' : ''}</div>
             </div>
@@ -994,8 +997,8 @@ class App {
           html += `
             <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid var(--border-subtle);">
               <div>
-                <div style="font-weight:600; font-size:14px;">${t.destination || t.event_name || 'Trasporto'}</div>
-                <div style="font-size:12px; color:var(--text-muted);">${dateStr} ${t.driver_name ? '• Autista: ' + t.driver_name : ''}</div>
+                <div style="font-weight:600; font-size:14px;">${this.escapeHtml(t.destination || t.event_name || 'Trasporto')}</div>
+                <div style="font-size:12px; color:var(--text-muted);">${dateStr} ${t.driver_name ? '• Autista: ' + this.escapeHtml(t.driver_name) : ''}</div>
               </div>
               <div style="font-size:12px; color:var(--accent-primary); font-weight:600;">${t.status || ''}</div>
             </div>
@@ -1115,18 +1118,18 @@ class App {
       let html = '';
       if (data.success && data.data && data.data.length > 0) {
         data.data.forEach(athlete => {
-          html += \`
-            <div class="athlete-item" onclick="app.renderProfilo('\${athlete.id}')">
+          html += `
+            <div class="athlete-item" onclick="app.renderProfilo('${athlete.id}')">
               <div class="athlete-avatar">
-                \${athlete.photo_path ? \`<img src="../\${athlete.photo_path}">\` : '<i class="fas fa-user"></i>'}
+                ${athlete.photo_path ? `<img src="../${athlete.photo_path}">` : '<i class="fas fa-user"></i>'}
               </div>
               <div class="athlete-details">
-                <div class="athlete-name">\${athlete.first_name} \${athlete.last_name}</div>
-                <div class="athlete-meta">\${athlete.role || 'Giocatore'}</div>
+                <div class="athlete-name">${this.escapeHtml(athlete.first_name)} ${this.escapeHtml(athlete.last_name)}</div>
+                <div class="athlete-meta">${this.escapeHtml(athlete.role || 'Giocatore')}</div>
               </div>
               <i class="fas fa-chevron-right" style="color: var(--border-subtle)"></i>
             </div>
-          \`;
+          `;
         });
       } else {
         html = '<p class="text-muted text-center" style="margin-top:20px;">Nessun atleta trovato in squadra.</p>';
@@ -1138,7 +1141,7 @@ class App {
   }
 
   async renderPresenzeTeam() {
-    this.container.innerHTML = \`
+    this.container.innerHTML = `
       <div class="screen presenze-team-screen">
         <header class="app-header glass-header">
           <div class="app-title">APPELLO OGGI</div>
@@ -1146,7 +1149,7 @@ class App {
         </header>
 
         <div class="p-20">
-          <h2 style="font-size:20px; text-transform:uppercase; margin-bottom:20px;" class="stagger-item text-center">\${new Date().toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' })}</h2>
+          <h2 style="font-size:20px; text-transform:uppercase; margin-bottom:20px;" class="stagger-item text-center">${new Date().toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' })}</h2>
           
           <div id="attendance-grid" class="attendance-grid stagger-item delay-1">
              <div class="glass-card skeleton" style="height:100px;"></div>
@@ -1156,7 +1159,7 @@ class App {
           <button class="btn mt-20 stagger-item delay-2" style="background:var(--success)" id="btn-confirm-attendance"><i class="fas fa-save"></i> CONFERMA MASCHERA PRESENZE</button>
         </div>
       </div>
-    \`;
+    `;
 
     // Load same list of athletes and render them as attendance cards
     try {
@@ -1165,20 +1168,20 @@ class App {
       let html = '';
       if (data.success && data.data && data.data.length > 0) {
         data.data.forEach(athlete => {
-          html += \`
-            <div class="attendance-card" id="att-card-\${athlete.id}">
+          html += `
+            <div class="attendance-card" id="att-card-${athlete.id}">
               <div class="athlete-avatar" style="margin:0 auto 10px; width:50px; height:50px;">
-                \${athlete.photo_path ? \`<img src="../\${athlete.photo_path}">\` : '<i class="fas fa-user"></i>'}
+                ${athlete.photo_path ? `<img src="../${athlete.photo_path}">` : '<i class="fas fa-user"></i>'}
               </div>
-              <div class="athlete-name" style="font-size:13px;">\${athlete.first_name}</div>
-              <div class="athlete-name" style="font-size:13px; opacity:0.8;">\${athlete.last_name}</div>
+              <div class="athlete-name" style="font-size:13px;">${this.escapeHtml(athlete.first_name)}</div>
+              <div class="athlete-name" style="font-size:13px; opacity:0.8;">${this.escapeHtml(athlete.last_name)}</div>
               
               <div class="attendance-actions">
-                <button class="btn-att btn-att-yes" onclick="app.markAttendance('\${athlete.id}', 'present')"><i class="fas fa-check"></i></button>
-                <button class="btn-att btn-att-no" onclick="app.markAttendance('\${athlete.id}', 'absent')"><i class="fas fa-times"></i></button>
+                <button class="btn-att btn-att-yes" onclick="app.markAttendance('${athlete.id}', 'present')"><i class="fas fa-check"></i></button>
+                <button class="btn-att btn-att-no" onclick="app.markAttendance('${athlete.id}', 'absent')"><i class="fas fa-times"></i></button>
               </div>
             </div>
-          \`;
+          `;
         });
       }
       document.getElementById('attendance-grid').innerHTML = html;
@@ -1220,6 +1223,7 @@ class App {
           for (const rec of records) {
             await fetch('../api/?module=teams&action=saveAttendance', {
               method: 'POST',
+              credentials: 'include',
               headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
               body: JSON.stringify({
                 team_id: teamId,
@@ -1306,9 +1310,9 @@ class App {
                   <i class="fas fa-triangle-exclamation" style="color: var(--danger); font-size: 20px;"></i>
                 </div>
                 <div>
-                  <h4 style="margin: 0; font-size: 16px;">${alert.athlete_name}</h4>
-                  <p style="font-size: 13px; color: var(--text-light); margin-top: 5px;">Rischio infortunio: <b>${alert.status_label || 'ALTO'}</b></p>
-                  <p style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Metriche ACWR: ${alert.acwr_value || '1.8+'}</p>
+                  <h4 style="margin: 0; font-size: 16px;">${this.escapeHtml(alert.athlete_name)}</h4>
+                  <p style="font-size: 13px; color: var(--text-light); margin-top: 5px;">Rischio infortunio: <b>${this.escapeHtml(alert.status_label || 'ALTO')}</b></p>
+                  <p style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Metriche ACWR: ${this.escapeHtml(alert.acwr_value || '1.8+')}</p>
                 </div>
               </div>
             </div>
@@ -1381,6 +1385,7 @@ class App {
         try {
           const verifyRes = await fetch('../api/verify_document.php', {
             method: 'POST',
+            credentials: 'include',
             headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
             body: JSON.stringify({
               image: base64Data,
@@ -1406,6 +1411,7 @@ class App {
           const finalModule = (!apiModule || apiModule === 'undefined' || apiModule === 'null') ? 'athletes' : apiModule;
           const response = await fetch(`../api/?module=${finalModule}&action=${action}`, {
             method: 'POST',
+            credentials: 'include',
             headers: { 'X-Requested-With': 'XMLHttpRequest' },
             body: formData
           });

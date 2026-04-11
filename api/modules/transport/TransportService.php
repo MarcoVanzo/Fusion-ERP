@@ -224,7 +224,7 @@ class TransportService
 HTML;
 
             $mpdf->WriteHTML($html);
-            $storagePath = getenv('PDF_STORAGE_PATH') ?: '/tmp/';
+            $storagePath = getenv('PDF_STORAGE_PATH') ?: (dirname(__DIR__, 3) . '/storage/pdfs/');
             $filename = "rimborso_{$reimbId}_" . date('Ymd') . '.pdf';
             $fullPath = rtrim($storagePath, '/') . '/' . $filename;
             $mpdf->Output($fullPath, 'F');

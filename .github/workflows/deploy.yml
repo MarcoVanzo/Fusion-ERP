@@ -86,8 +86,10 @@ jobs:
 
           # Application
           APP_ENV=production
+          APP_DEBUG=false
           APP_URL=${{ secrets.APP_URL }}
           APP_SECRET=${{ secrets.APP_SECRET }}
+          DEFAULT_TENANT_ID=${{ secrets.DEFAULT_TENANT_ID }}
 
           # Database
           DB_HOST=${{ secrets.DB_HOST }}
@@ -115,7 +117,7 @@ jobs:
           SESSION_NAME=fusion_session
           RATE_LIMIT_MAX=10
           RATE_LIMIT_WINDOW=300
-          TRUSTED_PROXY=
+          TRUSTED_PROXY=cloudflare
           IMPORT_SECRET=${{ secrets.IMPORT_SECRET }}
 
           # Password Policy
@@ -123,10 +125,10 @@ jobs:
           PASSWORD_HISTORY_LIMIT=5
           PASSWORD_EXPIRY_DAYS=90
 
-          # Storage paths (server-side)
-          PDF_STORAGE_PATH=/var/www/fusion/storage/pdfs/
-          UPLOAD_STORAGE_PATH=/var/www/fusion/storage/uploads/
-          BACKUP_STORAGE_PATH=/var/www/fusion/storage/backups/
+          # Storage paths — Aruba shared hosting (relative to document root)
+          PDF_STORAGE_PATH=../storage/pdfs/
+          UPLOAD_STORAGE_PATH=../storage/uploads/
+          BACKUP_STORAGE_PATH=../storage/backups/
           MILEAGE_RATE=0.25
 
           # Cognito Forms
@@ -140,6 +142,16 @@ jobs:
           # eCommerce Cognito
           ECOMMERCE_COGNITO_API_KEY=${{ secrets['ECOMMERCE_COGNITO_API_KEY'] }}
           ECOMMERCE_FORM_ID=${{ secrets['ECOMMERCE_FORM_ID'] }}
+
+          # Scouting — Fusion
+          SCOUTING_FUSION_FORM_ID=${{ secrets['SCOUTING_FUSION_FORM_ID'] }}
+          SCOUTING_FUSION_VIEW_ID=${{ secrets['SCOUTING_FUSION_VIEW_ID'] }}
+          SCOUTING_FUSION_API_KEY=${{ secrets['SCOUTING_FUSION_API_KEY'] }}
+
+          # Scouting — Network
+          SCOUTING_NETWORK_FORM_ID=${{ secrets['SCOUTING_NETWORK_FORM_ID'] }}
+          SCOUTING_NETWORK_VIEW_ID=${{ secrets['SCOUTING_NETWORK_VIEW_ID'] }}
+          SCOUTING_NETWORK_API_KEY=${{ secrets['SCOUTING_NETWORK_API_KEY'] }}
 
           # Meta / Social
           META_APP_ID=${{ secrets.META_APP_ID }}
@@ -166,6 +178,14 @@ jobs:
           VALD_CLIENT_SECRET=${{ secrets['VALD_CLIENT_SECRET'] }}
           VALD_USER_EMAIL=${{ secrets['VALD_USER_EMAIL'] }}
           VALD_ORG_ID=${{ secrets['VALD_ORG_ID'] }}
+
+          # Stripe Payments
+          STRIPE_SECRET_KEY=${{ secrets['STRIPE_SECRET_KEY'] }}
+          STRIPE_PUBLISHABLE_KEY=${{ secrets['STRIPE_PUBLISHABLE_KEY'] }}
+          STRIPE_WEBHOOK_SECRET=${{ secrets['STRIPE_WEBHOOK_SECRET'] }}
+
+          # Migrations
+          MIGRATION_TOKEN=${{ secrets['MIGRATION_TOKEN'] }}
           EOF
 
       # ── 5. Create .env.prod (deployed as .env on the server) ─────────────
