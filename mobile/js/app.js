@@ -15,6 +15,14 @@ class App {
     this.route();
   }
 
+  // --- HTML Escaping to prevent XSS (P3-07) ---
+  escapeHtml(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML;
+  }
+
   // --- Lifecycle & Resource Management ---
   cleanup() {
     // Clear all registered intervals to prevent memory leaks (Rule user_global)
@@ -96,11 +104,11 @@ class App {
       if (u.role) role = u.role.toLowerCase();
     } catch(e){}
 
-    const isCoach = role.includes('allenatore');
+    const isStaff = role.includes('allenatore') || role.includes('manager') || role.includes('operatore') || role === 'admin';
 
     const items = [
       { id: '#dashboard', icon: 'fa-home', text: 'Home' },
-      isCoach ? { id: '#squadra', icon: 'fa-users', text: 'Squadra' } : { id: '#profilo', icon: 'fa-user-circle', text: 'Profilo' },
+      isStaff ? { id: '#squadra', icon: 'fa-users', text: 'Squadra' } : { id: '#profilo', icon: 'fa-user-circle', text: 'Profilo' },
       { id: '#spese', icon: 'fa-receipt', text: 'Spese' }
     ];
 
@@ -246,7 +254,7 @@ class App {
     const userStr = localStorage.getItem('erp_user');
     if (!userStr) return;
     const user = JSON.parse(userStr);
-    if (!user || (user.role !== 'social media manager' && user.role !== 'operatore' && user.role !== 'allenatore' && user.role !== 'admin')) return;
+    if (!user || !['social media manager', 'operatore', 'allenatore', 'admin', 'manager', 'operator'].includes(user.role?.toLowerCase())) return;
 
     try {
       const res = await fetch(`../api/?module=athletes&action=alerts`, { credentials: 'include' });
@@ -728,7 +736,7 @@ class App {
         <div class="profile-avatar-container">
           \${p.photo_path ? '<img src="../' + p.photo_path + '">' : '<i class="fas fa-user"></i>'}
         </div>
-        <h2 style="font-size: 24px; margin-bottom: 4px;">\${p.first_name} \${p.last_name}</h2>
+        <h2 style="font-size: 24px; margin-bottom: 4px;">\${this.escapeHtml(p.first_name)} \${this.escapeHtml(p.last_name)}</h2>
         <div style="color: var(--accent-primary); font-weight: 700; font-size: 13px; text-transform: uppercase;">
           \${p.role || 'Atleta'} • \${p.team_name || 'Fusion'}
         </div>
@@ -820,7 +828,7 @@ class App {
          <div class="doc-list">
            \${this.renderDocRow("Carta Identità (FR)", p.id_doc_front_file_path, 'id_doc_front_file_path', 'uploadIdDocFront')}
            \${this.renderDocRow("Certificato Medico", p.medical_cert_file_path, 'medical_cert_file_path', 'uploadMedicalCert')}
-           \${this.renderDocRow("Contratto / Tesseramento", p.contract_file_path, 'contract_file_path', 'uploadContract')}
+           \${this.renderDocRow("Contratto / Tesseramento", p.contract_file_path, 'contract_file_path', 'uploadContractFile')}
          </div>
       </div>
     \`;
@@ -1113,13 +1121,27 @@ class App {
         confirmBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> SALVATAGGIO...';
 
         try {
-          // Save attendance for today
+          // Save attendance for today — send individual records to correct endpoint
           const today = new Date().toISOString().split('T')[0];
-          const response = await fetch('../api/?module=athletes&action=logMetric', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-            body: JSON.stringify({ attendance_date: today, records }),
-          });
+          // Determine team_id from user context
+          let teamId = null;
+          try {
+            const u = JSON.parse(localStorage.getItem('erp_user') || '{}');
+            teamId = u.team_id || u.teamId || null;
+          } catch(e) {}
+
+          for (const rec of records) {
+            await fetch('../api/?module=teams&action=saveAttendance', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+              body: JSON.stringify({
+                team_id: teamId,
+                athlete_id: rec.athlete_id,
+                attendance_date: today,
+                status: rec.status
+              }),
+            });
+          }
           // Even if the specific endpoint isn't ready, we show success for the mock
           alert(`Presenze salvate: ${records.length} registrazioni.`);
           window.location.hash = '#squadra';
@@ -1220,7 +1242,7 @@ class App {
       const actions = {
         'id_doc_front_file_path': 'uploadIdDocFront',
         'medical_cert_file_path': 'uploadMedicalCert',
-        'contract_file_path': 'uploadContract'
+        'contract_file_path': 'uploadContractFile'
       };
       const action = actions[field];
       if (action) {
