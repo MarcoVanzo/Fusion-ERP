@@ -380,7 +380,7 @@ class PaymentsController
     /**
      * Helper to create and save the PDF receipt
      */
-    private function createAndSaveReceipt(string $installmentId): string
+    public function createAndSaveReceipt(string $installmentId): string
     {
         $installment = $this->repo->getInstallmentById($installmentId);
         if (!$installment) return '';
