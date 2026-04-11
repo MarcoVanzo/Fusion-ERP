@@ -26,8 +26,10 @@ class FinanceController
         try {
             Response::success($callback());
         } catch (\Throwable $e) {
-            error_log("[Finance] API Error: " . $e->getMessage());
-            Response::error($e->getMessage(), 500);
+            $code = $e->getCode();
+            $httpCode = (is_int($code) && $code >= 400 && $code < 600) ? $code : 500;
+            error_log("[Finance] API Error ({$httpCode}): " . $e->getMessage());
+            Response::error($e->getMessage(), $httpCode);
         }
     }
 

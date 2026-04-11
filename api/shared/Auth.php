@@ -225,6 +225,8 @@ class Auth
             'athlete-payments' => 'read',
             'athlete-metrics' => 'read',
             'athlete-documents' => 'read',
+            'athlete-injuries' => 'read',
+            'athlete-attendances' => 'read',
             'payments' => 'read',
             'biometrics' => 'read',
             'teams' => 'read',
@@ -268,7 +270,13 @@ class Auth
             'network' => 'read',
             'network-collaborazioni' => 'read',
             'network-prove' => 'read',
-            'network-attivita' => 'read'
+            'network-attivita' => 'read',
+            // Moduli operativi (erano mancanti → 403 per tutti i non-admin)
+            'health' => 'read',
+            'federation' => 'read',
+            'documents' => 'read',
+            'scouting' => 'read',
+            'vald' => 'read',
         ];
 
         if ($role === 'admin') {
@@ -279,6 +287,33 @@ class Auth
         }
 
         if ($role === 'allenatore' || $role === 'operatore') {
+            // Moduli operativi: allenatori e operatori devono poter scrivere
+            $base['athletes'] = 'write';
+            $base['athlete-profile'] = 'write';
+            $base['athlete-payments'] = 'write';
+            $base['athlete-metrics'] = 'write';
+            $base['athlete-documents'] = 'write';
+            $base['athlete-injuries'] = 'write';
+            $base['athlete-attendances'] = 'write';
+            $base['health'] = 'write';
+            $base['tournaments'] = 'write';
+            $base['transport'] = 'write';
+            $base['transport-drivers'] = 'write';
+            $base['transport-fleet'] = 'write';
+            $base['biometrics'] = 'write';
+            $base['vald'] = 'write';
+            $base['tasks'] = 'write';
+            $base['documents'] = 'write';
+            $base['federation'] = 'write';
+            $base['results'] = 'write';
+            $base['results-matches'] = 'write';
+            $base['outseason'] = 'write';
+            $base['outseason-camps'] = 'write';
+            $base['outseason-tournaments'] = 'write';
+            $base['scouting'] = 'write';
+            $base['staff'] = 'write';
+            $base['staff-documents'] = 'write';
+            // Blocca amministrazione e finanza
             $base['finance'] = 'none';
             $base['admin'] = 'none';
             $base['admin-backup'] = 'none';

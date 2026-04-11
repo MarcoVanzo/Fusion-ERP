@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace FusionERP\Modules\Tournaments;
 
 use FusionERP\Shared\Database;
+use FusionERP\Shared\TenantContext;
 use PDO;
 
 class TournamentsRepository
@@ -25,6 +26,7 @@ class TournamentsRepository
      */
     public function listTournaments(): array
     {
+        $tid = TenantContext::id();
         $stmt = $this->db->prepare("
             SELECT e.*, t.name as team_name,
                    td.website_url, td.fee_per_athlete, td.accommodation_info
@@ -32,9 +34,10 @@ class TournamentsRepository
             LEFT JOIN teams t ON e.team_id = t.id
             LEFT JOIN tournament_details td ON e.id = td.event_id
             WHERE e.type = 'tournament' AND e.deleted_at IS NULL
+              AND e.tenant_id = :tid
             ORDER BY e.event_date DESC
         ");
-        $stmt->execute();
+        $stmt->execute([':tid' => $tid]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
@@ -43,15 +46,17 @@ class TournamentsRepository
      */
     public function getTournament(string $id): ?array
     {
+        $tid = TenantContext::id();
         $stmt = $this->db->prepare("
             SELECT e.*, t.name as team_name,
                    td.website_url, td.fee_per_athlete, td.accommodation_info
             FROM events e
-            JOIN teams t ON e.team_id = t.id
+            LEFT JOIN teams t ON e.team_id = t.id
             LEFT JOIN tournament_details td ON e.id = td.event_id
             WHERE e.id = :id AND e.type = 'tournament' AND e.deleted_at IS NULL
+              AND e.tenant_id = :tid
         ");
-        $stmt->execute([':id' => $id]);
+        $stmt->execute([':id' => $id, ':tid' => $tid]);
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
@@ -111,12 +116,14 @@ class TournamentsRepository
         $isUpdate = $data['is_update'] ?? false;
 
         if (!$isUpdate) {
+            $tid = TenantContext::id();
             $stmt = $this->db->prepare("
-                INSERT INTO events (id, team_id, type, title, event_date, event_end, location_name, created_by)
-                VALUES (:id, :team_id, 'tournament', :title, :event_date, :event_end, :location_name, :created_by)
+                INSERT INTO events (id, tenant_id, team_id, type, title, event_date, event_end, location_name, created_by)
+                VALUES (:id, :tenant_id, :team_id, 'tournament', :title, :event_date, :event_end, :location_name, :created_by)
             ");
             $stmt->execute([
                 ':id' => $id,
+                ':tenant_id' => $tid,
                 ':team_id' => $data['team_id'],
                 ':title' => $data['title'],
                 ':event_date' => $data['event_date'],

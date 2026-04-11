@@ -31,8 +31,10 @@ class TournamentsController
             $result = $callback();
             Response::success($result);
         } catch (\Exception $e) {
-            error_log("[Tournaments] API Error: " . $e->getMessage());
-            Response::error($e->getMessage(), 500);
+            $code = $e->getCode();
+            $httpCode = ($code >= 400 && $code < 600) ? $code : 500;
+            error_log("[Tournaments] API Error ({$httpCode}): " . $e->getMessage());
+            Response::error($e->getMessage(), $httpCode);
         }
     }
 
