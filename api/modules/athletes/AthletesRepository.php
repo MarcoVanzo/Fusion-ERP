@@ -100,6 +100,16 @@ class AthletesRepository
             $hasPaidField = 'ea.has_paid';
         }
 
+        // VALD subqueries: only reference vald_profile_id if the column exists in production
+        $hasValdProfileId = $this->_hasColumn('athletes', 'vald_profile_id');
+        if ($hasValdProfileId) {
+            $valdMetricsSub = "(SELECT metrics FROM vald_test_results WHERE athlete_id = a.id OR (a.vald_profile_id IS NOT NULL AND athlete_id IN (SELECT id FROM athletes WHERE vald_profile_id = a.vald_profile_id)) ORDER BY test_date DESC LIMIT 1)";
+            $valdDateSub = "(SELECT test_date FROM vald_test_results WHERE athlete_id = a.id OR (a.vald_profile_id IS NOT NULL AND athlete_id IN (SELECT id FROM athletes WHERE vald_profile_id = a.vald_profile_id)) ORDER BY test_date DESC LIMIT 1)";
+        } else {
+            $valdMetricsSub = "(SELECT metrics FROM vald_test_results WHERE athlete_id = a.id ORDER BY test_date DESC LIMIT 1)";
+            $valdDateSub = "(SELECT test_date FROM vald_test_results WHERE athlete_id = a.id ORDER BY test_date DESC LIMIT 1)";
+        }
+
         $sql = "SELECT DISTINCT a.id, a.team_id, a.full_name, a.jersey_number, a.role, a.photo_path, a.is_active,
                        a.birth_date, a.height_cm, a.weight_kg,
                        a.quota_iscrizione_rata1, a.quota_iscrizione_rata1_paid,
@@ -114,8 +124,8 @@ class AthletesRepository
                        COALESCE(t.category, 'Nessuna') AS category,
                        (SELECT GROUP_CONCAT(at_sub.team_season_id SEPARATOR ',') FROM athlete_teams at_sub WHERE at_sub.athlete_id = a.id) AS team_season_ids,
                        (SELECT GROUP_CONCAT(CONCAT_WS('||', ir.injury_date, ir.type, ir.current_status, IFNULL(ir.return_date, '')) SEPARATOR ';;;') FROM injury_records ir WHERE ir.athlete_id = a.id ORDER BY ir.injury_date DESC) AS injuries_summary,
-                       (SELECT metrics FROM vald_test_results WHERE athlete_id = a.id OR (a.vald_profile_id IS NOT NULL AND athlete_id IN (SELECT id FROM athletes WHERE vald_profile_id = a.vald_profile_id)) ORDER BY test_date DESC LIMIT 1) AS latest_vald_metrics,
-                       (SELECT test_date FROM vald_test_results WHERE athlete_id = a.id OR (a.vald_profile_id IS NOT NULL AND athlete_id IN (SELECT id FROM athletes WHERE vald_profile_id = a.vald_profile_id)) ORDER BY test_date DESC LIMIT 1) AS latest_vald_date
+                       {$valdMetricsSub} AS latest_vald_metrics,
+                       {$valdDateSub} AS latest_vald_date
                 FROM athletes a
                 LEFT JOIN teams t ON a.team_id = t.id";
 
