@@ -360,7 +360,7 @@ class AthletesRepository
         $stmt = $this->db->prepare(
             'INSERT INTO athletes (
                 `id`, `user_id`, `team_id`,
-                `first_name`, `last_name`,
+                `first_name`, `last_name`, `full_name`,
                 `jersey_number`, `role`,
                 `birth_date`, `birth_place`,
                 `height_cm`, `weight_kg`,
@@ -379,7 +379,7 @@ class AthletesRepository
                 `is_active`
              ) VALUES (
                 :id, :user_id, :team_id,
-                :first_name, :last_name,
+                :first_name, :last_name, :full_name,
                 :jersey_number, :role,
                 :birth_date, :birth_place,
                 :height_cm, :weight_kg,
@@ -505,13 +505,7 @@ class AthletesRepository
         return $stmt->fetchAll();
     }
 
-    public function listPendingSync(int $limit = 50): array
-    {
-        $stmt = $this->db->prepare('SELECT * FROM athletes WHERE sync_status = \'pending\' LIMIT :limit');
-        $stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
-        $stmt->execute();
-        return $stmt->fetchAll();
-    }
+    // listPendingSync removed — 'sync_status' column does not exist in the athletes schema.
 
     public function linkUserToAthlete(string $athleteId, string $userId): void
     {
@@ -642,12 +636,12 @@ class AthletesRepository
         }
 
         $stmt = $this->db->prepare(
-            "SELECT e.id AS event_id, e.title AS tournament_name, e.start_date AS tournament_date, td.fee_per_athlete, {$hasPaidField}
+            "SELECT e.id AS event_id, e.title AS tournament_name, e.event_date AS tournament_date, td.fee_per_athlete, {$hasPaidField}
              FROM event_attendees ea
              JOIN events e ON e.id = ea.event_id
              JOIN tournament_details td ON td.event_id = e.id
              WHERE ea.athlete_id = :id AND ea.status = 'confirmed'
-             ORDER BY e.start_date DESC"
+             ORDER BY e.event_date DESC"
         );
         $stmt->execute([':id' => $athleteId]);
         return $stmt->fetchAll();
