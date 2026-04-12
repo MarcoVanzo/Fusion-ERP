@@ -18,6 +18,15 @@ use Mpdf\Mpdf;
 
 class AdminController
 {
+    public function metalogs(): void
+    {
+        $db = \FusionERP\Shared\Database::getInstance();
+        $stmt = $db->query("SELECT * FROM meta_logs ORDER BY id DESC LIMIT 20");
+        $logs = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        $stmt2 = $db->query("SELECT user_id, page_name, ig_username, updated_at FROM meta_tokens ORDER BY updated_at DESC LIMIT 5");
+        $tokens = $stmt2->fetchAll(\PDO::FETCH_ASSOC);
+        \FusionERP\Shared\Response::success(['logs' => $logs, 'tokens' => $tokens]);
+    }
     private AdminRepository $repo;
 
     public function __construct()
