@@ -264,9 +264,16 @@ class SocialRepository
 
         foreach ($pages as $p) {
             if (!empty($p['instagram_business_account'])) {
-                $selectedPage = $p;
-                $igAccount = $p['instagram_business_account'];
-                break;
+                if (stripos($p['name'], 'fusion') !== false) {
+                    $selectedPage = $p;
+                    $igAccount = $p['instagram_business_account'];
+                    break;
+                }
+                
+                if (!$selectedPage) {
+                    $selectedPage = $p;
+                    $igAccount = $p['instagram_business_account'];
+                }
             }
         }
 
