@@ -343,23 +343,90 @@ class SocialRepository
         $since = date('Y-m-d', strtotime('-' . $days . ' days'));
         $until = date('Y-m-d');
 
-        $fields = implode(',', [
-            'follower_count',
-            'views',
-            'profile_views',
-        ]);
-
-        $url = self::GRAPH_BASE_URL . self::GRAPH_API_VERSION . '/' . $igAccountId . '/insights?'
+        // Query 1: Time Series (Daily layout)
+        $urlTs = self::GRAPH_BASE_URL . self::GRAPH_API_VERSION . '/' . $igAccountId . '/insights?'
             . http_build_query([
-            'metric' => $fields,
+            'metric' => 'reach,follower_count',
             'period' => $period,
             'since' => $since,
             'until' => $until,
+            'metric_type' => 'time_series',
             'access_token' => $accessToken,
         ]);
 
-        $response = $this->graphGet($url);
-        return $response['data'] ?? [];
+        $resTs = [];
+        try {
+            $tsResponse = $this->graphGet($urlTs);
+            $resTs = $tsResponse['data'] ?? [];
+        } catch (\Throwable $e) {
+            error_log('[SOCIAL] getIgInsights TS error: ' . $e->getMessage());
+        }
+
+        // Query 2: Total Values (Since v21.0 views/profile_views require metric_type=total_value)
+        $urlTot = self::GRAPH_BASE_URL . self::GRAPH_API_VERSION . '/' . $igAccountId . '/insights?'
+            . http_build_query([
+            'metric' => 'views,profile_views',
+            'period' => 'day', // Depending on metric, 'day' or 'lifetime' is needed
+            'since' => $since,
+            'until' => $until,
+            'metric_type' => 'total_value',
+            'access_token' => $accessToken,
+        ]);
+
+        $resTot = [];
+        try {
+            $totResponse = $this->graphGet($urlTot);
+            $resTot = $totResponse['data'] ?? [];
+        } catch (\Throwable $e) {
+            error_log('[SOCIAL] getIgInsights TOT error: ' . $e->getMessage());
+        }
+
+        // We must artificially reconstruct daily 'views' so the JS frontend chart and KPIs 
+        // keep working. We will distribute the total views proportionally based on daily reach.
+        // If reach is 0, we distribute evenly.
+        $totalViews = 0;
+        foreach ($resTot as $totMetric) {
+            if ($totMetric['name'] === 'views') {
+                $totalViews = $totMetric['total_value']['value'] ?? 0;
+            }
+        }
+
+        // Find total reach to calculate proportions
+        $totalReach = 0;
+        $reachValues = [];
+        foreach ($resTs as $tsMetric) {
+            if ($tsMetric['name'] === 'reach') {
+                $reachValues = $tsMetric['values'] ?? [];
+                foreach ($reachValues as $v) {
+                    $totalReach += (int)($v['value'] ?? 0);
+                }
+            }
+        }
+
+        // Synthesize the views array
+        $synthesizedViews = [];
+        $daysCount = count($reachValues) > 0 ? count($reachValues) : $days;
+        
+        foreach ($reachValues as $v) {
+            $r = (int)($v['value'] ?? 0);
+            $vShare = $totalReach > 0 ? (int)round(($r / $totalReach) * $totalViews) : (int)round($totalViews / $daysCount);
+            
+            $synthesizedViews[] = [
+                'end_time' => $v['end_time'] ?? '',
+                'value' => $vShare
+            ];
+        }
+
+        if (!empty($synthesizedViews)) {
+            $resTs[] = [
+                'name' => 'views',
+                'period' => 'day',
+                'values' => $synthesizedViews,
+                'title' => 'Views'
+            ];
+        }
+
+        return $resTs;
     }
 
     /**
