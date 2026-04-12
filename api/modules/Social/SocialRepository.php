@@ -329,7 +329,6 @@ class SocialRepository
 
         $expiresIn = $response['expires_in'] ?? 5184000;
         return [
-return [
             'access_token' => $response['access_token'],
             'expires_at' => date('Y-m-d H:i:s', time() + (int)$expiresIn),
         ];
