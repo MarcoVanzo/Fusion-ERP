@@ -246,6 +246,13 @@ def build_react_apps(force=False, skip=False, cache=None):
                 print(f"  ✅ Build successful for {app}!")
                 if cache is not None:
                     cache[f"__build_hash_{app}"] = current_hash
+            except FileNotFoundError:
+                # npm not installed on this machine
+                if os.path.exists(os.path.join(app, 'dist')):
+                    print(f"  ⚠️  npm non trovato, ma {app}/dist esiste — uso la build esistente.")
+                else:
+                    print(f"  ❌ npm non trovato e {app}/dist non esiste. Installa Node.js o usa --no-build.")
+                    sys.exit(1)
             except subprocess.CalledProcessError as e:
                 print(f"  ❌ Build failed for {app}: {e}")
                 sys.exit(1)
@@ -457,6 +464,28 @@ def deploy_files_via_ftp(dry_run=False):
         print(f"❌ FTP Error: {e}")
         return False
 
+def _git_credentials_available() -> bool:
+    """Quick check: can git authenticate to origin without user interaction?"""
+    try:
+        remote = subprocess.run(
+            ['git', 'remote', 'get-url', 'origin'],
+            capture_output=True, text=True, timeout=5
+        )
+        if remote.returncode != 0:
+            return False
+        url = remote.stdout.strip()
+        # Parse host from URL
+        host = url.replace('https://', '').replace('http://', '').split('/')[0]
+        # Ask credential helper (non-interactive) if it has stored creds
+        proc = subprocess.run(
+            ['git', 'credential', 'fill'],
+            input=f'protocol=https\nhost={host}\n\n',
+            capture_output=True, text=True, timeout=5
+        )
+        return proc.returncode == 0 and 'password=' in proc.stdout
+    except Exception:
+        return False
+
 def git_commit_and_push(skip=False):
     """Committa tutte le modifiche locali e fa push su GitHub prima del deploy."""
     if skip:
@@ -481,8 +510,12 @@ def git_commit_and_push(skip=False):
             )
             print(f"  ✅ Commit creato: deploy: {timestamp}")
 
-        # Push sempre (anche se non c'era commit, può esserci roba non pushata)
-        # We don't capture output here so the user can see if it asks for a password or shows progress
+        # Pre-check: verify git credentials before attempting push
+        if not _git_credentials_available():
+            print("  ⚠️  Credenziali Git non disponibili — push saltato.")
+            print("      Per configurarle: git config credential.helper store && git push origin main")
+            return
+
         push_result = subprocess.run(
             ['git', 'push', 'origin', 'main'],
             timeout=GIT_PUSH_TIMEOUT
@@ -490,10 +523,10 @@ def git_commit_and_push(skip=False):
         if push_result.returncode == 0:
             print("  ✅ Push su GitHub completato.")
         else:
-            print(f"  ⚠️  Push fallito (non bloccante).")
+            print("  ⚠️  Push fallito (non bloccante).")
 
     except subprocess.TimeoutExpired:
-        print("  ⚠️  Git timeout — il push potrebbe richiedere credenziali. Continuo il deploy...")
+        print("  ⚠️  Git timeout — continuo il deploy senza push...")
     except subprocess.CalledProcessError as e:
         print(f"  ⚠️  Git error (non bloccante): {e}")
     print()
@@ -584,6 +617,7 @@ def trigger_migrations():
         print("  ⚠️  Assicurati di controllare manualmente lo stato del database.")
 
 def main():
+    t0 = _time.time()
     parser = argparse.ArgumentParser(description="Fusion ERP Fast Auto-Deploy")
     parser.add_argument("--no-build", action="store_true", help="Salta la build dei progetti React")
     parser.add_argument("--force-build", action="store_true", help="Forza la build anche se non sono state rilevate modifiche")
@@ -593,7 +627,6 @@ def main():
     args = parser.parse_args()
 
     # 0. Fast Checks (Credentials and mandatory files)
-    # Check this FIRST before running expensive builds/analysis
     load_env()
     
     if not os.path.exists('.env.prod'):
@@ -603,24 +636,25 @@ def main():
 
     print("=== Fusion ERP Fast Auto-Deploy ===")
 
-    # 1. Pre-flight Checks
+    # 1. Pre-flight Checks (opzionali)
     if not args.dry_run and not args.skip_checks:
         run_preflight_checks()
 
     # 2. Carica cache per smart build
     cache = load_cache()
 
-    # 3. Aggiorna cache buster prima del deploy
+    # 3. Build React apps (se presenti e modificati)
+    build_react_apps(force=args.force_build, skip=args.no_build, cache=cache)
+
+    # 4. Aggiorna cache buster PRIMA del commit git
+    #    (così il commit include la nuova versione cache)
     if not args.dry_run:
         update_index_version()
 
-    # 4. Build React apps
-    build_react_apps(force=args.force_build, skip=args.no_build, cache=cache)
-
-    # 5. Salva su GitHub prima di deployare
+    # 5. Salva su GitHub (commit + push)
     git_commit_and_push(skip=(args.no_git or args.dry_run))
 
-    # 7. Deploy direttamente
+    # 6. Deploy FTP → Migrazioni → Health Check
     try:
         success = deploy_files_via_ftp(dry_run=args.dry_run)
         if success and not args.dry_run:
@@ -630,14 +664,15 @@ def main():
         print("\n🛑 Deployment interrupted by user. Cache saved for uploaded files.")
         success = False
 
+    elapsed = _time.time() - t0
     if success:
         if args.dry_run:
-            print("\n🏁 Dry run finished successfully! No changes were made.")
+            print(f"\n🏁 Dry run completato in {elapsed:.1f}s — nessuna modifica effettuata.")
         else:
-            print("\n🎉 Auto-deployment finished successfully!")
-            print("Your application is now live. Only changed files were uploaded.")
+            print(f"\n🎉 Deploy completato in {elapsed:.1f}s!")
+            print("L'applicazione è live. Solo i file modificati sono stati caricati.")
     else:
-        print("\n💥 Deployment failed. Please check the errors above.")
+        print(f"\n💥 Deploy fallito dopo {elapsed:.1f}s. Controlla gli errori sopra.")
         sys.exit(1)
 
 if __name__ == '__main__':
