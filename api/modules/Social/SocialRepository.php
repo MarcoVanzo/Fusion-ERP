@@ -495,9 +495,7 @@ class SocialRepository
     private function getMediaInsights(string $mediaId, string $mediaType, string $accessToken): array
     {
         $metrics = match (strtoupper($mediaType)) {
-            'VIDEO' => 'impressions,reach,saved',
-            'CAROUSEL_ALBUM' => 'impressions,reach,saved',
-            default => 'impressions,reach,saved',
+            default => 'views,reach,saved',
         };
 
         $url = self::GRAPH_BASE_URL . self::GRAPH_API_VERSION . '/' . $mediaId . '/insights?'
