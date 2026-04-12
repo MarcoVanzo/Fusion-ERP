@@ -311,9 +311,9 @@ const Transport = {
         const past = this.transports.filter(t => new Date(t.transport_date) < now);
         
         const stats = {
-            o: this.events.length,
-            s: upcoming.length,
-            l: this.transports.length
+            total: this.transports.length,
+            upcoming: upcoming.length,
+            past: past.length
         };
 
         app.innerHTML = TransportView.renderDashboard(this.events, stats, isAdmin, upcoming, past);

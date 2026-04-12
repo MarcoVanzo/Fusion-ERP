@@ -94,55 +94,89 @@ const TournamentsView = {
                 </div>
 
                 <div class="res-view-selector" style="display:flex; gap:10px; margin-bottom:24px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:12px;">
-                    <button class="res-view-btn active" data-target="panel-overview">OVERVIEW</button>
-                    <button class="res-view-btn" data-target="panel-roster">ROSTER (${confirmedRoster}/${data.roster.length})</button>
-                    <button class="res-view-btn" data-target="panel-matches">PARTITE (${data.matches.length})</button>
+                    <button class="res-view-btn active" data-target="panel-riepilogo-osti">RIEPILOGO OSTI</button>
+                    <button class="res-view-btn" data-target="panel-atlete">ATLETE (${confirmedRoster}/${data.roster.length})</button>
                 </div>
 
-                <div id="panel-overview" class="trm-panel active">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
-                        <div class="dash-card" style="padding: 24px;">
-                            <h4 style="color: #f59e0b; margin-bottom: 20px; display:flex; align-items:center; gap:8px;">
-                                <i class="ph ph-info"></i> Dettagli Logistici
-                            </h4>
-                            <div style="display:flex; flex-direction:column; gap:12px;">
-                                <p><strong>Luogo:</strong> ${Utils.escapeHtml(e.location_name || "Non specificato")}</p>
-                                <p><strong>Quota Atleta:</strong> ${e.fee_per_athlete > 0 ? e.fee_per_athlete + " €" : "Gratuito"}</p>
-                                ${e.website_url ? `<p><strong>Sito Web:</strong> <a href="${Utils.escapeHtml(e.website_url)}" target="_blank" style="color:var(--color-pink);text-decoration:underline;">${Utils.escapeHtml(e.website_url)}</a></p>` : ""}
-                            </div>
-                        </div>
-                        <div class="dash-card" style="padding: 24px;">
-                            <h4 style="color: #f59e0b; margin-bottom: 20px; display:flex; align-items:center; gap:8px;">
-                                <i class="ph ph-note"></i> Note / Alloggio
-                            </h4>
-                            <div style="white-space: pre-wrap; opacity: 0.8; font-size: 14px; line-height:1.6;">${Utils.escapeHtml(e.accommodation_info || "Nessuna informazione aggiuntiva.")}</div>
-                        </div>
-                    </div>
+                <div id="panel-riepilogo-osti" class="trm-panel active">
+                    ${TournamentsView.costsSummary(data)}
                 </div>
 
-                <div id="panel-roster" class="trm-panel">
+                <div id="panel-atlete" class="trm-panel">
                     <div class="dash-card" style="padding: 24px;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
-                            <h3>Convocazioni Atlete</h3>
-                            <button class="btn-dash pink" id="btn-save-roster">Salva Roster</button>
+                            <h3>Presenze Atlete</h3>
+                            <button class="btn-dash pink" id="btn-save-roster">Salva Presenze</button>
                         </div>
                         <div class="trm-roster-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:12px;">
                             ${data.roster.map(t => TournamentsView.rosterItem(t)).join("")}
                         </div>
                     </div>
                 </div>
+            </div>
+        `;
+    },
 
-                <div id="panel-matches" class="trm-panel">
-                    <div class="dash-card" style="padding: 24px;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
-                            <h3>Calendario e Risultati</h3>
-                            <button class="btn-dash pink" id="btn-add-match">Aggiungi Partita</button>
-                        </div>
-                        <div id="trm-matches-list" style="display:flex; flex-direction:column; gap:16px;">
-                            ${data.matches.length === 0 ? '<div style="opacity:0.5; padding:40px; text-align:center;">Nessuna partita aggiunta.</div>' : ""}
-                            ${data.matches.map(m => TournamentsView.matchItem(m, e.team_name)).join("")}
-                        </div>
-                    </div>
+    costsSummary: (data) => {
+        const e = data.tournament;
+        const confirmedAthletes = data.roster.filter(t => t.attendance_status === 'confirmed').length;
+        const totalRevenue = confirmedAthletes * (e.fee_per_athlete || 0);
+        const totalExpenses = data.expenses.reduce((sum, exp) => sum + parseFloat(exp.amount), 0);
+        const netProfit = totalRevenue - totalExpenses;
+
+        return `
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 32px;">
+                <div class="dash-card" style="padding:20px; border-left: 4px solid #10b981;">
+                    <div style="font-size:12px; opacity:0.6; text-transform:uppercase; margin-bottom:8px;">Totale Entrate</div>
+                    <div style="font-size:24px; font-weight:800; color:#10b981;">${totalRevenue.toFixed(2)} €</div>
+                    <div style="font-size:11px; margin-top:4px; opacity:0.5;">${confirmedAthletes} atlete × ${e.fee_per_athlete || 0} €</div>
+                </div>
+                <div class="dash-card" style="padding:20px; border-left: 4px solid #ef4444;">
+                    <div style="font-size:12px; opacity:0.6; text-transform:uppercase; margin-bottom:8px;">Totale Spese</div>
+                    <div style="font-size:24px; font-weight:800; color:#ef4444;">${totalExpenses.toFixed(2)} €</div>
+                    <div style="font-size:11px; margin-top:4px; opacity:0.5;">${data.expenses.length} voci di spesa</div>
+                </div>
+                <div class="dash-card" style="padding:20px; border-left: 4px solid #f59e0b;">
+                    <div style="font-size:12px; opacity:0.6; text-transform:uppercase; margin-bottom:8px;">Utile Netto</div>
+                    <div style="font-size:24px; font-weight:800; color:#f59e0b;">${netProfit.toFixed(2)} €</div>
+                    <div style="font-size:11px; margin-top:4px; opacity:0.5;">Margine: ${totalRevenue > 0 ? ((netProfit / totalRevenue) * 100).toFixed(1) : 0}%</div>
+                </div>
+            </div>
+
+            <div class="dash-card" style="padding: 24px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                    <h3 style="margin:0;">Elenco Spese</h3>
+                    <button class="btn-dash pink" id="btn-add-expense">
+                        <i class="ph ph-plus"></i> Aggiungi Spesa
+                    </button>
+                </div>
+                <div class="expense-list">
+                    <table style="width:100%; border-collapse:collapse;">
+                        <thead>
+                            <tr style="text-align:left; border-bottom:1px solid rgba(255,255,255,0.05); opacity:0.6; font-size:12px;">
+                                <th style="padding:12px;">DESCRIZIONE</th>
+                                <th style="padding:12px; text-align:right;">IMPORTO</th>
+                                <th style="padding:12px; width:80px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.expenses.length === 0 ? `
+                                <tr>
+                                    <td colspan="3" style="padding:40px; text-align:center; opacity:0.4;">Nessuna spesa registrata.</td>
+                                </tr>
+                            ` : data.expenses.map(exp => `
+                                <tr style="border-bottom:1px solid rgba(255,255,255,0.02);">
+                                    <td style="padding:12px;">${Utils.escapeHtml(exp.description)}</td>
+                                    <td style="padding:12px; text-align:right; font-weight:600;">${parseFloat(exp.amount).toFixed(2)} €</td>
+                                    <td style="padding:12px; text-align:right;">
+                                        <button class="btn-delete-expense" data-id="${exp.id}" style="background:none; border:none; color:#ef4444; cursor:pointer; opacity:0.6;">
+                                            <i class="ph ph-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            `).join("")}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         `;
@@ -253,6 +287,19 @@ const TournamentsView = {
             </div>
         `;
     },
+
+    expenseModal: () => `
+        <div class="res-modal-section" style="padding:0;">
+            <div class="res-form-row">
+                <label class="res-form-label">Descrizione Spesa *</label>
+                <input type="text" id="ex-desc" class="res-form-input" placeholder="es. Iscrizione Torneo, Hotel, Trasporto...">
+            </div>
+            <div class="res-form-row">
+                <label class="res-form-label">Importo (€) *</label>
+                <input type="number" step="0.01" id="ex-amount" class="res-form-input" value="0.00">
+            </div>
+        </div>
+    `,
 
     matchModal: (m) => {
         const formatDateTime = (dateStr) => {

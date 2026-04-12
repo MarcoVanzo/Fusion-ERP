@@ -127,4 +127,28 @@ class TournamentsController
             ];
         });
     }
+
+    public function saveExpense(): void
+    {
+        Auth::requireWrite('tournaments');
+        $body = Response::jsonBody();
+        
+        $this->handleServiceCall(function() use ($body) {
+            $this->repository->saveExpense($body);
+            return ['message' => 'Expense saved successfully.'];
+        });
+    }
+
+    public function deleteExpense(): void
+    {
+        Auth::requireWrite('tournaments');
+        $body = Response::jsonBody();
+        $id = $body['id'] ?? null;
+        
+        $this->handleServiceCall(function() use ($id) {
+            if (!$id) throw new \Exception('Expense ID required', 400);
+            $this->repository->deleteExpense($id);
+            return ['message' => 'Expense deleted successfully.'];
+        });
+    }
 }

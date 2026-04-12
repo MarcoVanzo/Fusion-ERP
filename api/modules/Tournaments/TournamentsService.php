@@ -32,7 +32,8 @@ class TournamentsService
         return [
             'tournament' => $tournament,
             'matches' => $this->repository->getMatches($id),
-            'roster' => $this->repository->getRoster($id, $tournament['team_id'])
+            'roster' => $this->repository->getRoster($id, $tournament['team_id']),
+            'expenses' => $this->repository->getExpenses($id)
         ];
     }
 

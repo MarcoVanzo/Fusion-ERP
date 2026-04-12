@@ -139,7 +139,27 @@ const Tournaments = {
     attachDetailEvents: function(container, tournamentId) {
         container.querySelector("#btn-back-trm")?.addEventListener("click", () => this.closeDetail(), this.sig());
         container.querySelector("#btn-edit-trm")?.addEventListener("click", () => this.openTournamentModal(this._currentData.tournament), this.sig());
-        container.querySelector("#btn-add-match")?.addEventListener("click", () => this.openMatchModal(), this.sig());
+        
+        container.querySelector("#btn-add-expense")?.addEventListener("click", () => this.openExpenseModal(tournamentId), this.sig());
+
+        container.querySelectorAll(".btn-delete-expense").forEach(btn => {
+            btn.onclick = async (e) => {
+                e.preventDefault();
+                const id = btn.dataset.id;
+                UI.confirm("Eliminare questa voce di spesa?", async () => {
+                    try {
+                        UI.loading(true);
+                        await TournamentsAPI.deleteExpense(id);
+                        UI.toast("Spesa eliminata", "success");
+                        await this.openDetail(tournamentId);
+                    } catch (err) {
+                        UI.toast(err.message, "error");
+                    } finally {
+                        UI.loading(false);
+                    }
+                });
+            };
+        });
         
         container.querySelector("#btn-save-roster")?.addEventListener("click", async (e) => {
             const btn = e.target;
@@ -266,6 +286,40 @@ const Tournaments = {
                 UI.toast("Match salvato", "success");
                 modal.close();
                 this.openDetail(this._currentData.tournament.id);
+            } catch (err) {
+                UI.toast(err.message, "error");
+            } finally {
+                UI.loading(false);
+            }
+        }, this.sig());
+    },
+
+    openExpenseModal: function(tournamentId) {
+        const modal = UI.modal({
+            title: "Nuova Spesa",
+            body: TournamentsView.expenseModal(),
+            footer: '<button class="btn-dash ghost" id="modal-cancel">Annulla</button><button class="btn-dash primary" id="modal-save">Salva</button>'
+        });
+
+        document.getElementById("modal-cancel")?.addEventListener("click", () => modal.close(), this.sig());
+        document.getElementById("modal-save")?.addEventListener("click", async () => {
+            const data = {
+                event_id: tournamentId,
+                description: document.getElementById("ex-desc").value.trim(),
+                amount: parseFloat(document.getElementById("ex-amount").value) || 0
+            };
+
+            if (!data.description || data.amount <= 0) {
+                UI.toast("Descrizione e Importo sono obbligatori.", "warning");
+                return;
+            }
+
+            try {
+                UI.loading(true);
+                await TournamentsAPI.saveExpense(data);
+                UI.toast("Spesa salvata", "success");
+                modal.close();
+                this.openDetail(tournamentId);
             } catch (err) {
                 UI.toast(err.message, "error");
             } finally {

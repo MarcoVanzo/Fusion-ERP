@@ -38,6 +38,14 @@ const TournamentsAPI = {
 
     duplicate: async function(id) {
         return await Store.api("duplicateTournament", "tournaments", { id });
+    },
+
+    saveExpense: async function(data) {
+        return await Store.api("saveExpense", "tournaments", data);
+    },
+
+    deleteExpense: async function(id) {
+        return await Store.api("deleteExpense", "tournaments", { id });
     }
 };
 

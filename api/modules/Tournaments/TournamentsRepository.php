@@ -322,4 +322,51 @@ class TournamentsRepository
             ]);
         }
     }
+
+    /**
+     * Get expenses for a tournament
+     */
+    public function getExpenses(string $tournamentId): array
+    {
+        $stmt = $this->db->prepare("SELECT * FROM tournament_expenses WHERE event_id = :id ORDER BY created_at ASC");
+        $stmt->execute([':id' => $tournamentId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Save tournament expense
+     */
+    public function saveExpense(array $data): void
+    {
+        if (empty($data['id'])) {
+            $id = 'EXP_' . substr(md5(uniqid('', true)), 0, 8);
+            $stmt = $this->db->prepare("
+                INSERT INTO tournament_expenses (id, event_id, description, amount)
+                VALUES (:id, :event_id, :description, :amount)
+            ");
+        } else {
+            $id = $data['id'];
+            $stmt = $this->db->prepare("
+                UPDATE tournament_expenses
+                SET description = :description, amount = :amount
+                WHERE id = :id AND event_id = :event_id
+            ");
+        }
+
+        $stmt->execute([
+            ':id' => $id,
+            ':event_id' => $data['event_id'],
+            ':description' => $data['description'],
+            ':amount' => $data['amount']
+        ]);
+    }
+
+    /**
+     * Delete expense
+     */
+    public function deleteExpense(string $id): void
+    {
+        $stmt = $this->db->prepare("DELETE FROM tournament_expenses WHERE id = :id");
+        $stmt->execute([':id' => $id]);
+    }
 }
