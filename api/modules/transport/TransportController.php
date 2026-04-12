@@ -360,4 +360,10 @@ class TransportController
         $body = Response::jsonBody();
         $this->handleServiceCall(fn() => $this->service->analyzeTransportAI($body));
     }
+
+    public function listVehicles(): void
+    {
+        Auth::requireRead('transport');
+        Response::success($this->repo->listVehicles());
+    }
 }

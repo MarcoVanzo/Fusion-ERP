@@ -85,7 +85,7 @@ const TransportAPI = {
     },
 
     getVehicles: async () => {
-        return await Store.get("listVehicles", "vehicles");
+        return await Store.get("listVehicles", "transport");
     },
 
     sendConvocations: async (data) => {

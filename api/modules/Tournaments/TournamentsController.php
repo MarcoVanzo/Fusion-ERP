@@ -11,6 +11,9 @@ namespace FusionERP\Modules\Tournaments;
 use FusionERP\Shared\Auth;
 use FusionERP\Shared\Response;
 
+require_once __DIR__ . '/Services/TournamentsPdfService.php';
+require_once dirname(__DIR__) . '/Societa/SocietaRepository.php';
+
 class TournamentsController
 {
     private TournamentsRepository $repository;
