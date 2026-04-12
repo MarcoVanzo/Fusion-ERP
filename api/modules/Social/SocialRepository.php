@@ -495,10 +495,10 @@ class SocialRepository
     private function getMediaInsights(string $mediaId, string $mediaType, string $accessToken): array
     {
         $metrics = match (strtoupper($mediaType)) {
-                'VIDEO' => 'views,plays,saved',
-                'CAROUSEL_ALBUM' => 'views,saved,carousel_album_views',
-                default => 'views,saved',
-            };
+            'VIDEO' => 'impressions,reach,saved',
+            'CAROUSEL_ALBUM' => 'impressions,reach,saved',
+            default => 'impressions,reach,saved',
+        };
 
         $url = self::GRAPH_BASE_URL . self::GRAPH_API_VERSION . '/' . $mediaId . '/insights?'
             . http_build_query([
@@ -511,7 +511,8 @@ class SocialRepository
 
         $result = [];
         foreach ($data as $d) {
-            $result[$d['name']] = $d['values'][0]['value'] ?? $d['value'] ?? 0;
+            $name = $d['name'] === 'impressions' ? 'views' : $d['name'];
+            $result[$name] = $d['values'][0]['value'] ?? $d['value'] ?? 0;
         }
         return $result;
     }
@@ -527,7 +528,7 @@ class SocialRepository
         // Daily metrics
         $urlDaily = self::GRAPH_BASE_URL . self::GRAPH_API_VERSION . '/' . $pageId . '/insights?'
             . http_build_query([
-            'metric' => 'page_views_total,page_impressions_unique,page_post_engagements',
+            'metric' => 'page_impressions,page_post_engagements',
             'period' => 'day',
             'since' => $since,
             'until' => $until,
@@ -542,8 +543,7 @@ class SocialRepository
         ];
 
         $keyMap = [
-            'page_views_total' => 'page_views',
-            'page_impressions_unique' => 'engaged_users',
+            'page_impressions' => 'page_views', // fallback mapping since views might be deprecated
             'page_post_engagements' => 'post_engagements',
         ];
 
