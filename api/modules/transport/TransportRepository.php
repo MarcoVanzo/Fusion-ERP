@@ -324,11 +324,11 @@ class TransportRepository
     {
         $data[':tenant_id'] = TenantContext::id();
         $stmt = $this->db->prepare(
-            'INSERT INTO transports (id, tenant_id, team_id, destination_name, destination_address,
+            'INSERT INTO transports (id, tenant_id, team_id, event_id, destination_name, destination_address,
                                       destination_lat, destination_lng, departure_address,
                                       arrival_time, departure_time, transport_date,
                                       athletes_json, timeline_json, stats_json, ai_response, created_by, driver_id, vehicle_id)
-             VALUES (:id, :tenant_id, :team_id, :destination_name, :destination_address,
+             VALUES (:id, :tenant_id, :team_id, :event_id, :destination_name, :destination_address,
                      :destination_lat, :destination_lng, :departure_address,
                      :arrival_time, :departure_time, :transport_date,
                      :athletes_json, :timeline_json, :stats_json, :ai_response, :created_by, :driver_id, :vehicle_id)'
@@ -339,7 +339,7 @@ class TransportRepository
     public function listTransports(string $teamId = ''): array
     {
         $tid = TenantContext::id();
-        $sql = 'SELECT t.id, t.team_id, t.destination_name, t.destination_address,
+        $sql = 'SELECT t.id, t.team_id, t.event_id, t.destination_name, t.destination_address,
                        t.arrival_time, t.departure_time, t.transport_date,
                        t.athletes_json, t.stats_json, t.created_at, t.driver_id,
                        tm.name AS team_name

@@ -44,8 +44,12 @@ const TournamentsAPI = {
         return await Store.api("saveExpense", "tournaments", data);
     },
 
-    deleteExpense: async function(id) {
+    deleteExpense: async (id) => {
         return await Store.api("deleteExpense", "tournaments", { id });
+    },
+
+    saveRoomingList: async (id) => {
+        return await Store.api("saveRoomingList", "tournaments", { id });
     }
 };
 

@@ -29,7 +29,7 @@ class TournamentsRepository
         $tid = TenantContext::id();
         $stmt = $this->db->prepare("
             SELECT e.*, t.name as team_name,
-                   td.website_url, td.fee_per_athlete, td.accommodation_info
+                   td.website_url, td.fee_per_athlete, td.accommodation_info, td.rooming_list_path
             FROM events e
             LEFT JOIN teams t ON e.team_id = t.id
             LEFT JOIN tournament_details td ON e.id = td.event_id
@@ -49,7 +49,7 @@ class TournamentsRepository
         $tid = TenantContext::id();
         $stmt = $this->db->prepare("
             SELECT e.*, t.name as team_name,
-                   td.website_url, td.fee_per_athlete, td.accommodation_info
+                   td.website_url, td.fee_per_athlete, td.accommodation_info, td.rooming_list_path
             FROM events e
             LEFT JOIN teams t ON e.team_id = t.id
             LEFT JOIN tournament_details td ON e.id = td.event_id
@@ -91,7 +91,7 @@ class TournamentsRepository
     {
         $stmt = $this->db->prepare("
             SELECT a.id, a.full_name, a.first_name, a.last_name, a.jersey_number, a.role, 'athlete' as member_type,
-                   ea.status as attendance_status, a.identity_document
+                   ea.status as attendance_status, a.identity_document, a.birth_date
             FROM athletes a
             LEFT JOIN event_attendees ea ON a.id = ea.athlete_id AND ea.event_id = :event_id1
             WHERE a.team_id = :team_id1 AND a.deleted_at IS NULL AND a.is_active = 1
@@ -99,7 +99,7 @@ class TournamentsRepository
             UNION ALL
             
             SELECT s.id, CONCAT(s.first_name, ' ', s.last_name) AS full_name, s.first_name, s.last_name, NULL as jersey_number, s.role, 'staff' as member_type,
-                   ea.status as attendance_status, s.identity_document
+                   ea.status as attendance_status, s.identity_document, s.birth_date
             FROM staff_members s
             JOIN staff_teams st ON s.id = st.staff_id
             JOIN team_seasons ts ON st.team_season_id = ts.id AND ts.team_id = :team_id2
@@ -368,5 +368,18 @@ class TournamentsRepository
     {
         $stmt = $this->db->prepare("DELETE FROM tournament_expenses WHERE id = :id");
         $stmt->execute([':id' => $id]);
+    }
+
+    /**
+     * Update rooming list path
+     */
+    public function updateRoomingListPath(string $id, ?string $path): void
+    {
+        $stmt = $this->db->prepare("
+            UPDATE tournament_details 
+            SET rooming_list_path = :path
+            WHERE event_id = :id
+        ");
+        $stmt->execute([':id' => $id, ':path' => $path]);
     }
 }

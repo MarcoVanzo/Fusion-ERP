@@ -1017,6 +1017,9 @@
 }
 .nt-tl-item.partenza { border-left-color: var(--accent-cyan); }
 .nt-tl-item.raccolta { border-left-color: var(--accent-pink); cursor: grab; }
+.nt-tl-item[draggable="true"]:active { cursor: grabbing; }
+.nt-tl-item.dragging { opacity: 0.4; transform: scale(0.98); border-style: dashed; }
+.nt-tl-item.drag-over { background: rgba(0, 229, 255, 0.1) !important; border-style: solid !important; border-color: var(--accent-cyan) !important; box-shadow: 0 0 15px rgba(0, 229, 255, 0.2); }
 .nt-tl-item.arrivo { border-left-color: #00E676; }
 .nt-tl-time {
   font-family: var(--font-display);

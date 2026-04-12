@@ -144,6 +144,20 @@ const Tournaments = {
             window.open(url, "_blank");
         }, this.sig());
 
+        container.querySelector("#btn-save-rooming-list")?.addEventListener("click", async () => {
+            try {
+                UI.loading(true);
+                const res = await TournamentsAPI.saveRoomingList(tournamentId);
+                UI.toast("Rooming List salvata correttamente nel server", "success");
+                Store.invalidate("tournaments");
+                await this.openDetail(tournamentId);
+            } catch (err) {
+                UI.toast("Errore durante il salvataggio: " + err.message, "error");
+            } finally {
+                UI.loading(false);
+            }
+        }, this.sig());
+
         container.querySelector("#btn-add-expense")?.addEventListener("click", () => this.openExpenseModal(tournamentId), this.sig());
 
         container.querySelectorAll(".btn-delete-expense").forEach(btn => {
@@ -203,15 +217,6 @@ const Tournaments = {
             }, this.sig());
         });
 
-        // Tabs
-        container.querySelectorAll(".res-view-btn").forEach(btn => {
-            btn.addEventListener("click", () => {
-                container.querySelectorAll(".res-view-btn").forEach(b => b.classList.remove("active"));
-                container.querySelectorAll(".trm-panel").forEach(p => p.classList.remove("active"));
-                btn.classList.add("active");
-                container.querySelector("#" + btn.dataset.target)?.classList.add("active");
-            }, this.sig());
-        });
     },
 
     openTournamentModal: function(tournament = null) {

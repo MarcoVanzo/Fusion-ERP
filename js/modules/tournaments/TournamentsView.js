@@ -86,29 +86,41 @@ const TournamentsView = {
                             <strong>${Utils.escapeHtml(e.team_name)}</strong> • ${date}
                         </div>
                     </div>
-                    <div style="display:flex; gap:10px; align-items:flex-end;">
-                        <button class="btn-dash" id="btn-rooming-list" title="Genera Rooming List per Hotel" style="background:rgba(255,255,255,0.05); color:var(--color-pink); border:1px solid rgba(255,255,255,0.1);">
-                            <i class="ph ph-file-pdf"></i> Rooming List
-                        </button>
-                        <button class="btn-dash" id="btn-edit-trm">
-                            <i class="ph ph-pencil"></i> Modifica
-                        </button>
+                    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
+                        ${e.rooming_list_path ? `
+                            <div style="display:flex; align-items:center; gap:8px; background:rgba(16,185,129,0.1); padding:4px 10px; border-radius:100px; border:1px solid rgba(16,185,129,0.2);">
+                                <i class="ph ph-check-circle" style="color:#10b981;"></i>
+                                <a href="${e.rooming_list_path}" target="_blank" style="color:#10b981; font-size:11px; font-weight:700; text-decoration:none;">VISUALIZZA SALVATA</a>
+                            </div>
+                        ` : ""}
+                        <div style="display:flex; gap:10px;">
+                            <button class="btn-dash" id="btn-save-rooming-list" title="Salva versione corrente nel server" style="background:rgba(255,255,255,0.05); color:var(--accent-pink); border:1px solid rgba(255,255,255,0.1);">
+                                <i class="ph ph-floppy-disk"></i> Salva PDF
+                            </button>
+                            <button class="btn-dash" id="btn-rooming-list" title="Genera Rooming List per Hotel" style="background:rgba(255,255,255,0.05); color:var(--color-pink); border:1px solid rgba(255,255,255,0.1);">
+                                <i class="ph ph-file-pdf"></i> Rooming List
+                            </button>
+                            <button class="btn-dash" id="btn-edit-trm">
+                                <i class="ph ph-pencil"></i> Modifica
+                            </button>
+                        </div>
                     </div>
                 </div>
 
-                <div class="res-view-selector" style="display:flex; gap:10px; margin-bottom:24px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:12px;">
-                    <button class="res-view-btn active" data-target="panel-riepilogo-osti">RIEPILOGO OSTI</button>
-                    <button class="res-view-btn" data-target="panel-atlete">ATLETE (${confirmedRoster}/${data.roster.length})</button>
-                </div>
-
-                <div id="panel-riepilogo-osti" class="trm-panel active">
+                <div id="panel-riepilogo-osti" class="trm-panel active" style="margin-bottom: 40px;">
+                    <div style="font-family: var(--font-display); font-size: 14px; font-weight: 800; color: var(--color-pink); margin-bottom: 16px; text-transform: uppercase; letter-spacing: 1px;">
+                        <i class="ph ph-chart-line-up"></i> Riepilogo Economico
+                    </div>
                     ${TournamentsView.costsSummary(data)}
                 </div>
 
-                <div id="panel-atlete" class="trm-panel">
+                <div id="panel-atlete" class="trm-panel active">
+                    <div style="font-family: var(--font-display); font-size: 14px; font-weight: 800; color: var(--color-pink); margin-bottom: 16px; text-transform: uppercase; letter-spacing: 1px;">
+                         <i class="ph ph-users"></i> Atlete e Staff (${confirmedRoster}/${data.roster.length})
+                    </div>
                     <div class="dash-card" style="padding: 24px;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
-                            <h3>Presenze Atlete</h3>
+                            <h3 style="margin:0;">Gestione Presenze</h3>
                             <button class="btn-dash pink" id="btn-save-roster">Salva Presenze</button>
                         </div>
                         <div class="trm-roster-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:12px;">

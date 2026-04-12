@@ -85,6 +85,7 @@ const TransportView = {
                         <i class="ph ph-brain" style="font-size:16px;"></i> CONSULTA AI
                     </button>
                     ${tr.pdf_reimbursement ? `<button class="btn-dash" style="padding:8px 16px; font-size:11px;" onclick="window.open('/storage/reimbursements/${tr.pdf_reimbursement}', '_blank')"><i class="ph ph-file-pdf"></i> PDF</button>` : ""}
+                    ${tr.event_id ? `<button class="btn-dash" style="padding:8px 16px; font-size:11px; border-color:var(--accent-pink); color:var(--accent-pink);" onclick="window.open('api/router.php?module=tournaments&action=generateRoomingList&id=${tr.event_id}', '_blank')"><i class="ph ph-file-pdf"></i> ROOMING LIST</button>` : ""}
                 </div>
             </div>`;
     },
@@ -324,6 +325,12 @@ const TransportView = {
                                 <select class="form-select" id="nt-team-select">
                                     <option value="">— Seleziona squadra —</option>
                                     ${teamOptions}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="nt-event-select">Evento / Torneo (Opzionale)</label>
+                                <select class="form-select" id="nt-event-select">
+                                    <option value="">— Seleziona evento —</option>
                                 </select>
                             </div>
                             <div class="form-group">
@@ -611,6 +618,75 @@ const TransportView = {
                     <div style="font-family:var(--font-display); font-weight:800; color:#00e676; font-size:16px;">€ ${Utils.formatNum(r.totalAmount)}</div>
                 </td>
             </tr>`;
+    },
+
+    aiOverlay: () => {
+        return `
+            <div class="ai-modal">
+                <div class="ai-modal-header">
+                    <div style="display:flex; align-items:center; gap:16px;">
+                        <div class="ai-modal-icon"><i class="ph ph-brain"></i></div>
+                        <div>
+                            <h2 class="ai-modal-title">ANALISI INTELLIGENTE</h2>
+                            <p class="ai-modal-subtitle">Ottimizzazione logistica e suggerimenti AI</p>
+                        </div>
+                    </div>
+                    <button class="ai-modal-close" id="ai-close-btn" type="button"><i class="ph ph-x"></i></button>
+                </div>
+                <div class="ai-modal-body" id="ai-modal-body">
+                    <div class="ai-loading">
+                        <div class="ai-loading-orb"></div>
+                        <p class="ai-loading-text">Analisi in corso...</p>
+                        <p class="ai-loading-sub">Elaborazione coordinate e traffico Real-Time</p>
+                    </div>
+                </div>
+            </div>`;
+    },
+
+    aiResultBody: (res) => {
+        if (!res) return `<p style="text-align:center; padding:40px; color:rgba(255,255,255,0.4);">Nessun suggerimento disponibile.</p>`;
+        
+        return `
+            <div class="ai-result-content">
+                <div class="ai-section ${res.risparmio ? 'savings' : ''}">
+                    <div class="ai-section-header">
+                        <i class="ph ph-lightning"></i> RIEPILOGO OTTIMIZZAZIONE
+                        ${res.risparmio ? `<span class="ai-badge">-${res.risparmio}</span>` : ''}
+                    </div>
+                    <p class="ai-section-text">${Utils.escapeHtml(res.commento || "Analisi completata con successo.")}</p>
+                </div>
+
+                ${res.suggerimenti ? `
+                <div class="ai-section">
+                    <div class="ai-section-header"><i class="ph ph-list-checks"></i> SUGGERIMENTI OPERATIVI</div>
+                    <ul style="margin:0; padding-left:20px; color:rgba(255,255,255,0.7); font-size:14px; line-height:1.6;">
+                        ${res.suggerimenti.map(s => `<li>${Utils.escapeHtml(s)}</li>`).join("")}
+                    </ul>
+                </div>` : ""}
+
+                ${res.viaggi_multipli ? `
+                <div class="ai-section warning">
+                    <div class="ai-section-header">
+                        <i class="ph ph-warning"></i> TRASPORTI MULTIPLI CONSIGLIATI
+                        <span class="ai-badge danger">CRITICO</span>
+                    </div>
+                    <p class="ai-section-text" style="margin-bottom:16px;">L'atleta <strong>${Utils.escapeHtml(res.atleta_fuori_mano)}</strong> allunga il percorso di oltre ${res.extra_time} min. Suggeriamo di dividere il viaggio:</p>
+                    <div class="ai-pickup-card">
+                        <div class="ai-pickup-num">A</div>
+                        <div class="ai-pickup-content">
+                            <div class="ai-pickup-name">Veicolo Principale</div>
+                            <div class="ai-pickup-athletes">${res.veicolo_a_count} Atlete (Percorso Ottimizzato)</div>
+                        </div>
+                    </div>
+                    <div class="ai-pickup-card" style="margin-top:10px;">
+                        <div class="ai-pickup-num">B</div>
+                        <div class="ai-pickup-content">
+                            <div class="ai-pickup-name">Veicolo Appoggio</div>
+                            <div class="ai-pickup-athletes">${res.atleta_fuori_mano} (Partenza diretta)</div>
+                        </div>
+                    </div>
+                </div>` : ""}
+            </div>`;
     }
 };
 

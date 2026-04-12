@@ -167,24 +167,59 @@ class TournamentsController
         }
 
         try {
-            // 1. Get tournament detail
             $tournament = $this->repository->getTournament($id);
             if (!$tournament) throw new \Exception('Tournament not found', 404);
 
-            // 2. Get roster with document info
             $roster = $this->repository->getRoster($id, $tournament['team_id']);
 
-            // 3. Get societa profile for branding/fiscal data
             $socRepo = new \FusionERP\Modules\Societa\SocietaRepository();
             $socProfile = $socRepo->getProfile() ?: [];
 
-            // 4. Generate PDF
-            $pdfService = new \FusionERP\Modules\Tournaments\Services\TournamentsPdfService(\FusionERP\Shared\Database::getInstance());
+            $pdfService = new \FusionERP\Modules\Tournaments\Services\TournamentsPdfService();
             $pdfService->generateRoomingList($tournament, $roster, $socProfile);
-            
         } catch (\Exception $e) {
-            error_log("[Tournaments] PDF generation failed: " . $e->getMessage());
-            die("Errore generazione PDF: " . $e->getMessage());
+            Response::error($e->getMessage(), (int)$e->getCode() ?: 500);
+        }
+    }
+
+    /**
+     * Save Rooming List PDF to disk
+     */
+    public function saveRoomingList(): void
+    {
+        Auth::requireWrite('tournaments');
+        $id = filter_input(INPUT_POST, 'id', FILTER_DEFAULT);
+        if (!$id) {
+            Response::error('Invalid tournament ID.', 400);
+        }
+
+        try {
+            $tournament = $this->repository->getTournament($id);
+            if (!$tournament) throw new \Exception('Tournament not found', 404);
+
+            $roster = $this->repository->getRoster($id, $tournament['team_id']);
+            
+            $socRepo = new \FusionERP\Modules\Societa\SocietaRepository();
+            $socProfile = $socRepo->getProfile() ?: [];
+
+            // Define path
+            $dir = dirname(__DIR__, 3) . '/uploads/rooming_lists/';
+            if (!is_dir($dir)) mkdir($dir, 0775, true);
+            
+            $filename = 'Rooming_List_' . $id . '.pdf';
+            $fullPath = $dir . $filename;
+            $relativePath = 'uploads/rooming_lists/' . $filename;
+
+            // Generate and save
+            $pdfService = new \FusionERP\Modules\Tournaments\Services\TournamentsPdfService();
+            $pdfService->generateRoomingList($tournament, $roster, $socProfile, $fullPath);
+
+            // Update DB
+            $this->repository->updateRoomingListPath($id, $relativePath);
+
+            Response::success(['path' => $relativePath]);
+        } catch (\Exception $e) {
+            Response::error($e->getMessage(), (int)$e->getCode() ?: 500);
         }
     }
 }

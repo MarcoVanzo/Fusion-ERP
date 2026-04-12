@@ -465,10 +465,30 @@ const Transport = {
             this.selectedAthletes = [];
             
             const grid = document.getElementById("nt-athletes-grid");
+            const eventSelect = document.getElementById("nt-event-select");
+
             if (!teamId) {
                 grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:rgba(255,255,255,0.4);">Seleziona una squadra</div>';
+                if (eventSelect) eventSelect.innerHTML = '<option value="">— Seleziona evento —</option>';
                 this.validateWizard();
                 return;
+            }
+
+            // Load Events for this team
+            if (eventSelect) {
+                eventSelect.innerHTML = '<option value="">Caricamento...</option>';
+                try {
+                    const events = await TransportAPI.getEvents(teamId);
+                    const tournaments = events.filter(ev => ev.type === 'tournament');
+                    if (tournaments.length > 0) {
+                        eventSelect.innerHTML = '<option value="">— Seleziona evento —</option>' + 
+                            tournaments.map(ev => `<option value="${ev.id}">${Utils.escapeHtml(ev.title)} (${Utils.formatDate(ev.event_date)})</option>`).join('');
+                    } else {
+                        eventSelect.innerHTML = '<option value="">Nessun torneo trovato per questa squadra</option>';
+                    }
+                } catch (err) {
+                    eventSelect.innerHTML = '<option value="">Errore caricamento eventi</option>';
+                }
             }
 
             grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px;"><div class="spinner"></div></div>';
@@ -568,10 +588,12 @@ const Transport = {
                 this.selectedAthletes = sortedAthletes;
             }
             
-            // Map timeline to athletes
+            // Map timeline to athletes robustly
+            // The timeline "raccolta" stops map 1:1 geometrically to the sortedAthletes array
+            let mapIndex = 0;
             plan.timeline.forEach(step => {
                 if (step.tipo === "raccolta") {
-                    const athlete = sortedAthletes.find(a => a.residence_address === step.luogo);
+                    const athlete = sortedAthletes[mapIndex++];
                     if (athlete) {
                         step.atleta_id = athlete.id;
                         step.atleta_name = athlete.full_name;
@@ -642,67 +664,110 @@ const Transport = {
     },
 
     attachDraggableEvents: function() {
-        const items = document.querySelectorAll('.nt-timeline-item[draggable="true"]');
-        items.forEach(item => {
-            item.addEventListener('dragstart', (e) => {
+        const list = document.getElementById('nt-timeline-list');
+        if (!list) return;
+
+        console.log("[Transport] Initializing reliable Drag & Drop on #nt-timeline-list");
+
+        // Use a persistent reference to handle browser inconsistencies with dataTransfer
+        this._draggedIdx = null;
+
+        // Drag Start
+        list.addEventListener('dragstart', (e) => {
+            const item = e.target.closest('.nt-tl-item[draggable="true"]');
+            if (item) {
+                this._draggedIdx = parseInt(item.dataset.index);
                 e.dataTransfer.setData('text/plain', item.dataset.index);
-                item.style.opacity = '0.4';
-            });
+                e.dataTransfer.effectAllowed = 'move';
+                item.classList.add('dragging');
+                console.log("[Transport] Dragging index:", this._draggedIdx);
+            }
+        });
 
-            item.addEventListener('dragend', () => {
-                item.style.opacity = '1';
-                document.querySelectorAll('.nt-timeline-item').forEach(i => i.style.background = '');
-            });
+        // Drag End
+        list.addEventListener('dragend', (e) => {
+            const item = e.target.closest('.nt-tl-item');
+            if (item) item.classList.remove('dragging');
+            list.querySelectorAll('.nt-tl-item').forEach(i => i.classList.remove('drag-over'));
+            this._draggedIdx = null;
+        });
 
-            item.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                item.style.background = 'rgba(255,255,255,0.05)';
-            });
+        // Drag Over
+        list.addEventListener('dragover', (e) => {
+            e.preventDefault(); // Crucial for allowing drop
+            const target = e.target.closest('.nt-tl-item');
+            if (target) {
+                e.dataTransfer.dropEffect = 'move';
+                target.classList.add('drag-over');
+            }
+        });
 
-            item.addEventListener('dragleave', () => {
-                item.style.background = '';
-            });
+        // Drag Leave
+        list.addEventListener('dragleave', (e) => {
+            const target = e.target.closest('.nt-tl-item');
+            if (target) target.classList.remove('drag-over');
+        });
 
-            item.addEventListener('drop', (e) => {
-                e.preventDefault();
-                const fromIdx = parseInt(e.dataTransfer.getData('text/plain'));
-                const toIdx = parseInt(item.dataset.index);
-                if (fromIdx !== toIdx) {
-                    this.handleTimelineDrop(fromIdx, toIdx);
-                }
-            });
+        // Drop
+        list.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const target = e.target.closest('.nt-tl-item');
+            const fromIdx = this._draggedIdx !== null ? this._draggedIdx : parseInt(e.dataTransfer.getData('text/plain'));
+            
+            if (!target || isNaN(fromIdx)) {
+                console.warn("[Transport] Drop failed: invalid target or index", { target, fromIdx });
+                return;
+            }
+            
+            const toIdx = parseInt(target.dataset.index);
+            console.log("[Transport] Dropped", fromIdx, "on", toIdx);
+
+            if (fromIdx !== toIdx) {
+                this.handleTimelineDrop(fromIdx, toIdx);
+            } else {
+                list.querySelectorAll('.nt-tl-item').forEach(i => i.classList.remove('drag-over'));
+            }
         });
     },
 
     handleTimelineDrop: function(fromIdx, toIdx) {
-        // Timeline includes Start and End, but draggable indices are relative to the full timeline
-        // The first and last items are Departure and Arrival. We only reorder the pickups.
-        // But our dataset-index is absolute.
-        // Convert timeline absolute index to athletes array index.
-        // In TransportLogic, timeline is [Departure, ...Pickups, Arrival].
-        // So pickup i corresponds to athletes[i-1]? No, it's safer to map by atleta_id.
-        
         const timeline = this.calculatedRoute.timeline;
         const fromItem = timeline[fromIdx];
         const toItem = timeline[toIdx];
 
-        if (fromItem.tipo !== 'raccolta' || toItem.tipo !== 'raccolta') return;
+        if (!fromItem || fromItem.tipo !== 'raccolta') return;
 
-        // Reorder selectedAthletes to match the new desired order
-        // We find the index in selectedAthletes of the moved item
-        const athleteToMove = this.selectedAthletes.find(a => a.id === fromItem.atleta_id);
-        const targetAthlete = this.selectedAthletes.find(a => a.id === toItem.atleta_id);
+        // Visual feedback
+        UI.toast("Ricalcolo percorso in corso...", "info");
 
-        if (!athleteToMove || !targetAthlete) return;
+        // Identify the athlete being moved
+        const athleteToMove = this.selectedAthletes.find(a => String(a.id) === String(fromItem.atleta_id));
+        if (!athleteToMove) {
+            console.error("[Transport] Athlete not found for ID:", fromItem.atleta_id);
+            return;
+        }
 
         const fromPos = this.selectedAthletes.indexOf(athleteToMove);
-        const toPos = this.selectedAthletes.indexOf(targetAthlete);
+        
+        let targetPos;
+        if (toItem.tipo === 'partenza') {
+            targetPos = 0; 
+        } else if (toItem.tipo === 'arrivo') {
+            targetPos = this.selectedAthletes.length - 1;
+        } else {
+            const targetAthlete = this.selectedAthletes.find(a => String(a.id) === String(toItem.atleta_id));
+            if (!targetAthlete) return;
+            targetPos = this.selectedAthletes.indexOf(targetAthlete);
+        }
 
+        console.log(`[Transport] Reordering: ${athleteToMove.full_name} from ${fromPos} to ${targetPos}`);
+
+        // Reorder
         this.selectedAthletes.splice(fromPos, 1);
-        this.selectedAthletes.splice(toPos, 0, athleteToMove);
+        this.selectedAthletes.splice(targetPos, 0, athleteToMove);
 
-        // Reroute forcing the manual order
-        this.handleCalculateRoute(true);
+        // Force reroute with a small delay to allow UI to breathe
+        setTimeout(() => this.handleCalculateRoute(true), 50);
     },
 
     handleSaveTransport: async function() {
@@ -718,6 +783,7 @@ const Transport = {
             
             const payload = {
                 team_id: this.selectedTeam,
+                event_id: document.getElementById("nt-event-select")?.value || null,
                 destination_name: this.selectedGym.name,
                 destination_address: this.selectedGym.address,
                 destination_lat: this.selectedGym.lat,

@@ -11,14 +11,7 @@ use FusionERP\Shared\TenantContext;
 
 class TournamentsPdfService
 {
-    private \PDO $db;
-
-    public function __construct(\PDO $db)
-    {
-        $this->db = $db;
-    }
-
-    public function generateRoomingList(array $tournament, array $roster, array $societaProfile): void
+    public function generateRoomingList(array $tournament, array $roster, array $societaProfile, ?string $savePath = null): void
     {
         // Setup mPDF - Autoloader is already loaded by router.php
         // Aruba optimization: use a writable temp folder
@@ -105,9 +98,10 @@ class TournamentsPdfService
         <table class="data-table">
             <thead>
                 <tr>
-                    <th width="30%">Cognome</th>
-                    <th width="30%">Nome</th>
-                    <th width="25%">Documento</th>
+                    <th width="20%">Cognome</th>
+                    <th width="20%">Nome</th>
+                    <th width="15%">Data Nascita</th>
+                    <th width="30%">Documento</th>
                     <th width="15%">Ruolo</th>
                 </tr>
             </thead>
@@ -122,11 +116,13 @@ class TournamentsPdfService
             
             // Format document string
             $docInfo = $member['identity_document'] ?: '—';
+            $birthDate = !empty($member['birth_date']) ? Utils::formatDate($member['birth_date']) : '—';
 
             $html .= '
                 <tr>
                     <td><strong>' . mb_strtoupper(htmlspecialchars($member['last_name'] ?? '')) . '</strong></td>
                     <td>' . htmlspecialchars($member['first_name'] ?? '') . '</td>
+                    <td>' . htmlspecialchars($birthDate) . '</td>
                     <td>' . htmlspecialchars($docInfo) . '</td>
                     <td><span class="role-badge ' . $roleClass . '">' . $roleLabel . '</span></td>
                 </tr>';
@@ -153,9 +149,13 @@ class TournamentsPdfService
 
         $mpdf->WriteHTML($html);
         
-        $filename = 'Rooming_List_' . str_replace(' ', '_', $tournament['title']) . '.pdf';
-        $mpdf->Output($filename, 'I'); // Inline view
-        exit;
+        $filename = 'Rooming_List_' . Utils::slugify($tournament['title'] ?? 'Evento') . '.pdf';
+        
+        if ($savePath) {
+            $mpdf->Output($savePath, 'F');
+        } else {
+            $mpdf->Output($filename, 'I');
+        }
     }
 }
 
@@ -164,5 +164,18 @@ class Utils {
     public static function formatDate($date) {
         if (!$date) return '';
         return date('d/m/Y', strtotime($date));
+    }
+
+    public static function slugify($text) {
+        $text = preg_replace('~[^\pL\d]+~u', '-', $text);
+        $text = iconv('utf-8', 'us-ascii//TRANSLIT', $text);
+        $text = preg_replace('~[^-\w]+~', '', $text);
+        $text = trim($text, '-');
+        $text = preg_replace('~-+~', '-', $text);
+        $text = strtolower($text);
+        if (empty($text)) {
+            return 'n-a';
+        }
+        return $text;
     }
 }
