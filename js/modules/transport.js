@@ -526,7 +526,7 @@ const Transport = {
         if (hint) hint.style.display = isValid ? "none" : "";
     },
 
-    handleCalculateRoute: async function() {
+    handleCalculateRoute: async function(forceManualOrder = false) {
         const arrivalTime = document.getElementById("nt-arrival-time")?.value;
         const departureAddr = document.getElementById("nt-departure-addr")?.value;
         
@@ -551,16 +551,22 @@ const Transport = {
             const waypoints = this.selectedAthletes.map(a => a.residence_address);
             const destination = this.selectedGym.address || this.selectedGym.name;
             
-            // 1. Get Directions from Google
-            const result = await TransportMap.getRoute(departureAddr, destination, waypoints, true);
+            // 1. Get Directions from Google (optimize only if not manually ordered)
+            const result = await TransportMap.getRoute(departureAddr, destination, waypoints, !forceManualOrder);
             
             // 2. Apply Backward Planning Logic
             const trafficRatio = TransportLogic.estimateTrafficRatio(arrivalTime);
             const plan = TransportLogic.calculateBackwards(result, arrivalTime, trafficRatio);
             
             // Enrich plan with athlete data
-            const order = result.routes[0].waypoint_order;
+            // If manual order is forced, the order is 0,1,2,3... because we already sorted selectedAthletes
+            const order = forceManualOrder ? this.selectedAthletes.map((_, i) => i) : result.routes[0].waypoint_order;
             const sortedAthletes = order.map(idx => this.selectedAthletes[idx]);
+
+            // Sync internal athletes list to match the actual route order for next interactions
+            if (!forceManualOrder) {
+                this.selectedAthletes = sortedAthletes;
+            }
             
             // Map timeline to athletes
             plan.timeline.forEach(step => {
@@ -590,6 +596,7 @@ const Transport = {
         resultsArea.innerHTML = TransportView.renderCalculationResult(plan.stats, timelineHtml, '<div id="nt-route-map" style="height:100%;"></div>');
         
         this.attachResultEvents();
+        this.attachDraggableEvents();
         
         // Render Route Map
         setTimeout(() => {
@@ -601,19 +608,101 @@ const Transport = {
 
     attachResultEvents: function() {
         document.getElementById("nt-save-btn")?.addEventListener("click", () => this.handleSaveTransport(), { signal: this.abortController.signal });
-        document.getElementById("nt-ai-refine-btn")?.addEventListener("click", () => {
-            this.handleAiAnalysis(null, {
-                team_id: this.selectedTeam,
-                destName: this.selectedGym.name,
-                destAddr: this.selectedGym.address,
-                depAddr: document.getElementById("nt-departure-addr")?.value,
-                date: document.getElementById("nt-transport-date")?.value,
-                time: document.getElementById("nt-arrival-time")?.value,
-                timeline: this.calculatedRoute.timeline,
-                athletes: this.selectedAthletes,
-                stats: this.calculatedRoute.stats
+        
+        const aiBtn = document.getElementById("nt-ai-refine-btn");
+        if (aiBtn) {
+            aiBtn.addEventListener("click", async () => {
+                if (!this.calculatedRoute || !this.selectedGym) {
+                    UI.toast("Calcola prima il percorso", "info");
+                    return;
+                }
+                
+                aiBtn.disabled = true;
+                const originalHtml = aiBtn.innerHTML;
+                aiBtn.innerHTML = '<div class="spinner" style="width:16px;height:16px;"></div> Analisi AI...';
+                
+                try {
+                    await this.handleAiAnalysis(null, {
+                        team_id: this.selectedTeam,
+                        destName: this.selectedGym.name,
+                        destAddr: this.selectedGym.address,
+                        depAddr: document.getElementById("nt-departure-addr")?.value,
+                        date: document.getElementById("nt-transport-date")?.value,
+                        time: document.getElementById("nt-arrival-time")?.value,
+                        timeline: this.calculatedRoute.timeline,
+                        athletes: this.selectedAthletes,
+                        stats: this.calculatedRoute.stats
+                    });
+                } finally {
+                    aiBtn.disabled = false;
+                    aiBtn.innerHTML = originalHtml;
+                }
+            }, { signal: this.abortController.signal });
+        }
+    },
+
+    attachDraggableEvents: function() {
+        const items = document.querySelectorAll('.nt-timeline-item[draggable="true"]');
+        items.forEach(item => {
+            item.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text/plain', item.dataset.index);
+                item.style.opacity = '0.4';
             });
-        }, { signal: this.abortController.signal });
+
+            item.addEventListener('dragend', () => {
+                item.style.opacity = '1';
+                document.querySelectorAll('.nt-timeline-item').forEach(i => i.style.background = '');
+            });
+
+            item.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                item.style.background = 'rgba(255,255,255,0.05)';
+            });
+
+            item.addEventListener('dragleave', () => {
+                item.style.background = '';
+            });
+
+            item.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const fromIdx = parseInt(e.dataTransfer.getData('text/plain'));
+                const toIdx = parseInt(item.dataset.index);
+                if (fromIdx !== toIdx) {
+                    this.handleTimelineDrop(fromIdx, toIdx);
+                }
+            });
+        });
+    },
+
+    handleTimelineDrop: function(fromIdx, toIdx) {
+        // Timeline includes Start and End, but draggable indices are relative to the full timeline
+        // The first and last items are Departure and Arrival. We only reorder the pickups.
+        // But our dataset-index is absolute.
+        // Convert timeline absolute index to athletes array index.
+        // In TransportLogic, timeline is [Departure, ...Pickups, Arrival].
+        // So pickup i corresponds to athletes[i-1]? No, it's safer to map by atleta_id.
+        
+        const timeline = this.calculatedRoute.timeline;
+        const fromItem = timeline[fromIdx];
+        const toItem = timeline[toIdx];
+
+        if (fromItem.tipo !== 'raccolta' || toItem.tipo !== 'raccolta') return;
+
+        // Reorder selectedAthletes to match the new desired order
+        // We find the index in selectedAthletes of the moved item
+        const athleteToMove = this.selectedAthletes.find(a => a.id === fromItem.atleta_id);
+        const targetAthlete = this.selectedAthletes.find(a => a.id === toItem.atleta_id);
+
+        if (!athleteToMove || !targetAthlete) return;
+
+        const fromPos = this.selectedAthletes.indexOf(athleteToMove);
+        const toPos = this.selectedAthletes.indexOf(targetAthlete);
+
+        this.selectedAthletes.splice(fromPos, 1);
+        this.selectedAthletes.splice(toPos, 0, athleteToMove);
+
+        // Reroute forcing the manual order
+        this.handleCalculateRoute(true);
     },
 
     handleSaveTransport: async function() {

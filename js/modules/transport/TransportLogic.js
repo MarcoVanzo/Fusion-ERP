@@ -98,11 +98,18 @@ const TransportLogic = {
             if (stop.tipo === "partenza") { icon = "ph-van"; color = "var(--accent-pink)"; }
             if (stop.tipo === "arrivo") { icon = "ph-flag-pennant"; color = "#00e676"; }
             
+            // Only pickup (raccolta) steps are draggable and numbered specifically for passengers
+            const isDraggable = stop.tipo === "raccolta";
+            const cursor = isDraggable ? "grab" : "default";
+            
             return `
-                <div class="nt-timeline-item" style="display:flex; gap:16px; position:relative; padding-bottom:12px;">
+                <div class="nt-timeline-item" 
+                     ${isDraggable ? `draggable="true" data-index="${i}"` : ""}
+                     style="display:flex; gap:16px; position:relative; padding-bottom:12px; cursor:${cursor};">
                     ${i < timeline.length - 1 ? '<div style="position:absolute; left:13px; top:28px; bottom:0; width:2px; background:rgba(255,255,255,0.05); border-left:1px dashed rgba(255,255,255,0.15);"></div>' : ''}
-                    <div style="width:28px; height:28px; border-radius:50%; background:rgba(255,255,255,0.05); border:1px solid ${color}; display:flex; align-items:center; justify-content:center; color:${color}; z-index:1; flex-shrink:0;">
+                    <div style="width:28px; height:28px; border-radius:50%; background:rgba(255,255,255,0.05); border:1px solid ${color}; display:flex; align-items:center; justify-content:center; color:${color}; z-index:1; flex-shrink:0; position:relative;">
                         <i class="ph ${icon}" style="font-size:14px;"></i>
+                        <span style="position:absolute; top:-6px; right:-6px; background:${color}; color:#000; width:14px; height:14px; border-radius:50%; font-size:9px; font-weight:900; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 4px rgba(0,0,0,0.3);">${i + 1}</span>
                     </div>
                     <div style="flex:1;">
                         <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -110,7 +117,9 @@ const TransportLogic = {
                             <span style="font-family:var(--font-display); font-size:14px; font-weight:800;">${stop.orario}</span>
                         </div>
                         <div style="font-size:12px; color:rgba(255,255,255,0.8); margin-top:2px;">${stop.luogo}</div>
+                        ${stop.atleta_name ? `<div style="font-weight:700; color:#fff; font-size:11px; margin-top:4px;"><i class="ph ph-user"></i> ${stop.atleta_name}</div>` : ""}
                     </div>
+                    ${isDraggable ? '<div style="color:rgba(255,255,255,0.15); align-self:center;"><i class="ph ph-dots-six-vertical" style="font-size:18px;"></i></div>' : ""}
                 </div>`;
         }).join("");
     }

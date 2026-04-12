@@ -187,15 +187,23 @@ const TransportMap = {
         
         const route = result.routes[0];
         const points = [];
-        route.legs.forEach(leg => {
+        route.legs.forEach((leg, i) => {
             leg.steps.forEach(step => {
                 step.path.forEach(p => points.push([p.lat(), p.lng()]));
             });
             const last = leg.end_location;
-            const marker = L.circleMarker([last.lat(), last.lng()], {
-                radius: 6, fillOpacity: 1, color: "#fff", weight: 2, fillColor: "#00e5ff"
-            }).addTo(map);
-            marker.bindPopup(leg.end_address);
+            
+            // Marker with number
+            const number = i + 1;
+            const icon = L.divIcon({
+                className: 'nt-map-marker',
+                html: `<div style="width:24px; height:24px; border-radius:50%; background:#fff; border:2px solid #00e5ff; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:12px; color:#000;">${number}</div>`,
+                iconSize: [24, 24],
+                iconAnchor: [12, 12]
+            });
+
+            const marker = L.marker([last.lat(), last.lng()], { icon }).addTo(map);
+            marker.bindPopup(`<strong>Tappa ${number}</strong><br>${leg.end_address}`);
         });
 
         const polyline = L.polyline(points, { color: "#E6007E", weight: 4, opacity: 0.8 }).addTo(map);
