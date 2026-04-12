@@ -359,14 +359,8 @@ class SocialRepository
             'access_token' => $accessToken,
         ]);
 
-        try {
-            $response = $this->graphGet($url);
-            return $response['data'] ?? [];
-        }
-        catch (\Throwable $e) {
-            error_log('[SOCIAL] getIgInsights error: ' . $e->getMessage());
-            return [];
-        }
+        $response = $this->graphGet($url);
+        return $response['data'] ?? [];
     }
 
     /**
@@ -440,20 +434,14 @@ class SocialRepository
             'access_token' => $accessToken,
         ]);
 
-        try {
-            $response = $this->graphGet($url);
-            $data = $response['data'] ?? [];
+        $response = $this->graphGet($url);
+        $data = $response['data'] ?? [];
 
-            $result = [];
-            foreach ($data as $d) {
-                $result[$d['name']] = $d['values'][0]['value'] ?? $d['value'] ?? 0;
-            }
-            return $result;
+        $result = [];
+        foreach ($data as $d) {
+            $result[$d['name']] = $d['values'][0]['value'] ?? $d['value'] ?? 0;
         }
-        catch (\Throwable $e) {
-            error_log('[SOCIAL] getMediaInsights error: ' . $e->getMessage());
-            return [];
-        }
+        return $result;
     }
 
     /**
