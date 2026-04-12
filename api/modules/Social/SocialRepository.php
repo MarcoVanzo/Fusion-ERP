@@ -329,6 +329,7 @@ class SocialRepository
 
         $expiresIn = $response['expires_in'] ?? 5184000;
         return [
+return [
             'access_token' => $response['access_token'],
             'expires_at' => date('Y-m-d H:i:s', time() + (int)$expiresIn),
         ];
@@ -347,67 +348,107 @@ class SocialRepository
      */
     public function getIgInsights(string $igAccountId, string $accessToken, string $period = 'day', int $days = 28): array
     {
-        $since = date('Y-m-d', strtotime('-' . $days . ' days'));
-        $until = date('Y-m-d');
-
-        // Query 1: Time Series (Daily layout)
-        $urlTs = self::GRAPH_BASE_URL . self::GRAPH_API_VERSION . '/' . $igAccountId . '/insights?'
-            . http_build_query([
-            'metric' => 'reach,follower_count',
-            'period' => $period,
-            'since' => $since,
-            'until' => $until,
-            'metric_type' => 'time_series',
-            'access_token' => $accessToken,
-        ]);
-
         $resTs = [];
-        try {
-            $tsResponse = $this->graphGet($urlTs);
-            $resTs = $tsResponse['data'] ?? [];
-        } catch (\Throwable $e) {
-            $this->logDebug('getIgInsights TS error: ' . $e->getMessage());
+        $totalViews = 0;
+        
+        // Meta Graph API restricts IG Insights since/until to max 30 days apart.
+        // We chunk the requested $days into 30-day intervals.
+        $chunks = [];
+        $remaining = $days;
+        $currentUntil = time();
+        
+        while ($remaining > 0) {
+            $chunkDays = min(30, $remaining);
+            $currentSince = $currentUntil - ($chunkDays * 86400);
+            $chunks[] = [
+                'since' => date('Y-m-d', $currentSince),
+                'until' => date('Y-m-d', $currentUntil)
+            ];
+            $currentUntil = $currentSince;
+            $remaining -= $chunkDays;
+        }
+        
+        $chunks = array_reverse($chunks); // Chronological order
+        
+        $reachValues = [];
+        $followerValues = [];
+        
+        foreach ($chunks as $chunk) {
+            // Query 1: Time Series Metrics
+            $urlTs = self::GRAPH_BASE_URL . self::GRAPH_API_VERSION . '/' . $igAccountId . '/insights?'
+                . http_build_query([
+                'metric' => 'reach,follower_count',
+                'period' => $period,
+                'since' => $chunk['since'],
+                'until' => $chunk['until'],
+                'metric_type' => 'time_series',
+                'access_token' => $accessToken,
+            ]);
+
+            try {
+                $tsResponse = $this->graphGet($urlTs);
+                $tsData = $tsResponse['data'] ?? [];
+                // Merge TS chunk results
+                foreach ($tsData as $m) {
+                    if ($m['name'] === 'reach') {
+                        $reachValues = array_merge($reachValues, $m['values'] ?? []);
+                    } elseif ($m['name'] === 'follower_count') {
+                        $followerValues = array_merge($followerValues, $m['values'] ?? []);
+                    }
+                }
+            } catch (\Throwable $e) {
+                $this->logDebug('getIgInsights TS chunk error: ' . $e->getMessage());
+            }
+
+            // Query 2: Total Values (Profile Views/Views)
+            $urlTot = self::GRAPH_BASE_URL . self::GRAPH_API_VERSION . '/' . $igAccountId . '/insights?'
+                . http_build_query([
+                'metric' => 'views,profile_views',
+                'period' => $period,
+                'since' => $chunk['since'],
+                'until' => $chunk['until'],
+                'metric_type' => 'total_value',
+                'access_token' => $accessToken,
+            ]);
+
+            try {
+                $totResponse = $this->graphGet($urlTot);
+                $totData = $totResponse['data'] ?? [];
+                foreach ($totData as $totMetric) {
+                    if ($totMetric['name'] === 'views') {
+                        $totalViews += ($totMetric['total_value']['value'] ?? 0);
+                    }
+                }
+            } catch (\Throwable $e) {
+                $this->logDebug('getIgInsights TOT chunk error: ' . $e->getMessage());
+            }
         }
 
-        // Query 2: Total Values (Since v21.0 views/profile_views require metric_type=total_value)
-        $urlTot = self::GRAPH_BASE_URL . self::GRAPH_API_VERSION . '/' . $igAccountId . '/insights?'
-            . http_build_query([
-            'metric' => 'views,profile_views',
-            'period' => 'day', // Depending on metric, 'day' or 'lifetime' is needed
-            'since' => $since,
-            'until' => $until,
-            'metric_type' => 'total_value',
-            'access_token' => $accessToken,
-        ]);
-
-        $resTot = [];
-        try {
-            $totResponse = $this->graphGet($urlTot);
-            $resTot = $totResponse['data'] ?? [];
-        } catch (\Throwable $e) {
-            $this->logDebug('getIgInsights TOT error: ' . $e->getMessage());
+        if (!empty($reachValues)) {
+            $resTs[] = [
+                'name' => 'reach',
+                'period' => 'day',
+                'values' => $reachValues,
+                'title' => 'Reach',
+            ];
+        }
+        if (!empty($followerValues)) {
+            $resTs[] = [
+                'name' => 'follower_count',
+                'period' => 'day',
+                'values' => $followerValues,
+                'title' => 'Follower Count',
+            ];
         }
 
         // We must artificially reconstruct daily 'views' so the JS frontend chart and KPIs 
         // keep working. We will distribute the total views proportionally based on daily reach.
         // If reach is 0, we distribute evenly.
-        $totalViews = 0;
-        foreach ($resTot as $totMetric) {
-            if ($totMetric['name'] === 'views') {
-                $totalViews = $totMetric['total_value']['value'] ?? 0;
-            }
-        }
-
+        
         // Find total reach to calculate proportions
         $totalReach = 0;
-        $reachValues = [];
-        foreach ($resTs as $tsMetric) {
-            if ($tsMetric['name'] === 'reach') {
-                $reachValues = $tsMetric['values'] ?? [];
-                foreach ($reachValues as $v) {
-                    $totalReach += (int)($v['value'] ?? 0);
-                }
-            }
+        foreach ($reachValues as $v) {
+            $totalReach += (int)($v['value'] ?? 0);
         }
 
         // Synthesize the views array

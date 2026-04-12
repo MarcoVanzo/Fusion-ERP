@@ -63,6 +63,7 @@ const Tournaments = {
                     try {
                         UI.loading(true);
                         await TournamentsAPI.duplicate(id);
+                        Store.invalidate("tournaments");
                         UI.toast("Torneo copiato con successo", "success");
                         await this.loadList();
                     } catch (err) {
@@ -84,6 +85,7 @@ const Tournaments = {
                             try {
                                 UI.loading(true);
                                 await TournamentsAPI.delete(id);
+                                Store.invalidate("tournaments");
                                 UI.toast("Torneo eliminato", "success");
                                 await this.loadList();
                             } catch (err) {
@@ -215,6 +217,7 @@ const Tournaments = {
             try {
                 UI.loading(true);
                 const res = await TournamentsAPI.save(data);
+                Store.invalidate("tournaments");
                 UI.toast("Torneo salvato", "success");
                 modal.close();
                 if (this._currentData) {
