@@ -188,7 +188,9 @@ class TournamentsController
     public function saveRoomingList(): void
     {
         Auth::requireWrite('tournaments');
-        $id = filter_input(INPUT_POST, 'id', FILTER_DEFAULT);
+        $body = Response::jsonBody();
+        $id = $body['id'] ?? null;
+        
         if (!$id) {
             Response::error('Invalid tournament ID.', 400);
         }

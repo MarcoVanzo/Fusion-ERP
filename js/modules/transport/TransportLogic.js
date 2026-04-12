@@ -92,6 +92,7 @@ const TransportLogic = {
      * Generates HTML for the timeline items.
      */
     generateTimelineHtml: (timeline) => {
+        let pickupCounter = 1;
         return timeline.map((stop, i) => {
             let icon = "ph-map-pin";
             let color = "var(--accent-cyan)";
@@ -102,6 +103,8 @@ const TransportLogic = {
             const typeClass = stop.tipo === "partenza" ? "partenza" : (stop.tipo === "arrivo" ? "arrivo" : "raccolta");
             const isDraggable = stop.tipo === "raccolta";
             
+            const badgeHtml = isDraggable ? `<span style="position:absolute; top:-6px; right:-6px; background:${color}; color:#000; width:14px; height:14px; border-radius:50%; font-size:9px; font-weight:900; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 4px rgba(0,0,0,0.3);">${pickupCounter++}</span>` : "";
+            
             return `
                 <div class="nt-tl-item ${typeClass}" 
                      ${isDraggable ? `draggable="true" data-index="${i}"` : ""}
@@ -110,7 +113,7 @@ const TransportLogic = {
                         <span style="font-family:var(--font-display); font-size:18px; font-weight:800; color:#fff;">${stop.orario}</span>
                         <div style="width:28px; height:28px; border-radius:50%; background:rgba(255,255,255,0.05); border:1px solid ${color}; display:flex; align-items:center; justify-content:center; color:${color}; position:relative; z-index:1;">
                             <i class="ph ${icon}" style="font-size:14px;"></i>
-                            <span style="position:absolute; top:-6px; right:-6px; background:${color}; color:#000; width:14px; height:14px; border-radius:50%; font-size:9px; font-weight:900; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 4px rgba(0,0,0,0.3);">${i + 1}</span>
+                            ${badgeHtml}
                         </div>
                     </div>
                     <div style="flex:1; min-width:0;">
