@@ -33,11 +33,11 @@ const TournamentsAPI = {
     },
 
     delete: async function(id) {
-        return await Store.api("deleteTournament", "tournaments", null, { id });
+        return await Store.api("deleteTournament", "tournaments", { id });
     },
 
     duplicate: async function(id) {
-        return await Store.api("duplicateTournament", "tournaments", null, { id });
+        return await Store.api("duplicateTournament", "tournaments", { id });
     }
 };
 

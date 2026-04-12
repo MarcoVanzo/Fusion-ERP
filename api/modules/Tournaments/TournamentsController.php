@@ -104,7 +104,8 @@ class TournamentsController
     public function deleteTournament(): void
     {
         Auth::requireWrite('tournaments');
-        $id = filter_input(INPUT_GET, 'id', FILTER_DEFAULT);
+        $body = Response::jsonBody();
+        $id = $body['id'] ?? filter_input(INPUT_GET, 'id', FILTER_DEFAULT);
         
         $this->handleServiceCall(function() use ($id) {
             $this->service->deleteTournament($id);
@@ -115,7 +116,8 @@ class TournamentsController
     public function duplicateTournament(): void
     {
         $user = Auth::requireWrite('tournaments');
-        $id = filter_input(INPUT_GET, 'id', FILTER_DEFAULT);
+        $body = Response::jsonBody();
+        $id = $body['id'] ?? filter_input(INPUT_GET, 'id', FILTER_DEFAULT);
         
         $this->handleServiceCall(function() use ($id, $user) {
             $newId = $this->service->duplicateTournament($id, $user['id']);
