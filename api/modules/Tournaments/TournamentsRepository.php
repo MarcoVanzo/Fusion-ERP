@@ -90,7 +90,7 @@ class TournamentsRepository
     public function getRoster(string $tournamentId, string $teamId): array
     {
         $stmt = $this->db->prepare("
-            SELECT a.id, a.full_name, a.jersey_number, a.role,
+            SELECT a.id, a.full_name, a.jersey_number, a.role, 'athlete' as member_type,
                    ea.status as attendance_status
             FROM athletes a
             LEFT JOIN event_attendees ea ON a.id = ea.athlete_id AND ea.event_id = :event_id1
@@ -98,7 +98,7 @@ class TournamentsRepository
             
             UNION ALL
             
-            SELECT s.id, CONCAT(s.first_name, ' ', s.last_name) AS full_name, NULL as jersey_number, s.role,
+            SELECT s.id, CONCAT(s.first_name, ' ', s.last_name) AS full_name, NULL as jersey_number, s.role, 'staff' as member_type,
                    ea.status as attendance_status
             FROM staff_members s
             JOIN staff_teams st ON s.id = st.staff_id

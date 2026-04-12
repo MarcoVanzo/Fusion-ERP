@@ -6,13 +6,13 @@
 
 const TransportView = {
     renderDashboard: (events, stats, isAdmin, upcoming, past) => {
-        const { o, s, l } = stats;
+        const { total, upcoming: upcomingCount, past: pastCount } = stats;
         return `
             <div class="transport-dashboard">
                 <div class="dash-top-bar">
                     <div>
                         <h1 class="dash-title">Gestione <span style="color:var(--accent-pink);">Trasporti</span></h1>
-                        <p class="dash-subtitle">${o} eventi nel sistema</p>
+                        <p class="dash-subtitle">${total} viaggi nel sistema</p>
                     </div>
                     <div style="display:flex; gap:12px; flex-wrap:wrap;">
                         <button class="btn-dash pink" id="nuovo-trasporto-btn" type="button"><i class="ph ph-van" style="font-size:18px;"></i> NUOVO TRASPORTO</button>
@@ -22,20 +22,16 @@ const TransportView = {
 
                 <div class="dash-stat-grid">
                     <div class="dash-stat-card">
-                        <div class="dash-stat-title">Totale Eventi <div class="dash-stat-icon"><i class="ph ph-calendar-blank"></i></div></div>
-                        <div class="dash-stat-value">${o}</div>
+                        <div class="dash-stat-title">Viaggi Totale <div class="dash-stat-icon"><i class="ph ph-van"></i></div></div>
+                        <div class="dash-stat-value">${total}</div>
                     </div>
                     <div class="dash-stat-card cyan">
-                        <div class="dash-stat-title">In Programma <div class="dash-stat-icon"><i class="ph ph-clock"></i></div></div>
-                        <div class="dash-stat-value">${s}</div>
+                        <div class="dash-stat-title">Viaggi Programmati <div class="dash-stat-icon"><i class="ph ph-clock"></i></div></div>
+                        <div class="dash-stat-value">${upcomingCount}</div>
                     </div>
                     <div class="dash-stat-card">
-                        <div class="dash-stat-title">Trasferte <div class="dash-stat-icon"><i class="ph ph-bus"></i></div></div>
-                        <div class="dash-stat-value">${l}</div>
-                    </div>
-                    <div class="dash-stat-card cyan">
-                        <div class="dash-stat-title">Allenamenti <div class="dash-stat-icon"><i class="ph ph-barbell"></i></div></div>
-                        <div class="dash-stat-value">${events.filter((t) => "training" === t.type).length}</div>
+                        <div class="dash-stat-title">Viaggi Effettuati <div class="dash-stat-icon"><i class="ph ph-check-circle"></i></div></div>
+                        <div class="dash-stat-value">${pastCount}</div>
                     </div>
                 </div>
 

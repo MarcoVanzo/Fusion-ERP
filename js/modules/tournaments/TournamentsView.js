@@ -119,7 +119,7 @@ const TournamentsView = {
 
     costsSummary: (data) => {
         const e = data.tournament;
-        const confirmedAthletes = data.roster.filter(t => t.attendance_status === 'confirmed').length;
+        const confirmedAthletes = data.roster.filter(t => t.attendance_status === 'confirmed' && t.member_type === 'athlete').length;
         const totalRevenue = confirmedAthletes * (e.fee_per_athlete || 0);
         const totalExpenses = data.expenses.reduce((sum, exp) => sum + parseFloat(exp.amount), 0);
         const netProfit = totalRevenue - totalExpenses;
