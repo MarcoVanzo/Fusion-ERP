@@ -311,9 +311,9 @@ const Transport = {
         const past = this.transports.filter(t => new Date(t.transport_date) < now);
         
         const stats = {
-            o: this.events.length,
-            s: upcoming.length,
-            l: this.transports.length
+            total: this.transports.length,
+            upcoming: upcoming.length,
+            past: past.length
         };
 
         app.innerHTML = TransportView.renderDashboard(this.events, stats, isAdmin, upcoming, past);
@@ -325,7 +325,6 @@ const Transport = {
     },
 
     attachDashboardEvents: function() {
-        document.getElementById("new-event-btn")?.addEventListener("click", () => this.showNewEventModal(), { signal: this.abortController.signal });
         document.getElementById("nuovo-trasporto-btn")?.addEventListener("click", () => this.renderNewTransportWizard(), { signal: this.abortController.signal });
         
         // Event cards
@@ -428,7 +427,11 @@ const Transport = {
             const vehicleOptions = vehicles.map(v => `<option value="${v.id}">${Utils.escapeHtml(v.name)} ${v.license_plate ? '(' + Utils.escapeHtml(v.license_plate) + ')' : ''}</option>`).join('');
 
             app.innerHTML = TransportView.renderNewTransport(gymOptions, teamOptions, driverOptions, vehicleOptions);
-            this.attachWizardEvents();
+            
+            // Initialize Google Maps API for autocomplete and route calculation
+            TransportMap.initGoogleMaps(() => {
+                this.attachWizardEvents();
+            });
         } catch (error) {
             UI.toast("Errore caricamento wizard", "error");
             this.renderDashboard();
@@ -462,10 +465,30 @@ const Transport = {
             this.selectedAthletes = [];
             
             const grid = document.getElementById("nt-athletes-grid");
+            const eventSelect = document.getElementById("nt-event-select");
+
             if (!teamId) {
                 grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:rgba(255,255,255,0.4);">Seleziona una squadra</div>';
+                if (eventSelect) eventSelect.innerHTML = '<option value="">— Seleziona evento —</option>';
                 this.validateWizard();
                 return;
+            }
+
+            // Load Events for this team
+            if (eventSelect) {
+                eventSelect.innerHTML = '<option value="">Caricamento...</option>';
+                try {
+                    const events = await TransportAPI.getEvents(teamId);
+                    const tournaments = events.filter(ev => ev.type === 'tournament');
+                    if (tournaments.length > 0) {
+                        eventSelect.innerHTML = '<option value="">— Seleziona evento —</option>' + 
+                            tournaments.map(ev => `<option value="${ev.id}">${Utils.escapeHtml(ev.title)} (${Utils.formatDate(ev.event_date)})</option>`).join('');
+                    } else {
+                        eventSelect.innerHTML = '<option value="">Nessun torneo trovato per questa squadra</option>';
+                    }
+                } catch (err) {
+                    eventSelect.innerHTML = '<option value="">Errore caricamento eventi</option>';
+                }
             }
 
             grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px;"><div class="spinner"></div></div>';
@@ -523,12 +546,20 @@ const Transport = {
         if (hint) hint.style.display = isValid ? "none" : "";
     },
 
-    handleCalculateRoute: async function() {
+    handleCalculateRoute: async function(forceManualOrder = false) {
         const arrivalTime = document.getElementById("nt-arrival-time")?.value;
         const departureAddr = document.getElementById("nt-departure-addr")?.value;
         
         if (!arrivalTime || !departureAddr) {
             UI.toast("Orario e punto di partenza obbligatori", "warning");
+            return;
+        }
+
+        // Validate athletes' addresses
+        const athletesWithNoAddr = this.selectedAthletes.filter(a => !a.residence_address || a.residence_address.trim().length < 3);
+        if (athletesWithNoAddr.length > 0) {
+            const names = athletesWithNoAddr.map(a => a.full_name).join(", ");
+            UI.toast(`Indirizzo mancante per: ${names}. Inseriscilo nella card atleta.`, "warning", 5000);
             return;
         }
 
@@ -540,21 +571,29 @@ const Transport = {
             const waypoints = this.selectedAthletes.map(a => a.residence_address);
             const destination = this.selectedGym.address || this.selectedGym.name;
             
-            // 1. Get Directions from Google
-            const result = await TransportMap.getRoute(departureAddr, destination, waypoints, true);
+            // 1. Get Directions from Google (optimize only if not manually ordered)
+            const result = await TransportMap.getRoute(departureAddr, destination, waypoints, !forceManualOrder);
             
             // 2. Apply Backward Planning Logic
             const trafficRatio = TransportLogic.estimateTrafficRatio(arrivalTime);
             const plan = TransportLogic.calculateBackwards(result, arrivalTime, trafficRatio);
             
             // Enrich plan with athlete data
-            const order = result.routes[0].waypoint_order;
+            // If manual order is forced, the order is 0,1,2,3... because we already sorted selectedAthletes
+            const order = forceManualOrder ? this.selectedAthletes.map((_, i) => i) : result.routes[0].waypoint_order;
             const sortedAthletes = order.map(idx => this.selectedAthletes[idx]);
+
+            // Sync internal athletes list to match the actual route order for next interactions
+            if (!forceManualOrder) {
+                this.selectedAthletes = sortedAthletes;
+            }
             
-            // Map timeline to athletes
+            // Map timeline to athletes robustly
+            // The timeline "raccolta" stops map 1:1 geometrically to the sortedAthletes array
+            let mapIndex = 0;
             plan.timeline.forEach(step => {
                 if (step.tipo === "raccolta") {
-                    const athlete = sortedAthletes.find(a => a.residence_address === step.luogo);
+                    const athlete = sortedAthletes[mapIndex++];
                     if (athlete) {
                         step.atleta_id = athlete.id;
                         step.atleta_name = athlete.full_name;
@@ -579,6 +618,7 @@ const Transport = {
         resultsArea.innerHTML = TransportView.renderCalculationResult(plan.stats, timelineHtml, '<div id="nt-route-map" style="height:100%;"></div>');
         
         this.attachResultEvents();
+        this.attachDraggableEvents();
         
         // Render Route Map
         setTimeout(() => {
@@ -590,19 +630,144 @@ const Transport = {
 
     attachResultEvents: function() {
         document.getElementById("nt-save-btn")?.addEventListener("click", () => this.handleSaveTransport(), { signal: this.abortController.signal });
-        document.getElementById("nt-ai-btn")?.addEventListener("click", () => {
-            this.handleAiAnalysis(null, {
-                team_id: this.selectedTeam,
-                destName: this.selectedGym.name,
-                destAddr: this.selectedGym.address,
-                depAddr: document.getElementById("nt-departure-addr")?.value,
-                date: document.getElementById("nt-transport-date")?.value,
-                time: document.getElementById("nt-arrival-time")?.value,
-                timeline: this.calculatedRoute.timeline,
-                athletes: this.selectedAthletes,
-                stats: this.calculatedRoute.stats
-            });
-        }, { signal: this.abortController.signal });
+        
+        const aiBtn = document.getElementById("nt-ai-refine-btn");
+        if (aiBtn) {
+            aiBtn.addEventListener("click", async () => {
+                if (!this.calculatedRoute || !this.selectedGym) {
+                    UI.toast("Calcola prima il percorso", "info");
+                    return;
+                }
+                
+                aiBtn.disabled = true;
+                const originalHtml = aiBtn.innerHTML;
+                aiBtn.innerHTML = '<div class="spinner" style="width:16px;height:16px;"></div> Analisi AI...';
+                
+                try {
+                    await this.handleAiAnalysis(null, {
+                        team_id: this.selectedTeam,
+                        destName: this.selectedGym.name,
+                        destAddr: this.selectedGym.address,
+                        depAddr: document.getElementById("nt-departure-addr")?.value,
+                        date: document.getElementById("nt-transport-date")?.value,
+                        time: document.getElementById("nt-arrival-time")?.value,
+                        timeline: this.calculatedRoute.timeline,
+                        athletes: this.selectedAthletes,
+                        stats: this.calculatedRoute.stats
+                    });
+                } finally {
+                    aiBtn.disabled = false;
+                    aiBtn.innerHTML = originalHtml;
+                }
+            }, { signal: this.abortController.signal });
+        }
+    },
+
+    attachDraggableEvents: function() {
+        const list = document.getElementById('nt-timeline-list');
+        if (!list) return;
+
+        console.log("[Transport] Initializing reliable Drag & Drop on #nt-timeline-list");
+
+        // Use a persistent reference to handle browser inconsistencies with dataTransfer
+        this._draggedIdx = null;
+
+        // Drag Start
+        list.addEventListener('dragstart', (e) => {
+            const item = e.target.closest('.nt-tl-item[draggable="true"]');
+            if (item) {
+                this._draggedIdx = parseInt(item.dataset.index);
+                e.dataTransfer.setData('text/plain', item.dataset.index);
+                e.dataTransfer.effectAllowed = 'move';
+                item.classList.add('dragging');
+                console.log("[Transport] Dragging index:", this._draggedIdx);
+            }
+        });
+
+        // Drag End
+        list.addEventListener('dragend', (e) => {
+            const item = e.target.closest('.nt-tl-item');
+            if (item) item.classList.remove('dragging');
+            list.querySelectorAll('.nt-tl-item').forEach(i => i.classList.remove('drag-over'));
+            this._draggedIdx = null;
+        });
+
+        // Drag Over
+        list.addEventListener('dragover', (e) => {
+            e.preventDefault(); // Crucial for allowing drop
+            const target = e.target.closest('.nt-tl-item');
+            if (target) {
+                e.dataTransfer.dropEffect = 'move';
+                target.classList.add('drag-over');
+            }
+        });
+
+        // Drag Leave
+        list.addEventListener('dragleave', (e) => {
+            const target = e.target.closest('.nt-tl-item');
+            if (target) target.classList.remove('drag-over');
+        });
+
+        // Drop
+        list.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const target = e.target.closest('.nt-tl-item');
+            const fromIdx = this._draggedIdx !== null ? this._draggedIdx : parseInt(e.dataTransfer.getData('text/plain'));
+            
+            if (!target || isNaN(fromIdx)) {
+                console.warn("[Transport] Drop failed: invalid target or index", { target, fromIdx });
+                return;
+            }
+            
+            const toIdx = parseInt(target.dataset.index);
+            console.log("[Transport] Dropped", fromIdx, "on", toIdx);
+
+            if (fromIdx !== toIdx) {
+                this.handleTimelineDrop(fromIdx, toIdx);
+            } else {
+                list.querySelectorAll('.nt-tl-item').forEach(i => i.classList.remove('drag-over'));
+            }
+        });
+    },
+
+    handleTimelineDrop: function(fromIdx, toIdx) {
+        const timeline = this.calculatedRoute.timeline;
+        const fromItem = timeline[fromIdx];
+        const toItem = timeline[toIdx];
+
+        if (!fromItem || fromItem.tipo !== 'raccolta') return;
+
+        // Visual feedback
+        UI.toast("Ricalcolo percorso in corso...", "info");
+
+        // Identify the athlete being moved
+        const athleteToMove = this.selectedAthletes.find(a => String(a.id) === String(fromItem.atleta_id));
+        if (!athleteToMove) {
+            console.error("[Transport] Athlete not found for ID:", fromItem.atleta_id);
+            return;
+        }
+
+        const fromPos = this.selectedAthletes.indexOf(athleteToMove);
+        
+        let targetPos;
+        if (toItem.tipo === 'partenza') {
+            targetPos = 0; 
+        } else if (toItem.tipo === 'arrivo') {
+            targetPos = this.selectedAthletes.length - 1;
+        } else {
+            const targetAthlete = this.selectedAthletes.find(a => String(a.id) === String(toItem.atleta_id));
+            if (!targetAthlete) return;
+            targetPos = this.selectedAthletes.indexOf(targetAthlete);
+        }
+
+        console.log(`[Transport] Reordering: ${athleteToMove.full_name} from ${fromPos} to ${targetPos}`);
+
+        // Reorder
+        this.selectedAthletes.splice(fromPos, 1);
+        this.selectedAthletes.splice(targetPos, 0, athleteToMove);
+
+        // Force reroute with a small delay to allow UI to breathe
+        setTimeout(() => this.handleCalculateRoute(true), 50);
     },
 
     handleSaveTransport: async function() {
@@ -618,6 +783,7 @@ const Transport = {
             
             const payload = {
                 team_id: this.selectedTeam,
+                event_id: document.getElementById("nt-event-select")?.value || null,
                 destination_name: this.selectedGym.name,
                 destination_address: this.selectedGym.address,
                 destination_lat: this.selectedGym.lat,

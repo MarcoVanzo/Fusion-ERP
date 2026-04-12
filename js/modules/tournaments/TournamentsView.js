@@ -1,20 +1,29 @@
 /**
  * Tournaments View Module
- * Fusion ERP v1.1
+ * Fusion ERP v1.2 — UX Redesign
+ * 
+ * Redesigned for clarity: card badges, tab-based detail, clean CSS classes
  */
 
 const TournamentsView = {
     skeleton: () => `
         <div class="transport-dashboard" style="min-height:100vh; padding: 24px;">
             <div id="trm-list-view">
-                <div class="dash-top-bar" style="margin-bottom: 24px; display:flex; justify-content:space-between; align-items:center;">
+                <div class="dash-top-bar">
                     <div>
                         <h1 class="dash-title"><i class="ph ph-trophy" style="color:#f59e0b;"></i> Tornei</h1>
                         <p class="dash-subtitle">Gestione eventi esterni e quadrangolari</p>
                     </div>
-                    <button class="btn-dash pink" id="btn-new-tournament">
-                        <i class="ph ph-plus"></i> Nuovo Torneo
-                    </button>
+                    <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+                        <div class="trm-filters" id="trm-filters">
+                            <button class="trm-filter-pill active" data-filter="upcoming">Prossimi</button>
+                            <button class="trm-filter-pill" data-filter="past">Passati</button>
+                            <button class="trm-filter-pill" data-filter="all">Tutti</button>
+                        </div>
+                        <button class="btn-dash pink" id="btn-new-tournament">
+                            <i class="ph ph-plus"></i> Nuovo Torneo
+                        </button>
+                    </div>
                 </div>
                 <div id="trm-list-content" class="dash-stat-grid">
                     <div style="opacity:0.5; text-align:center; grid-column: 1/-1; padding: 40px;">Caricamento...</div>
@@ -24,34 +33,106 @@ const TournamentsView = {
         </div>
     `,
 
-    list: (tournaments) => {
-        if (tournaments.length === 0) {
+    /**
+     * Compute tournament status based on dates
+     */
+    _getStatus: (t) => {
+        const now = new Date();
+        const start = new Date(t.event_date);
+        const end = t.event_end ? new Date(t.event_end) : null;
+
+        if (end && now >= start && now <= end) return 'ongoing';
+        if (now < start) return 'upcoming';
+        return 'past';
+    },
+
+    _statusLabel: (status) => {
+        switch (status) {
+            case 'upcoming': return '<i class="ph ph-clock"></i> Prossimo';
+            case 'ongoing':  return '<i class="ph ph-lightning"></i> In Corso';
+            case 'past':     return '<i class="ph ph-check"></i> Terminato';
+            default: return '';
+        }
+    },
+
+    list: (tournaments, filter = 'upcoming') => {
+        // Filter tournaments
+        let filtered = tournaments;
+        if (filter !== 'all') {
+            filtered = tournaments.filter(t => TournamentsView._getStatus(t) === filter);
+        }
+
+        if (filtered.length === 0) {
+            const emptyMsg = filter === 'upcoming'
+                ? 'Nessun torneo in programma'
+                : filter === 'past'
+                    ? 'Nessun torneo passato'
+                    : 'Nessun torneo registrato';
             return `
-                <div style="grid-column: 1/-1; text-align: center; padding: 80px; opacity: 0.5;">
-                    <i class="ph ph-trophy" style="font-size: 48px; margin-bottom: 16px; color:#f59e0b;"></i>
-                    <h3 style="margin-bottom:8px;">Nessun torneo programmato</h3>
+                <div class="trm-empty">
+                    <div class="trm-empty-icon"><i class="ph ph-trophy"></i></div>
+                    <h3>${emptyMsg}</h3>
                     <p>Clicca su "Nuovo Torneo" per iniziare a gestire i tuoi eventi.</p>
                 </div>
             `;
         }
 
-        return tournaments.map(t => {
+        return filtered.map(t => {
             const date = new Date(t.event_date).toLocaleDateString("it-IT", { day: '2-digit', month: 'short', year: 'numeric' });
+            const status = TournamentsView._getStatus(t);
+            const fee = parseFloat(t.fee_per_athlete || 0);
+            const confirmed = parseInt(t.confirmed_count || 0);
+            const total = parseInt(t.roster_count || 0);
+            const pct = total > 0 ? Math.round((confirmed / total) * 100) : 0;
+
             return `
-                <div class="dash-stat-card trm-card" data-id="${t.id}" style="cursor:pointer; transition: transform 0.2s;">
-                    <div style="font-size: 11px; opacity: 0.6; margin-bottom: 8px; text-transform: uppercase; font-weight:700; color:var(--color-pink);">${Utils.escapeHtml(t.team_name)}</div>
-                    <h3 style="font-size: 1.25rem; margin-bottom: 12px; line-height:1.2;">${Utils.escapeHtml(t.title)}</h3>
-                    <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; opacity: 0.8; margin-bottom:6px;">
-                        <i class="ph ph-calendar"></i> ${date}
+                <div class="dash-stat-card trm-card" data-id="${t.id}">
+                    <div class="trm-card-actions">
+                        <button class="trm-card-action btn-copy-trm" title="Duplica Torneo" data-id="${t.id}">
+                            <i class="ph ph-copy"></i>
+                        </button>
+                        <button class="trm-card-action danger btn-delete-trm" title="Elimina Torneo" data-id="${t.id}">
+                            <i class="ph ph-trash"></i>
+                        </button>
                     </div>
-                    ${t.location_name ? `
-                        <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; opacity: 0.8;">
-                            <i class="ph ph-map-pin"></i> ${Utils.escapeHtml(t.location_name)}
+
+                    <div class="trm-card-team">${Utils.escapeHtml(t.team_name)}</div>
+                    <h3 class="trm-card-title">${Utils.escapeHtml(t.title)}</h3>
+                    
+                    <div class="trm-card-meta">
+                        <div class="trm-card-meta-item">
+                            <i class="ph ph-calendar-blank"></i>
+                            <span>${date}</span>
+                            <span class="trm-badge ${status}">${TournamentsView._statusLabel(status)}</span>
                         </div>
-                    ` : ""}
-                    <div class="trm-card-arrow" style="position:absolute; bottom:20px; right:20px; opacity:0; transition:0.2s;">
-                        <i class="ph ph-arrow-right" style="font-size:20px;"></i>
+                        ${t.location_name ? `
+                            <div class="trm-card-meta-item">
+                                <i class="ph ph-map-pin"></i> ${Utils.escapeHtml(t.location_name)}
+                            </div>
+                        ` : ""}
                     </div>
+
+                    <div class="trm-card-footer">
+                        ${total > 0 ? `
+                            <div class="trm-progress-wrap">
+                                <div class="trm-progress-label">
+                                    <i class="ph ph-users"></i> ${confirmed}/${total} convocate
+                                </div>
+                                <div class="trm-progress-bar">
+                                    <div class="trm-progress-fill" style="width:${pct}%"></div>
+                                </div>
+                            </div>
+                        ` : `
+                            <div class="trm-progress-wrap">
+                                <div class="trm-progress-label"><i class="ph ph-users"></i> Roster non impostato</div>
+                            </div>
+                        `}
+                        ${fee > 0 ? `
+                            <div class="trm-card-fee"><span>${fee.toFixed(0)} €</span> / atleta</div>
+                        ` : ""}
+                    </div>
+
+                    <div class="trm-card-arrow"><i class="ph ph-arrow-right"></i></div>
                 </div>
             `;
         }).join("");
@@ -60,80 +141,186 @@ const TournamentsView = {
     detail: (data) => {
         const e = data.tournament;
         const date = new Date(e.event_date).toLocaleDateString("it-IT", { day: '2-digit', month: 'long', year: 'numeric' });
+        const endDate = e.event_end ? new Date(e.event_end).toLocaleDateString("it-IT", { day: '2-digit', month: 'long', year: 'numeric' }) : null;
+        const status = TournamentsView._getStatus(e);
         const confirmedRoster = data.roster.filter(t => t.attendance_status === 'confirmed').length;
+        const fee = parseFloat(e.fee_per_athlete || 0);
 
         return `
             <div class="trm-detail-container">
-                <div class="trm-header" style="margin-bottom:32px;">
-                    <div style="flex:1;">
-                        <button class="btn-dash" id="btn-back-trm" style="margin-bottom: 20px;">
-                            <i class="ph ph-arrow-left"></i> Torna ai Tornei
-                        </button>
-                        <div style="display:flex; align-items:center; gap:12px;">
-                            <h1 style="font-size:2rem; margin:0;">${Utils.escapeHtml(e.title)}</h1>
-                            <span class="res-badge played" style="background:rgba(245,158,11,0.1); color:#f59e0b; border:1px solid rgba(245,158,11,0.2);">Torneo</span>
+                <!-- HEADER -->
+                <div class="trm-detail-header">
+                    <button class="trm-detail-back" id="btn-back-trm">
+                        <i class="ph ph-arrow-left"></i> Torna ai Tornei
+                    </button>
+                    <div class="trm-detail-title-row">
+                        <div class="trm-detail-title-left">
+                            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                                <h1>${Utils.escapeHtml(e.title)}</h1>
+                                <span class="trm-badge ${status}">${TournamentsView._statusLabel(status)}</span>
+                            </div>
+                            <div style="font-size:13px; color:rgba(255,255,255,0.5);">
+                                <strong>${Utils.escapeHtml(e.team_name)}</strong>
+                            </div>
                         </div>
-                        <div style="opacity: 0.7; margin-top: 8px; font-size:15px;">
-                            <strong>${Utils.escapeHtml(e.team_name)}</strong> • ${date}
-                        </div>
-                    </div>
-                    <div style="display:flex; gap:10px; align-items:flex-end;">
                         <button class="btn-dash" id="btn-edit-trm">
                             <i class="ph ph-pencil"></i> Modifica
                         </button>
                     </div>
                 </div>
 
-                <div class="res-view-selector" style="display:flex; gap:10px; margin-bottom:24px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:12px;">
-                    <button class="res-view-btn active" data-target="panel-overview">OVERVIEW</button>
-                    <button class="res-view-btn" data-target="panel-roster">ROSTER (${confirmedRoster}/${data.roster.length})</button>
-                    <button class="res-view-btn" data-target="panel-matches">PARTITE (${data.matches.length})</button>
-                </div>
-
-                <div id="panel-overview" class="trm-panel active">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
-                        <div class="dash-card" style="padding: 24px;">
-                            <h4 style="color: #f59e0b; margin-bottom: 20px; display:flex; align-items:center; gap:8px;">
-                                <i class="ph ph-info"></i> Dettagli Logistici
-                            </h4>
-                            <div style="display:flex; flex-direction:column; gap:12px;">
-                                <p><strong>Luogo:</strong> ${Utils.escapeHtml(e.location_name || "Non specificato")}</p>
-                                <p><strong>Quota Atleta:</strong> ${e.fee_per_athlete > 0 ? e.fee_per_athlete + " €" : "Gratuito"}</p>
-                                ${e.website_url ? `<p><strong>Sito Web:</strong> <a href="${Utils.escapeHtml(e.website_url)}" target="_blank" style="color:var(--color-pink);text-decoration:underline;">${Utils.escapeHtml(e.website_url)}</a></p>` : ""}
-                            </div>
+                <!-- INFO BAR -->
+                <div class="trm-info-bar">
+                    <div class="trm-info-item">
+                        <i class="ph ph-calendar-blank"></i>
+                        ${date}${endDate && endDate !== date ? ` — ${endDate}` : ''}
+                    </div>
+                    ${e.location_name ? `
+                        <div class="trm-info-divider"></div>
+                        <div class="trm-info-item">
+                            <i class="ph ph-map-pin"></i> ${Utils.escapeHtml(e.location_name)}
                         </div>
-                        <div class="dash-card" style="padding: 24px;">
-                            <h4 style="color: #f59e0b; margin-bottom: 20px; display:flex; align-items:center; gap:8px;">
-                                <i class="ph ph-note"></i> Note / Alloggio
-                            </h4>
-                            <div style="white-space: pre-wrap; opacity: 0.8; font-size: 14px; line-height:1.6;">${Utils.escapeHtml(e.accommodation_info || "Nessuna informazione aggiuntiva.")}</div>
+                    ` : ''}
+                    ${e.website_url ? `
+                        <div class="trm-info-divider"></div>
+                        <div class="trm-info-item">
+                            <i class="ph ph-globe"></i>
+                            <a href="${Utils.escapeHtml(e.website_url)}" target="_blank" rel="noopener">Sito Web</a>
                         </div>
+                    ` : ''}
+                    ${fee > 0 ? `
+                        <div class="trm-info-divider"></div>
+                        <div class="trm-info-item">
+                            <i class="ph ph-currency-eur"></i>
+                            <strong style="color:#f59e0b;">${fee.toFixed(2)} €</strong> / atleta
+                        </div>
+                    ` : ''}
+                    <div class="trm-info-divider"></div>
+                    <div class="trm-info-item">
+                        <i class="ph ph-users"></i>
+                        <strong>${confirmedRoster}</strong>/${data.roster.length} confermate
                     </div>
                 </div>
 
-                <div id="panel-roster" class="trm-panel">
-                    <div class="dash-card" style="padding: 24px;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
-                            <h3>Convocazioni Atlete</h3>
-                            <button class="btn-dash pink" id="btn-save-roster">Salva Roster</button>
-                        </div>
-                        <div class="trm-roster-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:12px;">
-                            ${data.roster.map(t => TournamentsView.rosterItem(t)).join("")}
-                        </div>
-                    </div>
+                <!-- TABS -->
+                <div class="trm-tabs" id="trm-tabs">
+                    <button class="trm-tab active" data-tab="riepilogo">
+                        <i class="ph ph-chart-line-up"></i> Riepilogo
+                    </button>
+                    <button class="trm-tab" data-tab="convocazioni">
+                        <i class="ph ph-users"></i> Convocazioni
+                    </button>
+                    <button class="trm-tab" data-tab="documenti">
+                        <i class="ph ph-file-pdf"></i> Documenti
+                    </button>
                 </div>
 
-                <div id="panel-matches" class="trm-panel">
-                    <div class="dash-card" style="padding: 24px;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
-                            <h3>Calendario e Risultati</h3>
-                            <button class="btn-dash pink" id="btn-add-match">Aggiungi Partita</button>
-                        </div>
-                        <div id="trm-matches-list" style="display:flex; flex-direction:column; gap:16px;">
-                            ${data.matches.length === 0 ? '<div style="opacity:0.5; padding:40px; text-align:center;">Nessuna partita aggiunta.</div>' : ""}
-                            ${data.matches.map(m => TournamentsView.matchItem(m, e.team_name)).join("")}
-                        </div>
+                <!-- TAB: RIEPILOGO -->
+                <div class="trm-tab-panel active" data-panel="riepilogo">
+                    ${TournamentsView.costsSummary(data)}
+                </div>
+
+                <!-- TAB: CONVOCAZIONI -->
+                <div class="trm-tab-panel" data-panel="convocazioni">
+                    ${TournamentsView.rosterPanel(data)}
+                </div>
+
+                <!-- TAB: DOCUMENTI -->
+                <div class="trm-tab-panel" data-panel="documenti">
+                    ${TournamentsView.documentsPanel(data, e)}
+                </div>
+            </div>
+        `;
+    },
+
+    costsSummary: (data) => {
+        const e = data.tournament;
+        const fee = parseFloat(e.fee_per_athlete || 0);
+        const confirmedAthletes = data.roster.filter(t => t.attendance_status === 'confirmed' && t.member_type === 'athlete').length;
+        const totalRevenue = confirmedAthletes * fee;
+        const totalExpenses = data.expenses.reduce((sum, exp) => sum + parseFloat(exp.amount), 0);
+        const netProfit = totalRevenue - totalExpenses;
+        const margin = totalRevenue > 0 ? ((netProfit / totalRevenue) * 100).toFixed(1) : 0;
+
+        return `
+            <!-- Financial Cards -->
+            <div class="trm-finance-grid">
+                <div class="trm-finance-card revenue">
+                    <div class="trm-finance-label">Totale Entrate</div>
+                    <div class="trm-finance-value">${totalRevenue.toFixed(2)} €</div>
+                    <div class="trm-finance-sub">${confirmedAthletes} atlete × ${fee.toFixed(2)} €</div>
+                </div>
+                <div class="trm-finance-card expense">
+                    <div class="trm-finance-label">Totale Spese</div>
+                    <div class="trm-finance-value">${totalExpenses.toFixed(2)} €</div>
+                    <div class="trm-finance-sub">${data.expenses?.length || 0} voci di spesa</div>
+                </div>
+                <div class="trm-finance-card profit">
+                    <div class="trm-finance-label">Utile Netto</div>
+                    <div class="trm-finance-value">${netProfit.toFixed(2)} €</div>
+                    <div class="trm-finance-sub">Margine: ${margin}%</div>
+                </div>
+            </div>
+
+            <!-- Expenses Table -->
+            <div class="trm-expense-section">
+                <div class="trm-section-header">
+                    <div class="trm-section-title">
+                        <i class="ph ph-receipt"></i> Dettaglio Spese
                     </div>
+                    <button class="btn-dash pink" id="btn-add-expense" style="padding:8px 16px; font-size:12px;">
+                        <i class="ph ph-plus"></i> Aggiungi Spesa
+                    </button>
+                </div>
+                <table class="trm-expense-table">
+                    <thead>
+                        <tr>
+                            <th>Descrizione</th>
+                            <th style="text-align:right;">Importo</th>
+                            <th style="width:50px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.expenses.length === 0 ? `
+                            <tr>
+                                <td colspan="3" style="padding:40px; text-align:center; opacity:0.35; font-size:13px;">
+                                    <i class="ph ph-receipt" style="font-size:24px; display:block; margin-bottom:8px;"></i>
+                                    Nessuna spesa registrata
+                                </td>
+                            </tr>
+                        ` : data.expenses.map(exp => `
+                            <tr>
+                                <td>${Utils.escapeHtml(exp.description)}</td>
+                                <td class="trm-expense-amount">${parseFloat(exp.amount).toFixed(2)} €</td>
+                                <td style="text-align:right;">
+                                    <button class="trm-expense-delete btn-delete-expense" data-id="${exp.id}">
+                                        <i class="ph ph-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join("")}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    },
+
+    rosterPanel: (data) => {
+        const confirmedRoster = data.roster.filter(t => t.attendance_status === 'confirmed').length;
+        return `
+            <div class="trm-roster-section">
+                <div class="trm-section-header">
+                    <div class="trm-section-title">
+                        <i class="ph ph-users-three"></i>
+                        Gestione Presenze
+                        <span style="font-size:12px; opacity:0.5; font-weight:400; margin-left:4px;">(${confirmedRoster}/${data.roster.length})</span>
+                    </div>
+                    <button class="btn-dash pink" id="btn-save-roster" style="padding:8px 16px; font-size:12px;">
+                        <i class="ph ph-floppy-disk"></i> Salva Presenze
+                    </button>
+                </div>
+                <div class="trm-roster-grid">
+                    ${data.roster.map(t => TournamentsView.rosterItem(t)).join("")}
                 </div>
             </div>
         `;
@@ -142,20 +329,78 @@ const TournamentsView = {
     rosterItem: (t) => {
         const isConfirmed = t.attendance_status === 'confirmed';
         return `
-            <div class="trm-roster-card" style="background: rgba(255,255,255,0.03); padding:12px 16px; border-radius:8px; border:1px solid rgba(255,255,255,0.05); display:flex; justify-content:space-between; align-items:center;">
-                <div style="display:flex; align-items:center; gap:12px;">
-                    <div style="width:28px; height:28px; background:rgba(255,255,255,0.05); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700;">
-                        ${t.jersey_number || "-"}
-                    </div>
+            <div class="trm-roster-card">
+                <div class="trm-roster-left">
+                    <div class="trm-roster-number">${t.jersey_number || "-"}</div>
                     <div>
-                        <div style="font-weight:600; font-size:14px;">${Utils.escapeHtml(t.full_name)}</div>
-                        <div style="font-size:11px; opacity: 0.6; text-transform:uppercase;">${Utils.escapeHtml(t.role || "N/A")}</div>
+                        <div class="trm-roster-name">${Utils.escapeHtml(t.full_name)}</div>
+                        <div class="trm-roster-role">${Utils.escapeHtml(t.role || "N/A")}</div>
                     </div>
                 </div>
-                <label class="fusion-toggle" style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                <label class="trm-toggle">
                     <input type="checkbox" class="trm-roster-cb" data-id="${t.id}" ${isConfirmed ? "checked" : ""}>
-                    <span class="fusion-toggle-slider"></span>
+                    <span class="trm-toggle-slider"></span>
                 </label>
+            </div>
+        `;
+    },
+
+    documentsPanel: (data, e) => {
+        return `
+            <div class="trm-docs-grid">
+                <!-- Rooming List -->
+                <div class="trm-doc-card">
+                    <div class="trm-doc-icon rooming">
+                        <i class="ph ph-bed"></i>
+                    </div>
+                    <div class="trm-doc-title">Rooming List</div>
+                    <div class="trm-doc-desc">Lista stanze per l'hotel con assegnazione atleti e staff</div>
+                    ${e.rooming_list_path ? `
+                        <div class="trm-doc-saved">
+                            <i class="ph ph-check-circle"></i> Salvata nel server
+                        </div>
+                    ` : ''}
+                    <div class="trm-doc-actions">
+                        ${e.rooming_list_path ? `
+                            <button class="trm-doc-btn" onclick="UI.openPdf('${e.rooming_list_path}', 'Rooming List salvata')">
+                                <i class="ph ph-eye"></i> Visualizza
+                            </button>
+                        ` : ''}
+                        <button class="trm-doc-btn" id="btn-save-rooming-list">
+                            <i class="ph ph-floppy-disk"></i> Salva
+                        </button>
+                        <button class="trm-doc-btn primary" id="btn-rooming-list">
+                            <i class="ph ph-download"></i> Scarica PDF
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Dossier Torneo -->
+                <div class="trm-doc-card">
+                    <div class="trm-doc-icon dossier">
+                        <i class="ph ph-clipboard-text"></i>
+                    </div>
+                    <div class="trm-doc-title">Dossier Torneo</div>
+                    <div class="trm-doc-desc">Resoconto completo con riepilogo economico, presenze e spese</div>
+                    ${e.summary_pdf_path ? `
+                        <div class="trm-doc-saved">
+                            <i class="ph ph-check-circle"></i> Salvato nel server
+                        </div>
+                    ` : ''}
+                    <div class="trm-doc-actions">
+                        ${e.summary_pdf_path ? `
+                            <button class="trm-doc-btn" onclick="UI.openPdf('${e.summary_pdf_path}', 'Dossier Torneo')">
+                                <i class="ph ph-eye"></i> Visualizza
+                            </button>
+                        ` : ''}
+                        <button class="trm-doc-btn" id="btn-save-summary">
+                            <i class="ph ph-floppy-disk"></i> Salva
+                        </button>
+                        <button class="trm-doc-btn primary" id="btn-summary-pdf">
+                            <i class="ph ph-download"></i> Scarica PDF
+                        </button>
+                    </div>
+                </div>
             </div>
         `;
     },
@@ -244,6 +489,19 @@ const TournamentsView = {
             </div>
         `;
     },
+
+    expenseModal: () => `
+        <div class="res-modal-section" style="padding:0;">
+            <div class="res-form-row">
+                <label class="res-form-label">Descrizione Spesa *</label>
+                <input type="text" id="ex-desc" class="res-form-input" placeholder="es. Iscrizione Torneo, Hotel, Trasporto...">
+            </div>
+            <div class="res-form-row">
+                <label class="res-form-label">Importo (€) *</label>
+                <input type="number" step="0.01" id="ex-amount" class="res-form-input" value="0.00">
+            </div>
+        </div>
+    `,
 
     matchModal: (m) => {
         const formatDateTime = (dateStr) => {

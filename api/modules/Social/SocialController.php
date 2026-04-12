@@ -268,7 +268,7 @@ class SocialController
         catch (\Throwable $e) {
             error_log('[SOCIAL] Insights API error: ' . $e->getMessage());
             $mockData = $this->repo->getMockData($days);
-            $mockData['error'] = 'Errore nel recupero dati da Meta. Mostrati dati di esempio.';
+            $mockData['error'] = 'Errore nel recupero dati da Meta: ' . $e->getMessage();
             Response::success($mockData);
         }
     }
@@ -320,6 +320,7 @@ class SocialController
                 'views' => 0,
                 'accounts_engaged' => 0,
                 'profile_views' => 0,
+                'follower_count' => 0,
             ];
         }
 

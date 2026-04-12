@@ -1,0 +1,3 @@
+-- V108__add_identity_document_fields.sql
+-- No-op migration.
+-- Columns identity_document already present.

@@ -29,7 +29,7 @@ class TournamentsRepository
         $tid = TenantContext::id();
         $stmt = $this->db->prepare("
             SELECT e.*, t.name as team_name,
-                   td.website_url, td.fee_per_athlete, td.accommodation_info
+                   td.website_url, td.fee_per_athlete, td.accommodation_info, td.rooming_list_path, td.summary_pdf_path
             FROM events e
             LEFT JOIN teams t ON e.team_id = t.id
             LEFT JOIN tournament_details td ON e.id = td.event_id
@@ -49,7 +49,7 @@ class TournamentsRepository
         $tid = TenantContext::id();
         $stmt = $this->db->prepare("
             SELECT e.*, t.name as team_name,
-                   td.website_url, td.fee_per_athlete, td.accommodation_info
+                   td.website_url, td.fee_per_athlete, td.accommodation_info, td.rooming_list_path, td.summary_pdf_path
             FROM events e
             LEFT JOIN teams t ON e.team_id = t.id
             LEFT JOIN tournament_details td ON e.id = td.event_id
@@ -90,16 +90,16 @@ class TournamentsRepository
     public function getRoster(string $tournamentId, string $teamId): array
     {
         $stmt = $this->db->prepare("
-            SELECT a.id, a.full_name, a.jersey_number, a.role,
-                   ea.status as attendance_status
+            SELECT a.id, a.full_name, a.first_name, a.last_name, a.jersey_number, a.role, 'athlete' as member_type,
+                   ea.status as attendance_status, a.identity_document, a.birth_date
             FROM athletes a
             LEFT JOIN event_attendees ea ON a.id = ea.athlete_id AND ea.event_id = :event_id1
             WHERE a.team_id = :team_id1 AND a.deleted_at IS NULL AND a.is_active = 1
             
             UNION ALL
             
-            SELECT s.id, CONCAT(s.first_name, ' ', s.last_name) AS full_name, NULL as jersey_number, s.role,
-                   ea.status as attendance_status
+            SELECT s.id, CONCAT(s.first_name, ' ', s.last_name) AS full_name, s.first_name, s.last_name, NULL as jersey_number, s.role, 'staff' as member_type,
+                   ea.status as attendance_status, s.identity_document, s.birth_date
             FROM staff_members s
             JOIN staff_teams st ON s.id = st.staff_id
             JOIN team_seasons ts ON st.team_season_id = ts.id AND ts.team_id = :team_id2
@@ -266,5 +266,147 @@ class TournamentsRepository
             ':opponent_score' => $data['opponent_score'],
             ':status' => $data['status']
         ]);
+    }
+    /**
+     * Delete tournament (soft delete)
+     */
+    public function deleteTournament(string $id): void
+    {
+        $stmt = $this->db->prepare("UPDATE events SET deleted_at = NOW() WHERE id = :id");
+        $stmt->execute([':id' => $id]);
+    }
+
+    /**
+     * Duplicate tournament data
+     */
+    public function duplicateTournament(string $originalId, string $newId, string $userId): void
+    {
+        // 1. Duplicate event record
+        $stmtEvent = $this->db->prepare("
+            INSERT INTO events (id, team_id, tenant_id, type, title, event_date, event_end, location_name, location_lat, location_lng, notes, status, created_by)
+            SELECT :newId, team_id, tenant_id, type, CONCAT(title, ' (Copia)'), event_date, event_end, location_name, location_lat, location_lng, notes, 'scheduled', :userId
+            FROM events WHERE id = :originalId
+        ");
+        $stmtEvent->execute([':newId' => $newId, ':originalId' => $originalId, ':userId' => $userId]);
+
+        // 2. Duplicate tournament details
+        $stmtDetails = $this->db->prepare("
+            INSERT INTO tournament_details (event_id, website_url, fee_per_athlete, accommodation_info)
+            SELECT :newId, website_url, fee_per_athlete, accommodation_info
+            FROM tournament_details WHERE event_id = :originalId
+        ");
+        $stmtDetails->execute([':newId' => $newId, ':originalId' => $originalId]);
+
+        // 3. Duplicate matches
+        // Note: we generate a crude new ID here for each match using MD5(RAND())
+        $stmtMatchesSource = $this->db->prepare("SELECT * FROM tournament_matches WHERE event_id = :originalId");
+        $stmtMatchesSource->execute([':originalId' => $originalId]);
+        $matches = $stmtMatchesSource->fetchAll(\PDO::FETCH_ASSOC);
+
+        $stmtInsertMatch = $this->db->prepare("
+            INSERT INTO tournament_matches (id, event_id, match_time, opponent_name, court_name, our_score, opponent_score, status)
+            VALUES (:id, :event_id, :match_time, :opponent_name, :court_name, :our_score, :opponent_score, :status)
+        ");
+
+        foreach ($matches as $m) {
+            $newMatchId = 'TMT_' . substr(md5(uniqid('', true)), 0, 8);
+            $stmtInsertMatch->execute([
+                ':id' => $newMatchId,
+                ':event_id' => $newId,
+                ':match_time' => $m['match_time'],
+                ':opponent_name' => $m['opponent_name'],
+                ':court_name' => $m['court_name'],
+                ':our_score' => 0,
+                ':opponent_score' => 0,
+                ':status' => 'scheduled'
+            ]);
+        }
+    }
+
+    /**
+     * Get expenses for a tournament
+     */
+    public function getExpenses(string $tournamentId): array
+    {
+        $stmt = $this->db->prepare("SELECT * FROM tournament_expenses WHERE event_id = :id ORDER BY created_at ASC");
+        $stmt->execute([':id' => $tournamentId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Save tournament expense
+     */
+    public function saveExpense(array $data): void
+    {
+        if (empty($data['id'])) {
+            $id = 'EXP_' . substr(md5(uniqid('', true)), 0, 8);
+            $stmt = $this->db->prepare("
+                INSERT INTO tournament_expenses (id, event_id, description, amount)
+                VALUES (:id, :event_id, :description, :amount)
+            ");
+        } else {
+            $id = $data['id'];
+            $stmt = $this->db->prepare("
+                UPDATE tournament_expenses
+                SET description = :description, amount = :amount
+                WHERE id = :id AND event_id = :event_id
+            ");
+        }
+
+        $stmt->execute([
+            ':id' => $id,
+            ':event_id' => $data['event_id'],
+            ':description' => $data['description'],
+            ':amount' => $data['amount']
+        ]);
+    }
+
+    /**
+     * Delete expense
+     */
+    public function deleteExpense(string $id): void
+    {
+        $stmt = $this->db->prepare("DELETE FROM tournament_expenses WHERE id = :id");
+        $stmt->execute([':id' => $id]);
+    }
+
+    /**
+     * Update rooming list path
+     */
+    public function updateRoomingListPath(string $id, ?string $path): void
+    {
+        $stmt = $this->db->prepare("
+            UPDATE tournament_details 
+            SET rooming_list_path = :path
+            WHERE event_id = :id
+        ");
+        $stmt->execute([':id' => $id, ':path' => $path]);
+    }
+
+    /**
+     * Update summary pdf path
+     */
+    public function updateSummaryPdfPath(string $id, ?string $path): void
+    {
+        $stmt = $this->db->prepare("
+            UPDATE tournament_details 
+            SET summary_pdf_path = :path
+            WHERE event_id = :id
+        ");
+        $stmt->execute([':id' => $id, ':path' => $path]);
+    }
+
+    /**
+     * Get transports for event
+     */
+    public function getTransportsForEvent(string $eventId): array
+    {
+        $stmt = $this->db->prepare("
+            SELECT * FROM transports
+            WHERE event_id = :event_id
+            ORDER BY transport_date ASC, arrival_time ASC
+        ");
+        $stmt->execute([':event_id' => $eventId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }

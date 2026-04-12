@@ -32,7 +32,8 @@ class TournamentsService
         return [
             'tournament' => $tournament,
             'matches' => $this->repository->getMatches($id),
-            'roster' => $this->repository->getRoster($id, $tournament['team_id'])
+            'roster' => $this->repository->getRoster($id, $tournament['team_id']),
+            'expenses' => $this->repository->getExpenses($id)
         ];
     }
 
@@ -77,5 +78,27 @@ class TournamentsService
     {
         if (empty($tournamentId)) throw new Exception('Tournament ID is required', 400);
         $this->repository->updateRosterStatus($tournamentId, $attendees);
+    }
+
+    /**
+     * Delete tournament
+     */
+    public function deleteTournament(string $id): void
+    {
+        if (empty($id)) throw new Exception('Tournament ID is required', 400);
+        $this->repository->deleteTournament($id);
+    }
+
+    /**
+     * Duplicate tournament
+     */
+    public function duplicateTournament(string $id, string $userId): string
+    {
+        if (empty($id)) throw new Exception('Tournament ID is required', 400);
+        
+        $newId = 'EVT_' . substr(md5(uniqid('', true)), 0, 8);
+        $this->repository->duplicateTournament($id, $newId, $userId);
+        
+        return $newId;
     }
 }

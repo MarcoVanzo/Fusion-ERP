@@ -98,19 +98,31 @@ const TransportLogic = {
             if (stop.tipo === "partenza") { icon = "ph-van"; color = "var(--accent-pink)"; }
             if (stop.tipo === "arrivo") { icon = "ph-flag-pennant"; color = "#00e676"; }
             
+            // Map our stop types to the classes expected by dashboard_ui.css
+            const typeClass = stop.tipo === "partenza" ? "partenza" : (stop.tipo === "arrivo" ? "arrivo" : "raccolta");
+            const isDraggable = stop.tipo === "raccolta";
+            
+            const badgeHtml = `<span style="position:absolute; top:-6px; right:-6px; background:${color}; color:#000; width:14px; height:14px; border-radius:50%; font-size:9px; font-weight:900; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 4px rgba(0,0,0,0.3);">${i + 1}</span>`;
+            
             return `
-                <div class="nt-timeline-item" style="display:flex; gap:16px; position:relative; padding-bottom:12px;">
-                    ${i < timeline.length - 1 ? '<div style="position:absolute; left:13px; top:28px; bottom:0; width:2px; background:rgba(255,255,255,0.05); border-left:1px dashed rgba(255,255,255,0.15);"></div>' : ''}
-                    <div style="width:28px; height:28px; border-radius:50%; background:rgba(255,255,255,0.05); border:1px solid ${color}; display:flex; align-items:center; justify-content:center; color:${color}; z-index:1; flex-shrink:0;">
-                        <i class="ph ${icon}" style="font-size:14px;"></i>
-                    </div>
-                    <div style="flex:1;">
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <span style="font-size:13px; font-weight:700; color:${color}; text-transform:uppercase;">${stop.tipo}</span>
-                            <span style="font-family:var(--font-display); font-size:14px; font-weight:800;">${stop.orario}</span>
+                <div class="nt-tl-item ${typeClass}" 
+                     ${isDraggable ? `draggable="true" data-index="${i}"` : ""}
+                     style="position:relative; cursor:${isDraggable ? 'grab' : 'default'};">
+                    <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
+                        <span style="font-family:var(--font-display); font-size:18px; font-weight:800; color:#fff;">${stop.orario}</span>
+                        <div style="width:28px; height:28px; border-radius:50%; background:rgba(255,255,255,0.05); border:1px solid ${color}; display:flex; align-items:center; justify-content:center; color:${color}; position:relative; z-index:1;">
+                            <i class="ph ${icon}" style="font-size:14px;"></i>
+                            ${badgeHtml}
                         </div>
-                        <div style="font-size:12px; color:rgba(255,255,255,0.8); margin-top:2px;">${stop.luogo}</div>
                     </div>
+                    <div style="flex:1; min-width:0;">
+                        <div style="font-weight:700; font-size:14px; margin-bottom:4px; text-transform:uppercase; color:${color};">${stop.tipo}</div>
+                        <div style="font-size:12px; color:rgba(255,255,255,0.7); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${Utils.escapeHtml(stop.luogo)}">
+                            <i class="ph ph-map-pin"></i> ${Utils.escapeHtml(stop.luogo)}
+                        </div>
+                        ${stop.atleta_name ? `<div style="font-weight:700; color:#fff; font-size:11px; margin-top:6px; display:flex; align-items:center; gap:6px;"><i class="ph ph-user-circle" style="color:var(--accent-cyan);"></i> ${Utils.escapeHtml(stop.atleta_name)}</div>` : ""}
+                    </div>
+                    ${isDraggable ? '<div style="color:rgba(255,255,255,0.15); display:flex; align-items:center;"><i class="ph ph-dots-six-vertical" style="font-size:20px;"></i></div>' : ""}
                 </div>`;
         }).join("");
     }

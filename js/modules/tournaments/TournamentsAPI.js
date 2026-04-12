@@ -30,6 +30,30 @@ const TournamentsAPI = {
         // or fetch from common endpoint
         const res = await Store.get("teams", "athletes");
         return Array.isArray(res) ? res : (res?.teams || []);
+    },
+
+    delete: async function(id) {
+        return await Store.api("deleteTournament", "tournaments", { id });
+    },
+
+    duplicate: async function(id) {
+        return await Store.api("duplicateTournament", "tournaments", { id });
+    },
+
+    saveExpense: async function(data) {
+        return await Store.api("saveExpense", "tournaments", data);
+    },
+
+    deleteExpense: async (id) => {
+        return await Store.api("deleteExpense", "tournaments", { id });
+    },
+
+    saveRoomingList: async (id) => {
+        return await Store.api("saveRoomingList", "tournaments", { id });
+    },
+
+    saveSummaryPdf: async (id) => {
+        return await Store.api("saveSummaryPdf", "tournaments", { id });
     }
 };
 

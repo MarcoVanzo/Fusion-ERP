@@ -1,6 +1,8 @@
 /**
  * Tournaments Module — Main Orchestrator
- * Fusion ERP v1.1
+ * Fusion ERP v1.2 — UX Redesign
+ * 
+ * Adds: filter pills, tab switching, improved event delegation
  */
 import TournamentsAPI from './tournaments/TournamentsAPI.js';
 import TournamentsView from './tournaments/TournamentsView.js';
@@ -10,6 +12,7 @@ const Tournaments = {
     _tournaments: [],
     _currentData: null,
     _teams: [],
+    _currentFilter: 'upcoming',
 
     /** signal() helper for event listeners */
     sig: function() { return { signal: this._abort.signal }; },
@@ -49,11 +52,61 @@ const Tournaments = {
 
         try {
             this._tournaments = await TournamentsAPI.list();
-            listContent.innerHTML = TournamentsView.list(this._tournaments);
+            listContent.innerHTML = TournamentsView.list(this._tournaments, this._currentFilter);
 
-            listContent.querySelectorAll(".trm-card").forEach(card => {
-                card.addEventListener("click", () => this.openDetail(card.dataset.id), this.sig());
-            });
+            // Event delegation for cards and buttons
+            listContent.onclick = async (e) => {
+                const target = e.target;
+                
+                // 1. Copy Action
+                const btnCopy = target.closest(".btn-copy-trm");
+                if (btnCopy) {
+                    e.stopPropagation();
+                    const id = btnCopy.dataset.id;
+                    try {
+                        UI.loading(true);
+                        await TournamentsAPI.duplicate(id);
+                        Store.invalidate("tournaments");
+                        UI.toast("Torneo copiato con successo", "success");
+                        await this.loadList();
+                    } catch (err) {
+                        UI.toast(err.message, "error");
+                    } finally {
+                        UI.loading(false);
+                    }
+                    return;
+                }
+
+                // 2. Delete Action
+                const btnDelete = target.closest(".btn-delete-trm");
+                if (btnDelete) {
+                    e.stopPropagation();
+                    const id = btnDelete.dataset.id;
+                    UI.confirm(
+                        "Sei sicuro di voler eliminare questo torneo? L'azione è irreversibile.",
+                        async () => {
+                            try {
+                                UI.loading(true);
+                                await TournamentsAPI.delete(id);
+                                Store.invalidate("tournaments");
+                                UI.toast("Torneo eliminato", "success");
+                                await this.loadList();
+                            } catch (err) {
+                                UI.toast(err.message, "error");
+                            } finally {
+                                UI.loading(false);
+                            }
+                        }
+                    );
+                    return;
+                }
+
+                // 3. Open Detail
+                const card = target.closest(".trm-card");
+                if (card) {
+                    this.openDetail(card.dataset.id);
+                }
+            };
         } catch (err) {
             listContent.innerHTML = `<div style="text-align:center; grid-column:1/-1; color:#ef4444; padding:20px;">${Utils.escapeHtml(err.message)}</div>`;
         }
@@ -61,6 +114,26 @@ const Tournaments = {
 
     attachListEvents: function() {
         document.getElementById("btn-new-tournament")?.addEventListener("click", () => this.openTournamentModal(), this.sig());
+
+        // Filter pills
+        const filters = document.getElementById("trm-filters");
+        if (filters) {
+            filters.addEventListener("click", (e) => {
+                const pill = e.target.closest(".trm-filter-pill");
+                if (!pill) return;
+
+                // Update active state
+                filters.querySelectorAll(".trm-filter-pill").forEach(p => p.classList.remove("active"));
+                pill.classList.add("active");
+
+                // Apply filter
+                this._currentFilter = pill.dataset.filter;
+                const listContent = document.getElementById("trm-list-content");
+                if (listContent) {
+                    listContent.innerHTML = TournamentsView.list(this._tournaments, this._currentFilter);
+                }
+            }, this.sig());
+        }
     },
 
     openDetail: async function(id) {
@@ -87,10 +160,97 @@ const Tournaments = {
     },
 
     attachDetailEvents: function(container, tournamentId) {
+        // Back button
         container.querySelector("#btn-back-trm")?.addEventListener("click", () => this.closeDetail(), this.sig());
-        container.querySelector("#btn-edit-trm")?.addEventListener("click", () => this.openTournamentModal(this._currentData.tournament), this.sig());
-        container.querySelector("#btn-add-match")?.addEventListener("click", () => this.openMatchModal(), this.sig());
         
+        // Edit button
+        container.querySelector("#btn-edit-trm")?.addEventListener("click", () => this.openTournamentModal(this._currentData.tournament), this.sig());
+        
+        // Tab switching
+        const tabNav = container.querySelector("#trm-tabs");
+        if (tabNav) {
+            tabNav.addEventListener("click", (e) => {
+                const tab = e.target.closest(".trm-tab");
+                if (!tab) return;
+
+                const tabId = tab.dataset.tab;
+                
+                // Update tab active states
+                tabNav.querySelectorAll(".trm-tab").forEach(t => t.classList.remove("active"));
+                tab.classList.add("active");
+
+                // Update panel visibility
+                container.querySelectorAll(".trm-tab-panel").forEach(p => p.classList.remove("active"));
+                const panel = container.querySelector(`.trm-tab-panel[data-panel="${tabId}"]`);
+                if (panel) panel.classList.add("active");
+            }, this.sig());
+        }
+
+        // Rooming List buttons
+        container.querySelector("#btn-rooming-list")?.addEventListener("click", () => {
+            const url = `api/router.php?module=tournaments&action=generateRoomingList&id=${tournamentId}`;
+            UI.openPdf(url, 'Anteprima Rooming List');
+        }, this.sig());
+
+        container.querySelector("#btn-save-rooming-list")?.addEventListener("click", async () => {
+            try {
+                UI.loading(true);
+                const res = await TournamentsAPI.saveRoomingList(tournamentId);
+                UI.toast("Rooming List salvata correttamente nel server", "success");
+                Store.invalidate("tournaments");
+                await this.openDetail(tournamentId);
+            } catch (err) {
+                UI.toast("Errore durante il salvataggio: " + err.message, "error");
+            } finally {
+                UI.loading(false);
+            }
+        }, this.sig());
+
+        // Summary/Dossier buttons
+        container.querySelector("#btn-summary-pdf")?.addEventListener("click", () => {
+            const url = `api/router.php?module=tournaments&action=generateSummaryPdf&id=${tournamentId}`;
+            UI.openPdf(url, 'Anteprima Dossier Torneo');
+        }, this.sig());
+
+        container.querySelector("#btn-save-summary")?.addEventListener("click", async () => {
+            try {
+                UI.loading(true);
+                const res = await TournamentsAPI.saveSummaryPdf(tournamentId);
+                UI.toast("Dossier Torneo salvato correttamente nel server", "success");
+                Store.invalidate("tournaments");
+                await this.openDetail(tournamentId);
+            } catch (err) {
+                UI.toast("Errore durante il salvataggio: " + err.message, "error");
+            } finally {
+                UI.loading(false);
+            }
+        }, this.sig());
+
+        // Add expense
+        container.querySelector("#btn-add-expense")?.addEventListener("click", () => this.openExpenseModal(tournamentId), this.sig());
+
+        // Delete expense buttons
+        container.querySelectorAll(".btn-delete-expense").forEach(btn => {
+            btn.onclick = async (e) => {
+                e.preventDefault();
+                const id = btn.dataset.id;
+                UI.confirm("Eliminare questa voce di spesa?", async () => {
+                    try {
+                        UI.loading(true);
+                        await TournamentsAPI.deleteExpense(id);
+                        Store.invalidate("tournaments");
+                        UI.toast("Spesa eliminata", "success");
+                        await this.openDetail(tournamentId);
+                    } catch (err) {
+                        UI.toast(err.message, "error");
+                    } finally {
+                        UI.loading(false);
+                    }
+                });
+            };
+        });
+        
+        // Save roster
         container.querySelector("#btn-save-roster")?.addEventListener("click", async (e) => {
             const btn = e.target;
             btn.disabled = true;
@@ -106,6 +266,7 @@ const Tournaments = {
 
             try {
                 await TournamentsAPI.updateRoster(tournamentId, attendees);
+                Store.invalidate("tournaments");
                 UI.toast("Roster salvato", "success");
                 this.openDetail(tournamentId); // Refresh
             } catch (err) {
@@ -115,6 +276,7 @@ const Tournaments = {
             }
         }, this.sig());
 
+        // Edit match buttons
         container.querySelectorAll(".btn-edit-match").forEach(btn => {
             btn.addEventListener("click", () => {
                 const matchJson = btn.dataset.json;
@@ -127,15 +289,6 @@ const Tournaments = {
             }, this.sig());
         });
 
-        // Tabs
-        container.querySelectorAll(".res-view-btn").forEach(btn => {
-            btn.addEventListener("click", () => {
-                container.querySelectorAll(".res-view-btn").forEach(b => b.classList.remove("active"));
-                container.querySelectorAll(".trm-panel").forEach(p => p.classList.remove("active"));
-                btn.classList.add("active");
-                container.querySelector("#" + btn.dataset.target)?.classList.add("active");
-            }, this.sig());
-        });
     },
 
     openTournamentModal: function(tournament = null) {
@@ -167,6 +320,7 @@ const Tournaments = {
             try {
                 UI.loading(true);
                 const res = await TournamentsAPI.save(data);
+                Store.invalidate("tournaments");
                 UI.toast("Torneo salvato", "success");
                 modal.close();
                 if (this._currentData) {
@@ -215,6 +369,41 @@ const Tournaments = {
                 UI.toast("Match salvato", "success");
                 modal.close();
                 this.openDetail(this._currentData.tournament.id);
+            } catch (err) {
+                UI.toast(err.message, "error");
+            } finally {
+                UI.loading(false);
+            }
+        }, this.sig());
+    },
+
+    openExpenseModal: function(tournamentId) {
+        const modal = UI.modal({
+            title: "Nuova Spesa",
+            body: TournamentsView.expenseModal(),
+            footer: '<button class="btn-dash ghost" id="modal-cancel">Annulla</button><button class="btn-dash primary" id="modal-save">Salva</button>'
+        });
+
+        document.getElementById("modal-cancel")?.addEventListener("click", () => modal.close(), this.sig());
+        document.getElementById("modal-save")?.addEventListener("click", async () => {
+            const data = {
+                event_id: tournamentId,
+                description: document.getElementById("ex-desc").value.trim(),
+                amount: parseFloat(document.getElementById("ex-amount").value) || 0
+            };
+
+            if (!data.description || data.amount <= 0) {
+                UI.toast("Descrizione e Importo sono obbligatori.", "warning");
+                return;
+            }
+
+            try {
+                UI.loading(true);
+                await TournamentsAPI.saveExpense(data);
+                Store.invalidate("tournaments");
+                UI.toast("Spesa salvata", "success");
+                modal.close();
+                this.openDetail(tournamentId);
             } catch (err) {
                 UI.toast(err.message, "error");
             } finally {

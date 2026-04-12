@@ -6,36 +6,31 @@
 
 const TransportView = {
     renderDashboard: (events, stats, isAdmin, upcoming, past) => {
-        const { o, s, l } = stats;
+        const { total, upcoming: upcomingCount, past: pastCount } = stats;
         return `
             <div class="transport-dashboard">
                 <div class="dash-top-bar">
                     <div>
                         <h1 class="dash-title">Gestione <span style="color:var(--accent-pink);">Trasporti</span></h1>
-                        <p class="dash-subtitle">${o} eventi nel sistema</p>
+                        <p class="dash-subtitle">${total} viaggi nel sistema</p>
                     </div>
                     <div style="display:flex; gap:12px; flex-wrap:wrap;">
                         <button class="btn-dash pink" id="nuovo-trasporto-btn" type="button"><i class="ph ph-van" style="font-size:18px;"></i> NUOVO TRASPORTO</button>
-                        ${isAdmin ? '<button class="btn-dash primary" id="new-event-btn" type="button"><i class="ph ph-plus-circle" style="font-size:20px;"></i> NUOVO EVENTO</button>' : ""}
                     </div>
                 </div>
 
                 <div class="dash-stat-grid">
                     <div class="dash-stat-card">
-                        <div class="dash-stat-title">Totale Eventi <div class="dash-stat-icon"><i class="ph ph-calendar-blank"></i></div></div>
-                        <div class="dash-stat-value">${o}</div>
+                        <div class="dash-stat-title">Viaggi Totale <div class="dash-stat-icon"><i class="ph ph-van"></i></div></div>
+                        <div class="dash-stat-value">${total}</div>
                     </div>
                     <div class="dash-stat-card cyan">
-                        <div class="dash-stat-title">In Programma <div class="dash-stat-icon"><i class="ph ph-clock"></i></div></div>
-                        <div class="dash-stat-value">${s}</div>
+                        <div class="dash-stat-title">Viaggi Programmati <div class="dash-stat-icon"><i class="ph ph-clock"></i></div></div>
+                        <div class="dash-stat-value">${upcomingCount}</div>
                     </div>
                     <div class="dash-stat-card">
-                        <div class="dash-stat-title">Trasferte <div class="dash-stat-icon"><i class="ph ph-bus"></i></div></div>
-                        <div class="dash-stat-value">${l}</div>
-                    </div>
-                    <div class="dash-stat-card cyan">
-                        <div class="dash-stat-title">Allenamenti <div class="dash-stat-icon"><i class="ph ph-barbell"></i></div></div>
-                        <div class="dash-stat-value">${events.filter((t) => "training" === t.type).length}</div>
+                        <div class="dash-stat-title">Viaggi Effettuati <div class="dash-stat-icon"><i class="ph ph-check-circle"></i></div></div>
+                        <div class="dash-stat-value">${pastCount}</div>
                     </div>
                 </div>
 
@@ -89,7 +84,8 @@ const TransportView = {
                     <button class="btn-dash ai-consult-btn" data-transport-id="${Utils.escapeHtml(tr.id)}" type="button" style="background:linear-gradient(135deg, rgba(139,92,246,0.15), rgba(236,72,153,0.15)); border-color:rgba(139,92,246,0.4); color:#a78bfa; padding:8px 16px; font-size:11px;">
                         <i class="ph ph-brain" style="font-size:16px;"></i> CONSULTA AI
                     </button>
-                    ${tr.pdf_reimbursement ? `<button class="btn-dash" style="padding:8px 16px; font-size:11px;" onclick="window.open('/storage/reimbursements/${tr.pdf_reimbursement}', '_blank')"><i class="ph ph-file-pdf"></i> PDF</button>` : ""}
+                    ${tr.pdf_reimbursement ? `<button class="btn-dash" style="padding:8px 16px; font-size:11px;" onclick="UI.openPdf('/storage/reimbursements/${tr.pdf_reimbursement}', 'Rimborso PDF')"><i class="ph ph-file-pdf"></i> PDF</button>` : ""}
+                    ${tr.event_id ? `<button class="btn-dash" style="padding:8px 16px; font-size:11px; border-color:var(--accent-pink); color:var(--accent-pink);" onclick="UI.openPdf('api/router.php?module=tournaments&action=generateRoomingList&id=${tr.event_id}', 'Anteprima Rooming List')"><i class="ph ph-file-pdf"></i> ROOMING LIST</button>` : ""}
                 </div>
             </div>`;
     },
@@ -332,6 +328,12 @@ const TransportView = {
                                 </select>
                             </div>
                             <div class="form-group">
+                                <label class="form-label" for="nt-event-select">Evento / Torneo (Opzionale)</label>
+                                <select class="form-select" id="nt-event-select">
+                                    <option value="">— Seleziona evento —</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
                                 <label class="form-label">Orario Arrivo Desiderato</label>
                                 <input class="form-input" type="time" id="nt-arrival-time" value="18:00">
                             </div>
@@ -422,8 +424,8 @@ const TransportView = {
                 </div>
                 
                 <div style="display:grid; grid-template-columns: 1fr 380px; gap:24px; margin-top:20px;">
-                    <div>
-                        <div style="margin-bottom:16px; display:flex; gap:12px;">
+                    <div style="display:flex; flex-direction:column;">
+                        <div style="margin-bottom:16px; display:flex; gap:12px; flex-shrink:0;">
                             <div style="flex:1; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.05); padding:16px; border-radius:12px;">
                                 <div style="font-size:11px; text-transform:uppercase; color:rgba(255,255,255,0.4); margin-bottom:4px; letter-spacing:1px;">Distanza Totale</div>
                                 <div style="font-family:var(--font-display); font-size:20px; font-weight:700;">${stats.distanza}</div>
@@ -433,7 +435,7 @@ const TransportView = {
                                 <div style="font-family:var(--font-display); font-size:20px; font-weight:700; color:var(--accent-cyan);">${stats.orarioPartenza}</div>
                             </div>
                         </div>
-                        <div id="nt-map-container" style="height:440px; border-radius:16px; overflow:hidden; border:1px solid rgba(255,255,255,0.1); position:relative;">
+                        <div id="nt-map-container" style="flex:1; min-height:440px; border-radius:16px; overflow:hidden; border:1px solid rgba(255,255,255,0.1); position:relative;">
                             ${mapHtml}
                         </div>
                     </div>
@@ -616,6 +618,75 @@ const TransportView = {
                     <div style="font-family:var(--font-display); font-weight:800; color:#00e676; font-size:16px;">€ ${Utils.formatNum(r.totalAmount)}</div>
                 </td>
             </tr>`;
+    },
+
+    aiOverlay: () => {
+        return `
+            <div class="ai-modal">
+                <div class="ai-modal-header">
+                    <div style="display:flex; align-items:center; gap:16px;">
+                        <div class="ai-modal-icon"><i class="ph ph-brain"></i></div>
+                        <div>
+                            <h2 class="ai-modal-title">ANALISI INTELLIGENTE</h2>
+                            <p class="ai-modal-subtitle">Ottimizzazione logistica e suggerimenti AI</p>
+                        </div>
+                    </div>
+                    <button class="ai-modal-close" id="ai-close-btn" type="button"><i class="ph ph-x"></i></button>
+                </div>
+                <div class="ai-modal-body" id="ai-modal-body">
+                    <div class="ai-loading">
+                        <div class="ai-loading-orb"></div>
+                        <p class="ai-loading-text">Analisi in corso...</p>
+                        <p class="ai-loading-sub">Elaborazione coordinate e traffico Real-Time</p>
+                    </div>
+                </div>
+            </div>`;
+    },
+
+    aiResultBody: (res) => {
+        if (!res) return `<p style="text-align:center; padding:40px; color:rgba(255,255,255,0.4);">Nessun suggerimento disponibile.</p>`;
+        
+        return `
+            <div class="ai-result-content">
+                <div class="ai-section ${res.risparmio ? 'savings' : ''}">
+                    <div class="ai-section-header">
+                        <i class="ph ph-lightning"></i> RIEPILOGO OTTIMIZZAZIONE
+                        ${res.risparmio ? `<span class="ai-badge">-${res.risparmio}</span>` : ''}
+                    </div>
+                    <p class="ai-section-text">${Utils.escapeHtml(res.commento || "Analisi completata con successo.")}</p>
+                </div>
+
+                ${res.suggerimenti ? `
+                <div class="ai-section">
+                    <div class="ai-section-header"><i class="ph ph-list-checks"></i> SUGGERIMENTI OPERATIVI</div>
+                    <ul style="margin:0; padding-left:20px; color:rgba(255,255,255,0.7); font-size:14px; line-height:1.6;">
+                        ${res.suggerimenti.map(s => `<li>${Utils.escapeHtml(s)}</li>`).join("")}
+                    </ul>
+                </div>` : ""}
+
+                ${res.viaggi_multipli ? `
+                <div class="ai-section warning">
+                    <div class="ai-section-header">
+                        <i class="ph ph-warning"></i> TRASPORTI MULTIPLI CONSIGLIATI
+                        <span class="ai-badge danger">CRITICO</span>
+                    </div>
+                    <p class="ai-section-text" style="margin-bottom:16px;">L'atleta <strong>${Utils.escapeHtml(res.atleta_fuori_mano)}</strong> allunga il percorso di oltre ${res.extra_time} min. Suggeriamo di dividere il viaggio:</p>
+                    <div class="ai-pickup-card">
+                        <div class="ai-pickup-num">A</div>
+                        <div class="ai-pickup-content">
+                            <div class="ai-pickup-name">Veicolo Principale</div>
+                            <div class="ai-pickup-athletes">${res.veicolo_a_count} Atlete (Percorso Ottimizzato)</div>
+                        </div>
+                    </div>
+                    <div class="ai-pickup-card" style="margin-top:10px;">
+                        <div class="ai-pickup-num">B</div>
+                        <div class="ai-pickup-content">
+                            <div class="ai-pickup-name">Veicolo Appoggio</div>
+                            <div class="ai-pickup-athletes">${res.atleta_fuori_mano} (Partenza diretta)</div>
+                        </div>
+                    </div>
+                </div>` : ""}
+            </div>`;
     }
 };
 

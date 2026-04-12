@@ -218,6 +218,7 @@ class TransportController
         $this->repo->saveTransport([
             ':id' => $id,
             ':team_id' => $body['team_id'],
+            ':event_id' => $body['event_id'] ?? null,
             ':destination_name' => htmlspecialchars(trim($body['destination_name']), ENT_QUOTES, 'UTF-8'),
             ':destination_address' => $body['destination_address'] ?? null,
             ':destination_lat' => isset($body['destination_lat']) ? (float)$body['destination_lat'] : null,
@@ -359,5 +360,11 @@ class TransportController
         Auth::requireWrite('transport');
         $body = Response::jsonBody();
         $this->handleServiceCall(fn() => $this->service->analyzeTransportAI($body));
+    }
+
+    public function listVehicles(): void
+    {
+        Auth::requireRead('transport');
+        Response::success($this->repo->listVehicles());
     }
 }

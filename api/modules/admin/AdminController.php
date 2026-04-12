@@ -18,6 +18,19 @@ use Mpdf\Mpdf;
 
 class AdminController
 {
+    public function metalogs(): void
+    {
+        Auth::requireRole('admin');
+        $tid = \FusionERP\Shared\TenantContext::id();
+        $db = \FusionERP\Shared\Database::getInstance();
+        $stmt = $db->prepare("SELECT id, message, created_at FROM meta_logs WHERE tenant_id = :tid AND (message LIKE '%error%' OR message LIKE '%since%') ORDER BY id DESC LIMIT 1000");
+        $stmt->execute([':tid' => $tid]);
+        $logs = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        $stmt2 = $db->prepare("SELECT user_id, page_name, ig_username, updated_at FROM meta_tokens WHERE tenant_id = :tid ORDER BY updated_at DESC LIMIT 5");
+        $stmt2->execute([':tid' => $tid]);
+        $tokens = $stmt2->fetchAll(\PDO::FETCH_ASSOC);
+        \FusionERP\Shared\Response::success(['logs' => $logs, 'tokens' => $tokens]);
+    }
     private AdminRepository $repo;
 
     public function __construct()
@@ -164,7 +177,7 @@ class AdminController
 
     public function listContracts(): void
     {
-        Auth::requireRole('operator');
+        Auth::requireRole('operatore');
         $userId = filter_input(INPUT_GET, 'userId', FILTER_DEFAULT) ?? '';
         Response::success($this->repo->listContracts($userId));
     }
@@ -174,7 +187,7 @@ class AdminController
      */
     public function generateContract(): void
     {
-        $adminUser = Auth::requireRole('operator');
+        $adminUser = Auth::requireRole('operatore');
         $body = Response::jsonBody();
         Response::requireFields($body, ['user_id', 'valid_from', 'valid_to', 'role_description']);
 

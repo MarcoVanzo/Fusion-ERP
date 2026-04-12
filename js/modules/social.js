@@ -33,11 +33,77 @@ const Social = (() => {
       u = r.reduce((n, s) => n + (s.reach || 0), 0),
       v = r.reduce((n, s) => n + (s.views || 0), 0),
       m = r.reduce((n, s) => n + (s.accounts_engaged || 0), 0),
+      fw_tot = r.reduce((n, s) => n + (s.follower_count || 0), 0),
       f = !!l.username,
       b = f ? `@${l.username}` : s?.fb_page_name || "Facebook Page",
       y = f ? l.followers_count : h.page_fans,
       k = y ? ((m / y) * 100).toFixed(1) : "0.0";
-    ((e.innerHTML = `\n        <div class="transport-dashboard" style="min-height:100vh; padding:24px;">\n            ${g ? '\n            <div class="social-mock-banner" id="social-mock-banner">\n                <i class="ph ph-info"></i>\n                <span>Dati di esempio — <a href="#" id="connect-from-banner">Connetti un account reale</a> per visualizzare le tue analytics.</span>\n                <button class="btn-dash" id="close-mock-banner" type="button"><i class="ph ph-x"></i></button>\n            </div>' : ""}\n\n            \x3c!-- Header --\x3e\n            <div class="dash-top-bar" style="border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 24px; margin-bottom: 24px; display:flex; justify-content:space-between; align-items:flex-start;">\n                <div class="social-profile">\n                    <div class="social-avatar">\n                        ${l.profile_picture_url ? `<img src="${Utils.escapeHtml(l.profile_picture_url)}" alt="Profile" class="social-avatar-img">` : f ? '<i class="ph ph-instagram-logo" style="font-size:32px;"></i>' : '<i class="ph ph-facebook-logo" style="font-size:32px;color:#1877F2;"></i>'}\n                    </div>\n                    <div class="social-profile-info">\n                        <h1 class="dash-title" style="margin:0">\n                            <i class="ph ph-chart-line-up"></i> Social Analytics\n                        </h1>\n                        <p class="dash-subtitle" style="margin-top:4px;">\n                            ${Utils.escapeHtml(b)}\n                            ${y ? ` · ${d(y)} follower/fan` : ""}\n                        </p>\n                    </div>\n                </div>\n                <div class="social-actions">\n                    <div class="dash-filters" style="margin-bottom:8px;" id="period-selector">\n                        <button class="dash-filter ${7 === a ? "active" : ""}" data-days="7">7gg</button>\n                        <button class="dash-filter ${14 === a ? "active" : ""}" data-days="14">14gg</button>\n                        <button class="dash-filter ${28 === a ? "active" : ""}" data-days="28">28gg</button>\n                        <button class="dash-filter ${90 === a ? "active" : ""}" data-days="90">90gg</button>\n                    </div>\n                    ${g ? "" : '\n                    <button class="btn-dash" id="btn-disconnect-meta" type="button" title="Disconnetti account">\n                        <i class="ph ph-plug-charging" style="color:var(--color-pink);"></i>\n                    </button>'}\n                </div>\n            </div>\n\n            \x3c!-- KPI Cards --\x3e\n            <div class="dash-stat-grid">\n                <div class="dash-stat-card social-kpi-followers">\n                    <div class="social-kpi-icon"><i class="ph ph-users"></i></div>\n                    <div class="social-kpi-content">\n                        <span class="social-kpi-value" id="kpi-followers">${d(y || 0)}</span>\n                        <span class="social-kpi-label">${f ? "Follower" : "Fan Pagina"}</span>\n                    </div>\n                </div>\n                <div class="dash-stat-card social-kpi-views">\n                    <div class="social-kpi-icon"><i class="ph ph-eye"></i></div>\n                    <div class="social-kpi-content">\n                        <span class="social-kpi-value" id="kpi-views">${d(v)}</span>\n                        <span class="social-kpi-label">Views (${a}gg)</span>\n                    </div>\n                </div>\n                <div class="dash-stat-card social-kpi-reach">\n                    <div class="social-kpi-icon"><i class="ph ph-broadcast"></i></div>\n                    <div class="social-kpi-content">\n                        <span class="social-kpi-value" id="kpi-reach">${d(u)}</span>\n                        <span class="social-kpi-label">Reach (${a}gg)</span>\n                    </div>\n                </div>\n                <div class="dash-stat-card social-kpi-engagement">\n                    <div class="social-kpi-icon"><i class="ph ph-heart"></i></div>\n                    <div class="social-kpi-content">\n                        <span class="social-kpi-value" id="kpi-engagement">${k}%</span>\n                        <span class="social-kpi-label">Engagement Rate</span>\n                    </div>\n                </div>\n            </div>\n\n            \x3c!-- Chart --\x3e\n            <div class="dash-card" style="margin-top:24px">\n                <div class="social-chart-header">\n                    <h3><i class="ph ph-chart-line"></i> Andamento</h3>\n                    <div class="social-chart-legend">\n                        <span class="legend-dot legend-views"></span> Views\n                        <span class="legend-dot legend-reach" style="margin-left:16px;"></span> Reach\n                    </div>\n                </div>\n                <div class="social-chart-container">\n                    <canvas id="social-chart" width="800" height="280"></canvas>\n                </div>\n            </div>\n\n            \x3c!-- Facebook Quick Stats --\x3e\n            <div class="social-fb-section">\n                <h3 class="social-section-title"><i class="ph ph-facebook-logo" style="color:#1877F2;"></i> Facebook Page</h3>\n                <div class="social-fb-grid">\n                    <div class="social-fb-stat">\n                        <span class="social-fb-value">${d(h.page_fans || 0)}</span>\n                        <span class="social-fb-label">Fan Pagina</span>\n                    </div>\n                    <div class="social-fb-stat">\n                        <span class="social-fb-value">${d(h.page_views || 0)}</span>\n                        <span class="social-fb-label">Visite Pagina</span>\n                    </div>\n                    <div class="social-fb-stat">\n                        <span class="social-fb-value">${d(h.engaged_users || 0)}</span>\n                        <span class="social-fb-label">Utenti coinvolti</span>\n                    </div>\n                    <div class="social-fb-stat">\n                        <span class="social-fb-value">${d(h.post_engagements || 0)}</span>\n                        <span class="social-fb-label">Interazioni post</span>\n                    </div>\n                </div>\n            </div>\n\n            \x3c!-- Posts Grid --\x3e\n            ${
+    ((e.innerHTML = `\n        <div class="transport-dashboard" style="min-height:100vh; padding:24px;">\n            ${g ? '\n            <div class="social-mock-banner" id="social-mock-banner"' + (s.error ? ' style="background:rgba(239,68,68,0.1); border:1px solid #ef4444; color:#ef4444;"' : '') + '>\n                <i class="ph ph-' + (s.error ? 'warning-circle' : 'info') + '"></i>\n                <span>' + (s.error ? '<strong>Errore Meta API:</strong> ' + Utils.escapeHtml(s.error) : 'Dati di esempio — <a href="#" id="connect-from-banner">Connetti un account reale</a> per visualizzare le tue analytics.') + '</span>\n                <button class="btn-dash" id="close-mock-banner" type="button"' + (s.error ? ' style="color:#ef4444"' : '') + '><i class="ph ph-x"></i></button>\n            </div>' : ""}\n\n            \x3c!-- Header --\x3e\n            <div class="dash-top-bar" style="border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 24px; margin-bottom: 24px; display:flex; justify-content:space-between; align-items:flex-start;">\n                <div class="social-profile">\n                    <div class="social-avatar">\n                        ${l.profile_picture_url ? `<img src="${Utils.escapeHtml(l.profile_picture_url)}" alt="Profile" class="social-avatar-img">` : f ? '<i class="ph ph-instagram-logo" style="font-size:32px;"></i>' : '<i class="ph ph-facebook-logo" style="font-size:32px;color:#1877F2;"></i>'}\n                    </div>\n                    <div class="social-profile-info">\n                        <h1 class="dash-title" style="margin:0">\n                            <i class="ph ph-chart-line-up"></i> Social Analytics\n                        </h1>\n                        <p class="dash-subtitle" style="margin-top:4px;">
+                            <strong>${Utils.escapeHtml(l.name || b)}</strong>
+                            ${l.media_count ? ` · ${d(l.media_count)} post totali` : ""}
+                        </p>
+                        ${l.biography ? `<p style="margin-top:8px; font-size:13px; color:var(--text-muted); max-width:600px; line-height:1.4;">${Utils.escapeHtml(l.biography)}</p>` : ""}
+                    </div>
+                </div>
+                <div class="social-actions">\n                    <div class="dash-filters" style="margin-bottom:8px;" id="period-selector">\n                        <button class="dash-filter ${7 === a ? "active" : ""}" data-days="7">7gg</button>\n                        <button class="dash-filter ${14 === a ? "active" : ""}" data-days="14">14gg</button>\n                        <button class="dash-filter ${28 === a ? "active" : ""}" data-days="28">28gg</button>\n                        <button class="dash-filter ${90 === a ? "active" : ""}" data-days="90">90gg</button>\n                    </div>
+                    <button class="btn-dash" id="btn-disconnect-meta" type="button" title="Disconnetti account (Riconnetti)">
+                        <i class="ph ph-plug-charging" style="color:var(--color-pink);"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- KPI Cards Instagram -->
+            <h3 style="margin-bottom:16px; font-size:16px; display:flex; align-items:center; gap:8px;"><i class="ph ph-instagram-logo" style="color:var(--color-pink);"></i> Resoconto Instagram (${a} gg)</h3>
+            <div class="dash-stat-grid">
+                <div class="dash-stat-card">
+                    <div class="social-kpi-icon"><i class="ph ph-users" style="color:var(--color-pink);"></i></div>
+                    <div class="social-kpi-content">
+                        <span class="social-kpi-value">${d(l.followers_count || 0)} <small style="font-size:16px; margin-left:4px; font-weight:700; color:${fw_tot >= 0 ? '#10B981' : '#EF4444'};">${fw_tot > 0 ? '+' : ''}${fw_tot}</small></span>
+                        <span class="social-kpi-label">Follower (Variazione giorno per giorno)</span>
+                    </div>
+                </div>
+                <div class="dash-stat-card">
+                    <div class="social-kpi-icon"><i class="ph ph-eye" style="color:var(--color-pink);"></i></div>
+                    <div class="social-kpi-content">
+                        <span class="social-kpi-value">${d(v)}</span>
+                        <span class="social-kpi-label">Views (ex Impressions) totali generate</span>
+                    </div>
+                </div>
+                <div class="dash-stat-card">
+                    <div class="social-kpi-icon"><i class="ph ph-broadcast" style="color:var(--color-pink);"></i></div>
+                    <div class="social-kpi-content">
+                        <span class="social-kpi-value">${d(u)}</span>
+                        <span class="social-kpi-label">Reach (Copertura totale netta)</span>
+                    </div>
+                </div>
+                <div class="dash-stat-card">
+                    <div class="social-kpi-icon"><i class="ph ph-images" style="color:var(--color-pink);"></i></div>
+                    <div class="social-kpi-content">
+                        <span class="social-kpi-value">${d(l.media_count || 0)}</span>
+                        <span class="social-kpi-label">Post Pubblicati Storici</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KPI Cards Facebook -->
+            <h3 style="margin-top:32px; margin-bottom:16px; font-size:16px; display:flex; align-items:center; gap:8px;"><i class="ph ph-facebook-logo" style="color:#1877F2;"></i> Resoconto Facebook</h3>
+            <div class="dash-stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+                <div class="dash-stat-card">
+                    <div class="social-kpi-icon"><i class="ph ph-users" style="color:#1877F2;"></i></div>
+                    <div class="social-kpi-content">
+                        <span class="social-kpi-value">${d(h.page_fans || 0)}</span>
+                        <span class="social-kpi-label">Fan Pagina</span>
+                    </div>
+                </div>
+                <div class="dash-stat-card" style="grid-column: span 3; opacity: 0.8;">
+                    <div class="social-kpi-content" style="flex-direction:row; align-items:center; gap:16px; padding:8px 0;">
+                        <i class="ph ph-info" style="font-size:28px; color:var(--text-muted);"></i>
+                        <span style="font-size:13px; line-height:1.5; color:var(--text-muted);">
+                            <strong>Limitazione API di Meta:</strong> Le altre metriche avanzate di Facebook (es. Reach, Visite, Interazioni) non sono esportabili in dashboard di terze parti poiché la tua Pagina si trova in configurazione <em>New Page Experience</em>. I dati restano visibili unicamente dall'interno dell'app nativa Business Suite.
+                        </span>
+                    </div>
+                </div>
+            </div>\n\n            \x3c!-- Chart --\x3e\n            <div class="dash-card" style="margin-top:24px; margin-bottom:24px;">\n                <div class="social-chart-header">\n                    <h3><i class="ph ph-chart-line"></i> Andamento Instagram</h3>\n                    <div class="social-chart-legend">\n                        <span class="legend-dot legend-views"></span> Views\n                        <span class="legend-dot legend-reach" style="margin-left:16px;"></span> Reach\n                    </div>\n                </div>\n                <div class="social-chart-container">\n                    <canvas id="social-chart" width="800" height="280"></canvas>\n                </div>\n            </div>\n\n            \x3c!-- Posts Grid --\x3e\n            ${
       f
         ? `\n            <div class="social-posts-section">\n                <h3 class="social-section-title"><i class="ph ph-images"></i> Ultimi Post</h3>\n                <div class="social-posts-grid" id="social-posts-grid">\n                    ${p
             .map((n) =>
@@ -69,11 +135,12 @@ const Social = (() => {
       document
         .getElementById("period-selector")
         ?.addEventListener("click", async (n) => {
-          const i = n.target.closest(".period-btn");
+          const i = n.target.closest(".dash-filter");
           if (!i) return;
           const e = parseInt(i.dataset.days, 10);
           if (e !== a) {
             a = e;
+            document.getElementById("app").innerHTML = UI.skeletonPage();
             try {
               ((s = await Store.get("insights", "social", { days: e })),
                 o(document.getElementById("app")));
