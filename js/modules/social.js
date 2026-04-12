@@ -76,7 +76,7 @@ const Social = (() => {
       document
         .getElementById("period-selector")
         ?.addEventListener("click", async (n) => {
-          const i = n.target.closest(".period-btn");
+          const i = n.target.closest(".dash-filter");
           if (!i) return;
           const e = parseInt(i.dataset.days, 10);
           if (e !== a) {
