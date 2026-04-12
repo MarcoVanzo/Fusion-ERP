@@ -20,10 +20,15 @@ class TournamentsPdfService
 
     public function generateRoomingList(array $tournament, array $roster, array $societaProfile): void
     {
-        // Setup mPDF - Autoloader is already loaded by router.php, 
-        // but we ensure Mpdf class is available.
-        
+        // Setup mPDF - Autoloader is already loaded by router.php
+        // Aruba optimization: use a writable temp folder
+        $tempDir = dirname(__DIR__, 4) . '/uploads/tmp_pdf/';
+        if (!is_dir($tempDir)) {
+            mkdir($tempDir, 0775, true);
+        }
+
         $mpdf = new Mpdf([
+            'tempDir' => $tempDir,
             'margin_left' => 15,
             'margin_right' => 15,
             'margin_top' => 35, // More space for header
@@ -32,10 +37,15 @@ class TournamentsPdfService
             'margin_footer' => 10
         ]);
 
-        $logoPath = dirname(__DIR__, 4) . '/uploads/images/Logo Colorato.png';
-        if (!file_exists($logoPath)) {
-            // Fallback to website assets if not found in uploads
-            $logoPath = dirname(__DIR__, 4) . '/fusion-website/public/assets/logo-colorato.png';
+        // Logo resolution logic
+        $rootPath = dirname(__DIR__, 4);
+        $logoPath = $rootPath . '/uploads/images/Logo Colorato.png';
+        
+        // Ensure path is relative for mPDF to avoid some server-side absolute path blocks
+        if (file_exists($logoPath)) {
+            $logoSrc = $logoPath;
+        } else {
+            $logoSrc = $rootPath . '/fusion-website/public/assets/logo-colorato.png';
         }
 
         // Header content
@@ -43,7 +53,7 @@ class TournamentsPdfService
         <table width="100%" style="border-bottom: 1px solid #eee; padding-bottom: 10px; vertical-align: middle;">
             <tr>
                 <td width="50%">
-                    <img src="' . $logoPath . '" style="height: 60px;">
+                    <img src="' . $logoSrc . '" style="height: 60px;">
                 </td>
                 <td width="50%" style="text-align: right; font-size: 9pt; color: #555; line-height: 1.4;">
                     <strong>FUSION TEAM VOLLEY ASD</strong><br>
