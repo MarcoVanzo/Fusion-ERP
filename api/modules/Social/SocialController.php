@@ -246,13 +246,6 @@ class SocialController
                 }
             }
 
-            // TEMPORARY DEBUG: Dump raw data to file to inspect missing metrics / broken images
-            @file_put_contents(__DIR__ . '/../../debug_meta.json', json_encode([
-                'igInsights' => $igInsights,
-                'posts' => $posts,
-                'fbInsights' => $fbInsights,
-            ], JSON_PRETTY_PRINT));
-
             // Transform time-series insights into a flat daily array
             $dailyInsights = $this->transformInsights($igInsights, $days);
 
