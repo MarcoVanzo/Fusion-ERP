@@ -50,6 +50,10 @@ const TournamentsAPI = {
 
     saveRoomingList: async (id) => {
         return await Store.api("saveRoomingList", "tournaments", { id });
+    },
+
+    saveSummaryPdf: async (id) => {
+        return await Store.api("saveSummaryPdf", "tournaments", { id });
     }
 };
 

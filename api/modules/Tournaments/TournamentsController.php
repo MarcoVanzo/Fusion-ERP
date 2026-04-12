@@ -224,4 +224,79 @@ class TournamentsController
             Response::error($e->getMessage(), (int)$e->getCode() ?: 500);
         }
     }
+
+    /**
+     * PDF Export: Tournament Summary (Complete Recap)
+     */
+    public function generateSummaryPdf(): void
+    {
+        Auth::requireRead('tournaments');
+        $id = filter_input(INPUT_GET, 'id', FILTER_DEFAULT);
+        if (!$id) {
+            Response::error('Invalid tournament ID.', 400);
+        }
+
+        try {
+            $tournament = $this->repository->getTournament($id);
+            if (!$tournament) throw new \Exception('Tournament not found', 404);
+
+            $roster = $this->repository->getRoster($id, $tournament['team_id']);
+            $expenses = $this->repository->getExpenses($id);
+            $matches = $this->repository->getMatches($id);
+            $transports = $this->repository->getTransportsForEvent($id);
+
+            $socRepo = new \FusionERP\Modules\Societa\SocietaRepository();
+            $socProfile = $socRepo->getProfile() ?: [];
+
+            $pdfService = new \FusionERP\Modules\Tournaments\Services\TournamentsPdfService();
+            $pdfService->generateSummaryPdf($tournament, $roster, $expenses, $matches, $transports, $socProfile);
+        } catch (\Throwable $e) {
+            error_log('[Tournaments] generateSummaryPdf error: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+            Response::error($e->getMessage(), (int)$e->getCode() ?: 500);
+        }
+    }
+
+    /**
+     * Save Tournament Summary PDF to disk
+     */
+    public function saveSummaryPdf(): void
+    {
+        Auth::requireWrite('tournaments');
+        $body = Response::jsonBody();
+        $id = $body['id'] ?? null;
+        
+        if (!$id) {
+            Response::error('Invalid tournament ID.', 400);
+        }
+
+        try {
+            $tournament = $this->repository->getTournament($id);
+            if (!$tournament) throw new \Exception('Tournament not found', 404);
+
+            $roster = $this->repository->getRoster($id, $tournament['team_id']);
+            $expenses = $this->repository->getExpenses($id);
+            $matches = $this->repository->getMatches($id);
+            $transports = $this->repository->getTransportsForEvent($id);
+            
+            $socRepo = new \FusionERP\Modules\Societa\SocietaRepository();
+            $socProfile = $socRepo->getProfile() ?: [];
+
+            $dir = dirname(__DIR__, 3) . '/uploads/tournament_summaries/';
+            if (!is_dir($dir)) mkdir($dir, 0775, true);
+            
+            $filename = 'Riepilogo_Torneo_' . $id . '.pdf';
+            $fullPath = $dir . $filename;
+            $relativePath = 'uploads/tournament_summaries/' . $filename;
+
+            $pdfService = new \FusionERP\Modules\Tournaments\Services\TournamentsPdfService();
+            $pdfService->generateSummaryPdf($tournament, $roster, $expenses, $matches, $transports, $socProfile, $fullPath);
+
+            $this->repository->updateSummaryPdfPath($id, $relativePath);
+
+            Response::success(['path' => $relativePath]);
+        } catch (\Throwable $e) {
+            error_log('[Tournaments] saveSummaryPdf error: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+            Response::error($e->getMessage(), (int)$e->getCode() ?: 500);
+        }
+    }
 }

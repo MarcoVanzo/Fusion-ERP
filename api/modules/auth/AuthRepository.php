@@ -170,17 +170,18 @@ class AuthRepository
 
     public function listUsers(string $role = ''): array
     {
+        $tenantId = \FusionERP\Shared\TenantContext::id();
         $sql = 'SELECT u.id, u.email, u.role, u.full_name, u.phone, u.is_active, u.last_login_at, u.created_at, u.parent_user_id, t.roles as tenant_roles
                 FROM users u
-                LEFT JOIN tenant_users t ON u.id = t.user_id
+                JOIN tenant_users t ON u.id = t.user_id AND t.tenant_id = :tid
                 WHERE u.deleted_at IS NULL';
         if ($role !== '') {
             $stmt = $this->db->prepare($sql . ' AND u.role = :role ORDER BY u.full_name');
-            $stmt->execute([':role' => $role]);
+            $stmt->execute([':tid' => $tenantId, ':role' => $role]);
         }
         else {
             $stmt = $this->db->prepare($sql . ' ORDER BY u.full_name');
-            $stmt->execute();
+            $stmt->execute([':tid' => $tenantId]);
         }
         $rows = $stmt->fetchAll();
         foreach ($rows as &$row) {

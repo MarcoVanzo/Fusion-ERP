@@ -41,7 +41,7 @@ class NewsletterController
      */
     public function getConfig(): void
     {
-        Auth::requireRole('operator');
+        Auth::requireRole('operatore');
         Response::success([
             'configured' => $this->ml->isConfigured(),
         ]);
@@ -51,7 +51,7 @@ class NewsletterController
 
     public function getStats(): void
     {
-        Auth::requireRole('operator');
+        Auth::requireRole('operatore');
         Response::success($this->ml->getStats());
     }
 
@@ -59,7 +59,7 @@ class NewsletterController
 
     public function listCampaigns(): void
     {
-        Auth::requireRole('operator');
+        Auth::requireRole('operatore');
 
         $limit = (int)(filter_input(INPUT_GET, 'limit', FILTER_VALIDATE_INT) ?? 10);
         Response::success($this->ml->listCampaigns($limit));
@@ -69,7 +69,7 @@ class NewsletterController
 
     public function listSubscribers(): void
     {
-        Auth::requireRole('operator');
+        Auth::requireRole('operatore');
 
         $cursor = filter_input(INPUT_GET, 'cursor', FILTER_DEFAULT) ?? null;
         $limit  = (int)(filter_input(INPUT_GET, 'limit', FILTER_VALIDATE_INT) ?? 25);
@@ -119,7 +119,7 @@ class NewsletterController
 
     public function listGroups(): void
     {
-        Auth::requireRole('operator');
+        Auth::requireRole('operatore');
         Response::success($this->ml->listGroups());
     }
 

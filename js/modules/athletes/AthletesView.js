@@ -1085,7 +1085,7 @@ export const AthletesView = {
 
                     <div style="display:flex; gap:10px; margin-top:auto; padding-top:16px; border-top:1px solid rgba(255,255,255,0.05);">
                         ${hasFile ? `
-                            <button class="btn btn-default btn-xs" style="flex:1; background:rgba(0, 230, 118, 0.1); border-color:rgba(0, 230, 118, 0.2); color:var(--color-success);" onclick="window.open('api/?module=athletes&action=downloadDoc&id=${athlete.id}&field=${doc.id.replace(/-/g,'_')}_file_path', 'pdf_popup', 'width=800,height=900,scrollbars=yes,resizable=yes')">
+                            <button class="btn btn-default btn-xs" style="flex:1; background:rgba(0, 230, 118, 0.1); border-color:rgba(0, 230, 118, 0.2); color:var(--color-success);" onclick="UI.openPdf('api/?module=athletes&action=downloadDoc&id=${athlete.id}&field=${doc.id.replace(/-/g,'_')}_file_path', 'Documento Atleta')">
                                 <i class="ph ph-eye"></i> Visualizza
                             </button>
                         ` : ''}

@@ -29,7 +29,7 @@ class TournamentsRepository
         $tid = TenantContext::id();
         $stmt = $this->db->prepare("
             SELECT e.*, t.name as team_name,
-                   td.website_url, td.fee_per_athlete, td.accommodation_info, td.rooming_list_path
+                   td.website_url, td.fee_per_athlete, td.accommodation_info, td.rooming_list_path, td.summary_pdf_path
             FROM events e
             LEFT JOIN teams t ON e.team_id = t.id
             LEFT JOIN tournament_details td ON e.id = td.event_id
@@ -49,7 +49,7 @@ class TournamentsRepository
         $tid = TenantContext::id();
         $stmt = $this->db->prepare("
             SELECT e.*, t.name as team_name,
-                   td.website_url, td.fee_per_athlete, td.accommodation_info, td.rooming_list_path
+                   td.website_url, td.fee_per_athlete, td.accommodation_info, td.rooming_list_path, td.summary_pdf_path
             FROM events e
             LEFT JOIN teams t ON e.team_id = t.id
             LEFT JOIN tournament_details td ON e.id = td.event_id
@@ -381,5 +381,32 @@ class TournamentsRepository
             WHERE event_id = :id
         ");
         $stmt->execute([':id' => $id, ':path' => $path]);
+    }
+
+    /**
+     * Update summary pdf path
+     */
+    public function updateSummaryPdfPath(string $id, ?string $path): void
+    {
+        $stmt = $this->db->prepare("
+            UPDATE tournament_details 
+            SET summary_pdf_path = :path
+            WHERE event_id = :id
+        ");
+        $stmt->execute([':id' => $id, ':path' => $path]);
+    }
+
+    /**
+     * Get transports for event
+     */
+    public function getTransportsForEvent(string $eventId): array
+    {
+        $stmt = $this->db->prepare("
+            SELECT * FROM transports
+            WHERE event_id = :event_id
+            ORDER BY transport_date ASC, arrival_time ASC
+        ");
+        $stmt->execute([':event_id' => $eventId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }

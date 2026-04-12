@@ -202,10 +202,11 @@ class AuthController
 
         $token = bin2hex(random_bytes(32));
         $this->repo->createInvitation([
-            'parent_user_id' => $parentId,
+            'inviter_id' => $parentId,
             'email' => strtolower(trim($body['email'])),
             'full_name' => trim($body['full_name']),
-            'token' => $token
+            'token' => $token,
+            'expires_at' => date('Y-m-d H:i:s', strtotime('+7 days'))
         ]);
 
         // Mock mail for now, or use Mailer

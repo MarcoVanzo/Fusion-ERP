@@ -16,26 +16,30 @@ const UI = (() => {
 
     /**
      * Create and display a modal dialog.
-     * @param {{ title: string, body: string|Node, footer?: string|Node, onClose?: () => void }} options
+     * @param {{ title: string, body: string|Node, footer?: string|Node, size?: 'normal'|'large'|'xlarge', onClose?: () => void }} options
      * @returns {{ close: () => void }} Modal control object
      */
-    function modal({ title, body, footer = '', onClose }) {
+    function modal({ title, body, footer = '', size = 'normal', onClose }) {
         const container = document.getElementById('modal-container');
         if (!container) return null;
 
         // Save focus for restoration after close
         const previousFocus = document.activeElement;
 
+        let modalStyle = "";
+        if (size === 'large') modalStyle = "max-width: 800px; width: 90%;";
+        if (size === 'xlarge') modalStyle = "max-width: 1200px; width: 95%;";
+
         container.innerHTML = `
           <div class="modal-overlay" id="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-            <div class="modal">
+            <div class="modal" style="${modalStyle}">
               <div class="modal-header">
                 <h2 class="modal-title" id="modal-title">${Utils.escapeHtml(title)}</h2>
                 <button class="btn btn-ghost btn-sm" id="modal-close-btn" aria-label="Chiudi finestra" type="button">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
               </div>
-              <div class="modal-body"></div>
+              <div class="modal-body" style="${size !== 'normal' ? 'padding:0;' : ''}"></div>
             </div>
           </div>`;
 
@@ -226,6 +230,16 @@ const UI = (() => {
                 m.close();
                 onConfirm();
             });
+        },
+
+        /**
+         * Open a PDF seamlessly in an internal modal to bypass popup-blockers
+         * @param {string} url - URL of the PDF
+         * @param {string} title - Title of the modal
+         */
+        openPdf: function (url, title = 'Visualizzatore PDF') {
+            const body = `<iframe src="${url}" style="width:100%; height:85vh; border:none; border-radius:0 0 8px 8px; background:#fff; display:block;"></iframe>`;
+            modal({ title, body, footer: '', size: 'xlarge' });
         }
     };
 })();

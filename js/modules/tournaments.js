@@ -1,6 +1,8 @@
 /**
  * Tournaments Module — Main Orchestrator
- * Fusion ERP v1.1
+ * Fusion ERP v1.2 — UX Redesign
+ * 
+ * Adds: filter pills, tab switching, improved event delegation
  */
 import TournamentsAPI from './tournaments/TournamentsAPI.js';
 import TournamentsView from './tournaments/TournamentsView.js';
@@ -10,6 +12,7 @@ const Tournaments = {
     _tournaments: [],
     _currentData: null,
     _teams: [],
+    _currentFilter: 'upcoming',
 
     /** signal() helper for event listeners */
     sig: function() { return { signal: this._abort.signal }; },
@@ -49,7 +52,7 @@ const Tournaments = {
 
         try {
             this._tournaments = await TournamentsAPI.list();
-            listContent.innerHTML = TournamentsView.list(this._tournaments);
+            listContent.innerHTML = TournamentsView.list(this._tournaments, this._currentFilter);
 
             // Event delegation for cards and buttons
             listContent.onclick = async (e) => {
@@ -111,6 +114,26 @@ const Tournaments = {
 
     attachListEvents: function() {
         document.getElementById("btn-new-tournament")?.addEventListener("click", () => this.openTournamentModal(), this.sig());
+
+        // Filter pills
+        const filters = document.getElementById("trm-filters");
+        if (filters) {
+            filters.addEventListener("click", (e) => {
+                const pill = e.target.closest(".trm-filter-pill");
+                if (!pill) return;
+
+                // Update active state
+                filters.querySelectorAll(".trm-filter-pill").forEach(p => p.classList.remove("active"));
+                pill.classList.add("active");
+
+                // Apply filter
+                this._currentFilter = pill.dataset.filter;
+                const listContent = document.getElementById("trm-list-content");
+                if (listContent) {
+                    listContent.innerHTML = TournamentsView.list(this._tournaments, this._currentFilter);
+                }
+            }, this.sig());
+        }
     },
 
     openDetail: async function(id) {
@@ -135,13 +158,38 @@ const Tournaments = {
         this._currentData = null;
         this.loadList();
     },
+
     attachDetailEvents: function(container, tournamentId) {
+        // Back button
         container.querySelector("#btn-back-trm")?.addEventListener("click", () => this.closeDetail(), this.sig());
+        
+        // Edit button
         container.querySelector("#btn-edit-trm")?.addEventListener("click", () => this.openTournamentModal(this._currentData.tournament), this.sig());
         
+        // Tab switching
+        const tabNav = container.querySelector("#trm-tabs");
+        if (tabNav) {
+            tabNav.addEventListener("click", (e) => {
+                const tab = e.target.closest(".trm-tab");
+                if (!tab) return;
+
+                const tabId = tab.dataset.tab;
+                
+                // Update tab active states
+                tabNav.querySelectorAll(".trm-tab").forEach(t => t.classList.remove("active"));
+                tab.classList.add("active");
+
+                // Update panel visibility
+                container.querySelectorAll(".trm-tab-panel").forEach(p => p.classList.remove("active"));
+                const panel = container.querySelector(`.trm-tab-panel[data-panel="${tabId}"]`);
+                if (panel) panel.classList.add("active");
+            }, this.sig());
+        }
+
+        // Rooming List buttons
         container.querySelector("#btn-rooming-list")?.addEventListener("click", () => {
             const url = `api/router.php?module=tournaments&action=generateRoomingList&id=${tournamentId}`;
-            window.open(url, "pdf_popup", "width=800,height=900,scrollbars=yes,resizable=yes");
+            UI.openPdf(url, 'Anteprima Rooming List');
         }, this.sig());
 
         container.querySelector("#btn-save-rooming-list")?.addEventListener("click", async () => {
@@ -158,8 +206,30 @@ const Tournaments = {
             }
         }, this.sig());
 
+        // Summary/Dossier buttons
+        container.querySelector("#btn-summary-pdf")?.addEventListener("click", () => {
+            const url = `api/router.php?module=tournaments&action=generateSummaryPdf&id=${tournamentId}`;
+            UI.openPdf(url, 'Anteprima Dossier Torneo');
+        }, this.sig());
+
+        container.querySelector("#btn-save-summary")?.addEventListener("click", async () => {
+            try {
+                UI.loading(true);
+                const res = await TournamentsAPI.saveSummaryPdf(tournamentId);
+                UI.toast("Dossier Torneo salvato correttamente nel server", "success");
+                Store.invalidate("tournaments");
+                await this.openDetail(tournamentId);
+            } catch (err) {
+                UI.toast("Errore durante il salvataggio: " + err.message, "error");
+            } finally {
+                UI.loading(false);
+            }
+        }, this.sig());
+
+        // Add expense
         container.querySelector("#btn-add-expense")?.addEventListener("click", () => this.openExpenseModal(tournamentId), this.sig());
 
+        // Delete expense buttons
         container.querySelectorAll(".btn-delete-expense").forEach(btn => {
             btn.onclick = async (e) => {
                 e.preventDefault();
@@ -180,6 +250,7 @@ const Tournaments = {
             };
         });
         
+        // Save roster
         container.querySelector("#btn-save-roster")?.addEventListener("click", async (e) => {
             const btn = e.target;
             btn.disabled = true;
@@ -205,6 +276,7 @@ const Tournaments = {
             }
         }, this.sig());
 
+        // Edit match buttons
         container.querySelectorAll(".btn-edit-match").forEach(btn => {
             btn.addEventListener("click", () => {
                 const matchJson = btn.dataset.json;
