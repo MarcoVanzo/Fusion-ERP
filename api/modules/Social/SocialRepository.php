@@ -526,7 +526,7 @@ class SocialRepository
         // Daily metrics
         $urlDaily = self::GRAPH_BASE_URL . self::GRAPH_API_VERSION . '/' . $pageId . '/insights?'
             . http_build_query([
-            'metric' => 'page_impressions,page_post_engagements',
+            'metric' => 'page_views_total,page_impressions_unique,page_post_engagements',
             'period' => 'day',
             'since' => $since,
             'until' => $until,
@@ -541,7 +541,8 @@ class SocialRepository
         ];
 
         $keyMap = [
-            'page_impressions' => 'page_views', // fallback mapping since views might be deprecated
+            'page_views_total' => 'page_views',
+            'page_impressions_unique' => 'engaged_users',
             'page_post_engagements' => 'post_engagements',
         ];
 
@@ -549,6 +550,7 @@ class SocialRepository
             // Fetch daily insights (will fail if < 100 likes)
             $resDaily = $this->graphGet($urlDaily);
             $rawInsights = $resDaily['data'] ?? [];
+            $this->logDebug('RAW FB INSIGHTS: ' . json_encode($rawInsights));
         }
         catch (\Throwable $e) {
             $this->logDebug('getFbPageInsights error (likely <100 likes): ' . $e->getMessage());
