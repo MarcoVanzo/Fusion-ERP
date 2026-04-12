@@ -100,4 +100,29 @@ class TournamentsController
             return ['message' => 'Match saved successfully.'];
         });
     }
+
+    public function deleteTournament(): void
+    {
+        Auth::requireWrite('tournaments');
+        $id = filter_input(INPUT_GET, 'id', FILTER_DEFAULT);
+        
+        $this->handleServiceCall(function() use ($id) {
+            $this->service->deleteTournament($id);
+            return ['message' => 'Tournament deleted successfully.'];
+        });
+    }
+
+    public function duplicateTournament(): void
+    {
+        $user = Auth::requireWrite('tournaments');
+        $id = filter_input(INPUT_GET, 'id', FILTER_DEFAULT);
+        
+        $this->handleServiceCall(function() use ($id, $user) {
+            $newId = $this->service->duplicateTournament($id, $user['id']);
+            return [
+                'id' => $newId,
+                'message' => 'Tournament duplicated successfully.'
+            ];
+        });
+    }
 }

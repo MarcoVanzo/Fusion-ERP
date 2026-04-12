@@ -52,8 +52,56 @@ const Tournaments = {
             listContent.innerHTML = TournamentsView.list(this._tournaments);
 
             listContent.querySelectorAll(".trm-card").forEach(card => {
-                card.addEventListener("click", () => this.openDetail(card.dataset.id), this.sig());
+                card.addEventListener("click", (e) => {
+                    // Prevent click if clicking on action buttons
+                    if (e.target.closest(".btn-trm-action")) return;
+                    this.openDetail(card.dataset.id);
+                }, this.sig());
             });
+
+            // Action: Copy
+            listContent.querySelectorAll(".btn-copy-trm").forEach(btn => {
+                btn.addEventListener("click", async (e) => {
+                    e.stopPropagation();
+                    const id = btn.dataset.id;
+                    try {
+                        UI.loading(true);
+                        await TournamentsAPI.duplicate(id);
+                        UI.toast("Torneo copiato con successo", "success");
+                        await this.loadList();
+                    } catch (err) {
+                        UI.toast(err.message, "error");
+                    } finally {
+                        UI.loading(false);
+                    }
+                }, this.sig());
+            });
+
+            // Action: Delete
+            listContent.querySelectorAll(".btn-delete-trm").forEach(btn => {
+                btn.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    const id = btn.dataset.id;
+                    UI.confirm({
+                        title: "Elimina Torneo",
+                        message: "Sei sicuro di voler eliminare questo torneo? L'azione è irreversibile.",
+                        confirmText: "Elimina",
+                        onConfirm: async () => {
+                            try {
+                                UI.loading(true);
+                                await TournamentsAPI.delete(id);
+                                UI.toast("Torneo eliminato", "success");
+                                await this.loadList();
+                            } catch (err) {
+                                UI.toast(err.message, "error");
+                            } finally {
+                                UI.loading(false);
+                            }
+                        }
+                    });
+                }, this.sig());
+            });
+
         } catch (err) {
             listContent.innerHTML = `<div style="text-align:center; grid-column:1/-1; color:#ef4444; padding:20px;">${Utils.escapeHtml(err.message)}</div>`;
         }

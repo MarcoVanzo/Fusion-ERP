@@ -38,9 +38,18 @@ const TournamentsView = {
         return tournaments.map(t => {
             const date = new Date(t.event_date).toLocaleDateString("it-IT", { day: '2-digit', month: 'short', year: 'numeric' });
             return `
-                <div class="dash-stat-card trm-card" data-id="${t.id}" style="cursor:pointer; transition: transform 0.2s;">
+                <div class="dash-stat-card trm-card" data-id="${t.id}" style="cursor:pointer; transition: transform 0.2s; position:relative;">
+                    <div class="trm-card-actions" style="position:absolute; top:20px; right:20px; display:flex; gap:8px; z-index:10;">
+                        <button class="btn-trm-action btn-copy-trm" title="Copia Torneo" data-id="${t.id}" style="background:rgba(255,255,255,0.05); border:none; color:rgba(255,255,255,0.6); width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.2s;">
+                            <i class="ph ph-copy" style="font-size:18px;"></i>
+                        </button>
+                        <button class="btn-trm-action btn-delete-trm" title="Elimina Torneo" data-id="${t.id}" style="background:rgba(239,68,68,0.05); border:none; color:#ef4444; width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.2s;">
+                            <i class="ph ph-trash" style="font-size:18px;"></i>
+                        </button>
+                    </div>
+
                     <div style="font-size: 11px; opacity: 0.6; margin-bottom: 8px; text-transform: uppercase; font-weight:700; color:var(--color-pink);">${Utils.escapeHtml(t.team_name)}</div>
-                    <h3 style="font-size: 1.25rem; margin-bottom: 12px; line-height:1.2;">${Utils.escapeHtml(t.title)}</h3>
+                    <h3 style="font-size: 1.25rem; margin-bottom: 12px; line-height:1.2; padding-right:80px;">${Utils.escapeHtml(t.title)}</h3>
                     <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; opacity: 0.8; margin-bottom:6px;">
                         <i class="ph ph-calendar"></i> ${date}
                     </div>

@@ -30,6 +30,14 @@ const TournamentsAPI = {
         // or fetch from common endpoint
         const res = await Store.get("teams", "athletes");
         return Array.isArray(res) ? res : (res?.teams || []);
+    },
+
+    delete: async function(id) {
+        return await Store.api("deleteTournament", "tournaments", null, { id });
+    },
+
+    duplicate: async function(id) {
+        return await Store.api("duplicateTournament", "tournaments", null, { id });
     }
 };
 

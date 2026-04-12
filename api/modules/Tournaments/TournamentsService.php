@@ -78,4 +78,26 @@ class TournamentsService
         if (empty($tournamentId)) throw new Exception('Tournament ID is required', 400);
         $this->repository->updateRosterStatus($tournamentId, $attendees);
     }
+
+    /**
+     * Delete tournament
+     */
+    public function deleteTournament(string $id): void
+    {
+        if (empty($id)) throw new Exception('Tournament ID is required', 400);
+        $this->repository->deleteTournament($id);
+    }
+
+    /**
+     * Duplicate tournament
+     */
+    public function duplicateTournament(string $id, string $userId): string
+    {
+        if (empty($id)) throw new Exception('Tournament ID is required', 400);
+        
+        $newId = 'EVT_' . substr(md5(uniqid('', true)), 0, 8);
+        $this->repository->duplicateTournament($id, $newId, $userId);
+        
+        return $newId;
+    }
 }

@@ -267,4 +267,59 @@ class TournamentsRepository
             ':status' => $data['status']
         ]);
     }
+    /**
+     * Delete tournament (soft delete)
+     */
+    public function deleteTournament(string $id): void
+    {
+        $stmt = $this->db->prepare("UPDATE events SET deleted_at = NOW() WHERE id = :id");
+        $stmt->execute([':id' => $id]);
+    }
+
+    /**
+     * Duplicate tournament data
+     */
+    public function duplicateTournament(string $originalId, string $newId, string $userId): void
+    {
+        // 1. Duplicate event record
+        $stmtEvent = $this->db->prepare("
+            INSERT INTO events (id, team_id, tenant_id, type, title, event_date, event_end, location_name, location_lat, location_lng, notes, status, created_by)
+            SELECT :newId, team_id, tenant_id, type, CONCAT(title, ' (Copia)'), event_date, event_end, location_name, location_lat, location_lng, notes, 'scheduled', :userId
+            FROM events WHERE id = :originalId
+        ");
+        $stmtEvent->execute([':newId' => $newId, ':originalId' => $originalId, ':userId' => $userId]);
+
+        // 2. Duplicate tournament details
+        $stmtDetails = $this->db->prepare("
+            INSERT INTO tournament_details (event_id, website_url, fee_per_athlete, accommodation_info)
+            SELECT :newId, website_url, fee_per_athlete, accommodation_info
+            FROM tournament_details WHERE event_id = :originalId
+        ");
+        $stmtDetails->execute([':newId' => $newId, ':originalId' => $originalId]);
+
+        // 3. Duplicate matches
+        // Note: we generate a crude new ID here for each match using MD5(RAND())
+        $stmtMatchesSource = $this->db->prepare("SELECT * FROM tournament_matches WHERE event_id = :originalId");
+        $stmtMatchesSource->execute([':originalId' => $originalId]);
+        $matches = $stmtMatchesSource->fetchAll(\PDO::FETCH_ASSOC);
+
+        $stmtInsertMatch = $this->db->prepare("
+            INSERT INTO tournament_matches (id, event_id, match_time, opponent_name, court_name, our_score, opponent_score, status)
+            VALUES (:id, :event_id, :match_time, :opponent_name, :court_name, :our_score, :opponent_score, :status)
+        ");
+
+        foreach ($matches as $m) {
+            $newMatchId = 'TMT_' . substr(md5(uniqid('', true)), 0, 8);
+            $stmtInsertMatch->execute([
+                ':id' => $newMatchId,
+                ':event_id' => $newId,
+                ':match_time' => $m['match_time'],
+                ':opponent_name' => $m['opponent_name'],
+                ':court_name' => $m['court_name'],
+                ':our_score' => 0,
+                ':opponent_score' => 0,
+                ':status' => 'scheduled'
+            ]);
+        }
+    }
 }
