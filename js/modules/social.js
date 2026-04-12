@@ -81,6 +81,7 @@ const Social = (() => {
           const e = parseInt(i.dataset.days, 10);
           if (e !== a) {
             a = e;
+            document.getElementById("app").innerHTML = UI.skeletonPage();
             try {
               ((s = await Store.get("insights", "social", { days: e })),
                 o(document.getElementById("app")));
