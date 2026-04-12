@@ -345,8 +345,7 @@ class SocialRepository
 
         $fields = implode(',', [
             'follower_count',
-            'impressions',
-            'reach',
+            'views',
             'profile_views',
         ]);
 
@@ -421,11 +420,10 @@ class SocialRepository
      */
     private function getMediaInsights(string $mediaId, string $mediaType, string $accessToken): array
     {
-        // Different metric sets based on media type
         $metrics = match (strtoupper($mediaType)) {
-                'VIDEO' => 'impressions,reach,plays,saved',
-                'CAROUSEL_ALBUM' => 'impressions,reach,saved,carousel_album_impressions',
-                default => 'impressions,reach,saved',
+                'VIDEO' => 'views,plays,saved',
+                'CAROUSEL_ALBUM' => 'views,saved,carousel_album_views',
+                default => 'views,saved',
             };
 
         $url = self::GRAPH_BASE_URL . self::GRAPH_API_VERSION . '/' . $mediaId . '/insights?'

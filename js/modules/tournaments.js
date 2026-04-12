@@ -51,19 +51,15 @@ const Tournaments = {
             this._tournaments = await TournamentsAPI.list();
             listContent.innerHTML = TournamentsView.list(this._tournaments);
 
-            listContent.querySelectorAll(".trm-card").forEach(card => {
-                card.addEventListener("click", (e) => {
-                    // Prevent click if clicking on action buttons
-                    if (e.target.closest(".btn-trm-action")) return;
-                    this.openDetail(card.dataset.id);
-                }, this.sig());
-            });
-
-            // Action: Copy
-            listContent.querySelectorAll(".btn-copy-trm").forEach(btn => {
-                btn.addEventListener("click", async (e) => {
+            // Event delegation for cards and buttons
+            listContent.onclick = async (e) => {
+                const target = e.target;
+                
+                // 1. Copy Action
+                const btnCopy = target.closest(".btn-copy-trm");
+                if (btnCopy) {
                     e.stopPropagation();
-                    const id = btn.dataset.id;
+                    const id = btnCopy.dataset.id;
                     try {
                         UI.loading(true);
                         await TournamentsAPI.duplicate(id);
@@ -74,19 +70,17 @@ const Tournaments = {
                     } finally {
                         UI.loading(false);
                     }
-                }, this.sig());
-            });
+                    return;
+                }
 
-            // Action: Delete
-            listContent.querySelectorAll(".btn-delete-trm").forEach(btn => {
-                btn.addEventListener("click", (e) => {
+                // 2. Delete Action
+                const btnDelete = target.closest(".btn-delete-trm");
+                if (btnDelete) {
                     e.stopPropagation();
-                    const id = btn.dataset.id;
-                    UI.confirm({
-                        title: "Elimina Torneo",
-                        message: "Sei sicuro di voler eliminare questo torneo? L'azione è irreversibile.",
-                        confirmText: "Elimina",
-                        onConfirm: async () => {
+                    const id = btnDelete.dataset.id;
+                    UI.confirm(
+                        "Sei sicuro di voler eliminare questo torneo? L'azione è irreversibile.",
+                        async () => {
                             try {
                                 UI.loading(true);
                                 await TournamentsAPI.delete(id);
@@ -98,10 +92,16 @@ const Tournaments = {
                                 UI.loading(false);
                             }
                         }
-                    });
-                }, this.sig());
-            });
+                    );
+                    return;
+                }
 
+                // 3. Open Detail
+                const card = target.closest(".trm-card");
+                if (card) {
+                    this.openDetail(card.dataset.id);
+                }
+            };
         } catch (err) {
             listContent.innerHTML = `<div style="text-align:center; grid-column:1/-1; color:#ef4444; padding:20px;">${Utils.escapeHtml(err.message)}</div>`;
         }
