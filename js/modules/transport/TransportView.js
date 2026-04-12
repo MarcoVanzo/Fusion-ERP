@@ -424,8 +424,8 @@ const TransportView = {
                 </div>
                 
                 <div style="display:grid; grid-template-columns: 1fr 380px; gap:24px; margin-top:20px;">
-                    <div>
-                        <div style="margin-bottom:16px; display:flex; gap:12px;">
+                    <div style="display:flex; flex-direction:column;">
+                        <div style="margin-bottom:16px; display:flex; gap:12px; flex-shrink:0;">
                             <div style="flex:1; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.05); padding:16px; border-radius:12px;">
                                 <div style="font-size:11px; text-transform:uppercase; color:rgba(255,255,255,0.4); margin-bottom:4px; letter-spacing:1px;">Distanza Totale</div>
                                 <div style="font-family:var(--font-display); font-size:20px; font-weight:700;">${stats.distanza}</div>
@@ -435,7 +435,7 @@ const TransportView = {
                                 <div style="font-family:var(--font-display); font-size:20px; font-weight:700; color:var(--accent-cyan);">${stats.orarioPartenza}</div>
                             </div>
                         </div>
-                        <div id="nt-map-container" style="height:440px; border-radius:16px; overflow:hidden; border:1px solid rgba(255,255,255,0.1); position:relative;">
+                        <div id="nt-map-container" style="flex:1; min-height:440px; border-radius:16px; overflow:hidden; border:1px solid rgba(255,255,255,0.1); position:relative;">
                             ${mapHtml}
                         </div>
                     </div>
