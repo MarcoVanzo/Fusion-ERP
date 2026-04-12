@@ -33,6 +33,7 @@ const Social = (() => {
       u = r.reduce((n, s) => n + (s.reach || 0), 0),
       v = r.reduce((n, s) => n + (s.views || 0), 0),
       m = r.reduce((n, s) => n + (s.accounts_engaged || 0), 0),
+      fw_tot = r.reduce((n, s) => n + (s.follower_count || 0), 0),
       f = !!l.username,
       b = f ? `@${l.username}` : s?.fb_page_name || "Facebook Page",
       y = f ? l.followers_count : h.page_fans,
@@ -52,34 +53,34 @@ const Social = (() => {
             </div>
 
             <!-- KPI Cards Instagram -->
-            <h3 style="margin-bottom:16px; font-size:16px; display:flex; align-items:center; gap:8px;"><i class="ph ph-instagram-logo" style="color:var(--color-pink);"></i> Resoconto Instagram</h3>
+            <h3 style="margin-bottom:16px; font-size:16px; display:flex; align-items:center; gap:8px;"><i class="ph ph-instagram-logo" style="color:var(--color-pink);"></i> Resoconto Instagram (${a} gg)</h3>
             <div class="dash-stat-grid">
                 <div class="dash-stat-card">
                     <div class="social-kpi-icon"><i class="ph ph-users" style="color:var(--color-pink);"></i></div>
                     <div class="social-kpi-content">
-                        <span class="social-kpi-value">${d(l.followers_count || 0)}</span>
-                        <span class="social-kpi-label">Follower Attuali</span>
-                    </div>
-                </div>
-                <div class="dash-stat-card">
-                    <div class="social-kpi-icon"><i class="ph ph-images" style="color:var(--color-pink);"></i></div>
-                    <div class="social-kpi-content">
-                        <span class="social-kpi-value">${d(l.media_count || 0)}</span>
-                        <span class="social-kpi-label">Post Pubblicati (Storico)</span>
+                        <span class="social-kpi-value">${d(l.followers_count || 0)} <small style="font-size:16px; margin-left:4px; font-weight:700; color:${fw_tot >= 0 ? '#10B981' : '#EF4444'};">${fw_tot > 0 ? '+' : ''}${fw_tot}</small></span>
+                        <span class="social-kpi-label">Follower (Variazione giorno per giorno)</span>
                     </div>
                 </div>
                 <div class="dash-stat-card">
                     <div class="social-kpi-icon"><i class="ph ph-eye" style="color:var(--color-pink);"></i></div>
                     <div class="social-kpi-content">
                         <span class="social-kpi-value">${d(v)}</span>
-                        <span class="social-kpi-label">Views (${a}gg)</span>
+                        <span class="social-kpi-label">Views (ex Impressions) totali generate</span>
                     </div>
                 </div>
                 <div class="dash-stat-card">
                     <div class="social-kpi-icon"><i class="ph ph-broadcast" style="color:var(--color-pink);"></i></div>
                     <div class="social-kpi-content">
                         <span class="social-kpi-value">${d(u)}</span>
-                        <span class="social-kpi-label">Reach Totale (${a}gg)</span>
+                        <span class="social-kpi-label">Reach (Copertura totale netta)</span>
+                    </div>
+                </div>
+                <div class="dash-stat-card">
+                    <div class="social-kpi-icon"><i class="ph ph-images" style="color:var(--color-pink);"></i></div>
+                    <div class="social-kpi-content">
+                        <span class="social-kpi-value">${d(l.media_count || 0)}</span>
+                        <span class="social-kpi-label">Post Pubblicati Storici</span>
                     </div>
                 </div>
             </div>

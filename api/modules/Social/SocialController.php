@@ -320,6 +320,7 @@ class SocialController
                 'views' => 0,
                 'accounts_engaged' => 0,
                 'profile_views' => 0,
+                'follower_count' => 0,
             ];
         }
 
