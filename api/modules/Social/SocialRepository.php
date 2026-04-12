@@ -359,7 +359,7 @@ class SocialRepository
             $tsResponse = $this->graphGet($urlTs);
             $resTs = $tsResponse['data'] ?? [];
         } catch (\Throwable $e) {
-            error_log('[SOCIAL] getIgInsights TS error: ' . $e->getMessage());
+            $this->logDebug('getIgInsights TS error: ' . $e->getMessage());
         }
 
         // Query 2: Total Values (Since v21.0 views/profile_views require metric_type=total_value)
@@ -378,7 +378,7 @@ class SocialRepository
             $totResponse = $this->graphGet($urlTot);
             $resTot = $totResponse['data'] ?? [];
         } catch (\Throwable $e) {
-            error_log('[SOCIAL] getIgInsights TOT error: ' . $e->getMessage());
+            $this->logDebug('getIgInsights TOT error: ' . $e->getMessage());
         }
 
         // We must artificially reconstruct daily 'views' so the JS frontend chart and KPIs 
@@ -444,7 +444,7 @@ class SocialRepository
             return $this->graphGet($url);
         }
         catch (\Throwable $e) {
-            error_log('[SOCIAL] getIgProfile error: ' . $e->getMessage());
+            $this->logDebug('getIgProfile error: ' . $e->getMessage());
             return [];
         }
     }
@@ -477,7 +477,7 @@ class SocialRepository
             return $items;
         }
         catch (\Throwable $e) {
-            error_log('[SOCIAL] getIgMedia error: ' . $e->getMessage());
+            $this->logDebug('getIgMedia error: ' . $e->getMessage());
             return [];
         }
     }
@@ -555,7 +555,7 @@ class SocialRepository
             $result['page_fans'] = (int)($resPage['fan_count'] ?? 0);
         }
         catch (\Throwable $e) {
-            error_log('[SOCIAL] getFbPageInsights error: ' . $e->getMessage());
+            $this->logDebug('getFbPageInsights error: ' . $e->getMessage());
             return $result;
         }
 
