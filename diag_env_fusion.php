@@ -57,7 +57,18 @@ try {
             echo "<span style='color:red'>Failed to create PDF file.</span><br>";
         }
     }
+// 6. Check columns existence
+echo "<h3>Database Schema Check:</h3>";
+try {
+    require_once __DIR__ . '/api/Shared/Database.php';
+    $db = \FusionERP\Shared\Database::getInstance();
+    
+    foreach (['athletes', 'staff_members'] as $table) {
+        $stmt = $db->query("SHOW COLUMNS FROM $table LIKE 'identity_document'");
+        $exists = $stmt->fetch();
+        echo "Table $table has 'identity_document': " . ($exists ? "<span style='color:green'>YES</span>" : "<span style='color:red'>NO</span>") . "<br>";
+    }
 } catch (Throwable $e) {
-    echo "<span style='color:red'>PDF Test Error: " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine() . "</span><br>";
+    echo "<span style='color:red'>DB Error: " . $e->getMessage() . "</span><br>";
 }
 
