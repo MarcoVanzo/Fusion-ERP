@@ -51,34 +51,55 @@ const Social = (() => {
                 </div>
             </div>
 
-            <!-- KPI Cards -->
+            <!-- KPI Cards Instagram -->
+            <h3 style="margin-bottom:16px; font-size:16px; display:flex; align-items:center; gap:8px;"><i class="ph ph-instagram-logo" style="color:var(--color-pink);"></i> Resoconto Instagram</h3>
             <div class="dash-stat-grid">
-                <div class="dash-stat-card social-kpi-followers">
-                    <div class="social-kpi-icon"><i class="ph ph-instagram-logo" style="color:var(--color-pink);"></i></div>
+                <div class="dash-stat-card">
+                    <div class="social-kpi-icon"><i class="ph ph-users" style="color:var(--color-pink);"></i></div>
                     <div class="social-kpi-content">
                         <span class="social-kpi-value">${d(l.followers_count || 0)}</span>
-                        <span class="social-kpi-label">Follower IG</span>
+                        <span class="social-kpi-label">Follower Attuali</span>
                     </div>
                 </div>
-                <div class="dash-stat-card social-kpi-fb-fans">
-                    <div class="social-kpi-icon"><i class="ph ph-facebook-logo" style="color:#1877F2;"></i></div>
+                <div class="dash-stat-card">
+                    <div class="social-kpi-icon"><i class="ph ph-images" style="color:var(--color-pink);"></i></div>
                     <div class="social-kpi-content">
-                        <span class="social-kpi-value">${d(h.page_fans || 0)}</span>
-                        <span class="social-kpi-label">Fan Pagina FB</span>
+                        <span class="social-kpi-value">${d(l.media_count || 0)}</span>
+                        <span class="social-kpi-label">Post Pubblicati (Storico)</span>
                     </div>
                 </div>
-                <div class="dash-stat-card social-kpi-views">
-                    <div class="social-kpi-icon"><i class="ph ph-eye"></i></div>
+                <div class="dash-stat-card">
+                    <div class="social-kpi-icon"><i class="ph ph-eye" style="color:var(--color-pink);"></i></div>
                     <div class="social-kpi-content">
                         <span class="social-kpi-value">${d(v)}</span>
-                        <span class="social-kpi-label">Views IG (${a}gg)</span>
+                        <span class="social-kpi-label">Views (${a}gg)</span>
                     </div>
                 </div>
-                <div class="dash-stat-card social-kpi-reach">
-                    <div class="social-kpi-icon"><i class="ph ph-broadcast"></i></div>
+                <div class="dash-stat-card">
+                    <div class="social-kpi-icon"><i class="ph ph-broadcast" style="color:var(--color-pink);"></i></div>
                     <div class="social-kpi-content">
                         <span class="social-kpi-value">${d(u)}</span>
-                        <span class="social-kpi-label">Reach IG (${a}gg)</span>
+                        <span class="social-kpi-label">Reach Totale (${a}gg)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KPI Cards Facebook -->
+            <h3 style="margin-top:32px; margin-bottom:16px; font-size:16px; display:flex; align-items:center; gap:8px;"><i class="ph ph-facebook-logo" style="color:#1877F2;"></i> Resoconto Facebook</h3>
+            <div class="dash-stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+                <div class="dash-stat-card">
+                    <div class="social-kpi-icon"><i class="ph ph-users" style="color:#1877F2;"></i></div>
+                    <div class="social-kpi-content">
+                        <span class="social-kpi-value">${d(h.page_fans || 0)}</span>
+                        <span class="social-kpi-label">Fan Pagina</span>
+                    </div>
+                </div>
+                <div class="dash-stat-card" style="grid-column: span 3; opacity: 0.8;">
+                    <div class="social-kpi-content" style="flex-direction:row; align-items:center; gap:16px; padding:8px 0;">
+                        <i class="ph ph-info" style="font-size:28px; color:var(--text-muted);"></i>
+                        <span style="font-size:13px; line-height:1.5; color:var(--text-muted);">
+                            <strong>Limitazione API di Meta:</strong> Le altre metriche avanzate di Facebook (es. Reach, Visite, Interazioni) non sono esportabili in dashboard di terze parti poiché la tua Pagina si trova in configurazione <em>New Page Experience</em>. I dati restano visibili unicamente dall'interno dell'app nativa Business Suite.
+                        </span>
                     </div>
                 </div>
             </div>\n\n            \x3c!-- Chart --\x3e\n            <div class="dash-card" style="margin-top:24px; margin-bottom:24px;">\n                <div class="social-chart-header">\n                    <h3><i class="ph ph-chart-line"></i> Andamento Instagram</h3>\n                    <div class="social-chart-legend">\n                        <span class="legend-dot legend-views"></span> Views\n                        <span class="legend-dot legend-reach" style="margin-left:16px;"></span> Reach\n                    </div>\n                </div>\n                <div class="social-chart-container">\n                    <canvas id="social-chart" width="800" height="280"></canvas>\n                </div>\n            </div>\n\n            \x3c!-- Posts Grid --\x3e\n            ${
