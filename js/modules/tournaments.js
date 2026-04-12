@@ -136,10 +136,14 @@ const Tournaments = {
         this.loadList();
     },
 
-    attachDetailEvents: function(container, tournamentId) {
         container.querySelector("#btn-back-trm")?.addEventListener("click", () => this.closeDetail(), this.sig());
         container.querySelector("#btn-edit-trm")?.addEventListener("click", () => this.openTournamentModal(this._currentData.tournament), this.sig());
         
+        container.querySelector("#btn-rooming-list")?.addEventListener("click", () => {
+            const url = `api/router.php?module=tournaments&action=generateRoomingList&id=${tournamentId}`;
+            window.open(url, "_blank");
+        }, this.sig());
+
         container.querySelector("#btn-add-expense")?.addEventListener("click", () => this.openExpenseModal(tournamentId), this.sig());
 
         container.querySelectorAll(".btn-delete-expense").forEach(btn => {

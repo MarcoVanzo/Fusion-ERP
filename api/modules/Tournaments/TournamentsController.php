@@ -151,4 +151,37 @@ class TournamentsController
             return ['message' => 'Expense deleted successfully.'];
         });
     }
+
+    /**
+     * PDF Export: Rooming List
+     */
+    public function generateRoomingList(): void
+    {
+        Auth::requireRead('tournaments');
+        $id = filter_input(INPUT_GET, 'id', FILTER_DEFAULT);
+        if (!$id) {
+            Response::error('Invalid tournament ID.', 400);
+        }
+
+        try {
+            // 1. Get tournament detail
+            $tournament = $this->repository->getTournamentById($id);
+            if (!$tournament) throw new \Exception('Tournament not found', 404);
+
+            // 2. Get roster with document info
+            $roster = $this->repository->getRoster($id, $tournament['team_id']);
+
+            // 3. Get societa profile for branding/fiscal data
+            $socRepo = new \FusionERP\Modules\Societa\SocietaRepository();
+            $socProfile = $socRepo->getProfile() ?: [];
+
+            // 4. Generate PDF
+            $pdfService = new \FusionERP\Modules\Tournaments\Services\TournamentsPdfService(\FusionERP\Shared\Database::getInstance());
+            $pdfService->generateRoomingList($tournament, $roster, $socProfile);
+            
+        } catch (\Exception $e) {
+            error_log("[Tournaments] PDF generation failed: " . $e->getMessage());
+            die("Errore generazione PDF: " . $e->getMessage());
+        }
+    }
 }

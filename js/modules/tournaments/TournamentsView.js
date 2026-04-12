@@ -87,6 +87,9 @@ const TournamentsView = {
                         </div>
                     </div>
                     <div style="display:flex; gap:10px; align-items:flex-end;">
+                        <button class="btn-dash" id="btn-rooming-list" title="Genera Rooming List per Hotel" style="background:rgba(255,255,255,0.05); color:var(--color-pink); border:1px solid rgba(255,255,255,0.1);">
+                            <i class="ph ph-file-pdf"></i> Rooming List
+                        </button>
                         <button class="btn-dash" id="btn-edit-trm">
                             <i class="ph ph-pencil"></i> Modifica
                         </button>
