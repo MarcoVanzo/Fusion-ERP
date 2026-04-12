@@ -92,7 +92,6 @@ const TransportLogic = {
      * Generates HTML for the timeline items.
      */
     generateTimelineHtml: (timeline) => {
-        let pickupCounter = 1;
         return timeline.map((stop, i) => {
             let icon = "ph-map-pin";
             let color = "var(--accent-cyan)";
@@ -103,7 +102,7 @@ const TransportLogic = {
             const typeClass = stop.tipo === "partenza" ? "partenza" : (stop.tipo === "arrivo" ? "arrivo" : "raccolta");
             const isDraggable = stop.tipo === "raccolta";
             
-            const badgeHtml = isDraggable ? `<span style="position:absolute; top:-6px; right:-6px; background:${color}; color:#000; width:14px; height:14px; border-radius:50%; font-size:9px; font-weight:900; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 4px rgba(0,0,0,0.3);">${pickupCounter++}</span>` : "";
+            const badgeHtml = `<span style="position:absolute; top:-6px; right:-6px; background:${color}; color:#000; width:14px; height:14px; border-radius:50%; font-size:9px; font-weight:900; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 4px rgba(0,0,0,0.3);">${i + 1}</span>`;
             
             return `
                 <div class="nt-tl-item ${typeClass}" 

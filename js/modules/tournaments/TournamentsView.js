@@ -95,10 +95,10 @@ const TournamentsView = {
                         ` : ""}
                         <div style="display:flex; gap:10px;">
                             <button class="btn-dash" id="btn-save-rooming-list" title="Salva versione corrente nel server" style="background:rgba(255,255,255,0.05); color:var(--accent-pink); border:1px solid rgba(255,255,255,0.1);">
-                                <i class="ph ph-floppy-disk"></i> Salva PDF
+                                <i class="ph ph-floppy-disk"></i> Salva Rooming List
                             </button>
                             <button class="btn-dash" id="btn-rooming-list" title="Genera Rooming List per Hotel" style="background:rgba(255,255,255,0.05); color:var(--color-pink); border:1px solid rgba(255,255,255,0.1);">
-                                <i class="ph ph-file-pdf"></i> Rooming List
+                                <i class="ph ph-file-pdf"></i> Scarica Rooming List
                             </button>
                             <button class="btn-dash" id="btn-edit-trm">
                                 <i class="ph ph-pencil"></i> Modifica
