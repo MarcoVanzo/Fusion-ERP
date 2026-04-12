@@ -510,20 +510,45 @@ def git_commit_and_push(skip=False):
             )
             print(f"  ✅ Commit creato: deploy: {timestamp}")
 
-        # Pre-check: verify git credentials before attempting push
-        if not _git_credentials_available():
-            print("  ⚠️  Credenziali Git non disponibili — push saltato.")
-            print("      Per configurarle: git config credential.helper store && git push origin main")
+        # Strategy 1: credential helper
+        if _git_credentials_available():
+            push_result = subprocess.run(
+                ['git', 'push', 'origin', 'main'],
+                timeout=GIT_PUSH_TIMEOUT
+            )
+            if push_result.returncode == 0:
+                print("  ✅ Push su GitHub completato.")
+                return
+            print("  ⚠️  Push con credential helper fallito, provo con GITHUB_TOKEN...")
+
+        # Strategy 2: GITHUB_TOKEN from .env
+        token = os.getenv('GITHUB_TOKEN', '')
+        if not token:
+            print("  ⚠️  Push saltato — né credential helper né GITHUB_TOKEN disponibili.")
+            print("      Aggiungi GITHUB_TOKEN=ghp_xxx nel file .env")
             return
 
-        push_result = subprocess.run(
-            ['git', 'push', 'origin', 'main'],
-            timeout=GIT_PUSH_TIMEOUT
+        # Temporary auth URL (same approach as deploy_push.sh)
+        remote = subprocess.run(
+            ['git', 'remote', 'get-url', 'origin'],
+            capture_output=True, text=True, timeout=5
         )
-        if push_result.returncode == 0:
-            print("  ✅ Push su GitHub completato.")
-        else:
-            print("  ⚠️  Push fallito (non bloccante).")
+        clean_url = remote.stdout.strip()
+        # Build authenticated URL: https://USER:TOKEN@github.com/...
+        auth_url = clean_url.replace('https://', f'https://MarcoVanzo:{token}@')
+        try:
+            subprocess.run(['git', 'remote', 'set-url', 'origin', auth_url], check=True, timeout=5)
+            push_result = subprocess.run(
+                ['git', 'push', 'origin', 'main'],
+                timeout=GIT_PUSH_TIMEOUT
+            )
+            if push_result.returncode == 0:
+                print("  ✅ Push su GitHub completato (via token).")
+            else:
+                print("  ⚠️  Push fallito (non bloccante).")
+        finally:
+            # ALWAYS reset to clean URL — never leave token in .git/config
+            subprocess.run(['git', 'remote', 'set-url', 'origin', clean_url], timeout=5)
 
     except subprocess.TimeoutExpired:
         print("  ⚠️  Git timeout — continuo il deploy senza push...")
