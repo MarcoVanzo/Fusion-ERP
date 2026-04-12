@@ -84,8 +84,8 @@ const TransportView = {
                     <button class="btn-dash ai-consult-btn" data-transport-id="${Utils.escapeHtml(tr.id)}" type="button" style="background:linear-gradient(135deg, rgba(139,92,246,0.15), rgba(236,72,153,0.15)); border-color:rgba(139,92,246,0.4); color:#a78bfa; padding:8px 16px; font-size:11px;">
                         <i class="ph ph-brain" style="font-size:16px;"></i> CONSULTA AI
                     </button>
-                    ${tr.pdf_reimbursement ? `<button class="btn-dash" style="padding:8px 16px; font-size:11px;" onclick="window.open('/storage/reimbursements/${tr.pdf_reimbursement}', '_blank')"><i class="ph ph-file-pdf"></i> PDF</button>` : ""}
-                    ${tr.event_id ? `<button class="btn-dash" style="padding:8px 16px; font-size:11px; border-color:var(--accent-pink); color:var(--accent-pink);" onclick="window.open('api/router.php?module=tournaments&action=generateRoomingList&id=${tr.event_id}', '_blank')"><i class="ph ph-file-pdf"></i> ROOMING LIST</button>` : ""}
+                    ${tr.pdf_reimbursement ? `<button class="btn-dash" style="padding:8px 16px; font-size:11px;" onclick="window.open('/storage/reimbursements/${tr.pdf_reimbursement}', 'pdf_popup', 'width=800,height=900,scrollbars=yes,resizable=yes')"><i class="ph ph-file-pdf"></i> PDF</button>` : ""}
+                    ${tr.event_id ? `<button class="btn-dash" style="padding:8px 16px; font-size:11px; border-color:var(--accent-pink); color:var(--accent-pink);" onclick="window.open('api/router.php?module=tournaments&action=generateRoomingList&id=${tr.event_id}', 'pdf_popup', 'width=800,height=900,scrollbars=yes,resizable=yes')"><i class="ph ph-file-pdf"></i> ROOMING LIST</button>` : ""}
                 </div>
             </div>`;
     },

@@ -141,7 +141,7 @@ const Tournaments = {
         
         container.querySelector("#btn-rooming-list")?.addEventListener("click", () => {
             const url = `api/router.php?module=tournaments&action=generateRoomingList&id=${tournamentId}`;
-            window.open(url, "_blank");
+            window.open(url, "pdf_popup", "width=800,height=900,scrollbars=yes,resizable=yes");
         }, this.sig());
 
         container.querySelector("#btn-save-rooming-list")?.addEventListener("click", async () => {

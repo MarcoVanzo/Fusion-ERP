@@ -187,17 +187,33 @@ const TransportMap = {
         
         const route = result.routes[0];
         const points = [];
+        
+        if (route.legs && route.legs.length > 0) {
+            // Marker with number 1 (Partenza)
+            const startLoc = route.legs[0].start_location;
+            const iconStart = L.divIcon({
+                className: 'nt-map-marker',
+                html: `<div style="width:24px; height:24px; border-radius:50%; background:#fff; border:2px solid #ec4899; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:12px; color:#000;">1</div>`,
+                iconSize: [24, 24],
+                iconAnchor: [12, 12]
+            });
+            L.marker([startLoc.lat(), startLoc.lng()], { icon: iconStart }).addTo(map).bindPopup('<strong>Tappa 1</strong><br>Partenza');
+        }
+
         route.legs.forEach((leg, i) => {
             leg.steps.forEach(step => {
                 step.path.forEach(p => points.push([p.lat(), p.lng()]));
             });
             const last = leg.end_location;
             
-            // Marker with number
-            const number = i + 1;
+            // Marker with number (Raccolte & Arrivo)
+            const number = i + 2;
+            const isLast = i === route.legs.length - 1;
+            const borderColor = isLast ? "#00e676" : "#00e5ff";
+
             const icon = L.divIcon({
                 className: 'nt-map-marker',
-                html: `<div style="width:24px; height:24px; border-radius:50%; background:#fff; border:2px solid #00e5ff; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:12px; color:#000;">${number}</div>`,
+                html: `<div style="width:24px; height:24px; border-radius:50%; background:#fff; border:2px solid ${borderColor}; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:12px; color:#000;">${number}</div>`,
                 iconSize: [24, 24],
                 iconAnchor: [12, 12]
             });

@@ -88,9 +88,9 @@ const TournamentsView = {
                     </div>
                     <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
                         ${e.rooming_list_path ? `
-                            <div style="display:flex; align-items:center; gap:8px; background:rgba(16,185,129,0.1); padding:4px 10px; border-radius:100px; border:1px solid rgba(16,185,129,0.2);">
+                            <div style="display:flex; align-items:center; gap:8px; background:rgba(16,185,129,0.1); padding:4px 10px; border-radius:100px; border:1px solid rgba(16,185,129,0.2); cursor:pointer;" onclick="window.open('${e.rooming_list_path}', 'pdf_popup', 'width=800,height=900,scrollbars=yes,resizable=yes')">
                                 <i class="ph ph-check-circle" style="color:#10b981;"></i>
-                                <a href="${e.rooming_list_path}" target="_blank" style="color:#10b981; font-size:11px; font-weight:700; text-decoration:none;">VISUALIZZA SALVATA</a>
+                                <span style="color:#10b981; font-size:11px; font-weight:700;">VISUALIZZA SALVATA</span>
                             </div>
                         ` : ""}
                         <div style="display:flex; gap:10px;">
