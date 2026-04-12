@@ -18,12 +18,7 @@ declare(strict_types=1);
 
 namespace FusionERP\Modules\Network;
 
-$_networkShared = dirname(__DIR__, 2) . '/Shared/';
-require_once $_networkShared . 'Auth.php';
-require_once $_networkShared . 'Audit.php';
-require_once $_networkShared . 'Response.php';
-require_once $_networkShared . 'TenantContext.php';
-unset($_networkShared);
+// Shared classes are autoloaded by Composer PSR-4
 require_once __DIR__ . '/NetworkRepository.php';
 
 use FusionERP\Shared\Auth;

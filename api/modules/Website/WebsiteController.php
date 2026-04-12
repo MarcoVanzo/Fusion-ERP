@@ -8,11 +8,7 @@ declare(strict_types=1);
 
 namespace FusionERP\Modules\Website;
 
-$_websiteShared = dirname(__DIR__, 2) . '/Shared/';
-require_once $_websiteShared . 'Auth.php';
-require_once $_websiteShared . 'Response.php';
-require_once $_websiteShared . 'TenantContext.php';
-unset($_websiteShared);
+// Shared classes are autoloaded by Composer PSR-4
 require_once __DIR__ . '/WebsiteRepository.php';
 
 use FusionERP\Shared\Auth;

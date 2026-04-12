@@ -8,10 +8,7 @@ declare(strict_types=1);
 
 namespace FusionERP\Modules\Website;
 
-$_websiteShared = dirname(__DIR__, 2) . '/Shared/';
-require_once $_websiteShared . 'Database.php';
-require_once $_websiteShared . 'TenantContext.php';
-unset($_websiteShared);
+// Shared classes are autoloaded by Composer PSR-4
 
 use FusionERP\Shared\Database;
 use FusionERP\Shared\TenantContext;

@@ -13,12 +13,7 @@ declare(strict_types=1);
 
 namespace FusionERP\Modules\Newsletter;
 
-$_nlShared = dirname(__DIR__, 2) . '/Shared/';
-require_once $_nlShared . 'Auth.php';
-require_once $_nlShared . 'Audit.php';
-require_once $_nlShared . 'Response.php';
-require_once $_nlShared . 'TenantContext.php';
-unset($_nlShared);
+// Shared classes are autoloaded by Composer PSR-4
 require_once __DIR__ . '/MailerLiteService.php';
 
 use FusionERP\Shared\Auth;

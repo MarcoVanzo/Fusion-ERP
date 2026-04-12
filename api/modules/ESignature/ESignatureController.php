@@ -12,6 +12,7 @@ namespace FusionERP\Modules\ESignature;
 use FusionERP\Shared\Database;
 use FusionERP\Shared\ESignatureService;
 use FusionERP\Shared\Audit;
+use FusionERP\Shared\Response;
 
 class ESignatureController
 {
@@ -43,18 +44,14 @@ class ESignatureController
         }
 
         if (empty($documentId)) {
-            http_response_code(400);
-            echo json_encode(['error' => 'document_id mancante']);
-            exit();
+            Response::error('document_id mancante', 400);
         }
 
 
         // Handle cancellations
         if (in_array(strtolower($callbackStatus), ['cancelled', 'canceled', 'cancel'])) {
             $this->updateStaffContractStatus($documentId, 'annullato');
-            http_response_code(200);
-            echo json_encode(['status' => 'ok', 'message' => 'Firma annullata registrata.']);
-            exit();
+            Response::success(['status' => 'ok', 'message' => 'Firma annullata registrata.']);
         }
 
         // Handle completed signatures
@@ -85,9 +82,7 @@ class ESignatureController
             }
         }
 
-        http_response_code(200);
-        echo json_encode(['status' => 'ok', 'message' => 'Stato aggiornato']);
-        exit();
+        Response::success(['status' => 'ok', 'message' => 'Stato aggiornato']);
     }
 
     private function updateStaffContractStatus(string $documentId, string $status): void

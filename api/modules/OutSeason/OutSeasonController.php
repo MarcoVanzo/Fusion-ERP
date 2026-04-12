@@ -19,6 +19,7 @@ use FusionERP\Shared\Auth;
 use FusionERP\Shared\Database;
 use FusionERP\Shared\Response;
 use FusionERP\Shared\AIService;
+use FusionERP\Shared\TenantContext;
 
 class OutSeasonController
 {
@@ -54,19 +55,20 @@ class OutSeasonController
             ));
 
         $pdo = Database::getInstance();
+        $tid = TenantContext::id();
         $stmt = $pdo->prepare(
             'SELECT * FROM outseason_entries
-             WHERE season_key = :season_key
+             WHERE season_key = :season_key AND tenant_id = :tid
              ORDER BY entry_date ASC'
         );
-        $stmt->execute([':season_key' => $seasonKey]);
+        $stmt->execute([':season_key' => $seasonKey, ':tid' => $tid]);
         $rows = $stmt->fetchAll();
 
         // Last sync time
         $syncStmt = $pdo->prepare(
-            'SELECT MAX(synced_at) AS last_sync FROM outseason_entries WHERE season_key = :sk'
+            'SELECT MAX(synced_at) AS last_sync FROM outseason_entries WHERE season_key = :sk AND tenant_id = :tid'
         );
-        $syncStmt->execute([':sk' => $seasonKey]);
+        $syncStmt->execute([':sk' => $seasonKey, ':tid' => $tid]);
         $lastSync = $syncStmt->fetchColumn();
 
         Response::success([
@@ -159,15 +161,16 @@ class OutSeasonController
         }
 
         $pdo = Database::getInstance();
+        $tid = TenantContext::id();
 
         $sql = "
             INSERT INTO outseason_entries
-                (cognito_id, season_key, nome_e_cognome, email, cellulare, codice_fiscale,
+                (tenant_id, cognito_id, season_key, nome_e_cognome, email, cellulare, codice_fiscale,
                  data_di_nascita, indirizzo, cap, citta, provincia, club_di_appartenenza,
                  ruolo, taglia_kit, settimana_scelta, formula_scelta, come_vuoi_pagare,
                  codice_sconto, entry_date, entry_status, order_summary, synced_at)
             VALUES
-                (:cog_id, :sk, :nome, :email, :cell, :cf,
+                (:tid, :cog_id, :sk, :nome, :email, :cell, :cf,
                  :dob, :addr, :cap, :citta, :prov, :club,
                  :ruolo, :kit, :week, :formula, :pagare,
                  :sconto, :edate, :estatus, :osummary, NOW())
@@ -205,6 +208,7 @@ class OutSeasonController
             $edate = !empty($rawDate) ? date('Y-m-d H:i:s', (int)strtotime((string)$rawDate)) : null;
 
             $stmt->execute([
+                ':tid' => $tid,
                 ':cog_id' => (int)$e['Id'],
                 ':sk' => $seasonKey,
                 ':nome' => (string)($e['NomeECognome'] ?? ''),
@@ -261,13 +265,14 @@ class OutSeasonController
 
         // ── Load bonifico entries from DB ────────────────────────────────
         $pdo = Database::getInstance();
+        $tid = TenantContext::id();
         $stmt = $pdo->prepare(
             "SELECT nome_e_cognome, formula_scelta, order_summary
              FROM outseason_entries
-             WHERE season_key = :sk AND come_vuoi_pagare = 'Bonifico Bancario'
+             WHERE season_key = :sk AND tenant_id = :tid AND come_vuoi_pagare = 'Bonifico Bancario'
              ORDER BY nome_e_cognome"
         );
-        $stmt->execute([':sk' => self::seasonKey()]);
+        $stmt->execute([':sk' => self::seasonKey(), ':tid' => $tid]);
         $bonificoEntries = $stmt->fetchAll();
 
         if (empty($bonificoEntries)) {
@@ -416,12 +421,13 @@ PROMPT;
         }
 
         $pdo = Database::getInstance();
+        $tid = TenantContext::id();
         $sql = "
             INSERT INTO outseason_verifications
-                (season_key, entry_name, found, confidence, transaction_date,
+                (tenant_id, season_key, entry_name, found, confidence, transaction_date,
                  transaction_amount, transaction_description, notes, verified_by)
             VALUES
-                (:season_key, :name, :found, :confidence, :tx_date,
+                (:tid, :season_key, :name, :found, :confidence, :tx_date,
                  :tx_amount, :tx_desc, :notes, :verified_by)
             ON DUPLICATE KEY UPDATE
                 confidence              = IF(VALUES(found) = 1 OR found = 0, VALUES(confidence), confidence),
@@ -453,6 +459,7 @@ PROMPT;
             
             try {
                 $stmt->execute([
+                    ':tid' => $tid,
                     ':season_key' => $seasonKey,
                     ':name' => $r['name'],
                     ':found' => !empty($r['found']) ? 1 : 0,
@@ -489,14 +496,15 @@ PROMPT;
         }
 
         $pdo = Database::getInstance();
+        $tid = TenantContext::id();
         $stmt = $pdo->prepare(
             'SELECT entry_name, found, confidence, transaction_date,
                     transaction_amount, transaction_description, notes, verified_at
              FROM outseason_verifications
-             WHERE season_key = :season_key
+             WHERE season_key = :season_key AND tenant_id = :tid
              ORDER BY entry_name'
         );
-        $stmt->execute([':season_key' => $seasonKey]);
+        $stmt->execute([':season_key' => $seasonKey, ':tid' => $tid]);
         $rows = $stmt->fetchAll();
 
         Response::success(['season_key' => $seasonKey, 'results' => $rows]);

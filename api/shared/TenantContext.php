@@ -38,8 +38,11 @@ class TenantContext
         }
 
         // 2. From explicit header (for API integrations)
+        // SECURITY: Only accept the X-Tenant-ID header when the caller is
+        // already authenticated (session or token). This prevents an
+        // unauthenticated attacker from setting an arbitrary tenant context.
         $headerTenant = $_SERVER['HTTP_X_TENANT_ID'] ?? '';
-        if (!empty($headerTenant) && self::isValidTenantId($headerTenant)) {
+        if (!empty($headerTenant) && self::isValidTenantId($headerTenant) && $user !== null) {
             self::$tenantId = $headerTenant;
             return self::$tenantId;
         }

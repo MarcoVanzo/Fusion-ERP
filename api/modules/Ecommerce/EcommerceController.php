@@ -16,6 +16,7 @@ namespace FusionERP\Modules\Ecommerce;
 use FusionERP\Shared\Auth;
 use FusionERP\Shared\Response;
 use FusionERP\Shared\Database;
+use FusionERP\Shared\TenantContext;
 use PDO;
 
 class EcommerceController
@@ -258,7 +259,9 @@ class EcommerceController
         Auth::requireRead('ecommerce');
 
         $db = Database::getInstance();
-        $stmt = $db->query("SELECT * FROM ec_orders ORDER BY data_ordine DESC");
+        $tid = TenantContext::id();
+        $stmt = $db->prepare("SELECT * FROM ec_orders WHERE tenant_id = :tid ORDER BY data_ordine DESC");
+        $stmt->execute([':tid' => $tid]);
         $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         $orders = [];
@@ -294,7 +297,7 @@ class EcommerceController
     {
         Auth::requireWrite('ecommerce');
 
-        $data = json_decode(file_get_contents('php://input'), true);
+        $data = Response::jsonBody();
         $cognitoId = $data['id'] ?? null;
         $stato = trim($data['stato'] ?? '');
 
@@ -303,8 +306,9 @@ class EcommerceController
         }
 
         $db = Database::getInstance();
-        $stmt = $db->prepare("UPDATE ec_orders SET stato_interno = ?, updated_at = NOW() WHERE cognito_id = ?");
-        $stmt->execute([$stato, $cognitoId]);
+        $tid = TenantContext::id();
+        $stmt = $db->prepare("UPDATE ec_orders SET stato_interno = ?, updated_at = NOW() WHERE cognito_id = ? AND tenant_id = ?");
+        $stmt->execute([$stato, $cognitoId, $tid]);
 
         Response::success(['message' => 'Stato ordine aggiornato.']);
     }
@@ -362,12 +366,13 @@ class EcommerceController
         $db->beginTransaction();
 
         try {
+            $tid = TenantContext::id();
             $stmt = $db->prepare("
                 INSERT INTO ec_orders (
-                    cognito_id, nome_cliente, email, telefono, articoli, totale,
+                    tenant_id, cognito_id, nome_cliente, email, telefono, articoli, totale,
                     metodo_pagamento, stato_forms, data_ordine, order_summary, raw_data, created_at
                 ) VALUES (
-                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW()
+                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW()
                 )
                 ON DUPLICATE KEY UPDATE
                     nome_cliente = VALUES(nome_cliente),
@@ -387,6 +392,7 @@ class EcommerceController
 
                 $articoliStr = json_encode([$o['articoli']]);
                 $stmt->execute([
+                    $tid,
                     $o['id'],
                     $o['nomeCliente'],
                     $o['email'] ?? '',
@@ -544,7 +550,9 @@ class EcommerceController
         Auth::requireRead('ecommerce');
 
         $db = Database::getInstance();
-        $stmt = $db->query("SELECT * FROM ec_products ORDER BY nome ASC");
+        $tid = TenantContext::id();
+        $stmt = $db->prepare("SELECT * FROM ec_products WHERE tenant_id = :tid ORDER BY nome ASC");
+        $stmt->execute([':tid' => $tid]);
         $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         foreach ($products as &$p) {
@@ -563,7 +571,7 @@ class EcommerceController
     {
         Auth::requireWrite('ecommerce');
 
-        $data = json_decode(file_get_contents('php://input'), true);
+        $data = Response::jsonBody();
         if (!$data || empty($data['nome'])) {
             Response::error('Dati prodotto non validi o nome mancante.', 400);
         }
@@ -580,28 +588,30 @@ class EcommerceController
 
         $db = Database::getInstance();
 
+        $tid = TenantContext::id();
+
         if ($id) {
             $stmt = $db->prepare("
                 UPDATE ec_products 
                 SET nome = ?, prezzo = ?, categoria = ?, descrizione = ?, 
                     immagineBase64 = ?, immagineMimeType = ?, immagineUrl = ?, 
                     disponibile = ?, modificatoIl = NOW()
-                WHERE id = ?
+                WHERE id = ? AND tenant_id = ?
             ");
             $stmt->execute([
                 $nome, $prezzo, $categoria, $descrizione,
                 $immagineBase64, $immagineMimeType, $immagineUrl,
-                $disponibile, $id
+                $disponibile, $id, $tid
             ]);
             $insertedId = $id;
         } else {
             $stmt = $db->prepare("
                 INSERT INTO ec_products 
-                (nome, prezzo, categoria, descrizione, immagineBase64, immagineMimeType, immagineUrl, disponibile, importatoIl, modificatoIl)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+                (tenant_id, nome, prezzo, categoria, descrizione, immagineBase64, immagineMimeType, immagineUrl, disponibile, importatoIl, modificatoIl)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
             ");
             $stmt->execute([
-                $nome, $prezzo, $categoria, $descrizione,
+                $tid, $nome, $prezzo, $categoria, $descrizione,
                 $immagineBase64, $immagineMimeType, $immagineUrl, $disponibile
             ]);
             $insertedId = (int)$db->lastInsertId();
@@ -614,7 +624,7 @@ class EcommerceController
     {
         Auth::requireWrite('ecommerce');
 
-        $data = json_decode(file_get_contents('php://input'), true);
+        $data = Response::jsonBody();
         $id = !empty($data['id']) ? (int)$data['id'] : null;
 
         if (!$id) {
@@ -622,8 +632,9 @@ class EcommerceController
         }
 
         $db = Database::getInstance();
-        $stmt = $db->prepare("DELETE FROM ec_products WHERE id = ?");
-        $stmt->execute([$id]);
+        $tid = TenantContext::id();
+        $stmt = $db->prepare("DELETE FROM ec_products WHERE id = ? AND tenant_id = ?");
+        $stmt->execute([$id, $tid]);
 
         Response::success(['message' => 'Prodotto eliminato con successo.']);
     }
@@ -632,7 +643,7 @@ class EcommerceController
     {
         Auth::requireWrite('ecommerce');
 
-        $data = json_decode(file_get_contents('php://input'), true);
+        $data = Response::jsonBody();
         $prodotti = $data['prodotti'] ?? [];
 
         if (!is_array($prodotti) || empty($prodotti)) {
@@ -640,19 +651,21 @@ class EcommerceController
         }
 
         $db = Database::getInstance();
+        $tid = TenantContext::id();
         $db->beginTransaction();
 
         try {
             $stmt = $db->prepare("
                 INSERT INTO ec_products 
-                (nome, prezzo, categoria, descrizione, immagineBase64, immagineMimeType, immagineUrl, disponibile, importatoIl, modificatoIl)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+                (tenant_id, nome, prezzo, categoria, descrizione, immagineBase64, immagineMimeType, immagineUrl, disponibile, importatoIl, modificatoIl)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
             ");
 
             $count = 0;
             foreach ($prodotti as $p) {
                 if (empty($p['nome'])) continue;
                 $stmt->execute([
+                    $tid,
                     trim($p['nome'] ?? ''),
                     (float)($p['prezzo'] ?? 0),
                     trim($p['categoria'] ?? ''),
@@ -711,9 +724,7 @@ class EcommerceController
     {
         $id = (int)($_GET['id'] ?? 0);
         if (!$id) {
-            http_response_code(400);
-            echo "Missing ID";
-            exit;
+            Response::error('Missing product ID', 400);
         }
 
         $db = Database::getInstance();
@@ -722,9 +733,7 @@ class EcommerceController
         $product = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$product || empty($product['immagineBase64'])) {
-            http_response_code(404);
-            echo "Image not found";
-            exit;
+            Response::error('Image not found', 404);
         }
 
         $base64 = $product['immagineBase64'];
@@ -736,9 +745,7 @@ class EcommerceController
 
         $imageData = base64_decode($base64, true);
         if ($imageData === false || $imageData === '') {
-            http_response_code(500);
-            echo "Invalid image data";
-            exit;
+            Response::error('Invalid image data', 500);
         }
 
         $mimeType = $product['immagineMimeType'] ?: 'image/jpeg';

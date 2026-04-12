@@ -17,6 +17,8 @@ namespace FusionERP\Modules\WhatsApp;
 
 use FusionERP\Shared\Database;
 use FusionERP\Shared\WhatsAppClient;
+use FusionERP\Shared\Response;
+use FusionERP\Shared\TenantContext;
 
 class WhatsAppWebhookController
 {
@@ -42,9 +44,7 @@ class WhatsAppWebhookController
             exit;
         }
 
-        http_response_code(403);
-        echo json_encode(['error' => 'Forbidden — verify token mismatch']);
-        exit;
+        Response::error('Forbidden — verify token mismatch', 403);
     }
 
     // ─── POST ?module=whatsapp&action=receive ─────────────────────────────────
@@ -60,17 +60,13 @@ class WhatsAppWebhookController
 
         // 2. Validazione firma HMAC (X-Hub-Signature-256)
         if (!$this->validateSignature($rawBody)) {
-            http_response_code(403);
-            echo json_encode(['error' => 'Firma non valida']);
-            exit;
+            Response::error('Firma non valida', 403);
         }
 
         // 3. Decodifica payload
         $payload = json_decode($rawBody ?: '{}', true);
         if (json_last_error() !== JSON_ERROR_NONE || empty($payload)) {
-            http_response_code(400);
-            echo json_encode(['error' => 'Payload non valido']);
-            exit;
+            Response::error('Payload non valido', 400);
         }
 
         // 4. Cicla le entry del webhook
@@ -97,6 +93,8 @@ class WhatsAppWebhookController
         // 5. Meta si aspetta 200 OK in risposta rapida
         http_response_code(200);
         echo json_encode(['status' => 'ok']);
+        // NOTE: We keep raw echo here because Meta requires a fast 200 OK
+        // and Response::success() would add unnecessary overhead/headers.
     }
 
     // ─── PRIVATE HELPERS ──────────────────────────────────────────────────────
@@ -145,7 +143,9 @@ class WhatsAppWebhookController
         }
 
         // Tenta di collegare il numero a un atleta esistente
-        $athleteId = $this->resolveAthleteByPhone($fromPhone);
+        $resolveResult = $this->resolveAthleteByPhone($fromPhone);
+        $athleteId = $resolveResult['athlete_id'];
+        $tenantId = $resolveResult['tenant_id'];
 
         // Salva nel DB
         try {
@@ -153,9 +153,9 @@ class WhatsAppWebhookController
             $id = 'WA_' . bin2hex(random_bytes(6));
             $stmt = $db->prepare(
                 'INSERT IGNORE INTO whatsapp_messages
-                    (id, wa_message_id, from_phone, message_type, body, media_id, timestamp, status, athlete_id)
+                    (id, wa_message_id, from_phone, message_type, body, media_id, timestamp, status, athlete_id, tenant_id)
                  VALUES
-                    (:id, :wa_msg_id, :from, :type, :body, :media_id, :ts, "received", :athlete_id)'
+                    (:id, :wa_msg_id, :from, :type, :body, :media_id, :ts, "received", :athlete_id, :tenant_id)'
             );
             $stmt->execute([
                 ':id' => $id,
@@ -167,6 +167,7 @@ class WhatsAppWebhookController
                 ':media_id' => $mediaId,
                 ':ts' => $timestamp,
                 ':athlete_id' => $athleteId,
+                ':tenant_id' => $tenantId,
             ]);
         }
         catch (\Throwable $e) {
@@ -188,18 +189,21 @@ class WhatsAppWebhookController
     /**
      * Cerca un atleta per numero di telefono (phone o parent_phone).
      * Il numero in entrata da Meta è in formato internazionale senza +, es: 393471234567
+     * Returns both athlete_id and tenant_id for tenant-scoped message storage.
      */
-    private function resolveAthleteByPhone(string $fromPhone): ?string
+    private function resolveAthleteByPhone(string $fromPhone): array
     {
+        $default = ['athlete_id' => null, 'tenant_id' => TenantContext::id()];
+
         if (empty($fromPhone)) {
-            return null;
+            return $default;
         }
 
         try {
             $db = Database::getInstance();
             // Normalizza: rimuovi prefisso paese 39 e confronta con cifre finali
             $stmt = $db->prepare(
-                'SELECT id FROM athletes
+                'SELECT id, tenant_id FROM athletes
                   WHERE REGEXP_REPLACE(phone, "[^0-9]", "") LIKE :suffix
                      OR REGEXP_REPLACE(parent_phone, "[^0-9]", "") LIKE :suffix
                   LIMIT 1'
@@ -208,11 +212,14 @@ class WhatsAppWebhookController
             $suffix = '%' . substr($fromPhone, -9);
             $stmt->execute([':suffix' => $suffix]);
             $row = $stmt->fetch(\PDO::FETCH_ASSOC);
-            return $row ? $row['id'] : null;
+            if ($row) {
+                return ['athlete_id' => $row['id'], 'tenant_id' => $row['tenant_id']];
+            }
+            return $default;
         }
         catch (\Throwable $e) {
             error_log('[WhatsApp] resolveAthleteByPhone failed: ' . $e->getMessage());
-            return null;
+            return $default;
         }
     }
 
