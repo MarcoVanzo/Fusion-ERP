@@ -168,7 +168,7 @@ class TournamentsController
 
         try {
             // 1. Get tournament detail
-            $tournament = $this->repository->getTournamentById($id);
+            $tournament = $this->repository->getTournament($id);
             if (!$tournament) throw new \Exception('Tournament not found', 404);
 
             // 2. Get roster with document info
