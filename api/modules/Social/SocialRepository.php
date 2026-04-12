@@ -541,11 +541,17 @@ class SocialRepository
         ];
 
         try {
-            // Fetch daily
+            // Fetch daily insights (will fail if < 100 likes)
             $resDaily = $this->graphGet($urlDaily);
             $rawInsights = $resDaily['data'] ?? [];
-            
-            // Separate query for total lifetime fans to avoid Code 100
+        }
+        catch (\Throwable $e) {
+            $this->logDebug('getFbPageInsights error (likely <100 likes): ' . $e->getMessage());
+            $rawInsights = [];
+        }
+
+        try {
+            // Separate query for total lifetime fans (works even with < 100 likes)
             $urlPage = self::GRAPH_BASE_URL . self::GRAPH_API_VERSION . '/' . $pageId . '?'
                 . http_build_query([
                 'fields' => 'fan_count',
@@ -555,8 +561,7 @@ class SocialRepository
             $result['page_fans'] = (int)($resPage['fan_count'] ?? 0);
         }
         catch (\Throwable $e) {
-            $this->logDebug('getFbPageInsights error: ' . $e->getMessage());
-            return $result;
+            $this->logDebug('getPageFans error: ' . $e->getMessage());
         }
 
         foreach ($rawInsights as $metric) {
