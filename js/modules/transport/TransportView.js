@@ -16,7 +16,6 @@ const TransportView = {
                     </div>
                     <div style="display:flex; gap:12px; flex-wrap:wrap;">
                         <button class="btn-dash pink" id="nuovo-trasporto-btn" type="button"><i class="ph ph-van" style="font-size:18px;"></i> NUOVO TRASPORTO</button>
-                        ${isAdmin ? '<button class="btn-dash primary" id="new-event-btn" type="button"><i class="ph ph-plus-circle" style="font-size:20px;"></i> NUOVO EVENTO</button>' : ""}
                     </div>
                 </div>
 

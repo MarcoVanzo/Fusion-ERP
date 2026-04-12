@@ -150,6 +150,7 @@ const Tournaments = {
                     try {
                         UI.loading(true);
                         await TournamentsAPI.deleteExpense(id);
+                        Store.invalidate("tournaments");
                         UI.toast("Spesa eliminata", "success");
                         await this.openDetail(tournamentId);
                     } catch (err) {
@@ -176,6 +177,7 @@ const Tournaments = {
 
             try {
                 await TournamentsAPI.updateRoster(tournamentId, attendees);
+                Store.invalidate("tournaments");
                 UI.toast("Roster salvato", "success");
                 this.openDetail(tournamentId); // Refresh
             } catch (err) {
@@ -317,6 +319,7 @@ const Tournaments = {
             try {
                 UI.loading(true);
                 await TournamentsAPI.saveExpense(data);
+                Store.invalidate("tournaments");
                 UI.toast("Spesa salvata", "success");
                 modal.close();
                 this.openDetail(tournamentId);

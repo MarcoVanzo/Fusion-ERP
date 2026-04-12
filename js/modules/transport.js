@@ -325,7 +325,6 @@ const Transport = {
     },
 
     attachDashboardEvents: function() {
-        document.getElementById("new-event-btn")?.addEventListener("click", () => this.showNewEventModal(), { signal: this.abortController.signal });
         document.getElementById("nuovo-trasporto-btn")?.addEventListener("click", () => this.renderNewTransportWizard(), { signal: this.abortController.signal });
         
         // Event cards
