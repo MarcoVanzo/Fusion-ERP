@@ -135,7 +135,7 @@ const Tournaments = {
         this._currentData = null;
         this.loadList();
     },
-
+    attachDetailEvents: function(container, tournamentId) {
         container.querySelector("#btn-back-trm")?.addEventListener("click", () => this.closeDetail(), this.sig());
         container.querySelector("#btn-edit-trm")?.addEventListener("click", () => this.openTournamentModal(this._currentData.tournament), this.sig());
         
