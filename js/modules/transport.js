@@ -427,7 +427,11 @@ const Transport = {
             const vehicleOptions = vehicles.map(v => `<option value="${v.id}">${Utils.escapeHtml(v.name)} ${v.license_plate ? '(' + Utils.escapeHtml(v.license_plate) + ')' : ''}</option>`).join('');
 
             app.innerHTML = TransportView.renderNewTransport(gymOptions, teamOptions, driverOptions, vehicleOptions);
-            this.attachWizardEvents();
+            
+            // Initialize Google Maps API for autocomplete and route calculation
+            TransportMap.initGoogleMaps(() => {
+                this.attachWizardEvents();
+            });
         } catch (error) {
             UI.toast("Errore caricamento wizard", "error");
             this.renderDashboard();
@@ -531,6 +535,14 @@ const Transport = {
             return;
         }
 
+        // Validate athletes' addresses
+        const athletesWithNoAddr = this.selectedAthletes.filter(a => !a.residence_address || a.residence_address.trim().length < 3);
+        if (athletesWithNoAddr.length > 0) {
+            const names = athletesWithNoAddr.map(a => a.full_name).join(", ");
+            UI.toast(`Indirizzo mancante per: ${names}. Inseriscilo nella card atleta.`, "warning", 5000);
+            return;
+        }
+
         const btn = document.getElementById("nt-calc-btn");
         btn.disabled = true;
         btn.innerHTML = '<div class="spinner" style="width:20px;height:20px;"></div> Calcolo...';
@@ -589,7 +601,7 @@ const Transport = {
 
     attachResultEvents: function() {
         document.getElementById("nt-save-btn")?.addEventListener("click", () => this.handleSaveTransport(), { signal: this.abortController.signal });
-        document.getElementById("nt-ai-btn")?.addEventListener("click", () => {
+        document.getElementById("nt-ai-refine-btn")?.addEventListener("click", () => {
             this.handleAiAnalysis(null, {
                 team_id: this.selectedTeam,
                 destName: this.selectedGym.name,

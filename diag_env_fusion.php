@@ -41,17 +41,23 @@ foreach ($testDirs as $dir) {
 }
 echo "</ul>";
 
-// 5. Try to instantiate mPDF
-echo "<h3>mPDF Test:</h3>";
+// 5. Try to generate a REAL PDF
+echo "<h3>Real PDF Generation Test:</h3>";
 try {
     require_once __DIR__ . '/vendor/autoload.php';
     if (class_exists('\Mpdf\Mpdf')) {
-        echo "Class \Mpdf\Mpdf found.<br>";
         $mpdf = new \Mpdf\Mpdf(['tempDir' => __DIR__ . '/uploads/']); 
-        echo "<span style='color:green'>mPDF Instance created successfully!</span><br>";
-    } else {
-        echo "<span style='color:red'>Class \Mpdf\Mpdf NOT FOUND.</span><br>";
+        $mpdf->WriteHTML('<h1>Test PDF</h1><p>Generato correttamente il ' . date('Y-m-d H:i:s') . '</p>');
+        $outPath = __DIR__ . '/uploads/test_real.pdf';
+        $mpdf->Output($outPath, 'F');
+        if (file_exists($outPath)) {
+            echo "<span style='color:green'>Success! PDF file created at $outPath </span><br>";
+            unlink($outPath);
+        } else {
+            echo "<span style='color:red'>Failed to create PDF file.</span><br>";
+        }
     }
 } catch (Throwable $e) {
-    echo "<span style='color:red'>mPDF Error: " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine() . "</span><br>";
+    echo "<span style='color:red'>PDF Test Error: " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine() . "</span><br>";
 }
+
