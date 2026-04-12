@@ -18,8 +18,8 @@ class TournamentsPdfService
 
     public function generateRoomingList(array $tournament, array $roster, array $societaProfile): void
     {
-        // Setup mPDF
-        require_once dirname(__DIR__, 3) . '/vendor/autoload.php';
+        // Setup mPDF - Autoloader is already loaded by router.php, 
+        // but we ensure Mpdf class is available.
         
         $mpdf = new Mpdf([
             'margin_left' => 15,
@@ -30,10 +30,10 @@ class TournamentsPdfService
             'margin_footer' => 10
         ]);
 
-        $logoPath = dirname(__DIR__, 3) . '/uploads/images/Logo Colorato.png';
+        $logoPath = dirname(__DIR__, 4) . '/uploads/images/Logo Colorato.png';
         if (!file_exists($logoPath)) {
             // Fallback to website assets if not found in uploads
-            $logoPath = dirname(__DIR__, 3) . '/fusion-website/public/assets/logo-colorato.png';
+            $logoPath = dirname(__DIR__, 4) . '/fusion-website/public/assets/logo-colorato.png';
         }
 
         // Header content
