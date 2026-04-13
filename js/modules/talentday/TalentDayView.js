@@ -191,7 +191,6 @@ export class TalentDayView {
         if (view === 'fisici') {
             return [
                 ['Nome', 'nome'], ['Cognome', 'cognome'], ['Tappa', 'tappa'],
-                ['Data Nascita', 'data_nascita'],
                 ['Altezza', 'altezza'], ['Peso', 'peso'], ['Reach', 'reach_cm'],
                 ['CMJ', 'cmj'], ['Salto Rincorsa', 'salto_rincorsa']
             ];
@@ -199,6 +198,7 @@ export class TalentDayView {
         // anagrafica — Nome/Cognome first, Tappa included
         return [
             ['Nome', 'nome'], ['Cognome', 'cognome'], ['Tappa', 'tappa'],
+            ['Data Nascita', 'data_nascita'],
             ['Data Reg.', 'data_registrazione'], ['Ora', 'ora_registrazione'],
             ['Email', 'email'], ['Città/CAP', 'citta_cap'], ['Cellulare', 'cellulare'],
             ['Taglia', 'taglia_tshirt'], ['Club', 'club_tesseramento'],
@@ -261,7 +261,7 @@ export class TalentDayView {
                 const raw = e[key];
                 if (metricKeys[key]) return cellMetric(raw, metricKeys[key]);
                 if (boldKeys.has(key)) return cellBold(raw);
-                if (key === 'data_registrazione') return cell(fmtDate(raw));
+                if (key === 'data_registrazione' || key === 'data_nascita') return cell(fmtDate(raw));
                 if (key === 'ora_registrazione') return cell(fmtTime(raw));
                 return cell(raw);
             }).join('');
