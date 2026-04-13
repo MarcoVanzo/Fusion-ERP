@@ -34,7 +34,7 @@
 
         <!-- Tappe horizontal cards -->
         <div class="td-tappe-strip">
-            <div class="td-tappa-card" data-val="26 MAG 2026, Firenze - Savino Del Bene Volley" onclick="selectTappa(this)">
+            <div class="td-tappa-card" data-val="26 MAG 2026, Firenze - Savino Del Bene Volley" data-ig="https://www.instagram.com/sdbvolley_youth/" onclick="selectTappa(this)">
                 <div class="date">26 Maggio</div>
                 <div class="city">Firenze</div>
                 <div class="club">
@@ -42,7 +42,7 @@
                     <a href="https://www.instagram.com/sdbvolley_youth/" target="_blank" onclick="event.stopPropagation()"><i class="ph ph-instagram-logo"></i></a>
                 </div>
             </div>
-            <div class="td-tappa-card" data-val="28 MAG 2026, Roma - Civitavecchia" onclick="selectTappa(this)">
+            <div class="td-tappa-card" data-val="28 MAG 2026, Roma - Civitavecchia" data-ig="https://www.instagram.com/civitavecchiavolley/" onclick="selectTappa(this)">
                 <div class="date">28 Maggio</div>
                 <div class="city">Roma</div>
                 <div class="club">
@@ -50,7 +50,7 @@
                     <a href="https://www.instagram.com/civitavecchiavolley/" target="_blank" onclick="event.stopPropagation()"><i class="ph ph-instagram-logo"></i></a>
                 </div>
             </div>
-            <div class="td-tappa-card" data-val="3 GIU 2026, Venezia - Fusion Team Volley" onclick="selectTappa(this)">
+            <div class="td-tappa-card" data-val="3 GIU 2026, Venezia - Fusion Team Volley" data-ig="https://www.instagram.com/fusionteamvolley/" onclick="selectTappa(this)">
                 <div class="date">3 Giugno</div>
                 <div class="city">Venezia</div>
                 <div class="club">
@@ -58,7 +58,7 @@
                     <a href="https://www.instagram.com/fusionteamvolley/" target="_blank" onclick="event.stopPropagation()"><i class="ph ph-instagram-logo"></i></a>
                 </div>
             </div>
-            <div class="td-tappa-card" data-val="4 GIU 2026, Trieste - Azzurra Volley" onclick="selectTappa(this)">
+            <div class="td-tappa-card" data-val="4 GIU 2026, Trieste - Azzurra Volley" data-ig="https://www.instagram.com/azzurravolleytrieste/" onclick="selectTappa(this)">
                 <div class="date">4 Giugno</div>
                 <div class="city">Trieste</div>
                 <div class="club">
@@ -66,7 +66,7 @@
                     <a href="https://www.instagram.com/azzurravolleytrieste/" target="_blank" onclick="event.stopPropagation()"><i class="ph ph-instagram-logo"></i></a>
                 </div>
             </div>
-            <div class="td-tappa-card" data-val="10 GIU 2026, Torino - Volavalley" onclick="selectTappa(this)">
+            <div class="td-tappa-card" data-val="10 GIU 2026, Torino - Volavalley" data-ig="https://www.instagram.com/volavalley/" onclick="selectTappa(this)">
                 <div class="date">10 Giugno</div>
                 <div class="city">Torino</div>
                 <div class="club">
@@ -74,7 +74,7 @@
                     <a href="https://www.instagram.com/volavalley/" target="_blank" onclick="event.stopPropagation()"><i class="ph ph-instagram-logo"></i></a>
                 </div>
             </div>
-            <div class="td-tappa-card" data-val="11 GIU 2026, Lecce - Melendugno Volley" onclick="selectTappa(this)">
+            <div class="td-tappa-card" data-val="11 GIU 2026, Lecce - Melendugno Volley" data-ig="https://www.instagram.com/volley_melendugno/" onclick="selectTappa(this)">
                 <div class="date">11 Giugno</div>
                 <div class="city">Lecce</div>
                 <div class="club">
@@ -82,7 +82,7 @@
                     <a href="https://www.instagram.com/volley_melendugno/" target="_blank" onclick="event.stopPropagation()"><i class="ph ph-instagram-logo"></i></a>
                 </div>
             </div>
-            <div class="td-tappa-card" data-val="19 GIU 2026, Catania - We Kondor Catania" onclick="selectTappa(this)">
+            <div class="td-tappa-card" data-val="19 GIU 2026, Catania - We Kondor Catania" data-ig="https://www.instagram.com/kondorvolleycatania/" onclick="selectTappa(this)">
                 <div class="date">19 Giugno</div>
                 <div class="city">Catania</div>
                 <div class="club">
@@ -283,6 +283,8 @@
     // ── Pre-seleziona tappa ────────────────────────────────────────
     window.selectTappa = function(el) {
         const val = el.getAttribute('data-val');
+        const igUrl = el.getAttribute('data-ig');
+        
         if(!val) return;
         
         const sel = document.getElementById('tappa');
@@ -292,6 +294,15 @@
         sel.classList.remove('error');
         const err = document.querySelector(`[data-for="tappa"]`);
         if (err) err.style.display = 'none';
+
+        // Apri il popup di Instagram
+        if(igUrl) {
+            const popupWidth = 450;
+            const popupHeight = 600;
+            const left = (screen.width/2) - (popupWidth/2);
+            const top = (screen.height/2) - (popupHeight/2);
+            window.open(igUrl, 'InstagramPopup', `width=${popupWidth},height=${popupHeight},top=${top},left=${left},menubar=no,status=no,titlebar=no,toolbar=no`);
+        }
 
         // Scroll with offset
         const y = sel.getBoundingClientRect().top + window.pageYOffset - 100;
