@@ -578,7 +578,7 @@ class EcommerceController
         }
 
         $id = !empty($data['id']) ? (int)$data['id'] : null;
-        $nome = trim($data['nome'] ?? '');
+        $nome = trim((string)$data['nome']);
         $prezzo = (float)($data['prezzo'] ?? 0);
         $categoria = trim($data['categoria'] ?? '');
         $descrizione = trim($data['descrizione'] ?? '');
