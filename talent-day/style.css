@@ -164,7 +164,7 @@ body::before {
     text-align: left;
     min-width: 180px;
     transition: all 0.3s ease;
-    cursor: default;
+    cursor: pointer;
 }
 
 .td-tappa-card:hover {
@@ -195,6 +195,22 @@ body::before {
     color: rgba(255,255,255,0.7);
     margin-top: 2px;
     text-shadow: 0 1px 5px rgba(0,0,0,0.5); /* Shadow text */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.td-tappa-card .club a {
+    color: var(--white);
+    font-size: 16px;
+    text-decoration: none;
+    transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.td-tappa-card .club a:hover {
+    color: #E1306C; /* Instagram brand color */
+    transform: scale(1.1);
 }
 
 @keyframes floatIn {
