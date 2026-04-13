@@ -4,3 +4,6 @@ parameters:
         - api/
     bootstrapFiles:
         - vendor/autoload.php
+    ignoreErrors:
+        - '#on an unknown class PHPMailer\\\\PHPMailer\\\\PHPMailer#'
+        - '#Access to property .* on an unknown class PHPMailer\\\\PHPMailer\\\\PHPMailer#'
