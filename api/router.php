@@ -71,6 +71,14 @@ if (!in_array($_SERVER['REQUEST_METHOD'], ['POST', 'GET', 'PUT', 'DELETE', 'OPTI
     Response::error('Metodo non consentito', 405);
 }
 
+// Parse routing params — ?module=auth&action=login
+$module = filter_input(INPUT_GET, 'module', FILTER_DEFAULT) ?? '';
+$action = filter_input(INPUT_GET, 'action', FILTER_DEFAULT) ?? '';
+
+if (empty($module) || empty($action)) {
+    Response::error('Parametri di routing mancanti', 400);
+}
+
 // Security: Require X-Requested-With header for all state-changing requests (CSRF protection)
 // Exception: public endpoints that are called from standalone forms (e.g. Talent Day registration)
 $publicEndpoints = [
@@ -85,14 +93,6 @@ if (in_array($_SERVER['REQUEST_METHOD'], ['POST', 'PUT', 'DELETE']) && !$isPubli
     if (strtolower($requestedWith) !== 'xmlhttprequest') {
         Response::error('Richiesta non autorizzata (Missing Security Header)', 403);
     }
-}
-
-// Parse routing params — ?module=auth&action=login
-$module = filter_input(INPUT_GET, 'module', FILTER_DEFAULT) ?? '';
-$action = filter_input(INPUT_GET, 'action', FILTER_DEFAULT) ?? '';
-
-if (empty($module) || empty($action)) {
-    Response::error('Parametri di routing mancanti', 400);
 }
 
 // ─── RATE LIMITING ────────────────────────────────────────────────────────────
