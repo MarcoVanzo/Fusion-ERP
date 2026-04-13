@@ -21,11 +21,26 @@
             { "title": "Elenco Staff", "path": "staff", "icon": "identification-badge", "isMobileVisible": false, "roles": ["allenatore", "manager", "admin"] },
             { "title": "Documenti Staff", "path": "staff-documents", "icon": "file-text", "isMobileVisible": false, "roles": ["allenatore", "manager", "admin"] },
             { "title": "Risultati", "path": "results-matches", "icon": "volleyball", "isMobileVisible": false, "roles": ["atleta", "allenatore", "manager", "admin"] },
-            { "title": "Classifiche", "path": "results-standings", "icon": "list-numbers", "isMobileVisible": false, "roles": ["atleta", "allenatore", "manager", "admin"] },
-            { "title": "Database Scouting", "path": "scouting-database", "icon": "database", "isMobileVisible": false, "implemented": true, "roles": ["allenatore", "manager", "admin"] },
-            { "title": "Valutazioni Scouting", "path": "scouting-evaluations", "icon": "star", "isMobileVisible": false, "implemented": false, "roles": ["allenatore", "admin"] },
-            { "title": "Watchlist Scouting", "path": "scouting-watchlist", "icon": "eye", "isMobileVisible": false, "implemented": false, "roles": ["allenatore", "admin"] },
-            { "title": "Report Scouting", "path": "scouting-reports", "icon": "note-pencil", "isMobileVisible": false, "implemented": false, "roles": ["allenatore", "admin"] }
+            { "title": "Classifiche", "path": "results-standings", "icon": "list-numbers", "isMobileVisible": false, "roles": ["atleta", "allenatore", "manager", "admin"] }
+        ]
+    },
+    {
+        "id": "area-reclutamento",
+        "title": "Area Reclutamento",
+        "path": "scouting-database",
+        "icon": "magnifying-glass",
+        "isMobileVisible": true,
+        "roles": [
+            "allenatore",
+            "manager",
+            "admin"
+        ],
+        "children": [
+            { "title": "Scouting", "path": "scouting-database", "icon": "database", "isMobileVisible": false, "implemented": true, "roles": ["allenatore", "manager", "admin"] },
+            { "title": "Open Day", "path": "scouting-openday", "icon": "calendar-plus", "isMobileVisible": false, "implemented": false, "roles": ["allenatore", "manager", "admin"] },
+            { "title": "Talent Day", "path": "scouting-talentday", "icon": "star", "isMobileVisible": false, "implemented": true, "roles": ["allenatore", "manager", "admin"] },
+            { "title": "Atlete Seguite", "path": "scouting-atlete-seguite", "icon": "users", "isMobileVisible": false, "implemented": false, "roles": ["allenatore", "manager", "admin"] },
+            { "title": "Valutazioni", "path": "scouting-evaluations", "icon": "file-text", "isMobileVisible": false, "implemented": false, "roles": ["allenatore", "admin"] }
         ]
     },
     {

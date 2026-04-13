@@ -69,3 +69,7 @@ css/style_v2.backup.css
 .phpunit.cache/
 .credentials
 .env.prod
+report.json
+report2.json
+*.bundle
+PUSH_NOW.command

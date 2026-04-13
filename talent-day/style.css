@@ -1,0 +1,563 @@
+/* ═══════════════════════════════════════════════════════════════════════
+ *  TALENT DAY 2026 — Savino Del Bene Volley
+ *  Design System: Navy (#1a2744) + Red (#d4213d) + White + Gold
+ *  Inspired by official SDB branding
+ * ═══════════════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+    --navy: #1a2744;
+    --navy-deep: #0d1829;
+    --navy-light: #243454;
+    --red: #d4213d;
+    --red-dark: #b01a32;
+    --red-light: #e8445c;
+    --gold: #C8A959;
+    --white: #ffffff;
+    --text: #e0e4ea;
+    --text-muted: #8a92a6;
+    --bg: #0d1829;
+    --card: rgba(20, 30, 48, 0.85); /* Leggermente trasparente per mostrare le foto sotto */
+    --input-bg: rgba(26, 39, 68, 0.9);
+    --border: rgba(200, 169, 89, 0.12);
+    --border-focus: var(--gold);
+    --radius: 16px;
+    --radius-sm: 10px;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+    font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+    position: relative;
+    background-color: var(--navy-deep);
+}
+
+/* Sfondo con foto scorrevoli (Slideshow esteso a tutta la pagina) */
+.td-background-slides {
+    position: fixed; /* Fissato al viewport */
+    inset: 0;
+    z-index: -2;
+}
+
+.td-bg-slide {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    opacity: 0;
+    transition: opacity 1.5s ease-in-out;
+}
+
+.td-bg-slide.active {
+    opacity: 1; /* Piena visibilità delle foto */
+}
+
+/* Gradient overlay molto più leggero per mostrare le foto in tutto il loro splendore */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(
+        180deg,
+        rgba(13, 24, 41, 0.15) 0%,   /* Molto più trasparente in alto */
+        rgba(13, 24, 41, 0.25) 40%,  /* Trasparenza media al centro */
+        rgba(13, 24, 41, 0.70) 100%  /* Più scuro in basso per coprire bene il form */
+    );
+    z-index: -1;
+    pointer-events: none;
+}
+
+
+/* ── HERO ──────────────────────────────────────────────────────────── */
+.td-hero {
+    position: relative;
+    min-height: 520px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    overflow: hidden;
+}
+
+
+.td-hero-content {
+    position: relative;
+    z-index: 2;
+    padding: 60px 24px 48px;
+    width: 100%; /* FIX CRITICO: Forza il contenitore a non espandersi oltre lo schermo a causa delle card tappe */
+}
+
+.td-hero-logo {
+    height: 160px; /* Incrementato drasticamente il logo (prima 120px) */
+    margin-bottom: 24px;
+    filter: drop-shadow(0 4px 30px rgba(0,0,0,0.8)); /* Ombra più potente per risaltare */
+    animation: floatIn 0.8s ease both;
+}
+
+.td-hero h1 {
+    font-size: clamp(32px, 6vw, 56px);
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--white);
+    text-shadow: 0 4px 60px rgba(0,0,0,1), 0 2px 20px rgba(0,0,0,0.8), 0 1px 5px rgba(0,0,0,1); /* Triple shadow ultra strong per far esplodere il testo su foto chiare */
+    animation: floatIn 0.8s ease 0.15s both;
+}
+
+.td-hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--red);
+    color: var(--white);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 8px 24px;
+    border-radius: 30px;
+    margin-top: 16px;
+    animation: floatIn 0.8s ease 0.3s both;
+    box-shadow: 0 4px 20px rgba(212, 33, 61, 0.4);
+}
+
+.td-hero-subtitle {
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.95); /* Leggermente più bianco */
+    margin: 20px auto 0 auto;
+    display: block;
+    width: 100%; /* Obbligatorio nei contesti flex center per abilitare il text-wrapping su mobile */
+    max-width: 1000px;
+    font-weight: 500; /* Leggermente più spesso */
+    text-align: center;
+    line-height: 1.7;
+    animation: floatIn 0.8s ease 0.45s both;
+    text-shadow: 0 2px 30px rgba(0,0,0,1), 0 1px 8px rgba(0,0,0,1); /* Shadow pesantissima per contrasto estremo */
+}
+
+/* Tappa cards strip */
+.td-tappe-strip {
+    display: flex;
+    gap: 12px;
+    padding: 24px 24px 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch; /* Momentum scroll fluid su iOS */
+    scroll-snap-type: x mandatory; /* UX Fluida: aggancio automatico schede */
+    margin-top: 16px;
+    animation: floatIn 0.8s ease 0.6s both;
+    /* FIX: Centratura esatta per desktop (mantiene possibilità di scroll) */
+    width: max-content;
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.td-tappe-strip::-webkit-scrollbar { display: none; }
+
+.td-tappa-card {
+    flex-shrink: 0;
+    scroll-snap-align: center; /* Allineamento al centro per mobile swipe */
+    background: rgba(20, 30, 48, 0.9); /* Molto più visibile, quasi solido */
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(200, 169, 89, 0.3); /* Bordo dorato evidente */
+    border-radius: 12px;
+    padding: 14px 22px;
+    text-align: left;
+    min-width: 200px; /* Leggermente più larghe */
+    transition: all 0.3s ease;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.6); /* Ombra pronunciata */
+    position: relative;
+    overflow: hidden;
+}
+
+.td-tappa-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--red); /* Linea rossa in alto per aggancio visivo */
+    transition: background 0.3s ease;
+}
+
+.td-tappa-card:hover {
+    background: rgba(26, 39, 68, 0.95);
+    transform: translateY(-4px);
+    border-color: var(--gold);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.8);
+}
+
+.td-tappa-card:hover::before {
+    background: var(--gold);
+}
+
+.td-tappa-card .date {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--gold);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    text-shadow: 0 1px 5px rgba(0,0,0,0.5); /* Shadow text */
+}
+
+.td-tappa-card .city {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--white);
+    margin-top: 2px;
+    text-shadow: 0 1px 5px rgba(0,0,0,0.5); /* Shadow text */
+}
+
+.td-tappa-card .club {
+    font-size: 11px;
+    color: rgba(255,255,255,0.7);
+    margin-top: 2px;
+    text-shadow: 0 1px 5px rgba(0,0,0,0.5); /* Shadow text */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.td-tappa-card .club a {
+    color: var(--white);
+    font-size: 16px;
+    text-decoration: none;
+    transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.td-tappa-card .club a:hover {
+    color: #E1306C; /* Instagram brand color */
+    transform: scale(1.1);
+}
+
+@keyframes floatIn {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+
+/* ── MAIN CONTAINER ────────────────────────────────────────────────── */
+.td-container {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 20px 20px 80px; /* Ridotto il padding top per attaccamento all'hero */
+}
+
+/* ── FORM CARD ─────────────────────────────────────────────────────── */
+.td-form-card {
+    background: var(--card);
+    backdrop-filter: blur(16px); /* Effetto vetro marcato */
+    -webkit-backdrop-filter: blur(16px);
+    border-radius: var(--radius);
+    border: 1px solid rgba(255, 255, 255, 0.05); /* Bordo molto sottile per il glass */
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(200, 169, 89, 0.1);
+    overflow: hidden;
+    position: relative;
+    z-index: 2; /* Sopra lo sfondo */
+}
+
+/* Subtle top accent line */
+.td-form-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px; /* Leggermente più spessa */
+    background: linear-gradient(90deg, var(--red), var(--gold), var(--red));
+}
+
+/* ── SECTION ───────────────────────────────────────────────────────── */
+.td-section {
+    padding: 32px 32px 28px;
+    border-bottom: 1px solid rgba(255,255,255,0.05); /* Bordo divisorio più morbido */
+}
+
+.td-section:last-of-type { border-bottom: none; }
+
+.td-section-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--gold);
+    margin-bottom: 22px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(200, 169, 89, 0.15); /* Più evidente */
+}
+
+.td-section-title i { font-size: 20px; }
+
+/* ── GRID ──────────────────────────────────────────────────────────── */
+.td-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+}
+
+.td-grid.single { grid-template-columns: 1fr; }
+
+@media (max-width: 560px) {
+    .td-grid { grid-template-columns: 1fr; }
+    
+    /* Ridotta altezza hero per mostrare subito il form in prima pagina */
+    .td-hero { min-height: 380px; }
+    .td-hero-logo { height: 100px; margin-bottom: 12px; } /* Ingrandito logo mobile da 75 a 100px */
+    .td-hero h1 { font-size: 32px; letter-spacing: 0.04em; }
+    
+    .td-hero-subtitle {
+        font-size: 14px;
+        padding: 0 16px;
+        line-height: 1.5;
+        margin-top: 14px; /* Avvicinato maggiormente al titolo */
+    }
+
+    .td-tappe-strip { 
+        padding: 16px 0 0; /* Padding rimosso ai lati per swipe infinito visivo */
+        scroll-padding: 16px; 
+        gap: 8px; /* Tappe più ravvicinate su mobile */
+    }
+    .td-tappa-card {
+        min-width: 210px; /* Allungata proporzionalmente al click */
+    }
+    
+    /* Espansione della card per un look nativo a tutto schermo */
+    .td-container { padding: 12px 10px 60px; max-width: 100%; }
+    .td-section { padding: 22px 16px 20px; }
+    
+    .td-submit-btn { padding: 16px 20px; font-size: 14px; }
+}
+
+/* ── FIELDS ────────────────────────────────────────────────────────── */
+.td-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.td-field.full-width { grid-column: 1 / -1; }
+
+.td-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--white); /* Le label le facciamo bianche per contrastare col dark */
+}
+
+.td-label .required { color: var(--gold); margin-left: 2px; } /* Asterisco dorato instead of red */
+
+.td-input,
+.td-select {
+    background: var(--input-bg);
+    border: 1px solid rgba(255,255,255,0.15); /* Bordi input un po' più definiti */
+    border-radius: var(--radius-sm);
+    padding: 13px 16px;
+    font-size: 16px; /* Essenziale a 16px per evitare lo zoom automatico su iPhone (iOS Safari UX Fix) */
+    font-family: inherit;
+    color: var(--white);
+    transition: all 0.3s ease;
+    width: 100%;
+    outline: none;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); /* Inner shadow for depth */
+}
+
+.td-input::placeholder { color: var(--text-muted); opacity: 0.7; }
+
+.td-input:focus, .td-select:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(200, 169, 89, 0.15), inset 0 2px 4px rgba(0,0,0,0.2);
+    background: rgba(26, 39, 68, 0.95);
+}
+
+.td-input.error, .td-select.error {
+    border-color: var(--red);
+    box-shadow: 0 0 0 3px rgba(212, 33, 61, 0.15);
+}
+
+.td-select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); /* Arrow color to white */
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+}
+
+.td-select option { background: var(--navy); color: var(--white); }
+
+/* ── CHECKBOX ──────────────────────────────────────────────────────── */
+.td-checkbox-wrap {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px 0 0;
+}
+
+.td-checkbox-wrap input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    margin-top: 2px;
+    accent-color: var(--gold); /* Checkbox color dorato */
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.td-checkbox-wrap label {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    cursor: pointer;
+}
+
+.td-checkbox-wrap label a { color: var(--gold); text-decoration: underline; }
+
+/* ── ERRORS ────────────────────────────────────────────────────────── */
+.td-field-error {
+    font-size: 11px;
+    color: #ff6b81; /* Rosso un po' più brillante per errori */
+    display: none;
+    margin-top: 4px;
+}
+
+.td-form-error {
+    background: rgba(212, 33, 61, 0.15);
+    border: 1px solid rgba(212, 33, 61, 0.4);
+    border-radius: var(--radius-sm);
+    padding: 14px 18px;
+    margin: 0 32px 20px;
+    font-size: 13px;
+    color: #ff6b81;
+    display: none;
+}
+
+/* ── SUBMIT ────────────────────────────────────────────────────────── */
+.td-submit-wrap { padding: 8px 32px 32px; }
+
+.td-submit-btn {
+    width: 100%;
+    padding: 18px 24px;
+    background: linear-gradient(135deg, var(--red), var(--red-dark));
+    color: var(--white);
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(212, 33, 61, 0.4);
+}
+
+.td-submit-btn:hover {
+    background: linear-gradient(135deg, var(--red-light), var(--red));
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(212, 33, 61, 0.5);
+}
+
+.td-submit-btn:active { transform: translateY(0); }
+.td-submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+.td-submit-btn .spinner {
+    display: none;
+    width: 22px;
+    height: 22px;
+    border: 3px solid rgba(255,255,255,0.2);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    margin: 0 auto;
+}
+
+.td-submit-btn.loading .btn-text { display: none; }
+.td-submit-btn.loading .spinner { display: inline-block; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── SUCCESS ───────────────────────────────────────────────────────── */
+.td-success {
+    display: none;
+    text-align: center;
+    padding: 72px 32px;
+    animation: fadeInUp 0.6s ease;
+}
+
+.td-success.visible { display: block; }
+
+.td-success-icon {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--red), var(--red-dark));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 28px;
+    animation: scaleIn 0.4s ease 0.2s both;
+    box-shadow: 0 8px 32px rgba(212, 33, 61, 0.3);
+}
+
+.td-success-icon i { font-size: 40px; color: var(--white); }
+
+.td-success h2 {
+    font-size: 28px;
+    font-weight: 900;
+    color: var(--white);
+    margin-bottom: 14px;
+}
+
+.td-success p {
+    font-size: 15px;
+    color: var(--text-muted);
+    max-width: 440px;
+    margin: 0 auto;
+    line-height: 1.8;
+}
+
+.td-success p strong { color: var(--gold); }
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+    from { transform: scale(0); }
+    to { transform: scale(1); }
+}
+
+/* ── FOOTER ────────────────────────────────────────────────────────── */
+.td-footer {
+    position: relative; /* z-index is automatic with pos rel to go over background */
+    z-index: 2;
+    text-align: center;
+    padding: 60px 40px 40px; /* Padding extra per distanziare dal form */
+    font-size: 12px;
+    color: #ffffff; /* Testo bianco */
+    line-height: 1.8;
+    background: linear-gradient(0deg, rgba(13,24,41,0.95) 0%, rgba(13,24,41,0) 100%);
+}
+
+.td-footer a { color: var(--gold); text-decoration: none; font-weight: 600;}
+.td-footer a:hover { text-decoration: underline; }

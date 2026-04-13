@@ -1,14 +1,12 @@
 <?php
 require_once __DIR__ . '/vendor/autoload.php';
+require_once __DIR__ . '/api/Shared/Database.php';
+
 $dotenv = Dotenv\Dotenv::createMutable(__DIR__);
 $dotenv->safeLoad();
 
-require_once __DIR__ . '/api/Shared/Database.php';
+$db = FusionERP\Shared\Database::getInstance();
+$stmt = $db->query("SELECT id, nome, cognome, email, data_registrazione FROM talent_day_entries ORDER BY id DESC LIMIT 5");
+$rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-try {
-    $db = \FusionERP\Shared\Database::getInstance();
-    $stmt = $db->query("SELECT * FROM societa_sponsors LIMIT 1");
-    echo "SUCCESS: " . json_encode($stmt->fetchAll()) . "\n";
-} catch (\Exception $e) {
-    echo "ERROR: " . $e->getMessage() . "\n";
-}
+print_r($rows);

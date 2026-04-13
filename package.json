@@ -7,7 +7,11 @@
     "preview": "vite preview",
     "lint:css": "stylelint \"css/**/*.css\"",
     "lint:js": "eslint js/",
-    "css:build": "python3 scripts/dev/css_build.py"
+    "css:build": "python3 scripts/dev/css_build.py",
+    "deploy": "python3 deploy.py",
+    "deploy:fast": "python3 deploy.py --skip-checks",
+    "deploy:dry": "python3 deploy.py --dry-run --skip-checks",
+    "test:e2e": "node tests/e2e/login.test.js"
   },
   "dependencies": {
     "acorn": "^8.16.0",

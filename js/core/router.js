@@ -110,6 +110,7 @@ const Router = (() => {
         { path: 'squadre-presenze',     file: 'js/modules/squadre.js',             permission: 'read', module: 'Squadre', type: 'module' },
 
         { path: 'scouting-database',    file: 'js/modules/scouting/Scouting.js',            permission: 'read', module: 'Scouting', type: 'module' },
+        { path: 'scouting-talentday',   file: 'js/modules/talentday/TalentDay.js',          permission: 'read', module: 'TalentDay', type: 'module' },
     ];
 
     // Build lookup maps from the single registry (computed once at startup)
