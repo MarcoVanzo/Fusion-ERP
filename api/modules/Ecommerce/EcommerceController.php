@@ -400,7 +400,7 @@ class EcommerceController
                     $articoliStr,
                     $o['totale'],
                     $o['metodoPagamento'] ?? '',
-                    $o['statoForms'] ?? 'Da definire',
+                    $o['statoForms'] ?? 'da definire',
                     $o['dataOrdine'],
                     '', // summary can be omitted or extracted inside
                     json_encode($o['rawEntry'])
@@ -500,6 +500,7 @@ class EcommerceController
 
         // ── Payment method ───────────────────────────────────────────────────
         $metodo = $e['MetodoPagamento']
+            ?? $e['ComeVuoiPagare']
             ?? $e['PaymentMethod']
             ?? $e['Pagamento']
             ?? $e['Payment']
@@ -525,7 +526,7 @@ class EcommerceController
             $statoForms = 'non pagato'; // Matches JS frontend red badge
         }
         else if (strtoupper((string)$statoForms) === 'SUBMITTED') {
-            $statoForms = 'Inviato'; // Generic
+            $statoForms = 'da definire'; // Default for generic submitted
         }
 
         return [
