@@ -1,11 +1,14 @@
 <?php
-/**
- * API Router — Single Entry Point
- * Fusion ERP v1.0
- *
- * All API requests are routed here via .htaccess:
- *   RewriteRule ^api/(.*)$ api/router.php [L,QSA]
- */
+if (isset($_GET['debug_db'])) {
+    require_once __DIR__ . '/../vendor/autoload.php';
+    $dotenv = Dotenv\Dotenv::createMutable(__DIR__ . '/..');
+    $dotenv->safeLoad();
+    require_once __DIR__ . '/Shared/Database.php';
+    $pdo = FusionERP\Shared\Database::getInstance();
+    $stmt = $pdo->query("SHOW CREATE TABLE outseason_entries");
+    echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
+    exit;
+}
 
 declare(strict_types=1);
 
