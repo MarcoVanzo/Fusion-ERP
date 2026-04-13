@@ -150,6 +150,8 @@ body::before {
     padding: 24px 24px 0;
     overflow-x: auto;
     scrollbar-width: none;
+    -webkit-overflow-scrolling: touch; /* Momentum scroll fluid su iOS */
+    scroll-snap-type: x mandatory; /* UX Fluida: aggancio automatico schede */
     margin-top: 16px;
     animation: floatIn 0.8s ease 0.6s both;
 }
@@ -158,6 +160,7 @@ body::before {
 
 .td-tappa-card {
     flex-shrink: 0;
+    scroll-snap-align: center; /* Allineamento al centro per mobile swipe */
     background: rgba(20, 30, 48, 0.9); /* Molto più visibile, quasi solido */
     backdrop-filter: blur(12px);
     border: 1px solid rgba(200, 169, 89, 0.3); /* Bordo dorato evidente */
@@ -306,10 +309,33 @@ body::before {
 
 @media (max-width: 560px) {
     .td-grid { grid-template-columns: 1fr; }
-    .td-section { padding: 22px 20px 20px; }
-    .td-hero { min-height: 420px; }
-    .td-hero-logo { height: 80px; }
-    .td-tappe-strip { padding: 16px 16px 0; }
+    
+    /* Ridotta altezza hero per mostrare subito il form in prima pagina */
+    .td-hero { min-height: 380px; }
+    .td-hero-logo { height: 75px; margin-bottom: 12px; }
+    .td-hero h1 { font-size: 32px; letter-spacing: 0.04em; }
+    
+    .td-hero-subtitle {
+        font-size: 14px;
+        padding: 0 16px;
+        line-height: 1.5;
+        margin-top: 14px; /* Avvicinato maggiormente al titolo */
+    }
+
+    .td-tappe-strip { 
+        padding: 16px 0 0; /* Padding rimosso ai lati per swipe infinito visivo */
+        scroll-padding: 16px; 
+        gap: 8px; /* Tappe più ravvicinate su mobile */
+    }
+    .td-tappa-card {
+        min-width: 210px; /* Allungata proporzionalmente al click */
+    }
+    
+    /* Espansione della card per un look nativo a tutto schermo */
+    .td-container { padding: 12px 10px 60px; max-width: 100%; }
+    .td-section { padding: 22px 16px 20px; }
+    
+    .td-submit-btn { padding: 16px 20px; font-size: 14px; }
 }
 
 /* ── FIELDS ────────────────────────────────────────────────────────── */
@@ -337,7 +363,7 @@ body::before {
     border: 1px solid rgba(255,255,255,0.15); /* Bordi input un po' più definiti */
     border-radius: var(--radius-sm);
     padding: 13px 16px;
-    font-size: 14px;
+    font-size: 16px; /* Essenziale a 16px per evitare lo zoom automatico su iPhone (iOS Safari UX Fix) */
     font-family: inherit;
     color: var(--white);
     transition: all 0.3s ease;
