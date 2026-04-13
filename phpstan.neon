@@ -4,6 +4,7 @@ parameters:
         - api/
     bootstrapFiles:
         - vendor/autoload.php
+    reportUnmatchedIgnoredErrors: false
     ignoreErrors:
         - '#on an unknown class PHPMailer\\\\PHPMailer\\\\PHPMailer#'
         - '#Access to property .* on an unknown class PHPMailer\\\\PHPMailer\\\\PHPMailer#'
