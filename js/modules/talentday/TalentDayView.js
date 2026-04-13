@@ -191,7 +191,7 @@ export class TalentDayView {
         if (view === 'fisici') {
             return [
                 ['Nome', 'nome'], ['Cognome', 'cognome'], ['Tappa', 'tappa'],
-                ['Data Nascita', 'data_nascita'], ['Club', 'club_tesseramento'],
+                ['Data Nascita', 'data_nascita'],
                 ['Altezza', 'altezza'], ['Peso', 'peso'], ['Reach', 'reach_cm'],
                 ['CMJ', 'cmj'], ['Salto Rincorsa', 'salto_rincorsa']
             ];
