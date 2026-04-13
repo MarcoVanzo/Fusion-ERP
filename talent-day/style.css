@@ -94,6 +94,7 @@ body::before {
     position: relative;
     z-index: 2;
     padding: 60px 24px 48px;
+    width: 100%; /* FIX CRITICO: Forza il contenitore a non espandersi oltre lo schermo a causa delle card tappe */
 }
 
 .td-hero-logo {
