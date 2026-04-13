@@ -11,19 +11,19 @@
 </head>
 <body>
 
+<!-- Background Slideshow esteso a tutta la pagina -->
+<div class="td-background-slides">
+    <div class="td-bg-slide active" style="background-image:url('assets/hero-1.jpg')"></div>
+    <div class="td-bg-slide" style="background-image:url('assets/hero-2.jpg')"></div>
+    <div class="td-bg-slide" style="background-image:url('assets/hero-3.jpg')"></div>
+    <div class="td-bg-slide" style="background-image:url('assets/hero-4.jpg')"></div>
+    <div class="td-bg-slide" style="background-image:url('assets/hero-5.jpg')"></div>
+</div>
+
 <!-- ═══════════════════════════════════════════════════════════════════
-     HERO — Full-screen with photo slideshow
+     HERO
      ═══════════════════════════════════════════════════════════════════ -->
 <header class="td-hero">
-    <!-- Slideshow Background -->
-    <div class="td-hero-slides">
-        <div class="td-hero-slide active" style="background-image:url('assets/hero-1.jpg')"></div>
-        <div class="td-hero-slide" style="background-image:url('assets/hero-2.jpg')"></div>
-        <div class="td-hero-slide" style="background-image:url('assets/hero-3.jpg')"></div>
-        <div class="td-hero-slide" style="background-image:url('assets/hero-4.jpg')"></div>
-        <div class="td-hero-slide" style="background-image:url('assets/hero-5.jpg')"></div>
-    </div>
-
     <div class="td-hero-content">
         <img src="assets/logo-official.png" alt="Savino Del Bene Volley" class="td-hero-logo">
         <h1>Talent Day</h1>
@@ -71,29 +71,12 @@
             </div>
         </div>
     </div>
-
-    <div class="td-scroll-cta">
-        Iscriviti ora
-        <div class="arrow"><i class="ph ph-caret-down"></i></div>
-    </div>
 </header>
-
-<!-- ═══════════════════════════════════════════════════════════════════
-     PHOTO GALLERY STRIP
-     ═══════════════════════════════════════════════════════════════════ -->
-<div class="td-container" style="padding-top:40px">
-    <div class="td-gallery">
-        <img src="assets/hero-1.jpg" alt="SDB Match 1" loading="lazy">
-        <img src="assets/hero-3.jpg" alt="SDB Match 2" loading="lazy">
-        <img src="assets/hero-4.jpg" alt="SDB Match 3" loading="lazy">
-        <img src="assets/hero-5.jpg" alt="SDB Match 4" loading="lazy">
-    </div>
-</div>
 
 <!-- ═══════════════════════════════════════════════════════════════════
      REGISTRATION FORM
      ═══════════════════════════════════════════════════════════════════ -->
-<main class="td-container" style="padding-top:0">
+<main class="td-container">
     <form id="td-form" class="td-form-card" novalidate>
 
         <div class="td-form-error" id="td-global-error"></div>
@@ -251,8 +234,8 @@
      FOOTER
      ═══════════════════════════════════════════════════════════════════ -->
 <footer class="td-footer">
-    <img src="assets/logo-official.png" alt="SDB" style="height:48px;margin-bottom:12px;opacity:0.6"><br>
-    Pallavolo Scandicci Savino Del Bene ssdrl — Via Benozzo Gozzoli, 5/6 50018 Scandicci (FI)<br>
+    Pallavolo Scandicci Savino Del Bene ssdrl<br>
+    Via Benozzo Gozzoli, 5/6 50018 Scandicci (FI)<br>
     Tel. 055 721503 — <a href="mailto:info@savinodelbenevolley.it">info@savinodelbenevolley.it</a><br>
     <a href="https://savinodelbenevolley.it/informativa-privacy/" target="_blank">Informativa Privacy</a> ·
     <a href="https://savinodelbenevolley.it/informativa-cookie/" target="_blank">Cookie Policy</a>
@@ -265,15 +248,15 @@
 (function () {
     'use strict';
 
-    // ── Hero Slideshow ─────────────────────────────────────────────
-    const slides = document.querySelectorAll('.td-hero-slide');
-    let current = 0;
-    if (slides.length > 1) {
+    // ── Full-Page Background Slideshow ──────────────────────────────
+    const bgSlides = document.querySelectorAll('.td-bg-slide');
+    let currentSlide = 0;
+    if (bgSlides.length > 1) {
         setInterval(() => {
-            slides[current].classList.remove('active');
-            current = (current + 1) % slides.length;
-            slides[current].classList.add('active');
-        }, 4000);
+            bgSlides[currentSlide].classList.remove('active');
+            currentSlide = (currentSlide + 1) % bgSlides.length;
+            bgSlides[currentSlide].classList.add('active');
+        }, 5000); // 5 secondi per ogni foto per un effetto più elegante
     }
 
     // ── Form Logic ─────────────────────────────────────────────────
