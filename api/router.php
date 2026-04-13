@@ -143,6 +143,7 @@ try {
             'societa' => dispatch('Societa', $action),
             'network' => dispatch('Network', $action),
             'scouting' => dispatch('Scouting', $action),
+            'talentday' => dispatch('TalentDay', $action),
             'esignature' => dispatch('ESignature', $action),
             'tenant' => dispatch('Tenant', $action),
             'whatsapp' => dispatchWebhook($action),
