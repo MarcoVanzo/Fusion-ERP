@@ -124,7 +124,7 @@ class StripeWebhookController
 
             // 4. Generate receipt
             $pc = new PaymentsController();
-            $receiptPath = $pc->createAndSaveReceipt($installmentId);
+            $receiptPath = $pc->internalCreateReceipt($installmentId);
 
             $db->commit();
         } catch (\Throwable $e) {

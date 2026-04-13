@@ -68,6 +68,17 @@ class App {
     }
   }
 
+  // Intercept 401 responses globally — auto-logout on expired sessions
+  async apiFetch(url, options = {}) {
+    const res = await fetch(url, { credentials: 'include', ...options });
+    if (res.status === 401 || res.status === 403) {
+      localStorage.removeItem('erp_user');
+      window.location.hash = '#login';
+      throw new Error('Sessione scaduta');
+    }
+    return res;
+  }
+
   // Simple Hash Router
   route() {
     // Cleanup previous view state before rendering new one
@@ -104,7 +115,7 @@ class App {
       if (u.role) role = u.role.toLowerCase();
     } catch(e){}
 
-    const isStaff = role.includes('allenatore') || role.includes('social media manager') || role.includes('operatore') || role === 'admin';
+    const isStaff = role.includes('allenatore') || role.includes('social media manager') || role.includes('operatore') || role === 'operator' || role === 'admin';
 
     const items = [
       { id: '#dashboard', icon: 'fa-home', text: 'Home' },

@@ -335,15 +335,22 @@ class TalentDayController
             }
         }
 
-        // Send to registrant
-        // Invio mail con mittente forzato 'Talent Day SDB'
-        Mailer::sendWithAttachments(
+        // Logo incorporato come immagine inline (CID)
+        $logoPath = realpath(__DIR__ . '/../../../talent-day/assets/logo-savino.png');
+        $embeddedImages = [];
+        if ($logoPath && is_file($logoPath)) {
+            $embeddedImages['logo_sdb'] = $logoPath;
+        }
+
+        // Send to registrant con logo embedded (CID)
+        Mailer::sendWithEmbeddedImages(
             $email,
             "{$nome} {$cognome}",
             $subject,
             $htmlBody,
             '',
             $attachments,
+            $embeddedImages,
             [], // cc
             'giovanile@savinodelbenevolley.it', // fromEmail
             'Talent Day SDB'               // fromName
@@ -394,21 +401,44 @@ class TalentDayController
         if ($club)       $datiAtleta .= "<p style='margin:4px 0;font-size:14px;color:#333333;'><strong>Club di appartenenza:</strong> {$club}</p>";
         if ($taglia)     $datiAtleta .= "<p style='margin:4px 0;font-size:14px;color:#333333;'><strong>Taglia T-shirt:</strong> {$taglia}</p>";
 
-        $logoUrl = 'https://savinodelbenevolley.it/wp-content/uploads/2017/11/SDB_Volley_logo_trasp.png';
+        // Logo via CID (incorporato nella mail) con fallback a URL remoto
+        $logoSrc = 'cid:logo_sdb';
 
         return <<<HTML
 <!DOCTYPE html>
-<html>
-<head><meta charset="UTF-8"></head>
-<body style="margin:0;padding:0;background:#00205B;font-family:'Montserrat',Arial,sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#00205B;">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light only">
+    <meta name="supported-color-schemes" content="light only">
+    <!--[if mso]>
+    <xml>
+        <o:OfficeDocumentSettings>
+            <o:PixelsPerInch>96</o:PixelsPerInch>
+        </o:OfficeDocumentSettings>
+    </xml>
+    <![endif]-->
+    <style>
+        :root { color-scheme: light only; }
+        [data-ogsc] body, [data-ogsb] body { background-color: #00205B !important; }
+        @media (prefers-color-scheme: dark) {
+            body, .email-bg { background-color: #00205B !important; }
+            .email-card { background-color: #ffffff !important; }
+            .email-card td { color: #222222 !important; }
+            h1 { color: #00205B !important; }
+        }
+    </style>
+</head>
+<body style="margin:0;padding:0;background-color:#00205B;font-family:'Montserrat',Arial,sans-serif;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="email-bg" style="background-color:#00205B;">
 <tr><td align="center" style="padding:40px 16px;">
-<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;border:1px solid rgba(0,0,0,0.1);overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.1);">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" class="email-card" style="background-color:#ffffff;border-radius:12px;border:1px solid rgba(0,0,0,0.1);overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.1);">
 
     <!-- Header -->
-    <tr><td style="background:#ffffff;padding:32px 24px;text-align:center;border-bottom:3px solid #C8A959;">
-        <img src="{$logoUrl}" alt="Savino Del Bene Volley" style="max-height:90px;margin-bottom:20px;display:block;margin-left:auto;margin-right:auto;">
-        <h1 style="margin:0;font-size:25px;font-weight:900;color:#00205B;letter-spacing:0.08em;text-transform:uppercase;">TALENT DAY 2026</h1>
+    <tr><td style="background-color:#ffffff;padding:32px 24px;text-align:center;border-bottom:3px solid #C8A959;">
+        <img src="{$logoSrc}" alt="Savino Del Bene Volley" width="180" height="90" style="width:180px;height:90px;max-height:90px;margin-bottom:20px;display:block;margin-left:auto;margin-right:auto;outline:none;border:none;">
+        <h1 style="margin:0;font-size:25px;font-weight:900;color:#00205B !important;letter-spacing:0.08em;text-transform:uppercase;">TALENT DAY 2026</h1>
     </td></tr>
 
     <!-- Body -->

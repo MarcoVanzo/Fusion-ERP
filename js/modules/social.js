@@ -12,7 +12,7 @@ const Social = (() => {
         .getElementById("btn-connect-meta")
         ?.addEventListener("click", () => {
           window.location.href =
-            (Store.getApiUrl, "api/router.php?module=social&action=connect");
+            "api/router.php?module=social&action=connect";
         }),
       document
         .getElementById("btn-demo-social")

@@ -378,9 +378,18 @@ class PaymentsController
     }
 
     /**
-     * Helper to create and save the PDF receipt
+     * Internal helper to create and save the PDF receipt.
+     * NOT routable: protected visibility prevents router dispatch.
+     * Called internally from payInstallment(), generateReceipt(), and StripeWebhookController.
+     *
+     * @internal Use internalCreateReceipt() for cross-module access.
      */
-    public function createAndSaveReceipt(string $installmentId): string
+    public function internalCreateReceipt(string $installmentId): string
+    {
+        return $this->createAndSaveReceipt($installmentId);
+    }
+
+    protected function createAndSaveReceipt(string $installmentId): string
     {
         $installment = $this->repo->getInstallmentById($installmentId);
         if (!$installment) return '';

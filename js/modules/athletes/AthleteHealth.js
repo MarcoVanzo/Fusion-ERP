@@ -20,8 +20,8 @@ export const AthleteHealth = {
         try {
             // Fetch Anamnesi and Injuries concurrently
             const [anamnesiRes, injuriesRes] = await Promise.all([
-                fetch(`api/?module=Health&action=getAnamnesi&athlete_id=${athlete.id}`).then(r => r.json()),
-                fetch(`api/?module=Health&action=getInjuries&athlete_id=${athlete.id}`).then(r => r.json())
+                fetch(`api/?module=health&action=getAnamnesi&athlete_id=${athlete.id}`).then(r => r.json()),
+                fetch(`api/?module=health&action=getInjuries&athlete_id=${athlete.id}`).then(r => r.json())
             ]);
 
             const anamnesi = anamnesiRes.success ? (anamnesiRes.data || {}) : {};
@@ -256,7 +256,7 @@ export const AthleteHealth = {
             
             try {
                 UI.loading(true);
-                const res = await fetch('api/?module=Health&action=updateAnamnesi', {
+                const res = await fetch('api/?module=health&action=updateAnamnesi', {
                     method: 'POST',
                     body: formData
                 }).then(r => r.json());
@@ -511,7 +511,7 @@ export const AthleteHealth = {
                 try {
                     UI.loading(true);
                     const action = isEdit ? 'updateInjury' : 'addInjury';
-                    const res = await fetch(`api/?module=Health&action=${action}`, {
+                    const res = await fetch(`api/?module=health&action=${action}`, {
                         method: 'POST',
                         body: formData
                     }).then(r => r.json());
@@ -524,7 +524,7 @@ export const AthleteHealth = {
                             document.body.removeChild(theModal);
                             await this._loadData(container, athlete);
                             // Auto-open in edit mode
-                            const injuries = await fetch(`api/?module=Health&action=getInjuries&id=${athlete.id}`).then(r => r.json());
+                            const injuries = await fetch(`api/?module=health&action=getInjuries&id=${athlete.id}`).then(r => r.json());
                             const newInj = injuries.data?.find(i => i.id === res.id);
                             if (newInj) this._openInjuryModal(container, athlete, newInj);
                         } else {
@@ -551,7 +551,7 @@ export const AthleteHealth = {
                 
                 try {
                     UI.loading(true);
-                    const res = await fetch(`api/?module=Health&action=addFollowup`, {
+                    const res = await fetch(`api/?module=health&action=addFollowup`, {
                         method: 'POST',
                         body: formData
                     }).then(r => r.json());
@@ -581,7 +581,7 @@ export const AthleteHealth = {
                 
                 try {
                     UI.loading(true);
-                    const res = await fetch(`api/?module=Health&action=uploadDocument`, {
+                    const res = await fetch(`api/?module=health&action=uploadDocument`, {
                         method: 'POST',
                         body: formData
                     }).then(r => r.json());
@@ -606,7 +606,7 @@ export const AthleteHealth = {
     async _loadCheckups(injuryId, theModal) {
         const container = theModal.querySelector('#checkups-container');
         try {
-            const res = await fetch(`api/?module=Health&action=getFollowups&injury_id=${injuryId}`).then(r => r.json());
+            const res = await fetch(`api/?module=health&action=getFollowups&injury_id=${injuryId}`).then(r => r.json());
             if (res.success) {
                 const list = res.data || [];
                 if (list.length === 0) {
@@ -650,7 +650,7 @@ export const AthleteHealth = {
     async _loadDocs(injuryId, theModal) {
         const container = theModal.querySelector('#docs-container');
         try {
-            const res = await fetch(`api/?module=Health&action=getDocuments&injury_id=${injuryId}`).then(r => r.json());
+            const res = await fetch(`api/?module=health&action=getDocuments&injury_id=${injuryId}`).then(r => r.json());
             if (res.success) {
                 const list = res.data || [];
                 if (list.length === 0) {
