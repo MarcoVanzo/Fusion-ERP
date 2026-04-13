@@ -400,41 +400,41 @@ class TalentDayController
 <!DOCTYPE html>
 <html>
 <head><meta charset="UTF-8"></head>
-<body style="margin:0;padding:0;background:#003B73;font-family:'Montserrat',Arial,sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#003B73;">
+<body style="margin:0;padding:0;background:#00205B;font-family:'Montserrat',Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#00205B;">
 <tr><td align="center" style="padding:40px 16px;">
 <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;border:1px solid rgba(0,0,0,0.1);overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.1);">
 
     <!-- Header -->
-    <tr><td style="background:#f4f7fa;padding:32px 24px;text-align:center;border-bottom:3px solid #C8A959;">
-        <img src="{$logoUrl}" alt="Savino Del Bene Volley" style="max-height:80px;margin-bottom:20px;">
-        <h1 style="margin:0;font-size:24px;font-weight:900;color:#003B73;letter-spacing:0.08em;text-transform:uppercase;">TALENT DAY 2026</h1>
+    <tr><td style="background:#ffffff;padding:32px 24px;text-align:center;border-bottom:3px solid #C8A959;">
+        <img src="{$logoUrl}" alt="Savino Del Bene Volley" style="max-height:90px;margin-bottom:20px;display:block;margin-left:auto;margin-right:auto;">
+        <h1 style="margin:0;font-size:25px;font-weight:900;color:#00205B;letter-spacing:0.08em;text-transform:uppercase;">TALENT DAY 2026</h1>
     </td></tr>
 
     <!-- Body -->
     <tr><td style="padding:40px 32px;">
         <p style="color:#222222;font-size:16px;line-height:1.7;margin:0 0 20px;">Cara <strong>{$nome} {$cognome}</strong>,</p>
-        <p style="color:#444444;font-size:15px;line-height:1.7;margin:0 0 24px;">siamo felici di comunicarti che sei stata selezionata per partecipare al <strong style="color:#003B73;">Talent Day 2026</strong>, una giornata dove potrai mettere in mostra il tuo talento sotto lo sguardo dello staff della <strong>Savino del Bene Volley Scandicci!</strong> Qui di seguito troverai tutte le informazioni utili.</p>
+        <p style="color:#444444;font-size:15px;line-height:1.7;margin:0 0 24px;">siamo felici di comunicarti che sei stata selezionata per partecipare al <strong style="color:#00205B;">Talent Day 2026</strong>, una giornata dove potrai mettere in mostra il tuo talento sotto lo sguardo dello staff della <strong>Savino del Bene Volley Scandicci!</strong> Qui di seguito troverai tutte le informazioni utili.</p>
 
         <!-- Tappa Card -->
         <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fbfd;border:1px solid #e1e7f0;border-left:4px solid #C8A959;border-radius:6px;margin:24px 0;">
         <tr><td style="padding:20px 24px;">
             <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#C8A959;">Dove e quando?</p>
-            <p style="margin:4px 0;font-size:16px;color:#003B73;font-weight:bold;">{$tappa}</p>
+            <p style="margin:4px 0;font-size:16px;color:#00205B;font-weight:bold;">{$tappa}</p>
         </td></tr>
         </table>
 
         <!-- Dati Atleta Card -->
-        <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fbfd;border:1px solid #e1e7f0;border-left:4px solid #003B73;border-radius:6px;margin:24px 0;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fbfd;border:1px solid #e1e7f0;border-left:4px solid #00205B;border-radius:6px;margin:24px 0;">
         <tr><td style="padding:20px 24px;">
-            <p style="margin:0 0 12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#003B73;">Cosa ci hai comunicato?</p>
+            <p style="margin:0 0 12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#00205B;">Cosa ci hai comunicato?</p>
             {$datiAtleta}
         </td></tr>
         </table>
 
         <p style="color:#444444;font-size:15px;line-height:1.7;margin:24px 0 20px;">Ti raccomandiamo di presentarti sul posto con <strong>30 minuti di anticipo</strong>. L'orario dell'allenamento e l’indirizzo della struttura verranno forniti una volta concluse le iscrizioni.</p>
 
-        <p style="color:#003B73;font-size:16px;font-weight:bold;margin:30px 0 10px;">Cosa dovrai avere con te?</p>
+        <p style="color:#00205B;font-size:16px;font-weight:bold;margin:30px 0 10px;">Cosa dovrai avere con te?</p>
         <ul style="color:#444444;font-size:14px;line-height:1.8;margin:0 0 20px;padding-left:20px;">
             <li>documento di identità;</li>
             <li>copia cartacea del certificato medico attività sportiva agonistica;</li>
@@ -445,7 +445,7 @@ class TalentDayController
             <li>occorrente per l’allenamento (ti verrà fornita una t-shirt dell’evento).</li>
         </ul>
 
-        <p style="color:#003B73;font-size:16px;font-weight:bold;margin:30px 0 10px;">Ricorda inoltre:</p>
+        <p style="color:#00205B;font-size:16px;font-weight:bold;margin:30px 0 10px;">Ricorda inoltre:</p>
         <ul style="color:#444444;font-size:14px;line-height:1.8;margin:0 0 24px;padding-left:20px;">
             <li>L’ingresso del Palasport sarà consentito ad un massimo di <strong>due accompagnatori</strong> per ciascuna atleta;</li>
             <li>E’ <strong>severamente vietato</strong> scattare fotografie ed effettuare riprese video.</li>
