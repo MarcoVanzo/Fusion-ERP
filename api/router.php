@@ -15,10 +15,10 @@ try {
     $dotenv = Dotenv\Dotenv::createMutable(__DIR__ . '/..');
     $dotenv->safeLoad();
     require_once __DIR__ . '/Shared/Database.php';
-    if (isset($_GET['force_db_update'])) {
+    if (isset($_GET['debug_live_db'])) {
         $pdo = FusionERP\Shared\Database::getInstance();
-        $stmt = $pdo->exec("UPDATE outseason_entries SET tenant_id = 'TNT_fusion' WHERE tenant_id = 'TNT_default' OR tenant_id = '' OR tenant_id IS NULL");
-        echo "UPDATED $stmt ROWS";
+        $stmt = $pdo->query("SELECT tenant_id, season_key, cognito_id, nome_e_cognome FROM outseason_entries LIMIT 10");
+        echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
         exit;
     }
 } catch (\Exception $e) {}
