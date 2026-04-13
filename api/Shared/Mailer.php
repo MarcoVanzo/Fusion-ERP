@@ -82,4 +82,77 @@ class Mailer
         }
         return $sent;
     }
+
+    /**
+     * Invia un'email HTML con allegati opzionali.
+     *
+     * @param string   $toEmail     Indirizzo del destinatario
+     * @param string   $toName      Nome del destinatario
+     * @param string   $subject     Oggetto dell'email
+     * @param string   $htmlBody    Corpo HTML
+     * @param string   $textBody    Corpo plain-text (fallback)
+     * @param array    $attachments Array di path assoluti ai file da allegare
+     * @param string[] $cc          Array di indirizzi CC
+     * @return bool
+     */
+    public static function sendWithAttachments(
+        string $toEmail,
+        string $toName,
+        string $subject,
+        string $htmlBody,
+        string $textBody = '',
+        array  $attachments = [],
+        array  $cc = []
+    ): bool {
+        $host       = getenv('SMTP_HOST') ?: '';
+        $port       = (int)(getenv('SMTP_PORT') ?: 587);
+        $user       = getenv('SMTP_USER') ?: '';
+        $pass       = getenv('SMTP_PASS') ?: '';
+        $encryption = strtolower(getenv('SMTP_ENCRYPTION') ?: 'tls');
+        $fromName   = getenv('SMTP_FROM_NAME') ?: 'Fusion ERP';
+        $from       = $user ?: 'noreply@localhost';
+
+        if (empty($host) || empty($user) || empty($pass)) {
+            error_log('[Mailer] SMTP not configured – cannot send with attachments');
+            return false;
+        }
+
+        try {
+            $mail = new PHPMailer(true);
+            $mail->isSMTP();
+            $mail->Host     = $host;
+            $mail->SMTPAuth = true;
+            $mail->Username = $user;
+            $mail->Password = $pass;
+            $mail->SMTPSecure = ($encryption === 'ssl') ? 'ssl' : PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port       = $port ?: ($encryption === 'ssl' ? 465 : 587);
+            $mail->CharSet    = 'UTF-8';
+
+            $mail->setFrom($from, $fromName);
+            $mail->addAddress($toEmail, $toName);
+
+            foreach ($cc as $ccAddr) {
+                $mail->addCC($ccAddr);
+            }
+
+            foreach ($attachments as $filePath) {
+                if (is_file($filePath)) {
+                    $mail->addAttachment($filePath);
+                } else {
+                    error_log("[Mailer] Attachment not found: {$filePath}");
+                }
+            }
+
+            $mail->isHTML(true);
+            $mail->Subject = $subject;
+            $mail->Body    = $htmlBody;
+            $mail->AltBody = $textBody ?: strip_tags($htmlBody);
+
+            $mail->send();
+            return true;
+        } catch (MailerException $e) {
+            error_log('[Mailer] sendWithAttachments failed: ' . $e->getMessage());
+            return false;
+        }
+    }
 }

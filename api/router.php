@@ -72,7 +72,15 @@ if (!in_array($_SERVER['REQUEST_METHOD'], ['POST', 'GET', 'PUT', 'DELETE', 'OPTI
 }
 
 // Security: Require X-Requested-With header for all state-changing requests (CSRF protection)
-if (in_array($_SERVER['REQUEST_METHOD'], ['POST', 'PUT', 'DELETE'])) {
+// Exception: public endpoints that are called from standalone forms (e.g. Talent Day registration)
+$publicEndpoints = [
+    'talentday' => ['publicRegister'],
+    'webhooks'  => ['stripe'],
+    'whatsapp'  => ['receive'],
+];
+$isPublicEndpoint = isset($publicEndpoints[$module]) && in_array($action, $publicEndpoints[$module], true);
+
+if (in_array($_SERVER['REQUEST_METHOD'], ['POST', 'PUT', 'DELETE']) && !$isPublicEndpoint) {
     $requestedWith = $_SERVER['HTTP_X_REQUESTED_WITH'] ?? '';
     if (strtolower($requestedWith) !== 'xmlhttprequest') {
         Response::error('Richiesta non autorizzata (Missing Security Header)', 403);

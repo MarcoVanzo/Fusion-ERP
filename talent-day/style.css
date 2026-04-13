@@ -1,0 +1,413 @@
+/* ═══════════════════════════════════════════════════════════════════════
+ *  TALENT DAY 2026 — Public Registration Form
+ *  Design inspired by savinodelbenevolley.it
+ *  Palette: Dark (#0a0a14) + Gold (#C8A959) + White
+ * ═══════════════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap');
+
+/* ── Reset & Base ──────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+    --bg-primary: #0a0a14;
+    --bg-card: #12121e;
+    --bg-input: #1a1a2e;
+    --border: rgba(200, 169, 89, 0.15);
+    --border-focus: #C8A959;
+    --gold: #C8A959;
+    --gold-light: #e0c97a;
+    --gold-dark: #9a7d3a;
+    --white: #ffffff;
+    --text: #e0e0e0;
+    --text-muted: #8a8a9a;
+    --success: #22c55e;
+    --error: #ef4444;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+    font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ── Hero Header ───────────────────────────────────────────────────── */
+.td-hero {
+    position: relative;
+    background: linear-gradient(135deg, #0a0a14 0%, #1a1a2e 50%, #0a0a14 100%);
+    padding: 48px 24px 40px;
+    text-align: center;
+    overflow: hidden;
+    border-bottom: 2px solid var(--gold);
+}
+
+.td-hero::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -20%;
+    width: 140%;
+    height: 200%;
+    background: radial-gradient(ellipse at center, rgba(200, 169, 89, 0.06) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.td-hero-logo {
+    height: 80px;
+    margin-bottom: 20px;
+    filter: brightness(1.1);
+    position: relative;
+    z-index: 1;
+}
+
+.td-hero h1 {
+    font-size: clamp(28px, 5vw, 42px);
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--white);
+    position: relative;
+    z-index: 1;
+}
+
+.td-hero h1 span {
+    color: var(--gold);
+    display: block;
+    font-size: 0.5em;
+    letter-spacing: 0.2em;
+    font-weight: 600;
+    margin-top: 4px;
+}
+
+.td-hero-subtitle {
+    font-size: 15px;
+    color: var(--text-muted);
+    margin-top: 12px;
+    font-weight: 400;
+    position: relative;
+    z-index: 1;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* ── Main Container ────────────────────────────────────────────────── */
+.td-container {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 32px 20px 60px;
+}
+
+/* ── Form Card ─────────────────────────────────────────────────────── */
+.td-form-card {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+/* ── Section Headers ───────────────────────────────────────────────── */
+.td-section {
+    padding: 28px 28px 24px;
+    border-bottom: 1px solid var(--border);
+}
+
+.td-section:last-of-type {
+    border-bottom: none;
+}
+
+.td-section-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--gold);
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(200, 169, 89, 0.1);
+}
+
+.td-section-title i {
+    font-size: 18px;
+}
+
+/* ── Form Grid ─────────────────────────────────────────────────────── */
+.td-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.td-grid.single {
+    grid-template-columns: 1fr;
+}
+
+@media (max-width: 560px) {
+    .td-grid {
+        grid-template-columns: 1fr;
+    }
+    .td-section { padding: 20px 18px 18px; }
+}
+
+/* ── Form Fields ───────────────────────────────────────────────────── */
+.td-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.td-field.full-width {
+    grid-column: 1 / -1;
+}
+
+.td-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+}
+
+.td-label .required {
+    color: var(--gold);
+    margin-left: 2px;
+}
+
+.td-input,
+.td-select {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--white);
+    transition: border-color 0.25s ease, box-shadow 0.25s ease;
+    width: 100%;
+    outline: none;
+}
+
+.td-input::placeholder {
+    color: var(--text-muted);
+    opacity: 0.6;
+}
+
+.td-input:focus,
+.td-select:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(200, 169, 89, 0.12);
+}
+
+.td-input.error,
+.td-select.error {
+    border-color: var(--error);
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
+}
+
+.td-select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238a8a9a' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+}
+
+.td-select option {
+    background: var(--bg-input);
+    color: var(--white);
+}
+
+/* ── Checkbox / Privacy ────────────────────────────────────────────── */
+.td-checkbox-wrap {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 16px 0 0;
+}
+
+.td-checkbox-wrap input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin-top: 2px;
+    accent-color: var(--gold);
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.td-checkbox-wrap label {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    cursor: pointer;
+}
+
+.td-checkbox-wrap label a {
+    color: var(--gold);
+    text-decoration: underline;
+}
+
+/* ── Error Messages ────────────────────────────────────────────────── */
+.td-field-error {
+    font-size: 11px;
+    color: var(--error);
+    display: none;
+    margin-top: 2px;
+}
+
+.td-form-error {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    margin: 0 28px 20px;
+    font-size: 13px;
+    color: var(--error);
+    display: none;
+}
+
+/* ── Submit Button ─────────────────────────────────────────────────── */
+.td-submit-wrap {
+    padding: 8px 28px 28px;
+}
+
+.td-submit-btn {
+    width: 100%;
+    padding: 16px 24px;
+    background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+    color: #0a0a14;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.td-submit-btn:hover {
+    background: linear-gradient(135deg, var(--gold-light), var(--gold));
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(200, 169, 89, 0.3);
+}
+
+.td-submit-btn:active {
+    transform: translateY(0);
+}
+
+.td-submit-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.td-submit-btn .spinner {
+    display: none;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(10, 10, 20, 0.2);
+    border-top-color: #0a0a14;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    margin: 0 auto;
+}
+
+.td-submit-btn.loading .btn-text { display: none; }
+.td-submit-btn.loading .spinner { display: inline-block; }
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ── Success Screen ────────────────────────────────────────────────── */
+.td-success {
+    display: none;
+    text-align: center;
+    padding: 60px 28px;
+    animation: fadeInUp 0.5s ease;
+}
+
+.td-success.visible { display: block; }
+
+.td-success-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+    animation: scaleIn 0.4s ease 0.2s both;
+}
+
+.td-success-icon i {
+    font-size: 36px;
+    color: #0a0a14;
+}
+
+.td-success h2 {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--white);
+    margin-bottom: 12px;
+}
+
+.td-success p {
+    font-size: 14px;
+    color: var(--text-muted);
+    max-width: 400px;
+    margin: 0 auto;
+    line-height: 1.7;
+}
+
+.td-success p strong {
+    color: var(--gold);
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+    from { transform: scale(0); }
+    to { transform: scale(1); }
+}
+
+/* ── Footer ────────────────────────────────────────────────────────── */
+.td-footer {
+    text-align: center;
+    padding: 32px 20px;
+    font-size: 11px;
+    color: var(--text-muted);
+    border-top: 1px solid var(--border);
+    max-width: 680px;
+    margin: 0 auto;
+    line-height: 1.7;
+}
+
+.td-footer a {
+    color: var(--gold);
+    text-decoration: none;
+}
+
+.td-footer a:hover {
+    text-decoration: underline;
+}
