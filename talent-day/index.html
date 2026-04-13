@@ -303,8 +303,8 @@
             const top = Math.round((screen.height/2) - (popupHeight/2));
             
             // Per forzare al massimo il popup senza che diventi una tab
-            const features = 'width=' + popupWidth + ',height=' + popupHeight + ',top=' + top + ',left=' + left + ',toolbar=0,location=0,status=0,menubar=0,scrollbars=1,resizable=1';
-            window.open(igUrl, 'InstagramPopup', features);
+            const features = 'popup=yes,width=' + popupWidth + ',height=' + popupHeight + ',top=' + top + ',left=' + left + ',toolbar=no,location=no,status=no,menubar=no,scrollbars=yes,resizable=yes';
+            window.open(igUrl, '_blank', features);
         }
 
         // Scroll with offset
