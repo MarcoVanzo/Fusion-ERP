@@ -131,11 +131,13 @@ body::before {
 }
 
 .td-hero-subtitle {
-    font-size: 15px;
-    color: rgba(255,255,255,0.85); /* Leggermente più visibile */
+    font-size: 16px;
+    color: rgba(255,255,255,0.9);
     margin-top: 20px;
     font-weight: 400;
-    max-width: 520px;
+    max-width: 1000px; /* Allargato per permettere una singola riga decisa su desktop */
+    width: 100%;
+    text-align: center;
     line-height: 1.7;
     animation: floatIn 0.8s ease 0.45s both;
     text-shadow: 0 1px 10px rgba(0,0,0,0.8); /* Shadow per contrasto extra */
