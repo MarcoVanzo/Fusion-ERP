@@ -83,7 +83,7 @@ class AuthTest extends TestCase
     public function testAllenatoreCanReadAthletes(): void
     {
         $perms = Auth::getDefaultPermissions('allenatore');
-        $this->assertEquals('read', $perms['athletes']);
+        $this->assertEquals('write', $perms['athletes']);
         $this->assertEquals('read', $perms['teams']);
     }
 

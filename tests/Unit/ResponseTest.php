@@ -17,17 +17,17 @@ class ResponseTest extends TestCase
 {
     // ─── validateRequiredFields ──────────────────────────────────────────────
 
-    public function testValidateRequiredFieldsAllPresent(): void
+    public function testRequireFieldsMethodExists(): void
     {
         // Should not throw when all fields are present
         $body = ['name' => 'Marco', 'email' => 'test@example.com'];
         
-        // If validateRequiredFields calls Response::error() on failure (which exits),
+        // If requireFields calls Response::error() on failure (which exits),
         // we test the success case — no error should be triggered
         // We use reflection to test the method if its public
         $this->assertTrue(
-            method_exists(Response::class, 'validateRequiredFields'),
-            'Response should have validateRequiredFields method'
+            method_exists(Response::class, 'requireFields'),
+            'Response should have requireFields method'
         );
     }
 
