@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace FusionERP\Modules\Payments;
 
 use FusionERP\Shared\Database;
+use FusionERP\Shared\TenantContext;
 
 class PaymentsRepository
 {
@@ -41,11 +42,11 @@ class PaymentsRepository
         $stmt = $this->db->prepare(
             'SELECT id, total_amount, frequency, start_date, season, status, notes, created_at
              FROM payment_plans
-             WHERE athlete_id = :athlete_id AND status = \'active\'
+             WHERE athlete_id = :athlete_id AND tenant_id = :tid AND status = \'active\'
              ORDER BY created_at DESC
              LIMIT 1'
         );
-        $stmt->execute([':athlete_id' => $athleteId]);
+        $stmt->execute([':athlete_id' => $athleteId, ':tid' => TenantContext::id()]);
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
         return $row ?: null;
     }
@@ -58,10 +59,10 @@ class PaymentsRepository
         $stmt = $this->db->prepare(
             'SELECT id, total_amount, frequency, start_date, season, status, notes, created_at
              FROM payment_plans
-             WHERE athlete_id = :athlete_id
+             WHERE athlete_id = :athlete_id AND tenant_id = :tid
              ORDER BY created_at DESC'
         );
-        $stmt->execute([':athlete_id' => $athleteId]);
+        $stmt->execute([':athlete_id' => $athleteId, ':tid' => TenantContext::id()]);
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
@@ -71,9 +72,9 @@ class PaymentsRepository
     public function updatePlanStatus(string $planId, string $status): void
     {
         $stmt = $this->db->prepare(
-            'UPDATE payment_plans SET status = :status WHERE id = :id'
+            'UPDATE payment_plans SET status = :status WHERE id = :id AND tenant_id = :tid'
         );
-        $stmt->execute([':status' => $status, ':id' => $planId]);
+        $stmt->execute([':status' => $status, ':id' => $planId, ':tid' => TenantContext::id()]);
     }
 
     // ─── INSTALLMENTS ────────────────────────────────────────────────────────
@@ -165,6 +166,7 @@ class PaymentsRepository
      */
     public function getOverdueInstallments(): array
     {
+        $tid = TenantContext::id();
         $stmt = $this->db->prepare(
             "SELECT i.id, i.title, i.due_date, i.amount, i.status,
                     pp.athlete_id, pp.tenant_id,
@@ -174,10 +176,11 @@ class PaymentsRepository
              JOIN payment_plans pp ON pp.id = i.plan_id
              JOIN athletes a ON a.id = pp.athlete_id
              WHERE i.status = 'OVERDUE'
+               AND pp.tenant_id = :tid
                AND a.deleted_at IS NULL
              ORDER BY i.due_date ASC"
         );
-        $stmt->execute();
+        $stmt->execute([':tid' => $tid]);
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
@@ -186,6 +189,7 @@ class PaymentsRepository
      */
     public function getUpcomingInstallments(int $days = 7): array
     {
+        $tid = TenantContext::id();
         $stmt = $this->db->prepare(
             "SELECT i.id, i.title, i.due_date, i.amount,
                     pp.athlete_id, pp.tenant_id,
@@ -195,10 +199,12 @@ class PaymentsRepository
              JOIN payment_plans pp ON pp.id = i.plan_id
              JOIN athletes a ON a.id = pp.athlete_id
              WHERE i.status = 'PENDING'
+               AND pp.tenant_id = :tid
                AND i.due_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL :days DAY)
                AND a.deleted_at IS NULL
              ORDER BY i.due_date ASC"
         );
+        $stmt->bindValue(':tid', $tid);
         $stmt->bindValue(':days', $days, \PDO::PARAM_INT);
         $stmt->execute();
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);

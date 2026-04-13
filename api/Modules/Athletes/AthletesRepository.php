@@ -406,7 +406,8 @@ class AthletesRepository
 
     public function updateAthlete(string $id, array $data): void
     {
-        $params = [':id' => $id];
+        $tid = TenantContext::id();
+        $params = [':id' => $id, ':_tid' => $tid];
         $setClauses = [];
         foreach ($data as $key => $value) {
             $cleanKey = ltrim($key, ':');
@@ -414,31 +415,31 @@ class AthletesRepository
             $params[":{$cleanKey}"] = $value;
         }
         
-        $sql = 'UPDATE athletes SET ' . implode(', ', $setClauses) . ' WHERE id = :id AND deleted_at IS NULL';
+        $sql = 'UPDATE athletes SET ' . implode(', ', $setClauses) . ' WHERE id = :id AND tenant_id = :_tid AND deleted_at IS NULL';
         $stmt = $this->db->prepare($sql);
         $stmt->execute($params);
     }
 
     public function softDeleteAthlete(string $id): void
     {
-        $stmt = $this->db->prepare('UPDATE athletes SET deleted_at = NOW() WHERE id = :id');
-        $stmt->execute([':id' => $id]);
+        $stmt = $this->db->prepare('UPDATE athletes SET deleted_at = NOW() WHERE id = :id AND tenant_id = :tid');
+        $stmt->execute([':id' => $id, ':tid' => TenantContext::id()]);
     }
 
     public function updatePhotoPath(string $id, ?string $photoPath): void
     {
         $stmt = $this->db->prepare(
-            'UPDATE athletes SET `photo_path` = :photo_path WHERE id = :id AND deleted_at IS NULL'
+            'UPDATE athletes SET `photo_path` = :photo_path WHERE id = :id AND tenant_id = :tid AND deleted_at IS NULL'
         );
-        $stmt->execute([':photo_path' => $photoPath, ':id' => $id]);
+        $stmt->execute([':photo_path' => $photoPath, ':id' => $id, ':tid' => TenantContext::id()]);
     }
 
     public function updateDocumentPath(string $id, string $dbField, ?string $path): void
     {
         $stmt = $this->db->prepare(
-            "UPDATE athletes SET `{$dbField}` = :path WHERE id = :id AND deleted_at IS NULL"
+            "UPDATE athletes SET `{$dbField}` = :path WHERE id = :id AND tenant_id = :tid AND deleted_at IS NULL"
         );
-        $stmt->execute([':path' => $path, ':id' => $id]);
+        $stmt->execute([':path' => $path, ':id' => $id, ':tid' => TenantContext::id()]);
     }
 
     // ─── METRICS ──────────────────────────────────────────────────────────────
@@ -512,8 +513,8 @@ class AthletesRepository
 
     public function linkUserToAthlete(string $athleteId, string $userId): void
     {
-        $stmt = $this->db->prepare('UPDATE athletes SET user_id = :user_id, updated_at = NOW() WHERE id = :id');
-        $stmt->execute([':user_id' => $userId, ':id' => $athleteId]);
+        $stmt = $this->db->prepare('UPDATE athletes SET user_id = :user_id, updated_at = NOW() WHERE id = :id AND tenant_id = :tid');
+        $stmt->execute([':user_id' => $userId, ':id' => $athleteId, ':tid' => TenantContext::id()]);
     }
 
     // ─── PUBLIC WEBSITE ATHLETES ─────────────────────────────────────────────
@@ -550,14 +551,15 @@ class AthletesRepository
 
     public function listTeams(): array
     {
+        $tid = TenantContext::id();
         $stmt = $this->db->prepare(
             'SELECT ts.id AS id, t.id AS team_id, t.name, t.category, t.color_hex, ts.season
              FROM team_seasons ts
              JOIN teams t ON ts.team_id = t.id
-             WHERE t.deleted_at IS NULL AND t.is_active = 1
+             WHERE t.deleted_at IS NULL AND t.is_active = 1 AND t.tenant_id = :tid
              ORDER BY ts.season DESC, t.category, t.name'
         );
-        $stmt->execute();
+        $stmt->execute([':tid' => $tid]);
         $teams = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
         return array_map(function($team) {

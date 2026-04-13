@@ -115,8 +115,8 @@ class ResultsRepository
 
     public function deleteChampionship(string $id): int
     {
-        $stmt = $this->pdo->prepare("DELETE FROM federation_championships WHERE id = :id");
-        $stmt->execute([':id' => $id]);
+        $stmt = $this->pdo->prepare("DELETE FROM federation_championships WHERE id = :id AND tenant_id = :tid");
+        $stmt->execute([':id' => $id, ':tid' => $this->tenantId]);
         return $stmt->rowCount();
     }
 

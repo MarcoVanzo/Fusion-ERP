@@ -27,7 +27,9 @@ class WebsiteController
     // ─── GET /api/?module=website&action=categories ─────────────────────────
     public function categories(): void
     {
-        // Public endpoint allowed or authenticated
+        // Authenticated endpoint — requires at least read access to website module.
+        // Public website consumers should use getPublicNews() instead.
+        Auth::requireRead('website');
         Response::success($this->repo->getCategories());
     }
 
