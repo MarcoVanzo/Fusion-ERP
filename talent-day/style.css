@@ -58,19 +58,19 @@ body {
 }
 
 .td-bg-slide.active {
-    opacity: 0.3; /* Leggermente visibile sotto il gradiente scuro */
+    opacity: 1; /* Piena visibilità delle foto */
 }
 
-/* Gradient overlay per scurire e permettere la lettura su tutta la pagina */
+/* Gradient overlay molto più leggero per mostrare le foto ma permettere la lettura */
 body::before {
     content: '';
     position: fixed;
     inset: 0;
     background: linear-gradient(
         180deg,
-        rgba(13, 24, 41, 0.70) 0%,
-        rgba(13, 24, 41, 0.85) 40%,
-        rgba(13, 24, 41, 0.95) 100%
+        rgba(13, 24, 41, 0.3) 0%,
+        rgba(13, 24, 41, 0.4) 40%,
+        rgba(13, 24, 41, 0.8) 100%
     );
     z-index: -1;
     pointer-events: none;
