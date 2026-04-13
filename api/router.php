@@ -15,18 +15,14 @@ try {
     $dotenv = Dotenv\Dotenv::createMutable(__DIR__ . '/..');
     $dotenv->safeLoad();
     require_once __DIR__ . '/Shared/Database.php';
-    if (isset($_GET['dump_schema'])) {
-        $pdo = FusionERP\Shared\Database::getInstance();
-        $stmt = $pdo->query("SHOW CREATE TABLE outseason_entries");
-        file_put_contents(__DIR__ . '/../schema.txt', json_encode($stmt->fetchAll(PDO::FETCH_ASSOC)));
-        
-        $stmt2 = $pdo->query("SELECT tenant_id, season_key, cognito_id, nome_e_cognome FROM outseason_entries LIMIT 10");
-        file_put_contents(__DIR__ . '/../data.txt', json_encode($stmt2->fetchAll(PDO::FETCH_ASSOC)));
-        echo "DUMPED";
+    if (isset($_GET['force_sync_outseason'])) {
+        require_once __DIR__ . '/Modules/OutSeason/OutSeasonController.php';
+        $_SESSION['admin_auth']['tenant_id'] = 'TNT_fusion';
+        $res = FusionERP\Modules\OutSeason\OutSeasonController::_doSync('2026');
+        echo json_encode($res);
         exit;
     }
 } catch (\Exception $e) {}
-
 
 try {
     $dotenv = \Dotenv\Dotenv::createMutable(dirname(__DIR__));
