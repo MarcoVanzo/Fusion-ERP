@@ -1,5 +1,16 @@
 export class TalentDayView {
 
+    /** Predefined tappe for the Talent Day events */
+    static TAPPE = [
+        '26 MAG 2026, Firenze - Savino Del Bene Volley',
+        '28 MAG 2026, Roma - Civitavecchia',
+        '3 GIU 2026, Venezia - Fusion Team Volley',
+        '4 GIU 2026, Trieste - Azzurra Volley',
+        '10 GIU 2026, Torino - Volavalley',
+        '11 GIU 2026, Lecce - Melendugno Volley',
+        '19 GIU 2026, Catania - We Kondor Catania',
+    ];
+
     /* ═══════════════════════════════════════════════════════════════════
      *  Main Layout — header + content area + side panel shell
      * ═══════════════════════════════════════════════════════════════════ */
@@ -321,7 +332,10 @@ export class TalentDayView {
                 <div class="form-grid">
                     <div class="form-group">
                         <label class="form-label" for="td-tappa">Tappa</label>
-                        <input id="td-tappa" class="form-input" type="text" placeholder="es. Milano, Roma..." value="${esc(e.tappa)}">
+                        <select id="td-tappa" class="form-input">
+                            <option value="">— Seleziona tappa —</option>
+                            ${TalentDayView.TAPPE.map(t => `<option value="${t}" ${e.tappa === t ? 'selected' : ''}>${t}</option>`).join('')}
+                        </select>
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="td-email">Email</label>

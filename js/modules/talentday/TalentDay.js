@@ -93,13 +93,9 @@ class TalentDayModule {
         this.bindTableEvents(container, canEdit);
     }
 
-    /** Extract unique tappa values from all entries */
+    /** Return predefined tappa list for the filter dropdown */
     _getTappaList() {
-        const set = new Set();
-        for (const e of this._entries) {
-            if (e.tappa) set.add(e.tappa);
-        }
-        return [...set].sort((a, b) => a.localeCompare(b, 'it'));
+        return TalentDayView.TAPPE;
     }
 
     /** Apply search, tappa filter, and sort to entries */
