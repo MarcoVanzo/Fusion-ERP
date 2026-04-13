@@ -156,21 +156,40 @@ body::before {
 
 .td-tappa-card {
     flex-shrink: 0;
-    background: rgba(255,255,255,0.12); /* Più visibile */
+    background: rgba(20, 30, 48, 0.9); /* Molto più visibile, quasi solido */
     backdrop-filter: blur(12px);
-    border: 1px solid rgba(255,255,255,0.2); /* Bordo più evidente */
+    border: 1px solid rgba(200, 169, 89, 0.3); /* Bordo dorato evidente */
     border-radius: 12px;
-    padding: 12px 20px;
+    padding: 14px 22px;
     text-align: left;
-    min-width: 180px;
+    min-width: 200px; /* Leggermente più larghe */
     transition: all 0.3s ease;
     cursor: pointer;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.6); /* Ombra pronunciata */
+    position: relative;
+    overflow: hidden;
+}
+
+.td-tappa-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--red); /* Linea rossa in alto per aggancio visivo */
+    transition: background 0.3s ease;
 }
 
 .td-tappa-card:hover {
-    background: rgba(255,255,255,0.2);
-    transform: translateY(-2px);
+    background: rgba(26, 39, 68, 0.95);
+    transform: translateY(-4px);
     border-color: var(--gold);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.8);
+}
+
+.td-tappa-card:hover::before {
+    background: var(--gold);
 }
 
 .td-tappa-card .date {
