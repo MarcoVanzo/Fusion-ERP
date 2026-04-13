@@ -29,5 +29,10 @@
         <!-- Simulated environment for testing -->
         <env name="APP_ENV" value="testing"/>
         <env name="APP_DEBUG" value="true"/>
+        <env name="DB_HOST" value="127.0.0.1"/>
+        <env name="DB_PORT" value="3306"/>
+        <env name="DB_NAME" value="fusion_erp_test"/>
+        <env name="DB_USER" value="root"/>
+        <env name="DB_PASS" value="test"/>
     </php>
 </phpunit>

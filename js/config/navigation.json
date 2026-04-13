@@ -39,11 +39,8 @@
             { "title": "Scouting", "path": "scouting-database", "icon": "database", "isMobileVisible": false, "implemented": true, "roles": ["allenatore", "manager", "admin"] },
             { "title": "Open Day", "path": "scouting-openday", "icon": "calendar-plus", "isMobileVisible": false, "implemented": false, "roles": ["allenatore", "manager", "admin"] },
             { "title": "Talent Day", "path": "scouting-talentday", "icon": "star", "isMobileVisible": false, "implemented": false, "roles": ["allenatore", "manager", "admin"] },
-            { "title": "Prove", "path": "scouting-prove", "icon": "clipboard-text", "isMobileVisible": false, "implemented": false, "roles": ["allenatore", "manager", "admin"] },
             { "title": "Atlete Seguite", "path": "scouting-atlete-seguite", "icon": "users", "isMobileVisible": false, "implemented": false, "roles": ["allenatore", "manager", "admin"] },
-            { "title": "Valutazioni Scouting", "path": "scouting-evaluations", "icon": "file-text", "isMobileVisible": false, "implemented": false, "roles": ["allenatore", "admin"] },
-            { "title": "Watchlist Scouting", "path": "scouting-watchlist", "icon": "eye", "isMobileVisible": false, "implemented": false, "roles": ["allenatore", "admin"] },
-            { "title": "Report Scouting", "path": "scouting-reports", "icon": "note-pencil", "isMobileVisible": false, "implemented": false, "roles": ["allenatore", "admin"] }
+            { "title": "Valutazioni", "path": "scouting-evaluations", "icon": "file-text", "isMobileVisible": false, "implemented": false, "roles": ["allenatore", "admin"] }
         ]
     },
     {
