@@ -9,14 +9,11 @@
 
 declare(strict_types=1);
 
-require_once __DIR__ . '/../vendor/autoload.php';
-
-
-
-
 use FusionERP\Shared\Auth;
 use FusionERP\Shared\RateLimiter;
 use FusionERP\Shared\Response;
+
+require_once __DIR__ . '/../vendor/autoload.php';
 
 // Load environment variables from .env
 // createImmutable: does NOT overwrite variables already set in the environment

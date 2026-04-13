@@ -13,12 +13,12 @@ declare(strict_types=1);
 
 namespace FusionERP\Modules\Newsletter;
 
-// Shared classes are autoloaded by Composer PSR-4
-require_once __DIR__ . '/MailerLiteService.php';
-
 use FusionERP\Shared\Auth;
 use FusionERP\Shared\Audit;
 use FusionERP\Shared\Response;
+
+// Shared classes are autoloaded by Composer PSR-4
+require_once __DIR__ . '/MailerLiteService.php';
 
 class NewsletterController
 {

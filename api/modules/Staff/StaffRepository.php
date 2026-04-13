@@ -8,13 +8,13 @@ declare(strict_types=1);
 
 namespace FusionERP\Modules\Staff;
 
+use FusionERP\Shared\Database;
+use FusionERP\Shared\TenantContext;
+
 // Explicit require_once needed because server uses optimized classmap autoloader
 $_staffShared = dirname(__DIR__, 2) . '/Shared/';
 require_once $_staffShared . 'TenantContext.php';
 unset($_staffShared);
-
-use FusionERP\Shared\Database;
-use FusionERP\Shared\TenantContext;
 
 class StaffRepository
 {

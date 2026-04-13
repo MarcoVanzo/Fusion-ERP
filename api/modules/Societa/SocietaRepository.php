@@ -8,13 +8,13 @@ declare(strict_types=1);
 
 namespace FusionERP\Modules\Societa;
 
+use FusionERP\Shared\Database;
+use FusionERP\Shared\TenantContext;
+
 // Explicit require_once needed because server uses optimized classmap autoloader
 $_societaShared = dirname(__DIR__, 2) . '/Shared/';
 require_once $_societaShared . 'TenantContext.php';
 unset($_societaShared);
-
-use FusionERP\Shared\Database;
-use FusionERP\Shared\TenantContext;
 
 class SocietaRepository
 {

@@ -8,12 +8,12 @@ declare(strict_types=1);
 
 namespace FusionERP\Modules\Website;
 
-// Shared classes are autoloaded by Composer PSR-4
-require_once __DIR__ . '/WebsiteRepository.php';
-
 use FusionERP\Shared\Auth;
 use FusionERP\Shared\Response;
 use FusionERP\Shared\TenantContext;
+
+// Shared classes are autoloaded by Composer PSR-4
+require_once __DIR__ . '/WebsiteRepository.php';
 
 class WebsiteController
 {

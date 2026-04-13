@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace FusionERP\Modules\Tournaments\Services;
 
-require_once dirname(__DIR__, 3) . '/Shared/TenantContext.php';
-
 use Mpdf\Mpdf;
 use FusionERP\Shared\TenantContext;
+
+require_once dirname(__DIR__, 3) . '/Shared/TenantContext.php';
 
 class TournamentsPdfService
 {
