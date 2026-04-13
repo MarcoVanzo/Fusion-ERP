@@ -1,5 +1,5 @@
-import { TalentDayAPI } from './TalentDayAPI.js';
-import { TalentDayView } from './TalentDayView.js';
+import { TalentDayAPI } from './TalentDayAPI.js?v=1001';
+import { TalentDayView } from './TalentDayView.js?v=1001';
 
 class TalentDayModule {
     constructor() {
