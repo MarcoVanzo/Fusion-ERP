@@ -12,10 +12,8 @@ PREPARE stmt FROM @sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
--- Populate tenant_id from the first tenant if empty
-UPDATE ec_products SET tenant_id = (
-    SELECT id FROM tenants ORDER BY id LIMIT 1
-) WHERE tenant_id = '' OR tenant_id IS NULL;
+-- Populate tenant_id with TNT_fusion if empty
+UPDATE ec_products SET tenant_id = 'TNT_fusion' WHERE tenant_id = '' OR tenant_id IS NULL;
 
 -- Add index for tenant queries
 CREATE INDEX idx_ec_products_tenant ON ec_products(tenant_id);
