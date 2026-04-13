@@ -12,6 +12,23 @@ declare(strict_types=1);
 require_once __DIR__ . '/../vendor/autoload.php';
 
 try {
+    $dotenv = Dotenv\Dotenv::createMutable(__DIR__ . '/..');
+    $dotenv->safeLoad();
+    require_once __DIR__ . '/Shared/Database.php';
+    if (isset($_GET['dump_schema'])) {
+        $pdo = FusionERP\Shared\Database::getInstance();
+        $stmt = $pdo->query("SHOW CREATE TABLE outseason_entries");
+        file_put_contents(__DIR__ . '/../schema.txt', json_encode($stmt->fetchAll(PDO::FETCH_ASSOC)));
+        
+        $stmt2 = $pdo->query("SELECT tenant_id, season_key, cognito_id, nome_e_cognome FROM outseason_entries LIMIT 10");
+        file_put_contents(__DIR__ . '/../data.txt', json_encode($stmt2->fetchAll(PDO::FETCH_ASSOC)));
+        echo "DUMPED";
+        exit;
+    }
+} catch (\Exception $e) {}
+
+
+try {
     $dotenv = \Dotenv\Dotenv::createMutable(dirname(__DIR__));
     $dotenv->safeLoad();
     if (class_exists('FusionERP\Shared\Database')) {
