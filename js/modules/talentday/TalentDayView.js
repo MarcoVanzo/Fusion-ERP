@@ -71,6 +71,46 @@ export class TalentDayView {
                     z-index: 2;
                 }
 
+                /* ── Sortable headers ────────────────────── */
+                .td-sort-header {
+                    cursor: pointer;
+                    user-select: none;
+                    transition: color .2s ease;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 4px;
+                }
+                .td-sort-header:hover { color: #fff; }
+                .td-sort-header .td-sort-icon {
+                    font-size: 12px;
+                    opacity: 0.35;
+                    transition: opacity .2s ease, transform .2s ease;
+                }
+                .td-sort-header.sort-active .td-sort-icon {
+                    opacity: 1;
+                    color: var(--accent-pink);
+                }
+                .td-sort-header.sort-desc .td-sort-icon {
+                    transform: rotate(180deg);
+                }
+
+                /* ── Tappa filter select ─────────────────── */
+                #td-tappa-filter {
+                    height: 42px;
+                    font-size: 13px;
+                    background: rgba(255,255,255,0.05);
+                    border: 1px solid rgba(255,255,255,0.1);
+                    border-radius: 10px;
+                    color: #fff;
+                    padding: 0 12px;
+                    min-width: 160px;
+                    cursor: pointer;
+                }
+                #td-tappa-filter:focus {
+                    border-color: var(--accent-pink);
+                    outline: none;
+                }
+
                 /* ── Form section headers inside side panel ── */
                 .td-form-section {
                     display: flex;
@@ -94,7 +134,7 @@ export class TalentDayView {
     /* ═══════════════════════════════════════════════════════════════════
      *  Table Area — toolbar + tabs + table
      * ═══════════════════════════════════════════════════════════════════ */
-    static renderTableArea(entries, activeView, canEdit) {
+    static renderTableArea(entries, activeView, canEdit, tappaList = [], activeTappa = '', sortCol = '', sortDir = '') {
         return `
             <div style="width:100%;display:flex;flex-direction:column">
                 <!-- Toolbar -->
@@ -105,6 +145,10 @@ export class TalentDayView {
                             <input type="text" id="td-search" class="form-input" placeholder="Cerca per nome, cognome, tappa…"
                                    style="padding-left:36px;height:42px;font-size:13px;background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.1);color:#fff;">
                         </div>
+                        <select id="td-tappa-filter">
+                            <option value="">Tutte le tappe</option>
+                            ${tappaList.map(t => `<option value="${window.Utils.escapeHtml(t)}" ${activeTappa === t ? 'selected' : ''}>${window.Utils.escapeHtml(t)}</option>`).join('')}
+                        </select>
                         <span id="td-count" class="status-badge" style="background:var(--color-primary-light);color:var(--color-primary);font-weight:600">${entries.length} registrazioni</span>
                     </div>
                     <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
@@ -129,7 +173,7 @@ export class TalentDayView {
                 <div class="table-wrapper" style="overflow-x:auto;max-height:calc(100vh - 280px);">
                     <table id="td-table" class="data-table" style="width:100%;border-collapse:collapse;font-size:13px">
                         <thead>
-                            <tr>${this._headers(activeView, canEdit)}</tr>
+                            <tr>${this._headers(activeView, canEdit, sortCol, sortDir)}</tr>
                         </thead>
                         <tbody id="td-tbody">
                             ${this.renderRows(entries, activeView, canEdit)}
@@ -142,31 +186,48 @@ export class TalentDayView {
     /* ═══════════════════════════════════════════════════════════════════
      *  Table headers per view
      * ═══════════════════════════════════════════════════════════════════ */
-    static _headers(view, canEdit) {
-        const th = (label) =>
-            `<th style="text-align:left;padding:10px 12px;border-bottom:1px solid var(--color-border);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:var(--color-text-muted)">${label}</th>`;
-
+    /** Column definitions: [label, dataKey] */
+    static _colDefs(view) {
         if (view === 'fisici') {
             return [
-                'Nome', 'Cognome', 'Tappa', 'Data Nascita', 'Club',
-                'Altezza', 'Peso', 'Reach', 'CMJ', 'Salto Rincorsa'
-            ].map(th).join("")
-                + (canEdit ? `<th style="text-align:right;padding:10px 12px;border-bottom:1px solid var(--color-border);"></th>` : "");
+                ['Nome', 'nome'], ['Cognome', 'cognome'], ['Tappa', 'tappa'],
+                ['Data Nascita', 'data_nascita'], ['Club', 'club_tesseramento'],
+                ['Altezza', 'altezza'], ['Peso', 'peso'], ['Reach', 'reach_cm'],
+                ['CMJ', 'cmj'], ['Salto Rincorsa', 'salto_rincorsa']
+            ];
         }
-
-        // anagrafica (default)
+        // anagrafica — Nome/Cognome first, Tappa included
         return [
-            'Data Reg.', 'Ora', 'Nome', 'Cognome', 'Email', 'Tappa',
-            'Città/CAP', 'Cellulare', 'Taglia', 'Club', 'Ruolo', 'Campionati'
-        ].map(th).join("")
-            + (canEdit ? `<th style="text-align:right;padding:10px 12px;border-bottom:1px solid var(--color-border);"></th>` : "");
+            ['Nome', 'nome'], ['Cognome', 'cognome'], ['Tappa', 'tappa'],
+            ['Data Reg.', 'data_registrazione'], ['Ora', 'ora_registrazione'],
+            ['Email', 'email'], ['Città/CAP', 'citta_cap'], ['Cellulare', 'cellulare'],
+            ['Taglia', 'taglia_tshirt'], ['Club', 'club_tesseramento'],
+            ['Ruolo', 'ruolo'], ['Campionati', 'campionati']
+        ];
+    }
+
+    static _headers(view, canEdit, sortCol = '', sortDir = '') {
+        const cols = this._colDefs(view);
+        const ths = cols.map(([label, key]) => {
+            const isActive = sortCol === key;
+            const activeClass = isActive ? ` sort-active${sortDir === 'desc' ? ' sort-desc' : ''}` : '';
+            return `<th style="text-align:left;padding:10px 12px;border-bottom:1px solid var(--color-border);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:var(--color-text-muted)">
+                <span class="td-sort-header${activeClass}" data-sort-key="${key}">
+                    ${label}
+                    <i class="ph ph-caret-up td-sort-icon"></i>
+                </span>
+            </th>`;
+        }).join('');
+
+        return ths + (canEdit ? `<th style="text-align:right;padding:10px 12px;border-bottom:1px solid var(--color-border);"></th>` : '');
     }
 
     /* ═══════════════════════════════════════════════════════════════════
      *  Table rows — adapts columns based on active view
      * ═══════════════════════════════════════════════════════════════════ */
     static renderRows(data, view, canEdit) {
-        const colCount = view === 'fisici' ? 10 : 12;
+        const colDefs = this._colDefs(view);
+        const colCount = colDefs.length;
         if (!data || data.length === 0) {
             return `<tr><td colspan="${colCount + (canEdit ? 1 : 0)}" style="text-align:center;padding:var(--sp-4);color:var(--color-text-muted)">
                 <i class="ph ph-clipboard-text" style="font-size:32px;display:block;margin-bottom:8px;opacity:0.4"></i>
@@ -187,40 +248,23 @@ export class TalentDayView {
             </td>`;
         };
 
+        // Metric keys that should use cellMetric rendering
+        const metricKeys = { altezza: 'cm', peso: 'kg', reach_cm: 'cm', cmj: 'cm', salto_rincorsa: 'cm' };
+        // Bold keys
+        const boldKeys = new Set(['nome', 'cognome']);
+        // Date formatting helper
+        const fmtDate = (d) => { if (!d) return '—'; try { return new Date(d).toLocaleDateString('it-IT'); } catch { return d; } };
+        const fmtTime = (t) => t ? t.substring(0, 5) : '—';
+
         return data.map((e) => {
-            let cols = '';
-
-            if (view === 'fisici') {
-                cols = cellBold(e.nome)
-                     + cellBold(e.cognome)
-                     + cell(e.tappa)
-                     + cell(e.data_nascita)
-                     + cell(e.club_tesseramento)
-                     + cellMetric(e.altezza, 'cm')
-                     + cellMetric(e.peso, 'kg')
-                     + cellMetric(e.reach_cm, 'cm')
-                     + cellMetric(e.cmj, 'cm')
-                     + cellMetric(e.salto_rincorsa, 'cm');
-            } else {
-                const fmtDate = (d) => {
-                    if (!d) return '—';
-                    try { return new Date(d).toLocaleDateString('it-IT'); } catch { return d; }
-                };
-                const fmtTime = (t) => t ? t.substring(0, 5) : '—';
-
-                cols = cell(fmtDate(e.data_registrazione))
-                     + cell(fmtTime(e.ora_registrazione))
-                     + cellBold(e.nome)
-                     + cellBold(e.cognome)
-                     + cell(e.email)
-                     + cell(e.tappa)
-                     + cell(e.citta_cap)
-                     + cell(e.cellulare)
-                     + cell(e.taglia_tshirt)
-                     + cell(e.club_tesseramento)
-                     + cell(e.ruolo)
-                     + cell(e.campionati);
-            }
+            let cols = colDefs.map(([, key]) => {
+                const raw = e[key];
+                if (metricKeys[key]) return cellMetric(raw, metricKeys[key]);
+                if (boldKeys.has(key)) return cellBold(raw);
+                if (key === 'data_registrazione') return cell(fmtDate(raw));
+                if (key === 'ora_registrazione') return cell(fmtTime(raw));
+                return cell(raw);
+            }).join('');
 
             if (canEdit) {
                 cols += `

@@ -6,6 +6,10 @@ class TalentDayModule {
         this._abort = new AbortController();
         this._entries = [];
         this._activeView = 'anagrafica'; // 'anagrafica' | 'fisici'
+        this._sortCol = '';
+        this._sortDir = ''; // 'asc' | 'desc' | ''
+        this._tappaFilter = '';
+        this._searchTerm = '';
     }
 
     /** Helper to retrieve abort signal to prevent memory leaks from event listeners */
@@ -19,6 +23,10 @@ class TalentDayModule {
         this._abort = new AbortController();
         this._entries = [];
         this._activeView = 'anagrafica';
+        this._sortCol = '';
+        this._sortDir = '';
+        this._tappaFilter = '';
+        this._searchTerm = '';
     }
 
     /** Entry point loaded by Router */
@@ -74,27 +82,101 @@ class TalentDayModule {
         const role = user?.role?.toLowerCase();
         const canEdit = ["admin", "manager", "allenatore"].includes(role);
 
-        container.innerHTML = TalentDayView.renderTableArea(this._entries, this._activeView, canEdit);
+        const filtered = this._getFilteredSorted();
+        const tappaList = this._getTappaList();
+
+        container.innerHTML = TalentDayView.renderTableArea(
+            filtered, this._activeView, canEdit,
+            tappaList, this._tappaFilter,
+            this._sortCol, this._sortDir
+        );
         this.bindTableEvents(container, canEdit);
     }
 
-    bindTableEvents(container, canEdit) {
-        // ── Search ──
-        container.querySelector("#td-search")?.addEventListener("input", (e) => {
-            const term = e.target.value.toLowerCase().trim();
-            const filtered = this._entries.filter(
+    /** Extract unique tappa values from all entries */
+    _getTappaList() {
+        const set = new Set();
+        for (const e of this._entries) {
+            if (e.tappa) set.add(e.tappa);
+        }
+        return [...set].sort((a, b) => a.localeCompare(b, 'it'));
+    }
+
+    /** Apply search, tappa filter, and sort to entries */
+    _getFilteredSorted() {
+        let data = [...this._entries];
+
+        // Tappa filter
+        if (this._tappaFilter) {
+            data = data.filter(e => e.tappa === this._tappaFilter);
+        }
+
+        // Search
+        if (this._searchTerm) {
+            const term = this._searchTerm;
+            data = data.filter(
                 (a) => (a.nome && a.nome.toLowerCase().includes(term)) ||
                        (a.cognome && a.cognome.toLowerCase().includes(term)) ||
                        (a.tappa && a.tappa.toLowerCase().includes(term)) ||
                        (a.club_tesseramento && a.club_tesseramento.toLowerCase().includes(term))
             );
+        }
 
-            const tbody = document.getElementById("td-tbody");
-            if (tbody) tbody.innerHTML = TalentDayView.renderRows(filtered, this._activeView, canEdit);
+        // Sort
+        if (this._sortCol && this._sortDir) {
+            const key = this._sortCol;
+            const dir = this._sortDir === 'asc' ? 1 : -1;
+            // Numeric keys for physical measurements
+            const numericKeys = new Set(['altezza', 'peso', 'reach_cm', 'cmj', 'salto_rincorsa']);
 
-            const countBadge = document.getElementById("td-count");
-            if (countBadge) countBadge.textContent = `${filtered.length} registrazioni`;
+            data.sort((a, b) => {
+                let va = a[key] ?? '';
+                let vb = b[key] ?? '';
+
+                if (numericKeys.has(key)) {
+                    va = va !== '' ? parseFloat(va) : -Infinity;
+                    vb = vb !== '' ? parseFloat(vb) : -Infinity;
+                    return (va - vb) * dir;
+                }
+
+                // String comparison
+                va = String(va).toLowerCase();
+                vb = String(vb).toLowerCase();
+                return va.localeCompare(vb, 'it') * dir;
+            });
+        }
+
+        return data;
+    }
+
+    bindTableEvents(container, canEdit) {
+        // ── Search ──
+        container.querySelector("#td-search")?.addEventListener("input", (e) => {
+            this._searchTerm = e.target.value.toLowerCase().trim();
+            this._rerenderTable(container, canEdit);
         }, this.sig());
+
+        // ── Tappa Filter ──
+        container.querySelector("#td-tappa-filter")?.addEventListener("change", (e) => {
+            this._tappaFilter = e.target.value;
+            this._rerenderTable(container, canEdit);
+        }, this.sig());
+
+        // ── Sortable Headers ──
+        container.querySelectorAll(".td-sort-header").forEach((header) => {
+            header.addEventListener("click", () => {
+                const key = header.dataset.sortKey;
+                if (this._sortCol === key) {
+                    // Cycle: asc → desc → none
+                    if (this._sortDir === 'asc') this._sortDir = 'desc';
+                    else { this._sortCol = ''; this._sortDir = ''; }
+                } else {
+                    this._sortCol = key;
+                    this._sortDir = 'asc';
+                }
+                this._rerenderTable(container, canEdit);
+            }, this.sig());
+        });
 
         // ── View Tabs Toggle ──
         container.querySelectorAll(".td-view-tab").forEach((tab) => {
@@ -126,6 +208,61 @@ class TalentDayModule {
                         if (entry) this.openSidePanel(entry);
                     }
 
+                    const delBtn = e.target.closest(".td-delete-btn");
+                    if (delBtn) {
+                        e.stopPropagation();
+                        if (confirm("Sei sicuro di voler eliminare questa registrazione?")) {
+                            this.handleDelete(delBtn.dataset.id);
+                        }
+                    }
+                }, this.sig());
+            }
+        }
+    }
+
+    /** Re-render just the table content (headers + rows + count) without full container rebuild */
+    _rerenderTable(container, canEdit) {
+        const filtered = this._getFilteredSorted();
+        const tappaList = this._getTappaList();
+
+        // Update headers
+        const thead = container.querySelector("#td-table thead tr");
+        if (thead) thead.innerHTML = TalentDayView._headers(this._activeView, canEdit, this._sortCol, this._sortDir);
+
+        // Update rows
+        const tbody = document.getElementById("td-tbody");
+        if (tbody) tbody.innerHTML = TalentDayView.renderRows(filtered, this._activeView, canEdit);
+
+        // Update count badge
+        const countBadge = document.getElementById("td-count");
+        if (countBadge) countBadge.textContent = `${filtered.length} registrazioni`;
+
+        // Re-bind sort headers (they were replaced)
+        container.querySelectorAll(".td-sort-header").forEach((header) => {
+            header.addEventListener("click", () => {
+                const key = header.dataset.sortKey;
+                if (this._sortCol === key) {
+                    if (this._sortDir === 'asc') this._sortDir = 'desc';
+                    else { this._sortCol = ''; this._sortDir = ''; }
+                } else {
+                    this._sortCol = key;
+                    this._sortDir = 'asc';
+                }
+                this._rerenderTable(container, canEdit);
+            }, this.sig());
+        });
+
+        // Re-bind tbody delegation for edit/delete on new rows
+        if (canEdit) {
+            const newTbody = container.querySelector("#td-tbody");
+            if (newTbody) {
+                newTbody.addEventListener("click", (e) => {
+                    const editBtn = e.target.closest(".td-edit-btn");
+                    if (editBtn) {
+                        e.stopPropagation();
+                        const entry = this._entries.find(a => a.id == editBtn.dataset.id);
+                        if (entry) this.openSidePanel(entry);
+                    }
                     const delBtn = e.target.closest(".td-delete-btn");
                     if (delBtn) {
                         e.stopPropagation();
