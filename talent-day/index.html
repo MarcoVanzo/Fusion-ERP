@@ -297,11 +297,13 @@
 
         // Apri il popup di Instagram
         if(igUrl) {
-            const popupWidth = 450;
-            const popupHeight = 600;
+            const popupWidth = 500;
+            const popupHeight = 700;
             const left = (screen.width/2) - (popupWidth/2);
             const top = (screen.height/2) - (popupHeight/2);
-            window.open(igUrl, 'InstagramPopup', `width=${popupWidth},height=${popupHeight},top=${top},left=${left},menubar=no,status=no,titlebar=no,toolbar=no`);
+            
+            // L\'attributo popup=yes e location=no forza quasi tutti i browser moderni (incluso Chrome) ad aprire un popup separato al posto di una nuova scheda.
+            window.open(igUrl, '_blank', `popup=yes,width=${popupWidth},height=${popupHeight},top=${top},left=${left},scrollbars=yes,menubar=no,toolbar=no,location=no,status=no`);
         }
 
         // Scroll with offset
