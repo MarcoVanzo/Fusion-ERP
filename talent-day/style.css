@@ -133,8 +133,9 @@ body::before {
 .td-hero-subtitle {
     font-size: 16px;
     color: rgba(255, 255, 255, 0.9);
-    margin: 20px auto 0 auto; /* Forza i margini auto laterali per centrare il blocco div */
+    margin: 20px auto 0 auto;
     display: block;
+    width: 100%; /* Obbligatorio nei contesti flex center per abilitare il text-wrapping su mobile */
     max-width: 1000px;
     font-weight: 400;
     text-align: center;
