@@ -241,15 +241,27 @@ class TalentDayController
         }
 
         // ── Validation ─────────────────────────────────────────────────
-        $required = ['nome', 'cognome', 'email', 'tappa', 'data_nascita'];
+        $required = [
+            'nome', 'cognome', 'email', 'tappa', 'data_nascita',
+            'cellulare', 'indirizzo', 'citta_cap', 'taglia_tshirt',
+            'club_tesseramento', 'ruolo', 'campionati',
+            'nome_genitore', 'telefono_genitore', 'email_genitore'
+        ];
         foreach ($required as $field) {
-            if (empty(trim($data[$field] ?? ''))) {
+            if (empty(trim((string)($data[$field] ?? '')))) {
                 Response::error("Il campo {$field} è obbligatorio", 400);
             }
         }
 
+        if (empty($data['privacy_consent'])) {
+            Response::error("Il consenso alla privacy è obbligatorio", 400);
+        }
+
         if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
             Response::error('Indirizzo email non valido', 400);
+        }
+        if (!filter_var($data['email_genitore'], FILTER_VALIDATE_EMAIL)) {
+            Response::error('Indirizzo email genitore non valido', 400);
         }
 
         // ── Rate limiting (simple IP-based, 10 regs/hour) ──────────────
@@ -373,14 +385,14 @@ class TalentDayController
         $taglia       = htmlspecialchars(trim($data['taglia_tshirt'] ?? ''));
 
         // Formattazione dei dati extra inseriti dall'atleta
-        $datiAtleta = "<p style='margin:4px 0;font-size:14px;color:#e0e0e0;'><strong>Data di nascita:</strong> {$data_nascita}</p>";
-        if ($email)      $datiAtleta .= "<p style='margin:4px 0;font-size:14px;color:#e0e0e0;'><strong>Email:</strong> {$email}</p>";
-        if ($cellulare)  $datiAtleta .= "<p style='margin:4px 0;font-size:14px;color:#e0e0e0;'><strong>Cellulare:</strong> {$cellulare}</p>";
-        if ($citta_cap)  $datiAtleta .= "<p style='margin:4px 0;font-size:14px;color:#e0e0e0;'><strong>Città/CAP:</strong> {$citta_cap}</p>";
-        if ($ruolo)      $datiAtleta .= "<p style='margin:4px 0;font-size:14px;color:#e0e0e0;'><strong>Ruolo:</strong> {$ruolo}</p>";
-        if ($campionati) $datiAtleta .= "<p style='margin:4px 0;font-size:14px;color:#e0e0e0;'><strong>Campionati disputati:</strong> {$campionati}</p>";
-        if ($club)       $datiAtleta .= "<p style='margin:4px 0;font-size:14px;color:#e0e0e0;'><strong>Club di appartenenza:</strong> {$club}</p>";
-        if ($taglia)     $datiAtleta .= "<p style='margin:4px 0;font-size:14px;color:#e0e0e0;'><strong>Taglia T-shirt:</strong> {$taglia}</p>";
+        $datiAtleta = "<p style='margin:4px 0;font-size:14px;color:#333333;'><strong>Data di nascita:</strong> {$data_nascita}</p>";
+        if ($email)      $datiAtleta .= "<p style='margin:4px 0;font-size:14px;color:#333333;'><strong>Email:</strong> <a href=\"mailto:{$email}\" style=\"color:#0056b3;text-decoration:none;\">{$email}</a></p>";
+        if ($cellulare)  $datiAtleta .= "<p style='margin:4px 0;font-size:14px;color:#333333;'><strong>Cellulare:</strong> {$cellulare}</p>";
+        if ($citta_cap)  $datiAtleta .= "<p style='margin:4px 0;font-size:14px;color:#333333;'><strong>Città/CAP:</strong> {$citta_cap}</p>";
+        if ($ruolo)      $datiAtleta .= "<p style='margin:4px 0;font-size:14px;color:#333333;'><strong>Ruolo:</strong> {$ruolo}</p>";
+        if ($campionati) $datiAtleta .= "<p style='margin:4px 0;font-size:14px;color:#333333;'><strong>Campionati disputati:</strong> {$campionati}</p>";
+        if ($club)       $datiAtleta .= "<p style='margin:4px 0;font-size:14px;color:#333333;'><strong>Club di appartenenza:</strong> {$club}</p>";
+        if ($taglia)     $datiAtleta .= "<p style='margin:4px 0;font-size:14px;color:#333333;'><strong>Taglia T-shirt:</strong> {$taglia}</p>";
 
         $logoUrl = 'https://savinodelbenevolley.it/wp-content/uploads/2017/11/SDB_Volley_logo_trasp.png';
 
@@ -388,42 +400,42 @@ class TalentDayController
 <!DOCTYPE html>
 <html>
 <head><meta charset="UTF-8"></head>
-<body style="margin:0;padding:0;background:#0a0a14;font-family:'Montserrat',Arial,sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a14;">
-<tr><td align="center" style="padding:32px 16px;">
-<table width="600" cellpadding="0" cellspacing="0" style="background:#12121e;border-radius:12px;border:1px solid rgba(200,169,89,0.2);overflow:hidden;">
+<body style="margin:0;padding:0;background:#003B73;font-family:'Montserrat',Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#003B73;">
+<tr><td align="center" style="padding:40px 16px;">
+<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;border:1px solid rgba(0,0,0,0.1);overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.1);">
 
     <!-- Header -->
-    <tr><td style="background:linear-gradient(135deg,#0a0a14,#1a1a2e);padding:32px 24px;text-align:center;border-bottom:2px solid #C8A959;">
+    <tr><td style="background:#f4f7fa;padding:32px 24px;text-align:center;border-bottom:3px solid #C8A959;">
         <img src="{$logoUrl}" alt="Savino Del Bene Volley" style="max-height:80px;margin-bottom:20px;">
-        <h1 style="margin:0;font-size:24px;font-weight:900;color:#ffffff;letter-spacing:0.08em;text-transform:uppercase;">TALENT DAY 2026</h1>
+        <h1 style="margin:0;font-size:24px;font-weight:900;color:#003B73;letter-spacing:0.08em;text-transform:uppercase;">TALENT DAY 2026</h1>
     </td></tr>
 
     <!-- Body -->
-    <tr><td style="padding:32px 28px;">
-        <p style="color:#e0e0e0;font-size:15px;line-height:1.7;margin:0 0 20px;">Cara <strong style="color:#ffffff;">{$nome} {$cognome}</strong>,</p>
-        <p style="color:#e0e0e0;font-size:15px;line-height:1.7;margin:0 0 20px;">siamo felici di comunicarti che sei stata selezionata per partecipare al <strong style="color:#C8A959;">Talent Day 2026</strong>, una giornata dove potrai mettere in mostra il tuo talento sotto lo sguardo dello staff della <strong>Savino del Bene Volley Scandicci!</strong> Qui di seguito troverai tutte le informazioni utili!</p>
+    <tr><td style="padding:40px 32px;">
+        <p style="color:#222222;font-size:16px;line-height:1.7;margin:0 0 20px;">Cara <strong>{$nome} {$cognome}</strong>,</p>
+        <p style="color:#444444;font-size:15px;line-height:1.7;margin:0 0 24px;">siamo felici di comunicarti che sei stata selezionata per partecipare al <strong style="color:#003B73;">Talent Day 2026</strong>, una giornata dove potrai mettere in mostra il tuo talento sotto lo sguardo dello staff della <strong>Savino del Bene Volley Scandicci!</strong> Qui di seguito troverai tutte le informazioni utili.</p>
 
         <!-- Tappa Card -->
-        <table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(200,169,89,0.06);border:1px solid rgba(200,169,89,0.15);border-radius:8px;margin:20px 0;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fbfd;border:1px solid #e1e7f0;border-left:4px solid #C8A959;border-radius:6px;margin:24px 0;">
         <tr><td style="padding:20px 24px;">
             <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#C8A959;">Dove e quando?</p>
-            <p style="margin:4px 0;font-size:16px;color:#ffffff;font-weight:bold;">{$tappa}</p>
+            <p style="margin:4px 0;font-size:16px;color:#003B73;font-weight:bold;">{$tappa}</p>
         </td></tr>
         </table>
 
         <!-- Dati Atleta Card -->
-        <table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:8px;margin:20px 0;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fbfd;border:1px solid #e1e7f0;border-left:4px solid #003B73;border-radius:6px;margin:24px 0;">
         <tr><td style="padding:20px 24px;">
-            <p style="margin:0 0 12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#C8A959;">Cosa ci hai comunicato?</p>
+            <p style="margin:0 0 12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#003B73;">Cosa ci hai comunicato?</p>
             {$datiAtleta}
         </td></tr>
         </table>
 
-        <p style="color:#e0e0e0;font-size:15px;line-height:1.7;margin:20px 0;">Ti raccomandiamo di presentarti sul posto con <strong>30 minuti di anticipo</strong>. L'orario dell'allenamento e l’indirizzo della struttura verranno forniti una volta concluse le iscrizioni.</p>
+        <p style="color:#444444;font-size:15px;line-height:1.7;margin:24px 0 20px;">Ti raccomandiamo di presentarti sul posto con <strong>30 minuti di anticipo</strong>. L'orario dell'allenamento e l’indirizzo della struttura verranno forniti una volta concluse le iscrizioni.</p>
 
-        <p style="color:#C8A959;font-size:16px;font-weight:bold;margin:30px 0 10px;">Cosa dovrai avere con te?</p>
-        <ul style="color:#e0e0e0;font-size:14px;line-height:1.8;margin:0 0 20px;padding-left:20px;">
+        <p style="color:#003B73;font-size:16px;font-weight:bold;margin:30px 0 10px;">Cosa dovrai avere con te?</p>
+        <ul style="color:#444444;font-size:14px;line-height:1.8;margin:0 0 20px;padding-left:20px;">
             <li>documento di identità;</li>
             <li>copia cartacea del certificato medico attività sportiva agonistica;</li>
             <li>liberatoria immagini sottoscritta dal genitore (i moduli sono in allegato alla presente);</li>
@@ -433,18 +445,18 @@ class TalentDayController
             <li>occorrente per l’allenamento (ti verrà fornita una t-shirt dell’evento).</li>
         </ul>
 
-        <p style="color:#C8A959;font-size:16px;font-weight:bold;margin:30px 0 10px;">Ricorda inoltre:</p>
-        <ul style="color:#e0e0e0;font-size:14px;line-height:1.8;margin:0 0 20px;padding-left:20px;">
+        <p style="color:#003B73;font-size:16px;font-weight:bold;margin:30px 0 10px;">Ricorda inoltre:</p>
+        <ul style="color:#444444;font-size:14px;line-height:1.8;margin:0 0 24px;padding-left:20px;">
             <li>L’ingresso del Palasport sarà consentito ad un massimo di <strong>due accompagnatori</strong> per ciascuna atleta;</li>
             <li>E’ <strong>severamente vietato</strong> scattare fotografie ed effettuare riprese video.</li>
         </ul>
 
-        <p style="color:#8a8a9a;font-size:13px;line-height:1.7;margin:30px 0 0;">Se hai bisogno di ulteriori informazioni contattaci alla mail <a href="mailto:giovanile@savinodelbenevolley.it" style="color:#C8A959;">giovanile@savinodelbenevolley.it</a>.</p>
+        <p style="border-top:1px solid #eeeeee;padding-top:20px;color:#666666;font-size:13px;line-height:1.7;margin:30px 0 0;">Se hai bisogno di ulteriori informazioni contattaci alla mail <a href="mailto:giovanile@savinodelbenevolley.it" style="color:#0056b3;font-weight:bold;text-decoration:none;">giovanile@savinodelbenevolley.it</a>.</p>
     </td></tr>
 
     <!-- Footer -->
-    <tr><td style="padding:20px 28px;border-top:1px solid rgba(200,169,89,0.1);text-align:center;">
-        <p style="margin:0;font-size:11px;color:#8a8a9a;line-height:1.6;">Pallavolo Scandicci Savino Del Bene ssdrl<br>Via Benozzo Gozzoli, 5/6 — 50018 Scandicci (FI)</p>
+    <tr><td style="padding:24px 28px;background:#f4f7fa;border-top:1px solid #e1e7f0;text-align:center;">
+        <p style="margin:0;font-size:12px;color:#777777;line-height:1.6;"><strong>Pallavolo Scandicci Savino Del Bene ssdrl</strong><br>Via Benozzo Gozzoli, 5/6 — 50018 Scandicci (FI)</p>
     </td></tr>
 
 </table>

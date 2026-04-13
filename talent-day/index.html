@@ -152,26 +152,30 @@
             </div>
             <div class="td-grid" style="margin-top:18px">
                 <div class="td-field">
-                    <label class="td-label" for="cellulare">Cellulare</label>
-                    <input id="cellulare" class="td-input" type="tel" placeholder="+39 ...">
+                    <label class="td-label" for="cellulare">Cellulare <span class="required">*</span></label>
+                    <input id="cellulare" class="td-input" type="tel" placeholder="+39 ..." required>
+                    <span class="td-field-error" data-for="cellulare">Campo obbligatorio</span>
                 </div>
                 <div class="td-field">
-                    <label class="td-label" for="indirizzo">Indirizzo</label>
-                    <input id="indirizzo" class="td-input" type="text" placeholder="Via, Numero">
+                    <label class="td-label" for="indirizzo">Indirizzo <span class="required">*</span></label>
+                    <input id="indirizzo" class="td-input" type="text" placeholder="Via, Numero" required>
+                    <span class="td-field-error" data-for="indirizzo">Campo obbligatorio</span>
                 </div>
             </div>
             <div class="td-grid" style="margin-top:18px">
                 <div class="td-field">
-                    <label class="td-label" for="citta_cap">Città / CAP</label>
-                    <input id="citta_cap" class="td-input" type="text" placeholder="Città, CAP">
+                    <label class="td-label" for="citta_cap">Città / CAP <span class="required">*</span></label>
+                    <input id="citta_cap" class="td-input" type="text" placeholder="Città, CAP" required>
+                    <span class="td-field-error" data-for="citta_cap">Campo obbligatorio</span>
                 </div>
                 <div class="td-field">
-                    <label class="td-label" for="taglia_tshirt">Taglia T-shirt</label>
-                    <select id="taglia_tshirt" class="td-select">
+                    <label class="td-label" for="taglia_tshirt">Taglia T-shirt <span class="required">*</span></label>
+                    <select id="taglia_tshirt" class="td-select" required>
                         <option value="">—</option>
                         <option>XXS</option><option>XS</option><option>S</option>
                         <option>M</option><option>L</option><option>XL</option><option>XXL</option>
                     </select>
+                    <span class="td-field-error" data-for="taglia_tshirt">Seleziona la taglia</span>
                 </div>
             </div>
         </div>
@@ -181,22 +185,25 @@
             <div class="td-section-title"><i class="ph ph-volleyball"></i> Info Sportive</div>
             <div class="td-grid">
                 <div class="td-field">
-                    <label class="td-label" for="club_tesseramento">Club di Tesseramento</label>
-                    <input id="club_tesseramento" class="td-input" type="text" placeholder="Nome del club">
+                    <label class="td-label" for="club_tesseramento">Club di Tesseramento <span class="required">*</span></label>
+                    <input id="club_tesseramento" class="td-input" type="text" placeholder="Nome del club" required>
+                    <span class="td-field-error" data-for="club_tesseramento">Campo obbligatorio</span>
                 </div>
                 <div class="td-field">
-                    <label class="td-label" for="ruolo">Ruolo</label>
-                    <select id="ruolo" class="td-select">
+                    <label class="td-label" for="ruolo">Ruolo <span class="required">*</span></label>
+                    <select id="ruolo" class="td-select" required>
                         <option value="">—</option>
                         <option>Palleggiatrice</option><option>Opposta</option>
                         <option>Schiacciatrice</option><option>Centrale</option><option>Libero</option>
                     </select>
+                    <span class="td-field-error" data-for="ruolo">Seleziona il ruolo</span>
                 </div>
             </div>
             <div class="td-grid single" style="margin-top:18px">
                 <div class="td-field">
-                    <label class="td-label" for="campionati">Campionati disputati</label>
-                    <input id="campionati" class="td-input" type="text" placeholder="es. Serie C, Under 18...">
+                    <label class="td-label" for="campionati">Campionati disputati <span class="required">*</span></label>
+                    <input id="campionati" class="td-input" type="text" placeholder="es. Serie C, Under 18..." required>
+                    <span class="td-field-error" data-for="campionati">Campo obbligatorio</span>
                 </div>
             </div>
         </div>
@@ -206,18 +213,21 @@
             <div class="td-section-title"><i class="ph ph-users"></i> Genitore / Tutore</div>
             <div class="td-grid">
                 <div class="td-field">
-                    <label class="td-label" for="nome_genitore">Nome e Cognome</label>
-                    <input id="nome_genitore" class="td-input" type="text" placeholder="Nome e cognome genitore">
+                    <label class="td-label" for="nome_genitore">Nome e Cognome <span class="required">*</span></label>
+                    <input id="nome_genitore" class="td-input" type="text" placeholder="Nome e cognome genitore" required>
+                    <span class="td-field-error" data-for="nome_genitore">Campo obbligatorio</span>
                 </div>
                 <div class="td-field">
-                    <label class="td-label" for="telefono_genitore">Telefono</label>
-                    <input id="telefono_genitore" class="td-input" type="tel" placeholder="+39 ...">
+                    <label class="td-label" for="telefono_genitore">Telefono <span class="required">*</span></label>
+                    <input id="telefono_genitore" class="td-input" type="tel" placeholder="+39 ..." required>
+                    <span class="td-field-error" data-for="telefono_genitore">Campo obbligatorio</span>
                 </div>
             </div>
             <div class="td-grid single" style="margin-top:18px">
                 <div class="td-field">
-                    <label class="td-label" for="email_genitore">Email Genitore</label>
-                    <input id="email_genitore" class="td-input" type="email" placeholder="email.genitore@esempio.it">
+                    <label class="td-label" for="email_genitore">Email Genitore <span class="required">*</span></label>
+                    <input id="email_genitore" class="td-input" type="email" placeholder="email.genitore@esempio.it" required>
+                    <span class="td-field-error" data-for="email_genitore">Inserisci un'email valida</span>
                 </div>
             </div>
         </div>
@@ -327,7 +337,12 @@
     const submitBtn = document.getElementById('td-submit');
     const globalError = document.getElementById('td-global-error');
     const successScreen = document.getElementById('td-success');
-    const REQUIRED = ['tappa', 'nome', 'cognome', 'data_nascita', 'email'];
+    const REQUIRED = [
+        'tappa', 'nome', 'cognome', 'data_nascita', 'email',
+        'cellulare', 'indirizzo', 'citta_cap', 'taglia_tshirt',
+        'club_tesseramento', 'ruolo', 'campionati',
+        'nome_genitore', 'telefono_genitore', 'email_genitore'
+    ];
 
     function showErr(id) {
         const el = document.getElementById(id);
@@ -353,7 +368,7 @@
         if (!el) return;
         el.addEventListener('blur', () => {
             if (!el.value.trim()) showErr(id);
-            else if (id === 'email' && !isEmail(el.value.trim())) showErr(id);
+            else if ((id === 'email' || id === 'email_genitore') && !isEmail(el.value.trim())) showErr(id);
             else clearErr(id);
         });
         el.addEventListener('input', () => clearErr(id));
@@ -367,7 +382,7 @@
         REQUIRED.forEach(id => {
             const el = document.getElementById(id);
             if (!el || !el.value.trim()) { showErr(id); bad = true; }
-            else if (id === 'email' && !isEmail(el.value.trim())) { showErr(id); bad = true; }
+            else if ((id === 'email' || id === 'email_genitore') && !isEmail(el.value.trim())) { showErr(id); bad = true; }
         });
         if (!document.getElementById('privacy').checked) { showErr('privacy'); bad = true; }
 

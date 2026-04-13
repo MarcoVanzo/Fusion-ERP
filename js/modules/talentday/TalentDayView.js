@@ -277,6 +277,16 @@ export class TalentDayView {
                         <i class="ph ph-${raw ? 'check-circle' : 'warning-circle'}" style="color:var(--color-${raw ? 'green' : 'red'});font-size:18px"></i>
                     </td>`;
                 }
+                if (key === 'tappa' && raw) {
+                    let location = raw;
+                    if (raw.includes(',')) {
+                        const parts = raw.split(',');
+                        if (parts.length > 1) {
+                            location = parts[1].split('-')[0].trim();
+                        }
+                    }
+                    return cell(location);
+                }
                 if (metricKeys[key]) return cellMetric(raw, metricKeys[key]);
                 if (boldKeys.has(key)) return cellBold(raw);
                 if (key === 'data_registrazione' || key === 'data_nascita') return cell(fmtDate(raw));
