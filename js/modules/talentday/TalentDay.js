@@ -318,6 +318,7 @@ class TalentDayModule {
                 tappa:              document.getElementById("td-tappa")?.value.trim() || null,
                 nome:               document.getElementById("td-nome")?.value.trim(),
                 cognome:            document.getElementById("td-cognome")?.value.trim(),
+                privacy_consent:    document.getElementById("td-privacy-consent")?.checked ? 1 : 0,
                 indirizzo:          document.getElementById("td-indirizzo")?.value.trim() || null,
                 citta_cap:          document.getElementById("td-citta-cap")?.value.trim() || null,
                 data_nascita:       document.getElementById("td-data-nascita")?.value || null,

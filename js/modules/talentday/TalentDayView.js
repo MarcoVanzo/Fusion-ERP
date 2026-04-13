@@ -209,6 +209,7 @@ export class TalentDayView {
         // anagrafica — Nome/Cognome first, Tappa included
         return [
             ['Nome', 'nome'], ['Cognome', 'cognome'], ['Tappa', 'tappa'],
+            ['Privacy GDPR', 'privacy_consent'],
             ['Data Nascita', 'data_nascita'],
             ['Data Reg.', 'data_registrazione'], ['Ora', 'ora_registrazione'],
             ['Email', 'email'], ['Città/CAP', 'citta_cap'], ['Cellulare', 'cellulare'],
@@ -270,6 +271,12 @@ export class TalentDayView {
         return data.map((e) => {
             let cols = colDefs.map(([, key]) => {
                 const raw = e[key];
+                if (key === 'privacy_consent') {
+                    // Boolean visual feedback
+                    return `<td style="padding:10px 12px;border-bottom:1px solid var(--color-border);text-align:center;">
+                        <i class="ph ph-${raw ? 'check-circle' : 'warning-circle'}" style="color:var(--color-${raw ? 'green' : 'red'});font-size:18px"></i>
+                    </td>`;
+                }
                 if (metricKeys[key]) return cellMetric(raw, metricKeys[key]);
                 if (boldKeys.has(key)) return cellBold(raw);
                 if (key === 'data_registrazione' || key === 'data_nascita') return cell(fmtDate(raw));
@@ -341,6 +348,11 @@ export class TalentDayView {
                         <label class="form-label" for="td-email">Email</label>
                         <input id="td-email" class="form-input" type="email" value="${esc(e.email)}">
                     </div>
+                </div>
+                <!-- Consenso Privacy -->
+                <div class="form-group" style="margin-top:12px;background:rgba(255,255,255,0.03);padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.05);display:flex;align-items:center;gap:10px;">
+                    <input id="td-privacy-consent" type="checkbox" style="width:18px;height:18px;accent-color:var(--accent-pink)" ${e.privacy_consent === 1 || e.privacy_consent === true || !isEdit ? 'checked' : ''}>
+                    <label class="form-label" for="td-privacy-consent" style="margin:0;cursor:pointer;">Consenso Privacy Autorizzato (GDPR) <span style="color:var(--color-red)">*</span></label>
                 </div>
 
                 <!-- Section: Anagrafica -->

@@ -385,6 +385,7 @@
             club_tesseramento: val('club_tesseramento'), ruolo: val('ruolo'),
             campionati: val('campionati'), nome_genitore: val('nome_genitore'),
             telefono_genitore: val('telefono_genitore'), email_genitore: val('email_genitore'),
+            privacy_consent: document.getElementById('privacy').checked ? 1 : 0
         };
 
         submitBtn.classList.add('loading');

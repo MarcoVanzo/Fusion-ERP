@@ -33,7 +33,7 @@ class TalentDayController
             SELECT id, data_registrazione, ora_registrazione, email, tappa,
                    nome, cognome, indirizzo, citta_cap, data_nascita, cellulare,
                    taglia_tshirt, club_tesseramento, ruolo, campionati,
-                   nome_genitore, telefono_genitore, email_genitore,
+                   nome_genitore, telefono_genitore, email_genitore, privacy_consent,
                    altezza, peso, reach_cm, cmj, salto_rincorsa,
                    created_at
             FROM talent_day_entries
@@ -69,13 +69,13 @@ class TalentDayController
                 (tenant_id, data_registrazione, ora_registrazione, email, tappa,
                  nome, cognome, indirizzo, citta_cap, data_nascita, cellulare,
                  taglia_tshirt, club_tesseramento, ruolo, campionati,
-                 nome_genitore, telefono_genitore, email_genitore,
+                 nome_genitore, telefono_genitore, email_genitore, privacy_consent,
                  altezza, peso, reach_cm, cmj, salto_rincorsa)
             VALUES
                 (:tenant_id, :data_reg, :ora_reg, :email, :tappa,
                  :nome, :cognome, :indirizzo, :citta_cap, :data_nascita, :cellulare,
                  :taglia, :club, :ruolo, :campionati,
-                 :nome_gen, :tel_gen, :email_gen,
+                 :nome_gen, :tel_gen, :email_gen, :privacy_consent,
                  :altezza, :peso, :reach_cm, :cmj, :salto_rincorsa)
         ");
 
@@ -98,6 +98,7 @@ class TalentDayController
             ':nome_gen'     => $data['nome_genitore'] ?? null,
             ':tel_gen'      => $data['telefono_genitore'] ?? null,
             ':email_gen'    => $data['email_genitore'] ?? null,
+            ':privacy_consent' => !empty($data['privacy_consent']) ? 1 : 0,
             ':altezza'      => !empty($data['altezza'])        ? (float)$data['altezza']        : null,
             ':peso'         => !empty($data['peso'])           ? (float)$data['peso']           : null,
             ':reach_cm'     => !empty($data['reach_cm'])       ? (float)$data['reach_cm']       : null,
@@ -141,6 +142,7 @@ class TalentDayController
                 nome_genitore      = :nome_gen,
                 telefono_genitore  = :tel_gen,
                 email_genitore     = :email_gen,
+                privacy_consent    = :privacy_consent,
                 altezza            = :altezza,
                 peso               = :peso,
                 reach_cm           = :reach_cm,
@@ -169,6 +171,7 @@ class TalentDayController
             ':nome_gen'     => $data['nome_genitore'] ?? null,
             ':tel_gen'      => $data['telefono_genitore'] ?? null,
             ':email_gen'    => $data['email_genitore'] ?? null,
+            ':privacy_consent' => !empty($data['privacy_consent']) ? 1 : 0,
             ':altezza'      => !empty($data['altezza'])        ? (float)$data['altezza']        : null,
             ':peso'         => !empty($data['peso'])           ? (float)$data['peso']           : null,
             ':reach_cm'     => !empty($data['reach_cm'])       ? (float)$data['reach_cm']       : null,
@@ -267,12 +270,12 @@ class TalentDayController
                 (tenant_id, data_registrazione, ora_registrazione, email, tappa,
                  nome, cognome, indirizzo, citta_cap, data_nascita, cellulare,
                  taglia_tshirt, club_tesseramento, ruolo, campionati,
-                 nome_genitore, telefono_genitore, email_genitore)
+                 nome_genitore, telefono_genitore, email_genitore, privacy_consent)
             VALUES
                 ('TNT_fusion', :data_reg, :ora_reg, :email, :tappa,
                  :nome, :cognome, :indirizzo, :citta_cap, :data_nascita, :cellulare,
                  :taglia, :club, :ruolo, :campionati,
-                 :nome_gen, :tel_gen, :email_gen)
+                 :nome_gen, :tel_gen, :email_gen, :privacy_consent)
         ");
 
         $stmt->execute([
@@ -293,6 +296,7 @@ class TalentDayController
             ':nome_gen'     => !empty($data['nome_genitore']) ? trim($data['nome_genitore']) : null,
             ':tel_gen'      => !empty($data['telefono_genitore']) ? trim($data['telefono_genitore']) : null,
             ':email_gen'    => !empty($data['email_genitore']) ? trim($data['email_genitore']) : null,
+            ':privacy_consent' => !empty($data['privacy_consent']) ? 1 : 0,
         ]);
 
         $insertId = $this->db->lastInsertId();
