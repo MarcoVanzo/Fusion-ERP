@@ -175,6 +175,8 @@ class OutSeasonController
                  :ruolo, :kit, :week, :formula, :pagare,
                  :sconto, :edate, :estatus, :osummary, NOW())
             ON DUPLICATE KEY UPDATE
+                tenant_id            = VALUES(tenant_id),
+                season_key           = VALUES(season_key),
                 nome_e_cognome       = VALUES(nome_e_cognome),
                 email                = VALUES(email),
                 cellulare            = VALUES(cellulare),

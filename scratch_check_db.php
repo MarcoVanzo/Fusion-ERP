@@ -17,20 +17,16 @@ try {
     $db = Database::getInstance();
     $tid = $_ENV['DEFAULT_TENANT_ID'] ?? 'TNT_fusion';
     
-    echo "Checking tournaments for tenant: $tid\n";
+    echo "Checking ec_products:\n";
     
-    $stmt = $db->prepare("
-        SELECT id, tenant_id, title, type, deleted_at 
-        FROM events 
-        WHERE type = 'tournament'
-    ");
+    $stmt = $db->prepare("SELECT id, tenant_id, nome, prezzo FROM ec_products");
     $stmt->execute();
     $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     if (empty($results)) {
-        echo "No tournaments found in 'events' table.\n";
+        echo "No products found in 'ec_products' table.\n";
     } else {
-        echo "Found " . count($results) . " tournaments:\n";
+        echo "Found " . count($results) . " products:\n";
         print_r($results);
     }
 
