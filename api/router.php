@@ -15,11 +15,10 @@ try {
     $dotenv = Dotenv\Dotenv::createMutable(__DIR__ . '/..');
     $dotenv->safeLoad();
     require_once __DIR__ . '/Shared/Database.php';
-    if (isset($_GET['force_sync_outseason'])) {
-        require_once __DIR__ . '/Modules/OutSeason/OutSeasonController.php';
-        $_SESSION['admin_auth']['tenant_id'] = 'TNT_fusion';
-        $res = FusionERP\Modules\OutSeason\OutSeasonController::_doSync('2026');
-        echo json_encode($res);
+    if (isset($_GET['force_db_update'])) {
+        $pdo = FusionERP\Shared\Database::getInstance();
+        $stmt = $pdo->exec("UPDATE outseason_entries SET tenant_id = 'TNT_fusion' WHERE tenant_id = 'TNT_default' OR tenant_id = '' OR tenant_id IS NULL");
+        echo "UPDATED $stmt ROWS";
         exit;
     }
 } catch (\Exception $e) {}
