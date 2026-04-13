@@ -31,14 +31,16 @@ class Mailer
         string $toName,
         string $subject,
         string $htmlBody,
-        string $textBody = ''
+        string $textBody = '',
+        ?string $fromOverride = null,
+        ?string $fromNameOverride = null
     ): bool {
-        $host       = getenv('SMTP_HOST') ?: '';
-        $port       = (int)(getenv('SMTP_PORT') ?: 587);
-        $user       = getenv('SMTP_USER') ?: '';
-        $pass       = getenv('SMTP_PASS') ?: '';
-        $encryption = strtolower(getenv('SMTP_ENCRYPTION') ?: 'tls');
-        $fromName   = getenv('SMTP_FROM_NAME') ?: 'Fusion ERP';
+        $host       = $_ENV['SMTP_HOST'] ?? $_SERVER['SMTP_HOST'] ?? getenv('SMTP_HOST') ?: '';
+        $port       = (int)($_ENV['SMTP_PORT'] ?? $_SERVER['SMTP_PORT'] ?? getenv('SMTP_PORT') ?: 587);
+        $user       = $_ENV['SMTP_USER'] ?? $_SERVER['SMTP_USER'] ?? getenv('SMTP_USER') ?: '';
+        $pass       = $_ENV['SMTP_PASS'] ?? $_SERVER['SMTP_PASS'] ?? getenv('SMTP_PASS') ?: '';
+        $encryption = strtolower($_ENV['SMTP_ENCRYPTION'] ?? $_SERVER['SMTP_ENCRYPTION'] ?? getenv('SMTP_ENCRYPTION') ?: 'tls');
+        $fromName   = $fromNameOverride ?: ($_ENV['SMTP_FROM_NAME'] ?? $_SERVER['SMTP_FROM_NAME'] ?? getenv('SMTP_FROM_NAME') ?: 'Fusion ERP');
         $from       = $user ?: 'noreply@localhost';
 
         // ── Tentativo SMTP ────────────────────────────────────────────────────
@@ -57,6 +59,9 @@ class Mailer
                 $mail->CharSet    = 'UTF-8';
 
                 $mail->setFrom($from, $fromName);
+                if ($fromOverride) {
+                    $mail->addReplyTo($fromOverride, $fromName);
+                }
                 $mail->addAddress($toEmail, $toName);
 
                 $mail->isHTML(true);
@@ -102,14 +107,16 @@ class Mailer
         string $htmlBody,
         string $textBody = '',
         array  $attachments = [],
-        array  $cc = []
+        array  $cc = [],
+        ?string $fromOverride = null,
+        ?string $fromNameOverride = null
     ): bool {
-        $host       = getenv('SMTP_HOST') ?: '';
-        $port       = (int)(getenv('SMTP_PORT') ?: 587);
-        $user       = getenv('SMTP_USER') ?: '';
-        $pass       = getenv('SMTP_PASS') ?: '';
-        $encryption = strtolower(getenv('SMTP_ENCRYPTION') ?: 'tls');
-        $fromName   = getenv('SMTP_FROM_NAME') ?: 'Fusion ERP';
+        $host       = $_ENV['SMTP_HOST'] ?? $_SERVER['SMTP_HOST'] ?? getenv('SMTP_HOST') ?: '';
+        $port       = (int)($_ENV['SMTP_PORT'] ?? $_SERVER['SMTP_PORT'] ?? getenv('SMTP_PORT') ?: 587);
+        $user       = $_ENV['SMTP_USER'] ?? $_SERVER['SMTP_USER'] ?? getenv('SMTP_USER') ?: '';
+        $pass       = $_ENV['SMTP_PASS'] ?? $_SERVER['SMTP_PASS'] ?? getenv('SMTP_PASS') ?: '';
+        $encryption = strtolower($_ENV['SMTP_ENCRYPTION'] ?? $_SERVER['SMTP_ENCRYPTION'] ?? getenv('SMTP_ENCRYPTION') ?: 'tls');
+        $fromName   = $fromNameOverride ?: ($_ENV['SMTP_FROM_NAME'] ?? $_SERVER['SMTP_FROM_NAME'] ?? getenv('SMTP_FROM_NAME') ?: 'Fusion ERP');
         $from       = $user ?: 'noreply@localhost';
 
         if (empty($host) || empty($user) || empty($pass)) {
@@ -129,6 +136,9 @@ class Mailer
             $mail->CharSet    = 'UTF-8';
 
             $mail->setFrom($from, $fromName);
+            if ($fromOverride) {
+                $mail->addReplyTo($fromOverride, $fromName);
+            }
             $mail->addAddress($toEmail, $toName);
 
             foreach ($cc as $ccAddr) {

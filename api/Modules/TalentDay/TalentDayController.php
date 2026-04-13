@@ -224,6 +224,7 @@ class TalentDayController
      * ───────────────────────────────────────────────────────────────────── */
     public function publicRegister(): void
     {
+        try {
         // CORS for public form
         header('Access-Control-Allow-Origin: *');
         header('Access-Control-Allow-Methods: POST, OPTIONS');
@@ -309,7 +310,7 @@ class TalentDayController
 
         $subject = 'Conferma Registrazione — Talent Day 2026 Savino Del Bene Volley';
 
-        $htmlBody = $this->buildConfirmationEmail($nome, $cognome, $tappa);
+        $htmlBody = $this->buildConfirmationEmail($data);
 
         // Attachments from talent-day/attachments/ directory
         $attachDir = realpath(__DIR__ . '/../../../talent-day/attachments');
@@ -323,32 +324,66 @@ class TalentDayController
         }
 
         // Send to registrant
+        // Invio mail con mittente forzato 'Talent Day SDB'
         Mailer::sendWithAttachments(
             $email,
             "{$nome} {$cognome}",
             $subject,
             $htmlBody,
             '',
-            $attachments
+            $attachments,
+            [], // cc
+            'giovanile@savinodelbenevolley.it', // fromEmail
+            'Talent Day SDB'               // fromName
         );
 
         // Send copy to staff
-        $staffEmail = getenv('TALENT_DAY_STAFF_EMAIL') ?: 'info@savinodelbenevolley.it';
+        $staffEmail = getenv('TALENT_DAY_STAFF_EMAIL') ?: 'giovanile@savinodelbenevolley.it';
         Mailer::send(
             $staffEmail,
-            'Staff Talent Day',
+            'Staff Talent Day SDB',
             "[Nuova Registrazione] Talent Day — {$nome} {$cognome}",
-            "<p>Nuova registrazione Talent Day:</p><p><strong>{$nome} {$cognome}</strong><br>Tappa: {$tappa}<br>Email: {$email}</p>"
+            "<p>Nuova registrazione Talent Day:</p><p><strong>{$nome} {$cognome}</strong><br>Tappa: {$tappa}<br>Email: {$email}</p>",
+            '',
+            'giovanile@savinodelbenevolley.it', // fromEmail
+            'Talent Day SDB'               // fromName
         );
 
         Response::success(['success' => true, 'id' => $insertId]);
+        } catch (\Throwable $e) {
+            Response::error('PHP_ERROR: ' . $e->getMessage() . ' in ' . basename($e->getFile()) . ':' . $e->getLine(), 500);
+        }
     }
 
     /**
      * Build branded HTML email for Talent Day confirmation.
      */
-    private function buildConfirmationEmail(string $nome, string $cognome, string $tappa): string
+    private function buildConfirmationEmail(array $data): string
     {
+        $nome         = htmlspecialchars(trim($data['nome'] ?? ''));
+        $cognome      = htmlspecialchars(trim($data['cognome'] ?? ''));
+        $tappa        = htmlspecialchars(trim($data['tappa'] ?? ''));
+        $data_nascita = htmlspecialchars(trim($data['data_nascita'] ?? ''));
+        $email        = htmlspecialchars(trim($data['email'] ?? ''));
+        $cellulare    = htmlspecialchars(trim($data['cellulare'] ?? ''));
+        $citta_cap    = htmlspecialchars(trim($data['citta_cap'] ?? ''));
+        $ruolo        = htmlspecialchars(trim($data['ruolo'] ?? ''));
+        $campionati   = htmlspecialchars(trim($data['campionati'] ?? ''));
+        $club         = htmlspecialchars(trim($data['club_tesseramento'] ?? ''));
+        $taglia       = htmlspecialchars(trim($data['taglia_tshirt'] ?? ''));
+
+        // Formattazione dei dati extra inseriti dall'atleta
+        $datiAtleta = "<p style='margin:4px 0;font-size:14px;color:#e0e0e0;'><strong>Data di nascita:</strong> {$data_nascita}</p>";
+        if ($email)      $datiAtleta .= "<p style='margin:4px 0;font-size:14px;color:#e0e0e0;'><strong>Email:</strong> {$email}</p>";
+        if ($cellulare)  $datiAtleta .= "<p style='margin:4px 0;font-size:14px;color:#e0e0e0;'><strong>Cellulare:</strong> {$cellulare}</p>";
+        if ($citta_cap)  $datiAtleta .= "<p style='margin:4px 0;font-size:14px;color:#e0e0e0;'><strong>Città/CAP:</strong> {$citta_cap}</p>";
+        if ($ruolo)      $datiAtleta .= "<p style='margin:4px 0;font-size:14px;color:#e0e0e0;'><strong>Ruolo:</strong> {$ruolo}</p>";
+        if ($campionati) $datiAtleta .= "<p style='margin:4px 0;font-size:14px;color:#e0e0e0;'><strong>Campionati disputati:</strong> {$campionati}</p>";
+        if ($club)       $datiAtleta .= "<p style='margin:4px 0;font-size:14px;color:#e0e0e0;'><strong>Club di appartenenza:</strong> {$club}</p>";
+        if ($taglia)     $datiAtleta .= "<p style='margin:4px 0;font-size:14px;color:#e0e0e0;'><strong>Taglia T-shirt:</strong> {$taglia}</p>";
+
+        $logoUrl = 'https://savinodelbenevolley.it/wp-content/uploads/2017/11/SDB_Volley_logo_trasp.png';
+
         return <<<HTML
 <!DOCTYPE html>
 <html>
@@ -360,25 +395,51 @@ class TalentDayController
 
     <!-- Header -->
     <tr><td style="background:linear-gradient(135deg,#0a0a14,#1a1a2e);padding:32px 24px;text-align:center;border-bottom:2px solid #C8A959;">
+        <img src="{$logoUrl}" alt="Savino Del Bene Volley" style="max-height:80px;margin-bottom:20px;">
         <h1 style="margin:0;font-size:24px;font-weight:900;color:#ffffff;letter-spacing:0.08em;text-transform:uppercase;">TALENT DAY 2026</h1>
-        <p style="margin:6px 0 0;font-size:12px;color:#C8A959;letter-spacing:0.15em;font-weight:600;text-transform:uppercase;">Savino Del Bene Volley</p>
     </td></tr>
 
     <!-- Body -->
     <tr><td style="padding:32px 28px;">
-        <p style="color:#e0e0e0;font-size:15px;line-height:1.7;margin:0 0 20px;">Ciao <strong style="color:#ffffff;">{$nome}</strong>,</p>
-        <p style="color:#e0e0e0;font-size:15px;line-height:1.7;margin:0 0 20px;">La tua registrazione al <strong style="color:#C8A959;">Talent Day 2026</strong> è stata confermata con successo!</p>
+        <p style="color:#e0e0e0;font-size:15px;line-height:1.7;margin:0 0 20px;">Cara <strong style="color:#ffffff;">{$nome} {$cognome}</strong>,</p>
+        <p style="color:#e0e0e0;font-size:15px;line-height:1.7;margin:0 0 20px;">siamo felici di comunicarti che sei stata selezionata per partecipare al <strong style="color:#C8A959;">Talent Day 2026</strong>, una giornata dove potrai mettere in mostra il tuo talento sotto lo sguardo dello staff della <strong>Savino del Bene Volley Scandicci!</strong> Qui di seguito troverai tutte le informazioni utili!</p>
 
-        <!-- Recap Card -->
+        <!-- Tappa Card -->
         <table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(200,169,89,0.06);border:1px solid rgba(200,169,89,0.15);border-radius:8px;margin:20px 0;">
         <tr><td style="padding:20px 24px;">
-            <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#C8A959;">Riepilogo Registrazione</p>
-            <p style="margin:4px 0;font-size:14px;color:#e0e0e0;"><strong>Nome:</strong> {$nome} {$cognome}</p>
-            <p style="margin:4px 0;font-size:14px;color:#e0e0e0;"><strong>Tappa:</strong> {$tappa}</p>
+            <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#C8A959;">Dove e quando?</p>
+            <p style="margin:4px 0;font-size:16px;color:#ffffff;font-weight:bold;">{$tappa}</p>
         </td></tr>
         </table>
 
-        <p style="color:#8a8a9a;font-size:13px;line-height:1.7;margin:20px 0 0;">Ti aspettiamo! Per qualsiasi domanda, contattaci a <a href="mailto:info@savinodelbenevolley.it" style="color:#C8A959;">info@savinodelbenevolley.it</a>.</p>
+        <!-- Dati Atleta Card -->
+        <table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:8px;margin:20px 0;">
+        <tr><td style="padding:20px 24px;">
+            <p style="margin:0 0 12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#C8A959;">Cosa ci hai comunicato?</p>
+            {$datiAtleta}
+        </td></tr>
+        </table>
+
+        <p style="color:#e0e0e0;font-size:15px;line-height:1.7;margin:20px 0;">Ti raccomandiamo di presentarti sul posto con <strong>30 minuti di anticipo</strong>. L'orario dell'allenamento e l’indirizzo della struttura verranno forniti una volta concluse le iscrizioni.</p>
+
+        <p style="color:#C8A959;font-size:16px;font-weight:bold;margin:30px 0 10px;">Cosa dovrai avere con te?</p>
+        <ul style="color:#e0e0e0;font-size:14px;line-height:1.8;margin:0 0 20px;padding-left:20px;">
+            <li>documento di identità;</li>
+            <li>copia cartacea del certificato medico attività sportiva agonistica;</li>
+            <li>liberatoria immagini sottoscritta dal genitore (i moduli sono in allegato alla presente);</li>
+            <li>autorizzazione della tua società di appartenenza a partecipare all'allenamento firmata dal Presidente e/o legale rappresentante;</li>
+            <li>liberatoria scarico responsabilità sottoscritta dal genitore (i moduli sono in allegato alla presente);</li>
+            <li>borraccia ad uso personale (a disposizione per l’intera durata dell’allenamento);</li>
+            <li>occorrente per l’allenamento (ti verrà fornita una t-shirt dell’evento).</li>
+        </ul>
+
+        <p style="color:#C8A959;font-size:16px;font-weight:bold;margin:30px 0 10px;">Ricorda inoltre:</p>
+        <ul style="color:#e0e0e0;font-size:14px;line-height:1.8;margin:0 0 20px;padding-left:20px;">
+            <li>L’ingresso del Palasport sarà consentito ad un massimo di <strong>due accompagnatori</strong> per ciascuna atleta;</li>
+            <li>E’ <strong>severamente vietato</strong> scattare fotografie ed effettuare riprese video.</li>
+        </ul>
+
+        <p style="color:#8a8a9a;font-size:13px;line-height:1.7;margin:30px 0 0;">Se hai bisogno di ulteriori informazioni contattaci alla mail <a href="mailto:giovanile@savinodelbenevolley.it" style="color:#C8A959;">giovanile@savinodelbenevolley.it</a>.</p>
     </td></tr>
 
     <!-- Footer -->
