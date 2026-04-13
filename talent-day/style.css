@@ -61,16 +61,16 @@ body {
     opacity: 1; /* Piena visibilità delle foto */
 }
 
-/* Gradient overlay molto più leggero per mostrare le foto ma permettere la lettura */
+/* Gradient overlay molto più leggero per mostrare le foto in tutto il loro splendore */
 body::before {
     content: '';
     position: fixed;
     inset: 0;
     background: linear-gradient(
         180deg,
-        rgba(13, 24, 41, 0.3) 0%,
-        rgba(13, 24, 41, 0.4) 40%,
-        rgba(13, 24, 41, 0.8) 100%
+        rgba(13, 24, 41, 0.15) 0%,   /* Molto più trasparente in alto */
+        rgba(13, 24, 41, 0.25) 40%,  /* Trasparenza media al centro */
+        rgba(13, 24, 41, 0.70) 100%  /* Più scuro in basso per coprire bene il form */
     );
     z-index: -1;
     pointer-events: none;
@@ -98,9 +98,9 @@ body::before {
 }
 
 .td-hero-logo {
-    height: 120px;
+    height: 160px; /* Incrementato drasticamente il logo (prima 120px) */
     margin-bottom: 24px;
-    filter: drop-shadow(0 4px 20px rgba(0,0,0,0.5));
+    filter: drop-shadow(0 4px 30px rgba(0,0,0,0.8)); /* Ombra più potente per risaltare */
     animation: floatIn 0.8s ease both;
 }
 
@@ -110,7 +110,7 @@ body::before {
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--white);
-    text-shadow: 0 2px 30px rgba(0,0,0,0.5);
+    text-shadow: 0 4px 60px rgba(0,0,0,1), 0 2px 20px rgba(0,0,0,0.8), 0 1px 5px rgba(0,0,0,1); /* Triple shadow ultra strong per far esplodere il testo su foto chiare */
     animation: floatIn 0.8s ease 0.15s both;
 }
 
@@ -133,16 +133,16 @@ body::before {
 
 .td-hero-subtitle {
     font-size: 16px;
-    color: rgba(255, 255, 255, 0.9);
+    color: rgba(255, 255, 255, 0.95); /* Leggermente più bianco */
     margin: 20px auto 0 auto;
     display: block;
     width: 100%; /* Obbligatorio nei contesti flex center per abilitare il text-wrapping su mobile */
     max-width: 1000px;
-    font-weight: 400;
+    font-weight: 500; /* Leggermente più spesso */
     text-align: center;
     line-height: 1.7;
     animation: floatIn 0.8s ease 0.45s both;
-    text-shadow: 0 1px 10px rgba(0,0,0,0.8);
+    text-shadow: 0 2px 30px rgba(0,0,0,1), 0 1px 8px rgba(0,0,0,1); /* Shadow pesantissima per contrasto estremo */
 }
 
 /* Tappa cards strip */
@@ -319,7 +319,7 @@ body::before {
     
     /* Ridotta altezza hero per mostrare subito il form in prima pagina */
     .td-hero { min-height: 380px; }
-    .td-hero-logo { height: 75px; margin-bottom: 12px; }
+    .td-hero-logo { height: 100px; margin-bottom: 12px; } /* Ingrandito logo mobile da 75 a 100px */
     .td-hero h1 { font-size: 32px; letter-spacing: 0.04em; }
     
     .td-hero-subtitle {
