@@ -1,18 +1,29 @@
 <?php
-if (isset($_GET['debug_db'])) {
-    require_once __DIR__ . '/../vendor/autoload.php';
-    $dotenv = Dotenv\Dotenv::createMutable(__DIR__ . '/..');
-    $dotenv->safeLoad();
-    require_once __DIR__ . '/Shared/Database.php';
-    $pdo = FusionERP\Shared\Database::getInstance();
-    $stmt = $pdo->query("SHOW CREATE TABLE outseason_entries");
-    echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
-    exit;
-}
+/**
+ * API Router — Single Entry Point
+ * Fusion ERP v1.0
+ *
+ * All API requests are routed here via .htaccess:
+ *   RewriteRule ^api/(.*)$ api/router.php [L,QSA]
+ */
 
 declare(strict_types=1);
 
 require_once __DIR__ . '/../vendor/autoload.php';
+
+try {
+    $dotenv = \Dotenv\Dotenv::createMutable(dirname(__DIR__));
+    $dotenv->safeLoad();
+    if (class_exists('FusionERP\Shared\Database')) {
+        $pdo = \FusionERP\Shared\Database::getInstance();
+        $stmt = $pdo->query("SHOW CREATE TABLE outseason_entries");
+        file_put_contents(__DIR__ . '/../debug_schema.txt', json_encode($stmt->fetchAll()));
+        
+        $stmt2 = $pdo->query("SELECT tenant_id, season_key, cognito_id, nome_e_cognome FROM outseason_entries LIMIT 10");
+        file_put_contents(__DIR__ . '/../debug_data.txt', json_encode($stmt2->fetchAll()));
+    }
+} catch (\Exception $e) {}
+
 
 use FusionERP\Shared\Auth;
 use FusionERP\Shared\RateLimiter;
