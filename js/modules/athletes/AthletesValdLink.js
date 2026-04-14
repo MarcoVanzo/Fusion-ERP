@@ -3,7 +3,7 @@ export const AthletesValdLink = (() => {
     function modalTemplate() {
         return `
             <div id="vald-link-modal" class="modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); backdrop-filter:blur(10px); z-index:9999; justify-content:center; align-items:center;">
-                <div class="modal-content card glass-card flex-col" style="width:100%; max-width:800px; max-height:90vh; background:var(--color-bg-card); border-radius:24px; padding:32px; border:1px solid rgba(255,255,255,0.1);">
+                <div class="modal-content card glass-card" style="display:flex; flex-direction:column; overflow:hidden; width:100%; max-width:800px; max-height:90vh; background:var(--color-bg-card); border-radius:24px; padding:32px; border:1px solid rgba(255,255,255,0.1);">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
                         <div>
                             <h2 style="font-family:var(--font-display); font-size:24px; color:var(--color-white); margin:0;">
@@ -28,7 +28,7 @@ export const AthletesValdLink = (() => {
                         <div class="loader-spinner"></div>
                     </div>
 
-                    <div id="vald-link-container" style="flex:1; overflow-y:auto; display:none; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:12px;">
+                    <div id="vald-link-container" style="flex:1; overflow-y:auto; min-height:0; display:none; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:12px;">
                         <table class="table" style="width:100%; border-collapse:collapse; text-align:left;">
                             <thead style="background:rgba(255,255,255,0.05); position:sticky; top:0; z-index:10;">
                                 <tr>
