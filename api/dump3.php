@@ -4,9 +4,11 @@ $dotenv = Dotenv\Dotenv::createUnsafeImmutable(dirname(__DIR__));
 $dotenv->load();
 
 $db = \FusionERP\Shared\Database::getInstance();
-$stmt = $db->prepare("SELECT id, first_name, last_name, vald_profile_id FROM athletes WHERE last_name LIKE '%Olmesini%'");
+$stmt = $db->prepare("SELECT test_date, test_type, metrics FROM vald_test_results WHERE athlete_id = 'ATH_f4016c19' ORDER BY test_date DESC");
 $stmt->execute();
-$data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$tests = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-echo "---- Athletes ----\n";
-print_r($data);
+echo "---- Tests for ATH_f4016c19 (Olmesini mapped) ----\n";
+foreach ($tests as $t) {
+    echo "{$t['test_date']} | {$t['test_type']} | {$t['metrics']}\n";
+}
