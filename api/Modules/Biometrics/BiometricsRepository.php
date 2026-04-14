@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace FusionERP\Modules\Biometrics;
 
 use FusionERP\Shared\Database;
+use FusionERP\Shared\TenantContext;
 
 class BiometricsRepository
 {
@@ -45,11 +46,12 @@ class BiometricsRepository
         $stmt = $this->db->prepare(
             'SELECT id, record_date, height_cm, weight_kg, bmi, wingspan_cm, measured_by, notes, created_at
              FROM biometric_records
-             WHERE athlete_id = :athlete_id
+             WHERE athlete_id = :athlete_id AND tenant_id = :tid
              ORDER BY record_date DESC
              LIMIT :lim'
         );
         $stmt->bindValue(':athlete_id', $athleteId);
+        $stmt->bindValue(':tid', TenantContext::id());
         $stmt->bindValue(':lim', $limit, \PDO::PARAM_INT);
         $stmt->execute();
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
@@ -63,11 +65,11 @@ class BiometricsRepository
         $stmt = $this->db->prepare(
             'SELECT id, record_date, height_cm, weight_kg, bmi, wingspan_cm
              FROM biometric_records
-             WHERE athlete_id = :athlete_id
+             WHERE athlete_id = :athlete_id AND tenant_id = :tid
              ORDER BY record_date DESC
              LIMIT 1'
         );
-        $stmt->execute([':athlete_id' => $athleteId]);
+        $stmt->execute([':athlete_id' => $athleteId, ':tid' => TenantContext::id()]);
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
         return $row ?: null;
     }
@@ -85,10 +87,11 @@ class BiometricsRepository
              JOIN athletes a ON a.id = br.athlete_id
              JOIN teams t ON t.id = a.team_id
              WHERE t.category = :category
+               AND a.tenant_id = :tid
                AND br.record_date >= DATE_SUB(CURDATE(), INTERVAL 90 DAY)
                AND br.bmi IS NOT NULL'
         );
-        $stmt->execute([':category' => $category]);
+        $stmt->execute([':category' => $category, ':tid' => TenantContext::id()]);
         $val = $stmt->fetchColumn();
         return $val !== false ? round((float)$val, 1) : null;
     }
@@ -118,8 +121,8 @@ class BiometricsRepository
     {
         $sql = 'SELECT id, record_date, metric_type, value, unit, measured_by, notes, created_at
                 FROM athletic_metrics
-                WHERE athlete_id = :athlete_id';
-        $params = [':athlete_id' => $athleteId];
+                WHERE athlete_id = :athlete_id AND tenant_id = :tid';
+        $params = [':athlete_id' => $athleteId, ':tid' => TenantContext::id()];
 
         if ($metricType !== null) {
             $sql .= ' AND metric_type = :metric_type';
@@ -144,12 +147,13 @@ class BiometricsRepository
              INNER JOIN (
                  SELECT metric_type, MAX(record_date) AS max_date
                  FROM athletic_metrics
-                 WHERE athlete_id = :athlete_id
+                 WHERE athlete_id = :athlete_id AND tenant_id = :tid
                  GROUP BY metric_type
              ) latest ON am.metric_type = latest.metric_type AND am.record_date = latest.max_date
-             WHERE am.athlete_id = :athlete_id2'
+             WHERE am.athlete_id = :athlete_id2 AND am.tenant_id = :tid2'
         );
-        $stmt->execute([':athlete_id' => $athleteId, ':athlete_id2' => $athleteId]);
+        $tid = TenantContext::id();
+        $stmt->execute([':athlete_id' => $athleteId, ':tid' => $tid, ':athlete_id2' => $athleteId, ':tid2' => $tid]);
         $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
         $result = [];
@@ -171,11 +175,11 @@ class BiometricsRepository
     {
         $stmt = $this->db->prepare(
             'SELECT value FROM athletic_metrics
-             WHERE athlete_id = :athlete_id AND metric_type = :metric_type
+             WHERE athlete_id = :athlete_id AND metric_type = :metric_type AND tenant_id = :tid
              ORDER BY record_date DESC
              LIMIT 3'
         );
-        $stmt->execute([':athlete_id' => $athleteId, ':metric_type' => $metricType]);
+        $stmt->execute([':athlete_id' => $athleteId, ':metric_type' => $metricType, ':tid' => TenantContext::id()]);
         $values = $stmt->fetchAll(\PDO::FETCH_COLUMN);
 
         if (count($values) < 3) {

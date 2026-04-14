@@ -33,8 +33,12 @@ class AthletesRepository
 
     public function getTeamIdForSeason(string $seasonId): ?string
     {
-        $stmt = $this->db->prepare('SELECT team_id FROM team_seasons WHERE id = :id');
-        $stmt->execute([':id' => $seasonId]);
+        $stmt = $this->db->prepare(
+            'SELECT ts.team_id FROM team_seasons ts
+             JOIN teams t ON t.id = ts.team_id
+             WHERE ts.id = :id AND t.tenant_id = :tid'
+        );
+        $stmt->execute([':id' => $seasonId, ':tid' => TenantContext::id()]);
         $val = $stmt->fetchColumn();
         return $val !== false ? (string)$val : null;
     }
@@ -318,9 +322,10 @@ class AthletesRepository
                  JOIN teams t ON t.id = ts.team_id
                  WHERE at2.athlete_id = :id
                    AND t.deleted_at IS NULL
+                   AND t.tenant_id = :tid
                  ORDER BY ts.season DESC, t.category, t.name'
             );
-            $stmt->execute([':id' => $athleteId]);
+            $stmt->execute([':id' => $athleteId, ':tid' => TenantContext::id()]);
             return $stmt->fetchAll();
         }
         catch (\Throwable) {
@@ -330,7 +335,16 @@ class AthletesRepository
 
     public function setAthleteTeams(string $athleteId, array $teamSeasonIds, ?string $primaryTeamId = null): void
     {
+        $tid = TenantContext::id();
         try {
+            // Verify the athlete belongs to the current tenant before modifying
+            $check = $this->db->prepare('SELECT id FROM athletes WHERE id = :id AND tenant_id = :tid AND deleted_at IS NULL');
+            $check->execute([':id' => $athleteId, ':tid' => $tid]);
+            if (!$check->fetchColumn()) {
+                error_log('[athlete_teams] setAthleteTeams denied: athlete ' . $athleteId . ' not in tenant ' . $tid);
+                return;
+            }
+
             $this->db->beginTransaction();
             $del = $this->db->prepare('DELETE FROM athlete_teams WHERE athlete_id = :id');
             $del->execute([':id' => $athleteId]);
@@ -347,8 +361,8 @@ class AthletesRepository
             }
             
             if ($primaryTeamId !== null) {
-                $upd = $this->db->prepare('UPDATE athletes SET team_id = :team_id WHERE id = :id');
-                $upd->execute([':team_id' => $primaryTeamId, ':id' => $athleteId]);
+                $upd = $this->db->prepare('UPDATE athletes SET team_id = :team_id WHERE id = :id AND tenant_id = :tid');
+                $upd->execute([':team_id' => $primaryTeamId, ':id' => $athleteId, ':tid' => $tid]);
             }
             $this->db->commit();
         }
@@ -360,9 +374,14 @@ class AthletesRepository
 
     public function createAthlete(array $data): void
     {
+        // Ensure tenant_id is always set — defence-in-depth
+        if (!isset($data[':tenant_id'])) {
+            $data[':tenant_id'] = TenantContext::id();
+        }
+
         $stmt = $this->db->prepare(
             'INSERT INTO athletes (
-                `id`, `user_id`, `team_id`,
+                `id`, `tenant_id`, `user_id`, `team_id`,
                 `first_name`, `last_name`, `full_name`,
                 `jersey_number`, `role`,
                 `birth_date`, `birth_place`,
@@ -381,7 +400,7 @@ class AthletesRepository
                 `shirt_size`, `shoe_size`,
                 `is_active`
              ) VALUES (
-                :id, :user_id, :team_id,
+                :id, :tenant_id, :user_id, :team_id,
                 :first_name, :last_name, :full_name,
                 :jersey_number, :role,
                 :birth_date, :birth_place,
@@ -446,9 +465,14 @@ class AthletesRepository
 
     public function insertMetric(array $data): void
     {
+        // Ensure tenant_id is always set for tenant isolation
+        if (!isset($data[':tenant_id'])) {
+            $data[':tenant_id'] = TenantContext::id();
+        }
+
         $stmt = $this->db->prepare(
-            'INSERT INTO metrics_logs (id, athlete_id, event_id, log_date, duration_min, rpe, load_value, acwr_score, notes)
-             VALUES (:id, :athlete_id, :event_id, :log_date, :duration_min, :rpe, :load_value, :acwr_score, :notes)'
+            'INSERT INTO metrics_logs (id, tenant_id, athlete_id, event_id, log_date, duration_min, rpe, load_value, acwr_score, notes)
+             VALUES (:id, :tenant_id, :athlete_id, :event_id, :log_date, :duration_min, :rpe, :load_value, :acwr_score, :notes)'
         );
         $stmt->execute($data);
     }
@@ -461,9 +485,10 @@ class AthletesRepository
                 COALESCE(SUM(CASE WHEN log_date >= DATE_SUB(CURDATE(), INTERVAL 28 DAY) THEN load_value ELSE 0 END), 0) / 4  AS chronic
              FROM metrics_logs
              WHERE athlete_id = :id
+               AND tenant_id = :tid
                AND log_date >= DATE_SUB(CURDATE(), INTERVAL 28 DAY)'
         );
-        $stmt->execute([':id' => $athleteId]);
+        $stmt->execute([':id' => $athleteId, ':tid' => TenantContext::id()]);
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
         return [
             'acute' => (float)($row['acute'] ?? 0),
@@ -478,10 +503,11 @@ class AthletesRepository
         $stmt = $this->db->prepare(
             "SELECT id, log_date, duration_min, rpe, load_value, acwr_score, notes
              FROM metrics_logs
-             WHERE athlete_id = :id AND log_date >= DATE_SUB(CURDATE(), INTERVAL " . $days . " DAY)
+             WHERE athlete_id = :id AND tenant_id = :tid AND log_date >= DATE_SUB(CURDATE(), INTERVAL " . $days . " DAY)
              ORDER BY log_date DESC"
         );
         $stmt->bindValue(':id', $athleteId);
+        $stmt->bindValue(':tid', TenantContext::id());
         $stmt->execute();
         return $stmt->fetchAll();
     }
@@ -489,9 +515,9 @@ class AthletesRepository
     public function updateMetricAcwr(string $metricId, float $acwr): void
     {
         $stmt = $this->db->prepare(
-            'UPDATE metrics_logs SET acwr_score = :acwr WHERE id = :id'
+            'UPDATE metrics_logs SET acwr_score = :acwr WHERE id = :id AND tenant_id = :tid'
         );
-        $stmt->execute([':acwr' => $acwr, ':id' => $metricId]);
+        $stmt->execute([':acwr' => $acwr, ':id' => $metricId, ':tid' => TenantContext::id()]);
     }
 
     public function getCoachNotes(string $athleteId, int $limit = 10): array
@@ -499,11 +525,12 @@ class AthletesRepository
         $stmt = $this->db->prepare(
             'SELECT ml.log_date, ml.notes, ml.acwr_score, ml.duration_min, ml.rpe
              FROM metrics_logs ml
-             WHERE ml.athlete_id = :id AND ml.notes IS NOT NULL AND ml.notes != \'\'
+             WHERE ml.athlete_id = :id AND ml.tenant_id = :tid AND ml.notes IS NOT NULL AND ml.notes != \'\'
              ORDER BY ml.log_date DESC
              LIMIT :lim'
         );
         $stmt->bindValue(':id', $athleteId);
+        $stmt->bindValue(':tid', TenantContext::id());
         $stmt->bindValue(':lim', $limit, \PDO::PARAM_INT);
         $stmt->execute();
         return $stmt->fetchAll();
@@ -572,9 +599,14 @@ class AthletesRepository
 
     public function saveAiSummary(array $data): void
     {
+        // Ensure tenant_id is always set for tenant isolation
+        if (!isset($data[':tenant_id'])) {
+            $data[':tenant_id'] = TenantContext::id();
+        }
+
         $stmt = $this->db->prepare(
-            'INSERT INTO ai_summaries (id, athlete_id, period_start, period_end, summary_text, model_version)
-             VALUES (:id, :athlete_id, :period_start, :period_end, :summary_text, :model_version)'
+            'INSERT INTO ai_summaries (id, tenant_id, athlete_id, period_start, period_end, summary_text, model_version)
+             VALUES (:id, :tenant_id, :athlete_id, :period_start, :period_end, :summary_text, :model_version)'
         );
         $stmt->execute($data);
     }
@@ -583,9 +615,9 @@ class AthletesRepository
     {
         $stmt = $this->db->prepare(
             'SELECT id, period_start, period_end, summary_text, model_version, created_at
-             FROM ai_summaries WHERE athlete_id = :id ORDER BY created_at DESC LIMIT 1'
+             FROM ai_summaries WHERE athlete_id = :id AND tenant_id = :tid ORDER BY created_at DESC LIMIT 1'
         );
-        $stmt->execute([':id' => $athleteId]);
+        $stmt->execute([':id' => $athleteId, ':tid' => TenantContext::id()]);
         $row = $stmt->fetch();
         return $row ?: null;
     }
@@ -595,10 +627,10 @@ class AthletesRepository
     public function insertAcwrAlert(string $athleteId, float $acwr, string $riskLevel): void
     {
         $stmt = $this->db->prepare(
-            'INSERT INTO acwr_alerts (athlete_id, acwr_score, risk_level, log_date)
-             VALUES (:athlete_id, :acwr, :risk, CURDATE())'
+            'INSERT INTO acwr_alerts (tenant_id, athlete_id, acwr_score, risk_level, log_date)
+             VALUES (:tid, :athlete_id, :acwr, :risk, CURDATE())'
         );
-        $stmt->execute([':athlete_id' => $athleteId, ':acwr' => $acwr, ':risk' => $riskLevel]);
+        $stmt->execute([':tid' => TenantContext::id(), ':athlete_id' => $athleteId, ':acwr' => $acwr, ':risk' => $riskLevel]);
     }
 
     public function getUnacknowledgedAlerts(string $tenantId, string $coachId = ''): array
@@ -624,10 +656,11 @@ class AthletesRepository
         $stmt = $this->db->prepare(
             'SELECT destination_name, transport_date, departure_time, arrival_time
              FROM transports
-             WHERE JSON_CONTAINS(athletes_json, JSON_OBJECT(\'id\', :id))
+             WHERE tenant_id = :tid
+               AND JSON_CONTAINS(athletes_json, JSON_OBJECT(\'id\', :id))
              ORDER BY transport_date DESC, departure_time DESC'
         );
-        $stmt->execute([':id' => $athleteId]);
+        $stmt->execute([':id' => $athleteId, ':tid' => TenantContext::id()]);
         return $stmt->fetchAll();
     }
 
@@ -647,22 +680,28 @@ class AthletesRepository
              JOIN events e ON e.id = ea.event_id
              JOIN tournament_details td ON td.event_id = e.id
              WHERE ea.athlete_id = :id AND ea.status = 'confirmed'
+               AND e.tenant_id = :tid
              ORDER BY e.event_date DESC"
         );
-        $stmt->execute([':id' => $athleteId]);
+        $stmt->execute([':id' => $athleteId, ':tid' => TenantContext::id()]);
         return $stmt->fetchAll();
     }
 
     public function setTournamentPayment(string $athleteId, string $eventId, bool $hasPaid): void
     {
+        // Verify the event belongs to the current tenant before modifying
         $stmt = $this->db->prepare(
-            'UPDATE event_attendees SET has_paid = :has_paid 
-             WHERE athlete_id = :athlete_id AND event_id = :event_id'
+            'UPDATE event_attendees ea
+             JOIN events e ON e.id = ea.event_id
+             SET ea.has_paid = :has_paid 
+             WHERE ea.athlete_id = :athlete_id AND ea.event_id = :event_id
+               AND e.tenant_id = :tid'
         );
         $stmt->execute([
             ':has_paid' => $hasPaid ? 1 : 0,
             ':athlete_id' => $athleteId,
-            ':event_id' => $eventId
+            ':event_id' => $eventId,
+            ':tid' => TenantContext::id()
         ]);
     }
 
@@ -672,18 +711,20 @@ class AthletesRepository
     {
         $useGeneratedCol = $this->_hasColumn('audit_logs', 'json_entity_id');
 
-        $sql = function (string $whereClause) use ($athleteId): array {
+        $tid = TenantContext::id();
+        $sql = function (string $whereClause) use ($athleteId, $tid): array {
             $stmt = $this->db->prepare(
                 "SELECT al.id, al.action, al.table_name, al.created_at,
                         COALESCE(u.email, al.user_id, 'Sistema') AS operator,
                         al.after_snapshot, al.before_snapshot
                  FROM audit_logs al
                  LEFT JOIN users u ON al.user_id = u.id
-                 WHERE {$whereClause}
+                 WHERE al.tenant_id = :tid AND {$whereClause}
                  ORDER BY al.created_at DESC
                  LIMIT 5"
             );
             $stmt->bindValue(':athlete_id', $athleteId);
+            $stmt->bindValue(':tid', $tid);
             $stmt->execute();
             return $stmt->fetchAll();
         };

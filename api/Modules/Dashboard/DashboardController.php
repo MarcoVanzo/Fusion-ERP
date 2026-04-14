@@ -356,13 +356,12 @@ class DashboardController
         try {
             $s = $db->prepare(
                 "SELECT fm.id, fm.match_date, fm.location,
-                        th.name AS home_team, ta.name AS away_team,
+                        fm.home_team, fm.away_team,
                         fm.home_score, fm.away_score
                  FROM federation_matches fm
-                 LEFT JOIN teams th ON th.id = fm.home_team_id
-                 LEFT JOIN teams ta ON ta.id = fm.away_team_id
+                 JOIN federation_championships fc ON fc.id = fm.championship_id
                  WHERE fm.match_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)
-                   AND fm.tenant_id = :t
+                   AND fc.tenant_id = :t
                  ORDER BY fm.match_date ASC
                  LIMIT 10"
             );
