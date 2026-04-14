@@ -1186,7 +1186,7 @@ class App {
                   ${athlete.photo_path ? `<img src="../${athlete.photo_path}">` : '<i class="fas fa-user"></i>'}
                 </div>
                 <div class="athlete-details">
-                  <div class="athlete-name">${this.escapeHtml(athlete.first_name)} ${this.escapeHtml(athlete.last_name)}</div>
+                  <div class="athlete-name">${this.escapeHtml(athlete.full_name)}</div>
                   <div class="athlete-meta">${this.escapeHtml(athlete.role || 'Giocatore')}</div>
                 </div>
                 <i class="fas fa-chevron-right" style="color: var(--border-subtle)"></i>
@@ -1285,7 +1285,7 @@ class App {
             html += `
               <div class="attendance-card" id="att-card-${athlete.id}" style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; text-align:left;">
                 <div class="athlete-name" style="font-size:15px; font-weight:700; color:var(--text-primary);">
-                  ${this.escapeHtml(athlete.first_name)} ${this.escapeHtml(athlete.last_name)}
+                  ${this.escapeHtml(athlete.full_name)}
                 </div>
                 
                 <div class="attendance-actions" style="margin-top:0; gap:12px;">
