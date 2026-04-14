@@ -136,13 +136,20 @@ export const AthletesValdLink = (() => {
                     acceptBtn.onclick = async () => {
                         acceptBtn.innerHTML = '<div class="loader-spinner" style="width:14px;height:14px;"></div>';
                         try {
-                            const payload = { links: [autoLinksPayload[0]] };
-                            const result = await Store.api("linkAthlete", "vald", payload);
-                            const debugStr = JSON.stringify(result?.debug || {});
-                            if (result?.saved === 0) {
-                                UI.toast(`DB 0! Debug PHP: ${debugStr}`, "error", 15000);
+                            // Manda i dati direttamente come array piatto per matchare l'API PHP cachata
+                            let totalSaved = 0;
+                            const chunkSize = 10;
+                            for (let i = 0; i < autoLinksPayload.length; i += chunkSize) {
+                                const chunk = autoLinksPayload.slice(i, i + chunkSize);
+                                // The backend expects an array of objects: [{athlete_id: "...", vald_profile_id: "..."}]
+                                const result = await Store.api("linkAthlete", "vald", chunk);
+                                if (result?.saved > 0) totalSaved += result.saved;
+                            }
+                            
+                            if (totalSaved === 0) {
+                                UI.toast(`Errore di collegamento. Controlla la diagnostica o i log.`, "error", 8000);
                             } else {
-                                UI.toast(`✔ ${result?.saved} salvato! (Test)`, "success", 2000);
+                                UI.toast(`✔ ${totalSaved} atleti collegati in automatico!`, "success", 2000);
                             }
                             acceptBtn.style.display = "none";
                             // Reload modal
@@ -176,11 +183,16 @@ export const AthletesValdLink = (() => {
                         
                         saveBtn.innerHTML = '<div class="loader-spinner" style="width:14px;height:14px;"></div>';
                         try {
-                            const payload = { links: [{ athlete_id: erpId, vald_profile_id: valdId }] };
-                            await Store.api("linkAthlete", "vald", payload);
-                            UI.toast("Collegamento salvato con successo!", "success", 2000);
-                            saveBtn.innerHTML = '<i class="ph ph-check" style="font-size:18px;"></i>';
-                            saveBtn.style.display = "none";
+                            const payload = [{ athlete_id: erpId, vald_profile_id: valdId }]; // Array piatto!
+                            const result = await Store.api("linkAthlete", "vald", payload);
+                            if (result?.saved > 0) {
+                                UI.toast("Collegamento salvato con successo!", "success", 2000);
+                                saveBtn.innerHTML = '<i class="ph ph-check" style="font-size:18px;"></i>';
+                                saveBtn.style.display = "none";
+                            } else {
+                                UI.toast("Errore salvataggio: l'API ha restituito 0", "warning", 3000);
+                                saveBtn.innerHTML = 'Riprova';
+                            }
                         } catch(e) {
                             UI.toast(e.message, "error");
                             saveBtn.innerHTML = '<i class="ph ph-check" style="font-size:18px;"></i>';
