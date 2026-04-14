@@ -88,13 +88,15 @@ class App {
     
     const activeUser = localStorage.getItem('erp_user');
     let role = 'atleta';
+    let isAdmin = false;
     if (activeUser) {
       try {
         const u = JSON.parse(activeUser);
         if (u.role) role = u.role.toLowerCase();
+        const _adminPerm = u.permissions && u.permissions['admin'];
+        isAdmin = role === 'admin' || _adminPerm === 'write' || _adminPerm === 'read';
       } catch(e){}
     }
-    const isAdmin = role === 'admin';
     
     if (!activeUser && hash !== '#login') {
       window.location.hash = '#login';
@@ -123,12 +125,14 @@ class App {
 
   getBottomNav(activeHash) {
     let role = 'atleta';
+    let isAdmin = false;
     try {
       const u = JSON.parse(localStorage.getItem('erp_user') || '{}');
       if (u.role) role = u.role.toLowerCase();
+      const _adminPerm = u.permissions && u.permissions['admin'];
+      isAdmin = role === 'admin' || _adminPerm === 'write' || _adminPerm === 'read';
     } catch(e){}
 
-    const isAdmin = role === 'admin';
     const isStaff = role.includes('allenatore') || role.includes('social media manager') || role.includes('operatore') || role === 'operator' || isAdmin;
 
     let items = [];
