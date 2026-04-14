@@ -258,6 +258,7 @@ export const AthleteHealth = {
                 UI.loading(true);
                 const res = await fetch('api/?module=health&action=updateAnamnesi', {
                     method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
                     body: formData
                 }).then(r => r.json());
                 
@@ -513,6 +514,7 @@ export const AthleteHealth = {
                     const action = isEdit ? 'updateInjury' : 'addInjury';
                     const res = await fetch(`api/?module=health&action=${action}`, {
                         method: 'POST',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
                         body: formData
                     }).then(r => r.json());
                     
@@ -553,6 +555,7 @@ export const AthleteHealth = {
                     UI.loading(true);
                     const res = await fetch(`api/?module=health&action=addFollowup`, {
                         method: 'POST',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
                         body: formData
                     }).then(r => r.json());
                     
@@ -583,6 +586,7 @@ export const AthleteHealth = {
                     UI.loading(true);
                     const res = await fetch(`api/?module=health&action=uploadDocument`, {
                         method: 'POST',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
                         body: formData
                     }).then(r => r.json());
                     
