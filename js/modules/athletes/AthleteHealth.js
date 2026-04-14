@@ -191,6 +191,7 @@ export const AthleteHealth = {
         const aiDiagnosisBtns = container.querySelectorAll('.ai-diagnosis-btn');
         aiDiagnosisBtns.forEach(btn => {
             btn.addEventListener('click', (e) => {
+                e.stopPropagation();
                 const injuryId = btn.getAttribute('data-id');
                 this._openAiDiagnosisModal(container, athlete, anamnesi, injuries, injuryId);
             });
@@ -206,7 +207,7 @@ export const AthleteHealth = {
         const editBtns = container.querySelectorAll('.edit-injury-btn, .injury-card');
         editBtns.forEach(btn => {
             btn.addEventListener('click', (e) => {
-                if (btn.classList.contains('injury-card') && e.target.closest('.edit-injury-btn')) return; // handled by btn
+                if (btn.classList.contains('injury-card') && (e.target.closest('.edit-injury-btn') || e.target.closest('.ai-diagnosis-btn'))) return; // handled by btn
                 const id = btn.dataset.id;
                 const injury = injuries.find(i => String(i.id) === String(id));
                 if (injury) {
