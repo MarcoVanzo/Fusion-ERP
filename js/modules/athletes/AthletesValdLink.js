@@ -109,7 +109,7 @@ export const AthletesValdLink = (() => {
                     
                     if (va.suggested_erp_id && !va.linked_erp_id) {
                         suggestedCount++;
-                        autoLinksPayload.push({ athlete_id: va.suggested_erp_id, vald_athlete_id: va.vald_id });
+                        autoLinksPayload.push({ athlete_id: va.suggested_erp_id, vald_profile_id: va.vald_id });
                     }
                     
                     const optionsHtml = erpAthletes.map(erp => {
@@ -200,7 +200,7 @@ export const AthletesValdLink = (() => {
                         
                         saveBtn.innerHTML = '<div class="loader-spinner" style="width:14px;height:14px;"></div>';
                         try {
-                            const payload = [{ athlete_id: erpId, vald_athlete_id: valdId }]; // Array piatto!
+                            const payload = [{ athlete_id: erpId, vald_profile_id: valdId }]; // Array piatto!
                             const result = await Store.api("linkAthlete", "vald", payload);
                             if (result?.saved > 0) {
                                 UI.toast("Collegamento salvato con successo!", "success", 2000);
