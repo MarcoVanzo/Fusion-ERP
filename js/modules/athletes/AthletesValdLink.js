@@ -136,18 +136,14 @@ export const AthletesValdLink = (() => {
                     acceptBtn.onclick = async () => {
                         acceptBtn.innerHTML = '<div class="loader-spinner" style="width:14px;height:14px;"></div>';
                         try {
-                            let totalSaved = 0;
-                            // Chunk le richieste a gruppi di 10:
-                            // 1) Evita che ModSecurity (Aruba WAF) spogli payload JSON troppo grandi.
-                            // 2) Evita l'errore "Troppe richieste" (Rate limit di 60 req/minuto) inviando < 10 richieste.
-                            const chunkSize = 10;
-                            for (let i = 0; i < autoLinksPayload.length; i += chunkSize) {
-                                const chunk = autoLinksPayload.slice(i, i + chunkSize);
-                                const payload = { links: chunk };
-                                const result = await Store.api("linkAthlete", "vald", payload);
-                                if (result?.saved > 0) totalSaved += result.saved;
+                            const payload = { links: [autoLinksPayload[0]] };
+                            const result = await Store.api("linkAthlete", "vald", payload);
+                            const debugStr = JSON.stringify(result?.debug || {});
+                            if (result?.saved === 0) {
+                                UI.toast(`DB 0! Debug PHP: ${debugStr}`, "error", 15000);
+                            } else {
+                                UI.toast(`✔ ${result?.saved} salvato! (Test)`, "success", 2000);
                             }
-                            UI.toast(`✔ ${totalSaved} atleti collegati in automatico!`, "success", 2000);
                             acceptBtn.style.display = "none";
                             // Reload modal
                             openModal(onClose);
