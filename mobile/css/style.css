@@ -117,7 +117,7 @@ body {
   display: flex;
   flex-direction: column;
   animation: slideFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  padding-bottom: 100px;
+  padding-bottom: 150px;
   position: relative;
 }
 
@@ -574,13 +574,13 @@ select.input-field {
 /* Wizard Actions */
 .wizard-actions {
   position: fixed;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 45px); /* Just above the bottom nav */
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 70px); /* Just above the bottom nav */
   left: 0;
   right: 0;
   padding: 15px 20px;
   background: var(--bg-dark);
   border-top: 1px solid var(--border-subtle);
-  z-index: 90;
+  z-index: 101; /* Set higher than bottom-nav-container (100) just to be safe */
   display: flex;
   justify-content: space-between;
   gap: 15px;
@@ -589,7 +589,7 @@ select.input-field {
 }
 
 .wizard-padding {
-  padding-bottom: 90px;
+  padding-bottom: 180px;
 }
 
 .giant-camera-box {
