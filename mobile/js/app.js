@@ -733,7 +733,7 @@ class App {
     `;
 
     try {
-      const url = isOwningProfile ? '../api/?module=athletes&action=myProfile' : `../api/?module=athletes&action=myProfile&id=${uId}`;
+      const url = isOwningProfile ? '../api/?module=athletes&action=myProfile' : `../api/?module=athletes&action=get&id=${uId}`;
       const response = await fetch(url, { credentials: 'include', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
       const result = await response.json();
 

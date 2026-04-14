@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace FusionERP\Modules\Health;
 
 use FusionERP\Shared\Database;
+use FusionERP\Shared\TenantContext;
 
 class HealthRepository
 {
@@ -32,9 +33,10 @@ class HealthRepository
                  medical_cert_expires_at = :expires_at,
                  medical_cert_issued_at = :issued_at,
                  medical_cert_file_path = :file_path
-             WHERE id = :id AND deleted_at IS NULL'
+             WHERE id = :id AND tenant_id = :tenant_id AND deleted_at IS NULL'
         );
         $data[':id'] = $athleteId;
+        $data[':tenant_id'] = TenantContext::id();
         $stmt->execute($data);
     }
 
@@ -50,10 +52,10 @@ class HealthRepository
                     medical_cert_issued_at AS issued_at,
                     medical_cert_file_path AS file_path
              FROM athletes
-             WHERE id = :id AND deleted_at IS NULL
+             WHERE id = :id AND tenant_id = :tenant_id AND deleted_at IS NULL
              LIMIT 1'
         );
-        $stmt->execute([':id' => $athleteId]);
+        $stmt->execute([':id' => $athleteId, ':tenant_id' => TenantContext::id()]);
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
 
         if (!$row || empty($row['expires_at'])) {
@@ -123,10 +125,10 @@ class HealthRepository
             'SELECT blood_group, allergies, medications, chronic_diseases,
                     past_surgeries, past_injuries, chronic_orthopedic_issues, orthopedic_aids
              FROM athletes
-             WHERE id = :id AND deleted_at IS NULL
+             WHERE id = :id AND tenant_id = :tenant_id AND deleted_at IS NULL
              LIMIT 1'
         );
-        $stmt->execute([':id' => $athleteId]);
+        $stmt->execute([':id' => $athleteId, ':tenant_id' => TenantContext::id()]);
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
         return $row ?: [];
     }
@@ -143,9 +145,10 @@ class HealthRepository
                  past_injuries = :past_injuries,
                  chronic_orthopedic_issues = :chronic_orthopedic_issues,
                  orthopedic_aids = :orthopedic_aids
-             WHERE id = :id AND deleted_at IS NULL'
+             WHERE id = :id AND tenant_id = :tenant_id AND deleted_at IS NULL'
         );
         $data[':id'] = $athleteId;
+        $data[':tenant_id'] = TenantContext::id();
         $stmt->execute($data);
     }
 
@@ -156,7 +159,6 @@ class HealthRepository
      */
     public function insertInjury(array $data): void
     {
-        $data[':severity'] = 'moderate';
         $stmt = $this->db->prepare(
             'INSERT INTO injury_records (
                 id, tenant_id, athlete_id, injury_date, type, body_part, severity, stop_days, return_date, notes, treated_by, created_by,
@@ -182,10 +184,10 @@ class HealthRepository
                     (SELECT COUNT(*) FROM injury_followups WHERE injury_id = ir.id) as visit_count,
                     (SELECT COUNT(*) FROM injury_documents WHERE injury_id = ir.id) as doc_count
              FROM injury_records ir
-             WHERE ir.athlete_id = :athlete_id
+             WHERE ir.athlete_id = :athlete_id AND ir.tenant_id = :tenant_id
              ORDER BY ir.injury_date DESC'
         );
-        $stmt->execute([':athlete_id' => $athleteId]);
+        $stmt->execute([':athlete_id' => $athleteId, ':tenant_id' => TenantContext::id()]);
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
@@ -195,17 +197,18 @@ class HealthRepository
     public function updateInjury(string $injuryId, array $data): void
     {
         $data[':id'] = $injuryId;
+        $data[':tenant_id'] = TenantContext::id();
         // Costruzione dinamica dell'update
         $sets = [];
         foreach ($data as $key => $value) {
-            if ($key === ':id') continue;
+            if ($key === ':id' || $key === ':tenant_id') continue;
             $colName = ltrim($key, ':');
             $sets[] = "`$colName` = $key";
         }
         $setString = implode(', ', $sets);
 
         $stmt = $this->db->prepare(
-            "UPDATE injury_records SET $setString WHERE id = :id"
+            "UPDATE injury_records SET $setString WHERE id = :id AND tenant_id = :tenant_id"
         );
         $stmt->execute($data);
     }

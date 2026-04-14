@@ -473,12 +473,12 @@ class AthletesRepository
 
     public function getMetricsHistory(string $athleteId, int $days = 30): array
     {
-        $daysInt = (int)$days;
-        $daysIntStr = (string)$daysInt;
+        // Note: MySQL does not support bound parameters in INTERVAL expressions.
+        // $days is safe here because PHP strict_types enforces int at the call boundary.
         $stmt = $this->db->prepare(
             "SELECT id, log_date, duration_min, rpe, load_value, acwr_score, notes
              FROM metrics_logs
-             WHERE athlete_id = :id AND log_date >= DATE_SUB(CURDATE(), INTERVAL " . $daysIntStr . " DAY)
+             WHERE athlete_id = :id AND log_date >= DATE_SUB(CURDATE(), INTERVAL " . $days . " DAY)
              ORDER BY log_date DESC"
         );
         $stmt->bindValue(':id', $athleteId);
