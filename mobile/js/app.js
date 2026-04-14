@@ -119,6 +119,10 @@ class App {
     else if (hash === '#dashboard') this.renderDashboard();
     else if (hash === '#spese') this.renderSpese();
     else if (hash === '#profilo') this.renderProfilo();
+    else if (hash.startsWith('#profilo-')) {
+      const id = hash.replace('#profilo-', '');
+      this.renderProfilo(id);
+    }
     else if (hash === '#alerts') this.renderAlerts(); 
     else if (hash === '#squadra') this.renderSquadra();
     else if (hash === '#presenze-team') this.renderPresenzeTeam();
@@ -1181,7 +1185,7 @@ class App {
         if (data.success && data.data && data.data.length > 0) {
           data.data.forEach(athlete => {
             html += `
-              <div class="athlete-item" onclick="app.renderProfilo('${athlete.id}')">
+              <div class="athlete-item" onclick="window.location.hash='#profilo-${athlete.id}'">
                 <div class="athlete-avatar">
                   ${athlete.photo_path ? `<img src="../${athlete.photo_path}">` : '<i class="fas fa-user"></i>'}
                 </div>
@@ -1466,7 +1470,7 @@ class App {
       if (data.success && data.data.length > 0) {
         data.data.forEach((alert, i) => {
           html += `
-            <div class="glass-card alert-item stagger-item" style="border-left: 4px solid var(--danger); animation-delay: ${i*0.1}s">
+            <div class="glass-card alert-item stagger-item" style="border-left: 4px solid var(--danger); animation-delay: ${i*0.1}s; cursor: pointer;" onclick="window.location.hash='#profilo-' + ('${alert.athlete_id}' || '${alert.id}')">
               <div style="display: flex; align-items: flex-start; gap: 15px;">
                 <div class="alert-icon-box" style="background: rgba(255, 77, 77, 0.1); padding: 10px; border-radius: 12px;">
                   <i class="fas fa-triangle-exclamation" style="color: var(--danger); font-size: 20px;"></i>

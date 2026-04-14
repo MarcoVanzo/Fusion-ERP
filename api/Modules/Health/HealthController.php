@@ -112,18 +112,18 @@ class HealthController
             ':tenant_id' => $tenantId,
             ':athlete_id' => $body['athlete_id'],
             ':injury_date' => $body['injury_date'],
-            ':type' => $body['injury_type'] ?? null,
-            ':body_part' => $body['body_part'] ?? null,
-            ':severity' => $body['severity'] ?? null,
+            ':type' => !empty($body['injury_type']) ? $body['injury_type'] : 'Altro',
+            ':body_part' => !empty($body['body_part']) ? $body['body_part'] : 'Non specificato',
+            ':severity' => !empty($body['severity']) ? $body['severity'] : 'moderate',
             ':stop_days' => 0,
-            ':return_date' => !empty($body['rtp_cleared']) ? ($body['estimated_return_date'] ?? date('Y-m-d')) : null,
-            ':notes' => $body['description'] ?? null,
-            ':treated_by' => $user['full_name'] ?? null,
+            ':return_date' => !empty($body['rtp_cleared']) ? (!empty($body['estimated_return_date']) ? $body['estimated_return_date'] : date('Y-m-d')) : null,
+            ':notes' => !empty($body['description']) ? $body['description'] : null,
+            ':treated_by' => !empty($user['full_name']) ? $user['full_name'] : null,
             ':created_by' => $user['id'],
             ':location_context' => null,
             ':side' => null,
-            ':mechanism' => $body['mechanism'] ?? null,
-            ':official_diagnosis' => $body['diagnosis'] ?? null,
+            ':mechanism' => !empty($body['mechanism']) ? $body['mechanism'] : null,
+            ':official_diagnosis' => !empty($body['diagnosis']) ? $body['diagnosis'] : null,
             ':diagnosis_date' => null,
             ':diagnosed_by' => null,
             ':instrumental_tests' => null,
@@ -131,11 +131,11 @@ class HealthController
             ':is_recurrence' => 0,
             ':treatment_type' => null,
             ':surgery_date' => null,
-            ':physio_plan' => $body['treatment'] ?? null,
+            ':physio_plan' => !empty($body['treatment']) ? $body['treatment'] : null,
             ':assigned_physio' => null,
             ':current_status' => !empty($body['rtp_cleared']) ? 'CLEARED' : 'INJURED',
             ':estimated_recovery_time' => null,
-            ':estimated_return_date' => $body['expected_rtp_date'] ?? null,
+            ':estimated_return_date' => !empty($body['expected_rtp_date']) ? $body['expected_rtp_date'] : null,
             ':medical_clearance_given' => !empty($body['rtp_cleared']) ? 1 : 0,
         ]);
 
@@ -195,6 +195,14 @@ class HealthController
         foreach ($keyMap as $feKey => $dbKey) {
             if (array_key_exists($feKey, $body)) {
                 $val = $body[$feKey];
+                
+                // Fix for Incorrect date value: '' (and general empty string mapped to null)
+                // if val is an empty string, we set it to null to avoid SQL strict mode errors
+                // except for string fields that MUST be NOT NULL, but those are validated elsewhere (e.g. body_part)
+                if ($val === '') {
+                    $val = null;
+                }
+
                 if ($dbKey === 'medical_clearance_given') {
                     $val = !empty($val) ? 1 : 0;
                     if ($val === 1 && empty($body['estimated_return_date'])) {
@@ -206,6 +214,14 @@ class HealthController
                         $updateData[':current_status'] = 'INJURED';
                     }
                 }
+                
+                // Ensure NOT NULL fields fallback to default values
+                if ($val === null) {
+                    if ($dbKey === 'type') $val = 'Altro';
+                    if ($dbKey === 'body_part') $val = 'Non specificato';
+                    if ($dbKey === 'severity') $val = 'moderate';
+                }
+
                 $updateData[":$dbKey"] = $val;
             }
         }
