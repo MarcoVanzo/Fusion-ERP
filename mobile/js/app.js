@@ -423,10 +423,10 @@ class App {
       </div>
       <div class="wizard-actions d-none" id="step-2-actions">
         <button type="button" class="btn btn-secondary" id="btn-prev-step" style="flex: 1;">
-          INDIETRO
+          <i class="fas fa-arrow-left"></i> INDIETRO
         </button>
         <button type="button" class="btn" id="submit-expense-btn" style="flex: 2;">
-          SALVA SPESA
+          <i class="fas fa-paper-plane"></i> SALVA SPESA
         </button>
       </div>
 
@@ -811,7 +811,7 @@ class App {
             <label class="input-label">Taglia Abbigliamento (Modificabile)</label>
             <input type="text" class="inline-edit-input" id="edit-size" value="${p.shirt_size || ''}" placeholder="Es: M, L, XL">
           </div>
-          <button class="btn btn-secondary mt-10" onclick="app.saveAnagraficaPartial()">Salva Dati Modificati</button>
+          <button class="btn btn-secondary mt-10" onclick="app.saveAnagraficaPartial()"><i class="fas fa-save"></i> Salva Dati Modificati</button>
         </form>
         ` : `
           <div class="inline-edit-group">

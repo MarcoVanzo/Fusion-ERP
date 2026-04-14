@@ -319,14 +319,12 @@ const TeamsView = {
                 const dateStr = `${year}-${month}-${String(d).padStart(2, '0')}`;
                 const att = attendancesMap[athlete.id]?.[dateStr] || { status: null };
                 
-                let icon = '';
-                let bgColor = 'rgba(255,255,255,0.02)';
-                let color = 'inherit';
-                if (att.status === 'present') {
-                    icon = 'V';
-                    bgColor = 'rgba(16, 185, 129, 0.15)'; // emerald
-                    color = '#10b981';
-                } else if (att.status === 'absent') {
+                // Default to Present (even if null/empty)
+                let icon = 'V';
+                let bgColor = 'rgba(16, 185, 129, 0.15)'; // emerald
+                let color = '#10b981';
+
+                if (att.status === 'absent') {
                     icon = 'X';
                     bgColor = 'rgba(239, 68, 68, 0.15)'; // red
                     color = '#ef4444';
