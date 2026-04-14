@@ -362,6 +362,8 @@ PROMPT;
             Response::error('Body non valido', 400);
         }
 
+        error_log(print_r($body, true), 3, '/tmp/fusion_vald_debug.log');
+
         $saved = 0;
         $links = isset($body['links']) ? $body['links'] : $body;
         
@@ -371,6 +373,8 @@ PROMPT;
                 $saved++;
             }
         }
+        
+        error_log("Saved: " . $saved . "\n", 3, '/tmp/fusion_vald_debug.log');
         Response::success(['saved' => $saved, 'message' => 'Collegati ' . $saved . ' atleti.']);
     }
 

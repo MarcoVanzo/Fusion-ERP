@@ -136,8 +136,13 @@ export const AthletesValdLink = (() => {
                     acceptBtn.onclick = async () => {
                         acceptBtn.innerHTML = '<div class="loader-spinner" style="width:14px;height:14px;"></div>';
                         try {
-                            await Store.api("linkAthlete", "vald", { links: autoLinksPayload });
-                            UI.toast(`✔ ${suggestedCount} atleti collegati in automatico!`, "success", 2000);
+                            const result = await Store.api("linkAthlete", "vald", { links: autoLinksPayload });
+                            const saved = result?.saved ?? 0;
+                            if (saved === 0) {
+                                UI.toast(`Attenzione: Backend non ha salvato i collegamenti. (Assicurati che id siano corretti)`, "warning", 5000);
+                            } else {
+                                UI.toast(`✔ ${saved} atleti collegati in automatico!`, "success", 2000);
+                            }
                             acceptBtn.style.display = "none";
                             // Reload modal
                             openModal(onClose);
