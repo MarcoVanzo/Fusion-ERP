@@ -136,11 +136,14 @@ export const AthletesValdLink = (() => {
                     acceptBtn.onclick = async () => {
                         acceptBtn.innerHTML = '<div class="loader-spinner" style="width:14px;height:14px;"></div>';
                         try {
-                            const result = await Store.api("linkAthlete", "vald", { links: autoLinksPayload });
+                            const payloadToSend = { links: autoLinksPayload };
+                            const result = await Store.api("linkAthlete", "vald", payloadToSend);
                             const saved = result?.saved ?? 0;
                             if (saved === 0) {
-                                const debugStr = JSON.stringify(result?.debug_body?.links?.[0] || result?.debug_body || {});
-                                UI.toast(`Attenzione: Backend non ha salvato. Body: ${debugStr}`, "error", 8000);
+                                const sentLength = autoLinksPayload.length;
+                                const sentFirst = JSON.stringify(autoLinksPayload[0] || {});
+                                const debugStr = JSON.stringify(result?.debug_body || {});
+                                UI.toast(`Invio ${sentLength} items. Il primo: ${sentFirst}. Server vede: ${debugStr}`, "error", 10000);
                             } else {
                                 UI.toast(`✔ ${saved} atleti collegati in automatico!`, "success", 2000);
                             }
