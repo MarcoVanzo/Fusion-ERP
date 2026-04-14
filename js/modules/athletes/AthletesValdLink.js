@@ -19,6 +19,7 @@ export const AthletesValdLink = (() => {
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
                         <input type="text" id="vald-link-search" placeholder="Cerca atleta..." class="form-input" style="max-width:300px; font-size:14px; background:rgba(255,255,255,0.03);">
                         <div style="display:flex; align-items:center; gap:8px;">
+                            <button id="accept-all-suggestions-btn" class="btn btn-primary btn-sm" style="display:none; padding:6px 12px; font-weight:600;"><i class="ph ph-magic-wand"></i> Accetta <span id="suggestions-count">0</span> suggerimenti</button>
                             <span class="badge badge-success" id="vald-link-count" style="display:none;"></span>
                         </div>
                     </div>
@@ -81,10 +82,18 @@ export const AthletesValdLink = (() => {
             if(valdAthletes.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="2" style="padding:30px; text-align:center; color:rgba(255,255,255,0.5);">Nessun atleta trovato su VALD Hub.</td></tr>`;
             } else {
+                let suggestedCount = 0;
+                let autoLinksPayload = [];
+
                 tbody.innerHTML = valdAthletes.map(va => {
                     // Pre-select the linked athlete, or fallback to the suggested one
                     const mappedId = va.linked_erp_id || va.suggested_erp_id || "";
                     const searchStr = `${va.vald_name} ${va.vald_category || ''}`;
+                    
+                    if (va.suggested_erp_id && !va.linked_erp_id) {
+                        suggestedCount++;
+                        autoLinksPayload.push({ athlete_id: va.suggested_erp_id, vald_profile_id: va.vald_id });
+                    }
                     
                     const optionsHtml = erpAthletes.map(erp => {
                         const isSelected = String(erp.id) === String(mappedId) ? "selected" : "";
@@ -113,6 +122,28 @@ export const AthletesValdLink = (() => {
                 
                 countSpan.textContent = `${valdAthletes.length} su Hub`;
                 countSpan.style.display = "inline-flex";
+
+                const acceptBtn = document.getElementById("accept-all-suggestions-btn");
+                if (suggestedCount > 0) {
+                    document.getElementById("suggestions-count").textContent = suggestedCount;
+                    acceptBtn.style.display = "inline-flex";
+                    
+                    acceptBtn.onclick = async () => {
+                        acceptBtn.innerHTML = '<div class="loader-spinner" style="width:14px;height:14px;"></div>';
+                        try {
+                            await Store.api("linkAthlete", "vald", { links: autoLinksPayload });
+                            UI.toast(`✔ ${suggestedCount} atleti collegati in automatico!`, "success", 2000);
+                            acceptBtn.style.display = "none";
+                            // Reload modal
+                            openModal(onClose);
+                        } catch(e) {
+                            UI.toast(e.message, "error");
+                            acceptBtn.innerHTML = `<i class="ph ph-magic-wand"></i> Accetta ${suggestedCount} suggerimenti`;
+                        }
+                    };
+                } else {
+                    acceptBtn.style.display = "none";
+                }
 
                 // Add listeners to selects
                 document.querySelectorAll(".vald-erp-select").forEach(sel => {

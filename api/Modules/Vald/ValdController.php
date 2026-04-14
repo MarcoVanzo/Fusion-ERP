@@ -363,7 +363,9 @@ PROMPT;
         }
 
         $saved = 0;
-        foreach ($body as $link) {
+        $links = isset($body['links']) ? $body['links'] : $body;
+        
+        foreach ($links as $link) {
             if (!empty($link['athlete_id'])) {
                 $this->repo->linkAthleteToVald($link['athlete_id'], $link['vald_profile_id'] ?? null);
                 $saved++;
