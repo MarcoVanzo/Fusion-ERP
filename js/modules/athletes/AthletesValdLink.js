@@ -141,9 +141,8 @@ export const AthletesValdLink = (() => {
                             const saved = result?.saved ?? 0;
                             if (saved === 0) {
                                 const sentLength = autoLinksPayload.length;
-                                const sentFirst = JSON.stringify(autoLinksPayload[0] || {});
-                                const debugStr = JSON.stringify(result?.debug_body || {});
-                                UI.toast(`Invio ${sentLength} items. Il primo: ${sentFirst}. Server vede: ${debugStr}`, "error", 10000);
+                                const rawBody = result?.raw_body || "RAW_NULL";
+                                UI.toast(`Invio ${sentLength} items. Raw Backend: ${rawBody}`, "error", 10000);
                             } else {
                                 UI.toast(`✔ ${saved} atleti collegati in automatico!`, "success", 2000);
                             }

@@ -357,7 +357,9 @@ PROMPT;
     public function linkAthlete(): void
     {
         Auth::requireWrite('athletes');
-        $body = json_decode(file_get_contents('php://input'), true);
+        $rawJson = file_get_contents('php://input');
+        $body = json_decode($rawJson, true);
+        
         if (!is_array($body) || empty($body)) {
             Response::error('Body non valido', 400);
         }
@@ -375,9 +377,9 @@ PROMPT;
         }
         
         if ($saved === 0) {
-            error_log("Saved 0! Body: " . json_encode($body), 3, '/tmp/fusion_vald_debug.log');
-            Response::success(['saved' => 0, 'debug_body' => $body]);
+            Response::success(['saved' => 0, 'raw_body' => $rawJson, 'parsed_body' => $body]);
         }
+        
         
         error_log("Saved: " . $saved . "\n", 3, '/tmp/fusion_vald_debug.log');
         Response::success(['saved' => $saved, 'message' => 'Collegati ' . $saved . ' atleti.']);
