@@ -12,6 +12,7 @@ use FusionERP\Shared\Auth;
 use FusionERP\Shared\Audit;
 use FusionERP\Shared\Response;
 use FusionERP\Shared\TenantContext;
+use FusionERP\Shared\AIService;
 
 class HealthController
 {
@@ -324,6 +325,75 @@ class HealthController
         ]);
 
         Response::success(['message' => 'Documento caricato con successo', 'file_path' => $relPath]);
+    }
+
+    // ─── AI DIAGNOSIS & ASSISTANT ─────────────────────────────────────────────
+
+    public function askAI(): void
+    {
+        Auth::requireRead('health');
+        
+        // Handle both application/json and application/x-www-form-urlencoded
+        $body = [];
+        $raw = file_get_contents('php://input');
+        if (!empty($raw)) {
+            $decoded = json_decode($raw, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                $body = $decoded;
+            } else {
+                parse_str($raw, $body);
+            }
+        }
+        if (empty($body)) {
+            $body = $_POST;
+        }
+
+        if (empty($body['athlete_id'])) {
+            Response::error("athlete_id mancante", 400);
+        }
+        
+        $athleteId = $body['athlete_id'];
+        $message = $body['message'] ?? '';
+        $history = $body['history'] ?? [];
+
+        // Gather athlete data
+        $anamnesi = $this->repo->getAnamnesi($athleteId);
+        $injuries = $this->repo->getInjuries($athleteId);
+
+        $context = "Hai il ruolo di Assistente Medico Sportivo Avanzato in Fusion ERP. Ti vengono forniti i dati anamnestici, la storia clinica e degli infortuni di un determinato atleta.\n";
+        $context .= "Il tuo compito è restituire una diagnosi precisa e suggerire una terapia o un percorso di riabilitazione. Rispondi con linguaggio clinico formale e ben strutturato.\n\n";
+        
+        $context .= "DATI ANAMNESTICI DELL'ATLETA:\n";
+        $context .= json_encode($anamnesi, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . "\n\n";
+        
+        $context .= "LISTA INFORTUNI ED EVENTI MEDICI (con status e note):\n";
+        $context .= json_encode($injuries, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . "\n\n";
+        
+        if (empty($history) && empty($message)) {
+            // Initial analysis
+            $prompt = $context . "Sulla base di tutti questi dati, analizza accuratamente la situazione medica globale dell'atleta. Fornisci un quadro diagnostico di sintesi, evidenzia eventuali correlazioni tra infortuni pregressi e anamnesi, e per suggerisci una possibile terapia o indicazione utile per il recupero e la prevenzione.";
+        } else {
+            // Conversational follow-up
+            $prompt = $context . "CRONOLOGIA CHAT CON LO STAFF MEDICO:\n";
+            if (is_array($history)) {
+                foreach ($history as $msg) {
+                    $role = strtoupper($msg['role'] ?? 'USER'); 
+                    $content = $msg['content'] ?? '';
+                    $prompt .= "$role: $content\n";
+                }
+            }
+            if (!empty($message)) {
+                $prompt .= "\nUSER: " . $message . "\n";
+            }
+            $prompt .= "\nRispondi all'ultimo messaggio e fornisci eventuale followup relativo all'atleta in questione.";
+        }
+
+        try {
+            $response = AIService::generateContent($prompt);
+            Response::success(['reply' => $response]);
+        } catch (\Exception $e) {
+            Response::error('Errore AI: ' . $e->getMessage(), 500);
+        }
     }
 
 }
