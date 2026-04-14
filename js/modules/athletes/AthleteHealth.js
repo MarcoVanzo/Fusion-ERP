@@ -950,18 +950,10 @@ export const AthleteHealth = {
         } else if (type === 'pdf') {
             contentHtml = `<iframe src="${url}" style="width:100%; height:80vh; border:none; border-radius:8px; background:#fff; box-shadow: 0 8px 32px rgba(0,0,0,0.3);"></iframe>`;
         } else {
-            contentHtml = `
-                <div style="text-align:center; padding:60px 20px; background:rgba(255,255,255,0.02); border-radius:16px; border:1px dashed rgba(255,255,255,0.1); width:100%;">
-                    <div style="width:80px; height:80px; border-radius:24px; background:rgba(59, 130, 246, 0.1); color:#3b82f6; display:flex; align-items:center; justify-content:center; margin:0 auto 24px; font-size:40px;">
-                        <i class="ph ph-file-text"></i>
-                    </div>
-                    <h4 style="color:#fff; font-size:18px; font-weight:900; margin-bottom:12px; letter-spacing:-0.5px;">ANTEPRIMA NON DISPONIBILE</h4>
-                    <p style="color:var(--color-text-muted); font-size:14px; margin-bottom:32px; max-width:350px; margin-left:auto; margin-right:auto; line-height:1.6;">Questo formato non può essere visualizzato direttamente nel browser. Scaricalo sul tuo dispositivo per consultarlo.</p>
-                    <a href="${url}" target="_blank" class="btn" style="background:#3b82f6; color:#fff; border-radius:8px; padding:14px 32px; font-weight:700; box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4); display:inline-flex; align-items:center; gap:8px; border:none; transition:all 0.2s;" onmouseover="this.style.background='#2563eb'; this.style.transform='translateY(-2px)';" onmouseout="this.style.background='#3b82f6'; this.style.transform='translateY(0)';">
-                        <i class="ph ph-download-simple" style="font-size:20px;"></i> SCARICA / APRI FILE
-                    </a>
-                </div>
-            `;
+            // Use Google Docs Viewer to try to render Office files natively inside the iframe
+            const fullUrl = url.startsWith('http') ? url : window.location.origin + (url.startsWith('/') ? '' : '/') + url;
+            const viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(fullUrl)}&embedded=true`;
+            contentHtml = `<iframe src="${viewerUrl}" style="width:100%; height:80vh; border:none; border-radius:8px; background:#fff; box-shadow: 0 8px 32px rgba(0,0,0,0.3);"></iframe>`;
         }
 
         const theModal = this._createModal(`
