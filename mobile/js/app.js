@@ -84,9 +84,17 @@ class App {
     // Cleanup previous view state before rendering new one
     this.cleanup();
     
-    const hash = window.location.hash || '#login';
+    let hash = window.location.hash || '#login';
     
     const activeUser = localStorage.getItem('erp_user');
+    let role = 'atleta';
+    if (activeUser) {
+      try {
+        const u = JSON.parse(activeUser);
+        if (u.role) role = u.role.toLowerCase();
+      } catch(e){}
+    }
+    const isAdmin = role === 'admin';
     
     if (!activeUser && hash !== '#login') {
       window.location.hash = '#login';
@@ -94,7 +102,12 @@ class App {
     }
 
     if (activeUser && hash === '#login') {
-      window.location.hash = '#dashboard';
+      window.location.hash = isAdmin ? '#squadra' : '#dashboard';
+      return;
+    }
+
+    if (isAdmin && hash === '#dashboard') {
+      window.location.hash = '#squadra';
       return;
     }
 
@@ -115,13 +128,24 @@ class App {
       if (u.role) role = u.role.toLowerCase();
     } catch(e){}
 
-    const isStaff = role.includes('allenatore') || role.includes('social media manager') || role.includes('operatore') || role === 'operator' || role === 'admin';
+    const isAdmin = role === 'admin';
+    const isStaff = role.includes('allenatore') || role.includes('social media manager') || role.includes('operatore') || role === 'operator' || isAdmin;
 
-    const items = [
-      { id: '#dashboard', icon: 'fa-home', text: 'Home' },
-      isStaff ? { id: '#squadra', icon: 'fa-users', text: 'Squadra' } : { id: '#profilo', icon: 'fa-user-circle', text: 'Profilo' },
-      { id: '#spese', icon: 'fa-receipt', text: 'Spese' }
-    ];
+    let items = [];
+    if (isAdmin) {
+      items = [
+        { id: '#profilo', icon: 'fa-user-circle', text: 'Profilo' },
+        { id: '#squadra', icon: 'fa-users', text: 'Atlete' },
+        { id: '#presenze-team', icon: 'fa-calendar-check', text: 'Presenze' },
+        { id: '#spese', icon: 'fa-receipt', text: 'Spese' }
+      ];
+    } else {
+      items = [
+        { id: '#dashboard', icon: 'fa-home', text: 'Home' },
+        isStaff ? { id: '#squadra', icon: 'fa-users', text: 'Squadra' } : { id: '#profilo', icon: 'fa-user-circle', text: 'Profilo' },
+        { id: '#spese', icon: 'fa-receipt', text: 'Spese' }
+      ];
+    }
 
     let navHtml = '<div class="bottom-nav-container"><nav class="bottom-nav">';
     items.forEach(i => {
