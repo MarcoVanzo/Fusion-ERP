@@ -125,7 +125,12 @@ export const AthletesValdLink = (() => {
 
                 const acceptBtn = document.getElementById("accept-all-suggestions-btn");
                 if (suggestedCount > 0) {
-                    document.getElementById("suggestions-count").textContent = suggestedCount;
+                    let suggSpan = document.getElementById("suggestions-count");
+                    if (!suggSpan) {
+                        acceptBtn.innerHTML = '<i class="ph ph-magic-wand"></i> Accetta <span id="suggestions-count">0</span> suggerimenti';
+                        suggSpan = document.getElementById("suggestions-count");
+                    }
+                    suggSpan.textContent = suggestedCount;
                     acceptBtn.style.display = "inline-flex";
                     
                     acceptBtn.onclick = async () => {
