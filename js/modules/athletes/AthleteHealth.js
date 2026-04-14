@@ -887,7 +887,8 @@ export const AthleteHealth = {
                 const list = res.data || [];
                 if (list.length === 0) {
                     container.innerHTML = '<div style="padding:24px; text-align:center; color:var(--color-text-muted); background:rgba(255,255,255,0.02); border-radius:12px; border:1px dashed rgba(255,255,255,0.1);">Nessun documento caricato.</div>';
-                          container.innerHTML = '<div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:16px; padding-top:8px;">' + list.map(d => {
+                } else {
+                    container.innerHTML = '<div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:16px; padding-top:8px;">' + list.map(d => {
                         const isPdf = d.file_path.toLowerCase().endsWith('.pdf');
                         const isImg = /\\.(jpg|jpeg|png|gif|webp)$/i.test(d.file_path);
                         const iconClass = isPdf ? 'ph ph-file-pdf' : (isImg ? 'ph ph-file-image' : 'ph ph-file-text');
