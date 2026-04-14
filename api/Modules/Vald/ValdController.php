@@ -374,6 +374,11 @@ PROMPT;
             }
         }
         
+        if ($saved === 0) {
+            error_log("Saved 0! Body: " . json_encode($body), 3, '/tmp/fusion_vald_debug.log');
+            Response::success(['saved' => 0, 'debug_body' => $body]);
+        }
+        
         error_log("Saved: " . $saved . "\n", 3, '/tmp/fusion_vald_debug.log');
         Response::success(['saved' => $saved, 'message' => 'Collegati ' . $saved . ' atleti.']);
     }

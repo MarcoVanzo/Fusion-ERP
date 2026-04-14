@@ -139,7 +139,8 @@ export const AthletesValdLink = (() => {
                             const result = await Store.api("linkAthlete", "vald", { links: autoLinksPayload });
                             const saved = result?.saved ?? 0;
                             if (saved === 0) {
-                                UI.toast(`Attenzione: Backend non ha salvato i collegamenti. (Assicurati che id siano corretti)`, "warning", 5000);
+                                const debugStr = JSON.stringify(result?.debug_body?.links?.[0] || result?.debug_body || {});
+                                UI.toast(`Attenzione: Backend non ha salvato. Body: ${debugStr}`, "error", 8000);
                             } else {
                                 UI.toast(`✔ ${saved} atleti collegati in automatico!`, "success", 2000);
                             }
