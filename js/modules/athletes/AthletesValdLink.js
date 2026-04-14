@@ -136,22 +136,20 @@ export const AthletesValdLink = (() => {
                     acceptBtn.onclick = async () => {
                         acceptBtn.innerHTML = '<div class="loader-spinner" style="width:14px;height:14px;"></div>';
                         try {
-                            const payloadToSend = { links: autoLinksPayload };
-                            const result = await Store.api("linkAthlete", "vald", payloadToSend);
-                            const saved = result?.saved ?? 0;
-                            if (saved === 0) {
-                                const sentLength = autoLinksPayload.length;
-                                const rawBody = result?.raw_body || "RAW_NULL";
-                                UI.toast(`Invio ${sentLength} items. Raw Backend: ${rawBody}`, "error", 10000);
-                            } else {
-                                UI.toast(`✔ ${saved} atleti collegati in automatico!`, "success", 2000);
+                            let totalSaved = 0;
+                            // Batch iterate and send individually like the single save button
+                            for (const link of autoLinksPayload) {
+                                const payload = { links: [link] };
+                                const result = await Store.api("linkAthlete", "vald", payload);
+                                if (result?.saved > 0) totalSaved++;
                             }
+                            UI.toast(`✔ ${totalSaved} atleti collegati in automatico!`, "success", 2000);
                             acceptBtn.style.display = "none";
                             // Reload modal
                             openModal(onClose);
                         } catch(e) {
                             UI.toast(e.message, "error");
-                            acceptBtn.innerHTML = `<i class="ph ph-magic-wand"></i> Accetta ${suggestedCount} suggerimenti`;
+                            acceptBtn.innerHTML = `<i class="ph ph-magic-wand"></i> Accetta <span id="suggestions-count">${suggestedCount}</span> suggerimenti`;
                         }
                     };
                 } else {
