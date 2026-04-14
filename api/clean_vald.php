@@ -3,13 +3,9 @@ require_once __DIR__ . '/../vendor/autoload.php';
 $dotenv = Dotenv\Dotenv::createUnsafeImmutable(dirname(__DIR__));
 $dotenv->load();
 
-use FusionERP\Shared\Database;
-
-$db = Database::getInstance();
-
-// Delete tests with empty metrics or tests from March onwards that are corrupted
-$stmt = $db->prepare("DELETE FROM vald_test_results WHERE metrics = '{}' OR metrics NOT LIKE '%JumpHeight%'");
+$db = \FusionERP\Shared\Database::getInstance();
+$stmt = $db->prepare("DELETE FROM vald_test_results WHERE athlete_id = 'ATH_f4016c19'");
 $stmt->execute();
 $count = $stmt->rowCount();
 
-echo "Eliminati $count test corrotti o vuoti dal database.";
+echo "Eliminati $count test per re-importare Olmesini con le metriche corrette.";

@@ -485,9 +485,9 @@ PROMPT;
                                                 $val = (float)$val < 1.0 ? (float)$val * 100.0 : (float)$val; // m to cm
                                                 $keyToStore = 'JumpHeight';
                                                 
-                                                // Favor Flight Time (explicitly requested by user)
-                                                $isFlightTime = (strpos($def, 'FLIGHT') !== false);
-                                                if ($isFlightTime || !isset($trialMetrics['JumpHeight'])) {
+                                                // Favor Imp-Mom (to match VALD Hub default dashboard)
+                                                $isImpMom = (strpos($def, 'IMP_MOM') !== false || strpos($def, 'IMPULSE_MOMENTUM') !== false);
+                                                if ($isImpMom || !isset($trialMetrics['JumpHeight'])) {
                                                     $trialMetrics['JumpHeight'] = ['Value' => round((float)$val, 1)];
                                                     $trialJumpHeight = (float)$val;
                                                 }
