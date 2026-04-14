@@ -1262,9 +1262,18 @@ class App {
              <div class="glass-card skeleton" style="height:60px;"></div>
           </div>
           
-          <button class="btn mt-20 stagger-item delay-2" style="background:var(--success)" id="btn-confirm-attendance"><i class="fas fa-save"></i> CONFERMA MASCHERA PRESENZE</button>
+          <div class="wizard-padding"></div>
         </div>
       </div>
+      
+      <!-- Fixed Action Buttons -->
+      <div class="wizard-actions">
+        <button class="btn" style="background:var(--success); flex: 1;" id="btn-confirm-attendance">
+          <i class="fas fa-save"></i> CONFERMA MASCHERA PRESENZE
+        </button>
+      </div>
+      
+      ${this.getBottomNav('#presenze-team')}
     `;
 
     const grid = document.getElementById('attendance-grid');
