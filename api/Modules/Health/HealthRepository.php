@@ -156,6 +156,7 @@ class HealthRepository
      */
     public function insertInjury(array $data): void
     {
+        $data[':severity'] = 'moderate';
         $stmt = $this->db->prepare(
             'INSERT INTO injury_records (
                 id, tenant_id, athlete_id, injury_date, type, body_part, severity, stop_days, return_date, notes, treated_by, created_by,
