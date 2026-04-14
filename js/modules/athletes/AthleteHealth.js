@@ -950,10 +950,25 @@ export const AthleteHealth = {
         } else if (type === 'pdf') {
             contentHtml = `<iframe src="${url}" style="width:100%; height:80vh; border:none; border-radius:8px; background:#fff; box-shadow: 0 8px 32px rgba(0,0,0,0.3);"></iframe>`;
         } else {
-            // Use Google Docs Viewer to try to render Office files natively inside the iframe
-            const fullUrl = url.startsWith('http') ? url : window.location.origin + (url.startsWith('/') ? '' : '/') + url;
+            // Use Google Docs Viewer for Office files. Resolve the correct absolute URL using new URL()
+            // In case url has some special encoding, we pass the fully resolved absolute url back.
+            // If the environment requires a public URL, we reconstruct it properly.
+            const base = window.location.href; // e.g. https://www.fusionteamvolley.it/ERP/...
+            const fullUrl = new URL(url, base).href;
+            
+            // To ensure Google can reach it, we encode the full URL
             const viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(fullUrl)}&embedded=true`;
-            contentHtml = `<iframe src="${viewerUrl}" style="width:100%; height:80vh; border:none; border-radius:8px; background:#fff; box-shadow: 0 8px 32px rgba(0,0,0,0.3);"></iframe>`;
+            
+            contentHtml = `
+                <div style="width:100%; display:flex; flex-direction:column; gap:8px;">
+                    <iframe src="${viewerUrl}" style="width:100%; height:75vh; border:none; border-radius:8px; background:#fff; box-shadow: 0 8px 32px rgba(0,0,0,0.3);"></iframe>
+                    <div style="text-align:center; padding:8px;">
+                        <a href="${url}" target="_blank" class="btn" style="background:rgba(255,255,255,0.05); color:#fff; border-radius:8px; padding:10px 24px; font-size:13px; font-weight:700; border:1px solid rgba(255,255,255,0.1); display:inline-flex; align-items:center; gap:8px; transition:all 0.2s;" onmouseover="this.style.background='rgba(59, 130, 246, 0.2)'; this.style.borderColor='rgba(59, 130, 246, 0.5)';" onmouseout="this.style.background='rgba(255,255,255,0.05)'; this.style.borderColor='rgba(255,255,255,0.1)';">
+                            <i class="ph ph-download-simple" style="font-size:18px;"></i> Se l'anteprima non si carica, clicca qui per scaricare
+                        </a>
+                    </div>
+                </div>
+            `;
         }
 
         const theModal = this._createModal(`
