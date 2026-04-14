@@ -455,6 +455,7 @@ PROMPT;
                     if ($teamId && $testIdStr) {
                         try {
                             $trialsData = $this->getTrials($teamId, $testIdStr);
+                            usleep(300000); // 300ms pause to avoid rate limit
                             if (is_array($trialsData) && !empty($trialsData)) {
                                 $bestJumpHeight = -1.0;
                                 $bestMetrics = [];
