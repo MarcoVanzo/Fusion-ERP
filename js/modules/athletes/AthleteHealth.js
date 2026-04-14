@@ -249,18 +249,49 @@ export const AthleteHealth = {
         const input = form.querySelector('input');
         const submitBtn = form.querySelector('button');
 
+        const formatMarkdown = (text) => {
+            if (!text) return '';
+            let html = String(text);
+            
+            // Decodifica le entità HTML (es. &#x27; -> ') e sicurezza di base
+            const temp = document.createElement('textarea');
+            temp.innerHTML = html;
+            html = temp.value; // Questo decodifica le entità
+            
+            // Sicurezza: Re-escape HTML tag
+            html = html.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+            // Intestazioni
+            html = html.replace(/^### (.*$)/gim, '<h4 style="font-size:16px; font-weight:800; color:#fff; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:8px; margin-top:20px; margin-bottom:12px;">$1</h4>');
+            html = html.replace(/^## (.*$)/gim, '<h3 style="font-size:18px; font-weight:800; color:#10b981; margin-top:24px; margin-bottom:16px;">$1</h3>');
+            html = html.replace(/^# (.*$)/gim, '<h2 style="font-size:20px; font-weight:800; color:#10b981; margin-top:24px; margin-bottom:16px;">$1</h2>');
+            
+            // Liste
+            html = html.replace(/^\* (.*$)/gim, '<div style="display:flex; gap:8px; margin-bottom:8px; padding-left:8px;"><i class="ph ph-check-circle" style="color:#10b981; margin-top:4px;"></i><span style="flex:1;">$1</span></div>');
+            html = html.replace(/^\d+\. (.*$)/gim, '<div style="display:flex; gap:8px; margin-bottom:8px; padding-left:8px;"><i class="ph ph-caret-right" style="color:#3b82f6; margin-top:4px;"></i><span style="flex:1;">$1</span></div>');
+            
+            // Separatori orizzontali
+            html = html.replace(/^---/gim, '<hr style="border:none; border-top:1px solid rgba(255,255,255,0.1); margin:24px 0;">');
+            
+            // Grassetto e corsivo
+            html = html.replace(/\*\*(.*?)\*\*/gim, '<strong style="color:#fff;">$1</strong>');
+            html = html.replace(/\*(.*?)\*/gim, '<em style="opacity:0.8;">$1</em>');
+            
+            // A capo
+            html = html.replace(/\n\n/g, '<div style="height:12px;"></div>');
+            html = html.replace(/\n/g, '<br>');
+            
+            return html;
+        };
+
         const appendMessage = (role, content) => {
             const isAi = role === 'AI';
-            // Render markdown conceptually (we will just convert some basic markdown later if needed)
-            // But simple replace of \n is robust enough. Also handle basic bold **.
-            let formattedContent = Utils.escapeHtml(content)
-                .replace(/\\n/g, '<br>')
-                .replace(/\\*\\*(.*?)\\*\\*/g, '<strong>$1</strong>');
+            const formattedContent = isAi ? formatMarkdown(content) : Utils.escapeHtml(content);
 
             const html = `
-                <div style="display:flex; gap:12px; align-self: ${isAi ? 'flex-start' : 'flex-end'}; max-width:85%;">
+                <div style="display:flex; gap:12px; align-self: ${isAi ? 'flex-start' : 'flex-end'}; max-width:${isAi ? '100%' : '85%'}; width:${isAi ? '100%' : 'auto'};">
                     ${isAi ? '<div style="width:32px;height:32px;border-radius:50%;background:rgba(16, 185, 129, 0.2);color:#10b981;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="ph ph-robot"></i></div>' : ''}
-                    <div style="background:${isAi ? 'rgba(255,255,255,0.05)' : '#3b82f6'}; color:#fff; padding:12px 16px; border-radius:12px; ${isAi ? 'border-top-left-radius:2px;' : 'border-top-right-radius:2px;'} font-size:14px; line-height:1.5;">
+                    <div style="background:${isAi ? 'rgba(255,255,255,0.02)' : '#3b82f6'}; border:${isAi ? '1px solid rgba(255,255,255,0.05)' : 'none'}; color:#fff; padding:16px 20px; border-radius:12px; ${isAi ? 'border-top-left-radius:2px;' : 'border-top-right-radius:2px;'} font-size:14px; line-height:1.6; flex:1;">
                         ${formattedContent}
                     </div>
                 </div>
