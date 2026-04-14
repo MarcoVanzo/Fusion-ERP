@@ -957,7 +957,7 @@ export const AthleteHealth = {
                     </div>
                     <h4 style="color:#fff; font-size:18px; font-weight:900; margin-bottom:12px; letter-spacing:-0.5px;">Visualizzazione Non Formattata</h4>
                     <p style="color:var(--color-text-muted); font-size:14px; margin-bottom:32px; max-width:350px; margin-left:auto; margin-right:auto; line-height:1.6;">Questo formato non può essere visualizzato direttamente nel browser. Scaricalo sul tuo dispositivo per consultarlo.</p>
-                    <a href="${url}" target="_blank" class="btn btn-primary" style="background:#3b82f6; border-radius:8px; padding:14px 32px; font-weight:700; box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3); display:inline-flex; align-items:center; gap:8px;">
+                    <a href="${url}" target="_blank" class="btn" style="background:#3b82f6; color:#fff; border-radius:8px; padding:14px 32px; font-weight:700; box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4); display:inline-flex; align-items:center; gap:8px; border:none; transition:all 0.2s;" onmouseover="this.style.background='#2563eb'; this.style.transform='translateY(-2px)';" onmouseout="this.style.background='#3b82f6'; this.style.transform='translateY(0)';">
                         <i class="ph ph-download-simple" style="font-size:20px;"></i> SCARICA / APRI FILE
                     </a>
                 </div>
