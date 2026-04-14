@@ -889,8 +889,9 @@ export const AthleteHealth = {
                     container.innerHTML = '<div style="padding:24px; text-align:center; color:var(--color-text-muted); background:rgba(255,255,255,0.02); border-radius:12px; border:1px dashed rgba(255,255,255,0.1);">Nessun documento caricato.</div>';
                 } else {
                     container.innerHTML = '<div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:16px; padding-top:8px;">' + list.map(d => {
-                        const isPdf = d.file_path.toLowerCase().endsWith('.pdf');
-                        const isImg = /\\.(jpg|jpeg|png|gif|webp)$/i.test(d.file_path);
+                        const cleanPath = d.file_path.split('?')[0].split('#')[0].toLowerCase();
+                        const isPdf = cleanPath.endsWith('.pdf');
+                        const isImg = /\.(jpg|jpeg|png|gif|webp|bmp)$/.test(cleanPath);
                         const iconClass = isPdf ? 'ph ph-file-pdf' : (isImg ? 'ph ph-file-image' : 'ph ph-file-text');
                         const iconColor = isPdf ? '#ef4444' : (isImg ? '#10b981' : '#3b82f6');
                         const bgColor = isPdf ? 'rgba(239, 68, 68, 0.05)' : (isImg ? 'rgba(16, 185, 129, 0.05)' : 'rgba(59, 130, 246, 0.05)');
