@@ -137,11 +137,15 @@ export const AthletesValdLink = (() => {
                         acceptBtn.innerHTML = '<div class="loader-spinner" style="width:14px;height:14px;"></div>';
                         try {
                             let totalSaved = 0;
-                            // Batch iterate and send individually like the single save button
-                            for (const link of autoLinksPayload) {
-                                const payload = { links: [link] };
+                            // Chunk le richieste a gruppi di 10:
+                            // 1) Evita che ModSecurity (Aruba WAF) spogli payload JSON troppo grandi.
+                            // 2) Evita l'errore "Troppe richieste" (Rate limit di 60 req/minuto) inviando < 10 richieste.
+                            const chunkSize = 10;
+                            for (let i = 0; i < autoLinksPayload.length; i += chunkSize) {
+                                const chunk = autoLinksPayload.slice(i, i + chunkSize);
+                                const payload = { links: chunk };
                                 const result = await Store.api("linkAthlete", "vald", payload);
-                                if (result?.saved > 0) totalSaved++;
+                                if (result?.saved > 0) totalSaved += result.saved;
                             }
                             UI.toast(`✔ ${totalSaved} atleti collegati in automatico!`, "success", 2000);
                             acceptBtn.style.display = "none";
