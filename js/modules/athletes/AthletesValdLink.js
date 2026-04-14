@@ -1,0 +1,162 @@
+export const AthletesValdLink = (() => {
+    
+    function modalTemplate() {
+        return `
+            <div id="vald-link-modal" class="modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); backdrop-filter:blur(10px); z-index:9999; justify-content:center; align-items:center;">
+                <div class="modal-content card glass-card flex-col" style="width:100%; max-width:800px; max-height:90vh; background:var(--color-bg-card); border-radius:24px; padding:32px; border:1px solid rgba(255,255,255,0.1);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+                        <div>
+                            <h2 style="font-family:var(--font-display); font-size:24px; color:var(--color-white); margin:0;">
+                                <i class="ph ph-link" style="color:var(--color-pink);"></i> Gestione Link VALD
+                            </h2>
+                            <p style="color:var(--color-text-muted); font-size:14px; margin-top:4px;">
+                                Collega gli atleti provenienti da VALD Hub con l'anagrafica di sistema per abilitare la sincronizzazione dei dati.
+                            </p>
+                        </div>
+                        <button class="btn btn-ghost" id="close-vald-link-modal" style="padding:10px;"><i class="ph ph-x" style="font-size:24px;"></i></button>
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                        <input type="text" id="vald-link-search" placeholder="Cerca atleta..." class="form-input" style="max-width:300px; font-size:14px; background:rgba(255,255,255,0.03);">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span class="badge badge-success" id="vald-link-count" style="display:none;"></span>
+                        </div>
+                    </div>
+
+                    <div id="vald-link-loader" style="display:flex; justify-content:center; padding:40px;">
+                        <div class="loader-spinner"></div>
+                    </div>
+
+                    <div id="vald-link-container" style="flex:1; overflow-y:auto; display:none; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:12px;">
+                        <table class="table" style="width:100%; border-collapse:collapse; text-align:left;">
+                            <thead style="background:rgba(255,255,255,0.05); position:sticky; top:0; z-index:10;">
+                                <tr>
+                                    <th style="padding:16px; font-size:12px; color:rgba(255,255,255,0.4); text-transform:uppercase;">Atleta VALD Hub</th>
+                                    <th style="padding:16px; font-size:12px; color:rgba(255,255,255,0.4); text-transform:uppercase;">Atleta Sistema (Fusion ERP)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="vald-link-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    async function openModal(onClose) {
+        if (!document.getElementById("vald-link-modal")) {
+            document.body.insertAdjacentHTML("beforeend", modalTemplate());
+            
+            document.getElementById("close-vald-link-modal").addEventListener("click", () => {
+                document.getElementById("vald-link-modal").style.display = "none";
+                if(onClose) onClose();
+            });
+            
+            document.getElementById("vald-link-search").addEventListener("input", (e) => {
+                const term = e.target.value.toLowerCase();
+                document.querySelectorAll(".vald-link-row").forEach(row => {
+                    const text = row.dataset.search.toLowerCase();
+                    row.style.display = text.includes(term) ? "table-row" : "none";
+                });
+            });
+        }
+
+        const modal = document.getElementById("vald-link-modal");
+        const loader = document.getElementById("vald-link-loader");
+        const container = document.getElementById("vald-link-container");
+        const tbody = document.getElementById("vald-link-tbody");
+        const countSpan = document.getElementById("vald-link-count");
+
+        modal.style.display = "flex";
+        loader.style.display = "flex";
+        container.style.display = "none";
+        countSpan.style.display = "none";
+        
+        try {
+            const data = await Store.api("valdAthletes", "vald");
+            
+            const valdAthletes = data.valdAthletes || [];
+            const erpAthletes = data.erpAthletes || [];
+
+            if(valdAthletes.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="2" style="padding:30px; text-align:center; color:rgba(255,255,255,0.5);">Nessun atleta trovato su VALD Hub.</td></tr>`;
+            } else {
+                tbody.innerHTML = valdAthletes.map(va => {
+                    const mappedId = va.mappedTo || "";
+                    const searchStr = \`\${va.firstName} \${va.lastName} \${va.teamName}\`;
+                    
+                    const optionsHtml = erpAthletes.map(erp => {
+                        const isSelected = String(erp.id) === String(mappedId) ? "selected" : "";
+                        return \`<option value="\${erp.id}" \${isSelected}>\${erp.full_name} (\${erp.team_name || 'Nessuna squadra'})</option>\`;
+                    }).join("");
+
+                    return \`
+                        <tr class="vald-link-row" data-search="\${searchStr.replace(/"/g, '')}" style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                            <td style="padding:16px;">
+                                <div style="font-weight:600; color:var(--color-white);">\${Utils.escapeHtml(va.firstName)} \${Utils.escapeHtml(va.lastName)}</div>
+                                <div style="font-size:12px; color:rgba(255,255,255,0.4);"><i class="ph ph-shield-star"></i> \${Utils.escapeHtml(va.teamName || 'Team sconosciuto')}</div>
+                            </td>
+                            <td style="padding:16px;">
+                                <div style="display:flex; align-items:center; gap:8px;">
+                                    <select class="form-input vald-erp-select" data-vald-id="\${Utils.escapeHtml(va.id)}" style="flex:1; background:rgba(0,0,0,0.2); font-size:14px; border:1px solid rgba(255,255,255,0.1);">
+                                        <option value="">-- Nessun atleta collegato --</option>
+                                        \${optionsHtml}
+                                    </select>
+                                    <button class="btn btn-ghost btn-sm save-link-btn" title="Salva Collegamento" style="display:none; color:var(--color-success);"><i class="ph ph-check" style="font-size:18px;"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                    \`;
+                }).join("");
+                
+                countSpan.textContent = \`\${valdAthletes.length} su Hub\`;
+                countSpan.style.display = "inline-flex";
+
+                // Add listeners to selects
+                document.querySelectorAll(".vald-erp-select").forEach(sel => {
+                    const originalValue = sel.value;
+                    const row = sel.closest('tr');
+                    const saveBtn = row.querySelector('.save-link-btn');
+                    
+                    sel.addEventListener("change", () => {
+                        if(sel.value !== originalValue) {
+                            saveBtn.style.display = "flex";
+                        } else {
+                            saveBtn.style.display = "none";
+                        }
+                    });
+
+                    saveBtn.addEventListener("click", async () => {
+                        const erpId = sel.value;
+                        const valdId = sel.dataset.valdId;
+                        
+                        saveBtn.innerHTML = '<div class="loader-spinner" style="width:14px;height:14px;"></div>';
+                        try {
+                            const payload = { links: [{ athlete_id: erpId, vald_profile_id: valdId }] };
+                            await Store.api("linkAthlete", "vald", payload);
+                            UI.toast("Collegamento salvato con successo!", "success", 2000);
+                            saveBtn.innerHTML = '<i class="ph ph-check" style="font-size:18px;"></i>';
+                            saveBtn.style.display = "none";
+                        } catch(e) {
+                            UI.toast(e.message, "error");
+                            saveBtn.innerHTML = '<i class="ph ph-check" style="font-size:18px;"></i>';
+                        }
+                    });
+                });
+            }
+
+            loader.style.display = "none";
+            container.style.display = "block";
+            
+        } catch(e) {
+            loader.style.display = "none";
+            container.style.display = "block";
+            tbody.innerHTML = \`<tr><td colspan="2" style="padding:30px; text-align:center; color:#ef4444;">Errore: \${Utils.escapeHtml(e.message)}</td></tr>\`;
+        }
+    }
+
+    return {
+        openModal
+    };
+
+})();

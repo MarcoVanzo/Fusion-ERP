@@ -8,6 +8,7 @@ import { AthletesView } from './athletes/AthletesView.js?v=3';
 import { AthletesWizard } from './athletes/AthletesWizard.js?v=2';
 import { AthletesMetrics } from './athletes/AthletesMetricsV2.js?v=5';
 import { AthleteHealth } from './athletes/AthleteHealth.js?v=2';
+import { AthletesValdLink } from './athletes/AthletesValdLink.js?v=1';
 import TransportAPI from './transport/TransportAPI.js';
 
 const Athletes = (() => {
@@ -119,6 +120,12 @@ const Athletes = (() => {
 
         document.getElementById("new-athlete-btn")?.addEventListener("click", () => {
             AthletesWizard.openCreate(teamsData, () => {
+                refreshData(variant);
+            });
+        }, { signal });
+
+        document.getElementById("manage-vald-links-btn")?.addEventListener("click", () => {
+            AthletesValdLink.openModal(() => {
                 refreshData(variant);
             });
         }, { signal });
