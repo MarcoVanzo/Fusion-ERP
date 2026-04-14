@@ -220,7 +220,7 @@ export const AthletesMetrics = {
                             <span style="text-align:right;">RSI_Mod</span>
                             <span style="text-align:right;">Asymmetry</span>
                         </div>
-                        ${data.results.map(res => {
+                        ${data.results.filter(res => ['CMJ', 'SJ', 'DJ'].includes(res.test_type)).map(res => {
                             const m = res.metrics || {};
                             const asyNum = res.asymmetry?.landing?.asymmetry ?? 0;
                             const asy = asyNum.toFixed(1);
