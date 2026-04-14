@@ -387,9 +387,28 @@ export const AthletesMetrics = {
     async _syncVald(athleteId) {
         UI.loading(true, "Connessione a VALD Hub...");
         try {
-            await Store.api("sync", "vald", { athleteId });
-            UI.toast("Sincronizzazione completata", "success");
-            this._loadValdData(athleteId);
+            const result = await Store.api("sync", "vald", { athleteId });
+
+            // Invalidate cache so _loadValdData fetches fresh data from server
+            Store.invalidate("analytics/vald");
+
+            // Show meaningful feedback using the actual API response
+            const synced = result?.synced ?? 0;
+            const found  = result?.found ?? 0;
+            const skipped = result?.skipped ?? 0;
+            const unlinked = result?.unlinkedAthletes ?? [];
+
+            if (synced > 0) {
+                UI.toast(`Sincronizzazione completata: ${synced} nuovi test salvati su ${found} trovati.`, "success");
+            } else if (found > 0 && unlinked.length > 0) {
+                UI.toast(`Trovati ${found} test ma nessun atleta collegato a VALD. Vai in "Gestione Link VALD" per collegare gli atleti.`, "warning");
+            } else if (found > 0 && skipped > 0) {
+                UI.toast(`${found} test trovati, tutti già presenti nel sistema.`, "info");
+            } else {
+                UI.toast("Nessun nuovo test trovato su VALD Hub.", "info");
+            }
+
+            await this._loadValdData(athleteId);
         } catch (e) {
             UI.toast("Errore sync: " + e.message, "error");
         } finally {
