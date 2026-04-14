@@ -225,7 +225,7 @@ export const AthleteHealth = {
             </h2>
             <p style="color:var(--color-text-muted); font-size:14px; margin-bottom:24px;">Analisi diagnostica per ${Utils.escapeHtml(athlete.full_name)}</p>
             
-            <div id="ai-chat-container" style="background:rgba(0,0,0,0.3); border-radius:12px; border:1px solid rgba(255,255,255,0.05); height:400px; display:flex; flex-direction:column; overflow:hidden; margin-bottom:16px;">
+            <div id="ai-chat-container" style="background:rgba(0,0,0,0.3); border-radius:12px; border:1px solid rgba(255,255,255,0.05); height:65vh; max-height:800px; display:flex; flex-direction:column; overflow:hidden; margin-bottom:16px;">
                 <div id="ai-chat-messages" style="flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:16px;">
                     <div style="text-align:center; padding:20px; color:var(--color-text-muted);"><i class="ph ph-circle-notch animate-spin"></i> Generazione quadro clinico in corso...</div>
                 </div>
@@ -243,6 +243,11 @@ export const AthleteHealth = {
         `);
         
         document.body.appendChild(theModal);
+        
+        // Espandi la modale il più largo possibile (senza esagerare)
+        const modalContent = theModal.querySelector('.modal-content');
+        if (modalContent) modalContent.style.maxWidth = '1200px';
+        if (modalContent) modalContent.style.width = '95%';
         
         const messagesContainer = theModal.querySelector('#ai-chat-messages');
         const form = theModal.querySelector('#ai-chat-form');
