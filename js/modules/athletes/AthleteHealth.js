@@ -61,14 +61,9 @@ export const AthleteHealth = {
             <!-- Anamnesi Medica -->
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
                 <h3 style="font-family:var(--font-display); font-size:20px; font-weight:800; color:#fff; margin:0;">Anamnesi</h3>
-                <div style="display:flex; gap:12px;">
-                    <button class="btn btn-default btn-xs ai-diagnosis-btn" style="background:rgba(16, 185, 129, 0.1); border:1px solid rgba(16, 185, 129, 0.3); color:#10b981;">
-                        <i class="ph ph-magic-wand"></i> AI Analisi Clinica
-                    </button>
-                    <button class="btn btn-default btn-xs edit-anamnesi-btn" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);">
-                        <i class="ph ph-pencil-simple"></i> Modifica Anamnesi
-                    </button>
-                </div>
+                <button class="btn btn-default btn-xs edit-anamnesi-btn" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);">
+                    <i class="ph ph-pencil-simple"></i> Modifica Anamnesi
+                </button>
             </div>
 
             <div class="card glass-card" style="padding:24px; margin-bottom:32px;">
@@ -172,9 +167,14 @@ export const AthleteHealth = {
                             </div>
                         </div>
                     </div>
-                    <button class="btn btn-ghost btn-xs edit-injury-btn" data-id="${injury.id}" style="background:rgba(255,255,255,0.05);">
-                        <i class="ph ph-pencil-simple"></i> Dettagli
-                    </button>
+                    <div style="display:flex; flex-direction:column; gap:8px;">
+                        <button class="btn btn-default btn-xs ai-diagnosis-btn" data-id="${injury.id}" style="background:rgba(16, 185, 129, 0.1); border:1px solid rgba(16, 185, 129, 0.3); color:#10b981; width:100%; justify-content:center;">
+                            <i class="ph ph-magic-wand"></i> AI Analisi
+                        </button>
+                        <button class="btn btn-ghost btn-xs edit-injury-btn" data-id="${injury.id}" style="background:rgba(255,255,255,0.05); width:100%; justify-content:center;">
+                            <i class="ph ph-pencil-simple"></i> Dettagli
+                        </button>
+                    </div>
                 </div>
             </div>
         `;
@@ -188,12 +188,13 @@ export const AthleteHealth = {
             });
         }
 
-        const aiDiagnosisBtn = container.querySelector('.ai-diagnosis-btn');
-        if (aiDiagnosisBtn) {
-            aiDiagnosisBtn.addEventListener('click', () => {
-                this._openAiDiagnosisModal(container, athlete, anamnesi, injuries);
+        const aiDiagnosisBtns = container.querySelectorAll('.ai-diagnosis-btn');
+        aiDiagnosisBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const injuryId = btn.getAttribute('data-id');
+                this._openAiDiagnosisModal(container, athlete, anamnesi, injuries, injuryId);
             });
-        }
+        });
 
         const addInjuryBtn = container.querySelector('.add-injury-btn');
         if (addInjuryBtn) {
@@ -215,7 +216,7 @@ export const AthleteHealth = {
         });
     },
 
-    _openAiDiagnosisModal(container, athlete, anamnesi, injuries) {
+    _openAiDiagnosisModal(container, athlete, anamnesi, injuries, focusedInjuryId = null) {
         let chatHistory = [];
         
         const theModal = this._createModal(`
@@ -332,6 +333,7 @@ export const AthleteHealth = {
                     headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                     body: JSON.stringify({
                         athlete_id: athlete.id,
+                        focused_injury_id: focusedInjuryId,
                         message: message,
                         history: chatHistory
                     })

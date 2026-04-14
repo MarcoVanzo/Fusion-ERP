@@ -355,6 +355,7 @@ class HealthController
         $athleteId = $body['athlete_id'];
         $message = $body['message'] ?? '';
         $history = $body['history'] ?? [];
+        $focusedInjuryId = $body['focused_injury_id'] ?? null;
 
         // Gather athlete data
         $anamnesi = $this->repo->getAnamnesi($athleteId);
@@ -371,7 +372,12 @@ class HealthController
         
         if (empty($history) && empty($message)) {
             // Initial analysis
-            $prompt = $context . "Sulla base di tutti questi dati, analizza accuratamente la situazione medica globale dell'atleta. Fornisci un quadro diagnostico di sintesi, evidenzia eventuali correlazioni tra infortuni pregressi e anamnesi, e per suggerisci una possibile terapia o indicazione utile per il recupero e la prevenzione.";
+            $prompt = $context . "Sulla base di tutti questi dati, analizza accuratamente la situazione medica globale dell'atleta. ";
+            if ($focusedInjuryId) {
+                $prompt .= "In particolare, devi concentrare la tua analisi **esclusivamente o prevalentemente sull'infortunio con ID $focusedInjuryId** (presente nei dati sopra registrati). Focalizzati su di esso fornendo diagnosi, tempi di recupero e terapie per quello specifico infortunio, tenendo presente l'anamnesi.";
+            } else {
+                $prompt .= "Fornisci un quadro diagnostico di sintesi, evidenzia eventuali correlazioni tra infortuni pregressi e anamnesi, e suggerisci una possibile terapia o indicazione utile per il recupero e la prevenzione.";
+            }
         } else {
             // Conversational follow-up
             $prompt = $context . "CRONOLOGIA CHAT CON LO STAFF MEDICO:\n";
