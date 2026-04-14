@@ -506,30 +506,49 @@ select.input-field {
 
 .nav-item {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   color: var(--text-muted);
-  font-size: 14px;
+  font-size: 10px;
   font-weight: 600;
   text-decoration: none;
-  padding: 10px 16px;
-  border-radius: var(--radius-pill);
+  padding: 8px 4px;
+  border-radius: var(--radius-md);
   transition: all 0.3s ease;
-  gap: 8px;
+  gap: 4px;
+  flex: 1;
 }
 
-.nav-item span { display: none; }
+.nav-item span { 
+  display: block; 
+  text-transform: uppercase; 
+  letter-spacing: 0.5px; 
+  opacity: 0.8; 
+}
 
 .nav-item.active {
   color: var(--accent-secondary);
   background: rgba(255, 0, 122, 0.1);
-  box-shadow: 0 0 12px rgba(255, 0, 122, 0.3);
+  box-shadow: 0 4px 15px rgba(255, 0, 122, 0.15);
   animation: pulseGlow 3s infinite ease-in-out;
 }
-.nav-item.active i { color: var(--accent-secondary); }
 
-.nav-item.active span { display: inline; }
-.nav-item i { font-size: 20px; color: var(--text-muted); transition: 0.3s; }
+.nav-item.active i { 
+  color: var(--accent-secondary); 
+  transform: translateY(-2px); 
+}
+
+.nav-item.active span { 
+  opacity: 1; 
+  color: #fff; 
+}
+
+.nav-item i { 
+  font-size: 22px; 
+  color: rgba(255, 255, 255, 0.8); 
+  transition: 0.3s; 
+}
 
 /* Skeletons */
 @keyframes skeletonLoading {
