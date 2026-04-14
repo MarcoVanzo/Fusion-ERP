@@ -19,6 +19,7 @@ export const AthletesValdLink = (() => {
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
                         <input type="text" id="vald-link-search" placeholder="Cerca atleta..." class="form-input" style="max-width:300px; font-size:14px; background:rgba(255,255,255,0.03);">
                         <div style="display:flex; align-items:center; gap:8px;">
+                            <button id="sync-vald-btn" class="btn btn-default btn-sm" style="padding:6px 12px; font-weight:600; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.05); color:#fff;"><i class="ph ph-arrows-clockwise"></i> Avvia Sync</button>
                             <button id="accept-all-suggestions-btn" class="btn btn-primary btn-sm" style="display:none; padding:6px 12px; font-weight:600;"><i class="ph ph-magic-wand"></i> Accetta <span id="suggestions-count">0</span> suggerimenti</button>
                             <span class="badge badge-success" id="vald-link-count" style="display:none;"></span>
                         </div>
@@ -51,6 +52,22 @@ export const AthletesValdLink = (() => {
             document.getElementById("close-vald-link-modal").addEventListener("click", () => {
                 document.getElementById("vald-link-modal").style.display = "none";
                 if(onClose) onClose();
+            });
+            
+            document.getElementById("sync-vald-btn").addEventListener("click", async (e) => {
+                const btn = e.currentTarget;
+                btn.innerHTML = '<i class="ph ph-circle-notch animate-spin"></i> In corso...';
+                btn.disabled = true;
+                try {
+                    UI.toast("Sincronizzazione in corso. Attendere, potrebbe richiedere del tempo...", "info", 5000);
+                    const res = await Store.api("sync", "vald");
+                    UI.toast(res?.message || "Sincronizzazione VALD completata con successo", "success", 6000);
+                } catch(err) {
+                    UI.toast(err.message || "Errore durante la sincronizzazione.", "error", 8000);
+                } finally {
+                    btn.innerHTML = '<i class="ph ph-arrows-clockwise"></i> Avvia Sync';
+                    btn.disabled = false;
+                }
             });
             
             document.getElementById("vald-link-search").addEventListener("input", (e) => {
