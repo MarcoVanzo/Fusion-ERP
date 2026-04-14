@@ -861,12 +861,23 @@ export const AthleteHealth = {
                                 <div style="font-size:11px; opacity:0.5;">
                                     ${new Date(d.uploaded_at || d.created_at).toLocaleDateString('it-IT')}
                                 </div>
-                                <a href="${d.file_path}" target="_blank" class="btn btn-ghost btn-xs" style="color:#fff; background:rgba(255,255,255,0.1); padding:4px 8px; font-size:10px; font-weight:700;">
+                                <button type="button" class="btn btn-ghost btn-xs doc-preview-btn" data-url="${Utils.escapeHtml(d.file_path)}" data-title="${Utils.escapeHtml(d.document_title)}" data-type="${isPdf ? 'pdf' : (isImg ? 'img' : 'other')}" style="color:#fff; background:rgba(255,255,255,0.1); padding:4px 8px; font-size:10px; font-weight:700;">
                                     <i class="ph ph-eye"></i> APRI
-                                </a>
+                                </button>
                             </div>
                         </div>
                     `}).join('') + '</div>';
+
+                    // Attach listener to open doc
+                    container.querySelectorAll('.doc-preview-btn').forEach(btn => {
+                        btn.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            const url = btn.getAttribute('data-url');
+                            const title = btn.getAttribute('data-title');
+                            const type = btn.getAttribute('data-type');
+                            this._openDocViewer(url, title, type);
+                        });
+                    });
                 }
             } else {
                 throw new Error(res.error);
@@ -874,5 +885,35 @@ export const AthleteHealth = {
         } catch (e) {
             container.innerHTML = `<div style="color:#ef4444; padding:16px;">Errore caricamento documenti: ${Utils.escapeHtml(e.message)}</div>`;
         }
+    },
+
+    _openDocViewer(url, title, type) {
+        let contentHtml = '';
+        if (type === 'img') {
+            contentHtml = `<img src="${url}" style="max-width:100%; max-height:70vh; object-fit:contain; border-radius:8px; display:block; margin:0 auto;">`;
+        } else if (type === 'pdf') {
+            contentHtml = `<iframe src="${url}" style="width:100%; height:75vh; border:none; border-radius:8px;"></iframe>`;
+        } else {
+            contentHtml = `<div style="text-align:center; padding:40px;"><a href="${url}" target="_blank" class="btn btn-primary"><i class="ph ph-download-simple"></i> Scarica / Apri file</a></div>`;
+        }
+
+        const theModal = this._createModal(`
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                <h3 style="color:#fff; font-size:18px; font-weight:800; margin:0;">${Utils.escapeHtml(title)}</h3>
+            </div>
+            <div style="background:rgba(0,0,0,0.2); border-radius:8px; padding:16px; display:flex; justify-content:center; align-items:center;">
+                ${contentHtml}
+            </div>
+            <div style="display:flex; justify-content:flex-end; margin-top:16px;">
+                <button type="button" class="btn btn-default" onclick="document.body.removeChild(this.closest('.modal-backdrop'))">Chiudi</button>
+            </div>
+        `);
+        
+        const modalContent = theModal.querySelector('.modal-content');
+        if (modalContent) {
+            modalContent.style.maxWidth = type === 'pdf' || type === 'img' ? '900px' : '600px';
+        }
+
+        document.body.appendChild(theModal);
     }
 };
