@@ -718,7 +718,7 @@ class App {
     `;
 
     try {
-      const url = isOwningProfile ? '../api/?module=athletes&action=myProfile' : \`../api/?module=athletes&action=myProfile&id=\${uId}\`;
+      const url = isOwningProfile ? '../api/?module=athletes&action=myProfile' : `../api/?module=athletes&action=myProfile&id=${uId}`;
       const response = await fetch(url, { credentials: 'include', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
       const result = await response.json();
 
@@ -729,11 +729,11 @@ class App {
         // Render subtab anagrafica by default
         this.renderSubTabAnagrafica();
       } else {
-        document.getElementById('profilo-content').innerHTML = \`<div class="glass-card text-center"><p>Dati non accessibili.</p></div>\`;
+        document.getElementById('profilo-content').innerHTML = `<div class="glass-card text-center"><p>Dati non accessibili.</p></div>`;
       }
     } catch (e) {
       console.error(e);
-      document.getElementById('profilo-content').innerHTML = \`<div class="glass-card text-center"><p>Errore di connessione.</p></div>\`;
+      document.getElementById('profilo-content').innerHTML = `<div class="glass-card text-center"><p>Errore di connessione.</p></div>`;
     }
   }
 
@@ -768,14 +768,14 @@ class App {
     const p = this.currentAthleteProfile;
     const isMio = this.currentProfileIsOwn;
 
-    const html = \`
+    const html = `
       <div class="glass-card text-center" style="position: relative; overflow: hidden;">
         <div class="profile-avatar-container">
-          \${p.photo_path ? '<img src="../' + p.photo_path + '">' : '<i class="fas fa-user"></i>'}
+          ${p.photo_path ? '<img src="../' + p.photo_path + '">' : '<i class="fas fa-user"></i>'}
         </div>
-        <h2 style="font-size: 24px; margin-bottom: 4px;">\${this.escapeHtml(p.first_name)} \${this.escapeHtml(p.last_name)}</h2>
+        <h2 style="font-size: 24px; margin-bottom: 4px;">${this.escapeHtml(p.first_name)} ${this.escapeHtml(p.last_name)}</h2>
         <div style="color: var(--accent-primary); font-weight: 700; font-size: 13px; text-transform: uppercase;">
-          \${p.role || 'Atleta'} • \${p.team_name || 'Fusion'}
+          ${p.role || 'Atleta'} • ${p.team_name || 'Fusion'}
         </div>
       </div>
       
@@ -783,37 +783,37 @@ class App {
         <h3 class="section-title"><i class="fas fa-id-card"></i> DATI PERSONALI</h3>
         <div class="inline-edit-group">
           <label class="input-label">Email</label>
-          <div style="color:var(--text-primary); margin-bottom:10px;">\${p.email || 'N/D'}</div>
+          <div style="color:var(--text-primary); margin-bottom:10px;">${p.email || 'N/D'}</div>
         </div>
         <div class="inline-edit-group">
           <label class="input-label">Data di Nascita</label>
-          <div style="color:var(--text-primary); margin-bottom:10px;">\${p.birth_date ? new Date(p.birth_date).toLocaleDateString() : 'N/D'}</div>
+          <div style="color:var(--text-primary); margin-bottom:10px;">${p.birth_date ? new Date(p.birth_date).toLocaleDateString() : 'N/D'}</div>
         </div>
         
-        \${isMio ? \`
+        ${isMio ? `
         <form id="form-edit-anagrafica" onsubmit="return false">
           <div class="inline-edit-group">
             <label class="input-label">Telefono (Modificabile)</label>
-            <input type="tel" class="inline-edit-input" id="edit-phone" value="\${p.phone || ''}" placeholder="Tocca per inserire">
+            <input type="tel" class="inline-edit-input" id="edit-phone" value="${p.phone || ''}" placeholder="Tocca per inserire">
           </div>
           <div class="inline-edit-group">
             <label class="input-label">Taglia Abbigliamento (Modificabile)</label>
-            <input type="text" class="inline-edit-input" id="edit-size" value="\${p.shirt_size || ''}" placeholder="Es: M, L, XL">
+            <input type="text" class="inline-edit-input" id="edit-size" value="${p.shirt_size || ''}" placeholder="Es: M, L, XL">
           </div>
           <button class="btn btn-secondary mt-10" onclick="app.saveAnagraficaPartial()">Salva Dati Modificati</button>
         </form>
-        \` : \`
+        ` : `
           <div class="inline-edit-group">
             <label class="input-label">Telefono</label>
-            <div style="color:var(--text-primary); margin-bottom:10px;">\${p.phone || 'N/D'}</div>
+            <div style="color:var(--text-primary); margin-bottom:10px;">${p.phone || 'N/D'}</div>
           </div>
           <div class="inline-edit-group">
             <label class="input-label">Taglia Abbigliamento</label>
-            <div style="color:var(--text-primary); margin-bottom:10px;">\${p.shirt_size || 'N/D'}</div>
+            <div style="color:var(--text-primary); margin-bottom:10px;">${p.shirt_size || 'N/D'}</div>
           </div>
-        \`}
+        `}
       </div>
-    \`;
+    `;
     document.getElementById('profilo-content').innerHTML = html;
   }
 
@@ -852,24 +852,24 @@ class App {
     const p = this.currentAthleteProfile;
     const progress = this.calculateDocProgress(p);
     
-    document.getElementById('profilo-content').innerHTML = \`
+    document.getElementById('profilo-content').innerHTML = `
       <div class="glass-card">
         <h3 class="section-title"><i class="fas fa-chart-pie"></i> COMPLETAMENTO PROFILO</h3>
         <div class="progress-bar-container" style="margin: 15px 0;">
-          <div class="progress-fill" style="width: \${progress}%; background: var(--gradient-primary); height: 8px; border-radius: 4px;"></div>
+          <div class="progress-fill" style="width: ${progress}%; background: var(--gradient-primary); height: 8px; border-radius: 4px;"></div>
         </div>
-        <p style="font-size: 12px; color: var(--text-light);">\${progress}% dei documenti caricati</p>
+        <p style="font-size: 12px; color: var(--text-light);">${progress}% dei documenti caricati</p>
       </div>
 
       <div class="glass-card">
          <h3 class="section-title"><i class="fas fa-folder-open"></i> DOCUMENTI</h3>
          <div class="doc-list">
-           \${this.renderDocRow("Carta Identità (FR)", p.id_doc_front_file_path, 'id_doc_front_file_path', 'uploadIdDocFront')}
-           \${this.renderDocRow("Certificato Medico", p.medical_cert_file_path, 'medical_cert_file_path', 'uploadMedicalCert')}
-           \${this.renderDocRow("Contratto / Tesseramento", p.contract_file_path, 'contract_file_path', 'uploadContractFile')}
+           ${this.renderDocRow("Carta Identità (FR)", p.id_doc_front_file_path, 'id_doc_front_file_path', 'uploadIdDocFront')}
+           ${this.renderDocRow("Certificato Medico", p.medical_cert_file_path, 'medical_cert_file_path', 'uploadMedicalCert')}
+           ${this.renderDocRow("Contratto / Tesseramento", p.contract_file_path, 'contract_file_path', 'uploadContractFile')}
          </div>
       </div>
-    \`;
+    `;
   }
 
   async renderSubTabQuote() {
@@ -1115,7 +1115,7 @@ class App {
 
   // SQUADRA E PRESENZE COATCH (NEW VUES)
   async renderSquadra() {
-    this.container.innerHTML = \`
+    this.container.innerHTML = `
       <div class="screen squadra-screen">
         <header class="app-header glass-header">
           <div class="app-title">LA TUA SQUADRA</div>
@@ -1141,8 +1141,8 @@ class App {
           </div>
         </div>
       </div>
-      \${this.getBottomNav('#squadra')}
-    \`;
+      ${this.getBottomNav('#squadra')}
+    `;
 
     try {
       // Fetch athletes roster from API
