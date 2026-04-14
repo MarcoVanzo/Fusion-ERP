@@ -257,14 +257,14 @@ export const AthleteHealth = {
                 .replace(/\\n/g, '<br>')
                 .replace(/\\*\\*(.*?)\\*\\*/g, '<strong>$1</strong>');
 
-            const html = \`
-                <div style="display:flex; gap:12px; align-self: \${isAi ? 'flex-start' : 'flex-end'}; max-width:85%;">
-                    \${isAi ? '<div style="width:32px;height:32px;border-radius:50%;background:rgba(16, 185, 129, 0.2);color:#10b981;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="ph ph-robot"></i></div>' : ''}
-                    <div style="background:\${isAi ? 'rgba(255,255,255,0.05)' : '#3b82f6'}; color:#fff; padding:12px 16px; border-radius:12px; \${isAi ? 'border-top-left-radius:2px;' : 'border-top-right-radius:2px;'} font-size:14px; line-height:1.5;">
-                        \${formattedContent}
+            const html = `
+                <div style="display:flex; gap:12px; align-self: ${isAi ? 'flex-start' : 'flex-end'}; max-width:85%;">
+                    ${isAi ? '<div style="width:32px;height:32px;border-radius:50%;background:rgba(16, 185, 129, 0.2);color:#10b981;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="ph ph-robot"></i></div>' : ''}
+                    <div style="background:${isAi ? 'rgba(255,255,255,0.05)' : '#3b82f6'}; color:#fff; padding:12px 16px; border-radius:12px; ${isAi ? 'border-top-left-radius:2px;' : 'border-top-right-radius:2px;'} font-size:14px; line-height:1.5;">
+                        ${formattedContent}
                     </div>
                 </div>
-            \`;
+            `;
             messagesContainer.insertAdjacentHTML('beforeend', html);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         };
@@ -283,12 +283,12 @@ export const AthleteHealth = {
 
                 // Temporary loading indicator
                 const loadingId = 'loading-' + Date.now();
-                messagesContainer.insertAdjacentHTML('beforeend', \`
-                    <div id="\${loadingId}" style="display:flex; gap:12px; align-self:flex-start;">
+                messagesContainer.insertAdjacentHTML('beforeend', `
+                    <div id="${loadingId}" style="display:flex; gap:12px; align-self:flex-start;">
                         <div style="width:32px;height:32px;border-radius:50%;background:rgba(16, 185, 129, 0.2);color:#10b981;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="ph ph-robot animate-spin"></i></div>
                         <div style="background:rgba(255,255,255,0.05); color:var(--color-text-muted); padding:12px 16px; border-radius:12px; border-top-left-radius:2px; font-size:14px;">Elaborazione...</div>
                     </div>
-                \`);
+                `);
                 messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
                 const res = await fetch('api/?module=health&action=askAI', {
