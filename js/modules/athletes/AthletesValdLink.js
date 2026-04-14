@@ -82,28 +82,30 @@ export const AthletesValdLink = (() => {
                 tbody.innerHTML = `<tr><td colspan="2" style="padding:30px; text-align:center; color:rgba(255,255,255,0.5);">Nessun atleta trovato su VALD Hub.</td></tr>`;
             } else {
                 tbody.innerHTML = valdAthletes.map(va => {
-                    const mappedId = va.mappedTo || "";
-                    const searchStr = `${va.firstName} ${va.lastName} ${va.teamName}`;
+                    // Pre-select the linked athlete, or fallback to the suggested one
+                    const mappedId = va.linked_erp_id || va.suggested_erp_id || "";
+                    const searchStr = `${va.vald_name} ${va.vald_category || ''}`;
                     
                     const optionsHtml = erpAthletes.map(erp => {
                         const isSelected = String(erp.id) === String(mappedId) ? "selected" : "";
-                        return `<option value="${erp.id}" ${isSelected}>${erp.full_name} (${erp.team_name || 'Nessuna squadra'})</option>`;
+                        return `<option value="${erp.id}" ${isSelected}>${Utils.escapeHtml(erp.name || erp.full_name || '')}</option>`;
                     }).join("");
 
                     return `
                         <tr class="vald-link-row" data-search="${searchStr.replace(/"/g, '')}" style="border-bottom:1px solid rgba(255,255,255,0.05);">
                             <td style="padding:16px;">
-                                <div style="font-weight:600; color:var(--color-white);">${Utils.escapeHtml(va.firstName)} ${Utils.escapeHtml(va.lastName)}</div>
-                                <div style="font-size:12px; color:rgba(255,255,255,0.4);"><i class="ph ph-shield-star"></i> ${Utils.escapeHtml(va.teamName || 'Team sconosciuto')}</div>
+                                <div style="font-weight:600; color:var(--color-white);">${Utils.escapeHtml(va.vald_name)}</div>
+                                <div style="font-size:12px; color:rgba(255,255,255,0.4);"><i class="ph ph-shield-star"></i> ${Utils.escapeHtml(va.vald_category || 'Nessuna Categoria / Team')}</div>
                             </td>
                             <td style="padding:16px;">
                                 <div style="display:flex; align-items:center; gap:8px;">
-                                    <select class="form-input vald-erp-select" data-vald-id="${Utils.escapeHtml(va.id)}" style="flex:1; background:rgba(0,0,0,0.2); font-size:14px; border:1px solid rgba(255,255,255,0.1);">
+                                    <select class="form-input vald-erp-select" data-vald-id="${Utils.escapeHtml(va.vald_id)}" style="flex:1; background:rgba(0,0,0,0.2); font-size:14px; border:1px solid rgba(255,255,255,0.1);">
                                         <option value="">-- Nessun atleta collegato --</option>
                                         ${optionsHtml}
                                     </select>
-                                    <button class="btn btn-ghost btn-sm save-link-btn" title="Salva Collegamento" style="display:none; color:var(--color-success);"><i class="ph ph-check" style="font-size:18px;"></i></button>
+                                    <button class="btn ${va.linked_erp_id ? 'btn-ghost' : 'btn-primary'} btn-sm save-link-btn" title="Salva Collegamento" style="${va.linked_erp_id ? 'display:none; color:var(--color-success);' : 'display:flex; padding:6px 12px;'}">${va.linked_erp_id ? '<i class="ph ph-check" style="font-size:18px;"></i>' : 'Collega'}</button>
                                 </div>
+                                ${va.suggested_erp_id && !va.linked_erp_id ? '<div style="font-size:11px; color:var(--color-warning); margin-top:4px;">Suggerimento automatico rilevato</div>' : ''}
                             </td>
                         </tr>
                     `;
