@@ -83,33 +83,33 @@ export const AthletesValdLink = (() => {
             } else {
                 tbody.innerHTML = valdAthletes.map(va => {
                     const mappedId = va.mappedTo || "";
-                    const searchStr = \`\${va.firstName} \${va.lastName} \${va.teamName}\`;
+                    const searchStr = `${va.firstName} ${va.lastName} ${va.teamName}`;
                     
                     const optionsHtml = erpAthletes.map(erp => {
                         const isSelected = String(erp.id) === String(mappedId) ? "selected" : "";
-                        return \`<option value="\${erp.id}" \${isSelected}>\${erp.full_name} (\${erp.team_name || 'Nessuna squadra'})</option>\`;
+                        return `<option value="${erp.id}" ${isSelected}>${erp.full_name} (${erp.team_name || 'Nessuna squadra'})</option>`;
                     }).join("");
 
-                    return \`
-                        <tr class="vald-link-row" data-search="\${searchStr.replace(/"/g, '')}" style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                    return `
+                        <tr class="vald-link-row" data-search="${searchStr.replace(/"/g, '')}" style="border-bottom:1px solid rgba(255,255,255,0.05);">
                             <td style="padding:16px;">
-                                <div style="font-weight:600; color:var(--color-white);">\${Utils.escapeHtml(va.firstName)} \${Utils.escapeHtml(va.lastName)}</div>
-                                <div style="font-size:12px; color:rgba(255,255,255,0.4);"><i class="ph ph-shield-star"></i> \${Utils.escapeHtml(va.teamName || 'Team sconosciuto')}</div>
+                                <div style="font-weight:600; color:var(--color-white);">${Utils.escapeHtml(va.firstName)} ${Utils.escapeHtml(va.lastName)}</div>
+                                <div style="font-size:12px; color:rgba(255,255,255,0.4);"><i class="ph ph-shield-star"></i> ${Utils.escapeHtml(va.teamName || 'Team sconosciuto')}</div>
                             </td>
                             <td style="padding:16px;">
                                 <div style="display:flex; align-items:center; gap:8px;">
-                                    <select class="form-input vald-erp-select" data-vald-id="\${Utils.escapeHtml(va.id)}" style="flex:1; background:rgba(0,0,0,0.2); font-size:14px; border:1px solid rgba(255,255,255,0.1);">
+                                    <select class="form-input vald-erp-select" data-vald-id="${Utils.escapeHtml(va.id)}" style="flex:1; background:rgba(0,0,0,0.2); font-size:14px; border:1px solid rgba(255,255,255,0.1);">
                                         <option value="">-- Nessun atleta collegato --</option>
-                                        \${optionsHtml}
+                                        ${optionsHtml}
                                     </select>
                                     <button class="btn btn-ghost btn-sm save-link-btn" title="Salva Collegamento" style="display:none; color:var(--color-success);"><i class="ph ph-check" style="font-size:18px;"></i></button>
                                 </div>
                             </td>
                         </tr>
-                    \`;
+                    `;
                 }).join("");
                 
-                countSpan.textContent = \`\${valdAthletes.length} su Hub\`;
+                countSpan.textContent = `${valdAthletes.length} su Hub`;
                 countSpan.style.display = "inline-flex";
 
                 // Add listeners to selects
@@ -151,7 +151,7 @@ export const AthletesValdLink = (() => {
         } catch(e) {
             loader.style.display = "none";
             container.style.display = "block";
-            tbody.innerHTML = \`<tr><td colspan="2" style="padding:30px; text-align:center; color:#ef4444;">Errore: \${Utils.escapeHtml(e.message)}</td></tr>\`;
+            tbody.innerHTML = `<tr><td colspan="2" style="padding:30px; text-align:center; color:#ef4444;">Errore: ${Utils.escapeHtml(e.message)}</td></tr>`;
         }
     }
 
