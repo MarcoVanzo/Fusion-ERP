@@ -51,8 +51,8 @@ window.WebAnalytics = (() => {
             </div>
             
             <div class="page-content" style="padding:0; margin-top:1rem; height:calc(100vh - 180px); display:flex; flex-direction:column;">
-                <div style="flex:1; padding:0; border-radius:12px; overflow:hidden; border:1px solid var(--color-border); background:var(--color-surface); display:flex; flex-direction:column; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);">
-                    <div id="analytics-iframe-container" style="flex:1; width:100%; height:100%; position:relative;">
+                <div style="flex:1; padding:0; border-radius:12px; overflow:hidden; border:1px solid var(--color-border); background:var(--color-surface); box-shadow:0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); position:relative;">
+                    <div id="analytics-iframe-container" style="position:absolute; top:0; left:0; right:0; bottom:0; overflow:hidden;">
                         <!-- iFrame will be injected here -->
                     </div>
                 </div>
@@ -81,7 +81,59 @@ window.WebAnalytics = (() => {
     const activeData = state.sites[state.activeSite];
 
     if (activeData.url) {
-      container.innerHTML = `<iframe src="${activeData.url}" style="width:100%; height:100%; border:none; display:block;" allowfullscreen></iframe>`;
+      // Show loading spinner while iframe loads
+      container.innerHTML = `
+                <div id="analytics-loading" style="position:absolute; top:0; left:0; right:0; bottom:0; display:flex; flex-direction:column; align-items:center; justify-content:center; background:var(--color-surface); z-index:2;">
+                    <div style="width:40px; height:40px; border:3px solid var(--color-border); border-top-color:var(--color-primary); border-radius:50%; animation:spin 0.8s linear infinite;"></div>
+                    <p style="margin-top:1rem; color:var(--text-muted); font-size:14px;">Caricamento dashboard...</p>
+                </div>
+                <iframe 
+                    id="analytics-iframe"
+                    src="${activeData.url}" 
+                    style="width:100%; height:100%; border:none; display:block;" 
+                    allowfullscreen
+                    loading="eager"
+                    sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"
+                    allow="fullscreen"
+                    referrerpolicy="no-referrer-when-downgrade"
+                ></iframe>
+            `;
+
+      // Add spin animation if not already in document
+      if (!document.getElementById('analytics-spin-style')) {
+        const style = document.createElement('style');
+        style.id = 'analytics-spin-style';
+        style.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
+        document.head.appendChild(style);
+      }
+
+      const iframe = document.getElementById('analytics-iframe');
+      if (iframe) {
+        iframe.addEventListener('load', () => {
+          const loader = document.getElementById('analytics-loading');
+          if (loader) {
+            loader.style.opacity = '0';
+            loader.style.transition = 'opacity 0.3s ease';
+            setTimeout(() => loader.remove(), 300);
+          }
+        });
+
+        // Timeout: if iframe hasn't loaded after 15s, hide spinner and show message
+        setTimeout(() => {
+          const loader = document.getElementById('analytics-loading');
+          if (loader) {
+            loader.innerHTML = `
+                        <i class="ph ph-warning" style="font-size:48px; color:var(--color-warning); margin-bottom:1rem;"></i>
+                        <h3 style="margin:0 0 0.5rem 0; font-weight:600; color:var(--text-main); font-size:1.1rem;">Caricamento lento</h3>
+                        <p style="margin:0; font-size:14px; color:var(--text-muted); max-width:400px; text-align:center; line-height:1.5;">
+                            La dashboard potrebbe richiedere il login a Google.<br>
+                            <a href="${activeData.url}" target="_blank" rel="noopener" style="color:var(--color-primary); text-decoration:underline; margin-top:0.5rem; display:inline-block;">Apri in una nuova scheda →</a>
+                        </p>
+                    `;
+            loader.style.opacity = '0.95';
+          }
+        }, 15000);
+      }
     } else {
       container.innerHTML = `
                 <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; font-family:var(--font-body); color:var(--text-muted); background:var(--bg-body); text-align:center; padding:2rem;">
@@ -94,7 +146,9 @@ window.WebAnalytics = (() => {
   }
 
   function destroy() {
-    // Cleanup if necessary
+    // Cleanup: remove injected style
+    const style = document.getElementById('analytics-spin-style');
+    if (style) style.remove();
   }
 
   return { init, destroy };
