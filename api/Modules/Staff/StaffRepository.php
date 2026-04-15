@@ -46,11 +46,8 @@ class StaffRepository
 
         $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
-        // Fallback: Se il tenant corrente è vuoto, prova a recuperare quelli globali/fusion
-        if (empty($rows) && $tenantId !== 'TNT_fusion') {
-            $stmt->execute([':tenant_id' => 'TNT_fusion']);
-            $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-        }
+        // Audit P2-06: Removed cross-tenant fallback to TNT_fusion (was a data leak).
+        // A tenant with no staff should see an empty list.
 
         foreach ($rows as &$row) {
             $row['team_season_ids'] = $row['team_season_ids'] ? explode(',', $row['team_season_ids']) : [];

@@ -37,14 +37,14 @@ class StaffController
     // ─── GET /api/?module=staff&action=list ───────────────────────────────────
     public function list(): void
     {
-        Auth::requireRole('operator');
+        Auth::requireRole('operatore');
         Response::success($this->repo->listStaff());
     }
 
     // ─── GET /api/?module=staff&action=get&id=STF_xxx ─────────────────────────
     public function get(): void
     {
-        Auth::requireRole('operator');
+        Auth::requireRole('operatore');
         $id = filter_input(INPUT_GET, 'id', FILTER_DEFAULT) ?? '';
         if (empty($id)) {
             Response::error('id obbligatorio', 400);
@@ -59,7 +59,8 @@ class StaffController
     // ─── POST /api/?module=staff&action=create ────────────────────────────────
     public function create(): void
     {
-        Auth::requireRole('social media manager');
+        // Audit P1-04: Require allenatore role (was social media manager — too low)
+        Auth::requireRole('allenatore');
         $body = Response::jsonBody();
         Response::requireFields($body, ['first_name', 'last_name']);
 
@@ -94,7 +95,8 @@ class StaffController
     // ─── POST /api/?module=staff&action=update ────────────────────────────────
     public function update(): void
     {
-        Auth::requireRole('social media manager');
+        // Audit P1-04: Require allenatore role (was social media manager — too low)
+        Auth::requireRole('allenatore');
         $body = Response::jsonBody();
         Response::requireFields($body, ['id', 'first_name', 'last_name']);
 
@@ -129,7 +131,8 @@ class StaffController
     // ─── POST /api/?module=staff&action=delete ────────────────────────────────
     public function delete(): void
     {
-        Auth::requireRole('social media manager');
+        // Audit P1-04: Require allenatore role (was social media manager — too low)
+        Auth::requireRole('allenatore');
         $body = Response::jsonBody();
         $id = $body['id'] ?? '';
         if (empty($id)) {
@@ -315,13 +318,12 @@ class StaffController
     // ─── PUBLIC ENDPOINTS FOR WEBSITE ──────────────────────────────────────────────
     public function getPublicStaff(): void
     {
-        // Nessun controllo auth per la vista pubblica
+        // Audit P1-03: Previously, missing teamId fell through to listStaff(),
+        // exposing full PII (emails, phones, contracts) without authentication.
         $teamId = filter_input(INPUT_GET, 'teamId', FILTER_DEFAULT);
-        if ($teamId) {
-            Response::success($this->repo->getPublicStaffByTeam($teamId));
+        if (!$teamId) {
+            Response::error('teamId obbligatorio', 400);
         }
-        else {
-            Response::success($this->repo->listStaff());
-        }
+        Response::success($this->repo->getPublicStaffByTeam($teamId));
     }
 }

@@ -247,18 +247,19 @@ class BiometricsRepository
         $inList = implode(',', array_fill(0, count($athleteIds), '?'));
 
         // 2) Get latest VALD test per athlete
+        // Audit P2-01: Add tenant_id filter to prevent cross-tenant data leaks
         $metricStmt = $this->db->prepare(
             "SELECT v.athlete_id, v.metrics, v.test_type
              FROM vald_test_results v
              INNER JOIN (
                  SELECT athlete_id, MAX(test_date) as max_date
                  FROM vald_test_results
-                 WHERE athlete_id IN ($inList)
+                 WHERE athlete_id IN ($inList) AND tenant_id = ?
                  GROUP BY athlete_id
              ) latest ON v.athlete_id = latest.athlete_id AND v.test_date = latest.max_date
-             WHERE v.athlete_id IN ($inList)"
+             WHERE v.athlete_id IN ($inList) AND v.tenant_id = ?"
         );
-        $metricStmt->execute(array_merge($athleteIds, $athleteIds));
+        $metricStmt->execute(array_merge($athleteIds, [$tenantId], $athleteIds, [$tenantId]));
         $valdResults = $metricStmt->fetchAll(\PDO::FETCH_ASSOC);
 
         $resultsByAthlete = [];

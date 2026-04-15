@@ -23,6 +23,28 @@ class App {
     return div.innerHTML;
   }
 
+  // --- Toast Notification System (P3-07 replaces alert()) ---
+  showToast(message, type = 'info', duration = 3500) {
+    let container = document.getElementById('toast-container');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'toast-container';
+      container.style.cssText = 'position:fixed;top:env(safe-area-inset-top,20px);left:50%;transform:translateX(-50%);z-index:99999;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;width:90%;max-width:400px;';
+      document.body.appendChild(container);
+    }
+    const colors = { success:'#00e676', error:'#ff1744', warning:'#ffab00', info:'#00c3ff' };
+    const icons = { success:'fa-check-circle', error:'fa-exclamation-circle', warning:'fa-exclamation-triangle', info:'fa-info-circle' };
+    const toast = document.createElement('div');
+    toast.style.cssText = `pointer-events:auto;display:flex;align-items:center;gap:10px;padding:14px 18px;border-radius:14px;background:rgba(20,20,30,0.95);backdrop-filter:blur(12px);border:1px solid ${colors[type]}30;color:#fff;font-size:13px;font-weight:500;box-shadow:0 8px 32px rgba(0,0,0,0.4);opacity:0;transform:translateY(-20px);transition:all 0.35s cubic-bezier(0.16,1,0.3,1);width:100%;`;
+    toast.innerHTML = `<i class="fas ${icons[type]}" style="color:${colors[type]};font-size:18px;flex-shrink:0;"></i><span>${this.escapeHtml(message)}</span>`;
+    container.appendChild(toast);
+    requestAnimationFrame(() => { toast.style.opacity = '1'; toast.style.transform = 'translateY(0)'; });
+    setTimeout(() => {
+      toast.style.opacity = '0'; toast.style.transform = 'translateY(-20px)';
+      setTimeout(() => toast.remove(), 350);
+    }, duration);
+  }
+
   // --- Lifecycle & Resource Management ---
   cleanup() {
     // Clear all registered intervals to prevent memory leaks (Rule user_global)
@@ -205,7 +227,7 @@ class App {
       const btn = document.getElementById('login-btn');
 
       if (!email || !pass) {
-        alert('Inserisci le credenziali.');
+        this.showToast('Inserisci le credenziali.', 'warning');
         return;
       }
 
@@ -226,10 +248,10 @@ class App {
           localStorage.setItem('erp_user', JSON.stringify(result.data));
           window.location.hash = '#dashboard';
         } else {
-          alert(result.error || 'Credenziali non valide o errore del server.');
+          this.showToast(result.error || 'Credenziali non valide.', 'error');
         }
       } catch (err) {
-        alert('Errore di connessione al server.');
+        this.showToast('Errore di connessione al server.', 'error');
         console.error(err);
       } finally {
         btn.disabled = false;
@@ -483,7 +505,7 @@ class App {
       this.vibrate(20);
       const amt = document.getElementById('exp-amount').value;
       if (!amt || parseFloat(amt) <= 0) {
-        alert("Inserisci un importo valido prima di proseguire.");
+        this.showToast('Inserisci un importo valido prima di proseguire.', 'warning');
         document.getElementById('exp-amount').focus();
         return;
       }
@@ -537,7 +559,7 @@ class App {
       const fileInput = document.getElementById('exp-receipt');
 
       if (!desc || !amount || !date) {
-        alert("Completa i campi obbligatori.");
+        this.showToast('Completa i campi obbligatori.', 'warning');
         return;
       }
 
@@ -567,15 +589,15 @@ class App {
         const result = await response.json();
 
         if (response.ok && result.success !== false) {
-          alert('Spesa salvata correttamente!');
+          this.showToast('Spesa salvata correttamente!', 'success');
           // Reset cache so storico reloads
           this._expenseHistoryLoaded = false;
           window.location.hash = '#dashboard';
         } else {
-          alert(result.error || 'Errore durante il salvataggio.');
+          this.showToast(result.error || 'Errore durante il salvataggio.', 'error');
         }
       } catch (err) {
-        alert("Impossibile connettersi al API Server.");
+        this.showToast('Impossibile connettersi al server.', 'error');
       } finally {
         if (btn) {
           btn.disabled = false;
@@ -786,11 +808,11 @@ class App {
     const html = `
       <div class="glass-card text-center" style="position: relative; overflow: hidden;">
         <div class="profile-avatar-container">
-          ${p.photo_path ? '<img src="../' + p.photo_path + '">' : '<i class="fas fa-user"></i>'}
+          ${p.photo_path ? '<img src="../' + this.escapeHtml(p.photo_path) + '">' : '<i class="fas fa-user"></i>'}
         </div>
         <h2 style="font-size: 24px; margin-bottom: 4px;">${this.escapeHtml(p.first_name)} ${this.escapeHtml(p.last_name)}</h2>
         <div style="color: var(--accent-primary); font-weight: 700; font-size: 13px; text-transform: uppercase;">
-          ${p.role || 'Atleta'} • ${p.team_name || 'Fusion'}
+          ${this.escapeHtml(p.role || 'Atleta')} • ${this.escapeHtml(p.team_name || 'Fusion')}
         </div>
       </div>
       
@@ -798,7 +820,7 @@ class App {
         <h3 class="section-title"><i class="fas fa-id-card"></i> DATI PERSONALI</h3>
         <div class="inline-edit-group">
           <label class="input-label">Email</label>
-          <div style="color:var(--text-primary); margin-bottom:10px;">${p.email || 'N/D'}</div>
+          <div style="color:var(--text-primary); margin-bottom:10px;">${this.escapeHtml(p.email || 'N/D')}</div>
         </div>
         <div class="inline-edit-group">
           <label class="input-label">Data di Nascita</label>
@@ -809,22 +831,22 @@ class App {
         <form id="form-edit-anagrafica" onsubmit="return false">
           <div class="inline-edit-group">
             <label class="input-label">Telefono (Modificabile)</label>
-            <input type="tel" class="inline-edit-input" id="edit-phone" value="${p.phone || ''}" placeholder="Tocca per inserire">
+            <input type="tel" class="inline-edit-input" id="edit-phone" value="${this.escapeHtml(p.phone || '')}" placeholder="Tocca per inserire">
           </div>
           <div class="inline-edit-group">
             <label class="input-label">Taglia Abbigliamento (Modificabile)</label>
-            <input type="text" class="inline-edit-input" id="edit-size" value="${p.shirt_size || ''}" placeholder="Es: M, L, XL">
+            <input type="text" class="inline-edit-input" id="edit-size" value="${this.escapeHtml(p.shirt_size || '')}" placeholder="Es: M, L, XL">
           </div>
           <button class="btn btn-secondary mt-10" onclick="app.saveAnagraficaPartial()"><i class="fas fa-save"></i> Salva Dati Modificati</button>
         </form>
         ` : `
           <div class="inline-edit-group">
             <label class="input-label">Telefono</label>
-            <div style="color:var(--text-primary); margin-bottom:10px;">${p.phone || 'N/D'}</div>
+            <div style="color:var(--text-primary); margin-bottom:10px;">${this.escapeHtml(p.phone || 'N/D')}</div>
           </div>
           <div class="inline-edit-group">
             <label class="input-label">Taglia Abbigliamento</label>
-            <div style="color:var(--text-primary); margin-bottom:10px;">${p.shirt_size || 'N/D'}</div>
+            <div style="color:var(--text-primary); margin-bottom:10px;">${this.escapeHtml(p.shirt_size || 'N/D')}</div>
           </div>
         `}
       </div>
@@ -838,7 +860,7 @@ class App {
     const shirtSize = document.getElementById('edit-size')?.value?.trim() || '';
     const p = this.currentAthleteProfile;
     if (!p || !p.id) {
-      alert('Errore: profilo non caricato.');
+      this.showToast('Errore: profilo non caricato.', 'error');
       return;
     }
 
@@ -851,15 +873,15 @@ class App {
       });
       const result = await response.json();
       if (response.ok && result.success !== false) {
-        alert('Dati aggiornati con successo!');
+        this.showToast('Dati aggiornati con successo!', 'success');
         this.currentAthleteProfile.phone = phone;
         this.currentAthleteProfile.shirt_size = shirtSize;
       } else {
-        alert(result.error || 'Errore durante il salvataggio.');
+        this.showToast(result.error || 'Errore durante il salvataggio.', 'error');
       }
     } catch (err) {
       console.error(err);
-      alert('Impossibile connettersi al server.');
+      this.showToast('Impossibile connettersi al server.', 'error');
     }
   }
 
@@ -1368,7 +1390,7 @@ class App {
         });
 
         if (records.length === 0) {
-          alert('Segna almeno una presenza prima di confermare.');
+          this.showToast('Segna almeno una presenza prima di confermare.', 'warning');
           return;
         }
 
@@ -1400,10 +1422,10 @@ class App {
               }),
             });
           }
-          alert(`Presenze salvate: ${records.length} registrazioni.`);
+          this.showToast(`Presenze salvate: ${records.length} registrazioni.`, 'success');
           window.location.hash = '#squadra';
         } catch(err) {
-          alert('Errore durante il salvataggio delle presenze.');
+          this.showToast('Errore durante il salvataggio delle presenze.', 'error');
         } finally {
           if (confirmBtn) {
             confirmBtn.disabled = false;
@@ -1533,7 +1555,7 @@ class App {
       // 1. Lettura Base64 per Verifica AI
       const reader = new FileReader();
       reader.onerror = () => {
-        alert("Errore nella lettura del file per la verifica AI.");
+        this.showToast('Errore nella lettura del file.', 'error');
         if (btn) { btn.disabled = false; btn.innerHTML = originalText; }
       };
       
@@ -1562,7 +1584,7 @@ class App {
           const verifyData = await verifyRes.json();
           
           if (!verifyData.success || (verifyData.data && !verifyData.data.verified)) {
-              alert(verifyData.data?.message || verifyData.error || 'Verifica AI fallita: il documento non sembra corretto.');
+              this.showToast(verifyData.data?.message || verifyData.error || 'Verifica AI fallita.', 'error');
               if (btn) { btn.disabled = false; btn.innerHTML = originalText; }
               inputEl.value = '';
               return;
@@ -1585,15 +1607,15 @@ class App {
           const result = await response.json();
 
           if (response.ok && result.success !== false) {
-            alert("Documento verificato dall'AI e caricato con successo!");
+            this.showToast('Documento verificato e caricato!', 'success');
             this.renderProfilo();
           } else {
-            alert(result.error || 'Errore durante il caricamento del documento.');
+            this.showToast(result.error || 'Errore caricamento documento.', 'error');
             if (btn) { btn.disabled = false; btn.innerHTML = originalText; }
           }
         } catch (err) {
           console.error(err);
-          alert("Impossibile connettersi al Server AI o Endpoint Errato.");
+          this.showToast('Impossibile connettersi al server.', 'error');
           if (btn) { btn.disabled = false; btn.innerHTML = originalText; }
         }
       };
@@ -1601,7 +1623,7 @@ class App {
       reader.readAsDataURL(file);
 
     } catch (err) {
-      alert("Errore d'impostazione caricamento.");
+      this.showToast('Errore di caricamento.', 'error');
       if (btn) { btn.disabled = false; btn.innerHTML = originalText; }
     }
   }

@@ -38,6 +38,7 @@ $allTenants = array_map('strval', $allTenantsArr);
 echo "\n[CERT] Checking medical certificate expiry...\n";
 $healthRepo = new HealthRepository();
 foreach ($allTenants as $tenantId) {
+try {
 $expiringCerts = $healthRepo->getExpiringCertificates(30, $tenantId);
 
 foreach ($expiringCerts as $cert) {
@@ -80,6 +81,9 @@ foreach ($expiringCerts as $cert) {
             $waSent++;
     }
 }
+} catch (\Throwable $e) {
+    echo "  [ERROR] Tenant {$tenantId} cert alerts failed: " . $e->getMessage() . "\n";
+}
 } // end tenant loop
 
 // ─── 2. DOCUMENT EXPIRY ─────────────────────────────────────────────────────
@@ -87,6 +91,7 @@ foreach ($expiringCerts as $cert) {
 echo "\n[DOCS] Checking document expiry...\n";
 $docsRepo = new DocumentsRepository();
 foreach ($allTenants as $tenantId) {
+try {
 $expiringDocs = $docsRepo->getExpiringDocuments(30, $tenantId);
 
 foreach ($expiringDocs as $doc) {
@@ -127,14 +132,19 @@ foreach ($expiringDocs as $doc) {
             $waSent++;
     }
 }
+} catch (\Throwable $e) {
+    echo "  [ERROR] Tenant {$tenantId} doc alerts failed: " . $e->getMessage() . "\n";
+}
 } // end tenant loop
 
 // ─── 3. OVERDUE INSTALLMENTS ─────────────────────────────────────────────────
 
 echo "\n[PAY] Checking overdue installments...\n";
 $payRepo = new PaymentsRepository();
-$payRepo->markOverdueInstallments(); // Global cron — marks all PENDING past due
 foreach ($allTenants as $tenantId) {
+try {
+// Audit P2-09: Scope markOverdueInstallments per-tenant (was global unscoped UPDATE)
+$payRepo->markOverdueInstallments($tenantId);
 $overdueList = $payRepo->getOverdueInstallments($tenantId);
 
 foreach ($overdueList as $od) {
@@ -173,12 +183,16 @@ foreach ($overdueList as $od) {
             $waSent++;
     }
 }
+} catch (\Throwable $e) {
+    echo "  [ERROR] Tenant {$tenantId} overdue alerts failed: " . $e->getMessage() . "\n";
+}
 } // end tenant loop
 
 // ─── 4. UPCOMING PAYMENT REMINDERS ──────────────────────────────────────────
 
 echo "\n[PAY] Sending upcoming payment reminders...\n";
 foreach ($allTenants as $tenantId) {
+try {
 $upcoming = $payRepo->getUpcomingInstallments(7, $tenantId);
 
 foreach ($upcoming as $up) {
@@ -216,6 +230,9 @@ foreach ($upcoming as $up) {
         if ($ok)
             $waSent++;
     }
+}
+} catch (\Throwable $e) {
+    echo "  [ERROR] Tenant {$tenantId} upcoming payment alerts failed: " . $e->getMessage() . "\n";
 }
 } // end tenant loop
 

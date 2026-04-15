@@ -109,7 +109,8 @@ class TransportController
 
     public function addPassenger(): void
     {
-        $user = Auth::requireRead('transport');
+        // Audit P2-07: Adding a passenger is a write operation
+        $user = Auth::requireWrite('transport');
         $body = Response::jsonBody();
         $this->handleServiceCall(fn() => $this->service->addPassenger($user, $body));
     }

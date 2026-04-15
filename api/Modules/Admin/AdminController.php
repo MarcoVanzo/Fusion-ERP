@@ -177,7 +177,8 @@ class AdminController
 
     public function listContracts(): void
     {
-        Auth::requireRole('operatore');
+        // Audit P1-05: Contracts contain sensitive data — require admin role
+        Auth::requireRole('admin');
         $userId = filter_input(INPUT_GET, 'userId', FILTER_DEFAULT) ?? '';
         Response::success($this->repo->listContracts($userId));
     }
@@ -187,7 +188,8 @@ class AdminController
      */
     public function generateContract(): void
     {
-        $adminUser = Auth::requireRole('operatore');
+        // Audit P1-05: Contracts contain sensitive data — require admin role
+        $adminUser = Auth::requireRole('admin');
         $body = Response::jsonBody();
         Response::requireFields($body, ['user_id', 'valid_from', 'valid_to', 'role_description']);
 

@@ -203,6 +203,12 @@ class TasksRepository
 
     public function deleteTaskLog(string $id): void
     {
-        $this->db->prepare('DELETE FROM task_logs WHERE id = ?')->execute([$id]);
+        // Audit P1-02: Scope deletion through parent task's tenant_id
+        $stmt = $this->db->prepare(
+            'DELETE tl FROM task_logs tl
+             INNER JOIN tasks t ON t.id = tl.task_id
+             WHERE tl.id = :id AND t.tenant_id = :tid'
+        );
+        $stmt->execute([':id' => $id, ':tid' => TenantContext::id()]);
     }
 }

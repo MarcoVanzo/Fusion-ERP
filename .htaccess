@@ -35,6 +35,8 @@ Options -Indexes
     Header set X-Frame-Options "SAMEORIGIN"
     Header set X-XSS-Protection "1; mode=block"
     Header set Referrer-Policy "strict-origin-when-cross-origin"
+    # Audit P1-07: HSTS — enforce HTTPS for all subsequent requests (1 year)
+    Header set Strict-Transport-Security "max-age=31536000; includeSubDomains"
     Header set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com https://maps.googleapis.com https://maps.gstatic.com https://fonts.googleapis.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; img-src 'self' data: blob: https://maps.googleapis.com https://maps.gstatic.com https://streetviewpixels-pa.googleapis.com https://unpkg.com https://*.basemaps.cartocdn.com https://*.cdninstagram.com https://*.fbcdn.net https://*.facebook.com; font-src 'self' https://fonts.gstatic.com https://unpkg.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; connect-src 'self' https://*.fusionteamvolley.it; frame-src 'self' https://lookerstudio.google.com https://datastudio.google.com https://maps.google.com https://www.google.com https://www.youtube.com https://youtube.com https://youtu.be; frame-ancestors 'self';"
 </IfModule>
 

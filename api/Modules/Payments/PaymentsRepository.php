@@ -85,8 +85,8 @@ class PaymentsRepository
     public function insertInstallment(array $data): void
     {
         $stmt = $this->db->prepare(
-            'INSERT INTO installments (id, plan_id, title, due_date, amount, status)
-             VALUES (:id, :plan_id, :title, :due_date, :amount, :status)'
+            'INSERT INTO installments (id, tenant_id, plan_id, title, due_date, amount, status)
+             VALUES (:id, :tenant_id, :plan_id, :title, :due_date, :amount, :status)'
         );
         $stmt->execute($data);
     }
@@ -97,12 +97,13 @@ class PaymentsRepository
     public function getInstallments(string $planId): array
     {
         $stmt = $this->db->prepare(
-            'SELECT id, title, due_date, amount, status, paid_date, payment_method, receipt_path, notes
-             FROM installments
-             WHERE plan_id = :plan_id
-             ORDER BY due_date ASC'
+            'SELECT i.id, i.title, i.due_date, i.amount, i.status, i.paid_date, i.payment_method, i.receipt_path, i.notes
+             FROM installments i
+             JOIN payment_plans pp ON pp.id = i.plan_id
+             WHERE i.plan_id = :plan_id AND pp.tenant_id = :tid
+             ORDER BY i.due_date ASC'
         );
-        $stmt->execute([':plan_id' => $planId]);
+        $stmt->execute([':plan_id' => $planId, ':tid' => TenantContext::id()]);
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
@@ -117,10 +118,10 @@ class PaymentsRepository
                     pp.athlete_id, pp.tenant_id
              FROM installments i
              JOIN payment_plans pp ON pp.id = i.plan_id
-             WHERE i.id = :id
+             WHERE i.id = :id AND pp.tenant_id = :tid
              LIMIT 1'
         );
-        $stmt->execute([':id' => $installmentId]);
+        $stmt->execute([':id' => $installmentId, ':tid' => TenantContext::id()]);
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
         return $row ?: null;
     }
@@ -131,18 +132,20 @@ class PaymentsRepository
     public function payInstallment(string $installmentId, string $paidDate, string $method, ?string $receiptPath): void
     {
         $stmt = $this->db->prepare(
-            'UPDATE installments
-             SET status = \'PAID\',
-                 paid_date = :paid_date,
-                 payment_method = :method,
-                 receipt_path = :receipt_path
-             WHERE id = :id'
+            'UPDATE installments i
+             JOIN payment_plans pp ON pp.id = i.plan_id
+             SET i.status = \'PAID\',
+                 i.paid_date = :paid_date,
+                 i.payment_method = :method,
+                 i.receipt_path = :receipt_path
+             WHERE i.id = :id AND pp.tenant_id = :tid'
         );
         $stmt->execute([
             ':paid_date' => $paidDate,
             ':method' => $method,
             ':receipt_path' => $receiptPath,
             ':id' => $installmentId,
+            ':tid' => TenantContext::id(),
         ]);
     }
 
@@ -150,14 +153,22 @@ class PaymentsRepository
      * Mark overdue installments (past due date, still PENDING).
      * Called by cron job.
      */
-    public function markOverdueInstallments(): int
+    /**
+     * Mark overdue installments (past due date, still PENDING).
+     * Scoped per-tenant to prevent cross-tenant modifications (Audit P2-09).
+     *
+     * @param string|null $tenantId Scope to specific tenant. If null, uses current context.
+     */
+    public function markOverdueInstallments(?string $tenantId = null): int
     {
+        $tid = $tenantId ?? TenantContext::id();
         $stmt = $this->db->prepare(
-            "UPDATE installments
-             SET status = 'OVERDUE'
-             WHERE status = 'PENDING' AND due_date < CURDATE()"
+            "UPDATE installments i
+             JOIN payment_plans pp ON pp.id = i.plan_id
+             SET i.status = 'OVERDUE'
+             WHERE i.status = 'PENDING' AND i.due_date < CURDATE() AND pp.tenant_id = :tid"
         );
-        $stmt->execute();
+        $stmt->execute([':tid' => $tid]);
         return $stmt->rowCount();
     }
 

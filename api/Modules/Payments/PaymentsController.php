@@ -116,6 +116,7 @@ class PaymentsController
         $instId = 'INST_' . bin2hex(random_bytes(4));
         $this->repo->insertInstallment([
             ':id' => $instId,
+            ':tenant_id' => TenantContext::id(),
             ':plan_id' => $planId,
             ':title' => $body['title'],
             ':due_date' => $body['due_date'],
@@ -400,8 +401,14 @@ class PaymentsController
         $stmt->execute([':id' => $installment['athlete_id'], ':tid' => $tid]);
         $athlete = $stmt->fetch(\PDO::FETCH_ASSOC);
 
-        $stmt2 = $db->prepare('SELECT receipt_year, receipt_number FROM transactions WHERE installment_id = :id LIMIT 1');
-        $stmt2->execute([':id' => $installmentId]);
+        // Audit P3-02: Add tenant scope to transaction query
+        $stmt2 = $db->prepare(
+            'SELECT t.receipt_year, t.receipt_number FROM transactions t
+             JOIN installments i ON i.id = t.installment_id
+             JOIN payment_plans pp ON pp.id = i.plan_id
+             WHERE t.installment_id = :id AND pp.tenant_id = :tid LIMIT 1'
+        );
+        $stmt2->execute([':id' => $installmentId, ':tid' => $tid]);
         $transaction = $stmt2->fetch(\PDO::FETCH_ASSOC);
 
         $html = $this->buildReceiptHtml($installment, $athlete ?: [], $transaction ?: []);
@@ -424,8 +431,14 @@ class PaymentsController
         $mpdf->Output($filepath, \Mpdf\Output\Destination::FILE);
 
         $relPath = 'uploads/receipts/' . $installment['athlete_id'] . '/' . $filename;
-        $stmt = $db->prepare('UPDATE installments SET receipt_path = :path WHERE id = :id');
-        $stmt->execute([':path' => $relPath, ':id' => $installmentId]);
+        // Audit P3-03: Add tenant scope to receipt_path UPDATE
+        $stmt = $db->prepare(
+            'UPDATE installments i
+             JOIN payment_plans pp ON pp.id = i.plan_id
+             SET i.receipt_path = :path
+             WHERE i.id = :id AND pp.tenant_id = :tid'
+        );
+        $stmt->execute([':path' => $relPath, ':id' => $installmentId, ':tid' => $tid]);
 
         return $relPath;
     }
@@ -513,6 +526,7 @@ class PaymentsController
 
             $this->repo->insertInstallment([
                 ':id' => $instId,
+                ':tenant_id' => TenantContext::id(),
                 ':plan_id' => $planId,
                 ':title' => $title,
                 ':due_date' => $dueDate,
