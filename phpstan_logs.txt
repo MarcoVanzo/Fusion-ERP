@@ -1,0 +1,447 @@
+﻿2026-04-15T08:40:07.2941554Z Current runner version: '2.333.1'
+2026-04-15T08:40:07.2961222Z ##[group]Runner Image Provisioner
+2026-04-15T08:40:07.2961999Z Hosted Compute Agent
+2026-04-15T08:40:07.2962420Z Version: 20260213.493
+2026-04-15T08:40:07.2962894Z Commit: 5c115507f6dd24b8de37d8bbe0bb4509d0cc0fa3
+2026-04-15T08:40:07.2963506Z Build Date: 2026-02-13T00:28:41Z
+2026-04-15T08:40:07.2964049Z Worker ID: {eeac7ca1-96af-4708-a23d-ec725aec23a2}
+2026-04-15T08:40:07.2964574Z Azure Region: northcentralus
+2026-04-15T08:40:07.2965080Z ##[endgroup]
+2026-04-15T08:40:07.2966097Z ##[group]Operating System
+2026-04-15T08:40:07.2966526Z Ubuntu
+2026-04-15T08:40:07.2966985Z 24.04.4
+2026-04-15T08:40:07.2967327Z LTS
+2026-04-15T08:40:07.2967936Z ##[endgroup]
+2026-04-15T08:40:07.2968325Z ##[group]Runner Image
+2026-04-15T08:40:07.2968786Z Image: ubuntu-24.04
+2026-04-15T08:40:07.2969162Z Version: 20260406.80.1
+2026-04-15T08:40:07.2970187Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260406.80/images/ubuntu/Ubuntu2404-Readme.md
+2026-04-15T08:40:07.2971264Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260406.80
+2026-04-15T08:40:07.2972001Z ##[endgroup]
+2026-04-15T08:40:07.2972800Z ##[group]GITHUB_TOKEN Permissions
+2026-04-15T08:40:07.2974312Z Contents: read
+2026-04-15T08:40:07.2974864Z Metadata: read
+2026-04-15T08:40:07.2975272Z Packages: read
+2026-04-15T08:40:07.2975618Z ##[endgroup]
+2026-04-15T08:40:07.2977277Z Secret source: Actions
+2026-04-15T08:40:07.2977918Z Prepare workflow directory
+2026-04-15T08:40:07.3275633Z Prepare all required actions
+2026-04-15T08:40:07.3306295Z Getting action download info
+2026-04-15T08:40:07.7419361Z Download action repository 'actions/checkout@v4' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+2026-04-15T08:40:09.6195808Z Download action repository 'shivammathur/setup-php@v2' (SHA:accd6127cb78bee3e8082180cb391013d204ef9f)
+2026-04-15T08:40:10.2058489Z Download action repository 'actions/cache@v4' (SHA:0057852bfaa89a56745cba8c7296529d2fc39830)
+2026-04-15T08:40:10.6420096Z Complete job name: PHPStan
+2026-04-15T08:40:10.6928909Z ##[group]Run actions/checkout@v4
+2026-04-15T08:40:10.6929341Z with:
+2026-04-15T08:40:10.6929539Z   repository: MarcoVanzo/Fusion-ERP
+2026-04-15T08:40:10.6929904Z   token: ***
+2026-04-15T08:40:10.6930093Z   ssh-strict: true
+2026-04-15T08:40:10.6930273Z   ssh-user: git
+2026-04-15T08:40:10.6930469Z   persist-credentials: true
+2026-04-15T08:40:10.6930675Z   clean: true
+2026-04-15T08:40:10.6930879Z   sparse-checkout-cone-mode: true
+2026-04-15T08:40:10.6931100Z   fetch-depth: 1
+2026-04-15T08:40:10.6931289Z   fetch-tags: false
+2026-04-15T08:40:10.6931480Z   show-progress: true
+2026-04-15T08:40:10.6931668Z   lfs: false
+2026-04-15T08:40:10.6931848Z   submodules: false
+2026-04-15T08:40:10.6932031Z   set-safe-directory: true
+2026-04-15T08:40:10.6932361Z ##[endgroup]
+2026-04-15T08:40:10.7772333Z Syncing repository: MarcoVanzo/Fusion-ERP
+2026-04-15T08:40:10.7773407Z ##[group]Getting Git version info
+2026-04-15T08:40:10.7773742Z Working directory is '/home/runner/work/Fusion-ERP/Fusion-ERP'
+2026-04-15T08:40:10.7774375Z [command]/usr/bin/git version
+2026-04-15T08:40:10.8450128Z git version 2.53.0
+2026-04-15T08:40:10.8468533Z ##[endgroup]
+2026-04-15T08:40:10.8486729Z Temporarily overriding HOME='/home/runner/work/_temp/61d64f7c-ee67-4731-a1ed-e364e551ba4b' before making global git config changes
+2026-04-15T08:40:10.8491318Z Adding repository directory to the temporary git global config as a safe directory
+2026-04-15T08:40:10.8492114Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/Fusion-ERP/Fusion-ERP
+2026-04-15T08:40:10.8520612Z Deleting the contents of '/home/runner/work/Fusion-ERP/Fusion-ERP'
+2026-04-15T08:40:10.8523618Z ##[group]Initializing the repository
+2026-04-15T08:40:10.8527278Z [command]/usr/bin/git init /home/runner/work/Fusion-ERP/Fusion-ERP
+2026-04-15T08:40:11.2556171Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-04-15T08:40:11.2557326Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-04-15T08:40:11.2558767Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-04-15T08:40:11.2559532Z hint: call:
+2026-04-15T08:40:11.2559793Z hint:
+2026-04-15T08:40:11.2560110Z hint: 	git config --global init.defaultBranch <name>
+2026-04-15T08:40:11.2560477Z hint:
+2026-04-15T08:40:11.2560829Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-04-15T08:40:11.2561387Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-04-15T08:40:11.2561816Z hint:
+2026-04-15T08:40:11.2562033Z hint: 	git branch -m <name>
+2026-04-15T08:40:11.2562279Z hint:
+2026-04-15T08:40:11.2562638Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-04-15T08:40:11.2563249Z Initialized empty Git repository in /home/runner/work/Fusion-ERP/Fusion-ERP/.git/
+2026-04-15T08:40:11.2569108Z [command]/usr/bin/git remote add origin https://github.com/MarcoVanzo/Fusion-ERP
+2026-04-15T08:40:11.2615148Z ##[endgroup]
+2026-04-15T08:40:11.2615620Z ##[group]Disabling automatic garbage collection
+2026-04-15T08:40:11.2619665Z [command]/usr/bin/git config --local gc.auto 0
+2026-04-15T08:40:11.3501397Z ##[endgroup]
+2026-04-15T08:40:11.3501728Z ##[group]Setting up auth
+2026-04-15T08:40:11.3511447Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-04-15T08:40:11.3543052Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-04-15T08:40:11.5240294Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-04-15T08:40:11.5264906Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-04-15T08:40:11.5446075Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-04-15T08:40:11.5472394Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-04-15T08:40:11.5655545Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-04-15T08:40:11.5683333Z ##[endgroup]
+2026-04-15T08:40:11.5683756Z ##[group]Fetching the repository
+2026-04-15T08:40:11.5690663Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +30c25ce5e089181905a6055e4addcf00ad88d65a:refs/remotes/origin/main
+2026-04-15T08:40:13.7734811Z From https://github.com/MarcoVanzo/Fusion-ERP
+2026-04-15T08:40:13.7735404Z  * [new ref]         30c25ce5e089181905a6055e4addcf00ad88d65a -> origin/main
+2026-04-15T08:40:13.7758186Z ##[endgroup]
+2026-04-15T08:40:13.7758730Z ##[group]Determining the checkout info
+2026-04-15T08:40:13.7760570Z ##[endgroup]
+2026-04-15T08:40:13.7765950Z [command]/usr/bin/git sparse-checkout disable
+2026-04-15T08:40:13.8237028Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-04-15T08:40:13.8259333Z ##[group]Checking out the ref
+2026-04-15T08:40:13.8262903Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+2026-04-15T08:40:13.9842990Z Switched to a new branch 'main'
+2026-04-15T08:40:13.9843466Z branch 'main' set up to track 'origin/main'.
+2026-04-15T08:40:13.9865275Z ##[endgroup]
+2026-04-15T08:40:13.9898379Z [command]/usr/bin/git log -1 --format=%H
+2026-04-15T08:40:13.9916104Z 30c25ce5e089181905a6055e4addcf00ad88d65a
+2026-04-15T08:40:14.0076999Z ##[group]Run shivammathur/setup-php@v2
+2026-04-15T08:40:14.0077252Z with:
+2026-04-15T08:40:14.0077402Z   php-version: 8.1
+2026-04-15T08:40:14.0077551Z   tools: composer
+2026-04-15T08:40:14.0077947Z   ini-file: production
+2026-04-15T08:40:14.0078242Z   github-token: ***
+2026-04-15T08:40:14.0078404Z ##[endgroup]
+2026-04-15T08:40:14.0345793Z [command]/usr/bin/bash /home/runner/work/_actions/shivammathur/setup-php/v2/src/scripts/run.sh
+2026-04-15T08:40:14.0689452Z 
+2026-04-15T08:40:14.0690052Z [90;1m==> [0m[37;1mSetup PHP[0m
+2026-04-15T08:40:21.8784967Z [32;1m✓ [0m[34;1mPHP [0m[90;1mInstalled PHP 8.1.34[0m
+2026-04-15T08:40:21.8785445Z 
+2026-04-15T08:40:21.8785628Z [90;1m==> [0m[37;1mSetup Tools[0m
+2026-04-15T08:40:22.3083231Z [32;1m✓ [0m[34;1mcomposer [0m[90;1mAdded composer 2.9.7[0m
+2026-04-15T08:40:22.3083909Z 
+2026-04-15T08:40:22.3084467Z [90;1m==> [0m[37;1mSponsor setup-php[0m
+2026-04-15T08:40:22.3088484Z [32;1m✓ [0m[34;1msetup-php [0m[90;1mhttps://setup-php.com/sponsor[0m
+2026-04-15T08:40:22.3743265Z ##[group]Run actions/cache@v4
+2026-04-15T08:40:22.3743475Z with:
+2026-04-15T08:40:22.3743635Z   path: vendor
+2026-04-15T08:40:22.3743899Z   key: composer-21df0da879a9886c16943a08bbbb2a817d53cb0206435b5a2a49aab362bc3723
+2026-04-15T08:40:22.3744215Z   restore-keys: composer-
+2026-04-15T08:40:22.3744410Z   enableCrossOsArchive: false
+2026-04-15T08:40:22.3744615Z   fail-on-cache-miss: false
+2026-04-15T08:40:22.3744782Z   lookup-only: false
+2026-04-15T08:40:22.3744935Z   save-always: false
+2026-04-15T08:40:22.3745073Z env:
+2026-04-15T08:40:22.3745213Z   COMPOSER_PROCESS_TIMEOUT: 0
+2026-04-15T08:40:22.3745395Z   COMPOSER_NO_INTERACTION: 1
+2026-04-15T08:40:22.3745558Z   COMPOSER_NO_AUDIT: 1
+2026-04-15T08:40:22.3745714Z ##[endgroup]
+2026-04-15T08:40:22.5984016Z Cache hit for: composer-21df0da879a9886c16943a08bbbb2a817d53cb0206435b5a2a49aab362bc3723
+2026-04-15T08:40:23.3386605Z Received 49787534 of 49787534 (100.0%), 75.7 MBs/sec
+2026-04-15T08:40:23.3387409Z Cache Size: ~47 MB (49787534 B)
+2026-04-15T08:40:23.3410677Z [command]/usr/bin/tar -xf /home/runner/work/_temp/665b253a-7305-411e-bd6b-dcccdf6aa368/cache.tzst -P -C /home/runner/work/Fusion-ERP/Fusion-ERP --use-compress-program unzstd
+2026-04-15T08:40:23.5682750Z Cache restored successfully
+2026-04-15T08:40:23.5770162Z Cache restored from key: composer-21df0da879a9886c16943a08bbbb2a817d53cb0206435b5a2a49aab362bc3723
+2026-04-15T08:40:23.5864266Z ##[group]Run composer update --no-interaction --prefer-dist
+2026-04-15T08:40:23.5864630Z [36;1mcomposer update --no-interaction --prefer-dist[0m
+2026-04-15T08:40:23.5885918Z shell: /usr/bin/bash -e {0}
+2026-04-15T08:40:23.5886109Z env:
+2026-04-15T08:40:23.5886261Z   COMPOSER_PROCESS_TIMEOUT: 0
+2026-04-15T08:40:23.5886460Z   COMPOSER_NO_INTERACTION: 1
+2026-04-15T08:40:23.5886639Z   COMPOSER_NO_AUDIT: 1
+2026-04-15T08:40:23.5886797Z ##[endgroup]
+2026-04-15T08:40:23.7882769Z Loading composer repositories with package information
+2026-04-15T08:40:24.2147338Z Updating dependencies
+2026-04-15T08:40:24.2238962Z Lock file operations: 0 installs, 5 updates, 0 removals
+2026-04-15T08:40:24.2241247Z   - Upgrading phpstan/phpstan (2.1.46 => 2.1.47)
+2026-04-15T08:40:24.2241739Z   - Upgrading symfony/polyfill-ctype (v1.34.0 => v1.35.0)
+2026-04-15T08:40:24.2242217Z   - Upgrading symfony/polyfill-mbstring (v1.34.0 => v1.35.0)
+2026-04-15T08:40:24.2242958Z   - Upgrading symfony/polyfill-php80 (v1.34.0 => v1.35.0)
+2026-04-15T08:40:24.2243417Z   - Upgrading symfony/polyfill-php83 (v1.34.0 => v1.35.0)
+2026-04-15T08:40:24.2254271Z Writing lock file
+2026-04-15T08:40:24.2254652Z Installing dependencies from lock file (including require-dev)
+2026-04-15T08:40:24.2270486Z Package operations: 0 installs, 5 updates, 0 removals
+2026-04-15T08:40:24.2275875Z   - Downloading symfony/polyfill-php83 (v1.35.0)
+2026-04-15T08:40:24.2278968Z   - Downloading symfony/polyfill-php80 (v1.35.0)
+2026-04-15T08:40:24.2280909Z   - Downloading symfony/polyfill-mbstring (v1.35.0)
+2026-04-15T08:40:24.2282693Z   - Downloading symfony/polyfill-ctype (v1.35.0)
+2026-04-15T08:40:24.2284474Z   - Downloading phpstan/phpstan (2.1.47)
+2026-04-15T08:40:24.7291690Z   - Upgrading symfony/polyfill-php83 (v1.34.0 => v1.35.0): Extracting archive
+2026-04-15T08:40:24.7322042Z   - Upgrading symfony/polyfill-php80 (v1.34.0 => v1.35.0): Extracting archive
+2026-04-15T08:40:24.7351498Z   - Upgrading symfony/polyfill-mbstring (v1.34.0 => v1.35.0): Extracting archive
+2026-04-15T08:40:24.7380729Z   - Upgrading symfony/polyfill-ctype (v1.34.0 => v1.35.0): Extracting archive
+2026-04-15T08:40:24.7424465Z   - Upgrading phpstan/phpstan (2.1.46 => 2.1.47): Extracting archive
+2026-04-15T08:40:25.2251917Z Generating optimized autoload files
+2026-04-15T08:40:25.6490006Z 42 packages you are using are looking for funding.
+2026-04-15T08:40:25.6490482Z Use the `composer fund` command to find out more!
+2026-04-15T08:40:25.6823478Z ##[group]Run vendor/bin/phpstan analyse -c phpstan.neon --no-progress --error-format=github
+2026-04-15T08:40:25.6824008Z [36;1mvendor/bin/phpstan analyse -c phpstan.neon --no-progress --error-format=github[0m
+2026-04-15T08:40:25.6842036Z shell: /usr/bin/bash -e {0}
+2026-04-15T08:40:25.6842226Z env:
+2026-04-15T08:40:25.6842382Z   COMPOSER_PROCESS_TIMEOUT: 0
+2026-04-15T08:40:25.6842571Z   COMPOSER_NO_INTERACTION: 1
+2026-04-15T08:40:25.6842754Z   COMPOSER_NO_AUDIT: 1
+2026-04-15T08:40:25.6842919Z ##[endgroup]
+2026-04-15T08:40:29.8745757Z ##[error]Call to static method getInstance() on an unknown class FusionERP\Shared\Database.
+2026-04-15T08:40:29.8753918Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.8755548Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.8757121Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.8758826Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.8760440Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.8762049Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.8763583Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.8765037Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.8766507Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.8768164Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.8769685Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.8771052Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.8772732Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.8774208Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.8775698Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.8777412Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.8779487Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.8781297Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.8782945Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.8784683Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.8786374Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.8788279Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.8790049Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.8791962Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.8793691Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.8795350Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.8797479Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.8799399Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.8801235Z ##[error]Call to static method getInstance() on an unknown class FusionERP\Shared\Database.
+2026-04-15T08:40:29.8803318Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.8805086Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.8806813Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.8808865Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.8810664Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.8812425Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.8814050Z ##[error]Call to static method requireRole() on an unknown class FusionERP\Shared\Auth.
+2026-04-15T08:40:29.8815903Z ##[error]Call to static method getInstance() on an unknown class FusionERP\Shared\Database.
+2026-04-15T08:40:29.8817514Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.8819306Z ##[error]Call to static method success() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.8821173Z ##[error]Call to static method requireRole() on an unknown class FusionERP\Shared\Auth.
+2026-04-15T08:40:29.8823020Z ##[error]Call to static method getInstance() on an unknown class FusionERP\Shared\Database.
+2026-04-15T08:40:29.8824857Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.8826706Z ##[error]Call to static method success() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.8828637Z ##[error]Call to static method requireRole() on an unknown class FusionERP\Shared\Auth.
+2026-04-15T08:40:29.8830420Z ##[error]Call to static method getInstance() on an unknown class FusionERP\Shared\Database.
+2026-04-15T08:40:29.8832055Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.8833700Z ##[error]Call to static method success() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.8835608Z ##[error]Call to static method requireRole() on an unknown class FusionERP\Shared\Auth.
+2026-04-15T08:40:29.8837474Z ##[error]Call to static method getInstance() on an unknown class FusionERP\Shared\Database.
+2026-04-15T08:40:29.8839473Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.8841270Z ##[error]Call to static method success() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.8843012Z ##[error]Call to static method requireRole() on an unknown class FusionERP\Shared\Auth.
+2026-04-15T08:40:29.8844694Z ##[error]Call to static method getInstance() on an unknown class FusionERP\Shared\Database.
+2026-04-15T08:40:29.8846346Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.8848053Z ##[error]Call to static method success() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.8849632Z ##[error]Call to static method requireRole() on an unknown class FusionERP\Shared\Auth.
+2026-04-15T08:40:29.8851201Z ##[error]Call to static method getInstance() on an unknown class FusionERP\Shared\Database.
+2026-04-15T08:40:29.8852793Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.8854364Z ##[error]Call to static method success() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.8855909Z ##[error]Call to static method requireRole() on an unknown class FusionERP\Shared\Auth.
+2026-04-15T08:40:29.8857825Z ##[error]Call to static method getInstance() on an unknown class FusionERP\Shared\Database.
+2026-04-15T08:40:29.8859379Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.8860948Z ##[error]Call to static method success() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.8862626Z ##[error]Call to static method requireRead() on an unknown class FusionERP\Shared\Auth.
+2026-04-15T08:40:29.8864485Z ##[error]Call to static method error() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.8866185Z ##[error]Call to static method error() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.8868205Z ##[error]Call to static method success() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.8869724Z ##[error]Call to static method requireRead() on an unknown class FusionERP\Shared\Auth.
+2026-04-15T08:40:29.8871001Z ##[error]Call to static method getInstance() on an unknown class FusionERP\Shared\Database.
+2026-04-15T08:40:29.8872238Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.8873407Z ##[error]Call to static method success() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.8874506Z ##[error]Call to static method requireWrite() on an unknown class FusionERP\Shared\Auth.
+2026-04-15T08:40:29.8875560Z ##[error]Call to static method jsonBody() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.8876590Z ##[error]Call to static method error() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.8877763Z ##[error]Call to static method getInstance() on an unknown class FusionERP\Shared\Database.
+2026-04-15T08:40:29.8878807Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.8879812Z ##[error]Call to static method success() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.8880835Z ##[error]Call to static method requireWrite() on an unknown class FusionERP\Shared\Auth.
+2026-04-15T08:40:29.8881840Z ##[error]Call to static method error() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.8882816Z ##[error]Call to static method error() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.8883802Z ##[error]Call to static method error() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.8884834Z ##[error]Call to static method success() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.8885893Z ##[error]Call to static method getInstance() on an unknown class FusionERP\Shared\Database.
+2026-04-15T08:40:29.8886908Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.8888033Z ##[error]Call to static method success() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.8889358Z ##[error]Call to static method error() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.8890895Z ##[error]Call to static method requireRead() on an unknown class FusionERP\Shared\Auth.
+2026-04-15T08:40:29.8892491Z ##[error]Call to static method getInstance() on an unknown class FusionERP\Shared\Database.
+2026-04-15T08:40:29.8894025Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.8895731Z ##[error]Call to static method success() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.8897416Z ##[error]Call to static method requireWrite() on an unknown class FusionERP\Shared\Auth.
+2026-04-15T08:40:29.8899167Z ##[error]Call to static method jsonBody() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.8900744Z ##[error]Call to static method error() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.8902308Z ##[error]Call to static method getInstance() on an unknown class FusionERP\Shared\Database.
+2026-04-15T08:40:29.8903754Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.8905325Z ##[error]Call to static method success() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.8906848Z ##[error]Call to static method requireWrite() on an unknown class FusionERP\Shared\Auth.
+2026-04-15T08:40:29.8908382Z ##[error]Call to static method jsonBody() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.8909722Z ##[error]Call to static method error() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.8911420Z ##[error]Call to static method getInstance() on an unknown class FusionERP\Shared\Database.
+2026-04-15T08:40:29.8912983Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.8914886Z ##[error]Call to static method success() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.8916682Z ##[error]Call to static method requireWrite() on an unknown class FusionERP\Shared\Auth.
+2026-04-15T08:40:29.8918536Z ##[error]Call to static method jsonBody() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.8920286Z ##[error]Call to static method error() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.8922090Z ##[error]Call to static method getInstance() on an unknown class FusionERP\Shared\Database.
+2026-04-15T08:40:29.8923839Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.8925619Z ##[error]Call to static method success() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.8927358Z ##[error]Call to static method error() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.8929292Z ##[error]Call to static method getInstance() on an unknown class FusionERP\Shared\Database.
+2026-04-15T08:40:29.8931036Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.8932771Z ##[error]Call to static method success() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.8934485Z ##[error]Call to static method error() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.8936271Z ##[error]Call to static method getInstance() on an unknown class FusionERP\Shared\Database.
+2026-04-15T08:40:29.8938139Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.8939888Z ##[error]Call to static method error() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.8941655Z ##[error]Call to static method error() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.8943428Z ##[error]Call to static method getInstance() on an unknown class FusionERP\Shared\Database.
+2026-04-15T08:40:29.8945237Z ##[error]Call to static method requireRole() on an unknown class FusionERP\Shared\Auth.
+2026-04-15T08:40:29.8946946Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.8948783Z ##[error]Call to static method success() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.8950614Z ##[error]Call to static method requireRole() on an unknown class FusionERP\Shared\Auth.
+2026-04-15T08:40:29.8952189Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.8953905Z ##[error]Call to static method error() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.8955657Z ##[error]Call to static method success() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.8957449Z ##[error]Call to static method requireRole() on an unknown class FusionERP\Shared\Auth.
+2026-04-15T08:40:29.8959386Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.8961190Z ##[error]Call to static method error() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.8962894Z ##[error]Call to static method error() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.8996788Z ##[error]Call to static method success() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.8998989Z ##[error]Call to static method requireRole() on an unknown class FusionERP\Shared\Auth.
+2026-04-15T08:40:29.9000660Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.9002581Z ##[error]Call to static method error() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.9004334Z ##[error]Call to static method error() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.9006272Z ##[error]Call to static method success() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.9008014Z ##[error]Call to static method error() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.9009560Z ##[error]Call to static method error() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.9011064Z ##[error]Call to static method error() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.9012566Z ##[error]Call to static method error() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.9014184Z ##[error]Call to static method error() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.9015962Z ##[error]Call to static method sendWithEmbeddedImages() on an unknown class FusionERP\Shared\Mailer.
+2026-04-15T08:40:29.9017822Z ##[error]Call to static method send() on an unknown class FusionERP\Shared\Mailer.
+2026-04-15T08:40:29.9019455Z ##[error]Call to static method success() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.9021133Z ##[error]Call to static method error() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.9022840Z ##[error]Call to static method getInstance() on an unknown class FusionERP\Shared\Database.
+2026-04-15T08:40:29.9024493Z ##[error]Instantiated class FusionERP\Modules\Vald\ValdRepository not found.
+2026-04-15T08:40:29.9026339Z ##[error]Call to method getBaselineBrakingImpulse() on an unknown class FusionERP\Modules\Vald\ValdRepository.
+2026-04-15T08:40:29.9027830Z ##[error]Call to static method getInstance() on an unknown class FusionERP\Shared\Database.
+2026-04-15T08:40:29.9028988Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.9030801Z ##[error]Call to static method getInstance() on an unknown class FusionERP\Shared\Database.
+2026-04-15T08:40:29.9032025Z ##[error]Call to static method getInstance() on an unknown class FusionERP\Shared\Database.
+2026-04-15T08:40:29.9033108Z ##[error]Call to static method getInstance() on an unknown class FusionERP\Shared\Database.
+2026-04-15T08:40:29.9034159Z ##[error]Instantiated class FusionERP\Modules\Health\HealthRepository not found.
+2026-04-15T08:40:29.9035325Z ##[error]Call to method getExpiringCertificates() on an unknown class FusionERP\Modules\Health\HealthRepository.
+2026-04-15T08:40:29.9036447Z ##[error]Call to static method send() on an unknown class FusionERP\Shared\NotificationService.
+2026-04-15T08:40:29.9037616Z ##[error]Access to constant TYPE_CERT_EXPIRY on an unknown class FusionERP\Shared\NotificationService.
+2026-04-15T08:40:29.9039343Z ##[error]Call to static method sendWhatsApp() on an unknown class FusionERP\Shared\NotificationService.
+2026-04-15T08:40:29.9040501Z ##[error]Access to constant TYPE_CERT_EXPIRY on an unknown class FusionERP\Shared\NotificationService.
+2026-04-15T08:40:29.9041616Z ##[error]Instantiated class FusionERP\Modules\Documents\DocumentsRepository not found.
+2026-04-15T08:40:29.9042834Z ##[error]Call to method getExpiringDocuments() on an unknown class FusionERP\Modules\Documents\DocumentsRepository.
+2026-04-15T08:40:29.9043968Z ##[error]Call to static method send() on an unknown class FusionERP\Shared\NotificationService.
+2026-04-15T08:40:29.9045086Z ##[error]Access to constant TYPE_DOC_EXPIRY on an unknown class FusionERP\Shared\NotificationService.
+2026-04-15T08:40:29.9046219Z ##[error]Call to static method sendWhatsApp() on an unknown class FusionERP\Shared\NotificationService.
+2026-04-15T08:40:29.9047345Z ##[error]Access to constant TYPE_DOC_EXPIRY on an unknown class FusionERP\Shared\NotificationService.
+2026-04-15T08:40:29.9048807Z ##[error]Instantiated class FusionERP\Modules\Payments\PaymentsRepository not found.
+2026-04-15T08:40:29.9050015Z ##[error]Call to method markOverdueInstallments() on an unknown class FusionERP\Modules\Payments\PaymentsRepository.
+2026-04-15T08:40:29.9051268Z ##[error]Call to method getOverdueInstallments() on an unknown class FusionERP\Modules\Payments\PaymentsRepository.
+2026-04-15T08:40:29.9052519Z ##[error]Call to static method send() on an unknown class FusionERP\Shared\NotificationService.
+2026-04-15T08:40:29.9053697Z ##[error]Access to constant TYPE_PAYMENT_OVERDUE on an unknown class FusionERP\Shared\NotificationService.
+2026-04-15T08:40:29.9054901Z ##[error]Call to static method sendWhatsApp() on an unknown class FusionERP\Shared\NotificationService.
+2026-04-15T08:40:29.9056069Z ##[error]Access to constant TYPE_PAYMENT_OVERDUE on an unknown class FusionERP\Shared\NotificationService.
+2026-04-15T08:40:29.9057308Z ##[error]Call to method getUpcomingInstallments() on an unknown class FusionERP\Modules\Payments\PaymentsRepository.
+2026-04-15T08:40:29.9058630Z ##[error]Call to static method send() on an unknown class FusionERP\Shared\NotificationService.
+2026-04-15T08:40:29.9059743Z ##[error]Access to constant TYPE_PAYMENT_DUE on an unknown class FusionERP\Shared\NotificationService.
+2026-04-15T08:40:29.9060898Z ##[error]Call to static method sendWhatsApp() on an unknown class FusionERP\Shared\NotificationService.
+2026-04-15T08:40:29.9062025Z ##[error]Access to constant TYPE_PAYMENT_DUE on an unknown class FusionERP\Shared\NotificationService.
+2026-04-15T08:40:29.9063098Z ##[error]Call to static method getInstance() on an unknown class FusionERP\Shared\Database.
+2026-04-15T08:40:29.9064129Z ##[error]Instantiated class FusionERP\Modules\Admin\AdminRepository not found.
+2026-04-15T08:40:29.9065131Z ##[error]Call to method dump() on an unknown class FusionERP\Shared\BackupService.
+2026-04-15T08:40:29.9066119Z ##[error]Instantiated class FusionERP\Shared\BackupService not found.
+2026-04-15T08:40:29.9067162Z ##[error]Call to static method uploadFile() on an unknown class FusionERP\Shared\GoogleDrive.
+2026-04-15T08:40:29.9068528Z ##[error]Call to method updateBackupDriveInfo() on an unknown class FusionERP\Modules\Admin\AdminRepository.
+2026-04-15T08:40:29.9069719Z ##[error]Call to static method _doSync() on an unknown class FusionERP\Modules\Scouting\ScoutingController.
+2026-04-15T08:40:29.9070847Z ##[error]Call to static method setOverride() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.9071919Z ##[error]Instantiated class FusionERP\Modules\Results\ResultsRepository not found.
+2026-04-15T08:40:29.9072932Z ##[error]Instantiated class FusionERP\Modules\Results\ResultsService not found.
+2026-04-15T08:40:29.9074192Z ##[error]Call to method getActiveChampionshipsWithTeamFlags() on an unknown class FusionERP\Modules\Results\ResultsRepository.
+2026-04-15T08:40:29.9075436Z ##[error]Call to method syncChampionshipData() on an unknown class FusionERP\Modules\Results\ResultsService.
+2026-04-15T08:40:29.9076540Z ##[error]Call to static method getInstance() on an unknown class FusionERP\Shared\Database.
+2026-04-15T08:40:29.9077617Z ##[error]Call to static method setOverride() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.9078928Z ##[error]Instantiated class FusionERP\Modules\Results\ResultsRepository not found.
+2026-04-15T08:40:29.9079947Z ##[error]Instantiated class FusionERP\Modules\Results\ResultsService not found.
+2026-04-15T08:40:29.9081201Z ##[error]Call to method getActiveChampionshipsWithTeamFlags() on an unknown class FusionERP\Modules\Results\ResultsRepository.
+2026-04-15T08:40:29.9082520Z ##[error]Call to method syncChampionshipData() on an unknown class FusionERP\Modules\Results\ResultsService.
+2026-04-15T08:40:29.9083673Z ##[error]Call to static method getInstance() on an unknown class FusionERP\Shared\Database.
+2026-04-15T08:40:29.9084783Z ##[error]Call to static method setOverride() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.9085988Z ##[error]Instantiated class FusionERP\Modules\Vald\ValdRepository not found.
+2026-04-15T08:40:29.9086978Z ##[error]Instantiated class FusionERP\Modules\Vald\ValdService not found.
+2026-04-15T08:40:29.9088166Z ##[error]Call to method performSync() on an unknown class FusionERP\Modules\Vald\ValdService.
+2026-04-15T08:40:29.9089346Z ##[error]Call to static method getInstance() on an unknown class FusionERP\Shared\Database.
+2026-04-15T08:40:29.9090391Z ##[error]Call to static method id() on an unknown class FusionERP\Shared\TenantContext.
+2026-04-15T08:40:29.9091429Z ##[error]Call to static method getInstance() on an unknown class FusionERP\Shared\Database.
+2026-04-15T08:40:29.9092474Z ##[error]Call to static method getInstance() on an unknown class FusionERP\Shared\Database.
+2026-04-15T08:40:29.9093513Z ##[error]Call to static method getInstance() on an unknown class FusionERP\Shared\Database.
+2026-04-15T08:40:29.9094570Z ##[error]Call to static method getInstance() on an unknown class FusionERP\Shared\Database.
+2026-04-15T08:40:29.9095636Z ##[error]Call to static method getInstance() on an unknown class FusionERP\Shared\Database.
+2026-04-15T08:40:29.9096684Z ##[error]Call to static method getInstance() on an unknown class FusionERP\Shared\Database.
+2026-04-15T08:40:29.9097884Z ##[error]Call to static method getInstance() on an unknown class FusionERP\Shared\Database.
+2026-04-15T08:40:29.9098899Z ##[error]Instantiated class FusionERP\Shared\MigrationRunner not found.
+2026-04-15T08:40:29.9099873Z ##[error]Call to method run() on an unknown class FusionERP\Shared\MigrationRunner.
+2026-04-15T08:40:29.9100902Z ##[error]Call to static method getInstance() on an unknown class FusionERP\Shared\Database.
+2026-04-15T08:40:29.9101940Z ##[error]Call to static method startSession() on an unknown class FusionERP\Shared\Auth.
+2026-04-15T08:40:29.9103003Z ##[error]Call to static method setCorsHeaders() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.9104068Z ##[error]Call to static method error() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.9105067Z ##[error]Call to static method error() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.9106065Z ##[error]Call to static method error() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.9107087Z ##[error]Call to static method strict() on an unknown class FusionERP\Shared\RateLimiter.
+2026-04-15T08:40:29.9108285Z ##[error]Call to static method normal() on an unknown class FusionERP\Shared\RateLimiter.
+2026-04-15T08:40:29.9109292Z ##[error]Call to static method error() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.9110281Z ##[error]Call to static method error() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.9111267Z ##[error]Call to static method error() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.9112311Z ##[error]Instantiated class FusionERP\Modules\WhatsApp\WhatsAppController not found.
+2026-04-15T08:40:29.9113400Z ##[error]Instantiated class FusionERP\Modules\WhatsApp\WhatsAppWebhookController not found.
+2026-04-15T08:40:29.9114440Z ##[error]Call to static method error() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.9115484Z ##[error]Call to static method error() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.9116464Z ##[error]Call to static method error() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.9117507Z ##[error]Instantiated class FusionERP\Modules\Webhooks\StripeWebhookController not found.
+2026-04-15T08:40:29.9118825Z ##[error]Call to static method requireAuth() on an unknown class FusionERP\Shared\Auth.
+2026-04-15T08:40:29.9119850Z ##[error]Call to static method error() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.9120837Z ##[error]Call to static method error() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.9122214Z ##[error]Call to static method getInstance() on an unknown class FusionERP\Shared\Database.
+2026-04-15T08:40:29.9123366Z ##[error]No error to ignore is reported on line 56.
+2026-04-15T08:40:29.9124400Z ##[error]Call to static method wrapInLayout() on an unknown class FusionERP\Shared\NotificationService.
+2026-04-15T08:40:29.9125538Z ##[error]Call to static method wrapInLayout() on an unknown class FusionERP\Shared\NotificationService.
+2026-04-15T08:40:29.9126752Z ##[error]Call to static method wrapInLayout() on an unknown class FusionERP\Shared\NotificationService.
+2026-04-15T08:40:29.9128037Z ##[error]Call to static method wrapInLayout() on an unknown class FusionERP\Shared\NotificationService.
+2026-04-15T08:40:29.9129119Z ##[error]Call to static method startSession() on an unknown class FusionERP\Shared\Auth.
+2026-04-15T08:40:29.9130201Z ##[error]Call to static method setCorsHeaders() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.9131245Z ##[error]Call to static method error() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.9132277Z ##[error]Call to static method requireAuth() on an unknown class FusionERP\Shared\Auth.
+2026-04-15T08:40:29.9133283Z ##[error]Call to static method error() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.9134293Z ##[error]Call to static method error() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.9135292Z ##[error]Call to static method error() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.9136318Z ##[error]Call to static method error() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.9137392Z ##[error]Call to static method generateContent() on an unknown class FusionERP\Shared\AIService.
+2026-04-15T08:40:29.9138651Z ##[error]Call to static method extractJson() on an unknown class FusionERP\Shared\AIService.
+2026-04-15T08:40:29.9139705Z ##[error]Call to static method error() on an unknown class FusionERP\Shared\Response.
+2026-04-15T08:40:29.9142803Z ##[error]Process completed with exit code 1.
+2026-04-15T08:40:29.9207469Z Post job cleanup.
+2026-04-15T08:40:29.9957479Z [command]/usr/bin/git version
+2026-04-15T08:40:29.9987421Z git version 2.53.0
+2026-04-15T08:40:30.0020132Z Temporarily overriding HOME='/home/runner/work/_temp/46f3c579-fae5-4da9-b578-7f2de5cd9c45' before making global git config changes
+2026-04-15T08:40:30.0021085Z Adding repository directory to the temporary git global config as a safe directory
+2026-04-15T08:40:30.0031736Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/Fusion-ERP/Fusion-ERP
+2026-04-15T08:40:30.0062004Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-04-15T08:40:30.0088807Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-04-15T08:40:30.0275702Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-04-15T08:40:30.0292963Z http.https://github.com/.extraheader
+2026-04-15T08:40:30.0303200Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-04-15T08:40:30.0328617Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-04-15T08:40:30.0509153Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-04-15T08:40:30.0534252Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-04-15T08:40:30.0818268Z Cleaning up orphan processes
+2026-04-15T08:40:30.1090231Z ##[warning]Node.js 20 actions are deprecated. The following actions are running on Node.js 20 and may not work as expected: actions/cache@v4, actions/checkout@v4. Actions will be forced to run with Node.js 24 by default starting June 2nd, 2026. Node.js 20 will be removed from the runner on September 16th, 2026. Please check if updated versions of these actions are available that support Node.js 24. To opt into Node.js 24 now, set the FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true environment variable on the runner or in your workflow file. Once Node.js 24 becomes the default, you can temporarily opt out by setting ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
