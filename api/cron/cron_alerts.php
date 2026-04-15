@@ -30,7 +30,8 @@ $waSent = 0;
 $db = Database::getInstance();
 $tenantStmt = $db->prepare('SELECT id FROM tenants WHERE is_active = 1');
 $tenantStmt->execute();
-$allTenants = $tenantStmt->fetchAll(\PDO::FETCH_COLUMN);
+$allTenantsArr = $tenantStmt->fetchAll(\PDO::FETCH_COLUMN);
+$allTenants = array_map('strval', $allTenantsArr);
 
 // ─── 1. MEDICAL CERTIFICATE EXPIRY ──────────────────────────────────────────
 

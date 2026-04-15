@@ -109,6 +109,10 @@ class DocumentsRepository
     /**
      * Get documents expiring within N days across all athletes.
      * Used by cron alert system.
+     * 
+     * @param int $days Number of days
+     * @param string|null $tenantId The tenant ID scope
+     * @return array
      */
     public function getExpiringDocuments(int $days = 30, ?string $tenantId = null): array
     {

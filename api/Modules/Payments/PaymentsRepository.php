@@ -163,6 +163,9 @@ class PaymentsRepository
 
     /**
      * Get overdue installments across all athletes.
+     * 
+     * @param string|null $tenantId The tenant ID scope
+     * @return array
      */
     public function getOverdueInstallments(?string $tenantId = null): array
     {
@@ -186,6 +189,10 @@ class PaymentsRepository
 
     /**
      * Get installments due within N days (for reminder notifications).
+     * 
+     * @param int $days Number of days
+     * @param string|null $tenantId The tenant ID scope
+     * @return array
      */
     public function getUpcomingInstallments(int $days = 7, ?string $tenantId = null): array
     {

@@ -97,6 +97,10 @@ class HealthRepository
     /**
      * Get all athletes with certificates expiring within N days.
      * Used by the cron job for alert notifications.
+     * 
+     * @param int $days Number of days
+     * @param string|null $tenantId The tenant ID scope
+     * @return array
      */
     public function getExpiringCertificates(int $days = 30, ?string $tenantId = null): array
     {
