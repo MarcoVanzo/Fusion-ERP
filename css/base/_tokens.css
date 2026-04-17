@@ -11,27 +11,28 @@
 /* Font caricato via <link> in index.html con preconnect — NON usare @import qui */
 
 
-/* ─── DESIGN TOKENS ────────────────────────────────────────────────────────── */
+  /* ─── DESIGN TOKENS ────────────────────────────────────────────────────────── */
 :root {
-  /* NovaPM Premium Palette */
-  --accent-primary: #00f2fe;
+  /* Premium SaaS Palette */
+  --accent-primary: #8B5CF6; /* Violet */
+  --accent-secondary: #00E5FF; /* Cyan */
+  --accent-tertiary: #EC4899; /* Pink as tertiary */
 
-  /* Electric Cyan */
-  --accent-secondary: #ff007a;
-
-  /* Fusion Pink */
-  --bg-darker: #050505;
-  --bg-dark: #0a0a0c;
-  --bg-surface: rgba(255, 255, 255, 0.03);
-  --bg-surface-hover: rgba(255, 255, 255, 0.06);
-  --text-primary: #fff;
-  --text-secondary: rgba(255, 255, 255, 0.65);
-  --text-muted: rgba(255, 255, 255, 0.65);
-
-  /* WCAG fix: raised from 0.30 → 0.55 (contrast ~4.8:1 on #050505) */
-  --text-dim: rgba(255, 255, 255, 0.55);
-  --border-subtle: rgba(255, 255, 255, 0.06);
-  --border-glow: rgba(0, 242, 254, 0.2);
+  /* Surface & Background (Deep Slate/Charcoal instead of pure black) */
+  --bg-darker: #0B0E14;
+  --bg-dark: #12161F;
+  --bg-surface: rgba(255, 255, 255, 0.04);
+  --bg-surface-hover: rgba(255, 255, 255, 0.08);
+  
+  /* Typography */
+  --text-primary: #F8FAFC;
+  --text-secondary: rgba(248, 250, 252, 0.7);
+  --text-muted: rgba(248, 250, 252, 0.5);
+  --text-dim: rgba(248, 250, 252, 0.35);
+  
+  /* Borders & Outlines */
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-glow: rgba(139, 92, 246, 0.3);
 
   /* Layout */
   --sidebar-width: 240px;
@@ -39,26 +40,27 @@
   --topbar-height: 72px;
 
   /* Effects */
-  --glass: blur(20px) saturate(180%);
-  --shadow-premium: 0 20px 40px rgba(0, 0, 0, 0.4);
-  --transition: 0.26s cubic-bezier(0.4, 0, 0.2, 1);
+  --glass: blur(24px) saturate(180%);
+  --shadow-premium: 0 24px 48px rgba(0, 0, 0, 0.5);
+  --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
   /* ─── SHADOW TOKENS ─── */
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.6), 0 6px 12px rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 6px 16px rgba(0, 0, 0, 0.4), 0 3px 8px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 16px 32px rgba(0, 0, 0, 0.5), 0 8px 16px rgba(0, 0, 0, 0.3);
 
-  /* ─── GLOW TOKENS (Pink / Cyan / Card) ─── */
-  --glow-pink: 0 0 12px rgba(255, 0, 122, 0.45);
-  --glow-pink-strong: 0 0 24px rgba(255, 0, 122, 0.65), 0 0 48px rgba(255, 0, 122, 0.25);
-  --glow-cyan: 0 0 12px rgba(0, 242, 254, 0.45);
-  --glow-card-hover: 0 0 20px rgba(255, 0, 255, 0.12);
-  --glow-input: 0 0 0 3px rgba(255, 0, 122, 0.2);
+  /* ─── GLOW TOKENS ─── */
+  --glow-pink: 0 0 16px rgba(236, 72, 153, 0.4);
+  --glow-pink-strong: 0 0 24px rgba(236, 72, 153, 0.6), 0 0 48px rgba(236, 72, 153, 0.2);
+  --glow-cyan: 0 0 16px rgba(0, 229, 255, 0.4);
+  --glow-primary: 0 0 16px rgba(139, 92, 246, 0.4);
+  --glow-card-hover: 0 0 24px rgba(139, 92, 246, 0.15);
+  --glow-input: 0 0 0 3px rgba(139, 92, 246, 0.25);
 
   /* Status */
-  --success: #00ffbc;
-  --warning: #ffb800;
-  --danger: #ff4d4d;
+  --success: #10B981;
+  --warning: #F59E0B;
+  --danger: #EF4444;
 
   /* Typography */
   --font-display: 'Syne', sans-serif;

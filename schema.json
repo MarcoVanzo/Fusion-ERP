@@ -1,7 +1,0 @@
-{
-    "@odata.context": "https:\/\/www.cognitoforms.com\/api\/odata\/$metadata#Forms\/$entity",
-    "@odata.id": "https:\/\/www.cognitoforms.com\/api\/odata\/Forms(17)",
-    "Id": 17,
-    "Name": "Ordine e-commerce",
-    "InternalName": "OrdineEcommerce"
-}

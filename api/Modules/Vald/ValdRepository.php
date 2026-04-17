@@ -39,7 +39,7 @@ class ValdRepository
                          OR id = :athlete_id3
                      )
                )
-             ORDER BY test_date DESC'
+             ORDER BY test_date DESC LIMIT 500'
         );
         $stmt->execute([
             ':athlete_id2' => $athleteId,

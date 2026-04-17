@@ -411,9 +411,13 @@ PROMPT;
         $existingStmt->execute([':tid' => $tenantId]);
         $existingTestIds = array_flip($existingStmt->fetchAll(\PDO::FETCH_COLUMN));
 
-        $startStamp   = strtotime('2023-01-01');
+        $maxDateStmt = $db->prepare('SELECT MAX(test_date) FROM vald_test_results WHERE tenant_id = :tid');
+        $maxDateStmt->execute([':tid' => $tenantId]);
+        $maxDate = $maxDateStmt->fetchColumn();
+
+        $startStamp   = $maxDate ? strtotime('-3 days', strtotime($maxDate)) : strtotime('2023-01-01');
         $endStamp     = time();
-        $chunkSeconds = 90 * 86400;
+        $chunkSeconds = 30 * 86400; // Ridotto a 30 giorni per evitare troppi risultati per chunk
 
         for ($t = $startStamp; $t < $endStamp; $t += $chunkSeconds) {
             $dateFrom = date('Y-m-d', $t);
@@ -451,6 +455,7 @@ PROMPT;
                     if ($teamId && $testIdStr) {
                         try {
                             $trialsData = $this->getTrials($teamId, $testIdStr);
+                            usleep(300000); // 300ms pause to avoid rate limit
                             if (is_array($trialsData) && !empty($trialsData)) {
                                 $bestJumpHeight = -1.0;
                                 $bestMetrics = [];
@@ -480,9 +485,9 @@ PROMPT;
                                                 $val = (float)$val < 1.0 ? (float)$val * 100.0 : (float)$val; // m to cm
                                                 $keyToStore = 'JumpHeight';
                                                 
-                                                // Favor Flight Time (explicitly requested by user)
-                                                $isFlightTime = (strpos($def, 'FLIGHT') !== false);
-                                                if ($isFlightTime || !isset($trialMetrics['JumpHeight'])) {
+                                                // Favor Imp-Mom (to match VALD Hub default dashboard)
+                                                $isImpMom = (strpos($def, 'IMP_MOM') !== false || strpos($def, 'IMPULSE_MOMENTUM') !== false);
+                                                if ($isImpMom || !isset($trialMetrics['JumpHeight'])) {
                                                     $trialMetrics['JumpHeight'] = ['Value' => round((float)$val, 1)];
                                                     $trialJumpHeight = (float)$val;
                                                 }
@@ -566,7 +571,12 @@ PROMPT;
                 if (count($pageResults) < 50) break;
                 $page++;
                 if ($page > 50) break;
+                
+                // Rate limit protection pagination
+                sleep(1);
             }
+            // Rate limit protection chunks
+            sleep(1);
         }
 
         error_log('[VALD Sync] Completata: ' . $stats['synced'] . ' salvati, ' . $stats['skipped'] . ' saltati su ' . $stats['found'] . ' trovati.');

@@ -249,6 +249,7 @@ function dispatch(string $controllerName, string $action): void
     $modulePublicExceptions = [
         'ESignature' => ['callback'],   // OpenAPI.it e-signature webhook
         'Social'     => ['callback'],   // Meta OAuth redirect
+        'TalentDay'  => ['publicRegister'], // Public registration form
     ];
     $isModuleException = isset($modulePublicExceptions[$controllerName])
         && in_array($action, $modulePublicExceptions[$controllerName], true);

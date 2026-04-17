@@ -173,7 +173,7 @@ class SocialRepository
     public function resolveOAuthToken(string $token): string
     {
         if (empty($token) || strlen($token) < 16) {
-            error_log('[SOCIAL] resolveOAuthToken: token too short: ' . $token);
+            error_log('[SOCIAL] resolveOAuthToken: token too short (len=' . strlen($token) . ')');
             return '';
         }
 
@@ -196,13 +196,13 @@ class SocialRepository
                 error_log('[SOCIAL] resolveOAuthToken: success, userId=' . $userId);
                 return $userId;
             }
-            error_log('[SOCIAL] resolveOAuthToken: token not found in DB: ' . $token);
+            error_log('[SOCIAL] resolveOAuthToken: token not found in DB (prefix=' . substr($token, 0, 8) . '...)');
         }
         catch (\Throwable $e) {
             error_log('[SOCIAL] resolveOAuthToken DB error: ' . $e->getMessage());
         }
 
-        error_log('[SOCIAL] resolveOAuthToken: not found, token=' . $token);
+        error_log('[SOCIAL] resolveOAuthToken: not found (prefix=' . substr($token, 0, 8) . '...)');
         return '';
     }
 

@@ -54,7 +54,7 @@ const Navigation = (() => {
             _navConfig = navConfig;
 
             const desktopContainer = document.getElementById('sidebar-nav-container');
-            const mobileContainer = document.getElementById('mobile-nav-container');
+            const mobileContainer = document.querySelector('#bottom-nav .bottom-nav-inner');
 
             if (desktopContainer) desktopContainer.innerHTML = '';
             if (mobileContainer) mobileContainer.innerHTML = '';

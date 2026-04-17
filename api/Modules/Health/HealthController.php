@@ -12,6 +12,7 @@ use FusionERP\Shared\Auth;
 use FusionERP\Shared\Audit;
 use FusionERP\Shared\Response;
 use FusionERP\Shared\TenantContext;
+use FusionERP\Shared\AIService;
 
 class HealthController
 {
@@ -77,7 +78,8 @@ class HealthController
     public function updateAnamnesi(): void
     {
         Auth::requireWrite('health');
-        $body = $_POST;
+        // Frontend sends FormData (multipart), so we must handle both JSON and form-encoded
+        $body = json_decode(file_get_contents('php://input'), true) ?? $_POST;
         Response::requireFields($body, ['athlete_id']);
 
         $this->repo->updateAnamnesi($body['athlete_id'], [
@@ -101,7 +103,8 @@ class HealthController
     {
         Auth::requireWrite('health');
         $user = Auth::user();
-        $body = $_POST;
+        // Frontend sends FormData (multipart), so we must handle both JSON and form-encoded
+        $body = json_decode(file_get_contents('php://input'), true) ?? $_POST;
         Response::requireFields($body, ['athlete_id', 'injury_date']);
 
         $id = 'INJ_' . bin2hex(random_bytes(4));
@@ -112,18 +115,18 @@ class HealthController
             ':tenant_id' => $tenantId,
             ':athlete_id' => $body['athlete_id'],
             ':injury_date' => $body['injury_date'],
-            ':type' => $body['injury_type'] ?? null,
-            ':body_part' => $body['body_part'] ?? null,
-            ':severity' => $body['severity'] ?? null,
+            ':type' => !empty($body['injury_type']) ? $body['injury_type'] : 'Altro',
+            ':body_part' => !empty($body['body_part']) ? $body['body_part'] : 'Non specificato',
+            ':severity' => !empty($body['severity']) ? $body['severity'] : 'moderate',
             ':stop_days' => 0,
-            ':return_date' => !empty($body['rtp_cleared']) ? ($body['estimated_return_date'] ?? date('Y-m-d')) : null,
-            ':notes' => $body['description'] ?? null,
-            ':treated_by' => $user['full_name'] ?? null,
+            ':return_date' => !empty($body['rtp_cleared']) ? (!empty($body['estimated_return_date']) ? $body['estimated_return_date'] : date('Y-m-d')) : null,
+            ':notes' => !empty($body['description']) ? $body['description'] : null,
+            ':treated_by' => !empty($user['full_name']) ? $user['full_name'] : null,
             ':created_by' => $user['id'],
             ':location_context' => null,
             ':side' => null,
-            ':mechanism' => $body['mechanism'] ?? null,
-            ':official_diagnosis' => $body['diagnosis'] ?? null,
+            ':mechanism' => !empty($body['mechanism']) ? $body['mechanism'] : null,
+            ':official_diagnosis' => !empty($body['diagnosis']) ? $body['diagnosis'] : null,
             ':diagnosis_date' => null,
             ':diagnosed_by' => null,
             ':instrumental_tests' => null,
@@ -131,11 +134,11 @@ class HealthController
             ':is_recurrence' => 0,
             ':treatment_type' => null,
             ':surgery_date' => null,
-            ':physio_plan' => $body['treatment'] ?? null,
+            ':physio_plan' => !empty($body['treatment']) ? $body['treatment'] : null,
             ':assigned_physio' => null,
             ':current_status' => !empty($body['rtp_cleared']) ? 'CLEARED' : 'INJURED',
             ':estimated_recovery_time' => null,
-            ':estimated_return_date' => $body['expected_rtp_date'] ?? null,
+            ':estimated_return_date' => !empty($body['expected_rtp_date']) ? $body['expected_rtp_date'] : null,
             ':medical_clearance_given' => !empty($body['rtp_cleared']) ? 1 : 0,
         ]);
 
@@ -174,7 +177,8 @@ class HealthController
     public function updateInjury(): void
     {
         Auth::requireWrite('health');
-        $body = $_POST;
+        // Frontend sends FormData (multipart), so we must handle both JSON and form-encoded
+        $body = json_decode(file_get_contents('php://input'), true) ?? $_POST;
         Response::requireFields($body, ['injury_id']); // actually named injury_id from FE form
 
         $keyMap = [
@@ -195,6 +199,14 @@ class HealthController
         foreach ($keyMap as $feKey => $dbKey) {
             if (array_key_exists($feKey, $body)) {
                 $val = $body[$feKey];
+                
+                // Fix for Incorrect date value: '' (and general empty string mapped to null)
+                // if val is an empty string, we set it to null to avoid SQL strict mode errors
+                // except for string fields that MUST be NOT NULL, but those are validated elsewhere (e.g. body_part)
+                if ($val === '') {
+                    $val = null;
+                }
+
                 if ($dbKey === 'medical_clearance_given') {
                     $val = !empty($val) ? 1 : 0;
                     if ($val === 1 && empty($body['estimated_return_date'])) {
@@ -206,6 +218,14 @@ class HealthController
                         $updateData[':current_status'] = 'INJURED';
                     }
                 }
+                
+                // Ensure NOT NULL fields fallback to default values
+                if ($val === null) {
+                    if ($dbKey === 'type') $val = 'Altro';
+                    if ($dbKey === 'body_part') $val = 'Non specificato';
+                    if ($dbKey === 'severity') $val = 'moderate';
+                }
+
                 $updateData[":$dbKey"] = $val;
             }
         }
@@ -237,7 +257,8 @@ class HealthController
     public function addFollowup(): void
     {
         Auth::requireWrite('health');
-        $body = $_POST;
+        // Frontend sends FormData (multipart), so we must handle both JSON and form-encoded
+        $body = json_decode(file_get_contents('php://input'), true) ?? $_POST;
         Response::requireFields($body, ['injury_id', 'visit_date']);
 
         $this->repo->addInjuryFollowup([
@@ -308,6 +329,81 @@ class HealthController
         ]);
 
         Response::success(['message' => 'Documento caricato con successo', 'file_path' => $relPath]);
+    }
+
+    // ─── AI DIAGNOSIS & ASSISTANT ─────────────────────────────────────────────
+
+    public function askAI(): void
+    {
+        Auth::requireWrite('health');
+        
+        // Handle both application/json and application/x-www-form-urlencoded
+        $body = [];
+        $raw = file_get_contents('php://input');
+        if (!empty($raw)) {
+            $decoded = json_decode($raw, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                $body = $decoded;
+            } else {
+                parse_str($raw, $body);
+            }
+        }
+        if (empty($body)) {
+            $body = $_POST;
+        }
+
+        if (empty($body['athlete_id'])) {
+            Response::error("athlete_id mancante", 400);
+        }
+        
+        $athleteId = $body['athlete_id'];
+        $message = $body['message'] ?? '';
+        $history = $body['history'] ?? [];
+        $focusedInjuryId = $body['focused_injury_id'] ?? null;
+
+        // Gather athlete data
+        $anamnesi = $this->repo->getAnamnesi($athleteId);
+        $injuries = $this->repo->getInjuries($athleteId);
+
+        $context = "Hai il ruolo di Assistente Medico Sportivo Avanzato in Fusion ERP. Ti vengono forniti i dati anamnestici, la storia clinica e degli infortuni di un determinato atleta.\n";
+        $context .= "Il tuo compito è restituire una diagnosi precisa e suggerire una terapia o un percorso di riabilitazione. Rispondi con linguaggio clinico formale e ben strutturato.\n\n";
+        
+        $context .= "DATI ANAMNESTICI DELL'ATLETA:\n";
+        $context .= json_encode($anamnesi, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . "\n\n";
+        
+        $context .= "LISTA INFORTUNI ED EVENTI MEDICI (con status e note):\n";
+        $context .= json_encode($injuries, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . "\n\n";
+        
+        if (empty($history) && empty($message)) {
+            // Initial analysis
+            $prompt = $context . "Sulla base di tutti questi dati, analizza accuratamente la situazione medica globale dell'atleta. ";
+            if ($focusedInjuryId) {
+                $prompt .= "In particolare, devi concentrare la tua analisi **esclusivamente o prevalentemente sull'infortunio con ID $focusedInjuryId** (presente nei dati sopra registrati). Focalizzati su di esso fornendo diagnosi, tempi di recupero e terapie per quello specifico infortunio, tenendo presente l'anamnesi.";
+            } else {
+                $prompt .= "Fornisci un quadro diagnostico di sintesi, evidenzia eventuali correlazioni tra infortuni pregressi e anamnesi, e suggerisci una possibile terapia o indicazione utile per il recupero e la prevenzione.";
+            }
+        } else {
+            // Conversational follow-up
+            $prompt = $context . "CRONOLOGIA CHAT CON LO STAFF MEDICO:\n";
+            if (is_array($history)) {
+                foreach ($history as $msg) {
+                    $role = strtoupper($msg['role'] ?? 'USER'); 
+                    $content = $msg['content'] ?? '';
+                    $prompt .= "$role: $content\n";
+                }
+            }
+            if (!empty($message)) {
+                $prompt .= "\nUSER: " . $message . "\n";
+            }
+            $prompt .= "\nRispondi all'ultimo messaggio e fornisci eventuale followup relativo all'atleta in questione.";
+        }
+
+        try {
+            $response = AIService::generateContent($prompt);
+            Response::success(['reply' => $response]);
+        } catch (\Exception $e) {
+            Response::error('Errore AI: ' . $e->getMessage(), 500);
+        }
     }
 
 }

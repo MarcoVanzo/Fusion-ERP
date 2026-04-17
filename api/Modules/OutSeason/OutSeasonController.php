@@ -59,7 +59,7 @@ class OutSeasonController
         $stmt = $pdo->prepare(
             'SELECT * FROM outseason_entries
              WHERE season_key = :season_key AND tenant_id = :tid
-             ORDER BY entry_date ASC'
+             ORDER BY entry_date ASC LIMIT 500'
         );
         $stmt->execute([':season_key' => $seasonKey, ':tid' => $tid]);
         $rows = $stmt->fetchAll();

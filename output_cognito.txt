@@ -1,7 +1,0 @@
-ApiKey length: 507
-FormId: 17
-URL: https://www.cognitoforms.com/api/odata/Forms(17)/Views(1)/Entries?$top=1
-
-Deprecated: Function curl_close() is deprecated since 8.5, as it has no effect since PHP 8.0 in /Users/marcovanzo/Fusion ERP/test_cognito2.php on line 25
-Response length: 5796
-{"@odata.context":"https://www.cognitoforms.com/api/odata/Forms(17)/Views(1)/$metadata#Entries","value":[{"Name":"Lavinia Vidori","Indirizzo":"Via zoppette, 31020, Tv 31020","Email":"aviezzer77@gmail.com","Phone":"3341146197","ComeVuoiRicevereIlTuoOrdine":"Ritiro in sede","InserisciIlNomeDelTuoAllenatore":null,"Privacy":"Sì","ComeVuoiPagare":"On line","Entry_DateSubmitted":"2025-11-27T18:40:56.558Z","Entry_Status":"Submitted","Id":1,"@odata.id":"https://www.cognitoforms.com/api/odata/Forms(17)/

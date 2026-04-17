@@ -20,6 +20,11 @@ namespace FusionERP\Shared;
 
 use PDO;
 
+/**
+ * @property bool $tenantScoped When true, all CRUD methods automatically filter
+ *   by tenant_id = TenantContext::id(). Child repositories for tenant-scoped
+ *   tables MUST set this to true.
+ */
 abstract class BaseRepository
 {
     protected PDO $db;
@@ -35,6 +40,9 @@ abstract class BaseRepository
 
     /** @var bool Whether this table uses soft-delete via deleted_at column */
     protected bool $softDelete = true;
+
+    /** @var bool Whether queries should be automatically scoped to current tenant */
+    protected bool $tenantScoped = false;
 
     /** @var string Column used for default ordering */
     protected string $defaultOrderBy = 'id';
@@ -64,14 +72,19 @@ abstract class BaseRepository
     public function findById(string $id, string $columns = '*'): ?array
     {
         $where = "{$this->primaryKey} = :id";
+        $params = [':id' => $id];
         if ($this->softDelete) {
             $where .= ' AND deleted_at IS NULL';
+        }
+        if ($this->tenantScoped) {
+            $where .= ' AND tenant_id = :_tenant_id';
+            $params[':_tenant_id'] = TenantContext::id();
         }
 
         $stmt = $this->db->prepare(
             "SELECT {$columns} FROM {$this->table} WHERE {$where} LIMIT 1"
         );
-        $stmt->execute([':id' => $id]);
+        $stmt->execute($params);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         return $row ?: null;
     }
@@ -125,11 +138,16 @@ abstract class BaseRepository
     public function exists(string $id): bool
     {
         $where = "{$this->primaryKey} = :id";
+        $params = [':id' => $id];
         if ($this->softDelete) {
             $where .= ' AND deleted_at IS NULL';
         }
+        if ($this->tenantScoped) {
+            $where .= ' AND tenant_id = :_tenant_id';
+            $params[':_tenant_id'] = TenantContext::id();
+        }
         $stmt = $this->db->prepare("SELECT 1 FROM {$this->table} WHERE {$where} LIMIT 1");
-        $stmt->execute([':id' => $id]);
+        $stmt->execute($params);
         return $stmt->fetchColumn() !== false;
     }
 
@@ -188,6 +206,10 @@ abstract class BaseRepository
         if ($this->softDelete) {
             $where .= ' AND deleted_at IS NULL';
         }
+        if ($this->tenantScoped) {
+            $where .= ' AND tenant_id = :_tenant_id';
+            $params[':_tenant_id'] = TenantContext::id();
+        }
 
         $sql = 'UPDATE ' . $this->table . ' SET '
             . implode(', ', $setClauses)
@@ -209,10 +231,16 @@ abstract class BaseRepository
         if (!$this->softDelete) {
             throw new \LogicException("Table {$this->table} does not support soft-delete");
         }
+        $where = "{$this->primaryKey} = :id";
+        $params = [':id' => $id];
+        if ($this->tenantScoped) {
+            $where .= ' AND tenant_id = :_tenant_id';
+            $params[':_tenant_id'] = TenantContext::id();
+        }
         $stmt = $this->db->prepare(
-            "UPDATE {$this->table} SET deleted_at = NOW() WHERE {$this->primaryKey} = :id"
+            "UPDATE {$this->table} SET deleted_at = NOW() WHERE {$where}"
         );
-        $stmt->execute([':id' => $id]);
+        $stmt->execute($params);
         return $stmt->rowCount();
     }
 
@@ -224,10 +252,16 @@ abstract class BaseRepository
      */
     public function hardDelete(string $id): int
     {
+        $where = "{$this->primaryKey} = :id";
+        $params = [':id' => $id];
+        if ($this->tenantScoped) {
+            $where .= ' AND tenant_id = :_tenant_id';
+            $params[':_tenant_id'] = TenantContext::id();
+        }
         $stmt = $this->db->prepare(
-            "DELETE FROM {$this->table} WHERE {$this->primaryKey} = :id"
+            "DELETE FROM {$this->table} WHERE {$where}"
         );
-        $stmt->execute([':id' => $id]);
+        $stmt->execute($params);
         return $stmt->rowCount();
     }
 

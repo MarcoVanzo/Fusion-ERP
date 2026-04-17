@@ -103,6 +103,11 @@ export const AthletesView = {
                     <i class="ph ph-stack"></i> Assegnazione Massiva (per Squadra)
                 </button>
                 ` : ''}
+                ${variant === 'metrics' ? `
+                <button class="btn btn-secondary btn-sm" id="manage-vald-links-btn" style="padding:10px 20px; border-radius:12px; font-weight:600; margin-right:8px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:var(--color-white);">
+                    <i class="ph ph-link"></i> Gestione Link VALD
+                </button>
+                ` : ''}
                 <button class="btn btn-primary btn-sm" id="new-athlete-btn" style="padding:10px 20px; border-radius:12px; font-weight:600;">
                     <i class="ph ph-user-plus"></i> Nuovo Atleta
                 </button>

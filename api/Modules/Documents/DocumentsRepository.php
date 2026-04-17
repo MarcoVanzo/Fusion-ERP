@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace FusionERP\Modules\Documents;
 
 use FusionERP\Shared\Database;
+use FusionERP\Shared\TenantContext;
 
 class DocumentsRepository
 {
@@ -53,8 +54,8 @@ class DocumentsRepository
     {
         $sql = 'SELECT id, doc_type, file_name, file_path, upload_date, expiry_date, uploaded_by
                 FROM athlete_documents
-                WHERE athlete_id = :athlete_id AND deleted_at IS NULL';
-        $params = [':athlete_id' => $athleteId];
+                WHERE athlete_id = :athlete_id AND tenant_id = :tid AND deleted_at IS NULL';
+        $params = [':athlete_id' => $athleteId, ':tid' => TenantContext::id()];
 
         if ($docType !== null) {
             $sql .= ' AND doc_type = :doc_type';
@@ -86,10 +87,10 @@ class DocumentsRepository
         $stmt = $this->db->prepare(
             'SELECT id, athlete_id, doc_type, file_name, file_path, upload_date, expiry_date, uploaded_by
              FROM athlete_documents
-             WHERE id = :id AND deleted_at IS NULL
+             WHERE id = :id AND tenant_id = :tid AND deleted_at IS NULL
              LIMIT 1'
         );
-        $stmt->execute([':id' => $docId]);
+        $stmt->execute([':id' => $docId, ':tid' => TenantContext::id()]);
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
         return $row ?: null;
     }
@@ -100,17 +101,18 @@ class DocumentsRepository
     public function softDeleteDocument(string $docId): void
     {
         $stmt = $this->db->prepare(
-            'UPDATE athlete_documents SET deleted_at = NOW() WHERE id = :id'
+            'UPDATE athlete_documents SET deleted_at = NOW() WHERE id = :id AND tenant_id = :tid'
         );
-        $stmt->execute([':id' => $docId]);
+        $stmt->execute([':id' => $docId, ':tid' => TenantContext::id()]);
     }
 
     /**
      * Get documents expiring within N days across all athletes.
      * Used by cron alert system.
      */
-    public function getExpiringDocuments(int $days = 30): array
+    public function getExpiringDocuments(int $days = 30, ?string $tenantId = null): array
     {
+        $tid = $tenantId ?? TenantContext::id();
         $stmt = $this->db->prepare(
             "SELECT d.id, d.athlete_id, d.doc_type, d.file_name, d.expiry_date,
                     a.full_name, a.email, a.phone, a.parent_phone, a.tenant_id,
@@ -118,12 +120,14 @@ class DocumentsRepository
              FROM athlete_documents d
              JOIN athletes a ON a.id = d.athlete_id
              WHERE d.deleted_at IS NULL
+               AND d.tenant_id = :tid
                AND d.expiry_date IS NOT NULL
                AND d.expiry_date <= DATE_ADD(CURDATE(), INTERVAL :days DAY)
                AND a.deleted_at IS NULL
                AND a.is_active = 1
              ORDER BY d.expiry_date ASC"
         );
+        $stmt->bindValue(':tid', $tid);
         $stmt->bindValue(':days', $days, \PDO::PARAM_INT);
         $stmt->execute();
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);

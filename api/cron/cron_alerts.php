@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../../vendor/autoload.php';
 
+use FusionERP\Shared\Database;
 use FusionERP\Shared\NotificationService;
 use FusionERP\Modules\Health\HealthRepository;
 use FusionERP\Modules\Documents\DocumentsRepository;
@@ -25,11 +26,18 @@ echo "[{$timestamp}] ═══ Fusion ERP — Cron Alert Job ═══\n";
 $emailsSent = 0;
 $waSent = 0;
 
+// Fetch all active tenants — each alert section runs per-tenant (Audit P1-06/07/08)
+$db = Database::getInstance();
+$tenantStmt = $db->prepare('SELECT id FROM tenants WHERE is_active = 1');
+$tenantStmt->execute();
+$allTenants = $tenantStmt->fetchAll(\PDO::FETCH_COLUMN);
+
 // ─── 1. MEDICAL CERTIFICATE EXPIRY ──────────────────────────────────────────
 
 echo "\n[CERT] Checking medical certificate expiry...\n";
 $healthRepo = new HealthRepository();
-$expiringCerts = $healthRepo->getExpiringCertificates(30);
+foreach ($allTenants as $tenantId) {
+$expiringCerts = $healthRepo->getExpiringCertificates($tenantId, 30);
 
 foreach ($expiringCerts as $cert) {
     $daysUntil = (int)$cert['days_until_expiry'];
@@ -71,12 +79,14 @@ foreach ($expiringCerts as $cert) {
             $waSent++;
     }
 }
+} // end tenant loop
 
 // ─── 2. DOCUMENT EXPIRY ─────────────────────────────────────────────────────
 
 echo "\n[DOCS] Checking document expiry...\n";
 $docsRepo = new DocumentsRepository();
-$expiringDocs = $docsRepo->getExpiringDocuments(30);
+foreach ($allTenants as $tenantId) {
+$expiringDocs = $docsRepo->getExpiringDocuments($tenantId, 30);
 
 foreach ($expiringDocs as $doc) {
     $daysUntil = (int)$doc['days_until_expiry'];
@@ -116,13 +126,15 @@ foreach ($expiringDocs as $doc) {
             $waSent++;
     }
 }
+} // end tenant loop
 
 // ─── 3. OVERDUE INSTALLMENTS ─────────────────────────────────────────────────
 
 echo "\n[PAY] Checking overdue installments...\n";
 $payRepo = new PaymentsRepository();
-$payRepo->markOverdueInstallments();
-$overdueList = $payRepo->getOverdueInstallments();
+$payRepo->markOverdueInstallments(); // Global cron — marks all PENDING past due
+foreach ($allTenants as $tenantId) {
+$overdueList = $payRepo->getOverdueInstallments($tenantId);
 
 foreach ($overdueList as $od) {
     if (!in_array((int)$od['days_overdue'], [1, 7], true))
@@ -160,11 +172,13 @@ foreach ($overdueList as $od) {
             $waSent++;
     }
 }
+} // end tenant loop
 
 // ─── 4. UPCOMING PAYMENT REMINDERS ──────────────────────────────────────────
 
 echo "\n[PAY] Sending upcoming payment reminders...\n";
-$upcoming = $payRepo->getUpcomingInstallments(7);
+foreach ($allTenants as $tenantId) {
+$upcoming = $payRepo->getUpcomingInstallments($tenantId, 7);
 
 foreach ($upcoming as $up) {
     if ((int)$up['days_until_due'] !== 7)
@@ -202,5 +216,6 @@ foreach ($upcoming as $up) {
             $waSent++;
     }
 }
+} // end tenant loop
 
 echo "\n═══ CRON COMPLETE — Emails: " . $emailsSent . ", WhatsApp: " . $waSent . " ═══\n";

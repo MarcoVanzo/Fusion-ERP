@@ -413,7 +413,7 @@ class SocietaController
         $stmt = $db->prepare(
             'SELECT * FROM societa_companies
              WHERE tenant_id = :tid AND is_deleted = 0
-             ORDER BY created_at ASC'
+             ORDER BY created_at ASC LIMIT 500'
         );
         $stmt->execute([':tid' => $tenantId]);
         $results = $stmt->fetchAll(\PDO::FETCH_ASSOC);

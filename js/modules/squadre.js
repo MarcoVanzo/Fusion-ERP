@@ -453,18 +453,11 @@ const Squadre = {
             cell.addEventListener("click", async (e) => {
                 let status = e.target.dataset.status;
                 
-                // Toggle status logic: null -> present -> absent -> injured -> null
-                let newStatus = 'present';
-                if (status === 'present') newStatus = 'absent';
-                else if (status === 'absent') newStatus = 'injured';
-                else if (status === 'injured') newStatus = '';
-                
-                if (newStatus === '') {
-                    // we can't easily delete via upsert currently, so let's stick to real statuses.
-                    // Wait, the UI allows clicking to toggle. So absent -> present -> injured -> etc.
-                    // Let's do: null -> present -> absent -> injured -> present...
-                    if (status === 'injured') newStatus = 'present';
-                }
+                // Toggle status logic: Default (null or 'present') -> 'absent' -> 'injured' -> 'present'
+                let newStatus = 'absent';
+                if (status === 'absent') newStatus = 'injured';
+                else if (status === 'injured') newStatus = 'present';
+                else if (status === 'present' || !status) newStatus = 'absent';
 
                 try {
                     const athleteId = e.target.dataset.athlete;

@@ -1,4 +1,0 @@
-[DB] Connection attempt 1/2 failed: SQLSTATE[HY000] [1045] Access denied for user ''@'localhost' (using password: YES)
-[DB] Connection attempt 2/2 failed: SQLSTATE[HY000] [1045] Access denied for user ''@'localhost' (using password: YES)
-[DB] All connection attempts failed. Database unavailable.
-{"success":false,"error":"Database temporaneamente non disponibile. Riprova tra qualche istante."}

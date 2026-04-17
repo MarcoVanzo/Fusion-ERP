@@ -337,23 +337,33 @@ class AdminRepository
      */
     public function getLogsSummary(): array
     {
-        $recent = $this->db->query(
+        $tenantId = TenantContext::id();
+
+        $stmtRecent = $this->db->prepare(
             "SELECT al.id, al.action, al.table_name, al.record_id,
                     al.ip_address, al.created_at,
                     u.full_name AS user_name
              FROM audit_logs al
              LEFT JOIN users u ON u.id = al.user_id
+             LEFT JOIN tenant_users tu ON tu.user_id = al.user_id
+             WHERE (tu.tenant_id = :tid OR al.user_id IS NULL)
              ORDER BY al.created_at DESC
              LIMIT 10"
-        )->fetchAll(\PDO::FETCH_ASSOC);
+        );
+        $stmtRecent->execute([':tid' => $tenantId]);
+        $recent = $stmtRecent->fetchAll(\PDO::FETCH_ASSOC);
 
-        $byAction = $this->db->query(
-            "SELECT action, COUNT(*) AS cnt
-             FROM audit_logs
-             WHERE DATE(created_at) = CURDATE()
-             GROUP BY action
+        $stmtAction = $this->db->prepare(
+            "SELECT al.action, COUNT(*) AS cnt
+             FROM audit_logs al
+             LEFT JOIN tenant_users tu ON tu.user_id = al.user_id
+             WHERE DATE(al.created_at) = CURDATE()
+               AND (tu.tenant_id = :tid OR al.user_id IS NULL)
+             GROUP BY al.action
              ORDER BY cnt DESC"
-        )->fetchAll(\PDO::FETCH_ASSOC);
+        );
+        $stmtAction->execute([':tid' => $tenantId]);
+        $byAction = $stmtAction->fetchAll(\PDO::FETCH_ASSOC);
 
         $totalToday = (int)array_sum(array_column($byAction, 'cnt'));
 
@@ -370,17 +380,24 @@ class AdminRepository
      */
     public function getLastBackup(): array
     {
-        $last = $this->db->query(
+        $tenantId = TenantContext::id();
+
+        $stmtLast = $this->db->prepare(
             "SELECT b.id, b.filename, b.filesize, b.table_count, b.row_count,
                     b.status, b.created_at, b.drive_file_id,
                     u.full_name AS created_by_name
              FROM backups b
              LEFT JOIN users u ON u.id = b.created_by
+             WHERE b.tenant_id = :tid
              ORDER BY b.created_at DESC
              LIMIT 1"
-        )->fetch(\PDO::FETCH_ASSOC) ?: null;
+        );
+        $stmtLast->execute([':tid' => $tenantId]);
+        $last = $stmtLast->fetch(\PDO::FETCH_ASSOC) ?: null;
 
-        $total = (int)$this->db->query("SELECT COUNT(*) FROM backups")->fetchColumn();
+        $stmtTotal = $this->db->prepare("SELECT COUNT(*) FROM backups WHERE tenant_id = :tid");
+        $stmtTotal->execute([':tid' => $tenantId]);
+        $total = (int)$stmtTotal->fetchColumn();
 
         return [
             'last' => $last,

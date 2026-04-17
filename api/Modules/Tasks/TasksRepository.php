@@ -100,28 +100,33 @@ class TasksRepository
         ?string $attachment = null
         ): string
     {
-        $id = 'TSK_' . bin2hex(random_bytes(4));
-        $userId = Auth::user()['id'] ?? null;
+        try {
+            $id = 'TSK_' . bin2hex(random_bytes(4));
+            $userId = Auth::user()['id'] ?? null;
 
-        $stmt = $this->db->prepare('
-            INSERT INTO tasks (id, tenant_id, user_id, title, category, priority, status, due_date, notes, attachment, assigned_to)
-            VALUES (:id, :tenant_id, :user_id, :title, :category, :priority, :status, :due_date, :notes, :attachment, :assigned_to)
-        ');
-        $stmt->execute([
-            ':id'          => $id,
-            ':tenant_id'   => TenantContext::id(),
-            ':user_id'     => $userId,
-            ':title'       => $title,
-            ':category'    => $category,
-            ':priority'    => $priority,
-            ':status'      => $status,
-            ':due_date'    => $dueDate,
-            ':notes'       => $notes,
-            ':attachment'  => $attachment,
-            ':assigned_to' => $assignedTo,
-        ]);
+            $stmt = $this->db->prepare('
+                INSERT INTO tasks (id, tenant_id, user_id, title, category, priority, status, due_date, notes, attachment, assigned_to)
+                VALUES (:id, :tenant_id, :user_id, :title, :category, :priority, :status, :due_date, :notes, :attachment, :assigned_to)
+            ');
+            $stmt->execute([
+                ':id'          => $id,
+                ':tenant_id'   => TenantContext::id(),
+                ':user_id'     => $userId,
+                ':title'       => $title,
+                ':category'    => $category,
+                ':priority'    => $priority,
+                ':status'      => $status,
+                ':due_date'    => $dueDate,
+                ':notes'       => $notes,
+                ':attachment'  => $attachment,
+                ':assigned_to' => $assignedTo,
+            ]);
 
-        return $id;
+            return $id;
+        } catch (\Throwable $e) {
+            error_log('[Tasks] createTask failed: ' . $e->getMessage());
+            throw $e;
+        }
     }
 
     public function updateTask(string $id, array $data): void
@@ -147,7 +152,12 @@ class TasksRepository
 
     public function deleteTask(string $id): void
     {
-        $this->db->prepare('DELETE FROM tasks WHERE id = ? AND tenant_id = ?')->execute([$id, TenantContext::id()]);
+        try {
+            $this->db->prepare('DELETE FROM tasks WHERE id = ? AND tenant_id = ?')->execute([$id, TenantContext::id()]);
+        } catch (\Throwable $e) {
+            error_log('[Tasks] deleteTask failed for id=' . $id . ': ' . $e->getMessage());
+            throw $e;
+        }
     }
 
     // ─── TASK LOGS ────────────────────────────────────────────────────────────

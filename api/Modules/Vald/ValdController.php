@@ -356,20 +356,34 @@ PROMPT;
      */
     public function linkAthlete(): void
     {
-        Auth::requireWrite('athletes');
-        $body = json_decode(file_get_contents('php://input'), true);
-        if (!is_array($body) || empty($body)) {
-            Response::error('Body non valido', 400);
-        }
-
+        $rawJson = file_get_contents('php://input');
+        $body = json_decode($rawJson, true);
+        
+        $debug = [
+            'raw_length' => strlen($rawJson),
+            'raw_starts_with' => substr($rawJson, 0, 50),
+            'is_array' => is_array($body),
+            'body_keys' => is_array($body) ? array_keys($body) : null,
+            'links_type' => isset($body['links']) ? gettype($body['links']) : 'missing',
+            'first_link' => isset($body['links']) && is_array($body['links']) && count($body['links']) > 0 ? $body['links'][0] : null
+        ];
+        
         $saved = 0;
-        foreach ($body as $link) {
+        $links = isset($body['links']) ? $body['links'] : $body;
+        
+        foreach ($links as $index => $link) {
+            $debug['loop_'.$index] = [
+                'type' => gettype($link),
+                'athlete_id_val' => $link['athlete_id'] ?? 'MISSING_KEY'
+            ];
+            
             if (!empty($link['athlete_id'])) {
                 $this->repo->linkAthleteToVald($link['athlete_id'], $link['vald_profile_id'] ?? null);
                 $saved++;
             }
         }
-        Response::success(['saved' => $saved, 'message' => 'Collegati ' . $saved . ' atleti.']);
+        
+        Response::success(['saved' => $saved, 'debug' => $debug]);
     }
 
     /**

@@ -68,22 +68,50 @@ class App {
     }
   }
 
+  // Intercept 401 responses globally — auto-logout on expired sessions
+  async apiFetch(url, options = {}) {
+    const res = await fetch(url, { credentials: 'include', ...options });
+    if (res.status === 401 || res.status === 403) {
+      localStorage.removeItem('erp_user');
+      window.location.hash = '#login';
+      throw new Error('Sessione scaduta');
+    }
+    return res;
+  }
+
   // Simple Hash Router
   route() {
     // Cleanup previous view state before rendering new one
     this.cleanup();
     
-    const hash = window.location.hash || '#login';
+    let hash = window.location.hash || '#login';
     
     const activeUser = localStorage.getItem('erp_user');
+    let role = 'atleta';
+    let isAdmin = false;
+    if (activeUser) {
+      try {
+        const u = JSON.parse(activeUser);
+        if (u.role) role = u.role.toLowerCase();
+        const _adminPerm = u.permissions && u.permissions['admin'];
+        isAdmin = role === 'admin' || _adminPerm === 'write' || _adminPerm === 'read';
+      } catch(e){}
+    }
     
     if (!activeUser && hash !== '#login') {
       window.location.hash = '#login';
       return;
     }
 
+    const isStaff = role.includes('allenatore') || role.includes('social media manager') || role.includes('operatore') || role === 'operator' || isAdmin;
+
     if (activeUser && hash === '#login') {
-      window.location.hash = '#dashboard';
+      window.location.hash = isStaff ? '#dashboard' : '#profilo';
+      return;
+    }
+
+    if (!isStaff && hash === '#dashboard') {
+      window.location.hash = '#profilo';
       return;
     }
 
@@ -91,6 +119,10 @@ class App {
     else if (hash === '#dashboard') this.renderDashboard();
     else if (hash === '#spese') this.renderSpese();
     else if (hash === '#profilo') this.renderProfilo();
+    else if (hash.startsWith('#profilo-')) {
+      const id = hash.replace('#profilo-', '');
+      this.renderProfilo(id);
+    }
     else if (hash === '#alerts') this.renderAlerts(); 
     else if (hash === '#squadra') this.renderSquadra();
     else if (hash === '#presenze-team') this.renderPresenzeTeam();
@@ -99,18 +131,32 @@ class App {
 
   getBottomNav(activeHash) {
     let role = 'atleta';
+    let isAdmin = false;
     try {
       const u = JSON.parse(localStorage.getItem('erp_user') || '{}');
       if (u.role) role = u.role.toLowerCase();
+      const _adminPerm = u.permissions && u.permissions['admin'];
+      isAdmin = role === 'admin' || _adminPerm === 'write' || _adminPerm === 'read';
     } catch(e){}
 
-    const isStaff = role.includes('allenatore') || role.includes('social media manager') || role.includes('operatore') || role === 'admin';
+    const isStaff = role.includes('allenatore') || role.includes('social media manager') || role.includes('operatore') || role === 'operator' || isAdmin;
 
-    const items = [
-      { id: '#dashboard', icon: 'fa-home', text: 'Home' },
-      isStaff ? { id: '#squadra', icon: 'fa-users', text: 'Squadra' } : { id: '#profilo', icon: 'fa-user-circle', text: 'Profilo' },
-      { id: '#spese', icon: 'fa-receipt', text: 'Spese' }
-    ];
+    let items = [];
+    if (isStaff) {
+      items = [
+        { id: '#dashboard', icon: 'fa-home', text: 'Home' },
+        { id: '#squadra', icon: 'fa-users', text: isAdmin ? 'Atlete' : 'Squadra' },
+        { id: '#presenze-team', icon: 'fa-calendar-check', text: 'Presenze' },
+        { id: '#spese', icon: 'fa-receipt', text: 'Spese' },
+        { id: '#profilo', icon: 'fa-user-circle', text: 'Profilo' }
+      ];
+    } else {
+      // For athletes, Home is the profile
+      items = [
+        { id: '#profilo', icon: 'fa-home', text: 'Home' },
+        { id: '#spese', icon: 'fa-receipt', text: 'Spese' }
+      ];
+    }
 
     let navHtml = '<div class="bottom-nav-container"><nav class="bottom-nav">';
     items.forEach(i => {
@@ -192,7 +238,7 @@ class App {
     });
   }
 
-  // Dashboard View
+  // Dashboard View (Now only for Staff members)
   renderDashboard() {
     this.container.innerHTML = `
       <div class="screen dashboard-screen">
@@ -203,19 +249,18 @@ class App {
 
         <div class="p-20">
           <h2 id="dash-greeting" class="stagger-item delay-1" style="font-size: 24px; margin-bottom: 8px;">Bentornato</h2>
-          <p class="text-light stagger-item delay-1" style="margin-bottom: 24px; font-size: 14px;">Il tuo hub sportivo personale.</p>
+          <p class="text-light stagger-item delay-1" style="margin-bottom: 24px; font-size: 14px;">Hub Gestionale Staff</p>
           
-          <!-- Call to Action Spese -->
-          <div class="glass-card stagger-item delay-2" style="text-align: center; border: 2px dashed var(--accent-secondary); cursor: pointer; background: rgba(255,0,122,0.02); transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);" onclick="window.location.hash='#spese'" id="cta-add-spesa">
-            <i class="fas fa-plus-circle" style="font-size: 36px; color: var(--accent-secondary); margin-bottom: 12px; filter: drop-shadow(0 0 10px rgba(255,0,122,0.5));"></i>
-            <h4 style="color: var(--text-primary); font-size: 16px; margin-bottom: 4px;">AGGIUNGI SPESA</h4>
-            <p class="text-muted" style="font-size: 12px;">Carica scontrino e importo al volo</p>
+          <div class="glass-card stagger-item delay-2" style="text-align: center; border: 2px solid var(--accent-secondary); cursor: pointer; background: rgba(255,0,122,0.05); transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); margin-bottom: 20px;" onclick="window.location.hash='#spese'" id="cta-spese">
+            <i class="fas fa-receipt" style="font-size: 40px; color: var(--accent-secondary); margin-bottom: 12px; filter: drop-shadow(0 0 10px rgba(255,0,122,0.5));"></i>
+            <h4 style="color: var(--text-primary); font-size: 18px; margin-bottom: 4px; font-weight: 700;">SPESE</h4>
+            <p class="text-muted" style="font-size: 13px;">Gestione note spese</p>
           </div>
 
-          <div class="glass-card stagger-item delay-3" style="text-align: center; padding: 30px 20px;">
-            <i class="fas fa-chart-line" style="font-size: 32px; color: var(--accent-primary); margin-bottom: 16px; opacity: 0.8;"></i>
-            <h4 style="margin-bottom: 8px;">Statistiche</h4>
-            <p class="text-muted" style="font-size: 13px;">I widget KPI saranno disponibili a breve.</p>
+          <div class="glass-card stagger-item delay-3" style="text-align: center; border: 2px solid var(--accent-primary); cursor: pointer; background: rgba(0, 195, 255, 0.05); transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);" onclick="window.location.hash='#presenze-team'" id="cta-presenze">
+            <i class="fas fa-calendar-check" style="font-size: 40px; color: var(--accent-primary); margin-bottom: 12px; filter: drop-shadow(0 0 10px rgba(0,195,255,0.5));"></i>
+            <h4 style="color: var(--text-primary); font-size: 18px; margin-bottom: 4px; font-weight: 700;">PRESENZE</h4>
+            <p class="text-muted" style="font-size: 13px;">Gestione presenze atleti</p>
           </div>
 
           <button class="btn btn-secondary mt-20 stagger-item delay-4" id="logout-btn">
@@ -227,8 +272,13 @@ class App {
       ${this.getBottomNav('#dashboard')}
     `;
 
-    document.getElementById('cta-add-spesa').addEventListener('touchstart', function() { this.style.transform = 'scale(0.98)'; });
-    document.getElementById('cta-add-spesa').addEventListener('touchend', function() { this.style.transform = 'scale(1)'; });
+    ['cta-spese', 'cta-presenze'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('touchstart', function() { this.style.transform = 'scale(0.98)'; });
+        el.addEventListener('touchend', function() { this.style.transform = 'scale(1)'; });
+      }
+    });
 
     const userStr = localStorage.getItem('erp_user');
     if (userStr) {
@@ -377,10 +427,10 @@ class App {
       </div>
       <div class="wizard-actions d-none" id="step-2-actions">
         <button type="button" class="btn btn-secondary" id="btn-prev-step" style="flex: 1;">
-          INDIETRO
+          <i class="fas fa-arrow-left"></i> INDIETRO
         </button>
         <button type="button" class="btn" id="submit-expense-btn" style="flex: 2;">
-          SALVA SPESA
+          <i class="fas fa-paper-plane"></i> SALVA SPESA
         </button>
       </div>
 
@@ -683,7 +733,7 @@ class App {
     `;
 
     try {
-      const url = isOwningProfile ? '../api/?module=athletes&action=myProfile' : \`../api/?module=athletes&action=myProfile&id=\${uId}\`;
+      const url = isOwningProfile ? '../api/?module=athletes&action=myProfile' : `../api/?module=athletes&action=get&id=${uId}`;
       const response = await fetch(url, { credentials: 'include', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
       const result = await response.json();
 
@@ -694,11 +744,11 @@ class App {
         // Render subtab anagrafica by default
         this.renderSubTabAnagrafica();
       } else {
-        document.getElementById('profilo-content').innerHTML = \`<div class="glass-card text-center"><p>Dati non accessibili.</p></div>\`;
+        document.getElementById('profilo-content').innerHTML = `<div class="glass-card text-center"><p>Dati non accessibili.</p></div>`;
       }
     } catch (e) {
       console.error(e);
-      document.getElementById('profilo-content').innerHTML = \`<div class="glass-card text-center"><p>Errore di connessione.</p></div>\`;
+      document.getElementById('profilo-content').innerHTML = `<div class="glass-card text-center"><p>Errore di connessione.</p></div>`;
     }
   }
 
@@ -733,14 +783,14 @@ class App {
     const p = this.currentAthleteProfile;
     const isMio = this.currentProfileIsOwn;
 
-    const html = \`
+    const html = `
       <div class="glass-card text-center" style="position: relative; overflow: hidden;">
         <div class="profile-avatar-container">
-          \${p.photo_path ? '<img src="../' + p.photo_path + '">' : '<i class="fas fa-user"></i>'}
+          ${p.photo_path ? '<img src="../' + p.photo_path + '">' : '<i class="fas fa-user"></i>'}
         </div>
-        <h2 style="font-size: 24px; margin-bottom: 4px;">\${this.escapeHtml(p.first_name)} \${this.escapeHtml(p.last_name)}</h2>
+        <h2 style="font-size: 24px; margin-bottom: 4px;">${this.escapeHtml(p.first_name)} ${this.escapeHtml(p.last_name)}</h2>
         <div style="color: var(--accent-primary); font-weight: 700; font-size: 13px; text-transform: uppercase;">
-          \${p.role || 'Atleta'} • \${p.team_name || 'Fusion'}
+          ${p.role || 'Atleta'} • ${p.team_name || 'Fusion'}
         </div>
       </div>
       
@@ -748,37 +798,37 @@ class App {
         <h3 class="section-title"><i class="fas fa-id-card"></i> DATI PERSONALI</h3>
         <div class="inline-edit-group">
           <label class="input-label">Email</label>
-          <div style="color:var(--text-primary); margin-bottom:10px;">\${p.email || 'N/D'}</div>
+          <div style="color:var(--text-primary); margin-bottom:10px;">${p.email || 'N/D'}</div>
         </div>
         <div class="inline-edit-group">
           <label class="input-label">Data di Nascita</label>
-          <div style="color:var(--text-primary); margin-bottom:10px;">\${p.birth_date ? new Date(p.birth_date).toLocaleDateString() : 'N/D'}</div>
+          <div style="color:var(--text-primary); margin-bottom:10px;">${p.birth_date ? new Date(p.birth_date).toLocaleDateString() : 'N/D'}</div>
         </div>
         
-        \${isMio ? \`
+        ${isMio ? `
         <form id="form-edit-anagrafica" onsubmit="return false">
           <div class="inline-edit-group">
             <label class="input-label">Telefono (Modificabile)</label>
-            <input type="tel" class="inline-edit-input" id="edit-phone" value="\${p.phone || ''}" placeholder="Tocca per inserire">
+            <input type="tel" class="inline-edit-input" id="edit-phone" value="${p.phone || ''}" placeholder="Tocca per inserire">
           </div>
           <div class="inline-edit-group">
             <label class="input-label">Taglia Abbigliamento (Modificabile)</label>
-            <input type="text" class="inline-edit-input" id="edit-size" value="\${p.shirt_size || ''}" placeholder="Es: M, L, XL">
+            <input type="text" class="inline-edit-input" id="edit-size" value="${p.shirt_size || ''}" placeholder="Es: M, L, XL">
           </div>
-          <button class="btn btn-secondary mt-10" onclick="app.saveAnagraficaPartial()">Salva Dati Modificati</button>
+          <button class="btn btn-secondary mt-10" onclick="app.saveAnagraficaPartial()"><i class="fas fa-save"></i> Salva Dati Modificati</button>
         </form>
-        \` : \`
+        ` : `
           <div class="inline-edit-group">
             <label class="input-label">Telefono</label>
-            <div style="color:var(--text-primary); margin-bottom:10px;">\${p.phone || 'N/D'}</div>
+            <div style="color:var(--text-primary); margin-bottom:10px;">${p.phone || 'N/D'}</div>
           </div>
           <div class="inline-edit-group">
             <label class="input-label">Taglia Abbigliamento</label>
-            <div style="color:var(--text-primary); margin-bottom:10px;">\${p.shirt_size || 'N/D'}</div>
+            <div style="color:var(--text-primary); margin-bottom:10px;">${p.shirt_size || 'N/D'}</div>
           </div>
-        \`}
+        `}
       </div>
-    \`;
+    `;
     document.getElementById('profilo-content').innerHTML = html;
   }
 
@@ -817,24 +867,24 @@ class App {
     const p = this.currentAthleteProfile;
     const progress = this.calculateDocProgress(p);
     
-    document.getElementById('profilo-content').innerHTML = \`
+    document.getElementById('profilo-content').innerHTML = `
       <div class="glass-card">
         <h3 class="section-title"><i class="fas fa-chart-pie"></i> COMPLETAMENTO PROFILO</h3>
         <div class="progress-bar-container" style="margin: 15px 0;">
-          <div class="progress-fill" style="width: \${progress}%; background: var(--gradient-primary); height: 8px; border-radius: 4px;"></div>
+          <div class="progress-fill" style="width: ${progress}%; background: var(--gradient-primary); height: 8px; border-radius: 4px;"></div>
         </div>
-        <p style="font-size: 12px; color: var(--text-light);">\${progress}% dei documenti caricati</p>
+        <p style="font-size: 12px; color: var(--text-light);">${progress}% dei documenti caricati</p>
       </div>
 
       <div class="glass-card">
          <h3 class="section-title"><i class="fas fa-folder-open"></i> DOCUMENTI</h3>
          <div class="doc-list">
-           \${this.renderDocRow("Carta Identità (FR)", p.id_doc_front_file_path, 'id_doc_front_file_path', 'uploadIdDocFront')}
-           \${this.renderDocRow("Certificato Medico", p.medical_cert_file_path, 'medical_cert_file_path', 'uploadMedicalCert')}
-           \${this.renderDocRow("Contratto / Tesseramento", p.contract_file_path, 'contract_file_path', 'uploadContractFile')}
+           ${this.renderDocRow("Carta Identità (FR)", p.id_doc_front_file_path, 'id_doc_front_file_path', 'uploadIdDocFront')}
+           ${this.renderDocRow("Certificato Medico", p.medical_cert_file_path, 'medical_cert_file_path', 'uploadMedicalCert')}
+           ${this.renderDocRow("Contratto / Tesseramento", p.contract_file_path, 'contract_file_path', 'uploadContractFile')}
          </div>
       </div>
-    \`;
+    `;
   }
 
   async renderSubTabQuote() {
@@ -1080,7 +1130,7 @@ class App {
 
   // SQUADRA E PRESENZE COATCH (NEW VUES)
   async renderSquadra() {
-    this.container.innerHTML = \`
+    this.container.innerHTML = `
       <div class="screen squadra-screen">
         <header class="app-header glass-header">
           <div class="app-title">LA TUA SQUADRA</div>
@@ -1099,6 +1149,13 @@ class App {
           </div>
 
           <h3 class="section-title mt-20 stagger-item delay-2">ELENCO ATLETI ROSTER</h3>
+          
+          <div class="input-group stagger-item delay-2" id="roster-team-selector-group" style="display:none; margin-bottom: 15px;">
+            <select id="roster-team-selector" class="input-field">
+               <option value="">Tutte le squadre...</option>
+            </select>
+          </div>
+
           <div id="squadra-list" class="team-list stagger-item delay-3">
              <div class="glass-card skeleton" style="height:60px;"></div>
              <div class="glass-card skeleton" style="height:60px;"></div>
@@ -1106,37 +1163,83 @@ class App {
           </div>
         </div>
       </div>
-      \${this.getBottomNav('#squadra')}
-    \`;
+      ${this.getBottomNav('#squadra')}
+    `;
 
-    try {
-      // Fetch athletes roster from API
-      // Assuming a generic fetch to /athletes or similar
-      const res = await fetch('../api/?module=athletes&action=list', { credentials: 'include', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
-      const data = await res.json();
+    const listContainer = document.getElementById('squadra-list');
 
-      let html = '';
-      if (data.success && data.data && data.data.length > 0) {
-        data.data.forEach(athlete => {
-          html += `
-            <div class="athlete-item" onclick="app.renderProfilo('${athlete.id}')">
-              <div class="athlete-avatar">
-                ${athlete.photo_path ? `<img src="../${athlete.photo_path}">` : '<i class="fas fa-user"></i>'}
+    const loadSquadraAthletes = async (teamId) => {
+      listContainer.innerHTML = `
+         <div class="glass-card skeleton" style="height:60px;"></div>
+         <div class="glass-card skeleton" style="height:60px;"></div>
+         <div class="glass-card skeleton" style="height:60px;"></div>
+      `;
+      try {
+        const url = teamId 
+          ? `../api/?module=athletes&action=list&teamId=${teamId}` 
+          : `../api/?module=athletes&action=list`;
+        const res = await fetch(url, { credentials: 'include', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+        const data = await res.json();
+
+        let html = '';
+        if (data.success && data.data && data.data.length > 0) {
+          data.data.forEach(athlete => {
+            html += `
+              <div class="athlete-item" onclick="window.location.hash='#profilo-${athlete.id}'">
+                <div class="athlete-avatar">
+                  ${athlete.photo_path ? `<img src="../${athlete.photo_path}">` : '<i class="fas fa-user"></i>'}
+                </div>
+                <div class="athlete-details">
+                  <div class="athlete-name">${this.escapeHtml(athlete.full_name)}</div>
+                  <div class="athlete-meta">${this.escapeHtml(athlete.role || 'Giocatore')}</div>
+                </div>
+                <i class="fas fa-chevron-right" style="color: var(--border-subtle)"></i>
               </div>
-              <div class="athlete-details">
-                <div class="athlete-name">${this.escapeHtml(athlete.first_name)} ${this.escapeHtml(athlete.last_name)}</div>
-                <div class="athlete-meta">${this.escapeHtml(athlete.role || 'Giocatore')}</div>
-              </div>
-              <i class="fas fa-chevron-right" style="color: var(--border-subtle)"></i>
-            </div>
-          `;
-        });
-      } else {
-        html = '<p class="text-muted text-center" style="margin-top:20px;">Nessun atleta trovato in squadra.</p>';
+            `;
+          });
+        } else {
+          html = '<p class="text-muted text-center" style="margin-top:20px;">Nessun atleta trovato per questa squadra.</p>';
+        }
+        listContainer.innerHTML = html;
+      } catch(e) {
+        listContainer.innerHTML = '<p class="text-danger text-center">Nessuna connessione.</p>';
       }
-      document.getElementById('squadra-list').innerHTML = html;
+    };
+
+    // Load teams for dropdown
+    try {
+      const resTeams = await fetch('../api/?module=athletes&action=teams', { credentials: 'include', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+      const teamsData = await resTeams.json();
+      const selector = document.getElementById('roster-team-selector');
+      const group = document.getElementById('roster-team-selector-group');
+      
+      let initialTeamId = '';
+      try {
+        const u = JSON.parse(localStorage.getItem('erp_user') || '{}');
+        initialTeamId = u.team_id || u.teamId || '';
+      } catch(e){}
+
+      if (teamsData.success && teamsData.data && teamsData.data.length > 0) {
+        group.style.display = 'block';
+        selector.innerHTML = '<option value="">Tutte le squadre...</option>';
+        teamsData.data.forEach(t => {
+          let selected = t.id == initialTeamId ? 'selected' : '';
+          selector.innerHTML += `<option value="${t.id}" ${selected}>${this.escapeHtml(t.name)}</option>`;
+        });
+        
+        // Don't auto-select the first team if none matched the user's team ID, leave it empty (Tutte le squadre)
+        let valToLoad = selector.value || '';
+        selector.value = valToLoad;
+        initialTeamId = valToLoad;
+
+        selector.addEventListener('change', (e) => {
+          loadSquadraAthletes(e.target.value);
+        });
+      }
+      
+      loadSquadraAthletes(initialTeamId);
     } catch(e) {
-      document.getElementById('squadra-list').innerHTML = '<p class="text-danger text-center">Nessuna connessione.</p>';
+      loadSquadraAthletes(''); // fallback
     }
   }
 
@@ -1151,41 +1254,103 @@ class App {
         <div class="p-20">
           <h2 style="font-size:20px; text-transform:uppercase; margin-bottom:20px;" class="stagger-item text-center">${new Date().toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' })}</h2>
           
-          <div id="attendance-grid" class="attendance-grid stagger-item delay-1">
-             <div class="glass-card skeleton" style="height:100px;"></div>
-             <div class="glass-card skeleton" style="height:100px;"></div>
+          <div class="input-group stagger-item delay-1" id="team-selector-group" style="display:none;">
+            <select id="attendance-team-selector" class="input-field mb-20">
+               <option value="">Seleziona Squadra...</option>
+            </select>
+          </div>
+
+          <div id="attendance-grid" class="stagger-item delay-1" style="display:flex; flex-direction:column; gap:12px;">
+             <!-- Skeleton -->
+             <div class="glass-card skeleton" style="height:60px;"></div>
+             <div class="glass-card skeleton" style="height:60px;"></div>
           </div>
           
-          <button class="btn mt-20 stagger-item delay-2" style="background:var(--success)" id="btn-confirm-attendance"><i class="fas fa-save"></i> CONFERMA MASCHERA PRESENZE</button>
+          <div class="wizard-padding"></div>
         </div>
       </div>
+      
+      <!-- Fixed Action Buttons -->
+      <div class="wizard-actions">
+        <button class="btn" style="background:var(--success); flex: 1;" id="btn-confirm-attendance">
+          <i class="fas fa-save"></i> CONFERMA MASCHERA PRESENZE
+        </button>
+      </div>
+      
+      ${this.getBottomNav('#presenze-team')}
     `;
 
-    // Load same list of athletes and render them as attendance cards
+    const grid = document.getElementById('attendance-grid');
+    const loadAthletesForTeam = async (teamId) => {
+      grid.innerHTML = `
+        <div class="glass-card skeleton" style="height:60px; padding:0; margin:0;"></div>
+        <div class="glass-card skeleton" style="height:60px; padding:0; margin:0;"></div>
+      `;
+      try {
+        const url = teamId 
+          ? `../api/?module=athletes&action=list&teamId=${teamId}` 
+          : `../api/?module=athletes&action=list`;
+        const res = await fetch(url, { credentials: 'include', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+        const data = await res.json();
+        let html = '';
+        if (data.success && data.data && data.data.length > 0) {
+          data.data.forEach(athlete => {
+            html += `
+              <div class="attendance-card" id="att-card-${athlete.id}" style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; text-align:left;">
+                <div class="athlete-name" style="font-size:15px; font-weight:700; color:var(--text-primary);">
+                  ${this.escapeHtml(athlete.full_name)}
+                </div>
+                
+                <div class="attendance-actions" style="margin-top:0; gap:12px;">
+                  <button class="btn-att btn-att-yes" style="font-family:'Syne',sans-serif; font-weight:bold; font-size:18px; width:44px; height:44px;" onclick="app.markAttendance('${athlete.id}', 'present')">V</button>
+                  <button class="btn-att btn-att-no" style="font-family:'Syne',sans-serif; font-weight:bold; font-size:18px; width:44px; height:44px;" onclick="app.markAttendance('${athlete.id}', 'absent')">X</button>
+                </div>
+              </div>
+            `;
+          });
+        } else {
+           html = '<p class="text-muted text-center" style="margin-top:20px;">Nessun atleta trovato per questa squadra.</p>';
+        }
+        grid.innerHTML = html;
+      } catch(e) {
+        grid.innerHTML = '<p class="text-danger text-center">Nessuna connessione.</p>';
+      }
+    };
+
+    // Load teams for dropdown
     try {
-      const res = await fetch('../api/?module=athletes&action=list', { credentials: 'include', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
-      const data = await res.json();
-      let html = '';
-      if (data.success && data.data && data.data.length > 0) {
-        data.data.forEach(athlete => {
-          html += `
-            <div class="attendance-card" id="att-card-${athlete.id}">
-              <div class="athlete-avatar" style="margin:0 auto 10px; width:50px; height:50px;">
-                ${athlete.photo_path ? `<img src="../${athlete.photo_path}">` : '<i class="fas fa-user"></i>'}
-              </div>
-              <div class="athlete-name" style="font-size:13px;">${this.escapeHtml(athlete.first_name)}</div>
-              <div class="athlete-name" style="font-size:13px; opacity:0.8;">${this.escapeHtml(athlete.last_name)}</div>
-              
-              <div class="attendance-actions">
-                <button class="btn-att btn-att-yes" onclick="app.markAttendance('${athlete.id}', 'present')"><i class="fas fa-check"></i></button>
-                <button class="btn-att btn-att-no" onclick="app.markAttendance('${athlete.id}', 'absent')"><i class="fas fa-times"></i></button>
-              </div>
-            </div>
-          `;
+      const resTeams = await fetch('../api/?module=athletes&action=teams', { credentials: 'include', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+      const teamsData = await resTeams.json();
+      const selector = document.getElementById('attendance-team-selector');
+      const group = document.getElementById('team-selector-group');
+      
+      let initialTeamId = '';
+      try {
+        const u = JSON.parse(localStorage.getItem('erp_user') || '{}');
+        initialTeamId = u.team_id || u.teamId || '';
+      } catch(e){}
+
+      if (teamsData.success && teamsData.data && teamsData.data.length > 0) {
+        group.style.display = 'block';
+        selector.innerHTML = '<option value="">Seleziona Squadra...</option>';
+        teamsData.data.forEach(t => {
+          let selected = t.id == initialTeamId ? 'selected' : '';
+          selector.innerHTML += `<option value="${t.id}" ${selected}>${this.escapeHtml(t.name)}</option>`;
+        });
+        
+        let valToLoad = selector.value || (teamsData.data.length > 0 ? teamsData.data[0].id : '');
+        selector.value = valToLoad;
+        initialTeamId = valToLoad;
+
+        selector.addEventListener('change', (e) => {
+          loadAthletesForTeam(e.target.value);
         });
       }
-      document.getElementById('attendance-grid').innerHTML = html;
-    } catch(e) {}
+      
+      loadAthletesForTeam(initialTeamId);
+    } catch(e) {
+      loadAthletesForTeam(''); // fallback
+    }
 
     // P3.1: Attach listener to confirm button
     const confirmBtn = document.getElementById('btn-confirm-attendance');
@@ -1213,12 +1378,14 @@ class App {
         try {
           // Save attendance for today — send individual records to correct endpoint
           const today = new Date().toISOString().split('T')[0];
-          // Determine team_id from user context
-          let teamId = null;
-          try {
-            const u = JSON.parse(localStorage.getItem('erp_user') || '{}');
-            teamId = u.team_id || u.teamId || null;
-          } catch(e) {}
+          
+          let teamId = document.getElementById('attendance-team-selector')?.value;
+          if (!teamId) {
+            try {
+              const u = JSON.parse(localStorage.getItem('erp_user') || '{}');
+              teamId = u.team_id || u.teamId || null;
+            } catch(e) {}
+          }
 
           for (const rec of records) {
             await fetch('../api/?module=teams&action=saveAttendance', {
@@ -1303,7 +1470,7 @@ class App {
       if (data.success && data.data.length > 0) {
         data.data.forEach((alert, i) => {
           html += `
-            <div class="glass-card alert-item stagger-item" style="border-left: 4px solid var(--danger); animation-delay: ${i*0.1}s">
+            <div class="glass-card alert-item stagger-item" style="border-left: 4px solid var(--danger); animation-delay: ${i*0.1}s; cursor: pointer;" onclick="window.location.hash='#profilo-' + ('${alert.athlete_id}' || '${alert.id}')">
               <div style="display: flex; align-items: flex-start; gap: 15px;">
                 <div class="alert-icon-box" style="background: rgba(255, 77, 77, 0.1); padding: 10px; border-radius: 12px;">
                   <i class="fas fa-triangle-exclamation" style="color: var(--danger); font-size: 20px;"></i>

@@ -60,14 +60,19 @@ class TransportRepository
 
     public function createEvent(array $data): void
     {
-        $data[':tenant_id'] = TenantContext::id();
-        $stmt = $this->db->prepare(
-            'INSERT INTO events (id, tenant_id, team_id, type, title, event_date, event_end,
-                                  location_name, location_lat, location_lng, status, notes, created_by)
-             VALUES (:id, :tenant_id, :team_id, :type, :title, :event_date, :event_end,
-                     :location_name, :location_lat, :location_lng, :status, :notes, :created_by)'
-        );
-        $stmt->execute($data);
+        try {
+            $data[':tenant_id'] = TenantContext::id();
+            $stmt = $this->db->prepare(
+                'INSERT INTO events (id, tenant_id, team_id, type, title, event_date, event_end,
+                                      location_name, location_lat, location_lng, status, notes, created_by)
+                 VALUES (:id, :tenant_id, :team_id, :type, :title, :event_date, :event_end,
+                         :location_name, :location_lat, :location_lng, :status, :notes, :created_by)'
+            );
+            $stmt->execute($data);
+        } catch (\Throwable $e) {
+            error_log('[Transport] createEvent failed: ' . $e->getMessage());
+            throw $e;
+        }
     }
 
     public function updateEventStatus(string $id, string $status): void
@@ -322,18 +327,23 @@ class TransportRepository
 
     public function saveTransport(array $data): void
     {
-        $data[':tenant_id'] = TenantContext::id();
-        $stmt = $this->db->prepare(
-            'INSERT INTO transports (id, tenant_id, team_id, event_id, destination_name, destination_address,
-                                      destination_lat, destination_lng, departure_address,
-                                      arrival_time, departure_time, transport_date,
-                                      athletes_json, timeline_json, stats_json, ai_response, created_by, driver_id, vehicle_id)
-             VALUES (:id, :tenant_id, :team_id, :event_id, :destination_name, :destination_address,
-                     :destination_lat, :destination_lng, :departure_address,
-                     :arrival_time, :departure_time, :transport_date,
-                     :athletes_json, :timeline_json, :stats_json, :ai_response, :created_by, :driver_id, :vehicle_id)'
-        );
-        $stmt->execute($data);
+        try {
+            $data[':tenant_id'] = TenantContext::id();
+            $stmt = $this->db->prepare(
+                'INSERT INTO transports (id, tenant_id, team_id, event_id, destination_name, destination_address,
+                                          destination_lat, destination_lng, departure_address,
+                                          arrival_time, departure_time, transport_date,
+                                          athletes_json, timeline_json, stats_json, ai_response, created_by, driver_id, vehicle_id)
+                 VALUES (:id, :tenant_id, :team_id, :event_id, :destination_name, :destination_address,
+                         :destination_lat, :destination_lng, :departure_address,
+                         :arrival_time, :departure_time, :transport_date,
+                         :athletes_json, :timeline_json, :stats_json, :ai_response, :created_by, :driver_id, :vehicle_id)'
+            );
+            $stmt->execute($data);
+        } catch (\Throwable $e) {
+            error_log('[Transport] saveTransport failed: ' . $e->getMessage());
+            throw $e;
+        }
     }
 
     public function listTransports(string $teamId = ''): array
