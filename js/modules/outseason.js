@@ -242,10 +242,10 @@ const OutSeason = (() => {
                                   found: 0,
                                   not_found: 0,
                                 },
-                                s = a.found || o.filter((n) => n.found).length,
+                                s = a.found || o.filter((n) => n.found === true || String(n.found) === "1").length,
                                 r =
                                   a.not_found ||
-                                  o.filter((n) => !n.found).length,
+                                  o.filter((n) => n.found !== true && String(n.found) !== "1").length,
                                 d = o
                                   .map((n) => {
                                     const t =
@@ -261,10 +261,10 @@ const OutSeason = (() => {
                                             ? "Media"
                                             : "Bassa";
                                     return `\n            <tr>\n                <td style="font-weight:600;">${n.name}</td>\n                <td style="font-weight:600;">${n.expected_amount} €</td>
-                <td>${n.found ? '<span class="os-match-found">✅ Trovato</span>' : '<span class="os-match-missing">❌ Non trovato</span>'}</td>
-                <td>${(n.found && n.transaction_date) || "—"}</td>
-                <td>${n.found ? (n.transaction_amount || "") + " €" : "—"}</td>
-                <td>${n.found ? `<span class="os-confidence ${t}">${e}</span>` : "—"}</td>
+                <td>${n.found === true || String(n.found) === "1" ? '<span class="os-match-found">✅ Trovato</span>' : '<span class="os-match-missing">❌ Non trovato</span>'}</td>
+                <td>${((n.found === true || String(n.found) === "1") && n.transaction_date) || "—"}</td>
+                <td>${n.found === true || String(n.found) === "1" ? (n.transaction_amount || "") + " €" : "—"}</td>
+                <td>${n.found === true || String(n.found) === "1" ? `<span class="os-confidence ${t}">${e}</span>` : "—"}</td>
                 <td style="font-size:11px;opacity:.6;">${n.notes || "—"}</td>
             </tr>`;
                                   })
@@ -293,7 +293,7 @@ const OutSeason = (() => {
                                 (t = new Set(
                                   o
                                     .filter(
-                                      (n) => n.found && "high" === n.confidence,
+                                      (n) => (n.found === true || String(n.found) === "1") && "high" === n.confidence,
                                     )
                                     .map((n) =>
                                       String(n.name).toLowerCase().trim(),
@@ -390,7 +390,7 @@ const OutSeason = (() => {
             if (
               ((t = new Set(
                 e.data.results
-                  .filter((n) => n.found && "high" === n.confidence)
+                  .filter((n) => (n.found === true || String(n.found) === "1") && "high" === n.confidence)
                   .map((n) => String(n.entry_name).toLowerCase().trim()),
               )),
               t.size > 0)

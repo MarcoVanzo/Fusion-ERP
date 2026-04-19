@@ -432,14 +432,14 @@ PROMPT;
                 (:tid, :season_key, :name, :found, :confidence, :tx_date,
                  :tx_amount, :tx_desc, :notes, :verified_by)
             ON DUPLICATE KEY UPDATE
-                confidence              = IF(:u_found_chk = 1 OR found = 0, :u_confidence, confidence),
-                transaction_date        = IF(:u_found_chk2 = 1 OR found = 0, :u_tx_date, transaction_date),
-                transaction_amount      = IF(:u_found_chk3 = 1 OR found = 0, :u_tx_amount, transaction_amount),
-                transaction_description = IF(:u_found_chk4 = 1 OR found = 0, :u_tx_desc, transaction_description),
-                notes                   = IF(:u_found_chk5 = 1 OR found = 0, :u_notes, notes),
-                verified_by             = IF(:u_found_chk6 = 1 OR found = 0, :u_verified_by, verified_by),
-                verified_at             = IF(:u_found_chk7 = 1 OR found = 0, CURRENT_TIMESTAMP, verified_at),
-                found                   = GREATEST(found, :u_found)
+                confidence              = IF(VALUES(found) = 1 OR found = 0, VALUES(confidence), confidence),
+                transaction_date        = IF(VALUES(found) = 1 OR found = 0, VALUES(transaction_date), transaction_date),
+                transaction_amount      = IF(VALUES(found) = 1 OR found = 0, VALUES(transaction_amount), transaction_amount),
+                transaction_description = IF(VALUES(found) = 1 OR found = 0, VALUES(transaction_description), transaction_description),
+                notes                   = IF(VALUES(found) = 1 OR found = 0, VALUES(notes), notes),
+                verified_by             = IF(VALUES(found) = 1 OR found = 0, VALUES(verified_by), verified_by),
+                verified_at             = IF(VALUES(found) = 1 OR found = 0, CURRENT_TIMESTAMP, verified_at),
+                found                   = GREATEST(found, VALUES(found))
         ";
 
         $stmt = $pdo->prepare($sql);
@@ -478,22 +478,6 @@ PROMPT;
                     ':tx_desc' => $r_tx_desc,
                     ':notes' => $r_notes,
                     ':verified_by' => $r_verified_by,
-                    
-                    // UPDATE parameters (PDO emulate prepares strictly FALSE requires unique param names)
-                    ':u_found_chk' => $r_found,
-                    ':u_confidence' => $conf,
-                    ':u_found_chk2' => $r_found,
-                    ':u_tx_date' => $r_tx_date,
-                    ':u_found_chk3' => $r_found,
-                    ':u_tx_amount' => $r_tx_AMOUNT,
-                    ':u_found_chk4' => $r_found,
-                    ':u_tx_desc' => $r_tx_desc,
-                    ':u_found_chk5' => $r_found,
-                    ':u_notes' => $r_notes,
-                    ':u_found_chk6' => $r_found,
-                    ':u_verified_by' => $r_verified_by,
-                    ':u_found_chk7' => $r_found,
-                    ':u_found' => $r_found,
                 ]);
                 $saved++;
             } catch (\PDOException $e) {
