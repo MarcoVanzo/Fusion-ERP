@@ -4,6 +4,7 @@
  * TransportAPI - Frontend SDK per le chiamate API del modulo Trasporti
  * Astrae le chiamate a Store.get e Store.api per decoupling della vista della logica di rete.
  */
+/* eslint-disable-next-line no-unused-vars */
 const TransportAPI = (() => {
     return {
         // --- Eventi e Viaggi ---

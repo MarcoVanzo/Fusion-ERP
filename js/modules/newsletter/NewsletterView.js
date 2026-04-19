@@ -1,5 +1,5 @@
 // js/modules/newsletter/NewsletterView.js
-import { NewsletterAPI } from './NewsletterAPI.js';
+import { _NewsletterAPI } from './NewsletterAPI.js';
 
 export const NewsletterView = {
     renderEmptyConfig() {
@@ -381,7 +381,7 @@ export const NewsletterView = {
 
         document.getElementById("nl-groups-close")?.addEventListener("click", () => modal.close());
 
-        function rebindDeleteBtns(currentGroups) {
+        function rebindDeleteBtns(_currentGroups) {
             document.querySelectorAll("[data-del-group]").forEach((btn) => {
                 btn.addEventListener("click", async () => {
                     const gid = btn.dataset.delGroup;

@@ -131,7 +131,7 @@ export const AthleteHealth = {
     _renderInjuryCard(injury, isPast = false) {
         const dDate = new Date(injury.injury_date).toLocaleDateString('it-IT');
         let rDate = injury.estimated_return_date ? new Date(injury.estimated_return_date).toLocaleDateString('it-IT') : '—';
-        let statusBadge = '';
+        let statusBadge
         if (isPast) {
             statusBadge = `<span class="badge" style="background:rgba(16, 185, 129, 0.1); color:#10b981; border:1px solid rgba(16, 185, 129, 0.3);">RTP OK (${rDate})</span>`;
         } else {

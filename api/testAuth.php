@@ -9,8 +9,10 @@ $roles = [
     'admin'      => 5,
 ];
 
-$userLevel = $roles['allenatore'];
+$requestedRole = $_GET['role'] ?? 'allenatore';
+$userLevel = $roles[$requestedRole] ?? 0;
 $minLevel = $roles['operator'];
+
 if ($userLevel < $minLevel) {
     echo "Permessi insufficienti\n";
 } else {

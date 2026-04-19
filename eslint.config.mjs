@@ -30,11 +30,23 @@ export default [
                 FilePondPluginImagePreview: "readonly",
                 moment: "readonly",
                 html2canvas: "readonly",
-                jsPDF: "readonly"
+                jsPDF: "readonly",
+                google: "readonly",
+                L: "readonly",
+                Chart: "readonly",
+                EcommerceDB: "readonly",
+                AuthFlow: "readonly",
+                Enhancements: "readonly",
+                GlobalSearch: "readonly",
+                Onboarding: "readonly",
+                flatpickr: "readonly",
+                Dexie: "readonly",
+                FilterState: "readonly",
+                toggleSelection: "readonly"
             }
         },
         rules: {
-            "no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
+            "no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_", caughtErrorsIgnorePattern: "^_" }],
             "no-undef": "warn",
             "no-console": "off",
             "no-empty": ["error", { "allowEmptyCatch": true }],

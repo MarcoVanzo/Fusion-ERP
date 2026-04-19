@@ -3,7 +3,7 @@ const Staff = (() => {
   let e = new AbortController(),
     t = [],
     a = [],
-    n = null;
+    _n = null;
   const l = [
     "#f472b6",
     "#3b82f6",
@@ -209,7 +209,7 @@ const Staff = (() => {
       ));
   }
   async function d(l) {
-    n = l;
+    _n = l;
     const c = document.getElementById("app");
     c.innerHTML = UI.skeletonPage();
     try {
@@ -470,7 +470,7 @@ const Staff = (() => {
         document.getElementById("staff-back")?.addEventListener(
           "click",
           () => {
-            ((n = null), r());
+            ((_n = null), r());
           },
           { signal: e.signal },
         ),
@@ -619,7 +619,7 @@ const Staff = (() => {
                       (await Store.api("delete", "staff", { id: e.id }),
                         a.close(),
                         UI.toast("Membro staff eliminato", "success"),
-                        (n = null),
+                        (_n = null),
                         (t = await Store.get("list", "staff").catch(() => t)),
                         r());
                     } catch (e) {
@@ -642,7 +642,7 @@ const Staff = (() => {
     const medCertStats = { expired: 0, expiring: 0, valid: 0, missing: 0 };
     const certRows = t
       .map((p) => {
-        let statusHtml = "";
+        let statusHtml
         let certDate = p.medical_cert_expires_at
           ? new Date(p.medical_cert_expires_at)
           : null;
@@ -663,7 +663,7 @@ const Staff = (() => {
           statusHtml = '<span class="badge">Mancante</span>';
         }
 
-        let contractStatusHtml = "";
+        let contractStatusHtml
         if (p.contract_status === "firmato") {
           contractStatusHtml =
             '<span class="badge badge-success">Firmato</span>';
@@ -699,7 +699,7 @@ const Staff = (() => {
             Store.get("list", "staff"),
             Store.get("teams", "athletes").catch(() => []),
           ])),
-            (n = null),
+            (_n = null),
             Router.getCurrentRoute() === "staff-documents"
               ? renderDocumentsView()
               : r());

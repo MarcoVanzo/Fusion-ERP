@@ -96,7 +96,7 @@ const Staff = {
 
     renderDocumentsView: function(container) {
         const user = App.getUser();
-        const isAdmin = ["admin", "manager", "operator"].includes(user?.role);
+        const _isAdmin = ["admin", "manager", "operator"].includes(user?.role);
         
         container.innerHTML = StaffView.documentsTable(this._staffData);
 

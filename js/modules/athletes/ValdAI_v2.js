@@ -14,7 +14,7 @@ window.__valdAi = async function (athleteId, part) {
   const resultId = `vald-ai-${isDx ? 'diagnosis' : 'plan'}-result-${athleteId}`;
   const otherResultId = `vald-ai-${isDx ? 'plan' : 'diagnosis'}-result-${athleteId}`;
   const resultEl = document.getElementById(resultId);
-  const otherResultEl = document.getElementById(otherResultId);
+  const _otherResultEl = document.getElementById(otherResultId);
   const placeholder = document.getElementById("ai-empty-placeholder");
   
   if (!resultEl) return;

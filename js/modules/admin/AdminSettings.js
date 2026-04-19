@@ -111,7 +111,7 @@ const AdminSettings = (() => {
       const data = Object.fromEntries(formData.entries());
 
       try {
-        const res = await Store.api("updateSettings", "tenant", data);
+        const _res = await Store.api("updateSettings", "tenant", data);
         UI.toast("Impostazioni aggiornate con successo", "success");
         
         if (data.primary_color) {

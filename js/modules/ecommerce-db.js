@@ -64,7 +64,7 @@ const EcommerceDB = (() => {
       try {
         const articoli = await this.getArticoli();
         return articoli.find((a) => String(a.id) === String(id));
-      } catch (err) {
+      } catch (_err) {
         return null;
       }
     },
@@ -84,7 +84,7 @@ const EcommerceDB = (() => {
       return res;
     },
     bulkSaveArticoli: async function (prodotti) {
-      const res = await Store.api("bulkSaveProdotti", "ecommerce", {
+      const _res = await Store.api("bulkSaveProdotti", "ecommerce", {
         prodotti,
       });
       if (window.Store && typeof window.Store.invalidate === "function") {
@@ -96,7 +96,7 @@ const EcommerceDB = (() => {
       try {
         const res = await Store.api("getProdotti", "ecommerce");
         return res.count || 0;
-      } catch (err) {
+      } catch (_err) {
         return 0;
       }
     },

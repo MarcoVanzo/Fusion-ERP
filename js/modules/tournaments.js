@@ -195,7 +195,7 @@ const Tournaments = {
         container.querySelector("#btn-save-rooming-list")?.addEventListener("click", async () => {
             try {
                 UI.loading(true);
-                const res = await TournamentsAPI.saveRoomingList(tournamentId);
+                const _res = await TournamentsAPI.saveRoomingList(tournamentId);
                 UI.toast("Rooming List salvata correttamente nel server", "success");
                 Store.invalidate("tournaments");
                 await this.openDetail(tournamentId);
@@ -215,7 +215,7 @@ const Tournaments = {
         container.querySelector("#btn-save-summary")?.addEventListener("click", async () => {
             try {
                 UI.loading(true);
-                const res = await TournamentsAPI.saveSummaryPdf(tournamentId);
+                const _res = await TournamentsAPI.saveSummaryPdf(tournamentId);
                 UI.toast("Dossier Torneo salvato correttamente nel server", "success");
                 Store.invalidate("tournaments");
                 await this.openDetail(tournamentId);

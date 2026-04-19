@@ -11,7 +11,7 @@ const TransportLogic = {
      * @returns {number} Ratio (e.g., 1.2 for 20% more time)
      */
     estimateTrafficRatio: (arrivalTimeStr) => {
-        const [h, m] = (arrivalTimeStr || "18:00").split(":").map(Number);
+        const [h, _m] = (arrivalTimeStr || "18:00").split(":").map(Number);
         let ratio = 1.05; // 5% buffer base
         if (h >= 7 && h <= 9) ratio = 1.35; // Morning rush
         if (h >= 17 && h <= 19) ratio = 1.45; // Evening rush

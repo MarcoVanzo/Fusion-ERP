@@ -177,7 +177,7 @@ const Ecommerce = {
                     currentMimeType = file.type;
                     imgPreview.src = currentBase64;
                     imgPreview.style.display = "block";
-                } catch (err) {
+                } catch (_err) {
                     UI.toast("Errore lettura immagine", "error");
                 }
             }

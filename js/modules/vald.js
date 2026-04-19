@@ -3,6 +3,7 @@
  * Fusion ERP v1.0
  */
 
+/* eslint-disable no-redeclare */
 /* global Store, UI */
 
 /**

@@ -9,7 +9,7 @@ export const AthletesView = {
     dashboard: (teams, variant = 'anagrafica', athletes = []) => {
         let title = "Anagrafica Atleti";
         let subtitle = "Gestione dei tesserati, documenti e dati biometrici";
-        let thRow = ``;
+        let thRow
 
         const thStyle = `padding:16px; color:rgba(255,255,255,0.4); font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:0.05em; border-bottom:1px solid rgba(255,255,255,0.05);`;
 
@@ -169,7 +169,7 @@ export const AthletesView = {
 
         const tdStyle = `padding:14px 16px; font-size:14px; color:rgba(255,255,255,0.7); vertical-align:middle;`;
 
-        let extraCells = ``;
+        let extraCells
         if (variant === 'documenti') {
             const getDocSymbol = (path) => path 
                 ? `<i class="ph ph-check-circle-fill" style="color:var(--color-success); font-size:20px;"></i>` 
@@ -184,7 +184,7 @@ export const AthletesView = {
             `;
         } else if (variant === 'metrics') {
             let metricsData = {};
-            try { if (athlete.latest_vald_metrics) metricsData = JSON.parse(athlete.latest_vald_metrics); } catch(e) {}
+            try { if (athlete.latest_vald_metrics) metricsData = JSON.parse(athlete.latest_vald_metrics); } catch(_e) {}
 
             const jhVal = metricsData.JumpHeight?.Value ?? metricsData.JumpHeightTotal?.Value ?? null;
             const rsiVal = metricsData.RSIModified?.Value ?? null;
@@ -437,7 +437,7 @@ export const AthletesView = {
     /**
      * Layout del profilo atleta (Header + Tabs)
      */
-    profileLayout: (athlete, currentTab = 'anagrafica', user = null) => {
+    profileLayout: (athlete, _currentTab = 'anagrafica', user = null) => {
         const photoHtml = athlete.photo_path 
             ? `<img src="${Utils.escapeHtml(athlete.photo_path)}" class="athlete-hero-photo" alt="${athlete.full_name}">`
             : `<div class="athlete-hero-photo" style="display:flex;align-items:center;justify-content:center;background:var(--color-bg-card);"><span style="font-family:var(--font-display);font-size:5rem;font-weight:700;color:rgba(255,255,255,0.1);">${Utils.initials(athlete.full_name)}</span></div>`;
@@ -834,8 +834,8 @@ export const AthletesView = {
 
         let tornei = 0;
         let tornei_p = 0;
-        let tournamentRowsTable = '';
-        let tournamentRowsForm = '';
+        let _tournamentRowsTable = '';
+        let _tournamentRowsForm = '';
 
         tournamentHistory.forEach(tour => {
             const fee = parseFloat(tour.fee_per_athlete) || 0;

@@ -342,7 +342,7 @@ const Scouting = (() => {
       if (container) {
         renderTable(container);
       }
-    } catch (err) {
+    } catch (_err) {
       UI.toast("Errore nel caricamento del database", "error");
     }
   }

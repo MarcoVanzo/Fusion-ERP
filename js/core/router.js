@@ -342,7 +342,7 @@ document.addEventListener('click', (e) => {
         // Extract params if any via data-route-params (assuming valid JSON or query string format)
         let params = {};
         if (routeEl.dataset.routeParams) {
-            try { params = JSON.parse(routeEl.dataset.routeParams); } catch (e) { /* ignore */ }
+            try { params = JSON.parse(routeEl.dataset.routeParams); } catch (_e) { /* ignore */ }
         }
         
         Router.navigate(route, params);

@@ -174,9 +174,9 @@ class PaymentsRepository
     /**
      * Get overdue installments across all athletes.
      */
-    public function getOverdueInstallments(): array
+    public function getOverdueInstallments(?string $tenantId = null): array
     {
-        $tid = TenantContext::id();
+        $tid = $tenantId ?? TenantContext::id();
         $stmt = $this->db->prepare(
             "SELECT i.id, i.title, i.due_date, i.amount, i.status,
                     pp.athlete_id, pp.tenant_id,
@@ -197,9 +197,9 @@ class PaymentsRepository
     /**
      * Get installments due within N days (for reminder notifications).
      */
-    public function getUpcomingInstallments(int $days = 7): array
+    public function getUpcomingInstallments(int $days = 7, ?string $tenantId = null): array
     {
-        $tid = TenantContext::id();
+        $tid = $tenantId ?? TenantContext::id();
         $stmt = $this->db->prepare(
             "SELECT i.id, i.title, i.due_date, i.amount,
                     pp.athlete_id, pp.tenant_id,

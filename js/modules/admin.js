@@ -454,7 +454,7 @@ const Admin = (() => {
           "click",
           () =>
             (async function () {
-              let e = '<option value="">Caricamento...</option>';
+              let e
               try {
                 e =
                   '<option value="">Seleziona atleta...</option>' +
@@ -809,7 +809,7 @@ const Admin = (() => {
                       typeof e.permissions_json === "string"
                         ? JSON.parse(e.permissions_json)
                         : e.permissions_json;
-                  } catch (err) {}
+                  } catch (_err) {}
                 } else if (e.role) {
                   // Fallback permissons based on role if no explicit JSON
                   const rolePerms = {
@@ -1825,10 +1825,6 @@ const Admin = (() => {
                                 await E());
                             })()));
         })(e));
-    },
-    destroy: function() {
-      t.abort();
-      t = new AbortController();
     }
   };
 })();

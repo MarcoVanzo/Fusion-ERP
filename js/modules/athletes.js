@@ -375,7 +375,7 @@ const Athletes = (() => {
             // Update URL
             Router.updateHash(Router.getCurrentRoute(), { id });
 
-        } catch (e) {
+        } catch (_e) {
             UI.toast("Atleta non trovato", "error");
             renderDashboard();
         } finally {
@@ -456,7 +456,7 @@ const Athletes = (() => {
                     ]);
                     transportReimbursement = (transportHist || []).length * 2.50;
                     tournamentHistory = tournamentHist || [];
-                } catch (e) { /* fallback silenzioso */ }
+                } catch (_e) { /* fallback silenzioso */ }
                 panel.innerHTML = AthletesView.tabQuote(athlete, App.getUser().role === 'admin', transportReimbursement, tournamentHistory);
                 addQuoteListeners(athlete);
                 break;
@@ -732,7 +732,7 @@ const Athletes = (() => {
             const transports = await TransportAPI.getTransports();
             const reimbMap = new Map();
             transports.forEach(tr => {
-                let athletes = [];
+                let athletes
                 try {
                     athletes = typeof tr.athletes_json === 'string' ? JSON.parse(tr.athletes_json) : (tr.athletes_json || []);
                 } catch { athletes = []; }

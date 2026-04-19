@@ -37,7 +37,7 @@ $allTenants = $tenantStmt->fetchAll(\PDO::FETCH_COLUMN);
 echo "\n[CERT] Checking medical certificate expiry...\n";
 $healthRepo = new HealthRepository();
 foreach ($allTenants as $tenantId) {
-$expiringCerts = $healthRepo->getExpiringCertificates($tenantId, 30);
+$expiringCerts = $healthRepo->getExpiringCertificates(30, $tenantId);
 
 foreach ($expiringCerts as $cert) {
     $daysUntil = (int)$cert['days_until_expiry'];
@@ -86,7 +86,7 @@ foreach ($expiringCerts as $cert) {
 echo "\n[DOCS] Checking document expiry...\n";
 $docsRepo = new DocumentsRepository();
 foreach ($allTenants as $tenantId) {
-$expiringDocs = $docsRepo->getExpiringDocuments($tenantId, 30);
+$expiringDocs = $docsRepo->getExpiringDocuments(30, $tenantId);
 
 foreach ($expiringDocs as $doc) {
     $daysUntil = (int)$doc['days_until_expiry'];
@@ -178,7 +178,7 @@ foreach ($overdueList as $od) {
 
 echo "\n[PAY] Sending upcoming payment reminders...\n";
 foreach ($allTenants as $tenantId) {
-$upcoming = $payRepo->getUpcomingInstallments($tenantId, 7);
+$upcoming = $payRepo->getUpcomingInstallments(7, $tenantId);
 
 foreach ($upcoming as $up) {
     if ((int)$up['days_until_due'] !== 7)

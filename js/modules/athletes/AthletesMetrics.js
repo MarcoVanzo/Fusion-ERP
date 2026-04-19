@@ -2,7 +2,7 @@
  * AthletesMetrics — Gestione performance e integrazione VALD
  */
 
-import { AthletesAPI } from './AthletesAPI.js';
+import { _AthletesAPI } from './AthletesAPI.js';
 
 export const AthletesMetrics = {
     /**
@@ -48,7 +48,7 @@ export const AthletesMetrics = {
                 return;
             }
 
-            const kpi = [
+            const _kpi = [
                 { label: 'Jump Height', value: data.jumpHeight?.toFixed(1) || '—', unit: 'cm', icon: 'arrow-fat-up' },
                 { label: 'RSImod', value: data.semaphore?.rsimod?.current?.toFixed(3) || '—', unit: '', icon: 'lightning' },
                 { label: 'Braking Imp.', value: data.brakingImpulse?.toFixed(0) || '—', unit: 'Ns', icon: 'arrows-in' },
@@ -265,7 +265,7 @@ export const AthletesMetrics = {
         `;
     },
 
-    async _loadActivityLogs(athleteId) {
+    async _loadActivityLogs(_athleteId) {
         // Metodo rimosso in favore di _renderValdMeasurements
     },
 

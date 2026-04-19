@@ -93,7 +93,7 @@ const StaffView = {
         let valid = 0, expiring = 0, expired = 0, missing = 0;
 
         const rows = staff.map(p => {
-            let certHtml = "";
+            let certHtml
             let certDate = p.medical_cert_expires_at ? new Date(p.medical_cert_expires_at) : null;
             let isExpired = certDate && certDate < today;
             let isExpiring = certDate && !isExpired && certDate < future60;

@@ -2,7 +2,7 @@
  * EcommerceWizard
  * Handles complex modali, form rendering, and import wizards.
  */
-import EcommerceAPI from './EcommerceAPI.js';
+import _EcommerceAPI from './EcommerceAPI.js';
 
 const EcommerceWizard = {
     
@@ -10,7 +10,7 @@ const EcommerceWizard = {
      * Returns the HTML body for the Article edit/create form.
      */
     articleForm(article) {
-        const isEdit = !!article;
+        const _isEdit = !!article;
         return `
         <div class="ec-form">
             <div class="ec-form-row">

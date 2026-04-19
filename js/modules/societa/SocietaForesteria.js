@@ -39,7 +39,7 @@ export default {
         }
     },
 
-    render: function(container, data) {
+    render: function(_container, _data) {
         // Implementation of rendering if not using SocietaView
         // ... (SocietaView.foresteria is already defined)
     },
@@ -119,7 +119,7 @@ export default {
         });
     },
 
-    showAddExpenseModal: function(container, signal) {
+    showAddExpenseModal: function(_container, _signal) {
         const modal = UI.modal({
             title: "Nuova Spesa Foresteria",
             body: `
@@ -240,7 +240,7 @@ export default {
         });
     },
 
-    showEditInfoModal: function(container, info, signal) {
+    showEditInfoModal: function(container, info, _signal) {
         const modal = UI.modal({
             title: "Modifica Informazioni Foresteria",
             body: `
@@ -273,7 +273,7 @@ export default {
         });
     },
 
-    showUploadMediaModal: function(container, signal) {
+    showUploadMediaModal: function(_container, _signal) {
         const modal = UI.modal({
             title: "Carica Media Foresteria",
             body: `
@@ -308,7 +308,7 @@ export default {
         });
     },
 
-    showAddYoutubeModal: function(container, signal) {
+    showAddYoutubeModal: function(_container, _signal) {
         const modal = UI.modal({
             title: "Aggiungi Link YouTube",
             body: `

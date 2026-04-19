@@ -129,7 +129,7 @@ const Store = (() => {
             body = await response.json();
         } catch (_parseError) {
             const err = new Error(`Errore di rete o server irraggiungibile (HTTP ${response.status})`);
-            throw new Error(Utils.friendlyError(err));
+            throw new Error(Utils.friendlyError(err), { cause: _parseError });
         }
 
         // Application-level error
@@ -137,7 +137,7 @@ const Store = (() => {
             const msg = body.error || 'Errore sconosciuto durante la richiesta API';
             const err = new Error(msg);
             if (response.status >= 500) {
-                throw new Error(Utils.friendlyError(err));
+                throw new Error(Utils.friendlyError(err), { cause: _parseError });
             }
             throw err;
         }

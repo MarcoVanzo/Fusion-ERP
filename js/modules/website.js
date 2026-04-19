@@ -41,10 +41,10 @@ const Website = (() => {
     }
   }
   async function a(e = null) {
-    let t = [];
+    let t
     try {
       t = await Store.get("categories", "website");
-    } catch (e) {
+    } catch (_e) {
       return void UI.toast("Errore categorie", "error");
     }
     const a = !!e,

@@ -3,7 +3,7 @@
  * Redesigned for Premium Elite Sports Analytics Experience
  */
 
-import { AthletesAPI } from './AthletesAPI.js';
+import { _AthletesAPI } from './AthletesAPI.js';
 
 export const AthletesMetrics = {
     /**

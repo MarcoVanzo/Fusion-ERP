@@ -219,7 +219,7 @@ class TalentDayModule {
     /** Re-render just the table content (headers + rows + count) without full container rebuild */
     _rerenderTable(container, canEdit) {
         const filtered = this._getFilteredSorted();
-        const tappaList = this._getTappaList();
+        const _tappaList = this._getTappaList();
 
         // Update headers
         const thead = container.querySelector("#td-table thead tr");

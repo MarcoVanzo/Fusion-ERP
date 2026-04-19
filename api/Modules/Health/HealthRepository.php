@@ -98,10 +98,9 @@ class HealthRepository
      * Get all athletes with certificates expiring within N days.
      * Used by the cron job for alert notifications.
      */
-    public function getExpiringCertificates(int $days = 30): array
+    public function getExpiringCertificates(int $days = 30, ?string $tenantId = null): array
     {
-        $stmt = $this->db->prepare(
-            "SELECT a.id AS athlete_id, a.full_name, a.email, a.phone,
+        $sql = "SELECT a.id AS athlete_id, a.full_name, a.email, a.phone,
                     a.medical_cert_type, a.medical_cert_expires_at,
                     a.tenant_id, a.parent_contact, a.parent_phone,
                     DATEDIFF(a.medical_cert_expires_at, CURDATE()) AS days_until_expiry
@@ -109,10 +108,18 @@ class HealthRepository
              WHERE a.deleted_at IS NULL
                AND a.is_active = 1
                AND a.medical_cert_expires_at IS NOT NULL
-               AND a.medical_cert_expires_at <= DATE_ADD(CURDATE(), INTERVAL :days DAY)
-             ORDER BY a.medical_cert_expires_at ASC"
-        );
+               AND a.medical_cert_expires_at <= DATE_ADD(CURDATE(), INTERVAL :days DAY)";
+        
+        if ($tenantId !== null) {
+            $sql .= " AND a.tenant_id = :tenant_id";
+        }
+        $sql .= " ORDER BY a.medical_cert_expires_at ASC";
+
+        $stmt = $this->db->prepare($sql);
         $stmt->bindValue(':days', $days, \PDO::PARAM_INT);
+        if ($tenantId !== null) {
+            $stmt->bindValue(':tenant_id', $tenantId);
+        }
         $stmt->execute();
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }

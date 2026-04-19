@@ -10,7 +10,6 @@
   width: 208px;
   background: rgba(15, 15, 18, 0.85);
   backdrop-filter: var(--glass);
-  backdrop-filter: var(--glass);
   border: 1px solid var(--border-subtle);
   border-radius: 12px;
   padding: 8px;
@@ -99,7 +98,6 @@
   min-width: 220px;
   background: rgba(18, 18, 20, 0.85);
   backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   box-shadow: var(--shadow-lg);
@@ -115,3 +113,4 @@
   opacity: 1;
   visibility: visible;
   transform: translateY(0);
+}

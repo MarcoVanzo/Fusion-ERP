@@ -92,7 +92,7 @@ const ResultsView = {
         });
 
         let html = '';
-        sortedRounds.forEach((round, idx) => {
+        sortedRounds.forEach((round, _idx) => {
             const isLatest = round === latestPlayedRound;
             const label = round === 'Altre' ? 'Partite senza giornata' : `Giornata ${round}`;
             html += `
@@ -215,7 +215,7 @@ const ResultsView = {
     footer: (lastUpdated, sourceUrl) => {
         const date = new Date(lastUpdated).toLocaleString('it-IT');
         let hostname = 'portale federale';
-        try { if(sourceUrl) hostname = new URL(sourceUrl).hostname; } catch(e){}
+        try { if(sourceUrl) hostname = new URL(sourceUrl).hostname; } catch(_e){}
         
         return `
             <div class="res-last-update">

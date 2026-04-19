@@ -242,7 +242,7 @@ const AdminUsers = (() => {
     if (user.permissions_json) {
       try {
         existingPerms = typeof user.permissions_json === "string" ? JSON.parse(user.permissions_json) : user.permissions_json;
-      } catch (err) {}
+      } catch (_err) {}
     }
 
     let matrixHtml = `<div class="permissions-matrix" style="max-height: 400px; overflow-y: auto; border: 1px solid var(--color-border); border-radius: 6px; margin-top: 8px;">

@@ -223,7 +223,7 @@ const Transport = {
                 }
             }, { signal: this.abortController.signal });
 
-        } catch (err) {
+        } catch (_err) {
             UI.loading(false);
             UI.toast("Errore nel recupero dati autista", "error");
         }
@@ -363,7 +363,7 @@ const Transport = {
                     TransportMap.renderMiniMap("gmap", parseFloat(event.location_lat), parseFloat(event.location_lng), event.location_name);
                 }, 100);
             }
-        } catch (error) {
+        } catch (_error) {
             UI.toast("Errore caricamento dettaglio evento", "error");
             this.renderDashboard();
         }
@@ -388,7 +388,7 @@ const Transport = {
                     document.body.appendChild(a);
                     a.click();
                     a.remove();
-                } catch (e) {
+                } catch (_e) {
                     UI.toast("Errore generazione PDF", "error");
                 } finally {
                     UI.loading(false);
@@ -432,7 +432,7 @@ const Transport = {
             TransportMap.initGoogleMaps(() => {
                 this.attachWizardEvents();
             });
-        } catch (error) {
+        } catch (_error) {
             UI.toast("Errore caricamento wizard", "error");
             this.renderDashboard();
         }
@@ -486,7 +486,7 @@ const Transport = {
                     } else {
                         eventSelect.innerHTML = '<option value="">Nessun torneo trovato per questa squadra</option>';
                     }
-                } catch (err) {
+                } catch (_err) {
                     eventSelect.innerHTML = '<option value="">Errore caricamento eventi</option>';
                 }
             }
@@ -872,7 +872,7 @@ const Transport = {
                 // (Omitted for brevity, but follows the pattern of mapping names to IDs)
                 UI.toast("Suggerimenti applicati!", "success");
                 this.renderDashboard();
-            } catch (err) {
+            } catch (_err) {
                 UI.toast("Errore applicazione suggerimenti", "error");
             } finally {
                 UI.loading(false);
@@ -888,7 +888,7 @@ const Transport = {
         // ...
     },
 
-    showOfferRouteModal: function(eventId) {
+    showOfferRouteModal: function(_eventId) {
         // Modal implementation for carpooling
         // ...
     },

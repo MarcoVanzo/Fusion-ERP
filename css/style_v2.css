@@ -589,7 +589,6 @@ h3 {
   flex-shrink: 0;
   background: rgba(10, 10, 12, 0.6);
   backdrop-filter: var(--glass);
-  backdrop-filter: var(--glass);
   border-bottom: 1px solid var(--border-subtle);
   display: flex;
   align-items: center;
@@ -666,7 +665,6 @@ h3 {
   left: 0;
   right: 0;
   background: rgba(12, 12, 16, 0.95);
-  backdrop-filter: var(--glass);
   backdrop-filter: var(--glass);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius);
@@ -814,7 +812,6 @@ h3 {
   width: 208px;
   background: rgba(15, 15, 18, 0.85);
   backdrop-filter: var(--glass);
-  backdrop-filter: var(--glass);
   border: 1px solid var(--border-subtle);
   border-radius: 12px;
   padding: 8px;
@@ -902,7 +899,6 @@ h3 {
   left: 0;
   min-width: 220px;
   background: rgba(18, 18, 20, 0.85);
-  backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
@@ -1046,7 +1042,6 @@ h3 {
   transition: all var(--transition-base);
   white-space: nowrap;
   user-select: none;
-  user-select: none;
   position: relative;
   overflow: hidden;
 }
@@ -1069,7 +1064,6 @@ h3 {
 /* Default */
 .btn-default {
   background: var(--color-bg-card);
-  backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
   border-color: var(--color-border);
   color: var(--color-white);
@@ -1156,7 +1150,6 @@ h3 {
 .card {
   background: var(--color-bg-card);
   backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   padding: var(--sp-3);
@@ -1198,7 +1191,6 @@ h3 {
 .stat-card {
   padding: var(--sp-4);
   background: linear-gradient(180deg, rgba(30, 30, 35, 0.4) 0%, rgba(18, 18, 20, 0.6) 100%);
-  backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
   border: 1px solid var(--color-border);
   border-bottom: 2px solid rgba(255, 255, 255, 0.05);
@@ -1302,7 +1294,6 @@ h3 {
 .form-textarea {
   color-scheme: dark;
   background: var(--color-bg-input);
-  backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: var(--color-text);
@@ -1428,7 +1419,6 @@ h3 {
   border-radius: var(--radius);
   border: 1px solid var(--color-border);
   background: var(--color-bg-card);
-  backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
   box-shadow: var(--shadow-sm);
 }
@@ -1764,7 +1754,6 @@ h3 {
   gap: 6px;
   background: rgba(10, 10, 15, 0.6);
   backdrop-filter: blur(12px) saturate(160%);
-  -webkit-backdrop-filter: blur(12px) saturate(160%);
   padding: 6px;
   border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -2518,7 +2507,6 @@ h3 {
   width: 320px;
   background: rgba(12, 12, 16, 0.97);
   backdrop-filter: var(--glass);
-  backdrop-filter: var(--glass);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius);
   box-shadow: var(--shadow-lg), 0 0 40px rgba(230, 0, 126, 0.15);
@@ -2639,7 +2627,6 @@ h3 {
   z-index: 9000;
   max-width: 280px;
   background: rgba(12, 12, 16, 0.97);
-  backdrop-filter: var(--glass);
   backdrop-filter: var(--glass);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius);
@@ -2887,7 +2874,6 @@ textarea:focus-visible {
   /* Premium SaaS Glassmorphism Effect */
   background: rgba(18, 22, 31, 0.6);
   backdrop-filter: var(--glass);
-  -webkit-backdrop-filter: var(--glass);
   border-right: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: var(--shadow-premium), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
   position: relative;
@@ -2973,7 +2959,6 @@ textarea:focus-visible {
   /* Premium Glowing Text Gradient */
   background: linear-gradient(135deg, var(--text-primary) 30%, var(--accent-primary) 100%);
   background-clip: text;
-  -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   text-transform: uppercase;
   line-height: 1.1;
@@ -3191,6 +3176,7 @@ textarea:focus-visible {
     opacity: 0;
     transform: translateY(-10px) scaleY(0.9);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scaleY(1);
@@ -3509,7 +3495,6 @@ textarea:focus-visible {
   line-height: 1;
   margin-bottom: var(--sp-2);
   background: linear-gradient(180deg, #FFF 0%, #666 100%);
-  background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   animation: title-reveal 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
@@ -5962,7 +5947,6 @@ textarea:focus-visible {
 .widget {
   background: var(--color-bg-card);
   backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   padding: 20px;
@@ -6861,12 +6845,10 @@ textarea:focus-visible {
 .modal-overlay {
   background: rgba(0, 0, 0, 0.65) !important;
   backdrop-filter: blur(8px) !important;
-  backdrop-filter: blur(8px) !important;
 }
 
 .modal-content {
   background: rgba(12, 12, 18, 0.78) !important;
-  backdrop-filter: blur(28px) saturate(160%) !important;
   backdrop-filter: blur(28px) saturate(160%) !important;
   border: 1px solid rgba(255, 255, 255, 0.08) !important;
   box-shadow:
@@ -7053,7 +7035,6 @@ textarea:focus-visible {
   left: 50%;
   transform: translateX(-50%) translateY(120%);
   background: rgba(15, 15, 20, 0.92);
-  backdrop-filter: blur(20px) saturate(160%);
   backdrop-filter: blur(20px) saturate(160%);
   border: 1px solid rgba(255, 0, 122, 0.3);
   border-radius: 16px;
@@ -8062,7 +8043,7 @@ textarea:focus-visible {
 }
 
 /* ─── RESPONSIVE ─── */
-@media (max-width: 768px) {
+@media (width <= 768px) {
   .trm-detail-title-row {
     flex-direction: column;
     align-items: flex-start;

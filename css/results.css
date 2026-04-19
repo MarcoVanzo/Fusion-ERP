@@ -54,7 +54,6 @@
       margin-bottom: 32px !important;
       background: rgba(18, 18, 20, 0.5);
       backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
       padding: 6px;
       border-radius: 16px;
       border: 1px solid rgba(255, 255, 255, 0.06);
@@ -102,7 +101,6 @@
       align-items: center;
       gap: 10px;
       background: rgba(28, 28, 30, 0.5);
-      backdrop-filter: blur(15px);
       backdrop-filter: blur(15px);
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 12px;
@@ -153,7 +151,6 @@
       max-height: 320px;
       overflow-y: auto;
       background: rgba(18, 18, 22, 0.97);
-      backdrop-filter: blur(24px);
       backdrop-filter: blur(24px);
       border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 14px;
@@ -250,7 +247,6 @@
   .res-icon-btn {
       background: rgba(28, 28, 30, 0.5);
       backdrop-filter: blur(15px);
-      backdrop-filter: blur(15px);
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 12px;
       color: var(--color-text-muted);
@@ -296,7 +292,6 @@
 
   .res-card {
       background: rgba(18, 18, 20, 0.6);
-      backdrop-filter: blur(24px);
       backdrop-filter: blur(24px);
       border: 1px solid rgba(255, 255, 255, 0.06);
       border-radius: 20px;
@@ -519,7 +514,6 @@
       border-radius: 20px;
       background: rgba(18, 18, 20, 0.6);
       backdrop-filter: blur(24px);
-      backdrop-filter: blur(24px);
       border: 1px solid rgba(255, 255, 255, 0.06);
       box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
   }
@@ -685,7 +679,6 @@
       opacity: 0.3;
       background: linear-gradient(135deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.1));
       background-clip: text;
-      background-clip: text;
       -webkit-text-fill-color: transparent;
       filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.3));
   }
@@ -714,7 +707,6 @@
   .res-skel-card {
       background: rgba(18, 18, 20, 0.6);
       backdrop-filter: blur(24px);
-      backdrop-filter: blur(24px);
       border: 1px solid rgba(255, 255, 255, 0.06);
       border-radius: 20px;
       padding: 24px 28px;
@@ -739,7 +731,6 @@
       position: fixed;
       inset: 0;
       background: rgba(0, 0, 0, 0.85);
-      backdrop-filter: blur(8px);
       backdrop-filter: blur(8px);
       z-index: 9000;
       display: flex;

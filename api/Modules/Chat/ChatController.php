@@ -189,7 +189,7 @@ class ChatController
         ]);
 
         // Update sender's last_read_at
-        $this->markRead($channelId, $user['id']);
+        $this->markReadInternal($channelId, $user['id']);
 
         Response::success([
             'id' => $messageId,
