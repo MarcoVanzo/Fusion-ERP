@@ -382,7 +382,7 @@ const OutSeason = (() => {
                     ));
                 })())
               : (S.innerHTML =
-                  '<div class="os-table-wrap" style="padding:40px;text-align:center;opacity:.6;">\n                <p style="font-size:1.1rem;margin-bottom:16px;">Nessun dato trovato nel database.</p>\n                <p style="font-size:13px;margin-bottom:20px;">Clicca il pulsante per importare i dati da Cognito Forms.</p>\n            </div>');
+                  '<div class="os-table-wrap" style="padding:40px;text-align:center;opacity:.6;">\n                <p style="font-size:1.1rem;margin-bottom:16px;">Nessun dato trovato nel database.</p>\n                <p style="font-size:13px;margin-bottom:20px;">Clicca il pulsante per importare i dati da Cognito Forms.</p>\n            </div>'));
         })(m.data?.last_sync || null);
     } catch (n) {
       console.error("[OutSeason] Load error:", n);
