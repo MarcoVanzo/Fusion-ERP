@@ -460,10 +460,22 @@ PROMPT;
             }
             
             $r_found = !empty($r['found']) ? 1 : 0;
-            $r_tx_date = $r['transaction_date'] ?? null;
+            
+            // Fix transaction date length to max 20 chars
+            $r_tx_date = isset($r['transaction_date']) ? mb_substr(trim((string)$r['transaction_date']), 0, 20) : null;
+            if ($r_tx_date === 'null' || $r_tx_date === '') {
+                $r_tx_date = null;
+            }
+
+            // Fix transaction amount to float
             $r_tx_AMOUNT = isset($r['transaction_amount']) ? (float)$r['transaction_amount'] : null;
-            $r_tx_desc = $r['transaction_description'] ?? null;
-            $r_notes = $r['notes'] ?? null;
+            
+            // Transaction description max length is TEXT (65535 chars), so it's safe
+            $r_tx_desc = isset($r['transaction_description']) ? trim((string)$r['transaction_description']) : null;
+            
+            // Notes max length is TEXT
+            $r_notes = isset($r['notes']) ? trim((string)$r['notes']) : null;
+            
             $r_verified_by = $user['id'] ?? null;
 
             try {
