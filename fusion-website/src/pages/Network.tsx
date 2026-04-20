@@ -144,7 +144,7 @@ const Network = () => {
                             {hubConfig.logo_path ? (
                                 <img 
                                     src={hubConfig.logo_path.startsWith('http') ? hubConfig.logo_path : `${ERP_BASE}/${hubConfig.logo_path}`} 
-                                    alt="Savino del bene volley HUB" 
+                                    alt="Savino Del Bene volley HUB" 
                                     className="max-h-full max-w-full object-contain filter grayscale-0 md:grayscale md:group-hover:grayscale-0 transition-all duration-700 hover:scale-105 drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]"
                                 />
                             ) : (
@@ -161,7 +161,7 @@ const Network = () => {
                         {/* Info Section */}
                         <div className="flex flex-col flex-grow min-h-0 overflow-hidden z-10 p-8 md:p-10 md:w-3/5">
                             <h2 className="text-3xl md:text-4xl font-heading text-white tracking-tight uppercase mb-4 flex items-center gap-3 shrink-0 group-hover:text-brand-400 transition-colors">
-                                Savino del bene volley HUB
+                                Savino Del Bene volley HUB
                             </h2>
                             <div 
                                 className="relative mb-4 flex-grow min-h-0 overflow-visible md:overflow-y-auto pr-0 md:pr-4" 

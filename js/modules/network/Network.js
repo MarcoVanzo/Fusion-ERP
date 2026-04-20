@@ -127,7 +127,7 @@ class NetworkModule {
 
     openHubEditModal() {
         const modal = window.UI.modal({
-            title: "Modifica HUB Savino del Bene",
+            title: "Modifica HUB Savino Del Bene",
             body: NetworkView.getHubEditModalBody(this._hubConfig),
             footer: NetworkView.getHubEditModalFooter()
         });

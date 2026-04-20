@@ -41,7 +41,7 @@ const Network = (() => {
                 ${hz.logo_path ? `<img src="${Utils.escapeHtml(hz.logo_path)}" style="height:100px;width:100px;object-fit:contain;border-radius:var(--radius-sm);background:#fff;padding:8px;flex-shrink:0;box-shadow:0 2px 4px rgba(0,0,0,0.05);">` : `<div style="height:100px;width:100px;border-radius:var(--radius-sm);background:var(--color-border);display:flex;align-items:center;justify-content:center;color:var(--color-text-muted)"><i class="ph ph-image" style="font-size:32px;"></i></div>`}
                 <div style="flex:1;min-width:0;">
                     <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;">
-                        <h3 style="margin:0;font-size:20px;font-weight:600;">Savino del bene volley HUB</h3>
+                        <h3 style="margin:0;font-size:20px;font-weight:600;">Savino Del Bene volley HUB</h3>
                         ${e ? `<button class="btn-dash" id="net-edit-hub" type="button"><i class="ph ph-pencil-simple"></i> Modifica</button>` : ""}
                     </div>
                     <div style="margin:0;font-size:14px;color:var(--color-text-muted);line-height:1.6;">${hz.text ? Utils.escapeHtml(hz.text).replace(/\\n/g, "<br>") : "Nessun testo inserito."}</div>
@@ -79,7 +79,7 @@ const Network = (() => {
         "click",
         () => {
           const mModal = UI.modal({
-            title: "Modifica Savino del bene volley HUB",
+            title: "Modifica Savino Del Bene volley HUB",
             body: `
                   <div class="form-group">
                       <label class="form-label" for="hub-text">Testo</label>

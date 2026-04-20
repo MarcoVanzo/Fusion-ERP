@@ -2,8 +2,6 @@
  * AthletesMetrics — Gestione performance e integrazione VALD
  */
 
-import { _AthletesAPI } from './AthletesAPI.js';
-
 export const AthletesMetrics = {
     /**
      * Renderizza la sezione metriche per un singolo atleta
