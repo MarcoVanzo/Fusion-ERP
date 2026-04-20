@@ -170,8 +170,11 @@ catch (\Throwable $e) {
     }
     file_put_contents(__DIR__ . '/../ai_debug.log', date('Y-m-d H:i:s') . ' (CATCH) ' . $errMsg . PHP_EOL, FILE_APPEND);
 
-    $msg = $errMsg; // FORCE DEBUG
-    Response::error($msg, 500, $e->getMessage());
+    $clientMessage = $debug
+        ? 'PHP_ERROR: ' . $e->getMessage() . ' in ' . basename($e->getFile()) . ':' . $e->getLine()
+        : 'Errore interno del server. Contattare l\'amministratore.';
+        
+    Response::error($clientMessage, 500, $e->getMessage());
 } finally {
     // Robustness: Force database disconnection and trigger garbage collection
     if (class_exists('FusionERP\\Shared\\Database')) {
