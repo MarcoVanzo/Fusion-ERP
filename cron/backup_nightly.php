@@ -15,6 +15,13 @@ declare(strict_types=1);
 // ── Bootstrap ────────────────────────────────────────────────────────────────
 define('FUSION_CRON', true);
 
+$isCli = php_sapi_name() === 'cli';
+$token = $_GET['token'] ?? '';
+if (!$isCli && $token !== 'FusionBackup2026!') {
+    http_response_code(403);
+    die("Access denied");
+}
+
 $rootDir = dirname(__DIR__);
 require_once $rootDir . '/vendor/autoload.php';
 
