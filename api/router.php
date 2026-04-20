@@ -84,7 +84,7 @@ if (empty($module) || empty($action)) {
 $publicEndpoints = [
     'talentday' => ['publicRegister'],
     'webhooks'  => ['stripe'],
-    'whatsapp'  => ['receive'],
+    'whatsapp'  => ['receive', 'verify'],
 ];
 $isPublicEndpoint = isset($publicEndpoints[$module]) && in_array($action, $publicEndpoints[$module], true);
 
