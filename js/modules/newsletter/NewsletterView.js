@@ -1,5 +1,4 @@
 // js/modules/newsletter/NewsletterView.js
-import { _NewsletterAPI } from './NewsletterAPI.js';
 
 export const NewsletterView = {
     renderEmptyConfig() {
