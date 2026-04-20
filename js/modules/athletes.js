@@ -79,7 +79,7 @@ const Athletes = (() => {
                 renderDashboard();
             }
 
-        } catch (_e) {
+        } catch (e) {
             app.innerHTML = Utils.emptyState("Errore caricamento atleti", e.message);
             UI.toast("Errore nel caricamento del modulo atleti", "error");
         } finally {
@@ -250,7 +250,7 @@ const Athletes = (() => {
                 UI.toast(`Quote assegnate a ${selectedIds.length} atlete con successo!`, "success");
                 document.getElementById("bulk-quotes-modal").style.display = "none";
                 refreshData(variant);
-            } catch (_err) {
+            } catch (err) {
                 UI.toast("Errore durante l'assegnazione: " + err.message, "error");
             } finally {
                 btnText.textContent = originalText;
@@ -321,7 +321,7 @@ const Athletes = (() => {
                             await AthletesAPI.update({ id, [field]: val });
                             UI.toast("Quota salvata", "success", 1000);
                             await refreshData('quote');
-                        } catch (_err) {
+                        } catch (err) {
                             UI.toast(err.message, "error");
                         }
                     };
@@ -335,7 +335,7 @@ const Athletes = (() => {
                             await AthletesAPI.update({ id, [field]: value });
                             UI.toast("Pagamento aggiornato", "success", 1000);
                             await refreshData('quote');
-                        } catch (_err) {
+                        } catch (err) {
                             UI.toast(err.message, "error");
                         }
                     };
@@ -375,7 +375,7 @@ const Athletes = (() => {
             // Update URL
             Router.updateHash(Router.getCurrentRoute(), { id });
 
-        } catch (_e) {
+        } catch (e) {
             UI.toast("Atleta non trovato", "error");
             renderDashboard();
         } finally {
@@ -404,7 +404,7 @@ const Athletes = (() => {
                     Store.invalidate("auth");
                     Store.invalidate("athletes");
                     await renderProfile(athlete.id, currentTab);
-                } catch (_e) {
+                } catch (e) {
                     UI.toast(e.message, "error");
                 } finally {
                     UI.loading(false);
@@ -456,7 +456,7 @@ const Athletes = (() => {
                     ]);
                     transportReimbursement = (transportHist || []).length * 2.50;
                     tournamentHistory = tournamentHist || [];
-                } catch (_e) { /* fallback silenzioso */ }
+                } catch (e) { /* fallback silenzioso */ }
                 panel.innerHTML = AthletesView.tabQuote(athlete, App.getUser().role === 'admin', transportReimbursement, tournamentHistory);
                 addQuoteListeners(athlete);
                 break;
@@ -480,7 +480,7 @@ const Athletes = (() => {
                 try {
                     const history = await AthletesAPI.getTransportHistory(athlete.id);
                     panel.innerHTML = AthletesView.tabTrasporti(athlete, history);
-                } catch (_e) {
+                } catch (e) {
                     panel.innerHTML = Utils.emptyState("Errore caricamento trasporti", e.message);
                 }
                 break;
@@ -500,7 +500,7 @@ const Athletes = (() => {
                 UI.toast(`Atleta ${newState ? 'attivata' : 'disattivata'}`, "success");
                 const updated = await AthletesAPI.getById(athlete.id);
                 switchTab('anagrafica', updated);
-            } catch (_e) {
+            } catch (e) {
                 UI.toast(e.message, "error");
             } finally {
                 UI.loading(false);
@@ -546,7 +546,7 @@ const Athletes = (() => {
                     UI.toast("Quote aggiornate con successo", "success");
                     const updatedAthlete = await AthletesAPI.getById(athlete.id);
                     switchTab('quote', updatedAthlete);
-                } catch (_err) {
+                } catch (err) {
                     UI.toast(err.message, "error");
                 } finally {
                     UI.loading(false);
@@ -576,7 +576,7 @@ const Athletes = (() => {
                 await AthletesAPI.update(data);
                 UI.toast("Atleta aggiornata con successo", "success");
                 renderProfile(athlete.id);
-            } catch (_err) {
+            } catch (err) {
                 const errEl = document.getElementById("form-error");
                 if (errEl) {
                     errEl.textContent = err.message;
@@ -644,7 +644,7 @@ const Athletes = (() => {
                         // Ricarica i dati dell'atleta e aggiorna il tab
                         const updatedAthlete = await AthletesAPI.getById(athlete.id);
                         switchTab(currentTab, updatedAthlete);
-                    } catch (_err) {
+                    } catch (err) {
                         UI.toast(err.message || "Errore durante l'upload", "error");
                     } finally {
                         UI.loading(false);
@@ -698,14 +698,14 @@ const Athletes = (() => {
                         UI.toast("Invito inviato con successo!", "success");
                         modal.style.display = "none";
                         await renderSubUsers(panel, athlete);
-                    } catch (_e) {
+                    } catch (e) {
                         UI.toast(e.message, "error");
                     } finally {
                         UI.loading(false);
                     }
                 };
             }
-        } catch (_e) {
+        } catch (e) {
             panel.innerHTML = Utils.emptyState("Errore caricamento sotto-utenti", e.message);
         }
     }
@@ -745,7 +745,7 @@ const Athletes = (() => {
             athletesData.forEach(a => {
                 a._transportReimbursement = reimbMap.get(String(a.id)) || 0;
             });
-        } catch (_e) {
+        } catch (e) {
             console.warn('Impossibile caricare rimborsi trasporti:', e);
         }
     }

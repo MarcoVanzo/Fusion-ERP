@@ -465,7 +465,7 @@ const Staff = (() => {
                         Store.invalidate("list/staff");
                         Store.invalidate("get/staff");
                         d(p.id); // reload
-                    } catch (_err) {
+                    } catch (err) {
                         UI.toast(err.message, 'error');
                     }
                 }, { signal: e.signal });
@@ -544,7 +544,7 @@ const Staff = (() => {
                      btn.disabled = false;
                      btn.innerHTML = '<i class="ph ph-arrows-clockwise"></i> VERIFICA STATO';
                  }
-             } catch (_err) {
+             } catch (err) {
                  UI.toast(err.message, 'error');
                  btn.disabled = false;
                  btn.innerHTML = '<i class="ph ph-arrows-clockwise"></i> VERIFICA STATO';
@@ -583,7 +583,7 @@ const Staff = (() => {
                         Store.invalidate("list/staff");
                         Store.invalidate("get/staff");
                         d(p.id); // reload
-                    } catch (_err) {
+                    } catch (err) {
                         UI.toast(err.message, 'error');
                     }
                 }, { signal: e.signal });
@@ -675,7 +675,7 @@ const Staff = (() => {
                         Store.invalidate("get/staff"),
                         (t = await Store.get("list", "staff").catch(() => t)),
                         d(e.id));
-                    } catch (_e) {
+                    } catch (e) {
                       ((s.textContent = e.message),
                         s.classList.remove("hidden"),
                         (r.disabled = !1),
@@ -708,14 +708,14 @@ const Staff = (() => {
                         (_n = null),
                         (t = await Store.get("list", "staff").catch(() => t)),
                         r());
-                    } catch (_e) {
+                    } catch (e) {
                       UI.toast("Errore: " + e.message, "error");
                     }
                   }));
             })(p),
           { signal: e.signal },
         ));
-    } catch (_e) {
+    } catch (e) {
       c.innerHTML = Utils.emptyState("Errore caricamento", e.message);
     }
   }

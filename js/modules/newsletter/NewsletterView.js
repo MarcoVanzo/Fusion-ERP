@@ -339,7 +339,7 @@ export const NewsletterView = {
             try {
                 await callbacks.onSave({ email, name: name || null, last_name: last || null, groups: selectedGroups });
                 modal.close();
-            } catch (_err) {
+            } catch (err) {
                 errEl.textContent = err.message;
                 errEl.classList.remove("hidden");
                 saveBtn.disabled = false;
@@ -390,7 +390,7 @@ export const NewsletterView = {
                         if (list) list.innerHTML = renderGroupList(newGroups);
                         rebindDeleteBtns(newGroups);
                         UI.toast("Gruppo eliminato", "success");
-                    } catch (_err) {
+                    } catch (err) {
                         UI.toast("Errore: " + err.message, "error");
                     }
                 });
@@ -417,7 +417,7 @@ export const NewsletterView = {
                 document.getElementById("nl-group-name").value = "";
                 errEl.classList.add("hidden");
                 UI.toast("Gruppo creato", "success");
-            } catch (_err) {
+            } catch (err) {
                 errEl.textContent = err.message;
                 errEl.classList.remove("hidden");
             } finally {

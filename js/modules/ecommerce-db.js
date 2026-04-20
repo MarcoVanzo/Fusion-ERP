@@ -33,7 +33,7 @@ const EcommerceDB = (() => {
         await e().articoli.clear(); // Remove local items once successfully uploaded
       }
       await e().metadati.put({ chiave: "ec_migrated_v2", valore: 1 });
-    } catch (_err) {
+    } catch (err) {
       console.error("EcommerceDB Migration Error:", err);
       // Non impostiamo il flag 'ec_migrated_v2' così riprova al prossimo reload
     }
@@ -55,7 +55,7 @@ const EcommerceDB = (() => {
       try {
         const res = await Store.api("getProdotti", "ecommerce");
         return res.prodotti || [];
-      } catch (_err) {
+      } catch (err) {
         console.error("EcommerceDB.getArticoli error:", err);
         return [];
       }
@@ -64,7 +64,7 @@ const EcommerceDB = (() => {
       try {
         const articoli = await this.getArticoli();
         return articoli.find((a) => String(a.id) === String(id));
-      } catch (_err) {
+      } catch (err) {
         return null;
       }
     },
@@ -96,7 +96,7 @@ const EcommerceDB = (() => {
       try {
         const res = await Store.api("getProdotti", "ecommerce");
         return res.count || 0;
-      } catch (_err) {
+      } catch (err) {
         return 0;
       }
     },

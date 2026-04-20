@@ -241,7 +241,7 @@ export const AthletesWizard = {
                 UI.toast("Atleta creato con successo", "success");
                 modal.close();
                 if (onSave) onSave();
-            } catch (_e) {
+            } catch (e) {
                 const err = document.getElementById("na-error");
                 err.textContent = e.message;
                 err.classList.remove("hidden");

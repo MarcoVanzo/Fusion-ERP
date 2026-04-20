@@ -125,7 +125,7 @@ const Admin = (() => {
                       "success",
                     ),
                       await a());
-                  } catch (_e) {
+                  } catch (e) {
                     (UI.toast("Errore backup: " + e.message, "error"),
                       t &&
                         ((t.disabled = !1),
@@ -798,7 +798,7 @@ const Admin = (() => {
                   if (res.ok) {
                     navConfig = await res.json();
                   }
-                } catch (_err) {
+                } catch (err) {
                   console.error("Errore fetch permessi", err);
                 }
 
@@ -809,7 +809,7 @@ const Admin = (() => {
                       typeof e.permissions_json === "string"
                         ? JSON.parse(e.permissions_json)
                         : e.permissions_json;
-                  } catch (_err) {}
+                  } catch (err) {}
                 } else if (e.role) {
                   // Fallback permissons based on role if no explicit JSON
                   const rolePerms = {
@@ -1161,7 +1161,7 @@ const Admin = (() => {
                             .classList.remove("hidden"),
                           t.classList.add("hidden"),
                           UI.toast("Password temporanea generata", "success"));
-                      } catch (_e) {
+                      } catch (e) {
                         ((n.textContent = e.message),
                           n.classList.remove("hidden"),
                           (t.disabled = !1),
@@ -1612,7 +1612,7 @@ const Admin = (() => {
                         });
                       });
                     })(e.data);
-                  } catch (_e) {
+                  } catch (e) {
                     t.innerHTML = Utils.emptyState(
                       "Errore caricamento dashboard",
                       e?.message ?? "Riprova più tardi.",

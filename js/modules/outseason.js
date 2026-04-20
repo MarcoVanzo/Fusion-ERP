@@ -115,7 +115,7 @@ const OutSeason = (() => {
         } else {
             t = new Set();
         }
-      } catch (_err) {
+      } catch (err) {
         console.warn("[OutSeason] Could not load saved verifications pre-render:", err);
       }
 
@@ -617,7 +617,7 @@ const OutSeason = (() => {
                         AthletesWizard.openCreate(teams, () => {
                             if (typeof UI !== 'undefined' && UI.toast) UI.toast("Atleta aggiunta con successo!", "success");
                         });
-                    } catch (_err) {
+                    } catch (err) {
                         console.error("[OutSeason] Error opening wizard", err);
                         if (typeof UI !== 'undefined' && UI.toast) UI.toast("Errore apertura maschera atleta", "error");
                     }

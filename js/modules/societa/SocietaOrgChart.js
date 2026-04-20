@@ -42,7 +42,7 @@ export default {
                         await SocietaAPI.updateRole({ id: this.draggedId, name: this.getRoleNameById(this.draggedId), parent_role_id: targetId });
                         UI.toast("Gerarchia aggiornata", "success");
                         if (onUpdate) onUpdate();
-                    } catch (_err) {
+                    } catch (err) {
                         UI.toast("Errore: " + err.message, "error");
                     } finally {
                         UI.loading(false);

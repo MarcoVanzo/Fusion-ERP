@@ -72,7 +72,7 @@ window.__valdAi = async function (athleteId, part) {
       </div>
     `;
 
-  } catch (_err) {
+  } catch (err) {
     resultEl.innerHTML = `<div class="error-box" style="margin-top:20px;">${err.message}</div>`;
   }
 };
@@ -113,7 +113,7 @@ window.__valdChat = async function (athleteId, typeClass) {
   try {
     const resp = await Store.api("aiChat", "vald", { athleteId, question, context });
     aiMsg.innerHTML = `<span style="font-size:10px; opacity:0.4; display:block; margin-bottom:4px;">Assistant</span>${resp?.answer || "Spiacente, non ho potuto rispondere."}`;
-  } catch (_err) {
+  } catch (err) {
     aiMsg.classList.add("text-danger");
     aiMsg.innerHTML = `<span style="font-size:10px; opacity:0.4; display:block; margin-bottom:4px;">Assistant</span>Errore: ${err.message}`;
   } finally {

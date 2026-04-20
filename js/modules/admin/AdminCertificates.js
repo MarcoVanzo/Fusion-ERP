@@ -50,7 +50,7 @@ const AdminCertificates = (() => {
       `;
 
       bindEvents();
-    } catch (_err) {
+    } catch (err) {
       if (err.name === 'AbortError') return;
       container.innerHTML = Utils.emptyState("Errore caricamento certificati", err.message);
     }
@@ -67,7 +67,7 @@ const AdminCertificates = (() => {
           UI.toast("Certificato eliminato", "success");
           Store.invalidate("admin", "listCertificates");
           await loadCertificates();
-        } catch (_err) {
+        } catch (err) {
           UI.toast("Errore: " + err.message, "error");
         }
       }, { signal: abortController.signal });
@@ -131,7 +131,7 @@ const AdminCertificates = (() => {
         Store.invalidate("admin", "listCertificates");
         await loadCertificates();
         modal.close();
-      } catch (_err) {
+      } catch (err) {
         errEl.textContent = err.message;
         errEl.classList.remove("hidden");
       }

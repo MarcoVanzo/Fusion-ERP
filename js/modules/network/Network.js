@@ -55,7 +55,7 @@ class NetworkModule {
             });
 
             this.renderActiveTab();
-        } catch (_err) {
+        } catch (err) {
             console.error("[Network] Init error:", err);
             app.innerHTML = window.Utils.emptyState("Errore caricamento", err.message);
         } finally {
@@ -152,7 +152,7 @@ class NetworkModule {
                 window.UI.toast("HUB aggiornato", "success");
                 this.renderActiveTab();
                 modal.close();
-            } catch (_err) {
+            } catch (err) {
                 const errEl = document.getElementById("hub-error");
                 if (errEl) {
                     errEl.textContent = err.message;
@@ -233,7 +233,7 @@ class NetworkModule {
                 window.UI.toast(isEdit ? "Aggiornato" : "Creato", "success");
                 this.renderActiveTab();
                 modal.close();
-            } catch (_err) {
+            } catch (err) {
                 errEl.textContent = err.message;
                 errEl.classList.remove("hidden");
                 saveBtn.disabled = false;
@@ -286,7 +286,7 @@ class NetworkModule {
                 this._collaborations = this._collaborations.filter(c => c.id !== id);
                 window.UI.toast("Collaborazione eliminata", "success");
                 this.renderActiveTab();
-            } catch (_err) {
+            } catch (err) {
                 window.UI.toast("Errore: " + err.message, "error");
             }
         });
@@ -364,7 +364,7 @@ class NetworkModule {
                 window.UI.toast(isEdit ? "Atleta aggiornato" : "Atleta aggiunto", "success");
                 this.renderActiveTab();
                 modal.close();
-            } catch (_err) {
+            } catch (err) {
                 errEl.textContent = err.message;
                 errEl.classList.remove("hidden");
                 saveBtn.disabled = false;
@@ -430,7 +430,7 @@ class NetworkModule {
                 window.UI.toast("Valutazione salvata", "success");
                 this.renderActiveTab();
                 modal.close();
-            } catch (_err) {
+            } catch (err) {
                 const errEl = document.getElementById("ev-error");
                 errEl.textContent = err.message;
                 errEl.classList.remove("hidden");
@@ -449,7 +449,7 @@ class NetworkModule {
                 this._trials = await NetworkAPI.listTrials();
                 window.UI.toast("Convertito in Scouting ✓", "success");
                 this.renderActiveTab();
-            } catch (_err) {
+            } catch (err) {
                 window.UI.toast("Errore: " + err.message, "error");
             }
         });
@@ -462,7 +462,7 @@ class NetworkModule {
                 this._trials = this._trials.filter(t => t.id !== id);
                 window.UI.toast("Atleta rimosso", "success");
                 this.renderActiveTab();
-            } catch (_err) {
+            } catch (err) {
                 window.UI.toast("Errore: " + err.message, "error");
             }
         });
@@ -532,7 +532,7 @@ class NetworkModule {
                 window.UI.toast("Attività salvata", "success");
                 this.renderActiveTab();
                 modal.close();
-            } catch (_err) {
+            } catch (err) {
                 const errEl = document.getElementById("ac-error");
                 errEl.textContent = err.message;
                 errEl.classList.remove("hidden");
@@ -549,7 +549,7 @@ class NetworkModule {
                 this._activities = this._activities.filter(a => a.id !== id);
                 window.UI.toast("Attività eliminata", "success");
                 this.renderActiveTab();
-            } catch (_err) {
+            } catch (err) {
                 window.UI.toast("Errore: " + err.message, "error");
             }
         });

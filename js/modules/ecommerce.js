@@ -67,7 +67,7 @@ const Ecommerce = {
             }
 
             this.renderArticleGrid(panel);
-        } catch (_err) {
+        } catch (err) {
             panel.innerHTML = `<div class="ec-empty"><i class="ph ph-warning-circle"></i><p>Errore: ${Utils.escapeHtml(err.message)}</p></div>`;
         }
     },
@@ -177,7 +177,7 @@ const Ecommerce = {
                     currentMimeType = file.type;
                     imgPreview.src = currentBase64;
                     imgPreview.style.display = "block";
-                } catch (_err) {
+                } catch (err) {
                     UI.toast("Errore lettura immagine", "error");
                 }
             }
@@ -228,7 +228,7 @@ const Ecommerce = {
                 
                 await this.renderArticleGrid(panel);
                 modal.close();
-            } catch (_err) {
+            } catch (err) {
                 errorDiv.textContent = "Errore salvataggio: " + err.message;
                 errorDiv.style.display = "block";
                 btnSave.disabled = false;
@@ -268,7 +268,7 @@ const Ecommerce = {
                 document.getElementById("ec-wizard-back").addEventListener("click", () => this.openImportWizard(container), this.sig());
                 document.getElementById("ec-wizard-confirm").addEventListener("click", () => this.executeImportDownload(container, products), this.sig());
 
-            } catch (_err) {
+            } catch (err) {
                 const msg = (err.message && err.message.toLowerCase().includes("fetch"))
                     ? "Errore di rete o server non raggiungibile (Timeout/CORS). Assicurati di essere connesso."
                     : err.message;
@@ -351,7 +351,7 @@ const Ecommerce = {
             if (badge) badge.textContent = `${orders.length} Ordini`;
 
             this.renderOrdersTable(panel, orders);
-        } catch (_err) {
+        } catch (err) {
             panel.innerHTML = `<div class="ec-empty">
                 <i class="ph ph-warning-circle"></i>
                 <p>Errore caricamento ordini: ${Utils.escapeHtml(err.message)}</p>
@@ -404,7 +404,7 @@ const Ecommerce = {
                     const res = await EcommerceAPI.syncOrders();
                     UI.toast(res?.message || "Sincronizzazione completata", "success");
                     await this.loadOrdersList(); // Reloads entirely
-                } catch (_err) {
+                } catch (err) {
                     UI.toast(err.message, "error");
                     b.disabled = false;
                     b.innerHTML = '<i class="ph ph-arrows-clockwise"></i> Aggiorna';
@@ -425,7 +425,7 @@ const Ecommerce = {
                     if (original) original.statoInterno = val;
                     UI.toast("Stato aggiornato nel server", "success", 2000);
                     redrawCallback();
-                } catch (_err) {
+                } catch (err) {
                     UI.toast(err.message, "error");
                 }
             }, this.sig());

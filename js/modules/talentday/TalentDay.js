@@ -41,7 +41,7 @@ class TalentDayModule {
             await this.refreshData(false);
             container.innerHTML = TalentDayView.renderMainLayout();
             this.renderTableData(document.getElementById("td-content-area"));
-        } catch (_err) {
+        } catch (err) {
             console.error("[TalentDay] Init error", err);
             container.innerHTML = window.Utils.emptyState("Errore di caricamento", err.message);
             window.UI.toast("Impossibile caricare le registrazioni Talent Day: " + err.message, "error");
@@ -63,7 +63,7 @@ class TalentDayModule {
                 const area = document.getElementById("td-content-area");
                 if (area) this.renderTableData(area);
             }
-        } catch (_err) {
+        } catch (err) {
             console.error("[TalentDay] Data fetch error", err);
             window.UI.toast("Errore nel caricamento dei dati Talent Day", "error");
         }
@@ -277,7 +277,7 @@ class TalentDayModule {
             window.UI.toast("Registrazione eliminata con successo", "success");
             window.Store.invalidate("talentday");
             await this.refreshData(true);
-        } catch (_err) {
+        } catch (err) {
             window.UI.toast("Errore durante l'eliminazione: " + err.message, "error");
         }
     }
@@ -361,7 +361,7 @@ class TalentDayModule {
                 window.UI.toast(isEdit ? "Modifiche salvate con successo" : "Registrazione salvata con successo", "success");
                 closeModal();
                 await this.refreshData(true);
-            } catch (_err) {
+            } catch (err) {
                 errorDiv.textContent = err.message || "Errore durante il salvataggio.";
                 errorDiv.classList.remove("hidden");
                 saveBtn.disabled = false;

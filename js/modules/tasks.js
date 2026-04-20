@@ -133,7 +133,7 @@ const Tasks = (() => {
     try {
       const res = await Store.get("listTaskLogs", "tasks", { task_id: _currentTaskId });
       logs = res?.logs || [];
-    } catch (_err) { console.error("[Tasks] Logs load error:", err); }
+    } catch (err) { console.error("[Tasks] Logs load error:", err); }
 
     const outcomeOpts = ["", ...OUTCOMES].map(o => `<option value="${o}">${o || "— Seleziona esito —"}</option>`).join("");
     
@@ -282,7 +282,7 @@ const Tasks = (() => {
         UI.toast("Stato aggiornato", "success");
         if (task.status === "Completato") UI.toast("🎉 Task completata!", "success");
         render();
-      } catch (_err) { UI.toast(err.message, "error"); }
+      } catch (err) { UI.toast(err.message, "error"); }
     }, sig());
 
     container.querySelector("#qk-priority")?.addEventListener("change", async (e) => {
@@ -291,7 +291,7 @@ const Tasks = (() => {
         task.priority = e.target.value;
         UI.toast("Priorità aggiornata", "success");
         render();
-      } catch (_err) { UI.toast(err.message, "error"); }
+      } catch (err) { UI.toast(err.message, "error"); }
     }, sig());
 
     container.querySelector("#qk-assignee")?.addEventListener("change", async (e) => {
@@ -300,7 +300,7 @@ const Tasks = (() => {
         task.assigned_to = e.target.value || null;
         UI.toast("Assegnatario aggiornato", "success");
         render();
-      } catch (_err) { UI.toast(err.message, "error"); }
+      } catch (err) { UI.toast(err.message, "error"); }
     }, sig());
 
     container.querySelector("#btn-edit-task")?.addEventListener("click", () => openTaskModal(task.id), sig());
@@ -313,7 +313,7 @@ const Tasks = (() => {
           _currentTaskId = null;
           UI.toast("Task eliminata", "info");
           render();
-        } catch (_err) { UI.toast(err.message, "error"); }
+        } catch (err) { UI.toast(err.message, "error"); }
       });
     }, sig());
 
@@ -326,7 +326,7 @@ const Tasks = (() => {
             task.attachment = null;
             UI.toast("Allegato rimosso", "info");
             render();
-          } catch (_err) { UI.toast(err.message, "error"); }
+          } catch (err) { UI.toast(err.message, "error"); }
         });
       }, sig());
     }
@@ -375,7 +375,7 @@ const Tasks = (() => {
         }
         UI.toast("Aggiornamento salvato!", "success");
         render();
-      } catch (_err) {
+      } catch (err) {
         errEl.textContent = err.message;
         errEl.classList.remove("hidden");
         btn.disabled = false;
@@ -395,7 +395,7 @@ const Tasks = (() => {
                await Store.api("deleteTaskLog", "tasks", { id: logId });
                UI.toast("Log eliminato", "info");
                render();
-             } catch (_err) { UI.toast(err.message, "error"); }
+             } catch (err) { UI.toast(err.message, "error"); }
           });
           return;
         }
@@ -708,7 +708,7 @@ const Tasks = (() => {
         }
         render();
         modal.close();
-      } catch (_err) {
+      } catch (err) {
         errEl.textContent = err.message;
         errEl.classList.remove("hidden");
         btn.disabled = false;
@@ -810,7 +810,7 @@ const Tasks = (() => {
         _currentUserId = meRes?.user?.id || meRes?.id || null;
 
         render();
-      } catch (_err) {
+      } catch (err) {
         console.error("[Tasks] Init error:", err);
         app.innerHTML = Utils.emptyState("Errore nel caricamento", err.message, "Riprova", null, () => this.init());
       } finally {

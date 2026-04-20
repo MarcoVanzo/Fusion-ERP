@@ -47,7 +47,7 @@ export async function syncVald(btn) {
     } else {
       UI.toast("ℹ️ Nessun test nuovo trovato su VALD.", "info", 3000);
     }
-  } catch (_err) {
+  } catch (err) {
     UI.toast(
       "❌ Errore sincronizzazione VALD: " + (err.message || err),
       "error",

@@ -28,7 +28,7 @@ export async function initCampaignCharts(campaigns) {
 
     try {
         await loadChartJs();
-    } catch (_e) {
+    } catch (e) {
         console.error("[Newsletter] Failed to load Chart.js", e);
         return;
     }

@@ -237,7 +237,7 @@ const Dashboard = (() => {
           () => null,
         );
         render(data);
-      } catch (_err) {
+      } catch (err) {
         if (err.name === "AbortError") return;
         console.error("[Dashboard] init error", err);
         render(null);

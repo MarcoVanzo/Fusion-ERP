@@ -39,7 +39,7 @@ const Tournaments = {
             this.attachListEvents();
             await this.loadList();
             this._teams = await TournamentsAPI.getTeams();
-        } catch (_err) {
+        } catch (err) {
             console.error("[Tournaments] Init error:", err);
             const content = document.getElementById("trm-list-content");
             if(content) content.innerHTML = Utils.emptyState("Errore caricamento", err.message);
@@ -69,7 +69,7 @@ const Tournaments = {
                         Store.invalidate("tournaments");
                         UI.toast("Torneo copiato con successo", "success");
                         await this.loadList();
-                    } catch (_err) {
+                    } catch (err) {
                         UI.toast(err.message, "error");
                     } finally {
                         UI.loading(false);
@@ -91,7 +91,7 @@ const Tournaments = {
                                 Store.invalidate("tournaments");
                                 UI.toast("Torneo eliminato", "success");
                                 await this.loadList();
-                            } catch (_err) {
+                            } catch (err) {
                                 UI.toast(err.message, "error");
                             } finally {
                                 UI.loading(false);
@@ -107,7 +107,7 @@ const Tournaments = {
                     this.openDetail(card.dataset.id);
                 }
             };
-        } catch (_err) {
+        } catch (err) {
             listContent.innerHTML = `<div style="text-align:center; grid-column:1/-1; color:#ef4444; padding:20px;">${Utils.escapeHtml(err.message)}</div>`;
         }
     },
@@ -146,7 +146,7 @@ const Tournaments = {
             this._currentData = await TournamentsAPI.get(id);
             detailView.innerHTML = TournamentsView.detail(this._currentData);
             this.attachDetailEvents(detailView, id);
-        } catch (_err) {
+        } catch (err) {
             UI.toast(err.message, "error");
             this.closeDetail();
         }
@@ -199,7 +199,7 @@ const Tournaments = {
                 UI.toast("Rooming List salvata correttamente nel server", "success");
                 Store.invalidate("tournaments");
                 await this.openDetail(tournamentId);
-            } catch (_err) {
+            } catch (err) {
                 UI.toast("Errore durante il salvataggio: " + err.message, "error");
             } finally {
                 UI.loading(false);
@@ -219,7 +219,7 @@ const Tournaments = {
                 UI.toast("Dossier Torneo salvato correttamente nel server", "success");
                 Store.invalidate("tournaments");
                 await this.openDetail(tournamentId);
-            } catch (_err) {
+            } catch (err) {
                 UI.toast("Errore durante il salvataggio: " + err.message, "error");
             } finally {
                 UI.loading(false);
@@ -241,7 +241,7 @@ const Tournaments = {
                         Store.invalidate("tournaments");
                         UI.toast("Spesa eliminata", "success");
                         await this.openDetail(tournamentId);
-                    } catch (_err) {
+                    } catch (err) {
                         UI.toast(err.message, "error");
                     } finally {
                         UI.loading(false);
@@ -269,7 +269,7 @@ const Tournaments = {
                 Store.invalidate("tournaments");
                 UI.toast("Roster salvato", "success");
                 this.openDetail(tournamentId); // Refresh
-            } catch (_err) {
+            } catch (err) {
                 UI.toast(err.message, "error");
                 btn.disabled = false;
                 btn.textContent = "Salva Roster";
@@ -283,7 +283,7 @@ const Tournaments = {
                 try {
                     const matchData = JSON.parse(matchJson);
                     this.openMatchModal(matchData);
-                } catch (_e) {
+                } catch (e) {
                     console.error("Match JSON parse error", e);
                 }
             }, this.sig());
@@ -328,7 +328,7 @@ const Tournaments = {
                 } else {
                     this.loadList();
                 }
-            } catch (_err) {
+            } catch (err) {
                 UI.toast(err.message, "error");
             } finally {
                 UI.loading(false);
@@ -369,7 +369,7 @@ const Tournaments = {
                 UI.toast("Match salvato", "success");
                 modal.close();
                 this.openDetail(this._currentData.tournament.id);
-            } catch (_err) {
+            } catch (err) {
                 UI.toast(err.message, "error");
             } finally {
                 UI.loading(false);
@@ -404,7 +404,7 @@ const Tournaments = {
                 UI.toast("Spesa salvata", "success");
                 modal.close();
                 this.openDetail(tournamentId);
-            } catch (_err) {
+            } catch (err) {
                 UI.toast(err.message, "error");
             } finally {
                 UI.loading(false);

@@ -47,7 +47,7 @@ const Newsletter = (() => {
       }
       _meta = result.meta || { total: _subscribers.length };
       _nextCursor = extractCursor(result.links?.next);
-    } catch (_err) {
+    } catch (err) {
       console.error("[Newsletter] loadSubscribers error:", err);
     }
   }
@@ -193,7 +193,7 @@ const Newsletter = (() => {
           UI.toast("Iscritto eliminato", "success");
           render();
           m.close();
-        } catch (_err) {
+        } catch (err) {
           UI.toast("Errore: " + err.message, "error");
         }
     });
@@ -216,7 +216,7 @@ const Newsletter = (() => {
           ]);
           await loadSubscribers(false);
         }
-      } catch (_err) {
+      } catch (err) {
         console.error("[Newsletter] init error:", err);
       } finally {
         UI.loading(false);

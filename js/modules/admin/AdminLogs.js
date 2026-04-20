@@ -130,7 +130,7 @@ const AdminLogs = (() => {
             }
           }
         })(d, u.length < 100);
-      } catch (_err) {
+      } catch (err) {
         if (err.name === 'AbortError') return;
         n.innerHTML = Utils.emptyState("Errore caricamento log", err.message);
       }

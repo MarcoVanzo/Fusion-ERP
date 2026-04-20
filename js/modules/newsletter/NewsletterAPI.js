@@ -4,7 +4,7 @@ export const NewsletterAPI = {
     async getConfig() {
         try {
             return await Store.get("getConfig", "newsletter");
-        } catch (_err) {
+        } catch (err) {
             return { configured: false };
         }
     },

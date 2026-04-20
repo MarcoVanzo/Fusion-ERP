@@ -41,7 +41,7 @@ const Results = {
             this.renderToolbar();
             await this.loadAndRenderContent();
             this.attachGlobalEvents();
-        } catch (_err) {
+        } catch (err) {
             console.error("[Results] Init error:", err);
             const content = document.getElementById("res-content");
             if(content) content.innerHTML = Utils.emptyState("Errore caricamento", err.message);
@@ -112,7 +112,7 @@ const Results = {
                     content.innerHTML = ResultsView.standingsTable(data.standings, data.last_updated, data.source_url);
                 }
             }
-        } catch (_err) {
+        } catch (err) {
             content.innerHTML = ResultsView.emptyState("Errore connessione", err.message);
         }
     },
@@ -179,7 +179,7 @@ const Results = {
             const res = await ResultsAPI.sync(this._currentChamp.id);
             UI.toast(`Sincronizzazione completata: ${res.matches} partite`, "success");
             await this.refresh();
-        } catch (_err) {
+        } catch (err) {
             UI.toast(err.message, "error");
         } finally {
             if (btn) btn.classList.remove("loading");
@@ -207,7 +207,7 @@ const Results = {
                 modal.close();
                 this._abort.abort();
                 await this.init();
-            } catch (_err) {
+            } catch (err) {
                 UI.toast(err.message, "error");
             } finally {
                 UI.loading(false);
@@ -226,7 +226,7 @@ const Results = {
                     modal.close();
                     this._abort.abort();
                     await this.init();
-                } catch (_err) {
+                } catch (err) {
                     UI.toast(err.message, "error");
                 }
             }, this.sig());

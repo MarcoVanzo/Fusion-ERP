@@ -60,7 +60,7 @@ export default {
                         await SocietaAPI.deleteForesteriaMedia(btn.dataset.id);
                         UI.toast("Media rimosso", "success");
                         this.refresh(container, signal);
-                    } catch (_err) {
+                    } catch (err) {
                         UI.toast("Errore: " + err.message, "error");
                     }
                 });
@@ -77,7 +77,7 @@ export default {
                         await SocietaAPI.deleteExpense(btn.dataset.delExpense);
                         UI.toast("Spesa rimossa", "success");
                         this.refresh(container, signal);
-                    } catch (_err) {
+                    } catch (err) {
                         UI.toast("Errore: " + err.message, "error");
                     }
                 });
@@ -232,7 +232,7 @@ export default {
                 UI.toast("Spesa aggiunta", "success");
                 modal.close();
                 this.refresh();
-            } catch (_err) {
+            } catch (err) {
                 UI.toast(err.message, "error");
             } finally {
                 UI.loading(false);
@@ -267,7 +267,7 @@ export default {
                 UI.toast("Informazioni salvate", "success");
                 modal.close();
                 this.refresh();
-            } catch (_err) {
+            } catch (err) {
                 UI.toast(err.message, "error");
             }
         });
@@ -300,7 +300,7 @@ export default {
                 UI.toast("Media caricato", "success");
                 modal.close();
                 this.refresh();
-            } catch (_err) {
+            } catch (err) {
                 UI.toast(err.message, "error");
             } finally {
                 UI.loading(false);
@@ -329,7 +329,7 @@ export default {
                 UI.toast("Link aggiunto", "success");
                 modal.close();
                 this.refresh();
-            } catch (_err) {
+            } catch (err) {
                 UI.toast(err.message, "error");
             }
         });
@@ -341,7 +341,7 @@ export default {
 
         try {
             await this.loadChartJs();
-        } catch (_e) {
+        } catch (e) {
             console.error("[Foresteria] Failed to load Chart.js", e);
             return;
         }

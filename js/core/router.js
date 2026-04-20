@@ -260,7 +260,7 @@ const Router = (() => {
                 const prevFilePath = _fileMap[_currentRoute];
                 const prevMod = _moduleCache[prevFilePath];
                 if (prevMod && typeof prevMod.destroy === 'function') {
-                    try { prevMod.destroy(); } catch (_e) { console.error('[Router] Error during module destroy:', e); }
+                    try { prevMod.destroy(); } catch (e) { console.error('[Router] Error during module destroy:', e); }
                 }
             }
 
@@ -310,7 +310,7 @@ const Router = (() => {
                 if (mod && typeof mod.init === 'function') {
                     await mod.init();
                 }
-            } catch (_err) {
+            } catch (err) {
                 console.error('[Router] Navigation error:', err);
                 appEl.innerHTML = Utils.emptyState('Errore nel caricamento della sezione', err.message);
                 UI.toast('Errore nel caricare la sezione', 'error');
@@ -342,7 +342,7 @@ document.addEventListener('click', (e) => {
         // Extract params if any via data-route-params (assuming valid JSON or query string format)
         let params = {};
         if (routeEl.dataset.routeParams) {
-            try { params = JSON.parse(routeEl.dataset.routeParams); } catch (_e) { /* ignore */ }
+            try { params = JSON.parse(routeEl.dataset.routeParams); } catch (e) { /* ignore */ }
         }
         
         Router.navigate(route, params);

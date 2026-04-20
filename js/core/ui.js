@@ -99,7 +99,7 @@ const UI = (() => {
             container.innerHTML = '';
             hiddenEls.forEach(el => el.removeAttribute('aria-hidden'));
             if (previousFocus && typeof previousFocus.focus === 'function') {
-                try { previousFocus.focus(); } catch (_e) { /* noop */ }
+                try { previousFocus.focus(); } catch (e) { /* noop */ }
             }
             if (onClose) onClose();
         };

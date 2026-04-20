@@ -234,7 +234,7 @@ const AdminDashboard = (() => {
         });
       });
 
-    } catch (_err) {
+    } catch (err) {
       if (err.name === 'AbortError') return;
       container.innerHTML = Utils.emptyState("Errore caricamento dashboard", err.message);
     }

@@ -114,7 +114,7 @@ const AdminUsers = (() => {
       `;
 
       bindUserEvents();
-    } catch (_err) {
+    } catch (err) {
       if (err.name === 'AbortError') return;
       container.innerHTML = Utils.emptyState("Errore caricamento utenti", err.message);
     }
@@ -218,7 +218,7 @@ const AdminUsers = (() => {
         Store.invalidate("auth");
         await loadUsers();
         modal.close();
-      } catch (_err) {
+      } catch (err) {
         if (err.name === 'AbortError') return;
         errorEl.textContent = err.message;
         errorEl.classList.remove("hidden");
@@ -234,7 +234,7 @@ const AdminUsers = (() => {
       const navVersion = Router?._appVersion || document.querySelector('meta[name="app-version"]')?.content || Date.now();
       const res = await fetch(`js/config/navigation.json?v=${navVersion}`);
       if (res.ok) navConfig = await res.json();
-    } catch (_err) {
+    } catch (err) {
       console.error("Errore fetch permessi", err);
     }
 
@@ -242,7 +242,7 @@ const AdminUsers = (() => {
     if (user.permissions_json) {
       try {
         existingPerms = typeof user.permissions_json === "string" ? JSON.parse(user.permissions_json) : user.permissions_json;
-      } catch (_err) {}
+      } catch (err) {}
     }
 
     let matrixHtml = `<div class="permissions-matrix" style="max-height: 400px; overflow-y: auto; border: 1px solid var(--color-border); border-radius: 6px; margin-top: 8px;">
@@ -391,7 +391,7 @@ const AdminUsers = (() => {
         Store.invalidate("auth");
         await loadUsers();
         modal.close();
-      } catch (_err) {
+      } catch (err) {
         if (err.name === 'AbortError') return;
         errorEl.textContent = err.message;
         errorEl.classList.remove("hidden");
@@ -412,7 +412,7 @@ const AdminUsers = (() => {
       UI.toast("Utente " + (currentActive ? "sospeso" : "riattivato"), "success");
       Store.invalidate("auth");
       await loadUsers();
-    } catch (_err) {
+    } catch (err) {
       UI.toast(err.message, "error");
     }
   }
@@ -423,7 +423,7 @@ const AdminUsers = (() => {
     try {
       await Store.api("resendVerification", "auth", { userId: userId });
       UI.toast(`Email di invito reinviata a ${name}`, "success");
-    } catch (_err) {
+    } catch (err) {
       UI.toast("Errore: " + err.message, "error");
     }
   }
@@ -459,7 +459,7 @@ const AdminUsers = (() => {
         document.getElementById("rp-result").classList.remove("hidden");
         resetBtn.classList.add("hidden");
         UI.toast("Password temporanea generata", "success");
-      } catch (_err) {
+      } catch (err) {
         if (err.name === 'AbortError') return;
         errorEl.textContent = err.message;
         errorEl.classList.remove("hidden");
@@ -482,7 +482,7 @@ const AdminUsers = (() => {
       UI.toast(`Utente ${name} eliminato.`, "success");
       Store.invalidate("auth");
       await loadUsers();
-    } catch (_err) {
+    } catch (err) {
       UI.toast("Errore: " + err.message, "error");
     }
   }

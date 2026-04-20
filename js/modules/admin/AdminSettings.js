@@ -80,7 +80,7 @@ const AdminSettings = (() => {
       `;
 
       bindEvents();
-    } catch (_err) {
+    } catch (err) {
       if (err.name === 'AbortError') return;
       container.innerHTML = Utils.emptyState("Errore caricamento impostazioni", err.message);
     }
@@ -119,7 +119,7 @@ const AdminSettings = (() => {
         }
         
         Store.invalidate("tenant");
-      } catch (_err) {
+      } catch (err) {
         UI.toast(err.message, "error");
       } finally {
         saveBtn.disabled = false;

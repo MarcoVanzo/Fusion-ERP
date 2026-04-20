@@ -117,7 +117,7 @@ const Network = (() => {
                 UI.toast("HUB aggiornato", "success");
                 v();
                 mModal.close();
-              } catch (_err) {
+              } catch (err) {
                 UI.toast("Errore: " + err.message, "error");
                 saveBtn.disabled = false;
                 saveBtn.textContent = "SALVA";
@@ -739,7 +739,7 @@ const Network = (() => {
                 v();
               }
             })());
-        } catch (_e) {
+        } catch (e) {
           (t &&
             (t.innerHTML = Utils.emptyState("Errore caricamento", e.message)),
             UI.toast("Errore caricamento Network", "error"));

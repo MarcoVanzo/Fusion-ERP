@@ -200,7 +200,7 @@ const Enhancements = (() => {
                 });
             }, 1200);
 
-        } catch (_err) {
+        } catch (err) {
             console.warn('[App] Could not check expiring docs:', err);
         }
     }
