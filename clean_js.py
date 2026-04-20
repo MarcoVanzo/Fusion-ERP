@@ -6,13 +6,12 @@ def process_file(filepath):
         content = f.read()
     
     # Simply remove 'catch (err)' to basic 'catch (err)' and avoid replacing it blindly
-    # Actually wait, why did it even exist? I'll just change the pattern to avoid breaking files.
-    # We will rename `catch (_err)` back to `catch (err)`
     content = content.replace('catch (_err)', 'catch (err)')
     content = content.replace('catch (_e)', 'catch (e)')
     content = content.replace('catch (_error)', 'catch (error)')
-    # Revert my poor try
-    content = content.replace('cause: err', 'cause: _parseError') 
+    
+    # We MUST ensure _parseError is not left orphaned if the catch variable is renamed.
+    content = content.replace('cause: _parseError', 'cause: err')
 
     
     with open(filepath, 'w', encoding='utf-8') as f:
