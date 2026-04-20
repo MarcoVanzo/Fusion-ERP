@@ -45,7 +45,7 @@ const Squadre = {
             await this.loadData();
             this.render();
             this.attachGlobalEvents();
-        } catch (err) {
+        } catch (_err) {
             console.error("[Squadre] Init error:", err);
             appContainer.innerHTML = Utils.emptyState("Errore caricamento", err.message);
             UI.toast("Errore caricamento modulo Squadre", "error");
@@ -78,7 +78,7 @@ const Squadre = {
                 }
                 this._presenzeAttendancesMap[r.athlete_id][r.attendance_date] = r;
             });
-        } catch(e) {
+        } catch (_e) {
             UI.toast("Errore caricamento presenze: " + e.message, "error");
         } finally {
             UI.loading(false);
@@ -149,7 +149,7 @@ const Squadre = {
                 await this.loadData();
             }
             this.render();
-        } catch (err) {
+        } catch (_err) {
             UI.toast(err.message, "error");
         } finally {
             UI.loading(false);
@@ -184,7 +184,7 @@ const Squadre = {
                     await TeamsAPI.toggleSeason(id, action);
                     UI.toast(action === '1' ? "Stagione attivata" : "Stagione disattivata", "success");
                     await this.refresh();
-                } catch (err) {
+                } catch (_err) {
                     UI.toast(err.message, "error");
                     btn.disabled = false;
                 }
@@ -206,7 +206,7 @@ const Squadre = {
                     await TeamsAPI.deleteTeam(id);
                     UI.toast("Squadra rimossa", "success");
                     await this.refresh();
-                } catch (err) {
+                } catch (_err) {
                     UI.toast(err.message, "error");
                 }
             }, this.sig());
@@ -231,7 +231,7 @@ const Squadre = {
                     await TeamsAPI.deleteSeason(id);
                     UI.toast("Stagione rimossa dalla squadra", "success");
                     await this.refresh();
-                } catch (err) {
+                } catch (_err) {
                     UI.toast(err.message, "error");
                 }
             }, this.sig());
@@ -282,7 +282,7 @@ const Squadre = {
                 UI.toast(isEdit ? "Squadra aggiornata" : "Squadra creata", "success");
                 modal.close();
                 await this.refresh();
-            } catch (err) {
+            } catch (_err) {
                 const errEl = document.getElementById("team-error");
                 if (errEl) {
                     errEl.textContent = err.message;
@@ -319,7 +319,7 @@ const Squadre = {
                 UI.toast("Stagione aggiunta", "success");
                 modal.close();
                 await this.refresh();
-            } catch (err) {
+            } catch (_err) {
                 const errEl = document.getElementById("season-error");
                 if (errEl) { errEl.textContent = err.message; errEl.classList.remove("hidden"); }
             }
@@ -364,7 +364,7 @@ const Squadre = {
                 for (const teamId of selectedIds) {
                     try {
                         await TeamsAPI.addSeason({ team_id: teamId, season: seasonStr, is_active: isActive });
-                    } catch (err) {
+                    } catch (_err) {
                         errors.push(err.message);
                     }
                 }
@@ -416,7 +416,7 @@ const Squadre = {
                 UI.toast("Squadre associate con successo", "success");
                 modal.close();
                 await this.refresh();
-            } catch (err) {
+            } catch (_err) {
                 UI.toast(err.message, "error");
             } finally {
                 UI.loading(false);
@@ -477,7 +477,7 @@ const Squadre = {
                     this._presenzeAttendancesMap[athleteId][date] = { id: res.id, status: newStatus, attendance_date: date, athlete_id: athleteId, team_id: this._presenzeSelectedTeamId };
                     
                     this.render(); // re-render the grid
-                } catch(err) {
+                } catch (_err) {
                     UI.toast("Errore nel salvataggio: " + err.message, "error");
                 }
             });

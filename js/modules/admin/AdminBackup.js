@@ -109,7 +109,7 @@ const AdminBackup = (() => {
       `;
 
       bindEvents();
-    } catch (err) {
+    } catch (_err) {
       if (err.name === 'AbortError') return;
       container.innerHTML = Utils.emptyState("Errore caricamento backup", err.message);
     }
@@ -129,7 +129,7 @@ const AdminBackup = (() => {
         UI.toast("Backup eseguito con successo", "success");
         Store.invalidate("admin", "listBackups");
         await loadBackups();
-      } catch (err) {
+      } catch (_err) {
         UI.toast("Errore backup: " + err.message, "error");
         btn.disabled = false;
         btn.innerHTML = originalHtml;
@@ -150,7 +150,7 @@ const AdminBackup = (() => {
           UI.toast("Ripristino completato con successo!", "success");
           alert("Sistema ripristinato. Si consiglia di ricaricare l'applicazione.");
           window.location.reload();
-        } catch (err) {
+        } catch (_err) {
           UI.toast("Errore ripristino: " + err.message, "error");
           btn.disabled = false;
           btn.innerHTML = '<i class="ph ph-arrow-counter-clockwise"></i> Ripristina';
@@ -169,7 +169,7 @@ const AdminBackup = (() => {
           UI.toast("Backup eliminato", "success");
           Store.invalidate("admin", "listBackups");
           await loadBackups();
-        } catch (err) {
+        } catch (_err) {
           UI.toast("Errore: " + err.message, "error");
         }
       }, { signal: abortController.signal });

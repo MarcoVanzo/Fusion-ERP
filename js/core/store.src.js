@@ -137,7 +137,7 @@ const Store = (() => {
             const msg = body.error || 'Errore sconosciuto durante la richiesta API';
             const err = new Error(msg);
             if (response.status >= 500) {
-                throw new Error(Utils.friendlyError(err), { cause: _parseError });
+                throw new Error(Utils.friendlyError(err), { cause: err });
             }
             throw err;
         }
@@ -173,7 +173,7 @@ const Store = (() => {
             try {
                 const response = await fetch(url, opts);
                 return await _handleResponse(response);
-            } catch (err) {
+            } catch (_err) {
                 console.error(`Store.api Error [${module}/${action}]:`, err);
                 throw err;
             }
@@ -217,7 +217,7 @@ const Store = (() => {
                 const data = await _handleResponse(response);
                 _cacheWrite(key, data, action, module);
                 return data;
-            } catch (err) {
+            } catch (_err) {
                 console.error(`Store.get Error [${module}/${action}]:`, err);
                 throw err;
             }

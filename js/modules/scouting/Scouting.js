@@ -39,7 +39,7 @@ class ScoutingModule {
             await this.refreshData(false);
             container.innerHTML = ScoutingView.renderMainLayout();
             this.renderTableData(document.getElementById("scouting-content-area"));
-        } catch (err) {
+        } catch (_err) {
             console.error("[Scouting] Init error", err);
             container.innerHTML = window.Utils.emptyState("Errore di caricamento", err.message);
             window.UI.toast("Impossibile caricare il database scouting: " + err.message, "error");
@@ -62,7 +62,7 @@ class ScoutingModule {
                 const area = document.getElementById("scouting-content-area");
                 if (area) this.renderTableData(area);
             }
-        } catch (err) {
+        } catch (_err) {
             console.error(err);
             window.UI.toast("Errore nel caricamento del database", "error");
         }
@@ -186,7 +186,7 @@ class ScoutingModule {
             window.UI.toast(`Sincronizzazione completata: ${total} atleti importati`, "success");
             window.Store.invalidate("scouting");
             await this.refreshData(true);
-        } catch (err) {
+        } catch (_err) {
             if (statusEl) {
                 statusEl.innerHTML = `<span style="font-size:12px;color:var(--color-pink)">⚠️ ${err.message}</span>`;
             }
@@ -205,7 +205,7 @@ class ScoutingModule {
             window.UI.toast("Atleta eliminato con successo", "success");
             window.Store.invalidate("scouting");
             await this.refreshData(true);
-        } catch (err) {
+        } catch (_err) {
             window.UI.toast("Errore durante l'eliminazione: " + err.message, "error");
         }
     }
@@ -276,7 +276,7 @@ class ScoutingModule {
                 window.UI.toast(isEdit ? "Modifiche salvate con successo" : "Atleta salvato con successo", "success");
                 closeModal();
                 await this.refreshData(true);
-            } catch (err) {
+            } catch (_err) {
                 errorDiv.textContent = err.message || "Errore durante il salvataggio.";
                 errorDiv.classList.remove("hidden");
                 saveBtn.disabled = false;

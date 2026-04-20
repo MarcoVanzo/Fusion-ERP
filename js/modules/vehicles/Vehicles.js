@@ -37,7 +37,7 @@ class VehiclesModule {
             appEl.innerHTML = VehiclesView.renderDashboard(this.vehicles, canEdit);
 
             this.bindDashboardEvents();
-        } catch (error) {
+        } catch (_error) {
             appEl.innerHTML = window.Utils.emptyState("Errore nel caricamento dei mezzi", error.message);
             window.UI.toast("Errore caricamento mezzi", "error");
         } finally {
@@ -72,7 +72,7 @@ class VehiclesModule {
             appEl.innerHTML = VehiclesView.renderDetail(this.currentVehicle, this.currentTab, canEdit);
 
             this.bindDetailEvents(canEdit);
-        } catch (error) {
+        } catch (_error) {
             window.UI.toast(error.message, "error");
             await this.init();
         } finally {
@@ -128,7 +128,7 @@ class VehiclesModule {
                         await VehiclesAPI.updateAnomalyStatus({ id: anomalyId, status: newStatus });
                         window.UI.toast("Stato aggiornato", "success");
                         await this.showVehicleDetail(this.currentVehicle.id);
-                    } catch (error) {
+                    } catch (_error) {
                         window.UI.toast(error.message, "error");
                     } finally {
                         window.UI.loading(false);
@@ -187,7 +187,7 @@ class VehiclesModule {
                     window.UI.toast(isEdit ? "Mezzo aggiornato" : "Mezzo aggiunto", "success");
                     await this.init(); // Refresh dashboard or current view
                     modal.close();
-                } catch (error) {
+                } catch (_error) {
                     document.getElementById("veh-error").textContent = error.message;
                     document.getElementById("veh-error").classList.remove("hidden");
                     saveBtn.disabled = false;
@@ -209,7 +209,7 @@ class VehiclesModule {
                             window.UI.toast("Veicolo eliminato", "success");
                             await this.init();
                             modal.close();
-                        } catch (error) {
+                        } catch (_error) {
                             window.UI.toast(error.message, "error");
                             delBtn.disabled = false;
                         }
@@ -254,7 +254,7 @@ class VehiclesModule {
                 window.UI.toast("Manutenzione salvata", "success");
                 await this.showVehicleDetail(vehicleId);
                 modal.close();
-            } catch (error) {
+            } catch (_error) {
                 document.getElementById("m-err").textContent = error.message;
                 document.getElementById("m-err").classList.remove("hidden");
                 saveBtn.disabled = false;
@@ -292,7 +292,7 @@ class VehiclesModule {
                 window.UI.toast("Segnalazione inviata", "success");
                 await this.showVehicleDetail(vehicleId);
                 modal.close();
-            } catch (error) {
+            } catch (_error) {
                 document.getElementById("a-err").textContent = error.message;
                 document.getElementById("a-err").classList.remove("hidden");
                 saveBtn.disabled = false;
@@ -323,7 +323,7 @@ class VehiclesModule {
                 window.UI.toast("Anomalia chiusa", "success");
                 await this.showVehicleDetail(vehicleId);
                 modal.close();
-            } catch (error) {
+            } catch (_error) {
                 document.getElementById("ar-err").textContent = error.message;
                 document.getElementById("ar-err").classList.remove("hidden");
                 saveBtn.disabled = false;

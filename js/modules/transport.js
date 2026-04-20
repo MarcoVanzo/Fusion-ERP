@@ -50,7 +50,7 @@ const Transport = {
             } else {
                 await this.renderDashboard();
             }
-        } catch (error) {
+        } catch (_error) {
             app.innerHTML = Utils.emptyState("Errore nel caricamento", error.message);
             UI.toast("Errore inizializzazione modulo Trasporti", "error");
         } finally {
@@ -78,7 +78,7 @@ const Transport = {
             const drivers = await TransportAPI.getDrivers();
             app.innerHTML = TransportView.driversDashboard(drivers, isAdmin);
             this.attachDriversEvents(isAdmin);
-        } catch (error) {
+        } catch (_error) {
             app.innerHTML = Utils.emptyState("Errore nel caricamento", error.message);
             document.getElementById("err-back-btn")?.addEventListener("click", () => this.renderDashboard(), { signal: this.abortController.signal });
             UI.toast("Errore: " + error.message, "error");
@@ -112,7 +112,7 @@ const Transport = {
                         await TransportAPI.toggleDriverActive({ id: id, is_active: !isActive });
                         UI.toast(isActive ? "Autista disattivato" : "Autista attivato", "success");
                         this.renderDrivers();
-                    } catch (err) {
+                    } catch (_err) {
                         UI.toast("Errore: " + err.message, "error");
                     }
                 }, { signal: this.abortController.signal });
@@ -126,7 +126,7 @@ const Transport = {
                             await TransportAPI.deleteDriver({ id });
                             UI.toast("Autista eliminato", "success");
                             this.renderDrivers();
-                        } catch (err) {
+                        } catch (_err) {
                             UI.toast("Errore: " + err.message, "error");
                         }
                     });
@@ -143,7 +143,7 @@ const Transport = {
             app.innerHTML = TransportView.renderDriverDetail(driver, transports);
             
             document.getElementById("drv-detail-back")?.addEventListener("click", () => this.renderDrivers(), { signal: this.abortController.signal });
-        } catch (error) {
+        } catch (_error) {
             UI.toast("Errore caricamento dettaglio: " + error.message, "error");
             this.renderDrivers();
         }
@@ -215,7 +215,7 @@ const Transport = {
                     UI.toast("Dati aggiornati!", "success");
                     await this.renderDrivers();
                     modal.close();
-                } catch (err) {
+                } catch (_err) {
                     errEl.textContent = err.message;
                     errEl.classList.remove("hidden");
                     btn.disabled = false;
@@ -289,7 +289,7 @@ const Transport = {
                 UI.toast("Autista aggiunto!", "success");
                 await this.renderDrivers();
                 modal.close();
-            } catch (err) {
+            } catch (_err) {
                 errEl.textContent = err.message;
                 errEl.classList.remove("hidden");
                 btn.disabled = false;
@@ -496,7 +496,7 @@ const Transport = {
                 this.athletes = await TransportAPI.getTeamAthletes(teamId);
                 this.renderAthletesGrid();
                 this.validateWizard();
-            } catch (err) {
+            } catch (_err) {
                 grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; color:#FF00FF;">Errore: ${err.message}</div>`;
             }
         }, { signal: this.abortController.signal });
@@ -603,7 +603,7 @@ const Transport = {
 
             this.calculatedRoute = plan;
             this.renderCalculateResults(plan, result);
-        } catch (error) {
+        } catch (_error) {
             UI.toast("Errore calcolo percorso: " + error.message, "error");
         } finally {
             btn.disabled = false;
@@ -810,7 +810,7 @@ const Transport = {
             await TransportAPI.saveTransport(payload);
             UI.toast("Trasporto salvato!", "success");
             this.renderDashboard();
-        } catch (error) {
+        } catch (_error) {
             UI.toast("Errore salvataggio: " + error.message, "error");
             btn.disabled = false;
             btn.innerHTML = '<i class="ph ph-floppy-disk"></i> Salva Trasporto';
@@ -857,7 +857,7 @@ const Transport = {
                 });
             }
 
-        } catch (error) {
+        } catch (_error) {
             body.innerHTML = `<div style="text-align:center; color:#ff1a1a; padding:40px;"><i class="ph ph-warning" style="font-size:48px;"></i><p>${error.message}</p></div>`;
         }
     },
@@ -898,7 +898,7 @@ const Transport = {
             try {
                 const res = await TransportAPI.sendConvocations(eventId);
                 UI.toast(`Email inviate: ${res.sent}`, "success");
-            } catch (e) {
+            } catch (_e) {
                 UI.toast(e.message, "error");
             }
         });
@@ -909,7 +909,7 @@ const Transport = {
             await TransportAPI.updateAttendeeStatus(eventId, athleteId, status);
             UI.toast("Stato aggiornato", "success");
             this.renderEventDetail(eventId);
-        } catch (e) {
+        } catch (_e) {
             UI.toast(e.message, "error");
         }
     },
@@ -957,7 +957,7 @@ const Transport = {
             let athletes = [];
             try {
                 athletes = typeof tr.athletes_json === 'string' ? JSON.parse(tr.athletes_json) : (tr.athletes_json || []);
-            } catch (e) { console.error("Error parsing athletes_json", e); }
+            } catch (_e) { console.error("Error parsing athletes_json", e); }
             
             athletes.forEach(a => {
                 const id = a.id || a.athlete_id;

@@ -194,7 +194,7 @@ const Scouting = (() => {
       );
       Store.invalidate("scouting");
       await refreshData();
-    } catch (err) {
+    } catch (_err) {
       if (statusEl) {
         statusEl.innerHTML = `<span style="font-size:12px;color:var(--color-pink)">⚠️ ${err.message}</span>`;
       }
@@ -323,7 +323,7 @@ const Scouting = (() => {
           );
           closeModal();
           await refreshData();
-        } catch (err) {
+        } catch (_err) {
           errorDiv.textContent =
             err.message || "Errore durante il salvataggio.";
           errorDiv.classList.remove("hidden");
@@ -374,7 +374,7 @@ const Scouting = (() => {
                 `;
 
         renderTable(document.getElementById("scouting-content-area"));
-      } catch (err) {
+      } catch (_err) {
         container.innerHTML = Utils.emptyState(
           "Errore di caricamento",
           err.message,

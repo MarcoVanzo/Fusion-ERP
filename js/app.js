@@ -96,7 +96,7 @@ const App = (() => {
             // Load and render navigation (async)
             try {
                 await Navigation.render(user);
-            } catch (err) {
+            } catch (_err) {
                 console.error('[App] Failed to render navigation:', err);
             }
 
@@ -123,7 +123,7 @@ const App = (() => {
                 Enhancements.initExpiringDocsAlert().catch(e => console.warn('[App] Expiring docs:', e));
             }, 2000);
 
-        } catch (err) {
+        } catch (_err) {
             console.error('[App] Critical boot error:', err);
             UI.toast('Errore durante l\'avvio dell\'applicazione', 'error');
         }
@@ -218,7 +218,7 @@ const App = (() => {
      * @param {function} fn - Initialization function
      */
     function _tryInit(name, fn) {
-        try { fn(); } catch (err) { console.error(`[App] Failed to init ${name}:`, err); }
+        try { fn(); } catch (_err) { console.error(`[App] Failed to init ${name}:`, err); }
     }
 
     /**

@@ -125,7 +125,7 @@ const Admin = (() => {
                       "success",
                     ),
                       await a());
-                  } catch (e) {
+                  } catch (_e) {
                     (UI.toast("Errore backup: " + e.message, "error"),
                       t &&
                         ((t.disabled = !1),
@@ -798,7 +798,7 @@ const Admin = (() => {
                   if (res.ok) {
                     navConfig = await res.json();
                   }
-                } catch (err) {
+                } catch (_err) {
                   console.error("Errore fetch permessi", err);
                 }
 
@@ -1161,7 +1161,7 @@ const Admin = (() => {
                             .classList.remove("hidden"),
                           t.classList.add("hidden"),
                           UI.toast("Password temporanea generata", "success"));
-                      } catch (e) {
+                      } catch (_e) {
                         ((n.textContent = e.message),
                           n.classList.remove("hidden"),
                           (t.disabled = !1),
@@ -1612,7 +1612,7 @@ const Admin = (() => {
                         });
                       });
                     })(e.data);
-                  } catch (e) {
+                  } catch (_e) {
                     t.innerHTML = Utils.emptyState(
                       "Errore caricamento dashboard",
                       e?.message ?? "Riprova più tardi.",

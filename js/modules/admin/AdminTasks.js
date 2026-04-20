@@ -49,7 +49,7 @@ const AdminTasks = (() => {
         </div>`;
 
       bindRowEvents();
-    } catch (err) {
+    } catch (_err) {
       if (err.name === 'AbortError') return;
       wrap.innerHTML = Utils.emptyState("Errore caricamento task", err.message);
     }
@@ -68,7 +68,7 @@ const AdminTasks = (() => {
           UI.toast("Task eliminato", "success");
           Store.invalidate("admin", "listTasks");
           await loadTasks();
-        } catch (err) {
+        } catch (_err) {
           UI.toast("Errore: " + err.message, "error");
         }
       }, { signal: abortController.signal });

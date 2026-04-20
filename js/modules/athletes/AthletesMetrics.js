@@ -156,7 +156,7 @@ export const AthletesMetrics = {
             document.getElementById("vald-sync-btn-header").onclick = () => this._syncVald(athleteId);
             document.getElementById("vald-upload-btn").onclick = () => this._handleCsvUpload(athleteId);
 
-        } catch (e) {
+        } catch (_e) {
             console.error("Errore critico in _loadValdData:", e);
             container.innerHTML = `<div class="error-box">Errore VALD: ${e.message}</div>`;
         }
@@ -273,7 +273,7 @@ export const AthletesMetrics = {
             await Store.api("sync", "vald", { athleteId });
             UI.toast("Sincronizzazione completata", "success");
             this._loadValdData(athleteId);
-        } catch (e) {
+        } catch (_e) {
             UI.toast("Errore sync: " + e.message, "error");
         } finally {
             UI.loading(false);
@@ -320,7 +320,7 @@ export const AthletesMetrics = {
                 } else {
                     throw new Error(result.error || "Errore sconosciuto");
                 }
-            } catch (err) {
+            } catch (_err) {
                 UI.toast("Errore: " + err.message, "error");
             } finally {
                 UI.loading(false);

@@ -37,7 +37,7 @@ const Chat = (() => {
             const data = await Store.get('channels', 'chat');
             _channels = data || [];
             _render(app);
-        } catch (err) {
+        } catch (_err) {
             console.error('[Chat] Init error:', err);
             app.innerHTML = Utils.emptyState('Errore nel caricamento', err.message, 'Riprova', null, () => init());
         }
@@ -207,7 +207,7 @@ const Chat = (() => {
 
             // Start polling for new messages
             _startPolling(channelId);
-        } catch (err) {
+        } catch (_err) {
             console.error('[Chat] Load messages error:', err);
             msgContainer.innerHTML = `<p style="text-align:center;color:var(--color-danger);">${Utils.escapeHtml(err.message)}</p>`;
         }
@@ -290,7 +290,7 @@ const Chat = (() => {
             _scrollToBottom(msgContainer);
 
             input.value = '';
-        } catch (err) {
+        } catch (_err) {
             console.error('[Chat] Send error:', err);
             UI.toast(err.message || 'Errore invio messaggio', 'error');
         } finally {
@@ -393,7 +393,7 @@ const Chat = (() => {
                 modal.close();
                 _selectChannel(res.id);
                 _render(document.getElementById('app'));
-            } catch (err) {
+            } catch (_err) {
                 errEl.textContent = err.message || 'Errore nella creazione';
                 errEl.classList.remove('hidden');
                 btn.disabled = false;

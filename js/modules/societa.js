@@ -60,7 +60,7 @@ const Societa = {
             await this.reloadData();
             
             this.render();
-        } catch (err) {
+        } catch (_err) {
             console.error("[Societa] Init error:", err);
             appContainer.innerHTML = Utils.emptyState("Errore caricamento", err.message);
             UI.toast("Errore caricamento modulo Società", "error");
@@ -155,7 +155,7 @@ const Societa = {
             Store.invalidate("societa");
             await this.reloadData();
             this.render();
-        } catch (err) {
+        } catch (_err) {
             UI.toast(err.message, "error");
         } finally {
             UI.loading(false);
@@ -179,7 +179,7 @@ const Societa = {
                 this._data.profile.logo_path = res.logo_path;
                 UI.toast("Logo caricato", "success");
                 this.render();
-            } catch (err) {
+            } catch (_err) {
                 UI.toast(err.message, "error");
             }
         }, this.sig());
@@ -202,7 +202,7 @@ const Societa = {
                 await SocietaAPI.saveProfile(body);
                 UI.toast("Profilo aggiornato", "success");
                 this.refreshTab();
-            } catch (err) {
+            } catch (_err) {
                 if (errEl) { errEl.textContent = err.message; errEl.classList.remove("hidden"); }
                 UI.toast(err.message, "error");
             }
@@ -243,7 +243,7 @@ const Societa = {
                     await SocietaAPI.deleteCompany(id);
                     UI.toast("Società eliminata", "success");
                     this.refreshTab();
-                } catch (err) {
+                } catch (_err) {
                     UI.toast(err.message, "error");
                 }
             }, this.sig());
@@ -308,7 +308,7 @@ const Societa = {
                 UI.toast(isEdit ? "Società aggiornata" : "Società inserita", "success");
                 modal.close();
                 this.refreshTab();
-            } catch (err) {
+            } catch (_err) {
                 errEl.textContent = err.message;
                 errEl.classList.remove("hidden");
                 btnSalva.innerHTML = originalText;
@@ -372,7 +372,7 @@ const Societa = {
                     await SocietaAPI.deleteRole(id);
                     UI.toast("Ruolo eliminato", "success");
                     this.refreshTab();
-                } catch (err) {
+                } catch (_err) {
                     UI.toast(err.message, "error");
                 }
             }, this.sig());
@@ -415,7 +415,7 @@ const Societa = {
                 }
                 modal.close();
                 this.refreshTab();
-            } catch (err) {
+            } catch (_err) {
                 if (errEl) { errEl.textContent = err.message; errEl.classList.remove("hidden"); }
             }
         }, this.sig());
@@ -453,7 +453,7 @@ const Societa = {
                     await SocietaAPI.deleteMember(id);
                     UI.toast("Membro eliminato", "success");
                     this.refreshTab();
-                } catch (err) {
+                } catch (_err) {
                     UI.toast(err.message, "error");
                 }
             }, this.sig());
@@ -498,7 +498,7 @@ const Societa = {
                 }
                 modal.close();
                 this.refreshTab();
-            } catch (err) {
+            } catch (_err) {
                 if (errEl) { errEl.textContent = err.message; errEl.classList.remove("hidden"); }
             }
         }, this.sig());
@@ -520,7 +520,7 @@ const Societa = {
                     await SocietaAPI.uploadDocument(fd);
                     UI.toast("Documento caricato", "success");
                     this.refreshTab();
-                } catch (err) {
+                } catch (_err) {
                     UI.toast(err.message, "error");
                 } finally {
                     UI.loading(false);
@@ -537,7 +537,7 @@ const Societa = {
                     await SocietaAPI.deleteDocument(id);
                     UI.toast("Documento eliminato", "success");
                     this.refreshTab();
-                } catch (err) {
+                } catch (_err) {
                     UI.toast(err.message, "error");
                 }
             }, this.sig());
@@ -580,7 +580,7 @@ const Societa = {
                     await SocietaAPI.deleteDeadline(id);
                     UI.toast("Scadenza eliminata", "success");
                     this.refreshTab();
-                } catch (err) {
+                } catch (_err) {
                     UI.toast(err.message, "error");
                 }
             }, this.sig());
@@ -626,7 +626,7 @@ const Societa = {
                 }
                 modal.close();
                 this.refreshTab();
-            } catch (err) {
+            } catch (_err) {
                 if (errEl) { errEl.textContent = err.message; errEl.classList.remove("hidden"); }
             }
         }, this.sig());
@@ -655,7 +655,7 @@ const Societa = {
                     await SocietaAPI.deleteSponsor(id);
                     UI.toast("Sponsor eliminato", "success");
                     this.refreshTab();
-                } catch (err) {
+                } catch (_err) {
                     UI.toast(err.message, "error");
                 }
             }, this.sig());
@@ -677,7 +677,7 @@ const Societa = {
                         await SocietaAPI.uploadSponsorLogo(fd);
                         UI.toast("Logo sponsor aggiornato", "success");
                         this.refreshTab();
-                    } catch (err) {
+                    } catch (_err) {
                         UI.toast(err.message, "error");
                     }
                 };
@@ -732,7 +732,7 @@ const Societa = {
                 }
                 modal.close();
                 this.refreshTab();
-            } catch (err) {
+            } catch (_err) {
                 if (errEl) { errEl.textContent = err.message; errEl.classList.remove("hidden"); }
             }
         }, this.sig());
@@ -761,7 +761,7 @@ const Societa = {
                     await SocietaAPI.deleteTitolo(id);
                     UI.toast("Titolo eliminato", "success");
                     this.refreshTab();
-                } catch (err) {
+                } catch (_err) {
                     UI.toast(err.message, "error");
                 }
             }, this.sig());
@@ -808,7 +808,7 @@ const Societa = {
                 }
                 modal.close();
                 this.refreshTab();
-            } catch (err) {
+            } catch (_err) {
                 if (errEl) { errEl.textContent = err.message; errEl.classList.remove("hidden"); }
             }
         }, this.sig());

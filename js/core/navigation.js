@@ -191,7 +191,7 @@ const Navigation = (() => {
             // Re-highlight current active route after building the DOM
             Router.updateNavActive(Router.getCurrentRoute() || 'dashboard');
 
-        } catch (err) {
+        } catch (_err) {
             console.error('Error rendering navigation:', err);
 
             let errorMsg = 'Errore nel caricamento del menu';

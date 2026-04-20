@@ -35,7 +35,7 @@ const Staff = {
             } else {
                 this.renderDashboard(appContainer);
             }
-        } catch (err) {
+        } catch (_err) {
             console.error("Staff init err:", err);
             appContainer.innerHTML = Utils.emptyState("Errore caricamento staff", err.message);
             UI.toast("Errore caricamento staff", "error");
@@ -117,7 +117,7 @@ const Staff = {
 
             container.innerHTML = StaffView.staffDetail(memberData, this._teamsData, isAdmin);
             this.bindDetailEvents(memberData, isAdmin);
-        } catch (err) {
+        } catch (_err) {
             container.innerHTML = Utils.emptyState("Errore caricamento membro", err.message);
         }
     },
@@ -169,7 +169,7 @@ const Staff = {
                 await StaffAPI.uploadFile(id, file, "uploadPhoto");
                 UI.toast("Foto aggiornata", "success");
                 this.openDetail(id);
-            } catch (err) {
+            } catch (_err) {
                 UI.toast(err.message, "error");
                 if (statusText) statusText.textContent = "Errore: " + err.message;
             }
@@ -198,7 +198,7 @@ const Staff = {
                 await StaffAPI.uploadFile(id, file, action);
                 UI.toast("Documento salvato", "success");
                 this.openDetail(id);
-            } catch (err) {
+            } catch (_err) {
                 UI.toast(err.message, "error");
             }
         }, this.sig());
@@ -240,7 +240,7 @@ const Staff = {
                 UI.toast("Contratto generato e inviato", "success");
                 this.init(); // Refresh data entirely
                 setTimeout(() => this.openDetail(id), 500);
-            } catch(e) {
+            } catch (_e) {
                 err.textContent = e.message;
                 err.classList.remove("hidden");
                 btn.disabled = false;
@@ -263,7 +263,7 @@ const Staff = {
                 btn.disabled = false;
                 btn.innerHTML = originalText;
             }
-        } catch (err) {
+        } catch (_err) {
             UI.toast(err.message, "error");
             btn.disabled = false;
             btn.innerHTML = originalText;
@@ -284,7 +284,7 @@ const Staff = {
                 modal.close();
                 UI.toast("Membro eliminato", "success");
                 this.init();
-            } catch (err) {
+            } catch (_err) {
                 UI.toast(err.message, "error");
             }
         });
@@ -335,7 +335,7 @@ const Staff = {
                 UI.toast("Salvataggio completato", "success");
                 this.init();
                 setTimeout(() => this.openDetail(member.id), 500);
-            } catch (e) {
+            } catch (_e) {
                 err.textContent = e.message;
                 err.classList.remove("hidden");
                 btn.disabled = false;
@@ -435,7 +435,7 @@ const Staff = {
                 modal.close();
                 UI.toast("Membro staff creato", "success");
                 this.init();
-            } catch (e) {
+            } catch (_e) {
                 err.textContent = e.message;
                 err.classList.remove("hidden");
                 btn.disabled = false;

@@ -32,7 +32,7 @@ const Website = (() => {
         (document.getElementById("news-published").textContent = t.filter(
           (e) => 1 === Number(e.is_published),
         ).length));
-    } catch (e) {
+    } catch (_e) {
       (console.error("[Website] Failed to load news:", e),
         (document.getElementById("news-list-container").innerHTML =
           Utils.emptyState("Errore nel caricamento", e.message, "Riprova", () =>
@@ -79,7 +79,7 @@ const Website = (() => {
           ((c.value = n.url),
             (d.style.backgroundImage = `url(${n.url})`),
             UI.toast("Immagine caricata", "success"));
-        } catch (e) {
+        } catch (_e) {
           UI.toast(e.message, "error");
         } finally {
           ((d.style.opacity = "1"), (r.value = ""));
@@ -97,7 +97,7 @@ const Website = (() => {
                   Store.invalidate("website/newsList"),
                   s.close(),
                   await n());
-              } catch (e) {
+              } catch (_e) {
                 (UI.toast(e.message, "error"),
                   (document.getElementById("btn-delete").disabled = false));
               }
@@ -138,7 +138,7 @@ const Website = (() => {
             Store.invalidate("website/newsList"),
             s.close(),
             await n());
-        } catch (e) {
+        } catch (_e) {
           (UI.toast(e.message, "error"),
             (document.getElementById("btn-save").disabled = false));
         }

@@ -104,7 +104,7 @@ const AuthFlow = (() => {
                 }
 
                 onLoginSuccess(data);
-            } catch (err) {
+            } catch (_err) {
                 triggerShake(err.message || "Credenziali non valide. Verifica email e password.");
             } finally {
                 btn.disabled = false;
@@ -144,7 +144,7 @@ const AuthFlow = (() => {
                 await Store.api('resetPassword', 'auth', { currentPassword: current, newPassword: newPwd });
                 UI.toast('Password aggiornata. Effettua il login.', 'success');
                 setTimeout(() => showLoginScreen(onLoginSuccess), 1200);
-            } catch (err) {
+            } catch (_err) {
                 errEl.textContent = err.message;
                 errEl.classList.remove('hidden');
                 btn.disabled = false;
@@ -192,7 +192,7 @@ const AuthFlow = (() => {
                 await Store.api('acceptSubUserInvitation', 'auth', { token, password: newPwd });
                 UI.toast('Account attivato con successo! Ora puoi accedere.', 'success');
                 setTimeout(() => window.location.href = './', 1500);
-            } catch (err) {
+            } catch (_err) {
                 errEl.textContent = err.message;
                 errEl.classList.remove('hidden');
                 btn.disabled = false;
@@ -233,7 +233,7 @@ const AuthFlow = (() => {
                 UI.toast('Password aggiornata! Effettua il login.', 'success');
                 window.history.replaceState(null, '', window.location.pathname);
                 setTimeout(() => window.location.reload(), 1500);
-            } catch (err) {
+            } catch (_err) {
                 errEl.textContent = err.message;
                 errEl.classList.remove('hidden');
                 btn.disabled = false; btn.textContent = 'SALVA NUOVA PASSWORD';
@@ -278,7 +278,7 @@ const AuthFlow = (() => {
                 await Store.api('requestPasswordReset', 'auth', { email });
                 document.getElementById('fp-result').classList.remove('hidden');
                 btn.classList.add('hidden');
-            } catch (err) {
+            } catch (_err) {
                 errEl.textContent = err.message;
                 errEl.classList.remove('hidden');
                 btn.disabled = false; btn.textContent = '📧 INVIA LINK';
@@ -340,7 +340,7 @@ const AuthFlow = (() => {
                 await Store.api('resetPassword', 'auth', { currentPassword: current, newPassword: newPwd });
                 UI.toast('Password aggiornata con successo.', 'success');
                 m.close();
-            } catch (err) {
+            } catch (_err) {
                 errEl.textContent = err.message || 'Errore durante la modifica della password';
                 errEl.classList.remove('hidden');
                 btn.disabled = false;

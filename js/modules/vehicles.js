@@ -45,7 +45,7 @@ const Vehicles = (() => {
                 });
               }));
           })());
-      } catch (e) {
+      } catch (_e) {
         ((n.innerHTML = Utils.emptyState(
           "Errore nel caricamento dei mezzi",
           e.message,
@@ -101,7 +101,7 @@ const Vehicles = (() => {
                UI.toast(t ? "Mezzo aggiornato" : "Mezzo aggiunto", "success"),
                await a(),
                n.close());
-          } catch (e) {
+          } catch (_e) {
             ((document.getElementById("veh-error").textContent = e.message),
               document.getElementById("veh-error").classList.remove("hidden"),
               (o.disabled = !1),
@@ -248,7 +248,7 @@ const Vehicles = (() => {
                               UI.toast("Manutenzione salvata", "success"),
                               await o(e),
                               t.close());
-                          } catch (e) {
+                          } catch (_e) {
                             ((document.getElementById("m-err").textContent =
                               e.message),
                               document
@@ -299,7 +299,7 @@ const Vehicles = (() => {
                                 UI.toast("Segnalazione inviata", "success"),
                                 await o(e),
                                 t.close());
-                            } catch (e) {
+                            } catch (_e) {
                               ((document.getElementById("a-err").textContent =
                                 e.message),
                                 document
@@ -351,7 +351,7 @@ const Vehicles = (() => {
                                       UI.toast("Anomalia chiusa", "success"),
                                       n && (await o(n.id)),
                                       t.close());
-                                  } catch (e) {
+                                  } catch (_e) {
                                     ((document.getElementById(
                                       "ar-err",
                                     ).textContent = e.message),
@@ -373,7 +373,7 @@ const Vehicles = (() => {
                             }),
                             UI.toast("Stato aggiornato", "success"),
                             await o(t.id));
-                        } catch (e) {
+                        } catch (_e) {
                           UI.toast(e.message, "error");
                         } finally {
                           UI.loading(!1);
@@ -385,7 +385,7 @@ const Vehicles = (() => {
             };
           c();
         })());
-    } catch (e) {
+    } catch (_e) {
       (UI.toast(e.message, "error"), await a());
     } finally {
       UI.loading(!1);

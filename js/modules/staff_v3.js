@@ -313,7 +313,7 @@ const Staff = (() => {
                   Store.invalidate("list", "staff");
                   Store.invalidate("get", "staff");
                   d(p.id); // reload
-                } catch (err) {
+                } catch (_err) {
                   UI.toast(err.message, "error");
                   if (statusText)
                     statusText.textContent = "Errore: " + err.message;
@@ -404,7 +404,7 @@ const Staff = (() => {
                 btn.innerHTML =
                   '<i class="ph ph-arrows-clockwise"></i> VERIFICA STATO';
               }
-            } catch (err) {
+            } catch (_err) {
               UI.toast(err.message, "error");
               btn.disabled = false;
               btn.innerHTML =
@@ -459,7 +459,7 @@ const Staff = (() => {
                   Store.invalidate("list", "staff");
                   Store.invalidate("get", "staff");
                   d(p.id); // reload
-                } catch (err) {
+                } catch (_err) {
                   UI.toast(err.message, "error");
                 }
               },
@@ -563,7 +563,7 @@ const Staff = (() => {
                     l.close();
                     d(e.id);
                   }
-                } catch (err) {
+                } catch (_err) {
                   s.textContent = err.message;
                   s.classList.remove("hidden");
                 } finally {
@@ -622,14 +622,14 @@ const Staff = (() => {
                         (_n = null),
                         (t = await Store.get("list", "staff").catch(() => t)),
                         r());
-                    } catch (e) {
+                    } catch (_e) {
                       UI.toast("Errore: " + e.message, "error");
                     }
                   }));
             })(p),
           { signal: e.signal },
         ));
-    } catch (e) {
+    } catch (_e) {
       c.innerHTML = Utils.emptyState("Errore caricamento", e.message);
     }
   }

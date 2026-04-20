@@ -50,7 +50,7 @@ const AdminContracts = (() => {
       `;
 
       bindEvents();
-    } catch (err) {
+    } catch (_err) {
       if (err.name === 'AbortError') return;
       container.innerHTML = Utils.emptyState("Errore caricamento contratti", err.message);
     }
@@ -67,7 +67,7 @@ const AdminContracts = (() => {
           UI.toast("Contratto eliminato", "success");
           Store.invalidate("admin", "listContracts");
           await loadContracts();
-        } catch (err) {
+        } catch (_err) {
           UI.toast("Errore: " + err.message, "error");
         }
       }, { signal: abortController.signal });
@@ -137,7 +137,7 @@ const AdminContracts = (() => {
         Store.invalidate("admin", "listContracts");
         await loadContracts();
         modal.close();
-      } catch (err) {
+      } catch (_err) {
         errEl.textContent = err.message;
         errEl.classList.remove("hidden");
         saveBtn.disabled = false;

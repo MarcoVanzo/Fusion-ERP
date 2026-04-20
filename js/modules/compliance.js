@@ -48,7 +48,7 @@ const Compliance = (() => {
             } else if (_currentTab === 'calendar') {
                 await _loadCalendar(app);
             }
-        } catch (err) {
+        } catch (_err) {
             console.error('[Compliance] Init error:', err);
             app.innerHTML = Utils.emptyState('Errore nel caricamento', err.message, 'Riprova', null, () => init(route));
         }
@@ -295,7 +295,7 @@ const Compliance = (() => {
                 UI.toast('Contratto creato!', 'success');
                 modal.close();
                 init('compliance-contracts');
-            } catch (err) {
+            } catch (_err) {
                 errEl.textContent = err.message;
                 errEl.classList.remove('hidden');
             }
@@ -462,7 +462,7 @@ const Compliance = (() => {
             if (listEl) {
                 listEl.parentElement.innerHTML = `<div class="compliance-list">${html}</div>`;
             }
-        } catch (err) {
+        } catch (_err) {
             UI.toast(err.message, 'error');
         }
     }

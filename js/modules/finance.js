@@ -41,7 +41,7 @@ const Finance = {
             this._accounts = await FinanceAPI.getChartOfAccounts();
 
             await this.loadAndRender();
-        } catch (err) {
+        } catch (_err) {
             console.error("[Finance] Init error:", err);
             appContainer.innerHTML = Utils.emptyState("Errore caricamento", err.message);
         }
@@ -75,7 +75,7 @@ const Finance = {
                 }
                 this.attachBasicEvents(appContainer);
             }
-        } catch (err) {
+        } catch (_err) {
             UI.toast(err.message, "error");
         } finally {
             UI.loading(false);
@@ -103,7 +103,7 @@ const Finance = {
                         });
                         document.getElementById("modal-close-detail")?.addEventListener("click", () => modal.close(), this.sig());
                     }
-                } catch (err) {
+                } catch (_err) {
                     UI.toast("Impossibile caricare i dettagli: " + err.message, "error");
                 } finally {
                     UI.loading(false);
@@ -167,7 +167,7 @@ const Finance = {
                 UI.toast("Registrazione salvata", "success");
                 modal.close();
                 await this.refresh();
-            } catch (err) {
+            } catch (_err) {
                 UI.toast(err.message, "error");
             } finally {
                 UI.loading(false);

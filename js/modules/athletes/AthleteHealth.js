@@ -28,7 +28,7 @@ export const AthleteHealth = {
             const injuries = injuriesRes.success ? (injuriesRes.data || []) : [];
 
             this._renderUi(container, athlete, anamnesi, injuries);
-        } catch (e) {
+        } catch (_e) {
             console.error("Errore _loadData:", e);
             container.innerHTML = `<div class="error-box">Errore caricamento dati medici: ${Utils.escapeHtml(e.message)}</div>`;
         }
@@ -350,7 +350,7 @@ export const AthleteHealth = {
                 } else {
                     throw new Error(res.error || "Errore AI");
                 }
-            } catch (err) {
+            } catch (_err) {
                 // Remove loading fallback
                 const loadingEl = messagesContainer.lastElementChild;
                 if(loadingEl && loadingEl.querySelector('.animate-spin')) {
@@ -442,7 +442,7 @@ export const AthleteHealth = {
                 } else {
                     throw new Error(res.error || "Errore sconosciuto");
                 }
-            } catch(err) {
+            } catch (_err) {
                 UI.toast(err.message, "error");
             } finally {
                 UI.loading(false);
@@ -764,7 +764,7 @@ export const AthleteHealth = {
                     } else {
                         throw new Error(res.error || "Errore sconosciuto");
                     }
-                } catch(err) {
+                } catch (_err) {
                     UI.toast(err.message, "error");
                 } finally {
                     UI.loading(false);
@@ -795,7 +795,7 @@ export const AthleteHealth = {
                     } else {
                         throw new Error(res.error || "Errore sconosciuto");
                     }
-                } catch(err) {
+                } catch (_err) {
                     UI.toast(err.message, "error");
                 } finally {
                     UI.loading(false);
@@ -826,7 +826,7 @@ export const AthleteHealth = {
                     } else {
                         throw new Error(res.error || "Errore sconosciuto");
                     }
-                } catch(err) {
+                } catch (_err) {
                     UI.toast(err.message, "error");
                 } finally {
                     UI.loading(false);
@@ -874,7 +874,7 @@ export const AthleteHealth = {
             } else {
                 throw new Error(res.error);
             }
-        } catch (e) {
+        } catch (_e) {
             container.innerHTML = `<div style="color:#ef4444; padding:16px;">Errore caricamento visite: ${Utils.escapeHtml(e.message)}</div>`;
         }
     },
@@ -939,7 +939,7 @@ export const AthleteHealth = {
             } else {
                 throw new Error(res.error);
             }
-        } catch (e) {
+        } catch (_e) {
             container.innerHTML = `<div style="color:#ef4444; padding:16px;">Errore caricamento documenti: ${Utils.escapeHtml(e.message)}</div>`;
         }
     },
