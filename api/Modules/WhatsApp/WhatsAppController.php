@@ -52,18 +52,18 @@ class WhatsAppController
             FROM whatsapp_messages wm
             LEFT JOIN contacts c
                 ON c.phone_normalized = wm.from_phone
-               AND c.tenant_id = :tenant_id
+               AND c.tenant_id = :tenant_id1
             LEFT JOIN athletes a
                 ON (a.id = c.athlete_id OR
                     REGEXP_REPLACE(a.phone, '[^0-9]', '') LIKE CONCAT('%', RIGHT(wm.from_phone, 9)) OR
                     REGEXP_REPLACE(a.parent_phone, '[^0-9]', '') LIKE CONCAT('%', RIGHT(wm.from_phone, 9)))
-            WHERE wm.tenant_id = :tenant_id
+            WHERE wm.tenant_id = :tenant_id2
               AND wm.from_phone != 'me'
             GROUP BY wm.from_phone
             ORDER BY last_message_at DESC
             LIMIT 100
         ");
-        $stmt->execute([':tenant_id' => $tenantId]);
+        $stmt->execute([':tenant_id1' => $tenantId, ':tenant_id2' => $tenantId]);
         $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
         foreach ($rows as &$row) {
@@ -102,12 +102,12 @@ class WhatsAppController
             SELECT id, from_phone, message_type, body, media_id, timestamp, status, created_at
             FROM whatsapp_messages
             WHERE tenant_id = :tenant_id
-              AND (from_phone = :phone
-                   OR (from_phone = 'me' AND media_id = :phone))
+              AND (from_phone = :phone1
+                   OR (from_phone = 'me' AND media_id = :phone2))
             ORDER BY timestamp ASC, created_at ASC
             LIMIT 200
         ");
-        $stmt->execute([':tenant_id' => $tenantId, ':phone' => $fromPhone]);
+        $stmt->execute([':tenant_id' => $tenantId, ':phone1' => $fromPhone, ':phone2' => $fromPhone]);
         $messages = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
         // Marca come letti
