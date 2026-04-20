@@ -4,8 +4,8 @@ $dotenv = Dotenv\Dotenv::createMutable(dirname(__DIR__));
 $dotenv->safeLoad();
 try {
     $db = FusionERP\Shared\Database::getInstance();
-    $stmt = $db->query("SELECT * FROM migrations ORDER BY id DESC LIMIT 20");
-    echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
+    $stmt = $db->query("SELECT filename FROM migrations ORDER BY filename ASC");
+    echo json_encode($stmt->fetchAll(PDO::FETCH_COLUMN));
 } catch (Exception $e) {
     echo $e->getMessage();
 }
