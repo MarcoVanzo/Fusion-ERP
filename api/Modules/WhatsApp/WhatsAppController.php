@@ -35,7 +35,7 @@ class WhatsAppController
     public function getConversations(): void
     {
         $user = Auth::requireRole('operatore');
-        $tenantId = $user['tenant_id'] ?? 'TNT_default';
+        $tenantId = \FusionERP\Shared\TenantContext::id();
 
         $stmt = $this->db->prepare("
             SELECT
@@ -90,7 +90,7 @@ class WhatsAppController
     public function getMessages(): void
     {
         $user = Auth::requireRole('operatore');
-        $tenantId = $user['tenant_id'] ?? 'TNT_default';
+        $tenantId = \FusionERP\Shared\TenantContext::id();
         $fromPhone = $_GET['from_phone'] ?? '';
 
         if (empty($fromPhone)) {
@@ -124,7 +124,7 @@ class WhatsAppController
     public function reply(): void
     {
         $user = Auth::requireRole('operatore');
-        $tenantId = $user['tenant_id'] ?? 'TNT_default';
+        $tenantId = \FusionERP\Shared\TenantContext::id();
         $body = Response::jsonBody();
         $toPhone = $body['to_phone'] ?? '';
         $text = trim($body['text'] ?? '');
@@ -165,7 +165,7 @@ class WhatsAppController
     public function getContacts(): void
     {
         $user = Auth::requireRole('operatore');
-        $tenantId = $user['tenant_id'] ?? 'TNT_default';
+        $tenantId = \FusionERP\Shared\TenantContext::id();
 
         $stmt = $this->db->prepare("
             SELECT c.id, c.name, c.phone_raw, c.phone_normalized, c.source, c.created_at,
@@ -187,7 +187,7 @@ class WhatsAppController
     public function importContacts(): void
     {
         $user = Auth::requireRole('operatore');
-        $tenantId = $user['tenant_id'] ?? 'TNT_default';
+        $tenantId = \FusionERP\Shared\TenantContext::id();
 
         $isPreview = isset($_GET['preview']) && $_GET['preview'] === '1';
 
