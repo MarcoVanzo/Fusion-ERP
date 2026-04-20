@@ -62,6 +62,7 @@ class WhatsAppWebhookController
     {
         // 1. Leggi il body raw
         $rawBody = file_get_contents('php://input');
+        file_put_contents(__DIR__ . '/../../../local_debug_error.log', date('Y-m-d H:i:s') . ' [WEBHOOK-RAW] ' . $rawBody . PHP_EOL, FILE_APPEND);
 
         // 2. Validazione firma HMAC (X-Hub-Signature-256)
         if (!$this->validateSignature($rawBody)) {
