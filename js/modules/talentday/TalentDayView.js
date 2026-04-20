@@ -176,6 +176,9 @@ export class TalentDayView {
                             <button class="btn-dash pink" id="td-add-btn" type="button">
                                 <i class="ph ph-plus-circle" style="font-size:18px;"></i> NUOVA REGISTRAZIONE
                             </button>
+                            <button class="btn-dash" id="td-export-btn" type="button" style="background-color: #217346; color: white;">
+                                <i class="ph ph-file-csv" style="font-size:18px;"></i> ESPORTA EXCEL
+                            </button>
                         ` : ""}
                     </div>
                 </div>

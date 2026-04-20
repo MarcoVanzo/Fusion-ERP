@@ -218,6 +218,56 @@ class TalentDayController
     }
 
     /* ─────────────────────────────────────────────────────────────────────
+     * publicStatus — PUBLIC GET endpoint (no auth required)
+     * GET /api?module=talentday&action=publicStatus
+     * Returns count of registrations per tappa
+     * ───────────────────────────────────────────────────────────────────── */
+    public function publicStatus(): void
+    {
+        $allowedOrigins = array_filter([
+            getenv('APP_URL') ?: '',
+            getenv('TALENT_DAY_ORIGIN') ?: '',
+            'https://talentday.fusionteamvolley.it',
+            'https://www.savinodelbenevolley.it',
+        ]);
+        $requestOrigin = $_SERVER['HTTP_ORIGIN'] ?? '';
+        $corsOrigin = '';
+        foreach ($allowedOrigins as $ao) {
+            $parsed = parse_url($ao);
+            $originBase = ($parsed['scheme'] ?? 'https') . '://' . ($parsed['host'] ?? '');
+            if (!empty($parsed['port'])) {
+                $originBase .= ':' . $parsed['port'];
+            }
+            if ($requestOrigin === $originBase) {
+                $corsOrigin = $requestOrigin;
+                break;
+            }
+        }
+        if ($corsOrigin) {
+            header("Access-Control-Allow-Origin: {$corsOrigin}");
+            header('Vary: Origin');
+        }
+        header('Access-Control-Allow-Methods: GET, OPTIONS');
+        header('Access-Control-Allow-Headers: Content-Type');
+
+        if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+            http_response_code(204);
+            exit;
+        }
+
+        $stmt = $this->db->prepare("
+            SELECT tappa, COUNT(*) as count 
+            FROM talent_day_entries 
+            WHERE tenant_id = 'TNT_fusion' 
+            GROUP BY tappa
+        ");
+        $stmt->execute();
+        $counts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        Response::success(['counts' => $counts]);
+    }
+
+    /* ─────────────────────────────────────────────────────────────────────
      * publicRegister — PUBLIC POST endpoint (no auth required)
      * POST /api?module=talentday&action=publicRegister
      * Saves registration + sends confirmation email with attachments.
