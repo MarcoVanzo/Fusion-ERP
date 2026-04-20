@@ -79,6 +79,10 @@ if (empty($module) || empty($action)) {
     Response::error('Parametri di routing mancanti', 400);
 }
 
+if ($module === 'whatsapp') {
+    file_put_contents(__DIR__ . '/../local_debug_error.log', date('Y-m-d H:i:s') . ' [ROUTER] WhatsApp Request: ' . $_SERVER['REQUEST_METHOD'] . ' ' . $_SERVER['REQUEST_URI'] . PHP_EOL, FILE_APPEND);
+}
+
 // Security: Require X-Requested-With header for all state-changing requests (CSRF protection)
 // Exception: public endpoints that are called from standalone forms (e.g. Talent Day registration)
 $publicEndpoints = [
