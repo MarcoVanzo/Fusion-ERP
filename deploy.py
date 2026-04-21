@@ -32,7 +32,7 @@ def run_preflight_checks():
     try:
         # Use the composer script defined in composer.json
         # Running without capture_output to show live progress to the user
-        result = subprocess.run(['php', 'composer.phar', 'phpstan'])
+        result = subprocess.run(['composer', 'phpstan'])
         if result.returncode != 0:
             print("❌ PHPStan failed! Fix the following issues before deploying.")
             sys.exit(1)

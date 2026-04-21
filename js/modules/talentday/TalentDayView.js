@@ -78,7 +78,7 @@ export class TalentDayView {
                 #td-table th {
                     position: sticky;
                     top: 0;
-                    background: var(--color-bg-alt);
+                    background: var(--bg-dark, #12161F);
                     z-index: 2;
                 }
 
