@@ -174,7 +174,7 @@ catch (\Throwable $e) {
     }
     file_put_contents(__DIR__ . '/../ai_debug.log', date('Y-m-d H:i:s') . ' (CATCH) ' . $errMsg . PHP_EOL, FILE_APPEND);
 
-    $clientMessage = $debug
+    $clientMessage = $isDebug
         ? 'PHP_ERROR: ' . $e->getMessage() . ' in ' . basename($e->getFile()) . ':' . $e->getLine()
         : 'Errore interno del server. Contattare l\'amministratore.';
         
