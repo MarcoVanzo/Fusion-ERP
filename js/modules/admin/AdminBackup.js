@@ -125,7 +125,7 @@ const AdminBackup = (() => {
       btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> GENERAZIONE BACKUP...';
       
       try {
-        const _res = await Store.api("runBackup", "admin", { on_drive: true });
+        const _res = await Store.api("createBackup", "admin", { on_drive: true });
         UI.toast("Backup eseguito con successo", "success");
         Store.invalidate("admin", "listBackups");
         await loadBackups();
