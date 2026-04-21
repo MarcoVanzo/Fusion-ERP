@@ -432,10 +432,11 @@
     const STATUS_API_URL = '../api/api.php?module=talentday&action=publicStatus';
     fetch(STATUS_API_URL)
         .then(res => res.json())
-        .then(data => {
-            if (data.counts) {
+        .then(resData => {
+            const countsArray = resData.data?.counts || resData.counts;
+            if (countsArray) {
                 const limit = 50;
-                data.counts.forEach(c => {
+                countsArray.forEach(c => {
                     if (c.count >= limit) {
                         // Truncate sold out options in select
                         const selOption = document.querySelector(`select#tappa option[value="${c.tappa}"]`);
