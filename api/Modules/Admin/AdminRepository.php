@@ -139,7 +139,8 @@ class AdminRepository
         string $dateTo = '',
         string $search = '',
         int $limit = 200,
-        int $offset = 0
+        int $offset = 0,
+        string $eventType = ''
         ): array
     {
         $tenantId = TenantContext::id();
@@ -147,13 +148,17 @@ class AdminRepository
             SELECT
                 al.id,
                 al.user_id,
-                u.full_name  AS user_name,
+                COALESCE(al.username, u.full_name) AS user_name,
+                al.role,
                 al.action,
+                al.event_type,
                 al.table_name,
                 al.record_id,
                 al.before_snapshot,
                 al.after_snapshot,
                 al.ip_address,
+                al.http_status,
+                al.details,
                 al.created_at
             FROM audit_logs al
             LEFT JOIN users u ON u.id = al.user_id
@@ -165,6 +170,10 @@ class AdminRepository
         if ($action !== '') {
             $sql .= ' AND al.action = :action';
             $params[':action'] = $action;
+        }
+        if ($eventType !== '') {
+            $sql .= ' AND al.event_type = :event_type';
+            $params[':event_type'] = $eventType;
         }
         if ($tableName !== '') {
             $sql .= ' AND al.table_name = :table_name';

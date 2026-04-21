@@ -443,6 +443,7 @@ HTML;
         // The 'action' GET param is also used by the router; for this endpoint the
         // filter action is passed as 'action_filter' to avoid collision.
         $actionFilter = filter_input(INPUT_GET, 'action_filter', FILTER_DEFAULT) ?? '';
+        $eventType = filter_input(INPUT_GET, 'event_type', FILTER_DEFAULT) ?? '';
 
         $logs = $this->repo->listLogs(
             $actionFilter,
@@ -451,7 +452,8 @@ HTML;
             $dateTo,
             $search,
             $limit,
-            $offset
+            $offset,
+            $eventType
         );
 
         Response::success([
