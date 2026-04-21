@@ -8,7 +8,7 @@ export class TalentDayView {
         '4 GIU 2026, Trieste - Azzurra Volley',
         '10 GIU 2026, Torino - Volavalley',
         '11 GIU 2026, Lecce - Melendugno Volley',
-        '19 GIU 2026, Catania - We Kondor Catania',
+        '19 GIU 2026, Catania - Ciclope Volley Bronte',
     ];
 
     /* ═══════════════════════════════════════════════════════════════════
