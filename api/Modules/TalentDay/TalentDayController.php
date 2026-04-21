@@ -255,6 +255,11 @@ class TalentDayController
             exit;
         }
 
+        // Prevent caching for live status calls
+        header('Cache-Control: no-cache, no-store, must-revalidate');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+
         $stmt = $this->db->prepare("
             SELECT tappa, COUNT(*) as count 
             FROM talent_day_entries 
@@ -345,6 +350,19 @@ class TalentDayController
         ");
         $checkStmt->execute();
         // Simple global rate limit
+
+        // ── Backend Limit Validation ───────────────────────────────────
+        $tappa = trim($data['tappa']);
+        $limit = 50; // Quota massima per tappa
+        $checkLimitStmt = $this->db->prepare("
+            SELECT COUNT(*) FROM talent_day_entries
+            WHERE tenant_id = 'TNT_fusion'
+              AND tappa = :tappa
+        ");
+        $checkLimitStmt->execute([':tappa' => $tappa]);
+        if ($checkLimitStmt->fetchColumn() >= $limit) {
+            Response::error('Spiacenti, i posti per la tappa selezionata sono esauriti (SOLD OUT).', 400);
+        }
 
         // ── Insert into DB ─────────────────────────────────────────────
         $now = date('Y-m-d H:i:s');
