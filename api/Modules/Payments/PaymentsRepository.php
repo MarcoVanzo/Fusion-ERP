@@ -160,14 +160,17 @@ class PaymentsRepository
      * Mark overdue installments (past due date, still PENDING).
      * Called by cron job.
      */
-    public function markOverdueInstallments(): int
+    public function markOverdueInstallments(?string $tenantId = null): int
     {
+        $tid = $tenantId ?? TenantContext::id();
         $stmt = $this->db->prepare(
-            "UPDATE installments
-             SET status = 'OVERDUE'
-             WHERE status = 'PENDING' AND due_date < CURDATE()"
+            "UPDATE installments i
+             JOIN payment_plans pp ON pp.id = i.plan_id
+             SET i.status = 'OVERDUE'
+             WHERE i.status = 'PENDING' AND i.due_date < CURDATE()
+               AND pp.tenant_id = :tid"
         );
-        $stmt->execute();
+        $stmt->execute([':tid' => $tid]);
         return $stmt->rowCount();
     }
 

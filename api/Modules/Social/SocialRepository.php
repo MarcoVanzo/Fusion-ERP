@@ -708,7 +708,6 @@ class SocialRepository
     public function logDebug(string $message): void
     {
         try {
-            $this->db->exec("CREATE TABLE IF NOT EXISTS meta_logs (id INT AUTO_INCREMENT PRIMARY KEY, message TEXT NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
             $stmt = $this->db->prepare("INSERT INTO meta_logs (message) VALUES (:m)");
             $stmt->execute([':m' => $message]);
         }
@@ -731,7 +730,7 @@ class SocialRepository
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_TIMEOUT => 20,
-            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYPEER => true,
             CURLOPT_USERAGENT => 'FusionERP/1.0',
         ]);
         $body = curl_exec($ch);

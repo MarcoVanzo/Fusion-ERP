@@ -2,7 +2,11 @@
  * AthleteHealth — Gestione Anamnesi e Infortuni Atleti
  */
 
+const MAX_CHAT_HISTORY = 30;
+
 export const AthleteHealth = {
+    // Active AbortController for the current open modal — prevents listener accumulation
+    _modalAc: null,
     async render(container, athlete) {
         container.innerHTML = `
             <div class="health-dashboard">
@@ -34,7 +38,26 @@ export const AthleteHealth = {
         }
     },
 
+    /**
+     * Close and cleanup a modal: aborts the AbortController and removes from DOM.
+     */
+    _closeModal(overlay) {
+        if (this._modalAc) {
+            this._modalAc.abort();
+            this._modalAc = null;
+        }
+        if (overlay && overlay.parentNode) {
+            overlay.parentNode.removeChild(overlay);
+        }
+    },
+
     _createModal(htmlContent) {
+        // Abort any previous modal's listeners to prevent accumulation
+        if (this._modalAc) {
+            this._modalAc.abort();
+        }
+        this._modalAc = new AbortController();
+
         const overlay = document.createElement('div');
         overlay.className = 'modal-backdrop';
         overlay.style = 'position:fixed; inset:0; background:rgba(0,0,0,0.8); backdrop-filter:blur(4px); z-index:9999; display:flex; align-items:center; justify-content:center; padding:16px;';
@@ -45,10 +68,10 @@ export const AthleteHealth = {
         modal.innerHTML = htmlContent;
         
         overlay.appendChild(modal);
-        // click outside to close
+        // click outside to close — uses AbortController signal for cleanup
         overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) document.body.removeChild(overlay);
-        });
+            if (e.target === overlay) this._closeModal(overlay);
+        }, { signal: this._modalAc.signal });
         
         return overlay;
     },
@@ -218,7 +241,7 @@ export const AthleteHealth = {
     },
 
     _openAiDiagnosisModal(container, athlete, anamnesi, injuries, focusedInjuryId = null) {
-        let chatHistory = [];
+        let chatHistory = []; // Bounded to MAX_CHAT_HISTORY entries
         
         const theModal = this._createModal(`
             <h2 style="font-family:var(--font-display); font-size:24px; color:#fff; margin-bottom:8px; display:flex; align-items:center; gap:12px;">
@@ -260,13 +283,8 @@ export const AthleteHealth = {
             if (!text) return '';
             let html = String(text);
             
-            // Decodifica le entità HTML (es. &#x27; -> ') e sicurezza di base
-            const temp = document.createElement('textarea');
-            temp.innerHTML = html;
-            html = temp.value; // Questo decodifica le entità
-            
-            // Sicurezza: Re-escape HTML tag
-            html = html.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            // Sicurezza: escape HTML in un singolo passaggio (no decodifica entità)
+            html = html.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
             // Intestazioni
             html = html.replace(/^### (.*$)/gim, '<h4 style="font-size:16px; font-weight:800; color:#fff; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:8px; margin-top:20px; margin-bottom:12px;">$1</h4>');
@@ -346,6 +364,10 @@ export const AthleteHealth = {
                 if (res.success && res.data && res.data.reply) {
                     if (message) chatHistory.push({role: 'user', content: message});
                     chatHistory.push({role: 'ai', content: res.data.reply});
+                    // Prevent unbounded memory growth
+                    if (chatHistory.length > MAX_CHAT_HISTORY) {
+                        chatHistory = chatHistory.slice(-MAX_CHAT_HISTORY);
+                    }
                     appendMessage('AI', res.data.reply);
                 } else {
                     throw new Error(res.error || "Errore AI");
@@ -437,7 +459,7 @@ export const AthleteHealth = {
                 
                 if(res.success) {
                     UI.toast("Anamnesi aggiornata");
-                    document.body.removeChild(theModal);
+                    this._closeModal(theModal);
                     this._loadData(container, athlete);
                 } else {
                     throw new Error(res.error || "Errore sconosciuto");
@@ -751,14 +773,14 @@ export const AthleteHealth = {
                         
                         if (!isEdit && res.id) {
                             // Transition from New to Edit mode without closing
-                            document.body.removeChild(theModal);
+                            this._closeModal(theModal);
                             await this._loadData(container, athlete);
                             // Auto-open in edit mode
                             const injuries = await fetch(`api/?module=health&action=getInjuries&id=${athlete.id}`).then(r => r.json());
                             const newInj = injuries.data?.find(i => i.id === res.id);
                             if (newInj) this._openInjuryModal(container, athlete, newInj);
                         } else {
-                            document.body.removeChild(theModal);
+                            this._closeModal(theModal);
                             await this._loadData(container, athlete);
                         }
                     } else {
@@ -945,17 +967,26 @@ export const AthleteHealth = {
     },
 
     _openDocViewer(url, title, type) {
+        // Block dangerous protocols (XSS via javascript:, data:, vbscript:)
+        if (/^(javascript|data|vbscript):/i.test(url.trim())) {
+            UI.toast('URL documento non valido', 'error');
+            return;
+        }
+
+        // Sanitize URL for HTML attribute injection
+        const safeUrl = Utils.escapeHtml(url);
+
         if (type === 'other') {
             // Bypass the modal entirely and open directly in a popup window to save a click
-            window.open(url, '_blank', 'width=800,height=800,menubar=no,toolbar=no,location=no,status=no');
+            window.open(safeUrl, '_blank', 'width=800,height=800,menubar=no,toolbar=no,location=no,status=no');
             return;
         }
 
         let contentHtml = '';
         if (type === 'img') {
-            contentHtml = `<img src="${url}" style="max-width:100%; max-height:80vh; object-fit:contain; border-radius:8px; display:block; margin:0 auto; box-shadow: 0 8px 32px rgba(0,0,0,0.3);">`;
+            contentHtml = `<img src="${safeUrl}" style="max-width:100%; max-height:80vh; object-fit:contain; border-radius:8px; display:block; margin:0 auto; box-shadow: 0 8px 32px rgba(0,0,0,0.3);">`;
         } else if (type === 'pdf') {
-            contentHtml = `<iframe src="${url}" style="width:100%; height:80vh; border:none; border-radius:8px; background:#fff; box-shadow: 0 8px 32px rgba(0,0,0,0.3);"></iframe>`;
+            contentHtml = `<iframe src="${safeUrl}" style="width:100%; height:80vh; border:none; border-radius:8px; background:#fff; box-shadow: 0 8px 32px rgba(0,0,0,0.3);"></iframe>`;
         }
 
         const theModal = this._createModal(`

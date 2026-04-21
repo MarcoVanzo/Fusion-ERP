@@ -160,6 +160,7 @@ class PaymentsController
         $plan = $this->repo->getActivePlan($athleteId);
         if (!$plan) {
             Response::success(['plan' => null, 'installments' => []]);
+            return;
         }
 
         $installments = $this->repo->getInstallments($plan['id']);
@@ -276,6 +277,7 @@ class PaymentsController
         $user = Auth::requireRead('payments');
         if (!$user) {
             Response::error('Non autorizzato', 401);
+            return;
         }
 
         $body = Response::jsonBody();
@@ -284,9 +286,24 @@ class PaymentsController
         $installment = $this->repo->getInstallmentById($body['installment_id']);
         if (!$installment) {
             Response::error('Rata non trovata', 404);
+            return;
         }
         if ($installment['status'] === 'PAID') {
             Response::error('Questa rata è già stata pagata', 400);
+            return;
+        }
+
+        // IDOR protection: athletes can only pay their own installments
+        if ($user['role'] === 'atleta') {
+            $db = \FusionERP\Shared\Database::getInstance();
+            $tid = \FusionERP\Shared\TenantContext::id();
+            $stmt = $db->prepare('SELECT id FROM athletes WHERE user_id = :uid AND tenant_id = :tid LIMIT 1');
+            $stmt->execute([':uid' => $user['id'], ':tid' => $tid]);
+            $linked = $stmt->fetch(\PDO::FETCH_ASSOC);
+            if (!$linked || $linked['id'] !== $installment['athlete_id']) {
+                Response::error('Non puoi pagare rate di altri atleti.', 403);
+                return;
+            }
         }
 
         \Stripe\Stripe::setApiKey($_ENV['STRIPE_SECRET_KEY'] ?? '');
@@ -338,12 +355,14 @@ class PaymentsController
         $athlete = $stmt->fetch(\PDO::FETCH_ASSOC);
 
         if (!$athlete) {
-            Response::success([]); // No linked athlete
+            Response::success([]);
+            return;
         }
 
         $plan = $this->repo->getActivePlan($athlete['id']);
         if (!$plan) {
             Response::success([]);
+            return;
         }
 
         $installments = $this->repo->getInstallments($plan['id']);
@@ -541,8 +560,8 @@ class PaymentsController
      */
     private function buildReceiptHtml(array $installment, ?array $athlete, ?array $transaction): string
     {
-        $athleteName = $athlete['full_name'] ?? 'N/A';
-        $fiscalCode = $athlete['fiscal_code'] ?? 'N/A';
+        $athleteName = htmlspecialchars($athlete['full_name'] ?? 'N/A', ENT_QUOTES, 'UTF-8');
+        $fiscalCode = htmlspecialchars($athlete['fiscal_code'] ?? 'N/A', ENT_QUOTES, 'UTF-8');
         $amountRaw = (float)$installment['amount'];
         $amount = number_format($amountRaw, 2, ',', '.');
         $paidDate = $installment['paid_date'] ?? date('Y-m-d');

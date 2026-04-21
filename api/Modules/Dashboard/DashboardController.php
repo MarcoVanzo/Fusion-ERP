@@ -615,6 +615,12 @@ class DashboardController
     public function debugDashboard(): void
     {
         Auth::requireRole('admin');
+
+        // Only available when APP_DEBUG is explicitly enabled — never in production
+        if (!filter_var(getenv('APP_DEBUG') ?: 'false', FILTER_VALIDATE_BOOLEAN)) {
+            Response::error('Debug endpoint disabilitato in produzione', 403);
+        }
+
         $db  = Database::getInstance();
         $tid = TenantContext::id();
         $res = [];

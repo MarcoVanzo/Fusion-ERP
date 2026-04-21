@@ -74,10 +74,16 @@ class TasksRepository
             END,
             COALESCE(t.due_date, \'9999-12-31\') ASC,
             t.created_at DESC
-            LIMIT ' . $limit . ' OFFSET ' . $offset;
+            LIMIT :_limit OFFSET :_offset';
 
         $stmt = $this->db->prepare($sql);
-        $stmt->execute($params);
+        // Bind LIMIT/OFFSET as integers to prevent SQL injection
+        foreach ($params as $k => $v) {
+            $stmt->bindValue($k, $v);
+        }
+        $stmt->bindValue(':_limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':_offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
         return $stmt->fetchAll();
     }
 

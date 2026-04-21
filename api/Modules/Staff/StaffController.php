@@ -13,13 +13,6 @@ use FusionERP\Shared\Audit;
 use FusionERP\Shared\Response;
 use FusionERP\Shared\TenantContext;
 
-// Explicit require_once needed because server uses optimized classmap autoloader
-$_staffShared = dirname(__DIR__, 2) . '/Shared/';
-require_once $_staffShared . 'Auth.php';
-require_once $_staffShared . 'Audit.php';
-require_once $_staffShared . 'Response.php';
-require_once $_staffShared . 'TenantContext.php';
-unset($_staffShared);
 require_once __DIR__ . '/StaffRepository.php';
 require_once __DIR__ . '/StaffService.php';
 
@@ -317,11 +310,8 @@ class StaffController
     {
         // Nessun controllo auth per la vista pubblica
         $teamId = filter_input(INPUT_GET, 'teamId', FILTER_DEFAULT);
-        if ($teamId) {
-            Response::success($this->repo->getPublicStaffByTeam($teamId));
-        }
-        else {
-            Response::success($this->repo->listStaff());
-        }
+        // Always use getPublicStaffByTeam — listStaff() exposes sensitive fields
+        // (fiscal_code, email, phone, notes, documents) that must not be public.
+        Response::success($this->repo->getPublicStaffByTeam($teamId));
     }
 }

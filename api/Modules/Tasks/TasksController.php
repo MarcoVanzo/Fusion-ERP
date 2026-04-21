@@ -50,7 +50,7 @@ class TasksController
     {
         Auth::requireRole('operatore');
 
-        $body = json_decode(file_get_contents('php://input'), true) ?? [];
+        $body = Response::jsonBody();
 
         $title = trim($body['title'] ?? '');
         $category = trim($body['category'] ?? 'Interno');
@@ -82,7 +82,7 @@ class TasksController
     {
         Auth::requireRole('operatore');
 
-        $body = json_decode(file_get_contents('php://input'), true) ?? [];
+        $body = Response::jsonBody();
         $id = trim($body['id'] ?? '');
 
         if ($id === '')
@@ -105,7 +105,7 @@ class TasksController
     {
         Auth::requireRole('allenatore');
 
-        $body = json_decode(file_get_contents('php://input'), true) ?? [];
+        $body = Response::jsonBody();
         $id = trim($body['id'] ?? '');
 
         if ($id === '')
@@ -145,7 +145,7 @@ class TasksController
     {
         Auth::requireRole('operatore');
 
-        $body = json_decode(file_get_contents('php://input'), true) ?? [];
+        $body = Response::jsonBody();
         $taskId = trim($body['task_id'] ?? '');
         $date = trim($body['interaction_date'] ?? date('Y-m-d H:i:s'));
         $notes = trim($body['notes'] ?? '');
@@ -174,7 +174,7 @@ class TasksController
     {
         Auth::requireRole('allenatore');
 
-        $body = json_decode(file_get_contents('php://input'), true) ?? [];
+        $body = Response::jsonBody();
         $id = trim($body['id'] ?? '');
 
         if ($id === '')
