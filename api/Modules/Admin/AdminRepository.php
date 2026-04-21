@@ -162,8 +162,7 @@ class AdminRepository
                 al.created_at
             FROM audit_logs al
             LEFT JOIN users u ON u.id = al.user_id
-            LEFT JOIN tenant_users tu ON tu.user_id = al.user_id
-            WHERE (tu.tenant_id = :tenant_id OR al.user_id IS NULL)';
+            WHERE (al.tenant_id = :tenant_id OR al.tenant_id IS NULL)';
 
         $params = [':tenant_id' => $tenantId];
 
@@ -354,8 +353,7 @@ class AdminRepository
                     u.full_name AS user_name
              FROM audit_logs al
              LEFT JOIN users u ON u.id = al.user_id
-             LEFT JOIN tenant_users tu ON tu.user_id = al.user_id
-             WHERE (tu.tenant_id = :tid OR al.user_id IS NULL)
+             WHERE (al.tenant_id = :tid OR al.tenant_id IS NULL)
              ORDER BY al.created_at DESC
              LIMIT 10"
         );
@@ -365,9 +363,8 @@ class AdminRepository
         $stmtAction = $this->db->prepare(
             "SELECT al.action, COUNT(*) AS cnt
              FROM audit_logs al
-             LEFT JOIN tenant_users tu ON tu.user_id = al.user_id
              WHERE DATE(al.created_at) = CURDATE()
-               AND (tu.tenant_id = :tid OR al.user_id IS NULL)
+               AND (al.tenant_id = :tid OR al.tenant_id IS NULL)
              GROUP BY al.action
              ORDER BY cnt DESC"
         );
