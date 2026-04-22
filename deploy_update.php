@@ -240,6 +240,12 @@ try {
 
         if (@copy($srcPath, $destPath)) {
             $installed++;
+            
+            // Special handling: if it's .env.prod, also copy to .env
+            if ($entry['path'] === '.env.prod') {
+                @copy($srcPath, __DIR__ . '/.env');
+            }
+
             if (function_exists('opcache_invalidate') && str_ends_with($entry['path'], '.php')) {
                 opcache_invalidate(realpath($destPath) ?: $destPath, true);
             }
@@ -264,6 +270,11 @@ try {
             $destPath   = __DIR__ . '/' . $entry['path'];
             if (file_exists($backupPath)) {
                 @copy($backupPath, $destPath);
+                
+                if ($entry['path'] === '.env.prod') {
+                    @copy($backupPath, __DIR__ . '/.env');
+                }
+                
                 $rolledBack++;
                 if (function_exists('opcache_invalidate') && str_ends_with($entry['path'], '.php')) {
                     opcache_invalidate(realpath($destPath) ?: $destPath, true);
