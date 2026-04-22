@@ -1,231 +1,439 @@
 <?php
 /**
- * Fusion ERP — Deploy Update (HTTP Pull from GitHub)
+ * Fusion ERP — Deploy Update v3 (HTTP Pull from GitHub)
  *
- * Questo endpoint viene chiamato dallo script di deploy locale.
- * Scarica i file dal repository GitHub pubblico usando il manifest.
+ * Deploy incrementale pull-based (allineato con MV ERP):
+ * 1. Scarica manifest con hash da GitHub
+ * 2. Confronta con stato precedente (deploy_state.json)
+ * 3. Scarica solo i file cambiati in cartella temp
+ * 4. Verifica integrità SHA-256
+ * 5. Backup file vecchi
+ * 6. Swap dei file nuovi
+ * 7. Health check post-deploy
+ * 8. Rollback automatico se fallisce
  *
- * Autenticazione: Header X-Deploy-Key (confrontato con DEPLOY_KEY in .env)
- *
- * Flow:
- *   1. Verifica DEPLOY_KEY
- *   2. Scarica deploy_manifest.json da GitHub Raw
- *   3. Per ogni file nel manifest → scarica da raw.githubusercontent.com
- *   4. Applica cache busting (hash nei query string di index.html)
- *   5. Ritorna riepilogo (successi/errori)
- *
- * Uso:
- *   curl -s -H "X-Deploy-Key: <key>" https://www.fusionteamvolley.it/ERP/deploy_update.php
+ * Autenticazione: Header X-Deploy-Key
  */
 
 declare(strict_types=1);
 
-// ── Configurazione ──
-$repo = 'MarcoVanzo/Fusion-ERP';
-$branch = 'main';
-$hashableExtensions = ['js', 'css'];
+if (function_exists('opcache_invalidate')) {
+    opcache_invalidate(__FILE__, true);
+}
 
-// ── Resolve DEPLOY_KEY ──
-$deployKey = getenv('DEPLOY_KEY') ?: ($_ENV['DEPLOY_KEY'] ?? '');
-if (!$deployKey) {
-    // Fallback: parse .env direttamente
-    $envPaths = [__DIR__ . '/.env', __DIR__ . '/../.env'];
-    foreach ($envPaths as $envPath) {
+error_reporting(E_ALL);
+ini_set('display_errors', '0');
+ini_set('log_errors', '1');
+ini_set('max_execution_time', '300');
+
+// ── Carica .env ──────────────────────────────────────────────────────────────
+
+$envPaths = [__DIR__ . '/.env', __DIR__ . '/../.env'];
+foreach ($envPaths as $envPath) {
+    if (file_exists($envPath)) {
         $envContent = @file_get_contents($envPath);
-        if ($envContent && preg_match('/DEPLOY_KEY\s*=\s*([^\r\n]+)/', $envContent, $matches)) {
-            $deployKey = trim($matches[1], '"\'  ');
-            break;
+        if ($envContent && preg_match_all('/^([^#=\r\n]+)=(.*)$/m', $envContent, $matches, PREG_SET_ORDER)) {
+            foreach ($matches as $m) {
+                $key = trim($m[1]);
+                $val = trim(trim($m[2]), '"\'');
+                putenv("$key=$val");
+                $_ENV[$key] = $val;
+            }
         }
+        break;
     }
 }
 
-// ── Verifica autenticazione ──
+// ── Costanti ──────────────────────────────────────────────────────────────────
+
+$storageDir = __DIR__ . '/storage';
+if (!is_dir($storageDir)) {
+    mkdir($storageDir, 0755, true);
+}
+
+define('DEPLOY_STATE_FILE', $storageDir . '/deploy_state.json');
+define('DEPLOY_LOCK_FILE',  $storageDir . '/deploy.lock');
+define('DEPLOY_TEMP_DIR',   $storageDir . '/deploy_tmp');
+define('DEPLOY_BACKUP_DIR', $storageDir . '/deploy_backup');
+define('DEPLOY_LOG_FILE',   $storageDir . '/deploy_log.json');
+define('DEPLOY_COOLDOWN',   60);
+
+// ── Rate limiting ─────────────────────────────────────────────────────────────
+
+if (file_exists(DEPLOY_LOCK_FILE)) {
+    $lockAge = time() - filemtime(DEPLOY_LOCK_FILE);
+    if ($lockAge < DEPLOY_COOLDOWN) {
+        sendJsonResponse('error', 'Deploy in cooldown', [
+            'retry_after' => DEPLOY_COOLDOWN - $lockAge
+        ], 429);
+    }
+    if ($lockAge > 300) {
+        @unlink(DEPLOY_LOCK_FILE);
+    }
+}
+
+// ── Autenticazione ────────────────────────────────────────────────────────────
+
+$deployKey = getenv('DEPLOY_KEY') ?: ($_ENV['DEPLOY_KEY'] ?? '');
+
+if (!$deployKey) {
+    sendJsonResponse('error', 'DEPLOY_KEY non configurata sul server', [], 500);
+}
+
 $providedKey = $_SERVER['HTTP_X_DEPLOY_KEY'] ?? '';
 
-if (empty($deployKey)) {
-    http_response_code(500);
-    header('Content-Type: text/html; charset=utf-8');
-    echo "<pre>❌ DEPLOY_KEY non trovata nel sistema.\nConfigurala nel file .env sul server.</pre>";
-    exit;
-}
-
-if (!hash_equals(trim($deployKey), trim($providedKey))) {
+if (empty($providedKey) || !hash_equals(trim($deployKey), trim($providedKey))) {
     http_response_code(403);
-    header('Content-Type: text/html; charset=utf-8');
-    echo "<pre>⛔ Accesso Negato\n";
-    echo "La chiave fornita non coincide o è mancante.\n";
-    echo "Uso: Header X-Deploy-Key\n</pre>";
-    exit;
+    usleep(500000);
+    sendJsonResponse('error', 'Accesso negato: chiave non valida', [], 403);
 }
 
-// ── Timeout esteso per deploy lunghi ──
-set_time_limit(300);
-ini_set('max_execution_time', '300');
+// ── Lock ──────────────────────────────────────────────────────────────────────
 
-header('Content-Type: text/html; charset=utf-8');
-echo "<pre>\n";
-echo "══════════════════════════════════════════════════════\n";
-echo "  🚀 Fusion ERP — Deploy Update (HTTP Pull)\n";
-echo "══════════════════════════════════════════════════════\n\n";
+file_put_contents(DEPLOY_LOCK_FILE, json_encode([
+    'pid'        => getmypid(),
+    'started_at' => date('c'),
+    'ip'         => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
+]));
 
-// ── Step 1: Ottieni ultimo commit SHA ──
-echo "📡 Recupero ultimo commit da GitHub...\n";
-$apiUrl = "https://api.github.com/repos/$repo/commits/$branch";
-$ch = curl_init($apiUrl);
-curl_setopt_array($ch, [
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_SSL_VERIFYPEER => true,
-    CURLOPT_USERAGENT => 'Fusion-ERP-Deploy/1.0',
-    CURLOPT_TIMEOUT => 15,
-]);
-$commitData = curl_exec($ch);
-$commitHttp = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-curl_close($ch);
+register_shutdown_function(function () {
+    if (file_exists(DEPLOY_LOCK_FILE)) {
+        $lock = json_decode(@file_get_contents(DEPLOY_LOCK_FILE), true) ?: [];
+        $lock['finished_at'] = date('c');
+        @file_put_contents(DEPLOY_LOCK_FILE, json_encode($lock));
+    }
+});
 
-if ($commitHttp !== 200 || !$commitData) {
-    echo "❌ Impossibile ottenere ultimo commit (HTTP $commitHttp)\n</pre>";
-    exit(1);
-}
+// ═══════════════════════════════════════════════════════════════════════════════
+// MAIN DEPLOY FLOW
+// ═══════════════════════════════════════════════════════════════════════════════
 
-$commitInfo = json_decode($commitData, true);
-$latestCommitSha = $commitInfo['sha'] ?? $branch;
-echo "✅ Ultimo commit: " . substr($latestCommitSha, 0, 8) . "\n\n";
+$deployLog  = [];
+$startTime  = microtime(true);
+$repo       = 'MarcoVanzo/Fusion-ERP';
+$branch     = 'main';
 
-// ── Step 2: Scarica il manifest ──
-echo "📋 Scaricamento manifest...\n";
-$manifestUrl = "https://raw.githubusercontent.com/$repo/$latestCommitSha/deploy_manifest.json?t=" . time();
-$ch = curl_init($manifestUrl);
-curl_setopt_array($ch, [
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_SSL_VERIFYPEER => true,
-    CURLOPT_USERAGENT => 'Fusion-ERP-Deploy/1.0',
-    CURLOPT_TIMEOUT => 15,
-]);
-$manifestContent = curl_exec($ch);
-$httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
-curl_close($ch);
+try {
+    // ── Step 1: SHA ultimo commit ────────────────────────────────────────────
 
-if ($httpCode !== 200 || !$manifestContent) {
-    echo "❌ Impossibile scaricare il manifest (HTTP $httpCode)\n</pre>";
-    exit(1);
-}
+    logStep($deployLog, 'fetch_sha', 'Recupero SHA ultimo commit...');
+    $latestCommitSha = fetchLatestCommitSha($repo, $branch);
+    logStep($deployLog, 'fetch_sha', "SHA: " . substr($latestCommitSha, 0, 8), 'ok');
 
-$files = json_decode($manifestContent, true);
-if (!is_array($files) || empty($files)) {
-    echo "❌ Manifest vuoto o non valido.\n</pre>";
-    exit(1);
-}
+    // ── Step 2: Manifest ─────────────────────────────────────────────────────
 
-echo "✅ Manifest caricato (" . count($files) . " file identificati)\n\n";
+    logStep($deployLog, 'fetch_manifest', 'Download manifest da GitHub...');
+    $manifest = fetchManifest($repo, $latestCommitSha);
 
-// ── Step 3: Scarica e aggiorna i file ──
-echo "📦 Download e aggiornamento file...\n";
-echo "────────────────────────────────────────────────────\n";
+    if (!$manifest || empty($manifest['files'])) {
+        throw new RuntimeException('Manifest vuoto o non valido');
+    }
+    logStep($deployLog, 'fetch_manifest', $manifest['file_count'] . ' file nel manifest', 'ok');
 
-$successCount = 0;
-$failCount = 0;
-$totalBytes = 0;
-$hashes = [];
+    // ── Step 3: Diff ─────────────────────────────────────────────────────────
 
-foreach ($files as $file) {
-    // Encode path components for URL (handles spaces, special chars)
-    $encodedFile = implode('/', array_map('rawurlencode', explode('/', $file)));
-    $url = "https://raw.githubusercontent.com/$repo/$latestCommitSha/$encodedFile";
+    logStep($deployLog, 'diff', 'Calcolo differenze...');
+    $previousState = loadDeployState();
+    $filesToUpdate = [];
+    $filesToSkip   = 0;
 
-    $ch = curl_init();
-    curl_setopt_array($ch, [
-        CURLOPT_URL => $url,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_FOLLOWLOCATION => true,
-        CURLOPT_SSL_VERIFYPEER => true,
-        CURLOPT_USERAGENT => 'Fusion-ERP-Deploy/1.0',
-        CURLOPT_TIMEOUT => 30,
-    ]);
-    $content = curl_exec($ch);
-    $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
-
-    if ($content !== false && $httpCode === 200) {
-        // Crea directory se necessario
-        $dir = dirname($file);
-        if ($dir !== '.' && !is_dir($dir)) {
-            mkdir($dir, 0755, true);
+    foreach ($manifest['files'] as $entry) {
+        $path = $entry['path'];
+        $hash = $entry['hash'];
+        if (isset($previousState[$path]) && $previousState[$path] === $hash) {
+            $filesToSkip++;
+            continue;
         }
+        $filesToUpdate[] = $entry;
+    }
 
-        // Scrivi il file
-        if (@file_put_contents($file, $content) === false) {
-            $failCount++;
-            echo "❌ $file (Errore scrittura — permessi?)\n";
+    logStep($deployLog, 'diff', count($filesToUpdate) . " da aggiornare, {$filesToSkip} invariati", 'ok');
+
+    if (empty($filesToUpdate)) {
+        saveDeployLog($deployLog, $startTime, 'ok', 0, $filesToSkip, 0);
+        sendJsonResponse('ok', 'Nessun file da aggiornare', [
+            'summary' => ['updated' => 0, 'skipped' => $filesToSkip, 'failed' => 0],
+            'elapsed_ms' => elapsed($startTime)
+        ]);
+    }
+
+    // ── Step 4: Download in temp ─────────────────────────────────────────────
+
+    logStep($deployLog, 'download', 'Download ' . count($filesToUpdate) . ' file...');
+    cleanDir(DEPLOY_TEMP_DIR);
+    if (!is_dir(DEPLOY_TEMP_DIR)) {
+        mkdir(DEPLOY_TEMP_DIR, 0755, true);
+    }
+
+    $downloaded   = [];
+    $downloadFail = [];
+
+    foreach ($filesToUpdate as $entry) {
+        $path = $entry['path'];
+        $hash = $entry['hash'];
+        $content = downloadFileFromGitHub($repo, $latestCommitSha, $path);
+
+        if ($content === false) {
+            $downloadFail[] = $path;
             continue;
         }
 
-        $size = strlen($content);
-        $totalBytes += $size;
-        $successCount++;
+        $actualHash = hash('sha256', $content);
+        if ($actualHash !== $hash) {
+            $downloadFail[] = "{$path} (hash mismatch)";
+            continue;
+        }
 
-        // Calcola hash per file JS/CSS (usato per cache busting)
-        $ext = pathinfo($file, PATHINFO_EXTENSION);
-        if (in_array($ext, $hashableExtensions)) {
-            $hash = substr(md5($content), 0, 8);
-            $hashes[$file] = $hash;
-            echo "✅ $file [$hash]\n";
+        $tempPath = DEPLOY_TEMP_DIR . '/' . $path;
+        $tempDir  = dirname($tempPath);
+        if (!is_dir($tempDir)) {
+            mkdir($tempDir, 0755, true);
+        }
+        file_put_contents($tempPath, $content);
+        $downloaded[] = $entry;
+    }
+
+    logStep($deployLog, 'download', count($downloaded) . ' OK, ' . count($downloadFail) . ' falliti',
+        empty($downloadFail) ? 'ok' : 'warning');
+
+    if (count($downloadFail) > 0 && count($downloadFail) >= count($filesToUpdate) * 0.5) {
+        throw new RuntimeException('Troppi file falliti (' . count($downloadFail) . '/' . count($filesToUpdate) . ')');
+    }
+
+    // ── Step 5: Backup ──────────────────────────────────────────────────────
+
+    logStep($deployLog, 'backup', 'Backup file esistenti...');
+    cleanDir(DEPLOY_BACKUP_DIR);
+    if (!is_dir(DEPLOY_BACKUP_DIR)) {
+        mkdir(DEPLOY_BACKUP_DIR, 0755, true);
+    }
+
+    $backedUp = 0;
+    foreach ($downloaded as $entry) {
+        $originalPath = __DIR__ . '/' . $entry['path'];
+        if (file_exists($originalPath)) {
+            $backupPath = DEPLOY_BACKUP_DIR . '/' . $entry['path'];
+            $backupDir  = dirname($backupPath);
+            if (!is_dir($backupDir)) {
+                mkdir($backupDir, 0755, true);
+            }
+            copy($originalPath, $backupPath);
+            $backedUp++;
+        }
+    }
+    logStep($deployLog, 'backup', "{$backedUp} file nel backup", 'ok');
+
+    // ── Step 6: Swap ────────────────────────────────────────────────────────
+
+    logStep($deployLog, 'swap', 'Installazione file...');
+    $installed   = 0;
+    $installFail = [];
+
+    foreach ($downloaded as $entry) {
+        $srcPath  = DEPLOY_TEMP_DIR . '/' . $entry['path'];
+        $destPath = __DIR__ . '/' . $entry['path'];
+        $destDir  = dirname($destPath);
+
+        if (!is_dir($destDir)) {
+            mkdir($destDir, 0755, true);
+        }
+
+        if (@copy($srcPath, $destPath)) {
+            $installed++;
+            if (function_exists('opcache_invalidate') && str_ends_with($entry['path'], '.php')) {
+                opcache_invalidate(realpath($destPath) ?: $destPath, true);
+            }
         } else {
-            echo "✅ $file\n";
+            $installFail[] = $entry['path'];
         }
-
-        // Invalida opcache per file PHP
-        if ($ext === 'php' && function_exists('opcache_invalidate')) {
-            opcache_invalidate(realpath($file) ?: $file, true);
-        }
-    } else {
-        $failCount++;
-        echo "❌ $file (HTTP $httpCode)\n";
     }
+
+    logStep($deployLog, 'swap', "{$installed} installati, " . count($installFail) . " falliti",
+        empty($installFail) ? 'ok' : 'warning');
+
+    // ── Step 7: Health check ────────────────────────────────────────────────
+
+    logStep($deployLog, 'health', 'Health check...');
+    $healthOk = performHealthCheck();
+
+    if (!$healthOk) {
+        logStep($deployLog, 'rollback', 'Health check FALLITO — rollback...');
+        $rolledBack = 0;
+        foreach ($downloaded as $entry) {
+            $backupPath = DEPLOY_BACKUP_DIR . '/' . $entry['path'];
+            $destPath   = __DIR__ . '/' . $entry['path'];
+            if (file_exists($backupPath)) {
+                @copy($backupPath, $destPath);
+                $rolledBack++;
+                if (function_exists('opcache_invalidate') && str_ends_with($entry['path'], '.php')) {
+                    opcache_invalidate(realpath($destPath) ?: $destPath, true);
+                }
+            }
+        }
+        if (function_exists('opcache_reset')) { opcache_reset(); }
+        logStep($deployLog, 'rollback', "{$rolledBack} file ripristinati", 'ok');
+
+        saveDeployLog($deployLog, $startTime, 'rolled_back', $installed, $filesToSkip, count($downloadFail));
+        sendJsonResponse('rolled_back', 'Rollback eseguito', [
+            'summary' => ['updated' => $installed, 'skipped' => $filesToSkip, 'failed' => count($downloadFail), 'rolled_back' => $rolledBack],
+            'errors' => $downloadFail,
+            'elapsed_ms' => elapsed($startTime)
+        ]);
+    }
+
+    logStep($deployLog, 'health', 'Applicazione OK', 'ok');
+
+    // ── Step 8: Salva stato ─────────────────────────────────────────────────
+
+    $newState = $previousState;
+    foreach ($downloaded as $entry) {
+        $newState[$entry['path']] = $entry['hash'];
+    }
+    saveDeployState($newState);
+    cleanDir(DEPLOY_TEMP_DIR);
+    if (function_exists('opcache_reset')) { opcache_reset(); }
+
+    saveDeployLog($deployLog, $startTime, 'ok', $installed, $filesToSkip, count($downloadFail));
+
+    sendJsonResponse('ok', "Deploy completato: {$installed} aggiornati, {$filesToSkip} invariati", [
+        'summary' => ['updated' => $installed, 'skipped' => $filesToSkip, 'failed' => count($downloadFail)],
+        'errors' => $downloadFail,
+        'commit_sha' => substr($latestCommitSha, 0, 8),
+        'elapsed_ms' => elapsed($startTime)
+    ]);
+
+} catch (Throwable $e) {
+    error_log("[Fusion-ERP][deploy_update.php] FATAL: " . $e->getMessage());
+    cleanDir(DEPLOY_TEMP_DIR);
+    saveDeployLog($deployLog, $startTime, 'error', 0, 0, 0, $e->getMessage());
+    sendJsonResponse('error', $e->getMessage(), ['elapsed_ms' => elapsed($startTime)], 500);
 }
 
-echo "────────────────────────────────────────────────────\n\n";
+// ═══════════════════════════════════════════════════════════════════════════════
+// FUNZIONI HELPER
+// ═══════════════════════════════════════════════════════════════════════════════
 
-// ── Step 4: Cache Busting ──
-if (!empty($hashes) && file_exists('index.html')) {
-    echo "🔄 Applicazione cache busting...\n";
-    $indexContent = file_get_contents('index.html');
-    $bustCount = 0;
+function sendJsonResponse(string $status, string $message, array $data = [], int $httpCode = 200): never
+{
+    http_response_code($httpCode);
+    header('Content-Type: application/json; charset=utf-8');
+    header('Cache-Control: no-store');
+    echo json_encode(array_merge([
+        'status' => $status, 'message' => $message, 'timestamp' => date('c'),
+    ], $data), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+    exit;
+}
 
-    foreach ($hashes as $filePath => $hash) {
-        $basename = basename($filePath);
-        // Replace ?v=... with new hash
-        $pattern = '/' . preg_quote($basename, '/') . '\?v=[a-zA-Z0-9._]+/';
-        $replacement = $basename . '?v=' . $hash;
-        $newContent = preg_replace($pattern, $replacement, $indexContent);
-        if ($newContent !== $indexContent) {
-            $indexContent = $newContent;
-            $bustCount++;
-        }
-    }
+function logStep(array &$log, string $step, string $message, string $status = 'running'): void
+{
+    $log[] = ['step' => $step, 'message' => $message, 'status' => $status, 'time' => date('c')];
+}
 
-    // Update app-version meta tag
-    $timestamp = time();
-    $indexContent = preg_replace(
-        '/(<meta name="app-version" content=")[^"]+(")/i',
-        '${1}' . $timestamp . '${2}',
-        $indexContent
+function elapsed(float $start): int
+{
+    return (int) round((microtime(true) - $start) * 1000);
+}
+
+function fetchLatestCommitSha(string $repo, string $branch): string
+{
+    $url = "https://api.github.com/repos/{$repo}/commits/{$branch}";
+    $ch = curl_init();
+    curl_setopt_array($ch, [
+        CURLOPT_URL => $url, CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_USERAGENT => 'Fusion-ERP-Deploy/3.0', CURLOPT_TIMEOUT => 10,
+    ]);
+    $res = curl_exec($ch);
+    $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    if ($code !== 200 || !$res) throw new RuntimeException("GitHub API non raggiungibile (HTTP {$code})");
+    $data = json_decode($res, true);
+    if (empty($data['sha'])) throw new RuntimeException("SHA non trovato");
+    return $data['sha'];
+}
+
+function fetchManifest(string $repo, string $sha): array
+{
+    $url = "https://raw.githubusercontent.com/{$repo}/{$sha}/deploy_manifest.json";
+    $ch = curl_init();
+    curl_setopt_array($ch, [
+        CURLOPT_URL => $url, CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => true, CURLOPT_SSL_VERIFYPEER => true, CURLOPT_TIMEOUT => 15,
+    ]);
+    $content = curl_exec($ch);
+    $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    if ($code !== 200 || !$content) throw new RuntimeException("Manifest non scaricabile (HTTP {$code})");
+    $manifest = json_decode($content, true);
+    if (!$manifest || !isset($manifest['files'])) throw new RuntimeException('Manifest non valido');
+    return $manifest;
+}
+
+function downloadFileFromGitHub(string $repo, string $sha, string $path): string|false
+{
+    $encodedPath = implode('/', array_map('rawurlencode', explode('/', $path)));
+    $url = "https://raw.githubusercontent.com/{$repo}/{$sha}/{$encodedPath}";
+    $ch = curl_init();
+    curl_setopt_array($ch, [
+        CURLOPT_URL => $url, CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => true, CURLOPT_SSL_VERIFYPEER => true,
+        CURLOPT_USERAGENT => 'Fusion-ERP-Deploy/3.0', CURLOPT_TIMEOUT => 30,
+    ]);
+    $content = curl_exec($ch);
+    $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    return ($code === 200 && $content !== false) ? $content : false;
+}
+
+function loadDeployState(): array
+{
+    if (!file_exists(DEPLOY_STATE_FILE)) return [];
+    $data = json_decode(@file_get_contents(DEPLOY_STATE_FILE), true);
+    return is_array($data) ? $data : [];
+}
+
+function saveDeployState(array $state): void
+{
+    file_put_contents(DEPLOY_STATE_FILE, json_encode($state, JSON_PRETTY_PRINT));
+}
+
+function saveDeployLog(array $steps, float $startTime, string $outcome, int $updated, int $skipped, int $failed, string $error = ''): void
+{
+    $entry = ['timestamp' => date('c'), 'outcome' => $outcome, 'elapsed_ms' => elapsed($startTime),
+              'summary' => compact('updated', 'skipped', 'failed'), 'steps' => $steps];
+    if ($error) $entry['error'] = $error;
+    $existingLog = [];
+    if (file_exists(DEPLOY_LOG_FILE)) $existingLog = json_decode(@file_get_contents(DEPLOY_LOG_FILE), true) ?: [];
+    $existingLog[] = $entry;
+    $existingLog = array_slice($existingLog, -20);
+    @file_put_contents(DEPLOY_LOG_FILE, json_encode($existingLog, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+}
+
+function performHealthCheck(): bool
+{
+    // Prova ping.php first
+    $baseUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http')
+             . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost')
+             . dirname($_SERVER['SCRIPT_NAME']);
+    $pingUrl = $baseUrl . '/ping.php';
+
+    $ch = curl_init();
+    curl_setopt_array($ch, [CURLOPT_URL => $pingUrl, CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 10]);
+    $res = curl_exec($ch);
+    $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    return $code === 200;
+}
+
+function cleanDir(string $dir): void
+{
+    if (!is_dir($dir)) return;
+    $items = new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($dir, RecursiveDirectoryIterator::SKIP_DOTS),
+        RecursiveIteratorIterator::CHILD_FIRST
     );
-
-    file_put_contents('index.html', $indexContent);
-    echo "✅ Cache busting applicato ($bustCount file, v=$timestamp)\n\n";
+    foreach ($items as $item) {
+        $item->isDir() ? @rmdir($item->getRealPath()) : @unlink($item->getRealPath());
+    }
+    @rmdir($dir);
 }
-
-// ── Riepilogo ──
-$totalMB = number_format($totalBytes / 1024 / 1024, 2);
-echo "══════════════════════════════════════════════════════\n";
-echo "📊 Riepilogo: $successCount OK, $failCount falliti ($totalMB MB)\n";
-echo "══════════════════════════════════════════════════════\n";
-
-if ($failCount === 0) {
-    echo "\n✅ Deploy completato senza errori!\n";
-} else {
-    echo "\n⚠️  Deploy completato con $failCount errori. Controlla i file falliti.\n";
-}
-
-echo "\n→ https://www.fusionteamvolley.it/ERP/\n";
-echo "</pre>";

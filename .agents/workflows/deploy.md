@@ -4,7 +4,7 @@ description: Deploy dell'ERP in produzione su fusionteamvolley.it
 
 # Deploy in Produzione
 
-Esegue tutto in un unico comando: manifest → pre-flight → build → commit → push → deploy server → verifica.
+Pipeline unificata v4: pre-flight (PHPStan) → manifest (SHA-256) → React build → cache-bust → commit → push → deploy (HTTP Pull + rollback) → migrazione DB → health check.
 
 ## Steps
 
@@ -27,7 +27,7 @@ Nota: `--migrate` può essere passato anche al primo comando per fare tutto insi
 ## Uso diretto da terminale
 
 ```bash
-# Deploy standard (HTTP Pull — come MV ERP)
+# Deploy standard (HTTP Pull — solo file modificati)
 bash "/Users/marcovanzo/Fusion ERP/scripts/deploy.sh"
 
 # Deploy con messaggio di commit personalizzato
@@ -36,26 +36,21 @@ bash "/Users/marcovanzo/Fusion ERP/scripts/deploy.sh" "fix: risolto bug login"
 # Deploy con migrazione DB
 bash "/Users/marcovanzo/Fusion ERP/scripts/deploy.sh" --migrate
 
-# Deploy con messaggio + migrazione
-bash "/Users/marcovanzo/Fusion ERP/scripts/deploy.sh" "feat: nuova funzionalità" --migrate
-
-# Deploy via FTP-TLS (fallback se HTTP Pull non funziona)
+# Deploy via FTP-TLS (fallback)
 bash "/Users/marcovanzo/Fusion ERP/scripts/deploy.sh" --ftp
 
-# Dry run (simula senza modifiche)
-bash "/Users/marcovanzo/Fusion ERP/scripts/deploy.sh" --dry-run
-
-# Salta pre-flight checks (PHPStan, Stress Test)
+# Salta pre-flight checks (PHPStan)
 bash "/Users/marcovanzo/Fusion ERP/scripts/deploy.sh" --skip-checks
 
 # Salta build React
 bash "/Users/marcovanzo/Fusion ERP/scripts/deploy.sh" --no-build
+
+# Simulazione — non tocca nulla
+bash "/Users/marcovanzo/Fusion ERP/scripts/deploy.sh" --dry-run
 ```
 
 ## Note
-- La `DEPLOY_KEY` viene letta automaticamente da `.env` — non serve esportare nulla.
+- Le variabili di progetto sono in `deploy.config` — non modificare `deploy.sh` direttamente.
+- La DEPLOY_KEY viene letta automaticamente da `.env`.
 - Il manifest viene rigenerato automaticamente ad ogni deploy.
-- Se non ci sono modifiche da committare, lo step viene skippato automaticamente.
-- Il cache busting sugli hash JS/CSS è gestito sia localmente che server-side.
 - ⚠️ MAI committare la deploy key nel repository!
-- Per il deploy via FTP-TLS (vecchio metodo), usa il flag `--ftp`.
