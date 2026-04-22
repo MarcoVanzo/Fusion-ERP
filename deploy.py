@@ -61,6 +61,29 @@ def run_preflight_checks():
     print("✅ All Pre-flight Checks passed!\n")
 
 
+def generate_manifest():
+    """Rigenera deploy_manifest.json usando lo script Node.js (allineamento MV ERP)."""
+    manifest_script = os.path.join('scripts', 'generate_manifest.js')
+    if not os.path.exists(manifest_script):
+        print("⚠️  generate_manifest.js non trovato, skip manifest.")
+        return
+    
+    print("📋 Rigenerazione deploy_manifest.json...")
+    try:
+        result = subprocess.run(
+            ['node', manifest_script],
+            capture_output=True, text=True, timeout=30
+        )
+        if result.returncode == 0:
+            print(f"  {result.stdout.strip()}")
+        else:
+            print(f"  ⚠️  Manifest generation warning: {result.stderr.strip()}")
+    except FileNotFoundError:
+        print("  ⚠️  Node.js non trovato, skip manifest generation.")
+    except Exception as e:
+        print(f"  ⚠️  Error generating manifest: {e}")
+
+
 def load_env():
     """Load variables from .env file into environment."""
     env_file = '.env'
@@ -291,6 +314,8 @@ def deploy_files_via_ftp(dry_run=False):
         ignore_extensions = ['.zip', '.log', '.pyc', '.sqlite', '.db']
         ignore_files = [
             'deploy.py', 'deploy.mp', 'deploy_ftp.sh', CACHE_FILE, '.env.prod',
+            # Deploy infrastructure (deploy_update.php lives on server, not overwritten)
+            'deploy_update.php', 'deploy_manifest.json',
             # Dev/build config files — NOT needed on production:
             'Dockerfile', 'docker-compose.yml', '.dockerignore',
             'vite.config.js', 'tsconfig.json', 'phpstan.neon', 'phpunit.xml',
@@ -667,6 +692,9 @@ def main():
 
     # 2. Carica cache per smart build
     cache = load_cache()
+
+    # 2b. Rigenera manifest (allineamento con MV ERP)
+    generate_manifest()
 
     # 3. Build React apps (se presenti e modificati)
     build_react_apps(force=args.force_build, skip=args.no_build, cache=cache)

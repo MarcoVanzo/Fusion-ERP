@@ -77,11 +77,12 @@
   flex-direction: column;
   justify-content: center;
 
-  /* Premium SaaS Glassmorphism Effect */
-  background: rgba(18, 22, 31, 0.6);
-  backdrop-filter: var(--glass);
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: var(--shadow-premium), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  /* Premium SaaS Glassmorphism — deeper blur, luminous border, violet glow */
+  background: rgba(18, 22, 31, 0.55);
+  backdrop-filter: var(--glass-premium);
+  -webkit-backdrop-filter: var(--glass-premium);
+  border-right: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: var(--shadow-premium-glow), inset 0 0 0 1px rgba(255, 255, 255, 0.06);
   position: relative;
   z-index: 10;
 }
@@ -196,7 +197,7 @@
 
 .form-group-login label {
   font-size: 13px;
-  color: var(--color-silver);
+  color: rgba(248, 250, 252, 0.75); /* WCAG AA compliant — was var(--color-silver) at 0.55 */
   font-weight: 500;
   margin-left: 2px;
 }
@@ -209,7 +210,7 @@
 
 .forgot-link {
   font-size: 12px;
-  color: var(--text-muted);
+  color: var(--text-secondary); /* WCAG AA fix — was var(--text-muted) at 0.5 opacity */
   text-decoration: none;
   font-weight: 600;
   transition: var(--transition);
@@ -236,42 +237,42 @@
 
 .input-wrapper input {
   width: 100%;
-  padding: 16px 100px 16px 52px;
+  padding: 16px 56px 16px 52px;
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius);
   color: var(--text-primary);
   font-size: 15px;
-  transition: var(--transition);
+  transition: border-color var(--transition-smooth), box-shadow var(--transition-smooth), background var(--transition-smooth);
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .input-wrapper input:focus {
   outline: none;
   border-color: var(--accent-primary);
-  box-shadow: var(--glow-input), inset 0 2px 4px rgba(0, 0, 0, 0.1);
-  background: rgba(0, 0, 0, 0.4);
+  box-shadow: var(--glow-input-focus), inset 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: rgba(0, 0, 0, 0.35);
 }
 
 .input-wrapper input::placeholder {
-  color: var(--text-dim);
+  color: rgba(248, 250, 252, 0.42); /* WCAG fix — was var(--text-dim) at 0.35 */
 }
 
 .password-toggle-btn {
   position: absolute;
-  right: 12px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  right: 14px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-sm);
   color: var(--text-secondary);
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  width: 34px;
+  height: 34px;
   cursor: pointer;
-  padding: 6px 10px;
+  padding: 0;
   transition: var(--transition);
   backdrop-filter: blur(4px);
   z-index: 2;
@@ -279,7 +280,8 @@
 
 .password-toggle-btn:hover {
   color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.18);
 }
 
 .btn-login {
@@ -364,29 +366,27 @@
   text-shadow: 0 0 5px rgba(230, 0, 126, 0.5);
 }
 
+/* Login error — smooth max-height reveal to prevent CLS (layout shift) */
 .login-error {
   color: var(--danger);
   font-size: 13px;
   text-align: center;
   background: rgba(239, 68, 68, 0.1);
-  padding: 12px;
   border-radius: var(--radius-sm);
   border: 1px solid rgba(239, 68, 68, 0.2);
-  margin-bottom: var(--sp-2);
-  animation: slideDownFade 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-  transform-origin: top;
+  overflow: hidden;
+  max-height: 0;
+  padding: 0 12px;
+  margin: 0;
+  opacity: 0;
+  transition: max-height var(--transition-smooth), padding var(--transition-smooth), opacity 0.25s ease, margin var(--transition-smooth);
 }
 
-@keyframes slideDownFade {
-  from {
-    opacity: 0;
-    transform: translateY(-10px) scaleY(0.9);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0) scaleY(1);
-  }
+.login-error:not(.hidden) {
+  max-height: 80px;
+  padding: 12px;
+  margin-bottom: var(--sp-2);
+  opacity: 1;
 }
 
 /* ─── LOGIN ANIMATIONS ──────────────────────────────────────────────────────── */

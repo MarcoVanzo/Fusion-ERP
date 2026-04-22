@@ -41,8 +41,11 @@
 
   /* Effects */
   --glass: blur(24px) saturate(180%);
+  --glass-premium: blur(32px) saturate(200%);
   --shadow-premium: 0 24px 48px rgba(0, 0, 0, 0.5);
+  --shadow-premium-glow: 0 24px 48px rgba(0, 0, 0, 0.5), 0 0 80px rgba(139, 92, 246, 0.08);
   --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-smooth: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 
   /* ─── SHADOW TOKENS ─── */
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
@@ -56,6 +59,7 @@
   --glow-primary: 0 0 16px rgba(139, 92, 246, 0.4);
   --glow-card-hover: 0 0 24px rgba(139, 92, 246, 0.15);
   --glow-input: 0 0 0 3px rgba(139, 92, 246, 0.25);
+  --glow-input-focus: 0 0 0 3px rgba(139, 92, 246, 0.2), 0 0 16px rgba(139, 92, 246, 0.1);
 
   /* Status */
   --success: #10B981;
