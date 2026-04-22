@@ -331,7 +331,7 @@ const WhatsApp = (() => {
                                           },
                                         ));
                                   })((await t.json()).preview || []);
-                                } catch (t) {
+                                } catch (_t) {
                                   UI.toast(
                                     "Errore nel parsing del file .vcf",
                                     "error",
@@ -383,7 +383,7 @@ const WhatsApp = (() => {
                                           UI.toast(t.message, "error");
                                         }
                                       }));
-                                } catch (t) {
+                                } catch (_t) {
                                   UI.toast(
                                     "Errore caricamento atleti",
                                     "error",

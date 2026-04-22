@@ -50,8 +50,11 @@
 
   /* Effects */
   --glass: blur(24px) saturate(180%);
+  --glass-premium: blur(32px) saturate(200%);
   --shadow-premium: 0 24px 48px rgba(0, 0, 0, 0.5);
+  --shadow-premium-glow: 0 24px 48px rgba(0, 0, 0, 0.5), 0 0 80px rgba(139, 92, 246, 0.08);
   --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-smooth: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 
   /* ─── SHADOW TOKENS ─── */
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
@@ -65,6 +68,7 @@
   --glow-primary: 0 0 16px rgba(139, 92, 246, 0.4);
   --glow-card-hover: 0 0 24px rgba(139, 92, 246, 0.15);
   --glow-input: 0 0 0 3px rgba(139, 92, 246, 0.25);
+  --glow-input-focus: 0 0 0 3px rgba(139, 92, 246, 0.2), 0 0 16px rgba(139, 92, 246, 0.1);
 
   /* Status */
   --success: #10B981;
@@ -589,7 +593,6 @@ h3 {
   flex-shrink: 0;
   background: rgba(10, 10, 12, 0.6);
   backdrop-filter: var(--glass);
-  backdrop-filter: var(--glass);
   border-bottom: 1px solid var(--border-subtle);
   display: flex;
   align-items: center;
@@ -666,7 +669,6 @@ h3 {
   left: 0;
   right: 0;
   background: rgba(12, 12, 16, 0.95);
-  backdrop-filter: var(--glass);
   backdrop-filter: var(--glass);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius);
@@ -814,7 +816,6 @@ h3 {
   width: 208px;
   background: rgba(15, 15, 18, 0.85);
   backdrop-filter: var(--glass);
-  backdrop-filter: var(--glass);
   border: 1px solid var(--border-subtle);
   border-radius: 12px;
   padding: 8px;
@@ -903,7 +904,6 @@ h3 {
   min-width: 220px;
   background: rgba(18, 18, 20, 0.85);
   backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   box-shadow: var(--shadow-lg);
@@ -919,14 +919,13 @@ h3 {
   opacity: 1;
   visibility: visible;
   transform: translateY(0);
+}
 
 /* ═══ components/_forms.css ═══ */
 
 /* Form inputs, selects, textareas
  * Extracted from style_v2.css (lines 871-1412)
  */
-
-}
 
 .nav-dropdown-item {
   display: flex;
@@ -1046,7 +1045,6 @@ h3 {
   transition: all var(--transition-base);
   white-space: nowrap;
   user-select: none;
-  user-select: none;
   position: relative;
   overflow: hidden;
 }
@@ -1069,7 +1067,6 @@ h3 {
 /* Default */
 .btn-default {
   background: var(--color-bg-card);
-  backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
   border-color: var(--color-border);
   color: var(--color-white);
@@ -1156,7 +1153,6 @@ h3 {
 .card {
   background: var(--color-bg-card);
   backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   padding: var(--sp-3);
@@ -1198,7 +1194,6 @@ h3 {
 .stat-card {
   padding: var(--sp-4);
   background: linear-gradient(180deg, rgba(30, 30, 35, 0.4) 0%, rgba(18, 18, 20, 0.6) 100%);
-  backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
   border: 1px solid var(--color-border);
   border-bottom: 2px solid rgba(255, 255, 255, 0.05);
@@ -1303,14 +1298,13 @@ h3 {
   color-scheme: dark;
   background: var(--color-bg-input);
   backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: var(--color-text);
-  padding: 12px 16px;
+  padding: 14px 18px;
   font-size: 14px;
   border-radius: var(--radius-sm);
   width: 100%;
-  transition: all var(--transition-base);
+  transition: border-color var(--transition-smooth, 0.4s cubic-bezier(0.4, 0, 0.2, 1)), box-shadow var(--transition-smooth, 0.4s cubic-bezier(0.4, 0, 0.2, 1)), background 0.3s ease;
   appearance: none;
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
@@ -1325,8 +1319,8 @@ h3 {
 .form-select:focus,
 .form-textarea:focus {
   outline: none;
-  border-color: var(--color-pink);
-  box-shadow: var(--glow-input), inset 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-color: var(--accent-primary, var(--color-pink));
+  box-shadow: var(--glow-input-focus, 0 0 0 3px rgba(139, 92, 246, 0.2)), inset 0 2px 4px rgba(0, 0, 0, 0.1);
   background: rgba(30, 30, 35, 0.7);
 }
 
@@ -1409,7 +1403,7 @@ h3 {
 
 .form-hint {
   font-size: 12px;
-  color: var(--color-text-muted);
+  color: var(--text-secondary, rgba(248, 250, 252, 0.7)); /* WCAG AA fix — was var(--color-text-muted) */
   margin-top: 4px;
 }
 
@@ -1428,7 +1422,6 @@ h3 {
   border-radius: var(--radius);
   border: 1px solid var(--color-border);
   background: var(--color-bg-card);
-  backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
   box-shadow: var(--shadow-sm);
 }
@@ -1764,7 +1757,6 @@ h3 {
   gap: 6px;
   background: rgba(10, 10, 15, 0.6);
   backdrop-filter: blur(12px) saturate(160%);
-  -webkit-backdrop-filter: blur(12px) saturate(160%);
   padding: 6px;
   border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -2518,7 +2510,6 @@ h3 {
   width: 320px;
   background: rgba(12, 12, 16, 0.97);
   backdrop-filter: var(--glass);
-  backdrop-filter: var(--glass);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius);
   box-shadow: var(--shadow-lg), 0 0 40px rgba(230, 0, 126, 0.15);
@@ -2639,7 +2630,6 @@ h3 {
   z-index: 9000;
   max-width: 280px;
   background: rgba(12, 12, 16, 0.97);
-  backdrop-filter: var(--glass);
   backdrop-filter: var(--glass);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius);
@@ -2884,12 +2874,12 @@ textarea:focus-visible {
   flex-direction: column;
   justify-content: center;
 
-  /* Premium SaaS Glassmorphism Effect */
-  background: rgba(18, 22, 31, 0.6);
-  backdrop-filter: var(--glass);
-  -webkit-backdrop-filter: var(--glass);
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: var(--shadow-premium), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  /* Premium SaaS Glassmorphism — deeper blur, luminous border, violet glow */
+  background: rgba(18, 22, 31, 0.55);
+  backdrop-filter: var(--glass-premium);
+  -webkit-backdrop-filter: var(--glass-premium);
+  border-right: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: var(--shadow-premium-glow), inset 0 0 0 1px rgba(255, 255, 255, 0.06);
   position: relative;
   z-index: 10;
 }
@@ -2973,7 +2963,6 @@ textarea:focus-visible {
   /* Premium Glowing Text Gradient */
   background: linear-gradient(135deg, var(--text-primary) 30%, var(--accent-primary) 100%);
   background-clip: text;
-  -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   text-transform: uppercase;
   line-height: 1.1;
@@ -3005,7 +2994,7 @@ textarea:focus-visible {
 
 .form-group-login label {
   font-size: 13px;
-  color: var(--color-silver);
+  color: rgba(248, 250, 252, 0.75); /* WCAG AA compliant — was var(--color-silver) at 0.55 */
   font-weight: 500;
   margin-left: 2px;
 }
@@ -3018,7 +3007,7 @@ textarea:focus-visible {
 
 .forgot-link {
   font-size: 12px;
-  color: var(--text-muted);
+  color: var(--text-secondary); /* WCAG AA fix — was var(--text-muted) at 0.5 opacity */
   text-decoration: none;
   font-weight: 600;
   transition: var(--transition);
@@ -3045,42 +3034,42 @@ textarea:focus-visible {
 
 .input-wrapper input {
   width: 100%;
-  padding: 16px 100px 16px 52px;
+  padding: 16px 56px 16px 52px;
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius);
   color: var(--text-primary);
   font-size: 15px;
-  transition: var(--transition);
+  transition: border-color var(--transition-smooth), box-shadow var(--transition-smooth), background var(--transition-smooth);
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .input-wrapper input:focus {
   outline: none;
   border-color: var(--accent-primary);
-  box-shadow: var(--glow-input), inset 0 2px 4px rgba(0, 0, 0, 0.1);
-  background: rgba(0, 0, 0, 0.4);
+  box-shadow: var(--glow-input-focus), inset 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: rgba(0, 0, 0, 0.35);
 }
 
 .input-wrapper input::placeholder {
-  color: var(--text-dim);
+  color: rgba(248, 250, 252, 0.42); /* WCAG fix — was var(--text-dim) at 0.35 */
 }
 
 .password-toggle-btn {
   position: absolute;
-  right: 12px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  right: 14px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-sm);
   color: var(--text-secondary);
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  width: 34px;
+  height: 34px;
   cursor: pointer;
-  padding: 6px 10px;
+  padding: 0;
   transition: var(--transition);
   backdrop-filter: blur(4px);
   z-index: 2;
@@ -3088,7 +3077,8 @@ textarea:focus-visible {
 
 .password-toggle-btn:hover {
   color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.18);
 }
 
 .btn-login {
@@ -3173,28 +3163,27 @@ textarea:focus-visible {
   text-shadow: 0 0 5px rgba(230, 0, 126, 0.5);
 }
 
+/* Login error — smooth max-height reveal to prevent CLS (layout shift) */
 .login-error {
   color: var(--danger);
   font-size: 13px;
   text-align: center;
   background: rgba(239, 68, 68, 0.1);
-  padding: 12px;
   border-radius: var(--radius-sm);
   border: 1px solid rgba(239, 68, 68, 0.2);
-  margin-bottom: var(--sp-2);
-  animation: slideDownFade 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-  transform-origin: top;
+  overflow: hidden;
+  max-height: 0;
+  padding: 0 12px;
+  margin: 0;
+  opacity: 0;
+  transition: max-height var(--transition-smooth), padding var(--transition-smooth), opacity 0.25s ease, margin var(--transition-smooth);
 }
 
-@keyframes slideDownFade {
-  from {
-    opacity: 0;
-    transform: translateY(-10px) scaleY(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scaleY(1);
-  }
+.login-error:not(.hidden) {
+  max-height: 80px;
+  padding: 12px;
+  margin-bottom: var(--sp-2);
+  opacity: 1;
 }
 
 /* ─── LOGIN ANIMATIONS ──────────────────────────────────────────────────────── */
@@ -3509,7 +3498,6 @@ textarea:focus-visible {
   line-height: 1;
   margin-bottom: var(--sp-2);
   background: linear-gradient(180deg, #FFF 0%, #666 100%);
-  background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   animation: title-reveal 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
@@ -5962,7 +5950,6 @@ textarea:focus-visible {
 .widget {
   background: var(--color-bg-card);
   backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   padding: 20px;
@@ -6861,12 +6848,10 @@ textarea:focus-visible {
 .modal-overlay {
   background: rgba(0, 0, 0, 0.65) !important;
   backdrop-filter: blur(8px) !important;
-  backdrop-filter: blur(8px) !important;
 }
 
 .modal-content {
   background: rgba(12, 12, 18, 0.78) !important;
-  backdrop-filter: blur(28px) saturate(160%) !important;
   backdrop-filter: blur(28px) saturate(160%) !important;
   border: 1px solid rgba(255, 255, 255, 0.08) !important;
   box-shadow:
@@ -7053,7 +7038,6 @@ textarea:focus-visible {
   left: 50%;
   transform: translateX(-50%) translateY(120%);
   background: rgba(15, 15, 20, 0.92);
-  backdrop-filter: blur(20px) saturate(160%);
   backdrop-filter: blur(20px) saturate(160%);
   border: 1px solid rgba(255, 0, 122, 0.3);
   border-radius: 16px;
@@ -8062,7 +8046,7 @@ textarea:focus-visible {
 }
 
 /* ─── RESPONSIVE ─── */
-@media (max-width: 768px) {
+@media (width <= 768px) {
   .trm-detail-title-row {
     flex-direction: column;
     align-items: flex-start;

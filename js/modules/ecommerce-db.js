@@ -84,7 +84,7 @@ const EcommerceDB = (() => {
       return res;
     },
     bulkSaveArticoli: async function (prodotti) {
-      const res = await Store.api("bulkSaveProdotti", "ecommerce", {
+      const _res = await Store.api("bulkSaveProdotti", "ecommerce", {
         prodotti,
       });
       if (window.Store && typeof window.Store.invalidate === "function") {

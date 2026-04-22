@@ -143,7 +143,7 @@ const Finance = {
         document.getElementById("modal-cancel")?.addEventListener("click", () => modal.close(), this.sig());
 
         document.getElementById("modal-save")?.addEventListener("click", async () => {
-            const form = document.getElementById("entry-form");
+            const _form = document.getElementById("entry-form");
             const data = {
                 description: document.getElementById("entry-desc").value.trim(),
                 entry_date: document.getElementById("entry-date").value,

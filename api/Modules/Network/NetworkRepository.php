@@ -32,7 +32,7 @@ class NetworkRepository
         $stmt = $this->db->prepare(
             'SELECT * FROM network_collaborations
              WHERE tenant_id = :tid AND is_deleted = 0
-             ORDER BY status ASC, partner_name ASC'
+             ORDER BY status ASC, partner_name ASC LIMIT 500'
         );
         $stmt->execute([':tid' => $tenantId]);
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
@@ -162,7 +162,7 @@ class NetworkRepository
         $stmt = $this->db->prepare(
             'SELECT * FROM network_documents
              WHERE collaboration_id = :cid AND tenant_id = :tid AND is_deleted = 0
-             ORDER BY uploaded_at DESC'
+             ORDER BY uploaded_at DESC LIMIT 500'
         );
         $stmt->execute([':cid' => $collaborationId, ':tid' => $tenantId]);
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
@@ -282,7 +282,7 @@ class NetworkRepository
         $stmt = $this->db->prepare(
             'SELECT * FROM network_trial_evaluations
              WHERE trial_id = :tid_trial AND tenant_id = :tid AND is_deleted = 0
-             ORDER BY eval_date DESC'
+             ORDER BY eval_date DESC LIMIT 500'
         );
         $stmt->execute([':tid_trial' => $trialId, ':tid' => $tenantId]);
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
@@ -311,7 +311,7 @@ class NetworkRepository
         $stmt = $this->db->prepare(
             'SELECT * FROM network_activities
              WHERE tenant_id = :tid AND is_deleted = 0
-             ORDER BY date DESC'
+             ORDER BY date DESC LIMIT 500'
         );
         $stmt->execute([':tid' => $tenantId]);
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);

@@ -13,13 +13,6 @@ use FusionERP\Shared\Audit;
 use FusionERP\Shared\Response;
 use FusionERP\Shared\TenantContext;
 
-// Explicit require_once needed because server uses optimized classmap autoloader
-$_staffShared = dirname(__DIR__, 2) . '/Shared/';
-require_once $_staffShared . 'Auth.php';
-require_once $_staffShared . 'Audit.php';
-require_once $_staffShared . 'Response.php';
-require_once $_staffShared . 'TenantContext.php';
-unset($_staffShared);
 require_once __DIR__ . '/StaffRepository.php';
 require_once __DIR__ . '/StaffService.php';
 
@@ -37,14 +30,14 @@ class StaffController
     // ─── GET /api/?module=staff&action=list ───────────────────────────────────
     public function list(): void
     {
-        Auth::requireRole('operatore');
+        Auth::requireRole('operator');
         Response::success($this->repo->listStaff());
     }
 
     // ─── GET /api/?module=staff&action=get&id=STF_xxx ─────────────────────────
     public function get(): void
     {
-        Auth::requireRole('operatore');
+        Auth::requireRole('operator');
         $id = filter_input(INPUT_GET, 'id', FILTER_DEFAULT) ?? '';
         if (empty($id)) {
             Response::error('id obbligatorio', 400);
@@ -59,8 +52,7 @@ class StaffController
     // ─── POST /api/?module=staff&action=create ────────────────────────────────
     public function create(): void
     {
-        // Audit P1-04: Require allenatore role (was social media manager — too low)
-        Auth::requireRole('allenatore');
+        Auth::requireRole('social media manager');
         $body = Response::jsonBody();
         Response::requireFields($body, ['first_name', 'last_name']);
 
@@ -95,8 +87,7 @@ class StaffController
     // ─── POST /api/?module=staff&action=update ────────────────────────────────
     public function update(): void
     {
-        // Audit P1-04: Require allenatore role (was social media manager — too low)
-        Auth::requireRole('allenatore');
+        Auth::requireRole('social media manager');
         $body = Response::jsonBody();
         Response::requireFields($body, ['id', 'first_name', 'last_name']);
 
@@ -131,8 +122,7 @@ class StaffController
     // ─── POST /api/?module=staff&action=delete ────────────────────────────────
     public function delete(): void
     {
-        // Audit P1-04: Require allenatore role (was social media manager — too low)
-        Auth::requireRole('allenatore');
+        Auth::requireRole('social media manager');
         $body = Response::jsonBody();
         $id = $body['id'] ?? '';
         if (empty($id)) {
@@ -318,12 +308,10 @@ class StaffController
     // ─── PUBLIC ENDPOINTS FOR WEBSITE ──────────────────────────────────────────────
     public function getPublicStaff(): void
     {
-        // Audit P1-03: Previously, missing teamId fell through to listStaff(),
-        // exposing full PII (emails, phones, contracts) without authentication.
+        // Nessun controllo auth per la vista pubblica
         $teamId = filter_input(INPUT_GET, 'teamId', FILTER_DEFAULT);
-        if (!$teamId) {
-            Response::error('teamId obbligatorio', 400);
-        }
+        // Always use getPublicStaffByTeam — listStaff() exposes sensitive fields
+        // (fiscal_code, email, phone, notes, documents) that must not be public.
         Response::success($this->repo->getPublicStaffByTeam($teamId));
     }
 }

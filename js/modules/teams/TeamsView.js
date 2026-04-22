@@ -218,7 +218,7 @@ const TeamsView = {
     },
 
     /** Modal Body for adding a season to a single team */
-    seasonMappingModal: (team) => `
+    seasonMappingModal: (_team) => `
         <div class="form-group">
             <label class="form-label">Nome Stagione *</label>
             <input type="text" id="season-name" class="form-input" placeholder="es. 2025/2026">

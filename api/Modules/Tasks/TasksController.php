@@ -30,8 +30,7 @@ class TasksController
      */
     public function listTasks(): void
     {
-        // Audit P1-06: Use module permissions instead of role-only check
-        Auth::requireRead('tasks');
+        Auth::requireRole('operatore');
 
         $status = filter_input(INPUT_GET, 'status', FILTER_DEFAULT) ?? '';
         $priority = filter_input(INPUT_GET, 'priority', FILTER_DEFAULT) ?? '';
@@ -49,10 +48,9 @@ class TasksController
      */
     public function createTask(): void
     {
-        // Audit P1-06: Use module permissions instead of role-only check
-        Auth::requireWrite('tasks');
+        Auth::requireRole('operatore');
 
-        $body = json_decode(file_get_contents('php://input'), true) ?? [];
+        $body = Response::jsonBody();
 
         $title = trim($body['title'] ?? '');
         $category = trim($body['category'] ?? 'Interno');
@@ -82,10 +80,9 @@ class TasksController
      */
     public function updateTask(): void
     {
-        // Audit P1-06: Use module permissions instead of role-only check
-        Auth::requireWrite('tasks');
+        Auth::requireRole('operatore');
 
-        $body = json_decode(file_get_contents('php://input'), true) ?? [];
+        $body = Response::jsonBody();
         $id = trim($body['id'] ?? '');
 
         if ($id === '')
@@ -106,10 +103,9 @@ class TasksController
      */
     public function deleteTask(): void
     {
-        // Audit P1-06: Requires write permission (elevated)
-        Auth::requireWrite('tasks');
+        Auth::requireRole('allenatore');
 
-        $body = json_decode(file_get_contents('php://input'), true) ?? [];
+        $body = Response::jsonBody();
         $id = trim($body['id'] ?? '');
 
         if ($id === '')
@@ -132,7 +128,7 @@ class TasksController
      */
     public function listTaskLogs(): void
     {
-        Auth::requireRead('tasks');
+        Auth::requireRole('operatore');
 
         $taskId = filter_input(INPUT_GET, 'task_id', FILTER_DEFAULT) ?? '';
         if ($taskId === '')
@@ -147,9 +143,9 @@ class TasksController
      */
     public function createTaskLog(): void
     {
-        Auth::requireWrite('tasks');
+        Auth::requireRole('operatore');
 
-        $body = json_decode(file_get_contents('php://input'), true) ?? [];
+        $body = Response::jsonBody();
         $taskId = trim($body['task_id'] ?? '');
         $date = trim($body['interaction_date'] ?? date('Y-m-d H:i:s'));
         $notes = trim($body['notes'] ?? '');
@@ -176,9 +172,9 @@ class TasksController
      */
     public function deleteTaskLog(): void
     {
-        Auth::requireWrite('tasks');
+        Auth::requireRole('allenatore');
 
-        $body = json_decode(file_get_contents('php://input'), true) ?? [];
+        $body = Response::jsonBody();
         $id = trim($body['id'] ?? '');
 
         if ($id === '')

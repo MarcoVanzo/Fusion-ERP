@@ -58,9 +58,9 @@ const TransportView = {
     },
 
     renderTripCard: (tr) => {
-        let ath = [];
+        let ath
         try { ath = typeof tr.athletes_json === "string" ? JSON.parse(tr.athletes_json) : tr.athletes_json || []; } catch { ath = []; }
-        let stats = {};
+        let stats
         try { stats = typeof tr.stats_json === "string" ? JSON.parse(tr.stats_json) : tr.stats_json || {}; } catch { stats = {}; }
         const dateStr = tr.transport_date ? new Date(tr.transport_date).toLocaleDateString("it-IT", { weekday: "short", day: "numeric", month: "short" }).toUpperCase() : "";
 
@@ -258,9 +258,9 @@ const TransportView = {
     },
 
     renderDriverHistoryRow: (t) => {
-        let stats = {};
+        let stats
         try { stats = typeof t.stats_json === "string" ? JSON.parse(t.stats_json) : t.stats_json || {}; } catch { stats = {}; }
-        let athletes = [];
+        let athletes
         try { athletes = typeof t.athletes_json === "string" ? JSON.parse(t.athletes_json) : t.athletes_json || []; } catch { athletes = []; }
         
         const dateStr = t.transport_date ? new Date(t.transport_date).toLocaleDateString("it-IT", { day: "2-digit", month: "2-digit", year: "2-digit" }) : "-";
@@ -394,7 +394,7 @@ const TransportView = {
     renderAthleteGrid: (athletes, selectedIds) => {
         return athletes.map(t => {
             const initial = (t.full_name || "").split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2);
-            const address = [t.residence_address, t.residence_city].filter(v => v && v.trim()).join(", ");
+            const _address = [t.residence_address, t.residence_city].filter(v => v && v.trim()).join(", ");
             const isSelected = selectedIds.some(s => s.id === t.id);
             const addrMissing = !t.residence_address || t.residence_address.trim().length < 3;
 

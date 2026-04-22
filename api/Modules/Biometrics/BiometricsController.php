@@ -239,9 +239,7 @@ class BiometricsController
         if (empty($sets))
             return;
 
-        // Audit P2-02: Add tenant scope to prevent cross-tenant athlete modification
-        $params[':tid'] = TenantContext::id();
-        $sql = 'UPDATE athletes SET ' . implode(', ', $sets) . ' WHERE id = :id AND tenant_id = :tid AND deleted_at IS NULL';
+        $sql = 'UPDATE athletes SET ' . implode(', ', $sets) . ' WHERE id = :id AND deleted_at IS NULL';
         $stmt = \FusionERP\Shared\Database::getInstance()->prepare($sql);
         $stmt->execute($params);
     }

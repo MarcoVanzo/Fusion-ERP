@@ -3,8 +3,6 @@
  * Redesigned for Premium Elite Sports Analytics Experience
  */
 
-import { AthletesAPI } from './AthletesAPI.js';
-
 export const AthletesMetrics = {
     /**
      * Renderizza la sezione metriche per un singolo atleta

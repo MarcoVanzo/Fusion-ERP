@@ -79,12 +79,16 @@ if (empty($module) || empty($action)) {
     Response::error('Parametri di routing mancanti', 400);
 }
 
+if ($module === 'whatsapp') {
+    file_put_contents(__DIR__ . '/../local_debug_error.log', date('Y-m-d H:i:s') . ' [ROUTER] WhatsApp Request: ' . $_SERVER['REQUEST_METHOD'] . ' ' . $_SERVER['REQUEST_URI'] . PHP_EOL, FILE_APPEND);
+}
+
 // Security: Require X-Requested-With header for all state-changing requests (CSRF protection)
 // Exception: public endpoints that are called from standalone forms (e.g. Talent Day registration)
 $publicEndpoints = [
     'talentday' => ['publicRegister'],
     'webhooks'  => ['stripe'],
-    'whatsapp'  => ['receive'],
+    'whatsapp'  => ['receive', 'verify'],
 ];
 $isPublicEndpoint = isset($publicEndpoints[$module]) && in_array($action, $publicEndpoints[$module], true);
 
@@ -173,8 +177,8 @@ catch (\Throwable $e) {
     $clientMessage = $isDebug
         ? 'PHP_ERROR: ' . $e->getMessage() . ' in ' . basename($e->getFile()) . ':' . $e->getLine()
         : 'Errore interno del server. Contattare l\'amministratore.';
-
-    Response::error($clientMessage, 500);
+        
+    Response::error($clientMessage, 500, $e->getMessage());
 } finally {
     // Robustness: Force database disconnection and trigger garbage collection
     if (class_exists('FusionERP\\Shared\\Database')) {
@@ -249,7 +253,7 @@ function dispatch(string $controllerName, string $action): void
     $modulePublicExceptions = [
         'ESignature' => ['callback'],   // OpenAPI.it e-signature webhook
         'Social'     => ['callback'],   // Meta OAuth redirect
-        'TalentDay'  => ['publicRegister'], // Public registration form
+        'TalentDay'  => ['publicRegister', 'publicStatus'], // Public registration form
     ];
     $isModuleException = isset($modulePublicExceptions[$controllerName])
         && in_array($action, $modulePublicExceptions[$controllerName], true);

@@ -775,7 +775,7 @@
 }
 
 /* ─── RESPONSIVE ─── */
-@media (max-width: 768px) {
+@media (width <= 768px) {
   .trm-detail-title-row {
     flex-direction: column;
     align-items: flex-start;

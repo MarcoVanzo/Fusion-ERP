@@ -99,7 +99,7 @@ const UI = (() => {
             container.innerHTML = '';
             hiddenEls.forEach(el => el.removeAttribute('aria-hidden'));
             if (previousFocus && typeof previousFocus.focus === 'function') {
-                try { previousFocus.focus(); } catch (_e) { /* noop */ }
+                try { previousFocus.focus(); } catch (e) { /* noop */ }
             }
             if (onClose) onClose();
         };
@@ -123,8 +123,9 @@ const UI = (() => {
          * Show or hide the full-screen loading overlay.
          * Supports nested calls (show/hide must be balanced).
          * @param {boolean} show - true to show, false to hide
+         * @param {string} [text='Caricamento...'] - Status text
          */
-        loading: function (show) {
+        loading: function (show, text = 'Caricamento...') {
             _loadingCount = Math.max(0, _loadingCount + (show ? 1 : -1));
 
             let overlay = document.getElementById('loader-overlay');
@@ -134,10 +135,11 @@ const UI = (() => {
                     overlay = document.createElement('div');
                     overlay.id = 'loader-overlay';
                     overlay.style = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(10px);z-index:9999;display:flex;align-items:center;justify-content:center;color:white;opacity:0;transition:opacity 0.3s ease;';
-                    overlay.innerHTML = `<div class="loader-content" style="text-align:center;"><div class="loader-spinner" style="width:40px;height:40px;border:3px solid rgba(255,255,255,0.1);border-top-color:var(--color-pink);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 12px;"></div><div style="font-family:var(--font-display);font-size:12px;letter-spacing:0.1em;text-transform:uppercase;opacity:0.8;">Caricamento...</div></div>`;
+                    overlay.innerHTML = `<div class="loader-content" style="text-align:center;"><div class="loader-spinner" style="width:40px;height:40px;border:3px solid rgba(255,255,255,0.1);border-top-color:var(--color-pink);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 12px;"></div><div class="loader-text" style="font-family:var(--font-display);font-size:12px;letter-spacing:0.1em;text-transform:uppercase;opacity:0.8;">${Utils.escapeHtml(text)}</div></div>`;
                     document.body.appendChild(overlay);
                     requestAnimationFrame(() => overlay.style.opacity = '1');
                 } else {
+                    overlay.querySelector('.loader-text').textContent = text;
                     overlay.style.display = 'flex';
                     overlay.style.opacity = '1';
                 }
@@ -168,14 +170,21 @@ const UI = (() => {
             toast.className = `toast toast-${Utils.escapeHtml(type)}`;
             toast.setAttribute('role', 'alert');
             toast.innerHTML = `${icons[type] || icons.info}<span>${Utils.escapeHtml(message)}</span>`;
+            
+            const dismiss = document.createElement('button');
+            dismiss.innerHTML = '&times;';
+            dismiss.style.marginLeft = '10px';
+            dismiss.onclick = () => toast.remove();
+            toast.appendChild(dismiss);
 
-            container.appendChild(toast);
-
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transition = 'opacity 200ms ease';
-                setTimeout(() => toast.remove(), 200);
-            }, duration);
+            requestAnimationFrame(() => {
+                container.appendChild(toast);
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    toast.style.transition = 'opacity 200ms ease';
+                    setTimeout(() => toast.remove(), 200);
+                }, duration);
+            });
         },
 
         /**

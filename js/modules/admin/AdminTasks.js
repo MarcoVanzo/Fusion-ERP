@@ -96,7 +96,7 @@ const AdminTasks = (() => {
     }, { signal: abortController.signal });
   }
 
-  async function openTaskModal(taskId) {
+  async function openTaskModal(_taskId) {
     // This would typically fetch task details if taskId is present
     // For now, let's just show a simple "nuovo task" modal as per legacy logic
     UI.toast("Funzionalità in fase di migrazione", "info");

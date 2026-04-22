@@ -24,11 +24,16 @@ class TenantRepository
 
     public function createTenant(array $data): void
     {
-        $stmt = $this->db->prepare(
-            'INSERT INTO tenants (id, name, domain, is_active, created_at)
-             VALUES (:id, :name, :domain, 1, NOW())'
-        );
-        $stmt->execute($data);
+        try {
+            $stmt = $this->db->prepare(
+                'INSERT INTO tenants (id, name, domain, is_active, created_at)
+                 VALUES (:id, :name, :domain, 1, NOW())'
+            );
+            $stmt->execute($data);
+        } catch (\Throwable $e) {
+            error_log('[Tenant] createTenant failed: ' . $e->getMessage());
+            throw $e;
+        }
     }
 
     public function getTenantById(string $id): ?array
@@ -42,12 +47,17 @@ class TenantRepository
 
     public function setSetting(string $tenantId, string $key, string $value): void
     {
-        $stmt = $this->db->prepare(
-            'INSERT INTO tenant_settings (tenant_id, setting_key, setting_value)
-             VALUES (:tid, :key, :val)
-             ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value), updated_at = NOW()'
-        );
-        $stmt->execute([':tid' => $tenantId, ':key' => $key, ':val' => $value]);
+        try {
+            $stmt = $this->db->prepare(
+                'INSERT INTO tenant_settings (tenant_id, setting_key, setting_value)
+                 VALUES (:tid, :key, :val)
+                 ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value), updated_at = NOW()'
+            );
+            $stmt->execute([':tid' => $tenantId, ':key' => $key, ':val' => $value]);
+        } catch (\Throwable $e) {
+            error_log('[Tenant] setSetting failed for key=' . $key . ': ' . $e->getMessage());
+            throw $e;
+        }
     }
 
     // ─── Members ──────────────────────────────────────────────────────────────

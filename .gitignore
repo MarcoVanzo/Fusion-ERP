@@ -73,3 +73,87 @@ report.json
 report2.json
 *.bundle
 PUSH_NOW.command
+
+# ─── Root Debris Prevention (managed by scripts/cleanup_root.sh) ───
+
+# Quarantine folder
+.quarantine/
+
+# Test / debug / tmp / check one-off scripts in root
+/test_*
+/test.*
+/test-*
+/run_test.js
+/db_test*.*
+/test[0-9]*.*
+/testDB.*
+/testList*.*
+/test-*
+/tmp_*
+/temp_*
+/debug_*
+/check_*
+/fix_*
+/scratch_*
+/db_test*
+/fv_debug*
+/vd.php
+/local_test_file.*
+
+# Debug & output JSON/TXT artifacts
+/debug_api_*.json
+/local_debug.json
+/out*.json
+/out*.txt
+/output*.txt
+/prod_matchcenter.json
+/phpstan_errors.json
+/phpstan.log
+
+# Obsolete one-off scripts
+/get_errors_*.php
+/public_getver_*.php
+/plan.md
+
+# Cookie / session dumps
+/cookie*.txt
+/cookies.txt
+/mycookie*.txt
+
+# Cognito test data
+/cognito_*.json
+
+# Diff & discrepancy files
+/*diff*.txt
+/discrepancies.txt
+/current_db_discrepancies.txt
+
+# Info / notes text dumps
+/athlete_cols.txt
+/vald_info.txt
+/remote_htaccess.txt
+/full_models_list.txt
+/prod_repo.txt
+
+# Stale media (dev assets)
+/voice*.aiff
+/*.webm
+/presentation_*.mp4
+/dummy_logo.png
+
+# Data dumps
+/fusion_dump.sql
+/audit-hardening.bundle
+
+# One-off migration / import scripts
+/run_migration_*.php
+/_migrate_*.php
+/migrate_*.php
+/run_*_migration.py
+/import_*.php
+/run_import.php
+
+# Scratch / temp directories
+/scratch/
+/screenshots_messy/
+pdf_export_tool/.cache/

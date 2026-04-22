@@ -135,7 +135,6 @@
 
 .eval-slider {
     appearance: none;
-    appearance: none;
     width: 100%;
     height: 6px;
     border-radius: 3px;
@@ -145,7 +144,6 @@
 }
 
 .eval-slider::-webkit-slider-thumb {
-    appearance: none;
     appearance: none;
     width: 18px;
     height: 18px;

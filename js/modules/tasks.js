@@ -722,7 +722,7 @@ const Tasks = (() => {
     if (!match) { UI.toast("Formato non supportato", "error"); return; }
     const mime = match[1];
 
-    let contentHtml = "";
+    let contentHtml
     let blobUrl = null;
 
     if (mime === "application/pdf") {

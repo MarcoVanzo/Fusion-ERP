@@ -1,18 +1,18 @@
 "use strict";
 const Dashboard = (() => {
   let _abort = new AbortController();
-  function sig() {
+  function _sig() {
     return { signal: _abort.signal };
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
-  function weekdayShort(dateStr) {
+  function _weekdayShort(dateStr) {
     if (!dateStr) return "";
     const d = new Date(dateStr);
     return d.toLocaleDateString("it-IT", { weekday: "short", day: "2-digit", month: "short" });
   }
 
-  function isWithinLast14Days(dateStr) {
+  function _isWithinLast14Days(dateStr) {
     if (!dateStr) return false;
     const d = new Date(dateStr);
     const now = new Date();

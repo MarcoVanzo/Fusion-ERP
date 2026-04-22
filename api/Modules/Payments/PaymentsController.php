@@ -116,7 +116,6 @@ class PaymentsController
         $instId = 'INST_' . bin2hex(random_bytes(4));
         $this->repo->insertInstallment([
             ':id' => $instId,
-            ':tenant_id' => TenantContext::id(),
             ':plan_id' => $planId,
             ':title' => $body['title'],
             ':due_date' => $body['due_date'],
@@ -161,6 +160,7 @@ class PaymentsController
         $plan = $this->repo->getActivePlan($athleteId);
         if (!$plan) {
             Response::success(['plan' => null, 'installments' => []]);
+            return;
         }
 
         $installments = $this->repo->getInstallments($plan['id']);
@@ -277,6 +277,7 @@ class PaymentsController
         $user = Auth::requireRead('payments');
         if (!$user) {
             Response::error('Non autorizzato', 401);
+            return;
         }
 
         $body = Response::jsonBody();
@@ -285,9 +286,24 @@ class PaymentsController
         $installment = $this->repo->getInstallmentById($body['installment_id']);
         if (!$installment) {
             Response::error('Rata non trovata', 404);
+            return;
         }
         if ($installment['status'] === 'PAID') {
             Response::error('Questa rata è già stata pagata', 400);
+            return;
+        }
+
+        // IDOR protection: athletes can only pay their own installments
+        if ($user['role'] === 'atleta') {
+            $db = \FusionERP\Shared\Database::getInstance();
+            $tid = \FusionERP\Shared\TenantContext::id();
+            $stmt = $db->prepare('SELECT id FROM athletes WHERE user_id = :uid AND tenant_id = :tid LIMIT 1');
+            $stmt->execute([':uid' => $user['id'], ':tid' => $tid]);
+            $linked = $stmt->fetch(\PDO::FETCH_ASSOC);
+            if (!$linked || $linked['id'] !== $installment['athlete_id']) {
+                Response::error('Non puoi pagare rate di altri atleti.', 403);
+                return;
+            }
         }
 
         \Stripe\Stripe::setApiKey($_ENV['STRIPE_SECRET_KEY'] ?? '');
@@ -339,12 +355,14 @@ class PaymentsController
         $athlete = $stmt->fetch(\PDO::FETCH_ASSOC);
 
         if (!$athlete) {
-            Response::success([]); // No linked athlete
+            Response::success([]);
+            return;
         }
 
         $plan = $this->repo->getActivePlan($athlete['id']);
         if (!$plan) {
             Response::success([]);
+            return;
         }
 
         $installments = $this->repo->getInstallments($plan['id']);
@@ -401,14 +419,8 @@ class PaymentsController
         $stmt->execute([':id' => $installment['athlete_id'], ':tid' => $tid]);
         $athlete = $stmt->fetch(\PDO::FETCH_ASSOC);
 
-        // Audit P3-02: Add tenant scope to transaction query
-        $stmt2 = $db->prepare(
-            'SELECT t.receipt_year, t.receipt_number FROM transactions t
-             JOIN installments i ON i.id = t.installment_id
-             JOIN payment_plans pp ON pp.id = i.plan_id
-             WHERE t.installment_id = :id AND pp.tenant_id = :tid LIMIT 1'
-        );
-        $stmt2->execute([':id' => $installmentId, ':tid' => $tid]);
+        $stmt2 = $db->prepare('SELECT receipt_year, receipt_number FROM transactions WHERE installment_id = :id LIMIT 1');
+        $stmt2->execute([':id' => $installmentId]);
         $transaction = $stmt2->fetch(\PDO::FETCH_ASSOC);
 
         $html = $this->buildReceiptHtml($installment, $athlete ?: [], $transaction ?: []);
@@ -431,14 +443,8 @@ class PaymentsController
         $mpdf->Output($filepath, \Mpdf\Output\Destination::FILE);
 
         $relPath = 'uploads/receipts/' . $installment['athlete_id'] . '/' . $filename;
-        // Audit P3-03: Add tenant scope to receipt_path UPDATE
-        $stmt = $db->prepare(
-            'UPDATE installments i
-             JOIN payment_plans pp ON pp.id = i.plan_id
-             SET i.receipt_path = :path
-             WHERE i.id = :id AND pp.tenant_id = :tid'
-        );
-        $stmt->execute([':path' => $relPath, ':id' => $installmentId, ':tid' => $tid]);
+        $stmt = $db->prepare('UPDATE installments SET receipt_path = :path WHERE id = :id');
+        $stmt->execute([':path' => $relPath, ':id' => $installmentId]);
 
         return $relPath;
     }
@@ -526,7 +532,6 @@ class PaymentsController
 
             $this->repo->insertInstallment([
                 ':id' => $instId,
-                ':tenant_id' => TenantContext::id(),
                 ':plan_id' => $planId,
                 ':title' => $title,
                 ':due_date' => $dueDate,
@@ -555,8 +560,8 @@ class PaymentsController
      */
     private function buildReceiptHtml(array $installment, ?array $athlete, ?array $transaction): string
     {
-        $athleteName = $athlete['full_name'] ?? 'N/A';
-        $fiscalCode = $athlete['fiscal_code'] ?? 'N/A';
+        $athleteName = htmlspecialchars($athlete['full_name'] ?? 'N/A', ENT_QUOTES, 'UTF-8');
+        $fiscalCode = htmlspecialchars($athlete['fiscal_code'] ?? 'N/A', ENT_QUOTES, 'UTF-8');
         $amountRaw = (float)$installment['amount'];
         $amount = number_format($amountRaw, 2, ',', '.');
         $paidDate = $installment['paid_date'] ?? date('Y-m-d');

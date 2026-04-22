@@ -9,7 +9,6 @@ declare(strict_types=1);
 namespace FusionERP\Modules\Biometrics;
 
 use FusionERP\Shared\Database;
-use FusionERP\Shared\TenantContext;
 
 class BiometricsRepository
 {
@@ -46,12 +45,11 @@ class BiometricsRepository
         $stmt = $this->db->prepare(
             'SELECT id, record_date, height_cm, weight_kg, bmi, wingspan_cm, measured_by, notes, created_at
              FROM biometric_records
-             WHERE athlete_id = :athlete_id AND tenant_id = :tid
+             WHERE athlete_id = :athlete_id
              ORDER BY record_date DESC
              LIMIT :lim'
         );
         $stmt->bindValue(':athlete_id', $athleteId);
-        $stmt->bindValue(':tid', TenantContext::id());
         $stmt->bindValue(':lim', $limit, \PDO::PARAM_INT);
         $stmt->execute();
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
@@ -65,11 +63,11 @@ class BiometricsRepository
         $stmt = $this->db->prepare(
             'SELECT id, record_date, height_cm, weight_kg, bmi, wingspan_cm
              FROM biometric_records
-             WHERE athlete_id = :athlete_id AND tenant_id = :tid
+             WHERE athlete_id = :athlete_id
              ORDER BY record_date DESC
              LIMIT 1'
         );
-        $stmt->execute([':athlete_id' => $athleteId, ':tid' => TenantContext::id()]);
+        $stmt->execute([':athlete_id' => $athleteId]);
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
         return $row ?: null;
     }
@@ -87,11 +85,10 @@ class BiometricsRepository
              JOIN athletes a ON a.id = br.athlete_id
              JOIN teams t ON t.id = a.team_id
              WHERE t.category = :category
-               AND a.tenant_id = :tid
                AND br.record_date >= DATE_SUB(CURDATE(), INTERVAL 90 DAY)
                AND br.bmi IS NOT NULL'
         );
-        $stmt->execute([':category' => $category, ':tid' => TenantContext::id()]);
+        $stmt->execute([':category' => $category]);
         $val = $stmt->fetchColumn();
         return $val !== false ? round((float)$val, 1) : null;
     }
@@ -121,8 +118,8 @@ class BiometricsRepository
     {
         $sql = 'SELECT id, record_date, metric_type, value, unit, measured_by, notes, created_at
                 FROM athletic_metrics
-                WHERE athlete_id = :athlete_id AND tenant_id = :tid';
-        $params = [':athlete_id' => $athleteId, ':tid' => TenantContext::id()];
+                WHERE athlete_id = :athlete_id';
+        $params = [':athlete_id' => $athleteId];
 
         if ($metricType !== null) {
             $sql .= ' AND metric_type = :metric_type';
@@ -147,13 +144,12 @@ class BiometricsRepository
              INNER JOIN (
                  SELECT metric_type, MAX(record_date) AS max_date
                  FROM athletic_metrics
-                 WHERE athlete_id = :athlete_id AND tenant_id = :tid
+                 WHERE athlete_id = :athlete_id
                  GROUP BY metric_type
              ) latest ON am.metric_type = latest.metric_type AND am.record_date = latest.max_date
-             WHERE am.athlete_id = :athlete_id2 AND am.tenant_id = :tid2'
+             WHERE am.athlete_id = :athlete_id2'
         );
-        $tid = TenantContext::id();
-        $stmt->execute([':athlete_id' => $athleteId, ':tid' => $tid, ':athlete_id2' => $athleteId, ':tid2' => $tid]);
+        $stmt->execute([':athlete_id' => $athleteId, ':athlete_id2' => $athleteId]);
         $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
         $result = [];
@@ -175,11 +171,11 @@ class BiometricsRepository
     {
         $stmt = $this->db->prepare(
             'SELECT value FROM athletic_metrics
-             WHERE athlete_id = :athlete_id AND metric_type = :metric_type AND tenant_id = :tid
+             WHERE athlete_id = :athlete_id AND metric_type = :metric_type
              ORDER BY record_date DESC
              LIMIT 3'
         );
-        $stmt->execute([':athlete_id' => $athleteId, ':metric_type' => $metricType, ':tid' => TenantContext::id()]);
+        $stmt->execute([':athlete_id' => $athleteId, ':metric_type' => $metricType]);
         $values = $stmt->fetchAll(\PDO::FETCH_COLUMN);
 
         if (count($values) < 3) {
@@ -247,19 +243,18 @@ class BiometricsRepository
         $inList = implode(',', array_fill(0, count($athleteIds), '?'));
 
         // 2) Get latest VALD test per athlete
-        // Audit P2-01: Add tenant_id filter to prevent cross-tenant data leaks
         $metricStmt = $this->db->prepare(
             "SELECT v.athlete_id, v.metrics, v.test_type
              FROM vald_test_results v
              INNER JOIN (
                  SELECT athlete_id, MAX(test_date) as max_date
                  FROM vald_test_results
-                 WHERE athlete_id IN ($inList) AND tenant_id = ?
+                 WHERE athlete_id IN ($inList)
                  GROUP BY athlete_id
              ) latest ON v.athlete_id = latest.athlete_id AND v.test_date = latest.max_date
-             WHERE v.athlete_id IN ($inList) AND v.tenant_id = ?"
+             WHERE v.athlete_id IN ($inList)"
         );
-        $metricStmt->execute(array_merge($athleteIds, [$tenantId], $athleteIds, [$tenantId]));
+        $metricStmt->execute(array_merge($athleteIds, $athleteIds));
         $valdResults = $metricStmt->fetchAll(\PDO::FETCH_ASSOC);
 
         $resultsByAthlete = [];

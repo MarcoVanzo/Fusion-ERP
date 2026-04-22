@@ -888,7 +888,7 @@ const Transport = {
         // ...
     },
 
-    showOfferRouteModal: function(eventId) {
+    showOfferRouteModal: function(_eventId) {
         // Modal implementation for carpooling
         // ...
     },

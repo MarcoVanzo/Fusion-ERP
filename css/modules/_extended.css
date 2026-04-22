@@ -79,7 +79,6 @@
 .widget {
   background: var(--color-bg-card);
   backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   padding: 20px;
@@ -978,12 +977,10 @@
 .modal-overlay {
   background: rgba(0, 0, 0, 0.65) !important;
   backdrop-filter: blur(8px) !important;
-  backdrop-filter: blur(8px) !important;
 }
 
 .modal-content {
   background: rgba(12, 12, 18, 0.78) !important;
-  backdrop-filter: blur(28px) saturate(160%) !important;
   backdrop-filter: blur(28px) saturate(160%) !important;
   border: 1px solid rgba(255, 255, 255, 0.08) !important;
   box-shadow:
@@ -1170,7 +1167,6 @@
   left: 50%;
   transform: translateX(-50%) translateY(120%);
   background: rgba(15, 15, 20, 0.92);
-  backdrop-filter: blur(20px) saturate(160%);
   backdrop-filter: blur(20px) saturate(160%);
   border: 1px solid rgba(255, 0, 122, 0.3);
   border-radius: 16px;

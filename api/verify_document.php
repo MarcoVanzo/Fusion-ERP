@@ -42,13 +42,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 Auth::requireAuth(); // Must be logged in
 
-// CSRF Protection — verify_document.php bypasses router.php, so we enforce the
-// same X-Requested-With header check manually to prevent cross-origin POST attacks.
-$xrw = $_SERVER['HTTP_X_REQUESTED_WITH'] ?? '';
-if (strcasecmp($xrw, 'XMLHttpRequest') !== 0) {
-    Response::error('Richiesta non valida (CSRF check)', 403);
-}
-
 $input = json_decode(file_get_contents('php://input'), true) ?: [];
 
 $imageBase64 = $input['image'] ?? '';

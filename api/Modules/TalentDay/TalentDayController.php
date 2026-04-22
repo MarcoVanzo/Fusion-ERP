@@ -218,6 +218,61 @@ class TalentDayController
     }
 
     /* ─────────────────────────────────────────────────────────────────────
+     * publicStatus — PUBLIC GET endpoint (no auth required)
+     * GET /api?module=talentday&action=publicStatus
+     * Returns count of registrations per tappa
+     * ───────────────────────────────────────────────────────────────────── */
+    public function publicStatus(): void
+    {
+        $allowedOrigins = array_filter([
+            getenv('APP_URL') ?: '',
+            getenv('TALENT_DAY_ORIGIN') ?: '',
+            'https://talentday.fusionteamvolley.it',
+            'https://www.savinodelbenevolley.it',
+        ]);
+        $requestOrigin = $_SERVER['HTTP_ORIGIN'] ?? '';
+        $corsOrigin = '';
+        foreach ($allowedOrigins as $ao) {
+            $parsed = parse_url($ao);
+            $originBase = ($parsed['scheme'] ?? 'https') . '://' . ($parsed['host'] ?? '');
+            if (!empty($parsed['port'])) {
+                $originBase .= ':' . $parsed['port'];
+            }
+            if ($requestOrigin === $originBase) {
+                $corsOrigin = $requestOrigin;
+                break;
+            }
+        }
+        if ($corsOrigin) {
+            header("Access-Control-Allow-Origin: {$corsOrigin}");
+            header('Vary: Origin');
+        }
+        header('Access-Control-Allow-Methods: GET, OPTIONS');
+        header('Access-Control-Allow-Headers: Content-Type');
+
+        if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+            http_response_code(204);
+            exit;
+        }
+
+        // Prevent caching for live status calls
+        header('Cache-Control: no-cache, no-store, must-revalidate');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+
+        $stmt = $this->db->prepare("
+            SELECT tappa, COUNT(*) as count 
+            FROM talent_day_entries 
+            WHERE tenant_id = 'TNT_fusion' 
+            GROUP BY tappa
+        ");
+        $stmt->execute();
+        $counts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        Response::success(['counts' => $counts]);
+    }
+
+    /* ─────────────────────────────────────────────────────────────────────
      * publicRegister — PUBLIC POST endpoint (no auth required)
      * POST /api?module=talentday&action=publicRegister
      * Saves registration + sends confirmation email with attachments.
@@ -225,8 +280,30 @@ class TalentDayController
     public function publicRegister(): void
     {
         try {
-        // CORS for public form
-        header('Access-Control-Allow-Origin: *');
+        // CORS for public Talent Day form — whitelist instead of wildcard
+        $allowedOrigins = array_filter([
+            getenv('APP_URL') ?: '',
+            getenv('TALENT_DAY_ORIGIN') ?: '',
+            'https://talentday.fusionteamvolley.it',
+            'https://www.savinodelbenevolley.it',
+        ]);
+        $requestOrigin = $_SERVER['HTTP_ORIGIN'] ?? '';
+        $corsOrigin = '';
+        foreach ($allowedOrigins as $ao) {
+            $parsed = parse_url($ao);
+            $originBase = ($parsed['scheme'] ?? 'https') . '://' . ($parsed['host'] ?? '');
+            if (!empty($parsed['port'])) {
+                $originBase .= ':' . $parsed['port'];
+            }
+            if ($requestOrigin === $originBase) {
+                $corsOrigin = $requestOrigin;
+                break;
+            }
+        }
+        if ($corsOrigin) {
+            header("Access-Control-Allow-Origin: {$corsOrigin}");
+            header('Vary: Origin');
+        }
         header('Access-Control-Allow-Methods: POST, OPTIONS');
         header('Access-Control-Allow-Headers: Content-Type');
 
@@ -273,6 +350,19 @@ class TalentDayController
         ");
         $checkStmt->execute();
         // Simple global rate limit
+
+        // ── Backend Limit Validation ───────────────────────────────────
+        $tappa = trim($data['tappa']);
+        $limit = 50; // Quota massima per tappa
+        $checkLimitStmt = $this->db->prepare("
+            SELECT COUNT(*) FROM talent_day_entries
+            WHERE tenant_id = 'TNT_fusion'
+              AND tappa = :tappa
+        ");
+        $checkLimitStmt->execute([':tappa' => $tappa]);
+        if ($checkLimitStmt->fetchColumn() >= $limit) {
+            Response::error('Spiacenti, i posti per la tappa selezionata sono esauriti (SOLD OUT).', 400);
+        }
 
         // ── Insert into DB ─────────────────────────────────────────────
         $now = date('Y-m-d H:i:s');
@@ -444,7 +534,7 @@ class TalentDayController
     <!-- Body -->
     <tr><td style="padding:40px 32px;">
         <p style="color:#222222;font-size:16px;line-height:1.7;margin:0 0 20px;">Cara <strong>{$nome} {$cognome}</strong>,</p>
-        <p style="color:#444444;font-size:15px;line-height:1.7;margin:0 0 24px;">siamo felici di comunicarti che sei stata selezionata per partecipare al <strong style="color:#00205B;">Talent Day 2026</strong>, una giornata dove potrai mettere in mostra il tuo talento sotto lo sguardo dello staff della <strong>Savino del Bene Volley Scandicci!</strong> Qui di seguito troverai tutte le informazioni utili.</p>
+        <p style="color:#444444;font-size:15px;line-height:1.7;margin:0 0 24px;">siamo felici di comunicarti che sei stata selezionata per partecipare al <strong style="color:#00205B;">Talent Day 2026</strong>, una giornata dove potrai mettere in mostra il tuo talento sotto lo sguardo dello staff della <strong>Savino Del Bene Volley Scandicci!</strong> Qui di seguito troverai tutte le informazioni utili.</p>
 
         <!-- Tappa Card -->
         <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fbfd;border:1px solid #e1e7f0;border-left:4px solid #C8A959;border-radius:6px;margin:24px 0;">

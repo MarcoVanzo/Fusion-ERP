@@ -62,7 +62,7 @@ export const AthletesValdLink = (() => {
                     UI.toast("Sincronizzazione in corso. Attendere, potrebbe richiedere del tempo...", "info", 5000);
                     const res = await Store.api("sync", "vald");
                     UI.toast(res?.message || "Sincronizzazione VALD completata con successo", "success", 6000);
-                } catch(err) {
+                } catch (err) {
                     UI.toast(err.message || "Errore durante la sincronizzazione.", "error", 8000);
                 } finally {
                     btn.innerHTML = '<i class="ph ph-arrows-clockwise"></i> Avvia Sync';
@@ -171,7 +171,7 @@ export const AthletesValdLink = (() => {
                             acceptBtn.style.display = "none";
                             // Reload modal
                             openModal(onClose);
-                        } catch(e) {
+                        } catch (e) {
                             UI.toast(e.message, "error");
                             acceptBtn.innerHTML = `<i class="ph ph-magic-wand"></i> Accetta <span id="suggestions-count">${suggestedCount}</span> suggerimenti`;
                         }
@@ -210,7 +210,7 @@ export const AthletesValdLink = (() => {
                                 UI.toast("Errore salvataggio: l'API ha restituito 0", "warning", 3000);
                                 saveBtn.innerHTML = 'Riprova';
                             }
-                        } catch(e) {
+                        } catch (e) {
                             UI.toast(e.message, "error");
                             saveBtn.innerHTML = '<i class="ph ph-check" style="font-size:18px;"></i>';
                         }
@@ -221,7 +221,7 @@ export const AthletesValdLink = (() => {
             loader.style.display = "none";
             container.style.display = "block";
             
-        } catch(e) {
+        } catch (e) {
             loader.style.display = "none";
             container.style.display = "block";
             tbody.innerHTML = `<tr><td colspan="2" style="padding:30px; text-align:center; color:#ef4444;">Errore: ${Utils.escapeHtml(e.message)}</td></tr>`;

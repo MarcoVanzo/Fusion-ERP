@@ -77,7 +77,7 @@ class SocietaRepository
         $stmt = $this->db->prepare(
             'SELECT * FROM societa_companies
              WHERE tenant_id = :tid AND is_deleted = 0
-             ORDER BY created_at DESC'
+             ORDER BY created_at DESC LIMIT 500'
         );
         $stmt->execute([':tid' => $tenantId]);
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
@@ -151,7 +151,7 @@ class SocietaRepository
         $stmt = $this->db->prepare(
             'SELECT * FROM societa_roles
              WHERE tenant_id = :tid AND is_deleted = 0
-             ORDER BY sort_order ASC, name ASC'
+             ORDER BY sort_order ASC, name ASC LIMIT 500'
         );
         $stmt->execute([':tid' => $tenantId]);
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
@@ -283,7 +283,7 @@ class SocietaRepository
         $stmt = $this->db->prepare(
             'SELECT * FROM societa_documents
              WHERE tenant_id = :tid AND is_deleted = 0
-             ORDER BY uploaded_at DESC'
+             ORDER BY uploaded_at DESC LIMIT 500'
         );
         $stmt->execute([':tid' => $tenantId]);
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
@@ -324,7 +324,7 @@ class SocietaRepository
         $stmt = $this->db->prepare(
             'SELECT * FROM societa_deadlines
              WHERE tenant_id = :tid AND is_deleted = 0
-             ORDER BY due_date ASC'
+             ORDER BY due_date ASC LIMIT 500'
         );
         $stmt->execute([':tid' => $tenantId]);
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
@@ -381,7 +381,7 @@ class SocietaRepository
         $stmt = $this->db->prepare(
             'SELECT * FROM societa_sponsors
              WHERE tenant_id = :tid AND is_deleted = 0
-             ORDER BY sort_order ASC, name ASC'
+             ORDER BY sort_order ASC, name ASC LIMIT 500'
         );
         $stmt->execute([':tid' => $tenantId]);
         $results = $stmt->fetchAll(\PDO::FETCH_ASSOC);
@@ -473,7 +473,7 @@ class SocietaRepository
         $stmt = $this->db->prepare(
             'SELECT * FROM societa_titoli
              WHERE tenant_id = :tid AND is_deleted = 0
-             ORDER BY stagione DESC, campionato ASC, piazzamento ASC'
+             ORDER BY stagione DESC, campionato ASC, piazzamento ASC LIMIT 500'
         );
         $stmt->execute([':tid' => $tenantId]);
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);

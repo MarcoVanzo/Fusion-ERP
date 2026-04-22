@@ -732,7 +732,7 @@ const Athletes = (() => {
             const transports = await TransportAPI.getTransports();
             const reimbMap = new Map();
             transports.forEach(tr => {
-                let athletes = [];
+                let athletes
                 try {
                     athletes = typeof tr.athletes_json === 'string' ? JSON.parse(tr.athletes_json) : (tr.athletes_json || []);
                 } catch { athletes = []; }

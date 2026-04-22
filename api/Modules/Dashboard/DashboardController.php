@@ -356,12 +356,13 @@ class DashboardController
         try {
             $s = $db->prepare(
                 "SELECT fm.id, fm.match_date, fm.location,
-                        fm.home_team, fm.away_team,
+                        th.name AS home_team, ta.name AS away_team,
                         fm.home_score, fm.away_score
                  FROM federation_matches fm
-                 JOIN federation_championships fc ON fc.id = fm.championship_id
+                 LEFT JOIN teams th ON th.id = fm.home_team_id
+                 LEFT JOIN teams ta ON ta.id = fm.away_team_id
                  WHERE fm.match_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)
-                   AND fc.tenant_id = :t
+                   AND fm.tenant_id = :t
                  ORDER BY fm.match_date ASC
                  LIMIT 10"
             );
@@ -614,6 +615,12 @@ class DashboardController
     public function debugDashboard(): void
     {
         Auth::requireRole('admin');
+
+        // Only available when APP_DEBUG is explicitly enabled — never in production
+        if (!filter_var(getenv('APP_DEBUG') ?: 'false', FILTER_VALIDATE_BOOLEAN)) {
+            Response::error('Debug endpoint disabilitato in produzione', 403);
+        }
+
         $db  = Database::getInstance();
         $tid = TenantContext::id();
         $res = [];

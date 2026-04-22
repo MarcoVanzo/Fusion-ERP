@@ -59,7 +59,7 @@ class OutSeasonController
         $stmt = $pdo->prepare(
             'SELECT * FROM outseason_entries
              WHERE season_key = :season_key AND tenant_id = :tid
-             ORDER BY entry_date ASC'
+             ORDER BY entry_date ASC LIMIT 500'
         );
         $stmt->execute([':season_key' => $seasonKey, ':tid' => $tid]);
         $rows = $stmt->fetchAll();
@@ -459,18 +459,37 @@ PROMPT;
                 else $conf = 'low';
             }
             
+            $r_found = !empty($r['found']) ? 1 : 0;
+            
+            // Fix transaction date length to max 20 chars
+            $r_tx_date = isset($r['transaction_date']) ? mb_substr(trim((string)$r['transaction_date']), 0, 20) : null;
+            if ($r_tx_date === 'null' || $r_tx_date === '') {
+                $r_tx_date = null;
+            }
+
+            // Fix transaction amount to float
+            $r_tx_AMOUNT = isset($r['transaction_amount']) ? (float)$r['transaction_amount'] : null;
+            
+            // Transaction description max length is TEXT (65535 chars), so it's safe
+            $r_tx_desc = isset($r['transaction_description']) ? trim((string)$r['transaction_description']) : null;
+            
+            // Notes max length is TEXT
+            $r_notes = isset($r['notes']) ? trim((string)$r['notes']) : null;
+            
+            $r_verified_by = $user['id'] ?? null;
+
             try {
                 $stmt->execute([
                     ':tid' => $tid,
                     ':season_key' => $seasonKey,
                     ':name' => $r['name'],
-                    ':found' => !empty($r['found']) ? 1 : 0,
+                    ':found' => $r_found,
                     ':confidence' => $conf,
-                    ':tx_date' => $r['transaction_date'] ?? null,
-                    ':tx_amount' => isset($r['transaction_amount']) ? (float)$r['transaction_amount'] : null,
-                    ':tx_desc' => $r['transaction_description'] ?? null,
-                    ':notes' => $r['notes'] ?? null,
-                    ':verified_by' => $user['id'] ?? null,
+                    ':tx_date' => $r_tx_date,
+                    ':tx_amount' => $r_tx_AMOUNT,
+                    ':tx_desc' => $r_tx_desc,
+                    ':notes' => $r_notes,
+                    ':verified_by' => $r_verified_by,
                 ]);
                 $saved++;
             } catch (\PDOException $e) {

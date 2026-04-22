@@ -104,8 +104,22 @@ const OutSeason = (() => {
         ),
         m = await f.json();
       if (!m.success) throw new Error(m.error || "Errore caricamento entries");
-      ((e = m.data?.entries || []),
-        (function (f) {
+      
+      e = m.data?.entries || [];
+      
+      try {
+        const verRes = await fetch(`api/router.php?module=outseason&action=getVerification&season_key=${i}`, { method: "GET", credentials: "same-origin", cache: "no-store" });
+        const verData = await verRes.json();
+        if (verData.success && Array.isArray(verData.data?.results) && verData.data.results.length > 0) {
+            t = new Set(verData.data.results.filter(n => (n.found === true || String(n.found) === "1") && "high" === n.confidence).map(n => String(n.entry_name).toLowerCase().trim()));
+        } else {
+            t = new Set();
+        }
+      } catch (err) {
+        console.warn("[OutSeason] Could not load saved verifications pre-render:", err);
+      }
+
+      (function (f) {
           const m = document.getElementById("os-badge-count");
           m && (m.textContent = `${e.length} Iscritte`);
           const y = document.getElementById("os-sync-status");
@@ -242,10 +256,10 @@ const OutSeason = (() => {
                                   found: 0,
                                   not_found: 0,
                                 },
-                                s = a.found || o.filter((n) => n.found).length,
+                                s = a.found || o.filter((n) => n.found === true || String(n.found) === "1").length,
                                 r =
                                   a.not_found ||
-                                  o.filter((n) => !n.found).length,
+                                  o.filter((n) => n.found !== true && String(n.found) !== "1").length,
                                 d = o
                                   .map((n) => {
                                     const t =
@@ -261,10 +275,10 @@ const OutSeason = (() => {
                                             ? "Media"
                                             : "Bassa";
                                     return `\n            <tr>\n                <td style="font-weight:600;">${n.name}</td>\n                <td style="font-weight:600;">${n.expected_amount} €</td>
-                <td>${n.found ? '<span class="os-match-found">✅ Trovato</span>' : '<span class="os-match-missing">❌ Non trovato</span>'}</td>
-                <td>${(n.found && n.transaction_date) || "—"}</td>
-                <td>${n.found ? (n.transaction_amount || "") + " €" : "—"}</td>
-                <td>${n.found ? `<span class="os-confidence ${t}">${e}</span>` : "—"}</td>
+                <td>${n.found === true || String(n.found) === "1" ? '<span class="os-match-found">✅ Trovato</span>' : '<span class="os-match-missing">❌ Non trovato</span>'}</td>
+                <td>${((n.found === true || String(n.found) === "1") && n.transaction_date) || "—"}</td>
+                <td>${n.found === true || String(n.found) === "1" ? (n.transaction_amount || "") + " €" : "—"}</td>
+                <td>${n.found === true || String(n.found) === "1" ? `<span class="os-confidence ${t}">${e}</span>` : "—"}</td>
                 <td style="font-size:11px;opacity:.6;">${n.notes || "—"}</td>
             </tr>`;
                                   })
@@ -293,7 +307,7 @@ const OutSeason = (() => {
                                 (t = new Set(
                                   o
                                     .filter(
-                                      (n) => n.found && "high" === n.confidence,
+                                      (n) => (n.found === true || String(n.found) === "1") && "high" === n.confidence,
                                     )
                                     .map((n) =>
                                       String(n.name).toLowerCase().trim(),
@@ -369,43 +383,7 @@ const OutSeason = (() => {
                 })())
               : (S.innerHTML =
                   '<div class="os-table-wrap" style="padding:40px;text-align:center;opacity:.6;">\n                <p style="font-size:1.1rem;margin-bottom:16px;">Nessun dato trovato nel database.</p>\n                <p style="font-size:13px;margin-bottom:20px;">Clicca il pulsante per importare i dati da Cognito Forms.</p>\n            </div>'));
-        })(m.data?.last_sync || null),
-        await (async function () {
-          try {
-            const n = await fetch(
-                `api/router.php?module=outseason&action=getVerification&season_key=${i}`,
-                {
-                  method: "GET",
-                  credentials: "same-origin",
-                  cache: "no-store",
-                },
-              ),
-              e = await n.json();
-            if (
-              !e.success ||
-              !Array.isArray(e.data?.results) ||
-              0 === e.data.results.length
-            )
-              return;
-            if (
-              ((t = new Set(
-                e.data.results
-                  .filter((n) => n.found && "high" === n.confidence)
-                  .map((n) => String(n.entry_name).toLowerCase().trim()),
-              )),
-              t.size > 0)
-            ) {
-              const n = document.getElementById("os-payments-table-wrap");
-              n && (n.innerHTML = v());
-              const wPan = document.getElementById("os-panel-weeks");
-              (wPan && (wPan.innerHTML = W()),
-                document.getElementById("os-kpi-row") &&
-                  (document.getElementById("os-kpi-row").innerHTML = K()));
-            }
-          } catch (n) {
-            console.warn("[OutSeason] Could not load saved verifications:", n);
-          }
-        })());
+        })(m.data?.last_sync || null);
     } catch (n) {
       console.error("[OutSeason] Load error:", n);
       const t = document.getElementById("os-main-content");
@@ -639,7 +617,7 @@ const OutSeason = (() => {
                         AthletesWizard.openCreate(teams, () => {
                             if (typeof UI !== 'undefined' && UI.toast) UI.toast("Atleta aggiunta con successo!", "success");
                         });
-                    } catch(err) {
+                    } catch (err) {
                         console.error("[OutSeason] Error opening wizard", err);
                         if (typeof UI !== 'undefined' && UI.toast) UI.toast("Errore apertura maschera atleta", "error");
                     }

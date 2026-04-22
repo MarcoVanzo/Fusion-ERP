@@ -46,8 +46,11 @@ class StaffRepository
 
         $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
-        // Audit P2-06: Removed cross-tenant fallback to TNT_fusion (was a data leak).
-        // A tenant with no staff should see an empty list.
+        // Fallback: Se il tenant corrente è vuoto, prova a recuperare quelli globali/fusion
+        if (empty($rows) && $tenantId !== 'TNT_fusion') {
+            $stmt->execute([':tenant_id' => 'TNT_fusion']);
+            $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        }
 
         foreach ($rows as &$row) {
             $row['team_season_ids'] = $row['team_season_ids'] ? explode(',', $row['team_season_ids']) : [];
@@ -184,20 +187,27 @@ class StaffRepository
     }
 
     // ─── Public ───────────────────────────────────────────────────────────────
-    public function getPublicStaffByTeam(string $teamId): array
+    public function getPublicStaffByTeam(?string $teamId = null): array
     {
         $tenantId = TenantContext::id();
+        $teamFilter = $teamId ? 'INNER JOIN staff_teams st ON s.id = st.staff_id' : '';
+        $teamWhere  = $teamId ? 'AND st.team_season_id = :team_season_id' : '';
+
         $sql = "SELECT s.id, s.first_name, s.last_name,
                        CONCAT(s.first_name, ' ', s.last_name) AS full_name,
                        s.role, s.photo_path, s.fiscal_code
                 FROM staff_members s
-                INNER JOIN staff_teams st ON s.id = st.staff_id
+                {$teamFilter}
                 WHERE s.is_deleted = 0
                   AND s.tenant_id = :tenant_id
-                  AND st.team_season_id = :team_season_id
+                  {$teamWhere}
                 ORDER BY s.last_name ASC, s.first_name ASC";
         $stmt = $this->db->prepare($sql);
-        $stmt->execute([':team_season_id' => $teamId, ':tenant_id' => $tenantId]);
+        $params = [':tenant_id' => $tenantId];
+        if ($teamId) {
+            $params[':team_season_id'] = $teamId;
+        }
+        $stmt->execute($params);
 
         $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
         foreach ($rows as &$row) {

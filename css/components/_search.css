@@ -10,7 +10,6 @@
   right: 0;
   background: rgba(12, 12, 16, 0.95);
   backdrop-filter: var(--glass);
-  backdrop-filter: var(--glass);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius);
   box-shadow: var(--shadow-lg);

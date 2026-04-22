@@ -35,7 +35,10 @@ const AuthFlow = (() => {
             toggleBtn.addEventListener('click', () => {
                 const isPassword = passwordInput.type === 'password';
                 passwordInput.type = isPassword ? 'text' : 'password';
-                toggleBtn.textContent = isPassword ? '🙈' : '👁️';
+                const icon = toggleBtn.querySelector('i');
+                if (icon) {
+                    icon.className = isPassword ? 'ph ph-eye' : 'ph ph-eye-slash';
+                }
             }, { signal: _abortAuth.signal });
         }
 
@@ -131,8 +134,8 @@ const AuthFlow = (() => {
             const current = document.getElementById('reset-current').value;
             const newPwd = document.getElementById('reset-new').value;
 
-            if (newPwd.length < 10) {
-                errEl.textContent = 'La password deve essere di almeno 10 caratteri';
+            if (newPwd.length < 12) {
+                errEl.textContent = 'La password deve essere di almeno 12 caratteri';
                 errEl.classList.remove('hidden');
                 return;
             }
@@ -179,8 +182,8 @@ const AuthFlow = (() => {
             const errEl = document.getElementById('reset-error');
             const newPwd = document.getElementById('reset-new').value;
 
-            if (newPwd.length < 10) {
-                errEl.textContent = 'La password deve essere di almeno 10 caratteri';
+            if (newPwd.length < 12) {
+                errEl.textContent = 'La password deve essere di almeno 12 caratteri';
                 errEl.classList.remove('hidden');
                 return;
             }
@@ -223,8 +226,8 @@ const AuthFlow = (() => {
             const btn = document.getElementById('reset-btn');
             const errEl = document.getElementById('reset-error');
             const newPwd = document.getElementById('reset-new').value;
-            if (newPwd.length < 10) {
-                errEl.textContent = 'La password deve essere di almeno 10 caratteri';
+            if (newPwd.length < 12) {
+                errEl.textContent = 'La password deve essere di almeno 12 caratteri';
                 errEl.classList.remove('hidden'); return;
             }
             btn.disabled = true; btn.textContent = 'SALVATAGGIO…';
@@ -326,8 +329,8 @@ const AuthFlow = (() => {
             const current = bodyEl.querySelector('#profile-current-pwd').value;
             const newPwd = bodyEl.querySelector('#profile-new-pwd').value;
 
-            if (newPwd.length < 10) {
-                errEl.textContent = 'La password deve essere di almeno 10 caratteri';
+            if (newPwd.length < 12) {
+                errEl.textContent = 'La password deve essere di almeno 12 caratteri';
                 errEl.classList.remove('hidden');
                 return;
             }

@@ -78,7 +78,7 @@ const Squadre = {
                 }
                 this._presenzeAttendancesMap[r.athlete_id][r.attendance_date] = r;
             });
-        } catch(e) {
+        } catch (e) {
             UI.toast("Errore caricamento presenze: " + e.message, "error");
         } finally {
             UI.loading(false);
@@ -477,7 +477,7 @@ const Squadre = {
                     this._presenzeAttendancesMap[athleteId][date] = { id: res.id, status: newStatus, attendance_date: date, athlete_id: athleteId, team_id: this._presenzeSelectedTeamId };
                     
                     this.render(); // re-render the grid
-                } catch(err) {
+                } catch (err) {
                     UI.toast("Errore nel salvataggio: " + err.message, "error");
                 }
             });

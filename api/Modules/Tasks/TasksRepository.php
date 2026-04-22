@@ -74,10 +74,16 @@ class TasksRepository
             END,
             COALESCE(t.due_date, \'9999-12-31\') ASC,
             t.created_at DESC
-            LIMIT ' . $limit . ' OFFSET ' . $offset;
+            LIMIT :_limit OFFSET :_offset';
 
         $stmt = $this->db->prepare($sql);
-        $stmt->execute($params);
+        // Bind LIMIT/OFFSET as integers to prevent SQL injection
+        foreach ($params as $k => $v) {
+            $stmt->bindValue($k, $v);
+        }
+        $stmt->bindValue(':_limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':_offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
         return $stmt->fetchAll();
     }
 
@@ -100,28 +106,33 @@ class TasksRepository
         ?string $attachment = null
         ): string
     {
-        $id = 'TSK_' . bin2hex(random_bytes(4));
-        $userId = Auth::user()['id'] ?? null;
+        try {
+            $id = 'TSK_' . bin2hex(random_bytes(4));
+            $userId = Auth::user()['id'] ?? null;
 
-        $stmt = $this->db->prepare('
-            INSERT INTO tasks (id, tenant_id, user_id, title, category, priority, status, due_date, notes, attachment, assigned_to)
-            VALUES (:id, :tenant_id, :user_id, :title, :category, :priority, :status, :due_date, :notes, :attachment, :assigned_to)
-        ');
-        $stmt->execute([
-            ':id'          => $id,
-            ':tenant_id'   => TenantContext::id(),
-            ':user_id'     => $userId,
-            ':title'       => $title,
-            ':category'    => $category,
-            ':priority'    => $priority,
-            ':status'      => $status,
-            ':due_date'    => $dueDate,
-            ':notes'       => $notes,
-            ':attachment'  => $attachment,
-            ':assigned_to' => $assignedTo,
-        ]);
+            $stmt = $this->db->prepare('
+                INSERT INTO tasks (id, tenant_id, user_id, title, category, priority, status, due_date, notes, attachment, assigned_to)
+                VALUES (:id, :tenant_id, :user_id, :title, :category, :priority, :status, :due_date, :notes, :attachment, :assigned_to)
+            ');
+            $stmt->execute([
+                ':id'          => $id,
+                ':tenant_id'   => TenantContext::id(),
+                ':user_id'     => $userId,
+                ':title'       => $title,
+                ':category'    => $category,
+                ':priority'    => $priority,
+                ':status'      => $status,
+                ':due_date'    => $dueDate,
+                ':notes'       => $notes,
+                ':attachment'  => $attachment,
+                ':assigned_to' => $assignedTo,
+            ]);
 
-        return $id;
+            return $id;
+        } catch (\Throwable $e) {
+            error_log('[Tasks] createTask failed: ' . $e->getMessage());
+            throw $e;
+        }
     }
 
     public function updateTask(string $id, array $data): void
@@ -147,7 +158,12 @@ class TasksRepository
 
     public function deleteTask(string $id): void
     {
-        $this->db->prepare('DELETE FROM tasks WHERE id = ? AND tenant_id = ?')->execute([$id, TenantContext::id()]);
+        try {
+            $this->db->prepare('DELETE FROM tasks WHERE id = ? AND tenant_id = ?')->execute([$id, TenantContext::id()]);
+        } catch (\Throwable $e) {
+            error_log('[Tasks] deleteTask failed for id=' . $id . ': ' . $e->getMessage());
+            throw $e;
+        }
     }
 
     // ─── TASK LOGS ────────────────────────────────────────────────────────────
@@ -203,12 +219,6 @@ class TasksRepository
 
     public function deleteTaskLog(string $id): void
     {
-        // Audit P1-02: Scope deletion through parent task's tenant_id
-        $stmt = $this->db->prepare(
-            'DELETE tl FROM task_logs tl
-             INNER JOIN tasks t ON t.id = tl.task_id
-             WHERE tl.id = :id AND t.tenant_id = :tid'
-        );
-        $stmt->execute([':id' => $id, ':tid' => TenantContext::id()]);
+        $this->db->prepare('DELETE FROM task_logs WHERE id = ?')->execute([$id]);
     }
 }

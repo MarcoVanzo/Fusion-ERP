@@ -346,7 +346,7 @@ const EcommerceView = {
         }
 
         const fallback = statoInterno || "da definire";
-        let statusBadge = "";
+        let statusBadge
         if (fallback === "pagato") statusBadge = '<span class="ec-badge-pagato">🟢 Pagato</span>';
         else if (fallback === "non pagato") statusBadge = '<span class="ec-badge-nonpagato">🔴 Non Pagato</span>';
         else if (fallback === "consegnato") statusBadge = '<span class="ec-badge-consegnato">🔵 Consegnato</span>';

@@ -55,7 +55,6 @@
   margin-bottom: var(--sp-2);
   background: linear-gradient(180deg, #FFF 0%, #666 100%);
   background-clip: text;
-  background-clip: text;
   -webkit-text-fill-color: transparent;
   animation: title-reveal 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }

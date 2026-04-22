@@ -4,7 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Talent Day 2026 — Savino Del Bene Volley</title>
-    <meta name="description" content="Iscriviti al Talent Day 2026 della Savino Del Bene Volley. Scegli la tua tappa e registrati online.">
+    <!-- SEO di Base -->
+    <meta name="description" content="Iscriviti al Talent Day 2026 della Savino Del Bene Volley. Scegli la tua tappa e registrati online alle selezioni volley per nuovi talenti.">
+    <meta name="keywords" content="talent, talent day, volley, savino del bene, pallavolo, selezioni, provini pallavolo, talent pallavolo">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://savinodelbenevolley.it/talent-day/">
+
+    <!-- Open Graph (Facebook, LinkedIn, ecc.) -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Talent Day 2026 — Savino Del Bene Volley">
+    <meta property="og:description" content="Partecipa al Talent Day 2026: le selezioni ufficiali della Savino Del Bene Volley. Scopri le date e iscriviti!">
+    <meta property="og:image" content="https://savinodelbenevolley.it/talent-day/assets/hero-1.jpg">
+    <meta property="og:url" content="https://savinodelbenevolley.it/talent-day/">
+    <meta property="og:site_name" content="Savino Del Bene Volley">
+
     <link rel="icon" href="assets/logo-official.png" type="image/png">
     <link rel="stylesheet" href="style.css?v=1005">
     <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
@@ -82,12 +95,12 @@
                     <a href="https://www.instagram.com/volley_melendugno/" target="_blank" onclick="event.stopPropagation()"><i class="ph ph-instagram-logo"></i></a>
                 </div>
             </div>
-            <div class="td-tappa-card" data-val="19 GIU 2026, Catania - We Kondor Catania" data-ig="https://www.instagram.com/kondorvolleycatania/" onclick="selectTappa(this)">
+            <div class="td-tappa-card" data-val="19 GIU 2026, Catania - Ciclope Volley Bronte" data-ig="https://www.instagram.com/ciclopevolleybronte/" onclick="selectTappa(this)">
                 <div class="date">19 Giugno</div>
                 <div class="city">Catania</div>
                 <div class="club">
-                    We Kondor Catania
-                    <a href="https://www.instagram.com/kondorvolleycatania/" target="_blank" onclick="event.stopPropagation()"><i class="ph ph-instagram-logo"></i></a>
+                    Ciclope Volley Bronte
+                    <a href="https://www.instagram.com/ciclopevolleybronte/" target="_blank" onclick="event.stopPropagation()"><i class="ph ph-instagram-logo"></i></a>
                 </div>
             </div>
         </div>
@@ -116,7 +129,7 @@
                         <option value="4 GIU 2026, Trieste - Azzurra Volley">4 GIU — Trieste, Azzurra Volley</option>
                         <option value="10 GIU 2026, Torino - Volavalley">10 GIU — Torino, Volavalley</option>
                         <option value="11 GIU 2026, Lecce - Melendugno Volley">11 GIU — Lecce, Melendugno Volley</option>
-                        <option value="19 GIU 2026, Catania - We Kondor Catania">19 GIU — Catania, We Kondor Catania</option>
+                        <option value="19 GIU 2026, Catania - Ciclope Volley Bronte">19 GIU — Catania, Ciclope Volley Bronte</option>
                     </select>
                     <span class="td-field-error" data-for="tappa">Seleziona una tappa</span>
                 </div>
@@ -427,6 +440,40 @@
             submitBtn.disabled = false;
         }
     });
+
+    // ── Load Tappa Status ──────────────────────────────────────────
+    const STATUS_API_URL = '../api/api.php?module=talentday&action=publicStatus';
+    fetch(STATUS_API_URL)
+        .then(res => res.json())
+        .then(resData => {
+            const countsArray = resData.data?.counts || resData.counts;
+            if (countsArray) {
+                const limit = 50;
+                countsArray.forEach(c => {
+                    if (c.count >= limit) {
+                        // Truncate sold out options in select
+                        const selOption = document.querySelector(`select#tappa option[value="${c.tappa}"]`);
+                        if (selOption) {
+                            selOption.disabled = true;
+                            selOption.textContent += ' (SOLD OUT)';
+                        }
+                        
+                        // Disable card
+                        const card = document.querySelector(`.td-tappa-card[data-val="${c.tappa}"]`);
+                        if (card) {
+                            card.classList.add('sold-out');
+                            card.onclick = null; // Prevent click
+                            // Add a badge
+                            const badge = document.createElement('div');
+                            badge.className = 'sold-out-badge';
+                            badge.textContent = 'SOLD OUT';
+                            card.appendChild(badge);
+                        }
+                    }
+                });
+            }
+        })
+        .catch(err => console.error("Could not load tappa status", err));
 })();
 </script>
 

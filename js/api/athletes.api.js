@@ -4,6 +4,7 @@
  * AthletesAPI - Frontend SDK per le chiamate API del modulo Atleti
  * Astrae le chiamate a Store.get e Store.api per decoupling della vista della logica di rete.
  */
+/* eslint-disable-next-line no-unused-vars */
 const AthletesAPI = (() => {
     return {
         // --- Lettura ---

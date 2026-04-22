@@ -4,7 +4,7 @@ const Social = (() => {
     s = null,
     i = !1,
     a = 28,
-    e = null;
+    _e = null;
   function t(n) {
     ((n.innerHTML =
       '\n        <div class="page-body" style="display:flex;align-items:center;justify-content:center;min-height:70vh;">\n            <div class="social-connect-card" id="social-connect-card">\n                <div class="social-connect-icon">\n                    <i class="ph ph-instagram-logo" style="font-size:48px;color:var(--color-pink);"></i>\n                    <i class="ph ph-facebook-logo" style="font-size:48px;color:#1877F2;"></i>\n                </div>\n                <h2 class="social-connect-title">Collega i tuoi Social</h2>\n                <p class="social-connect-desc">\n                    Connetti il tuo account Instagram Business e la tua Pagina Facebook\n                    per visualizzare le analytics direttamente dall\'ERP.\n                </p>\n                <div class="social-connect-features">\n                    <div class="social-feature"><i class="ph ph-chart-line-up"></i> Andamento follower e reach</div>\n                    <div class="social-feature"><i class="ph ph-eye"></i> Views e engagement per post</div>\n                    <div class="social-feature"><i class="ph ph-trend-up"></i> Grafici trend giornalieri</div>\n                    <div class="social-feature"><i class="ph ph-images"></i> Griglia ultimi post con metriche</div>\n                </div>\n                <button class="btn btn-primary social-connect-btn" id="btn-connect-meta" type="button">\n                    <i class="ph ph-plug"></i> Connetti Instagram & Facebook\n                </button>\n                <button class="btn btn-ghost social-demo-btn" id="btn-demo-social" type="button" style="margin-top:8px;">\n                    <i class="ph ph-eye"></i> Mostra Demo con dati di esempio\n                </button>\n                <p class="social-connect-note">\n                    <i class="ph ph-info"></i> Servono un account Instagram Business e una Pagina Facebook collegata.\n                </p>\n            </div>\n        </div>'),
@@ -19,7 +19,7 @@ const Social = (() => {
         ?.addEventListener("click", async () => {
           try {
             ((s = await Store.get("insights", "social", { days: a })), o(n));
-          } catch (n) {
+          } catch (_n) {
             UI.toast("Errore nel caricamento demo", "error");
           }
         }));
@@ -37,7 +37,7 @@ const Social = (() => {
       f = !!l.username,
       b = f ? `@${l.username}` : s?.fb_page_name || "Facebook Page",
       y = f ? l.followers_count : h.page_fans,
-      k = y ? ((m / y) * 100).toFixed(1) : "0.0";
+      _k = y ? ((m / y) * 100).toFixed(1) : "0.0";
     ((e.innerHTML = `\n        <div class="transport-dashboard" style="min-height:100vh; padding:24px;">\n            ${g ? '\n            <div class="social-mock-banner" id="social-mock-banner"' + (s.error ? ' style="background:rgba(239,68,68,0.1); border:1px solid #ef4444; color:#ef4444;"' : '') + '>\n                <i class="ph ph-' + (s.error ? 'warning-circle' : 'info') + '"></i>\n                <span>' + (s.error ? '<strong>Errore Meta API:</strong> ' + Utils.escapeHtml(s.error) : 'Dati di esempio — <a href="#" id="connect-from-banner">Connetti un account reale</a> per visualizzare le tue analytics.') + '</span>\n                <button class="btn-dash" id="close-mock-banner" type="button"' + (s.error ? ' style="color:#ef4444"' : '') + '><i class="ph ph-x"></i></button>\n            </div>' : ""}\n\n            \x3c!-- Header --\x3e\n            <div class="dash-top-bar" style="border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 24px; margin-bottom: 24px; display:flex; justify-content:space-between; align-items:flex-start;">\n                <div class="social-profile">\n                    <div class="social-avatar">\n                        ${l.profile_picture_url ? `<img src="${Utils.escapeHtml(l.profile_picture_url)}" alt="Profile" class="social-avatar-img">` : f ? '<i class="ph ph-instagram-logo" style="font-size:32px;"></i>' : '<i class="ph ph-facebook-logo" style="font-size:32px;color:#1877F2;"></i>'}\n                    </div>\n                    <div class="social-profile-info">\n                        <h1 class="dash-title" style="margin:0">\n                            <i class="ph ph-chart-line-up"></i> Social Analytics\n                        </h1>\n                        <p class="dash-subtitle" style="margin-top:4px;">
                             <strong>${Utils.escapeHtml(l.name || b)}</strong>
                             ${l.media_count ? ` · ${d(l.media_count)} post totali` : ""}
@@ -144,7 +144,7 @@ const Social = (() => {
             try {
               ((s = await Store.get("insights", "social", { days: e })),
                 o(document.getElementById("app")));
-            } catch (n) {
+            } catch (_n) {
               UI.toast("Errore nel caricamento dati", "error");
             }
           }
@@ -160,7 +160,7 @@ const Social = (() => {
                   (i = !1),
                   UI.toast("Account Meta disconnesso", "info"),
                   t(document.getElementById("app")));
-              } catch (n) {
+              } catch (_n) {
                 UI.toast("Errore nella disconnessione", "error");
               }
             },
@@ -190,7 +190,7 @@ const Social = (() => {
   function c(n) {
     const s = document.getElementById("social-chart");
     if (!s) return;
-    e = s;
+    _e = s;
     const i = s.getContext("2d"),
       a = window.devicePixelRatio || 1,
       t = s.parentElement.getBoundingClientRect();
@@ -316,7 +316,7 @@ const Social = (() => {
       })();
     },
     destroy: function () {
-      (n.abort(), (s = null), (e = null));
+      (n.abort(), (s = null), (_e = null));
     },
   };
 })();

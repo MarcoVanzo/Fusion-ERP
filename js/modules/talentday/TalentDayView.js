@@ -8,7 +8,7 @@ export class TalentDayView {
         '4 GIU 2026, Trieste - Azzurra Volley',
         '10 GIU 2026, Torino - Volavalley',
         '11 GIU 2026, Lecce - Melendugno Volley',
-        '19 GIU 2026, Catania - We Kondor Catania',
+        '19 GIU 2026, Catania - Ciclope Volley Bronte',
     ];
 
     /* ═══════════════════════════════════════════════════════════════════
@@ -78,7 +78,7 @@ export class TalentDayView {
                 #td-table th {
                     position: sticky;
                     top: 0;
-                    background: var(--color-bg-alt);
+                    background: var(--bg-dark, #12161F);
                     z-index: 2;
                 }
 
@@ -175,6 +175,9 @@ export class TalentDayView {
                         ${canEdit ? `
                             <button class="btn-dash pink" id="td-add-btn" type="button">
                                 <i class="ph ph-plus-circle" style="font-size:18px;"></i> NUOVA REGISTRAZIONE
+                            </button>
+                            <button class="btn-dash" id="td-export-btn" type="button" style="background-color: #217346; color: white;">
+                                <i class="ph ph-file-csv" style="font-size:18px;"></i> ESPORTA EXCEL
                             </button>
                         ` : ""}
                     </div>

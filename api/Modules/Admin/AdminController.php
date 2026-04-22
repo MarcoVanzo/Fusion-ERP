@@ -177,8 +177,7 @@ class AdminController
 
     public function listContracts(): void
     {
-        // Audit P1-05: Contracts contain sensitive data — require admin role
-        Auth::requireRole('admin');
+        Auth::requireRole('operatore');
         $userId = filter_input(INPUT_GET, 'userId', FILTER_DEFAULT) ?? '';
         Response::success($this->repo->listContracts($userId));
     }
@@ -188,8 +187,7 @@ class AdminController
      */
     public function generateContract(): void
     {
-        // Audit P1-05: Contracts contain sensitive data — require admin role
-        $adminUser = Auth::requireRole('admin');
+        $adminUser = Auth::requireRole('operatore');
         $body = Response::jsonBody();
         Response::requireFields($body, ['user_id', 'valid_from', 'valid_to', 'role_description']);
 
@@ -445,6 +443,7 @@ HTML;
         // The 'action' GET param is also used by the router; for this endpoint the
         // filter action is passed as 'action_filter' to avoid collision.
         $actionFilter = filter_input(INPUT_GET, 'action_filter', FILTER_DEFAULT) ?? '';
+        $eventType = filter_input(INPUT_GET, 'event_type', FILTER_DEFAULT) ?? '';
 
         $logs = $this->repo->listLogs(
             $actionFilter,
@@ -453,7 +452,8 @@ HTML;
             $dateTo,
             $search,
             $limit,
-            $offset
+            $offset,
+            $eventType
         );
 
         Response::success([
@@ -499,39 +499,49 @@ HTML;
      */
     public function createBackup(): void
     {
-        $user = Auth::requireRole('admin');
-        $result = (new BackupService($this->repo))->dump($user['id'], $user['full_name'] ?? 'Admin');
+        ob_start();
+        try {
+            $user = Auth::requireRole('admin');
+            $result = (new BackupService($this->repo))->dump($user['id'], $user['full_name'] ?? 'Admin');
 
-        if (!$result['success']) {
-            Response::error($result['error'], 500);
-        }
-
-        // ── Upload to Google Drive ─────────────────────────────────────────────
-        $driveFileId = null;
-        $driveError = null;
-        $driveEnabled = !empty(getenv('GDRIVE_CLIENT_ID')) && !empty(getenv('GDRIVE_REFRESH_TOKEN'));
-
-        if ($driveEnabled) {
-            try {
-                $driveFileId = GoogleDrive::uploadFile($result['filepath'], $result['filename']);
-                $this->repo->updateBackupDriveInfo($result['id'], $driveFileId);
+            if (!$result['success']) {
+                ob_end_clean();
+                Response::error($result['error'], 500);
             }
-            catch (\Throwable $e) {
-                $driveError = $e->getMessage();
-                error_log('[BACKUP] Drive upload failed: ' . $driveError);
-            }
-        }
 
-        Response::success([
-            'id' => $result['id'],
-            'filename' => $result['filename'],
-            'filesize' => $result['filesize'],
-            'table_count' => count($result['table_names']),
-            'row_count' => $result['total_rows'],
-            'created_at' => date('Y-m-d H:i:s'),
-            'drive_file_id' => $driveFileId,
-            'drive_error' => $driveError,
-        ], 201);
+            // ── Upload to Google Drive ─────────────────────────────────────────────
+            $driveFileId = null;
+            $driveError = null;
+            $driveEnabled = !empty(getenv('GDRIVE_CLIENT_ID')) && !empty(getenv('GDRIVE_REFRESH_TOKEN'));
+
+            if ($driveEnabled) {
+                try {
+                    $driveFileId = GoogleDrive::uploadFile($result['filepath'], $result['filename']);
+                    $this->repo->updateBackupDriveInfo($result['id'], $driveFileId);
+                }
+                catch (\Throwable $e) {
+                    $driveError = $e->getMessage();
+                    error_log('[BACKUP] Drive upload failed: ' . $driveError);
+                }
+            }
+
+            $outputDec = ob_get_clean();
+
+            Response::success([
+                'id' => $result['id'],
+                'filename' => $result['filename'],
+                'filesize' => $result['filesize'],
+                'table_count' => count($result['table_names'] ?? []),
+                'row_count' => $result['total_rows'] ?? 0,
+                'created_at' => date('Y-m-d H:i:s'),
+                'drive_file_id' => $driveFileId,
+                'drive_error' => $driveError,
+                'debug_warnings' => $outputDec // for debugging
+            ], 201);
+        } catch (\Throwable $err) {
+            $dirtyOutput = ob_get_clean();
+            Response::error('Eccezione Backup: ' . $err->getMessage() . ' | Output Sporco: ' . $dirtyOutput, 500);
+        }
     }
 
 

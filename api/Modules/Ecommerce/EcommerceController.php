@@ -691,9 +691,7 @@ class EcommerceController
     public function getPublicShop(): void
     {
         $db = Database::getInstance();
-        $tid = TenantContext::id();
-        $stmt = $db->prepare("SELECT id, nome, prezzo, categoria, descrizione, immagineUrl, CASE WHEN immagineBase64 IS NOT NULL AND immagineBase64 != '' THEN 1 ELSE 0 END as hasBase64, disponibile FROM ec_products WHERE disponibile = 1 AND tenant_id = :tid ORDER BY categoria ASC, nome ASC");
-        $stmt->execute([':tid' => $tid]);
+        $stmt = $db->query("SELECT id, nome, prezzo, categoria, descrizione, immagineUrl, CASE WHEN immagineBase64 IS NOT NULL AND immagineBase64 != '' THEN 1 ELSE 0 END as hasBase64, disponibile FROM ec_products WHERE disponibile = 1 ORDER BY categoria ASC, nome ASC");
         $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         $formattedProducts = [];
@@ -731,9 +729,8 @@ class EcommerceController
         }
 
         $db = Database::getInstance();
-        $tid = TenantContext::id();
-        $stmt = $db->prepare("SELECT immagineBase64, immagineMimeType FROM ec_products WHERE id = ? AND tenant_id = ? AND immagineBase64 IS NOT NULL AND immagineBase64 != ''");
-        $stmt->execute([$id, $tid]);
+        $stmt = $db->prepare("SELECT immagineBase64, immagineMimeType FROM ec_products WHERE id = ? AND immagineBase64 IS NOT NULL AND immagineBase64 != ''");
+        $stmt->execute([$id]);
         $product = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$product || empty($product['immagineBase64'])) {

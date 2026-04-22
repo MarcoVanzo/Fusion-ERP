@@ -192,6 +192,15 @@ class TalentDayModule {
                 }, this.sig());
             }
 
+            // ── Export Button ──
+            const exportBtn = container.querySelector("#td-export-btn");
+            if (exportBtn) {
+                exportBtn.addEventListener("click", (e) => {
+                    e.preventDefault();
+                    this.exportToExcel();
+                }, this.sig());
+            }
+
             // ── Table Row Actions (Edit / Delete) via Delegation ──
             const tbody = container.querySelector("#td-tbody");
             if (tbody) {
@@ -219,7 +228,7 @@ class TalentDayModule {
     /** Re-render just the table content (headers + rows + count) without full container rebuild */
     _rerenderTable(container, canEdit) {
         const filtered = this._getFilteredSorted();
-        const tappaList = this._getTappaList();
+        const _tappaList = this._getTappaList();
 
         // Update headers
         const thead = container.querySelector("#td-table thead tr");
@@ -280,6 +289,58 @@ class TalentDayModule {
         } catch (err) {
             window.UI.toast("Errore durante l'eliminazione: " + err.message, "error");
         }
+    }
+
+    exportToExcel() {
+        const data = this._getFilteredSorted();
+        if (data.length === 0) {
+            window.UI.toast("Nessun dato da esportare", "warning");
+            return;
+        }
+
+        const headers = [
+            "Data Reg.", "Ora", "Tappa", "Nome", "Cognome", "Email", "Cellulare", 
+            "Data Nascita", "Città/CAP", "Indirizzo", "Taglia", "Club", "Ruolo", 
+            "Campionati", "Genitore", "Tel. Gen.", "Email Gen.", "Altezza", "Peso", 
+            "Reach", "CMJ", "Salto Rinc", "Privacy GDPR"
+        ];
+        
+        const rows = data.map(e => [
+            e.data_registrazione ? e.data_registrazione.substring(0, 10) : "",
+            e.ora_registrazione || "",
+            `"${(e.tappa || "").replace(/"/g, '""')}"`,
+            `"${(e.nome || "").replace(/"/g, '""')}"`,
+            `"${(e.cognome || "").replace(/"/g, '""')}"`,
+            `"${(e.email || "").replace(/"/g, '""')}"`,
+            `"${(e.cellulare || "").replace(/"/g, '""')}"`,
+            e.data_nascita || "",
+            `"${(e.citta_cap || "").replace(/"/g, '""')}"`,
+            `"${(e.indirizzo || "").replace(/"/g, '""')}"`,
+            `"${(e.taglia_tshirt || "").replace(/"/g, '""')}"`,
+            `"${(e.club_tesseramento || "").replace(/"/g, '""')}"`,
+            `"${(e.ruolo || "").replace(/"/g, '""')}"`,
+            `"${(e.campionati || "").replace(/"/g, '""')}"`,
+            `"${(e.nome_genitore || "").replace(/"/g, '""')}"`,
+            `"${(e.telefono_genitore || "").replace(/"/g, '""')}"`,
+            `"${(e.email_genitore || "").replace(/"/g, '""')}"`,
+            e.altezza || "",
+            e.peso || "",
+            e.reach_cm || "",
+            e.cmj || "",
+            e.salto_rincorsa || "",
+            e.privacy_consent ? "SI" : "NO"
+        ]);
+
+        const csvContent = [headers.join(";"), ...rows.map(r => r.join(";"))].join("\n");
+        const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `TalentDay_Export_${new Date().toISOString().substring(0, 10)}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
     }
 
     openSidePanel(entry = null) {

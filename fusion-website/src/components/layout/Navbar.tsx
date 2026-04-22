@@ -83,7 +83,7 @@ const Navbar = () => {
                         <a 
                             href="https://www.fusionteamvolley.it/network" 
                             className="block relative group pointer-events-auto"
-                            title="Savino del bene volley HUB"
+                            title="Savino Del Bene volley HUB"
                         >
                             <div className="absolute inset-0 bg-brand-500/30 blur-xl rounded-full scale-150 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                             <div className="relative w-[34px] h-[34px] sm:w-[38px] sm:h-[38px] md:w-[56px] md:h-[56px] lg:w-[72px] lg:h-[72px] bg-gradient-to-b from-white/90 to-white/70 backdrop-blur-md p-[2px] rounded-full border border-white/20 shadow-[0_4px_15px_rgba(0,0,0,0.5)] group-hover:shadow-[0_0_25px_rgba(217,70,239,0.4)] transition-all duration-300 overflow-hidden">

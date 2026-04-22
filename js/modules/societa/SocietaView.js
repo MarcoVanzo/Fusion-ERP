@@ -752,7 +752,7 @@ const SocietaView = {
     },
 
     roleModal: (role, allRoles) => {
-        const isEdit = !!role;
+        const _isEdit = !!role;
         const r = role || {};
         const availableParents = allRoles.filter(x => x.id != r.id);
         return `

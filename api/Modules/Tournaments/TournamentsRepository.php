@@ -424,7 +424,7 @@ class TournamentsRepository
         $stmt = $this->db->prepare("
             SELECT * FROM transports
             WHERE event_id = :event_id
-            ORDER BY transport_date ASC, arrival_time ASC
+            ORDER BY transport_date ASC, arrival_time ASC LIMIT 200
         ");
         $stmt->execute([':event_id' => $eventId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);

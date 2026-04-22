@@ -69,7 +69,7 @@ class AuthController
             'role' => $dbUser['role'],
             'full_name' => $dbUser['full_name'],
             'needsReset' => $needsReset,
-            'tenantId' => $dbUser['tenant_id'] ?? null,
+            'tenant_id' => $dbUser['tenant_id'] ?? null,
             'permissions' => $dbUser['permissions'] ?? [],
             'parent_user_id' => $dbUser['parent_user_id'] ?? null
         ];
