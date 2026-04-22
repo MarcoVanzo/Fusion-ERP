@@ -160,7 +160,6 @@ class PaymentsController
         $plan = $this->repo->getActivePlan($athleteId);
         if (!$plan) {
             Response::success(['plan' => null, 'installments' => []]);
-            return;
         }
 
         $installments = $this->repo->getInstallments($plan['id']);
@@ -277,7 +276,6 @@ class PaymentsController
         $user = Auth::requireRead('payments');
         if (!$user) {
             Response::error('Non autorizzato', 401);
-            return;
         }
 
         $body = Response::jsonBody();
@@ -286,11 +284,9 @@ class PaymentsController
         $installment = $this->repo->getInstallmentById($body['installment_id']);
         if (!$installment) {
             Response::error('Rata non trovata', 404);
-            return;
         }
         if ($installment['status'] === 'PAID') {
             Response::error('Questa rata è già stata pagata', 400);
-            return;
         }
 
         // IDOR protection: athletes can only pay their own installments
@@ -302,7 +298,6 @@ class PaymentsController
             $linked = $stmt->fetch(\PDO::FETCH_ASSOC);
             if (!$linked || $linked['id'] !== $installment['athlete_id']) {
                 Response::error('Non puoi pagare rate di altri atleti.', 403);
-                return;
             }
         }
 
@@ -356,13 +351,11 @@ class PaymentsController
 
         if (!$athlete) {
             Response::success([]);
-            return;
         }
 
         $plan = $this->repo->getActivePlan($athlete['id']);
         if (!$plan) {
             Response::success([]);
-            return;
         }
 
         $installments = $this->repo->getInstallments($plan['id']);

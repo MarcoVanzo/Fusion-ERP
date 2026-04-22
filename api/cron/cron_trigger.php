@@ -75,7 +75,7 @@ try {
 
     // ── 3. Sync Scouting da Cognito Forms ────────────────────────────────────
     try {
-        require_once $rootDir . '/api/Modules/Scouting/ScoutingController.php';
+        require_once $baseDir . '/api/Modules/Scouting/ScoutingController.php';
         $scoutingResult = \FusionERP\Modules\Scouting\ScoutingController::_doSync();
         if ($scoutingResult['success']) {
             $fus = $scoutingResult['fusion_upserted'] ?? 0;
