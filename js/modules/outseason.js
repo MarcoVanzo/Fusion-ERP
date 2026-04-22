@@ -469,8 +469,11 @@ const OutSeason = (() => {
                         <td><span class="os-badge-formula ${d(n) ? "os-badge-full" : "os-badge-daily"}">${b(n)}</span></td>
                         <td>${r(n) || isVer(c(n)) ? '<span class="os-badge-paid">✓</span>' : '<span class="os-badge-unpaid">✗</span>'}</td>
                         <td>
-                            <button class="btn btn-ghost btn-xs os-genera-atleta" style="background:rgba(99,102,241,0.1); border:1px solid rgba(99,102,241,0.3); color:#818cf8; white-space:nowrap; padding: 4px 8px; border-radius: 6px;">
+                            <button class="btn btn-ghost btn-xs os-genera-atleta" style="background:rgba(99,102,241,0.1); border:1px solid rgba(99,102,241,0.3); color:#818cf8; white-space:nowrap; padding: 4px 8px; border-radius: 6px; margin-bottom: 4px;">
                                 <i class="ph ph-user-plus"></i> Genera
+                            </button>
+                            <button class="btn btn-ghost btn-xs os-delete-atleta" data-id="${n.id}" style="background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); color:#ef4444; white-space:nowrap; padding: 4px 8px; border-radius: 6px;">
+                                <i class="ph ph-trash"></i> Elimina
                             </button>
                         </td>
                     </tr>`;
@@ -540,8 +543,11 @@ const OutSeason = (() => {
                   })(n) || "—"
                 }</td>
                 <td>
-                    <button class="btn btn-ghost btn-xs os-genera-atleta" style="background:rgba(99,102,241,0.1); border:1px solid rgba(99,102,241,0.3); color:#818cf8; white-space:nowrap; padding: 4px 8px; border-radius: 6px;">
+                    <button class="btn btn-ghost btn-xs os-genera-atleta" style="background:rgba(99,102,241,0.1); border:1px solid rgba(99,102,241,0.3); color:#818cf8; white-space:nowrap; padding: 4px 8px; border-radius: 6px; margin-bottom: 4px;">
                         <i class="ph ph-user-plus"></i> Genera
+                    </button>
+                    <button class="btn btn-ghost btn-xs os-delete-atleta" data-id="${n.id}" style="background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); color:#ef4444; white-space:nowrap; padding: 4px 8px; border-radius: 6px;">
+                        <i class="ph ph-trash"></i> Elimina
                     </button>
                 </td>
             </tr>`,
@@ -620,6 +626,31 @@ const OutSeason = (() => {
                     } catch (err) {
                         console.error("[OutSeason] Error opening wizard", err);
                         if (typeof UI !== 'undefined' && UI.toast) UI.toast("Errore apertura maschera atleta", "error");
+                    }
+                }
+
+                const delBtn = ev.target.closest(".os-delete-atleta");
+                if (delBtn) {
+                    if (!confirm("Sei sicuro di voler eliminare questa iscritta? Non verrà più reimportata da Cognito.")) return;
+                    const id = delBtn.dataset.id;
+                    const row = delBtn.closest("tr");
+                    
+                    try {
+                        const res = await fetch(`api/router.php?module=outseason&action=deleteEntry&id=${id}`, {
+                            method: "POST",
+                            credentials: "same-origin"
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                            if (typeof UI !== 'undefined' && UI.toast) UI.toast("Iscritta eliminata con successo.", "success");
+                            // Instead of just removing row, reload the list to update stats and tabs correctly
+                            await OutSeason.init();
+                        } else {
+                            if (typeof UI !== 'undefined' && UI.toast) UI.toast(data.error || "Errore durante l'eliminazione", "error");
+                        }
+                    } catch (err) {
+                        console.error("[OutSeason] Errore eliminazione:", err);
+                        if (typeof UI !== 'undefined' && UI.toast) UI.toast("Errore di rete durante l'eliminazione.", "error");
                     }
                 }
             }, { signal: n.signal }));
