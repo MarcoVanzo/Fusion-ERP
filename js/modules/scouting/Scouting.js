@@ -6,6 +6,7 @@ class ScoutingModule {
         this._abort = new AbortController();
         this._athletes = [];
         this._lastSync = null;
+        this._activeView = 'anagrafica';
     }
 
     /**
@@ -23,6 +24,7 @@ class ScoutingModule {
         this._abort = new AbortController();
         this._athletes = [];
         this._lastSync = null;
+        this._activeView = 'anagrafica';
     }
 
     /**
@@ -84,7 +86,7 @@ class ScoutingModule {
         
         console.log("[Scouting] User role:", role, "canEdit:", canEdit);
         
-        container.innerHTML = ScoutingView.renderTableArea(this._athletes, this._lastSync, canEdit);
+        container.innerHTML = ScoutingView.renderTableArea(this._athletes, this._lastSync, canEdit, this._activeView);
         this.bindTableEvents(container, canEdit);
     }
 
@@ -99,7 +101,7 @@ class ScoutingModule {
             );
             
             const tbody = document.getElementById("scouting-tbody");
-            if (tbody) tbody.innerHTML = ScoutingView.renderRows(filtered, canEdit);
+            if (tbody) tbody.innerHTML = ScoutingView.renderRows(filtered, canEdit, this._activeView);
             
             const countBadge = document.getElementById("scouting-count");
             if (countBadge) countBadge.textContent = `${filtered.length} atleti`;
@@ -107,6 +109,19 @@ class ScoutingModule {
 
         if (canEdit) {
             console.log("[Scouting] Binding event listeners for edit actions");
+            
+            // View Tabs
+            const viewTabs = container.querySelectorAll(".scouting-view-tab");
+            viewTabs.forEach(btn => {
+                btn.addEventListener("click", (e) => {
+                    const view = e.currentTarget.dataset.view;
+                    if (view !== this._activeView) {
+                        this._activeView = view;
+                        this.renderTableData(container);
+                    }
+                }, this.sig());
+            });
+
             // New Entry Button
             const addBtn = container.querySelector("#scouting-add-btn");
             if (addBtn) {
@@ -249,7 +264,12 @@ class ScoutingModule {
                 anno_nascita: document.getElementById("sc-anno")?.value,
                 rilevatore: document.getElementById("sc-rilevatore")?.value.trim(),
                 data_rilevazione: document.getElementById("sc-data")?.value,
-                note: document.getElementById("sc-note")?.value.trim()
+                note: document.getElementById("sc-note")?.value.trim(),
+                altezza: document.getElementById("sc-altezza")?.value,
+                peso: document.getElementById("sc-peso")?.value,
+                reach_cm: document.getElementById("sc-reach")?.value,
+                cmj: document.getElementById("sc-cmj")?.value,
+                salto_rincorsa: document.getElementById("sc-salto")?.value
             };
 
             if (isEdit) {
