@@ -188,7 +188,7 @@ export class TalentDayView {
         const tappeCards = Object.entries(countsByLocation).map(([location, count]) => {
             const fullTappaName = locationMap[location] || location;
             return `
-                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: all 0.3s ease; cursor: default;" onmouseover="this.style.background='rgba(255,255,255,0.06)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.background='rgba(255,255,255,0.03)'; this.style.transform='translateY(0)';">
+                <div style="flex: 1 1 140px; min-width: 140px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: all 0.3s ease; cursor: default;" onmouseover="this.style.background='rgba(255,255,255,0.06)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.background='rgba(255,255,255,0.03)'; this.style.transform='translateY(0)';">
                     <div style="font-size: 11px; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;" title="${window.Utils.escapeHtml(fullTappaName)}">${window.Utils.escapeHtml(location)}</div>
                     <div style="font-size: 24px; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums;">${count}</div>
                 </div>
@@ -196,9 +196,9 @@ export class TalentDayView {
         }).join('');
 
         return `
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px;">
+            <div style="display: flex; flex-wrap: nowrap; gap: 16px; overflow-x: auto; padding-bottom: 8px; -webkit-overflow-scrolling: touch; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.2) transparent;">
                 <!-- Total Card -->
-                <div style="background: linear-gradient(135deg, rgba(236,72,153,0.15), rgba(99,102,241,0.15)); border: 1px solid rgba(236,72,153,0.3); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
+                <div style="flex: 1 1 150px; min-width: 150px; background: linear-gradient(135deg, rgba(236,72,153,0.15), rgba(99,102,241,0.15)); border: 1px solid rgba(236,72,153,0.3); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
                     <div style="position: absolute; top: -10px; right: -10px; opacity: 0.1; transform: rotate(15deg);">
                         <i class="ph-fill ph-users" style="font-size: 80px; color: var(--accent-pink);"></i>
                     </div>
