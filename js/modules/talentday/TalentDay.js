@@ -41,6 +41,9 @@ class TalentDayModule {
             await this.refreshData(false);
             container.innerHTML = TalentDayView.renderMainLayout();
             this.renderTableData(document.getElementById("td-content-area"));
+            
+            const statsArea = document.getElementById("td-stats-area");
+            if (statsArea) statsArea.innerHTML = TalentDayView.renderStatsSummary(this._entries);
         } catch (err) {
             console.error("[TalentDay] Init error", err);
             container.innerHTML = window.Utils.emptyState("Errore di caricamento", err.message);
@@ -62,6 +65,9 @@ class TalentDayModule {
             if (reRender) {
                 const area = document.getElementById("td-content-area");
                 if (area) this.renderTableData(area);
+                
+                const statsArea = document.getElementById("td-stats-area");
+                if (statsArea) statsArea.innerHTML = TalentDayView.renderStatsSummary(this._entries);
             }
         } catch (err) {
             console.error("[TalentDay] Data fetch error", err);
