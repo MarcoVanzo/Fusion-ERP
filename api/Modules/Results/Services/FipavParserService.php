@@ -33,10 +33,10 @@ class FipavParserService
         $body = curl_exec($ch);
         if ($body === false) {
             $error = curl_error($ch);
-            curl_close($ch);
+
             return null;
         }
-        curl_close($ch);
+
         return is_string($body) ? $body : null;
     }
 

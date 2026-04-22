@@ -1,7 +1,7 @@
 {
   "version": 3,
-  "generated_at": "2026-04-22T20:14:41.495Z",
-  "file_count": 1705,
+  "generated_at": "2026-04-22T20:16:22.677Z",
+  "file_count": 1706,
   "files": [
     {
       "path": ".env.prod",
@@ -121,7 +121,7 @@
     },
     {
       "path": "api/Modules/Ecommerce/EcommerceController.php",
-      "hash": "dc0d2fa7ab25f720e58c962b34b0aa95b96aa265a89d9cb99278992ce4d16695"
+      "hash": "6a9036b1b5701d2425bc2ce0b22fb2a33bc224a5d0a10211769f9937a442d586"
     },
     {
       "path": "api/Modules/ESignature/ESignatureController.php",
@@ -177,7 +177,7 @@
     },
     {
       "path": "api/Modules/OutSeason/OutSeasonController.php",
-      "hash": "170e39e460d775afac75acdb3002cb30e813e4458576461a0a900c78e828603e"
+      "hash": "6be1996f2e2a829d13ff4866bcea52b8d8236c98053b389f1a405315035e8711"
     },
     {
       "path": "api/Modules/Payments/PaymentsController.php",
@@ -193,7 +193,7 @@
     },
     {
       "path": "api/Modules/Results/FipavScraperClient.php",
-      "hash": "1620ae202d12459b9c625f6e921f54652b1eb659a28e8599fdb68f251bfbbcaa"
+      "hash": "793aaacd22f9304a83e3386ef4b541da15bacf3e154d3b5f9511663341ce0207"
     },
     {
       "path": "api/Modules/Results/ResultsController.php",
@@ -209,11 +209,11 @@
     },
     {
       "path": "api/Modules/Results/Services/FipavParserService.php",
-      "hash": "7cec87aa451c54248731600b9d982c6386414239d8bad762b1e1b3aff58d768c"
+      "hash": "1b3894208d8e82935d918d4f8f1a1cce177ea1aad971868cb1e34bfc1001d870"
     },
     {
       "path": "api/Modules/Scouting/ScoutingController.php",
-      "hash": "61931f6496a6cec54a1c509e79c1a24cf077788669c8f3e488bccf152802f34c"
+      "hash": "542c5f56a8a2612759e6585fe0a5559fd15efda0bd3d09f5c17fee97d8ee9516"
     },
     {
       "path": "api/Modules/Social/SocialController.php",
@@ -221,7 +221,7 @@
     },
     {
       "path": "api/Modules/Social/SocialRepository.php",
-      "hash": "e9c9535a617933a6517685ee3f409e46068185483101f10e6702463cd14fa4f0"
+      "hash": "811d14bb3ea940bb873902f445d2a661aa92684e5d6024b84e00909e1d10c3c9"
     },
     {
       "path": "api/Modules/Societa/SocietaController.php",
@@ -321,7 +321,7 @@
     },
     {
       "path": "api/Modules/Vald/ValdService.php",
-      "hash": "bfef4336e4864cab248ccfa35643bb0650206da5f6c26d34007c553262f32683"
+      "hash": "f2d76fa4776003f55d3463faedd1752fdeb5861f5b499a4df0906829877137e9"
     },
     {
       "path": "api/Modules/Vehicles/VehiclesController.php",
@@ -397,11 +397,11 @@
     },
     {
       "path": "api/Shared/ESignatureService.php",
-      "hash": "67c347dcfc4b61aefbe0c4f5cdba16bb394bdca43faca6bee1265335869a1b18"
+      "hash": "33254b158bc0d4112ff3904936f5545ccceb191b7d78ef376e97ad3e1570fe22"
     },
     {
       "path": "api/Shared/GoogleDrive.php",
-      "hash": "52bc9a7be5eea627bbc52ddf595b55c2c39818df54818eec7407c3fd91a291be"
+      "hash": "090c2d883f7a1519bd3a81ff999236ba64c03712bdc49b689b4c1b2566680778"
     },
     {
       "path": "api/Shared/Mailer.php",
@@ -433,7 +433,7 @@
     },
     {
       "path": "api/Shared/WhatsAppClient.php",
-      "hash": "68acf5befa1aafadef885fcebf79a7c3e1e1eaee77576ef4d9fe52d160d88797"
+      "hash": "db8d548c7260d0edb0dca8ade1d0108655b852ac4b8f7e05dd44851967541d57"
     },
     {
       "path": "api/templates/email_certificate_expiry.php",
@@ -1140,6 +1140,10 @@
       "hash": "7585542acbdd2edd3ac61eb861995fe521c7011aa856ca12250b32b22f140b5f"
     },
     {
+      "path": "db/migrations/V116__outseason_is_deleted.sql",
+      "hash": "e7be9c199bc4145384d43b59127c89a110b2513f70c5c2f38723a7bd8d23ebcb"
+    },
+    {
       "path": "db/migrations/V116__talent_day.sql",
       "hash": "0056cc5b42448840af579dde99acc797e787f194598b3f6aa6ed724a17ee61b8"
     },
@@ -1489,7 +1493,7 @@
     },
     {
       "path": "index.html",
-      "hash": "d0ea4eecea74b185851d7d3aeffd63112fe85e182e80ee54df12cdde602506b0"
+      "hash": "d1ad2359c94f5bd88dec1b7fe6833e936edd2c3ea76785ecd9d87991c73755e7"
     },
     {
       "path": "js/api/athletes.api.js",

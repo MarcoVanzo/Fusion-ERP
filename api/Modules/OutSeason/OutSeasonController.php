@@ -131,7 +131,6 @@ class OutSeasonController
         $response = curl_exec($ch);
         $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $curlError = curl_error($ch);
-        curl_close($ch);
 
         if ($response === false || !empty($curlError)) {
             return ['success' => false, 'error' => 'Errore cURL Cognito: ' . $curlError];
