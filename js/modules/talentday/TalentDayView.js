@@ -152,33 +152,44 @@ export class TalentDayView {
         // Count total
         const total = entries.length;
         
-        // Count per tappa
-        const countsByTappa = {};
-        this.TAPPE.forEach(t => countsByTappa[t] = 0); // Initialize with 0
+        // Count per parsed location to avoid duplicates if tappa name was slightly changed
+        const countsByLocation = {};
+        const locationMap = {}; // Maps short location to full name for tooltip (optional)
+        
+        // Helper to extract location
+        const getLocation = (tappaStr) => {
+            let loc = tappaStr;
+            if (tappaStr.includes(',')) {
+                const parts = tappaStr.split(',');
+                if (parts.length > 1) {
+                    loc = parts[1].split('-')[0].trim();
+                }
+            }
+            return loc;
+        };
+
+        // Initialize with predefined locations
+        this.TAPPE.forEach(t => {
+            const loc = getLocation(t);
+            countsByLocation[loc] = 0;
+            locationMap[loc] = t;
+        });
         
         entries.forEach(e => {
             if (e.tappa) {
-                if (countsByTappa[e.tappa] !== undefined) {
-                    countsByTappa[e.tappa]++;
-                } else {
-                    // Fallback for tappe not in the predefined list
-                    countsByTappa[e.tappa] = (countsByTappa[e.tappa] || 0) + 1;
-                }
+                const loc = getLocation(e.tappa);
+                countsByLocation[loc] = (countsByLocation[loc] || 0) + 1;
+                // Update mapping to use the latest/most common full string, optional
+                locationMap[loc] = locationMap[loc] || e.tappa;
             }
         });
 
-        // Generate cards for each tappa
-        const tappeCards = Object.entries(countsByTappa).map(([tappa, count]) => {
-            let location = tappa;
-            if (tappa.includes(',')) {
-                const parts = tappa.split(',');
-                if (parts.length > 1) {
-                    location = parts[1].split('-')[0].trim();
-                }
-            }
+        // Generate cards for each location
+        const tappeCards = Object.entries(countsByLocation).map(([location, count]) => {
+            const fullTappaName = locationMap[location] || location;
             return `
                 <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: all 0.3s ease; cursor: default;" onmouseover="this.style.background='rgba(255,255,255,0.06)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.background='rgba(255,255,255,0.03)'; this.style.transform='translateY(0)';">
-                    <div style="font-size: 11px; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;" title="${window.Utils.escapeHtml(tappa)}">${window.Utils.escapeHtml(location)}</div>
+                    <div style="font-size: 11px; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;" title="${window.Utils.escapeHtml(fullTappaName)}">${window.Utils.escapeHtml(location)}</div>
                     <div style="font-size: 24px; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums;">${count}</div>
                 </div>
             `;
