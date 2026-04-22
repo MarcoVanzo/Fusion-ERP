@@ -1,19 +1,15 @@
 {
   "version": 3,
-  "generated_at": "2026-04-22T11:14:19.137Z",
-  "file_count": 1715,
+  "generated_at": "2026-04-22T20:14:21.104Z",
+  "file_count": 1705,
   "files": [
     {
       "path": ".env.prod",
-      "hash": "b41f2fd8e54fe7c2d301bad6d58c0f4610824ce2c22bf850fed3159d1c90054c"
+      "hash": "a6f61a530ef094c7b568d06115a96c0a937b541249102cb31c14300ddf9d6ebf"
     },
     {
       "path": ".htaccess",
       "hash": "55d8f2f99caba088677b51f46d1df9995bd85964df10f508ce3080bcb3b154d2"
-    },
-    {
-      "path": "admin_logs.php",
-      "hash": "33f222b8d39a3994aea42ebd4e17d24b7d95883760a7b0c7bde02c768f026a07"
     },
     {
       "path": "api/check_vehicles_debug.php",
@@ -37,7 +33,7 @@
     },
     {
       "path": "api/cron/cron_trigger.php",
-      "hash": "1c9775fb49afbb0e5d94eb28fa33b57da80beb865077fbd07e5f4e761273a9a1"
+      "hash": "9d2f8ba3d3cb758d0af6d31e9500712b9cfbcf1fc73d049839a27c417391b24e"
     },
     {
       "path": "api/cron/sync_results.php",
@@ -185,7 +181,7 @@
     },
     {
       "path": "api/Modules/Payments/PaymentsController.php",
-      "hash": "7923bc9c85087e8e6dd6c8ff1f148b186fe990363d3697a05261ad1fc6592bd6"
+      "hash": "2fb9c79b68bac92eb576475c6616d56aebb406ccd8ca53fb8a20b0d516b93295"
     },
     {
       "path": "api/Modules/Payments/PaymentsRepository.php",
@@ -217,7 +213,7 @@
     },
     {
       "path": "api/Modules/Scouting/ScoutingController.php",
-      "hash": "92ea733aa45ea64fb7e5b72dcad815ad219a32f57eac4a9b5119fa06d6177aad"
+      "hash": "61931f6496a6cec54a1c509e79c1a24cf077788669c8f3e488bccf152802f34c"
     },
     {
       "path": "api/Modules/Social/SocialController.php",
@@ -1164,8 +1160,8 @@
       "hash": "175b6589d711957e3fd2484d22e4d2b86fd11bc988b958929c80a7969a456458"
     },
     {
-      "path": "deleted_backend_files.txt",
-      "hash": "5d2a1dc3bd3e8334e6d99218ddfe5d1d785349b485422bfa412b4287195d2f95"
+      "path": "db/migrations/V121__scouting_physical_data.sql",
+      "hash": "b81bafb907e56e05dee2419229811ebbd1c51cb91d97b5986b219a1d69188154"
     },
     {
       "path": "deploy_state.json",
@@ -1493,7 +1489,7 @@
     },
     {
       "path": "index.html",
-      "hash": "fa97905de54c268dddfe2e206478a3403f138b8caa6c9b5077d1f06195613599"
+      "hash": "d0a28cf7f358297bc714a544e8082b2d367143dce1fdb3ab23f3f732b8bb4da2"
     },
     {
       "path": "js/api/athletes.api.js",
@@ -1753,7 +1749,7 @@
     },
     {
       "path": "js/modules/scouting/ScoutingView.js",
-      "hash": "72669362197f04da4f49c9cf5ed0e834b919a464afaea7105a0e9c03fc196fd7"
+      "hash": "30e58291ac3c32f3bdab5f92ce7b819511a9924acb5734ad8c27d5dea9acb9a0"
     },
     {
       "path": "js/modules/site_stats.js",
@@ -1928,38 +1924,6 @@
       "hash": "693ea4cd4aacb15d5f9105dad1a4418f6e666b4ab83ad23c0b3e9f05232b0713"
     },
     {
-      "path": "pdf_export_tool/export_website_pdf.js",
-      "hash": "cd9159f5b0e9f78931e0f82fc97e39313c91df6b7f1327bd9ff5775d67cd5ada"
-    },
-    {
-      "path": "pdf_export_tool/get_urls.js",
-      "hash": "de11b53ee0200c218dd221b3cfa2ba81559acafb8b674adb1a807759671482f3"
-    },
-    {
-      "path": "phpstan_logs.txt",
-      "hash": "5edffe37d6490e281d73e024eb104e3f1eacd468d26fbd7471e8a9df6ddf3360"
-    },
-    {
-      "path": "phpstan_new.txt",
-      "hash": "8631686403d7fe6d2e3c7fffacd46f158059a989243342f21078802dceb7da58"
-    },
-    {
-      "path": "phpunit_logs.txt",
-      "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    },
-    {
-      "path": "ping.php",
-      "hash": "4833cc2c69d8859c2cf8495a0ab6dccf63432fa2edb35e4214d23504de3af6f4"
-    },
-    {
-      "path": "read_ai_debug.php",
-      "hash": "0d3228942cd139f8a39de47e3580aa0db6030acc587e11ff0248a3c87a37dd10"
-    },
-    {
-      "path": "read_logs.php",
-      "hash": "1dcf655964de3129ea529abb162db00544efa5738b9c510dec3f0b26c3356ddf"
-    },
-    {
       "path": "resend.php",
       "hash": "9278a9a72c45cb1cabb6c0849610e47eef7f96b084c2e8674e06b3388e4d32e3"
     },
@@ -2022,10 +1986,6 @@
     {
       "path": "templates/import_atlete_template.csv",
       "hash": "78bc95dc06309a02cf871b792f06f723682192da5c53b11495a0d0c34f2be357"
-    },
-    {
-      "path": "test.php",
-      "hash": "723817ec8c5453af653515bb36c22d006e06652981345dfc4195bd0de056bfde"
     },
     {
       "path": "vendor/autoload.php",

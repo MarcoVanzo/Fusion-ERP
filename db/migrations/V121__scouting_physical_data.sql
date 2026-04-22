@@ -1,0 +1,5 @@
+ALTER TABLE scouting_athletes ADD COLUMN altezza DECIMAL(5,2) DEFAULT NULL;
+ALTER TABLE scouting_athletes ADD COLUMN peso DECIMAL(5,2) DEFAULT NULL;
+ALTER TABLE scouting_athletes ADD COLUMN reach_cm DECIMAL(5,2) DEFAULT NULL;
+ALTER TABLE scouting_athletes ADD COLUMN cmj DECIMAL(5,2) DEFAULT NULL;
+ALTER TABLE scouting_athletes ADD COLUMN salto_rincorsa DECIMAL(5,2) DEFAULT NULL;

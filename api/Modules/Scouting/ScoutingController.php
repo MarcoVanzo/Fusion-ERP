@@ -63,7 +63,7 @@ class ScoutingController
 
         // Security: limit to current tenant's records, ordered by recency
         $stmt = $this->db->prepare("
-            SELECT id, nome, cognome, societa_appartenenza, anno_nascita, ruolo, email, cellulare, note, rilevatore, data_rilevazione, source, is_locked_edit
+            SELECT id, nome, cognome, societa_appartenenza, anno_nascita, ruolo, email, cellulare, note, rilevatore, data_rilevazione, source, is_locked_edit, altezza, peso, reach_cm, cmj, salto_rincorsa
             FROM scouting_athletes
             WHERE tenant_id = :tenant_id
             ORDER BY created_at DESC
@@ -107,8 +107,8 @@ class ScoutingController
         }
 
         $stmt = $this->db->prepare("
-            INSERT INTO scouting_athletes (tenant_id, nome, cognome, societa_appartenenza, anno_nascita, ruolo, email, cellulare, note, rilevatore, data_rilevazione, source)
-            VALUES (:tenant_id, :nome, :cognome, :societa, :anno, :ruolo, :email, :cellulare, :note, :rilevatore, :data_ril, 'manual')
+            INSERT INTO scouting_athletes (tenant_id, nome, cognome, societa_appartenenza, anno_nascita, ruolo, email, cellulare, note, rilevatore, data_rilevazione, source, altezza, peso, reach_cm, cmj, salto_rincorsa)
+            VALUES (:tenant_id, :nome, :cognome, :societa, :anno, :ruolo, :email, :cellulare, :note, :rilevatore, :data_ril, 'manual', :altezza, :peso, :reach_cm, :cmj, :salto_rincorsa)
         ");
 
         $stmt->execute([
@@ -123,6 +123,11 @@ class ScoutingController
             ':note'      => $data['note'] ?? null,
             ':rilevatore'=> $data['rilevatore'] ?? null,
             ':data_ril'  => $data['data_rilevazione'] ?? date('Y-m-d'),
+            ':altezza'   => !empty($data['altezza']) ? (float)$data['altezza'] : null,
+            ':peso'      => !empty($data['peso']) ? (float)$data['peso'] : null,
+            ':reach_cm'  => !empty($data['reach_cm']) ? (float)$data['reach_cm'] : null,
+            ':cmj'       => !empty($data['cmj']) ? (float)$data['cmj'] : null,
+            ':salto_rincorsa' => !empty($data['salto_rincorsa']) ? (float)$data['salto_rincorsa'] : null,
         ]);
 
         Response::success(['success' => true, 'id' => $this->db->lastInsertId()]);
@@ -155,6 +160,11 @@ class ScoutingController
                 note = :note,
                 rilevatore = :rilevatore,
                 data_rilevazione = :data_ril,
+                altezza = :altezza,
+                peso = :peso,
+                reach_cm = :reach_cm,
+                cmj = :cmj,
+                salto_rincorsa = :salto_rincorsa,
                 is_locked_edit = 1
             WHERE id = :id AND tenant_id = :tenant_id
         ");
@@ -172,6 +182,11 @@ class ScoutingController
             ':note'       => $data['note'] ?? null,
             ':rilevatore' => $data['rilevatore'] ?? null,
             ':data_ril'   => $data['data_rilevazione'] ?? date('Y-m-d'),
+            ':altezza'    => !empty($data['altezza']) ? (float)$data['altezza'] : null,
+            ':peso'       => !empty($data['peso']) ? (float)$data['peso'] : null,
+            ':reach_cm'   => !empty($data['reach_cm']) ? (float)$data['reach_cm'] : null,
+            ':cmj'        => !empty($data['cmj']) ? (float)$data['cmj'] : null,
+            ':salto_rincorsa' => !empty($data['salto_rincorsa']) ? (float)$data['salto_rincorsa'] : null,
         ]);
 
         if ($stmt->rowCount() === 0) {
