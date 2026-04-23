@@ -7,6 +7,9 @@ class ScoutingModule {
         this._athletes = [];
         this._lastSync = null;
         this._activeView = 'anagrafica';
+        this._sortCol = '';
+        this._sortDir = ''; // 'asc' | 'desc' | ''
+        this._searchTerm = '';
     }
 
     /**
@@ -25,6 +28,9 @@ class ScoutingModule {
         this._athletes = [];
         this._lastSync = null;
         this._activeView = 'anagrafica';
+        this._sortCol = '';
+        this._sortDir = '';
+        this._searchTerm = '';
     }
 
     /**
@@ -70,10 +76,46 @@ class ScoutingModule {
         }
     }
 
-    /**
-     * Injects the Table HTML and attaches interaction listeners
-     * @param {HTMLElement} container Node where table area goes
-     */
+    /** Apply search and sort to entries */
+    _getFilteredSorted() {
+        let data = [...this._athletes];
+
+        // Search
+        if (this._searchTerm) {
+            const term = this._searchTerm;
+            data = data.filter(
+                (a) => (a.nome && a.nome.toLowerCase().includes(term)) ||
+                       (a.cognome && a.cognome.toLowerCase().includes(term)) ||
+                       (a.societa_appartenenza && a.societa_appartenenza.toLowerCase().includes(term))
+            );
+        }
+
+        // Sort
+        if (this._sortCol && this._sortDir) {
+            const key = this._sortCol;
+            const dir = this._sortDir === 'asc' ? 1 : -1;
+            const numericKeys = new Set(['altezza', 'peso', 'reach_cm', 'sit_and_reach', 'reach_2', 'cmj', 'salto_rincorsa', 'anno_nascita']);
+
+            data.sort((a, b) => {
+                let va = a[key] ?? '';
+                let vb = b[key] ?? '';
+
+                if (numericKeys.has(key)) {
+                    va = va !== '' ? parseFloat(va) : -Infinity;
+                    vb = vb !== '' ? parseFloat(vb) : -Infinity;
+                    return (va - vb) * dir;
+                }
+
+                // String comparison
+                va = String(va).toLowerCase();
+                vb = String(vb).toLowerCase();
+                return va.localeCompare(vb, 'it') * dir;
+            });
+        }
+
+        return data;
+    }
+
     renderTableData(container) {
         if (!container) return;
         
@@ -86,26 +128,65 @@ class ScoutingModule {
         
         console.log("[Scouting] User role:", role, "canEdit:", canEdit);
         
-        container.innerHTML = ScoutingView.renderTableArea(this._athletes, this._lastSync, canEdit, this._activeView);
+        const filtered = this._getFilteredSorted();
+        
+        container.innerHTML = ScoutingView.renderTableArea(filtered, this._lastSync, canEdit, this._activeView, this._sortCol, this._sortDir);
         this.bindTableEvents(container, canEdit);
+    }
+
+    _rerenderTable(container, canEdit) {
+        const filtered = this._getFilteredSorted();
+
+        // Update headers
+        const thead = container.querySelector("#scouting-table thead tr");
+        if (thead) thead.innerHTML = ScoutingView._headers(this._activeView, canEdit, this._sortCol, this._sortDir);
+
+        // Update rows
+        const tbody = document.getElementById("scouting-tbody");
+        if (tbody) tbody.innerHTML = ScoutingView.renderRows(filtered, canEdit, this._activeView);
+
+        // Update count badge
+        const countBadge = document.getElementById("scouting-count");
+        if (countBadge) countBadge.textContent = `${filtered.length} atleti`;
+
+        // Re-bind sort headers
+        container.querySelectorAll(".td-sort-header").forEach((header) => {
+            header.addEventListener("click", () => {
+                const key = header.dataset.sortKey;
+                if (this._sortCol === key) {
+                    if (this._sortDir === 'asc') this._sortDir = 'desc';
+                    else { this._sortCol = ''; this._sortDir = ''; }
+                } else {
+                    this._sortCol = key;
+                    this._sortDir = 'asc';
+                }
+                this._rerenderTable(container, canEdit);
+            }, this.sig());
+        });
     }
 
     bindTableEvents(container, canEdit) {
         // Search Input Filtering
         container.querySelector("#scouting-search")?.addEventListener("input", (e) => {
-            const term = e.target.value.toLowerCase().trim();
-            const filtered = this._athletes.filter(
-                (a) => (a.nome && a.nome.toLowerCase().includes(term)) ||
-                       (a.cognome && a.cognome.toLowerCase().includes(term)) ||
-                       (a.societa_appartenenza && a.societa_appartenenza.toLowerCase().includes(term))
-            );
-            
-            const tbody = document.getElementById("scouting-tbody");
-            if (tbody) tbody.innerHTML = ScoutingView.renderRows(filtered, canEdit, this._activeView);
-            
-            const countBadge = document.getElementById("scouting-count");
-            if (countBadge) countBadge.textContent = `${filtered.length} atleti`;
+            this._searchTerm = e.target.value.toLowerCase().trim();
+            this._rerenderTable(container, canEdit);
         }, this.sig());
+
+        // Sortable Headers
+        container.querySelectorAll(".td-sort-header").forEach((header) => {
+            header.addEventListener("click", () => {
+                const key = header.dataset.sortKey;
+                if (this._sortCol === key) {
+                    // Cycle: asc → desc → none
+                    if (this._sortDir === 'asc') this._sortDir = 'desc';
+                    else { this._sortCol = ''; this._sortDir = ''; }
+                } else {
+                    this._sortCol = key;
+                    this._sortDir = 'asc';
+                }
+                this._rerenderTable(container, canEdit);
+            }, this.sig());
+        });
 
         if (canEdit) {
             console.log("[Scouting] Binding event listeners for edit actions");

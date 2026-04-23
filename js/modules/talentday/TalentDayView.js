@@ -275,7 +275,7 @@ export class TalentDayView {
     static _colDefs(view) {
         if (view === 'fisici') {
             return [
-                ['Nome', 'nome'], ['Cognome', 'cognome'], ['Tappa', 'tappa'],
+                ['Nome', 'nome'], ['Cognome', 'cognome'], ['Anno Nascita', 'data_nascita'], ['Tappa', 'tappa'],
                 ['Altezza', 'altezza'], ['Peso', 'peso'], ['Reach', 'reach_cm'],
                 ['Sit e Reach', 'sit_and_reach'], ['Reach 2', 'reach_2'],
                 ['CMJ', 'cmj'], ['Salto Rincorsa', 'salto_rincorsa']
@@ -375,8 +375,15 @@ export class TalentDayView {
                     </td>`;
                 }
                 if (metricKeys[key]) return cellMetric(raw, metricKeys[key]);
-                if (boldKeys.has(key)) return cellBold(raw);
-                if (key === 'data_registrazione' || key === 'data_nascita') return cell(fmtDate(raw));
+                if (key === 'data_nascita') {
+                    if (!raw) return cell('—');
+                    try {
+                        return view === 'fisici' ? cell(new Date(raw).getFullYear()) : cell(fmtDate(raw));
+                    } catch {
+                        return cell(raw);
+                    }
+                }
+                if (key === 'data_registrazione') return cell(fmtDate(raw));
                 if (key === 'ora_registrazione') return cell(fmtTime(raw));
                 return cell(raw);
             }).join('');

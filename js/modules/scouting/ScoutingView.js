@@ -73,10 +73,65 @@ export class ScoutingView {
                     color: var(--accent-pink);
                     border-bottom: 1px solid rgba(255,255,255,0.06);
                 }
+                .td-sort-header {
+                    cursor: pointer;
+                    user-select: none;
+                    transition: color .2s ease;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 4px;
+                }
+                .td-sort-header:hover { color: #fff; }
+                .td-sort-header .td-sort-icon {
+                    font-size: 12px;
+                    opacity: 0.35;
+                    transition: opacity .2s ease, transform .2s ease;
+                }
+                .td-sort-header.sort-active .td-sort-icon {
+                    opacity: 1;
+                    color: var(--accent-pink);
+                }
+                .td-sort-header.sort-desc .td-sort-icon {
+                    transform: rotate(180deg);
+                }
             </style>
             
             <div id="scouting-side-panel" style="display:none;flex-direction:column;"></div>
             `;
+    }
+
+    static _colDefs(view) {
+        if (view === 'fisici') {
+            return [
+                ['Nome', 'nome'], ['Cognome', 'cognome'], ['Anno Nascita', 'anno_nascita'],
+                ['Altezza', 'altezza'], ['Peso', 'peso'], ['Reach', 'reach_cm'], 
+                ['Sit e Reach', 'sit_and_reach'], ['Reach 2', 'reach_2'], 
+                ['CMJ', 'cmj'], ['Salto Rincorsa', 'salto_rincorsa']
+            ];
+        } else {
+            return [
+                ['Nome', 'nome'], ['Cognome', 'cognome'], ['Ruolo', 'ruolo'], 
+                ['Società', 'societa_appartenenza'], ['Email', 'email'], ['Cellulare', 'cellulare'], 
+                ['Anno Nasc.', 'anno_nascita'], ['Note', 'note'], ['Rilevatore', 'rilevatore'], 
+                ['Data', 'data_rilevazione'], ['Fonte', 'source']
+            ];
+        }
+    }
+
+    static _headers(view, canEdit, sortCol = '', sortDir = '') {
+        const cols = this._colDefs(view);
+        const ths = cols.map(([label, key]) => {
+            const isActive = sortCol === key;
+            const activeClass = isActive ? ` sort-active${sortDir === 'desc' ? ' sort-desc' : ''}` : '';
+            return `<th style="text-align:left;padding:10px 12px;border-bottom:1px solid var(--color-border);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:var(--color-text-muted)">
+                <span class="td-sort-header${activeClass}" data-sort-key="${key}">
+                    ${label}
+                    <i class="ph ph-caret-up td-sort-icon"></i>
+                </span>
+            </th>`;
+        }).join('');
+
+        return ths + (canEdit ? `<th style="text-align:right;padding:10px 12px;border-bottom:1px solid var(--color-border);"></th>` : '');
     }
 
     /**
@@ -86,14 +141,7 @@ export class ScoutingView {
      * @param {boolean} canEdit 
      * @param {string} activeView
      */
-    static renderTableArea(athletes, lastSync, canEdit, activeView = 'anagrafica') {
-        let headers = [];
-        if (activeView === 'fisici') {
-            headers = ["Nome", "Cognome", "Altezza", "Peso", "Reach", "Sit e Reach", "Reach 2", "CMJ", "Salto Rincorsa"];
-        } else {
-            headers = ["Nome", "Cognome", "Ruolo", "Società", "Email", "Cellulare", "Anno Nasc.", "Note", "Rilevatore", "Data", "Fonte"];
-        }
-
+    static renderTableArea(athletes, lastSync, canEdit, activeView = 'anagrafica', sortCol = '', sortDir = '') {
         return `
             <div style="width: 100%; display: flex; flex-direction: column;">
                 <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);margin-bottom:var(--sp-3)">
@@ -129,11 +177,10 @@ export class ScoutingView {
                     </span>` : ""}
                 </div>
                 <div class="table-wrapper" style="overflow-x:auto">
-                    <table class="data-table" style="width:100%;border-collapse:collapse;font-size:14px">
+                    <table class="data-table" id="scouting-table" style="width:100%;border-collapse:collapse;font-size:14px">
                         <thead>
                             <tr>
-                                ${headers.map((h) => `<th style="text-align:left;padding:10px 12px;border-bottom:1px solid var(--color-border);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:var(--color-text-muted)">${h}</th>`).join("")}
-                                ${canEdit ? `<th style="text-align:right;padding:10px 12px;border-bottom:1px solid var(--color-border);"></th>` : ""}
+                                ${this._headers(activeView, canEdit, sortCol, sortDir)}
                             </tr>
                         </thead>
                         <tbody id="scouting-tbody">
@@ -151,7 +198,7 @@ export class ScoutingView {
      * @param {string} activeView The current view (anagrafica or fisici)
      */
     static renderRows(data, canEdit, activeView = 'anagrafica') {
-        const colCount = activeView === 'fisici' ? 9 : 11;
+        const colCount = activeView === 'fisici' ? 10 : 11;
         if (data.length === 0) {
             return `<tr><td colspan="${canEdit ? colCount + 1 : colCount}" style="text-align:center;padding:var(--sp-4);color:var(--color-text-muted)">Nessun atleta trovato nel database scouting.</td></tr>`;
         }
@@ -195,6 +242,7 @@ export class ScoutingView {
                 cols = `
                     <td style="padding:10px 12px;border-bottom:1px solid var(--color-border);font-weight:600">${window.Utils.escapeHtml(athlete.nome || "—")}</td>
                     <td style="padding:10px 12px;border-bottom:1px solid var(--color-border);font-weight:600">${window.Utils.escapeHtml(athlete.cognome || "—")}</td>
+                    <td style="padding:10px 12px;border-bottom:1px solid var(--color-border)">${athlete.anno_nascita || "—"}</td>
                     ${cellMetric(athlete.altezza, 'cm')}
                     ${cellMetric(athlete.peso, 'kg')}
                     ${cellMetric(athlete.reach_cm, 'cm')}
