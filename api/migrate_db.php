@@ -1,6 +1,11 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/../vendor/autoload.php';
+
+$dotenv = Dotenv\Dotenv::createMutable(dirname(__DIR__));
+$dotenv->safeLoad();
+
 require_once __DIR__ . '/Shared/Database.php';
 
 use FusionERP\Shared\Database;
