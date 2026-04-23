@@ -6,7 +6,7 @@
  *   or:  node tests/e2e/login.test.js
  * 
  * Environment variables:
- *   ERP_URL     — Base URL of the ERP (default: https://mvsporttravel.com)
+ *   ERP_URL     — Base URL of the ERP (default: https://www.fusionteamvolley.it/ERP)
  *   ERP_USER    — Admin username for testing
  *   ERP_PASS    — Admin password for testing
  *   HEADLESS    — Set to "false" to watch the browser (default: true)
@@ -14,7 +14,7 @@
 
 const puppeteer = require('puppeteer');
 
-const BASE_URL = process.env.ERP_URL || 'https://mvsporttravel.com';
+const BASE_URL = process.env.ERP_URL || 'https://www.fusionteamvolley.it/ERP';
 const USERNAME = process.env.ERP_USER || '';
 const PASSWORD = process.env.ERP_PASS || '';
 const HEADLESS = process.env.HEADLESS !== 'false';

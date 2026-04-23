@@ -41,6 +41,9 @@ class TalentDayModule {
             await this.refreshData(false);
             container.innerHTML = TalentDayView.renderMainLayout();
             this.renderTableData(document.getElementById("td-content-area"));
+            
+            const statsArea = document.getElementById("td-stats-area");
+            if (statsArea) statsArea.innerHTML = TalentDayView.renderStatsSummary(this._entries);
         } catch (err) {
             console.error("[TalentDay] Init error", err);
             container.innerHTML = window.Utils.emptyState("Errore di caricamento", err.message);
@@ -62,6 +65,9 @@ class TalentDayModule {
             if (reRender) {
                 const area = document.getElementById("td-content-area");
                 if (area) this.renderTableData(area);
+                
+                const statsArea = document.getElementById("td-stats-area");
+                if (statsArea) statsArea.innerHTML = TalentDayView.renderStatsSummary(this._entries);
             }
         } catch (err) {
             console.error("[TalentDay] Data fetch error", err);
@@ -257,27 +263,7 @@ class TalentDayModule {
             }, this.sig());
         });
 
-        // Re-bind tbody delegation for edit/delete on new rows
-        if (canEdit) {
-            const newTbody = container.querySelector("#td-tbody");
-            if (newTbody) {
-                newTbody.addEventListener("click", (e) => {
-                    const editBtn = e.target.closest(".td-edit-btn");
-                    if (editBtn) {
-                        e.stopPropagation();
-                        const entry = this._entries.find(a => a.id == editBtn.dataset.id);
-                        if (entry) this.openSidePanel(entry);
-                    }
-                    const delBtn = e.target.closest(".td-delete-btn");
-                    if (delBtn) {
-                        e.stopPropagation();
-                        if (confirm("Sei sicuro di voler eliminare questa registrazione?")) {
-                            this.handleDelete(delBtn.dataset.id);
-                        }
-                    }
-                }, this.sig());
-            }
-        }
+
     }
 
     async handleDelete(id) {

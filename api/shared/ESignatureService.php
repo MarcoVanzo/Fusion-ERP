@@ -107,7 +107,6 @@ class ESignatureService
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $errorStr = curl_error($ch);
-        curl_close($ch);
 
         if ($response === false) {
             return ['success' => false, 'error' => 'CURL Error: ' . $errorStr];
@@ -156,7 +155,6 @@ class ESignatureService
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $errorStr = curl_error($ch);
-        curl_close($ch);
 
         if ($response === false) {
             return ['success' => false, 'error' => 'CURL Error: ' . $errorStr, 'http_code' => 500];

@@ -77,9 +77,11 @@
 }
 
 /* ─── FALLBACKS & RESET PREVIOUS ─────────────────────────── */
-.top-nav,
-.bottom-nav {
+.top-nav {
   display: none !important;
+}
+.bottom-nav {
+  display: none;
 }
 
 

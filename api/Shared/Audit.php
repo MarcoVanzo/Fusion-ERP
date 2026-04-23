@@ -26,7 +26,8 @@ class Audit
         string $tableName,
         ?string $recordId = null,
         ?array $before = null,
-        ?array $after = null
+        ?array $after = null,
+        ?string $details = null
         ): void
     {
         try {
@@ -37,26 +38,63 @@ class Audit
 
             $id = 'AUD_' . bin2hex(random_bytes(4));
 
+            // Determine event_type from action
+            $eventType = self::resolveEventType($action);
+
+            // Snapshot user context at log time
+            $username = $user['fullName'] ?? $user['full_name'] ?? null;
+            $role = $user['role'] ?? null;
+            $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? null;
+            $httpStatus = http_response_code() ?: 200;
+
             $stmt = $db->prepare(
-                'INSERT INTO audit_logs (id, user_id, action, table_name, record_id, before_snapshot, after_snapshot, ip_address)
-                 VALUES (:id, :user_id, :action, :table_name, :record_id, :before, :after, :ip)'
+                'INSERT INTO audit_logs
+                    (id, user_id, username, role, action, event_type, table_name, record_id,
+                     before_snapshot, after_snapshot, ip_address, user_agent, http_status, details)
+                 VALUES
+                    (:id, :user_id, :username, :role, :action, :event_type, :table_name, :record_id,
+                     :before, :after, :ip, :user_agent, :http_status, :details)'
             );
 
             $stmt->execute([
                 ':id' => $id,
                 ':user_id' => $userId,
+                ':username' => $username,
+                ':role' => $role,
                 ':action' => $action,
+                ':event_type' => $eventType,
                 ':table_name' => $tableName,
                 ':record_id' => $recordId,
                 ':before' => $before !== null ? json_encode($before) : null,
                 ':after' => $after !== null ? json_encode($after) : null,
                 ':ip' => $ip,
+                ':user_agent' => $userAgent ? mb_substr($userAgent, 0, 512) : null,
+                ':http_status' => $httpStatus,
+                ':details' => $details,
             ]);
         }
         catch (PDOException $e) {
             // Audit failure should never break the main request — just log to error_log
             error_log('[AUDIT] Failed to write audit log: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Map action names to event_type categories.
+     */
+    private static function resolveEventType(string $action): string
+    {
+        return match (strtoupper($action)) {
+            'LOGIN'          => 'login',
+            'LOGIN_FAILED'   => 'login',
+            'LOGOUT'         => 'logout',
+            'BACKUP'         => 'backup',
+            'RESTORE'        => 'restore',
+            'PASSWORD_RESET' => 'login',
+            'ACCESS_DENIED'  => 'access_denied',
+            'ERROR'          => 'error',
+            default          => 'crud',
+        };
     }
 
     /**

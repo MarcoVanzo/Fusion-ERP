@@ -440,7 +440,7 @@
   }
 
   .bottom-nav {
-    display: flex;
+    display: flex !important;
   }
 
   .page-header {
@@ -468,9 +468,18 @@
     display: none;
   }
 
+  .auth-screen {
+    background: radial-gradient(circle at top right, rgba(0, 229, 255, 0.15), transparent 400px),
+                radial-gradient(circle at bottom left, rgba(236, 72, 153, 0.15), transparent 400px),
+                var(--color-black);
+  }
+
   .auth-panel {
     max-width: 100%;
     padding: var(--sp-4);
+    background: rgba(30, 35, 45, 0.7);
+    border-right: none;
+    box-shadow: none;
   }
 
   .auth-logo {

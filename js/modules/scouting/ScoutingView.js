@@ -31,6 +31,48 @@ export class ScoutingView {
                 #scouting-side-panel.open {
                     right: 0;
                 }
+                .td-view-tabs {
+                    display: flex;
+                    gap: 4px;
+                    background: rgba(255,255,255,0.04);
+                    border-radius: 12px;
+                    padding: 4px;
+                    border: 1px solid rgba(255,255,255,0.06);
+                }
+                .scouting-view-tab {
+                    padding: 8px 18px;
+                    border-radius: 10px;
+                    font-size: 13px;
+                    font-weight: 600;
+                    color: var(--color-text-muted);
+                    cursor: pointer;
+                    transition: all .25s ease;
+                    border: none;
+                    background: transparent;
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    white-space: nowrap;
+                }
+                .scouting-view-tab:hover { color: #fff; background: rgba(255,255,255,0.06); }
+                .scouting-view-tab.active {
+                    background: linear-gradient(135deg, var(--accent-pink), var(--color-primary));
+                    color: #fff;
+                    box-shadow: 0 2px 12px rgba(var(--accent-pink-rgb, 236,72,153), 0.3);
+                }
+                .td-form-section {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    padding: 6px 0 8px;
+                    margin-top: 12px;
+                    font-size: 11px;
+                    font-weight: 700;
+                    text-transform: uppercase;
+                    letter-spacing: 0.08em;
+                    color: var(--accent-pink);
+                    border-bottom: 1px solid rgba(255,255,255,0.06);
+                }
             </style>
             
             <div id="scouting-side-panel" style="display:none;flex-direction:column;"></div>
@@ -42,8 +84,16 @@ export class ScoutingView {
      * @param {Array} athletes 
      * @param {string|null} lastSync 
      * @param {boolean} canEdit 
+     * @param {string} activeView
      */
-    static renderTableArea(athletes, lastSync, canEdit) {
+    static renderTableArea(athletes, lastSync, canEdit, activeView = 'anagrafica') {
+        let headers = [];
+        if (activeView === 'fisici') {
+            headers = ["Nome", "Cognome", "Altezza", "Peso", "Reach", "CMJ", "Salto Rincorsa"];
+        } else {
+            headers = ["Nome", "Cognome", "Ruolo", "Società", "Email", "Cellulare", "Anno Nasc.", "Note", "Rilevatore", "Data", "Fonte"];
+        }
+
         return `
             <div style="width: 100%; display: flex; flex-direction: column;">
                 <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);margin-bottom:var(--sp-3)">
@@ -55,6 +105,14 @@ export class ScoutingView {
                         <span id="scouting-count" class="status-badge" style="background:var(--color-primary-light);color:var(--color-primary);font-weight:600">${athletes.length} atleti</span>
                     </div>
                     <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+                        <div class="td-view-tabs">
+                            <button class="scouting-view-tab ${activeView === 'anagrafica' ? 'active' : ''}" data-view="anagrafica">
+                                <i class="ph ph-identification-card"></i> Dati Anagrafici
+                            </button>
+                            <button class="scouting-view-tab ${activeView === 'fisici' ? 'active' : ''}" data-view="fisici">
+                                <i class="ph ph-barbell"></i> Dati Fisici
+                            </button>
+                        </div>
                         ${canEdit ? `
                             <button class="btn-dash" id="scouting-sync-btn" type="button" title="Sincronizza da Cognito Forms">
                                 <i class="ph ph-arrows-clockwise" style="font-size:18px;"></i> Sincronizza
@@ -74,12 +132,12 @@ export class ScoutingView {
                     <table class="data-table" style="width:100%;border-collapse:collapse;font-size:14px">
                         <thead>
                             <tr>
-                                ${["Nome", "Cognome", "Ruolo", "Società", "Email", "Cellulare", "Anno Nasc.", "Note", "Rilevatore", "Data", "Fonte"].map((h) => `<th style="text-align:left;padding:10px 12px;border-bottom:1px solid var(--color-border);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:var(--color-text-muted)">${h}</th>`).join("")}
+                                ${headers.map((h) => `<th style="text-align:left;padding:10px 12px;border-bottom:1px solid var(--color-border);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:var(--color-text-muted)">${h}</th>`).join("")}
                                 ${canEdit ? `<th style="text-align:right;padding:10px 12px;border-bottom:1px solid var(--color-border);"></th>` : ""}
                             </tr>
                         </thead>
                         <tbody id="scouting-tbody">
-                            ${this.renderRows(athletes, canEdit)}
+                            ${this.renderRows(athletes, canEdit, activeView)}
                         </tbody>
                     </table>
                 </div>
@@ -90,10 +148,12 @@ export class ScoutingView {
      * Renders rows exclusively for dynamic search table replacement
      * @param {Array} data The list of athletes
      * @param {boolean} canEdit Determine row actions
+     * @param {string} activeView The current view (anagrafica or fisici)
      */
-    static renderRows(data, canEdit) {
+    static renderRows(data, canEdit, activeView = 'anagrafica') {
+        const colCount = activeView === 'fisici' ? 7 : 11;
         if (data.length === 0) {
-            return `<tr><td colspan="${canEdit ? 12 : 11}" style="text-align:center;padding:var(--sp-4);color:var(--color-text-muted)">Nessun atleta trovato nel database scouting.</td></tr>`;
+            return `<tr><td colspan="${canEdit ? colCount + 1 : colCount}" style="text-align:center;padding:var(--sp-4);color:var(--color-text-muted)">Nessun atleta trovato nel database scouting.</td></tr>`;
         }
 
         const sourceMap = {
@@ -102,13 +162,33 @@ export class ScoutingView {
             cognito_network: { bg: "rgba(245,158,11,0.12)", color: "#f59e0b", label: "Network" },
         };
 
+        const cellMetric = (val, unit = '') => {
+            const v = val != null && val !== '' ? parseFloat(val) : null;
+            if (v === null) return `<td style="padding:10px 12px;border-bottom:1px solid var(--color-border)">—</td>`;
+            return `<td style="padding:10px 12px;border-bottom:1px solid var(--color-border);font-variant-numeric:tabular-nums">
+                <span style="font-weight:600;color:var(--color-primary)">${v}</span>
+                <span style="font-size:11px;color:var(--color-text-muted);margin-left:2px">${unit}</span>
+            </td>`;
+        };
+
         return data.map((athlete) => {
             const src = sourceMap[athlete.source] || {
                 bg: "var(--color-bg-alt)", color: "var(--color-text-muted)", label: athlete.source || "—"
             };
 
-            return `
-                <tr>
+            let cols = '';
+            if (activeView === 'fisici') {
+                cols = `
+                    <td style="padding:10px 12px;border-bottom:1px solid var(--color-border);font-weight:600">${window.Utils.escapeHtml(athlete.nome || "—")}</td>
+                    <td style="padding:10px 12px;border-bottom:1px solid var(--color-border);font-weight:600">${window.Utils.escapeHtml(athlete.cognome || "—")}</td>
+                    ${cellMetric(athlete.altezza, 'cm')}
+                    ${cellMetric(athlete.peso, 'kg')}
+                    ${cellMetric(athlete.reach_cm, 'cm')}
+                    ${cellMetric(athlete.cmj, 'cm')}
+                    ${cellMetric(athlete.salto_rincorsa, 'cm')}
+                `;
+            } else {
+                cols = `
                     <td style="padding:10px 12px;border-bottom:1px solid var(--color-border);font-weight:600">${window.Utils.escapeHtml(athlete.nome || "—")}</td>
                     <td style="padding:10px 12px;border-bottom:1px solid var(--color-border);font-weight:600">${window.Utils.escapeHtml(athlete.cognome || "—")}</td>
                     <td style="padding:10px 12px;border-bottom:1px solid var(--color-border)">${window.Utils.escapeHtml(athlete.ruolo || "—")}</td>
@@ -122,6 +202,12 @@ export class ScoutingView {
                     <td style="padding:10px 12px;border-bottom:1px solid var(--color-border)">
                         <span class="status-badge" style="background:${src.bg};color:${src.color}">${window.Utils.escapeHtml(src.label)} ${athlete.is_locked_edit == 1 ? '<i class="ph ph-lock-key" title="Modificato manualmente" style="margin-left:4px"></i>' : ""}</span>
                     </td>
+                `;
+            }
+
+            return `
+                <tr>
+                    ${cols}
                     ${canEdit ? `
                     <td style="padding:10px 12px;border-bottom:1px solid var(--color-border);text-align:right">
                         <button class="btn btn-icon btn-ghost btn-sm edit-athlete-btn" data-id="${window.Utils.escapeHtml(athlete.id)}" title="Modifica">
@@ -152,6 +238,8 @@ export class ScoutingView {
             </div>
             <div style="padding:var(--sp-4); flex-grow:1; overflow-y:auto;">
                 ${isEdit ? '<div class="banner banner-warning" style="margin-bottom:var(--sp-4);font-size:12px;display:flex;align-items:center;gap:8px"><i class="ph ph-warning-circle" style="font-size:16px"></i> Salvando le modifiche questo record verrà bloccato e non sarà più sovrascritto dalla sync di Cognito.</div>' : ""}
+                
+                <div class="td-form-section"><i class="ph ph-identification-card"></i> Anagrafica</div>
                 <div class="form-grid">
                     <div class="form-group">
                         <label class="form-label" for="sc-nome">Nome *</label>
@@ -182,25 +270,51 @@ export class ScoutingView {
                         <input id="sc-cellulare" class="form-input" type="text" value="${isEdit ? window.Utils.escapeHtml(athlete.cellulare || "") : ""}">
                     </div>
                 </div>
+                <div class="form-grid">
                     <div class="form-group">
                         <label class="form-label" for="sc-anno">Nascita (Anno)</label>
                         <input id="sc-anno" class="form-input" type="number" min="1990" max="2025" value="${isEdit ? athlete.anno_nascita || "" : ""}">
                     </div>
-                </div>
-                <div class="form-grid">
                     <div class="form-group">
                         <label class="form-label" for="sc-rilevatore">Rilevatore</label>
                         <input id="sc-rilevatore" class="form-input" type="text" placeholder="Nome cognome" value="${isEdit ? window.Utils.escapeHtml(athlete.rilevatore || "") : ""}">
                     </div>
-                    <div class="form-group">
-                        <label class="form-label" for="sc-data">Data</label>
-                        <input id="sc-data" class="form-input" type="date" value="${isEdit && athlete.data_rilevazione ? athlete.data_rilevazione : new Date().toISOString().substring(0, 10)}">
-                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="sc-data">Data Rilevazione</label>
+                    <input id="sc-data" class="form-input" type="date" value="${isEdit && athlete.data_rilevazione ? athlete.data_rilevazione : new Date().toISOString().substring(0, 10)}">
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="sc-note">Note</label>
-                    <textarea id="sc-note" class="form-input" rows="4">${isEdit ? window.Utils.escapeHtml(athlete.note || "") : ""}</textarea>
+                    <textarea id="sc-note" class="form-input" rows="3">${isEdit ? window.Utils.escapeHtml(athlete.note || "") : ""}</textarea>
                 </div>
+
+                <div class="td-form-section"><i class="ph ph-barbell"></i> Dati Fisici</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label" for="sc-altezza">Altezza (cm)</label>
+                        <input id="sc-altezza" class="form-input" type="number" step="0.1" min="100" max="250" value="${athlete?.altezza ?? ''}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="sc-peso">Peso (kg)</label>
+                        <input id="sc-peso" class="form-input" type="number" step="0.1" min="30" max="200" value="${athlete?.peso ?? ''}">
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label" for="sc-reach">Reach (cm)</label>
+                        <input id="sc-reach" class="form-input" type="number" step="0.1" min="100" max="400" value="${athlete?.reach_cm ?? ''}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="sc-cmj">CMJ (cm)</label>
+                        <input id="sc-cmj" class="form-input" type="number" step="0.1" min="0" max="100" value="${athlete?.cmj ?? ''}">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="sc-salto">Salto con Rincorsa (cm)</label>
+                    <input id="sc-salto" class="form-input" type="number" step="0.1" min="0" max="400" value="${athlete?.salto_rincorsa ?? ''}">
+                </div>
+
                 <div id="sc-error" class="form-error hidden"></div>
             </div>
             <div style="padding:var(--sp-3) var(--sp-4); border-top:1px solid var(--color-border); background:var(--color-bg); display:flex; justify-content:flex-end; gap:var(--sp-2);">

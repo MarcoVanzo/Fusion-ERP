@@ -56,7 +56,6 @@ class EcommerceController
         $html = curl_exec($ch);
         $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $curlErr = curl_error($ch);
-        curl_close($ch);
 
         if ($html === false || !empty($curlErr)) {
             Response::error('Impossibile raggiungere il negozio online: ' . $curlErr, 502);
@@ -341,7 +340,6 @@ class EcommerceController
         $response = curl_exec($ch);
         $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $curlErr = curl_error($ch);
-        curl_close($ch);
 
         if ($response === false || !empty($curlErr)) {
             Response::error('Errore di connessione a Cognito Forms: ' . $curlErr, 502);

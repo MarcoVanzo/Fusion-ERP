@@ -166,7 +166,6 @@ class GoogleDrive
 
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
 
         if ($httpCode !== 200) {
             error_log('[FUSION-ERP] Google OAuth refresh failed: HTTP ' . $httpCode . ' — ' . $response);
@@ -219,7 +218,6 @@ class GoogleDrive
         $httpCode1 = curl_getinfo($ch1, CURLINFO_HTTP_CODE);
         $headerSize = curl_getinfo($ch1, CURLINFO_HEADER_SIZE);
         $headers = substr($response1, 0, $headerSize);
-        curl_close($ch1);
 
         if ($httpCode1 !== 200) {
             error_log('[FUSION-ERP] Resumable upload init failed: HTTP ' . $httpCode1);
@@ -256,7 +254,6 @@ class GoogleDrive
         $response2 = curl_exec($ch2);
         $httpCode2 = curl_getinfo($ch2, CURLINFO_HTTP_CODE);
         fclose($fh);
-        curl_close($ch2);
 
         if ($httpCode2 !== 200 && $httpCode2 !== 201) {
             error_log('[FUSION-ERP] Drive resumable upload failed: HTTP ' . $httpCode2 . ' — ' . $response2);
@@ -296,7 +293,6 @@ class GoogleDrive
 
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
 
         if ($httpCode !== 200) {
             error_log('[FUSION-ERP] Content restriction failed: HTTP ' . $httpCode . ' — ' . $response);
@@ -320,7 +316,6 @@ class GoogleDrive
             CURLOPT_TIMEOUT => 15,
         ]);
         $response = curl_exec($ch);
-        curl_close($ch);
 
         $data = json_decode($response, true);
         $revisions = $data['revisions'] ?? [];
@@ -344,7 +339,6 @@ class GoogleDrive
 
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
 
         return $httpCode === 200;
     }
@@ -364,6 +358,6 @@ class GoogleDrive
             CURLOPT_TIMEOUT => 15,
         ]);
         curl_exec($ch);
-        curl_close($ch);
+
     }
 }

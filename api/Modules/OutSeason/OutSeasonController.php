@@ -58,7 +58,7 @@ class OutSeasonController
         $tid = TenantContext::id();
         $stmt = $pdo->prepare(
             'SELECT * FROM outseason_entries
-             WHERE season_key = :season_key AND tenant_id = :tid
+             WHERE season_key = :season_key AND tenant_id = :tid AND is_deleted = 0
              ORDER BY entry_date ASC LIMIT 500'
         );
         $stmt->execute([':season_key' => $seasonKey, ':tid' => $tid]);
@@ -101,6 +101,31 @@ class OutSeasonController
     }
 
     /* ─────────────────────────────────────────────────────────────────────
+     * deleteEntry — marca l'entry come is_deleted = 1
+     * POST /api?module=outseason&action=deleteEntry&id=123
+     * ───────────────────────────────────────────────────────────────────── */
+    public function deleteEntry(): void
+    {
+        Auth::requireWrite('outseason');
+        $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+        if (!$id) {
+            Response::error('ID non valido.', 400);
+        }
+
+        $pdo = Database::getInstance();
+        $tid = TenantContext::id();
+
+        $stmt = $pdo->prepare('UPDATE outseason_entries SET is_deleted = 1 WHERE id = :id AND tenant_id = :tid');
+        $stmt->execute([':id' => $id, ':tid' => $tid]);
+
+        if ($stmt->rowCount() === 0) {
+            Response::error('Record non trovato o già eliminato.', 404);
+        }
+
+        Response::success(['deleted' => true, 'id' => $id]);
+    }
+
+    /* ─────────────────────────────────────────────────────────────────────
      * _doSync — logica di sync condivisa (usata anche dal cron CLI)
      * ───────────────────────────────────────────────────────────────────── */
     public static function _doSync(string $seasonKey): array
@@ -131,7 +156,6 @@ class OutSeasonController
         $response = curl_exec($ch);
         $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $curlError = curl_error($ch);
-        curl_close($ch);
 
         if ($response === false || !empty($curlError)) {
             return ['success' => false, 'error' => 'Errore cURL Cognito: ' . $curlError];

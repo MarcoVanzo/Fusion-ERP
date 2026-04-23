@@ -1,0 +1,350 @@
+{
+  "total_count": 4,
+  "jobs": [
+    {
+      "id": 71418615435,
+      "run_id": 24444895416,
+      "workflow_name": "CI — Lint & Test",
+      "head_branch": "main",
+      "run_url": "https://api.github.com/repos/MarcoVanzo/Fusion-ERP/actions/runs/24444895416",
+      "run_attempt": 1,
+      "node_id": "CR_kwDORa9NQc8AAAAQoOGWiw",
+      "head_sha": "30c25ce5e089181905a6055e4addcf00ad88d65a",
+      "url": "https://api.github.com/repos/MarcoVanzo/Fusion-ERP/actions/jobs/71418615435",
+      "html_url": "https://github.com/MarcoVanzo/Fusion-ERP/actions/runs/24444895416/job/71418615435",
+      "status": "completed",
+      "conclusion": "failure",
+      "created_at": "2026-04-15T08:40:04Z",
+      "started_at": "2026-04-15T08:40:06Z",
+      "completed_at": "2026-04-15T08:40:31Z",
+      "name": "PHPStan",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-04-15T08:40:07Z",
+          "completed_at": "2026-04-15T08:40:10Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-04-15T08:40:10Z",
+          "completed_at": "2026-04-15T08:40:14Z"
+        },
+        {
+          "name": "Setup PHP",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-04-15T08:40:14Z",
+          "completed_at": "2026-04-15T08:40:22Z"
+        },
+        {
+          "name": "Cache Composer dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-04-15T08:40:22Z",
+          "completed_at": "2026-04-15T08:40:23Z"
+        },
+        {
+          "name": "Install Composer dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-04-15T08:40:23Z",
+          "completed_at": "2026-04-15T08:40:25Z"
+        },
+        {
+          "name": "Run PHPStan",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 6,
+          "started_at": "2026-04-15T08:40:25Z",
+          "completed_at": "2026-04-15T08:40:29Z"
+        },
+        {
+          "name": "Post Cache Composer dependencies",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 11,
+          "started_at": "2026-04-15T08:40:29Z",
+          "completed_at": "2026-04-15T08:40:29Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12,
+          "started_at": "2026-04-15T08:40:29Z",
+          "completed_at": "2026-04-15T08:40:30Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-04-15T08:40:30Z",
+          "completed_at": "2026-04-15T08:40:30Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/MarcoVanzo/Fusion-ERP/check-runs/71418615435",
+      "labels": [
+        "ubuntu-latest"
+      ],
+      "runner_id": 1000001535,
+      "runner_name": "GitHub Actions 1000001535",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 71418615474,
+      "run_id": 24444895416,
+      "workflow_name": "CI — Lint & Test",
+      "head_branch": "main",
+      "run_url": "https://api.github.com/repos/MarcoVanzo/Fusion-ERP/actions/runs/24444895416",
+      "run_attempt": 1,
+      "node_id": "CR_kwDORa9NQc8AAAAQoOGWsg",
+      "head_sha": "30c25ce5e089181905a6055e4addcf00ad88d65a",
+      "url": "https://api.github.com/repos/MarcoVanzo/Fusion-ERP/actions/jobs/71418615474",
+      "html_url": "https://github.com/MarcoVanzo/Fusion-ERP/actions/runs/24444895416/job/71418615474",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-04-15T08:40:04Z",
+      "started_at": "2026-04-15T08:40:07Z",
+      "completed_at": "2026-04-15T08:40:33Z",
+      "name": "ESLint",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-04-15T08:40:08Z",
+          "completed_at": "2026-04-15T08:40:09Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-04-15T08:40:09Z",
+          "completed_at": "2026-04-15T08:40:12Z"
+        },
+        {
+          "name": "Setup Node.js",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-04-15T08:40:12Z",
+          "completed_at": "2026-04-15T08:40:19Z"
+        },
+        {
+          "name": "Install dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-04-15T08:40:19Z",
+          "completed_at": "2026-04-15T08:40:28Z"
+        },
+        {
+          "name": "Run ESLint",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-04-15T08:40:28Z",
+          "completed_at": "2026-04-15T08:40:30Z"
+        },
+        {
+          "name": "Post Setup Node.js",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-04-15T08:40:30Z",
+          "completed_at": "2026-04-15T08:40:30Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-04-15T08:40:30Z",
+          "completed_at": "2026-04-15T08:40:31Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-04-15T08:40:31Z",
+          "completed_at": "2026-04-15T08:40:31Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/MarcoVanzo/Fusion-ERP/check-runs/71418615474",
+      "labels": [
+        "ubuntu-latest"
+      ],
+      "runner_id": 1000001536,
+      "runner_name": "GitHub Actions 1000001536",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 71418615524,
+      "run_id": 24444895416,
+      "workflow_name": "CI — Lint & Test",
+      "head_branch": "main",
+      "run_url": "https://api.github.com/repos/MarcoVanzo/Fusion-ERP/actions/runs/24444895416",
+      "run_attempt": 1,
+      "node_id": "CR_kwDORa9NQc8AAAAQoOGW5A",
+      "head_sha": "30c25ce5e089181905a6055e4addcf00ad88d65a",
+      "url": "https://api.github.com/repos/MarcoVanzo/Fusion-ERP/actions/jobs/71418615524",
+      "html_url": "https://github.com/MarcoVanzo/Fusion-ERP/actions/runs/24444895416/job/71418615524",
+      "status": "completed",
+      "conclusion": "failure",
+      "created_at": "2026-04-15T08:40:04Z",
+      "started_at": "2026-04-15T08:40:06Z",
+      "completed_at": "2026-04-15T08:40:56Z",
+      "name": "PHPUnit",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-04-15T08:40:07Z",
+          "completed_at": "2026-04-15T08:40:09Z"
+        },
+        {
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-04-15T08:40:09Z",
+          "completed_at": "2026-04-15T08:40:38Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-04-15T08:40:38Z",
+          "completed_at": "2026-04-15T08:40:40Z"
+        },
+        {
+          "name": "Setup PHP",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-04-15T08:40:40Z",
+          "completed_at": "2026-04-15T08:40:45Z"
+        },
+        {
+          "name": "Cache Composer dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-04-15T08:40:45Z",
+          "completed_at": "2026-04-15T08:40:49Z"
+        },
+        {
+          "name": "Install Composer dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-04-15T08:40:49Z",
+          "completed_at": "2026-04-15T08:40:52Z"
+        },
+        {
+          "name": "Create test .env",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-04-15T08:40:52Z",
+          "completed_at": "2026-04-15T08:40:52Z"
+        },
+        {
+          "name": "Run PHPUnit",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 8,
+          "started_at": "2026-04-15T08:40:52Z",
+          "completed_at": "2026-04-15T08:40:52Z"
+        },
+        {
+          "name": "Post Cache Composer dependencies",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 14,
+          "started_at": "2026-04-15T08:40:52Z",
+          "completed_at": "2026-04-15T08:40:52Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-04-15T08:40:52Z",
+          "completed_at": "2026-04-15T08:40:52Z"
+        },
+        {
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 16,
+          "started_at": "2026-04-15T08:40:52Z",
+          "completed_at": "2026-04-15T08:40:54Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17,
+          "started_at": "2026-04-15T08:40:54Z",
+          "completed_at": "2026-04-15T08:40:54Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/MarcoVanzo/Fusion-ERP/check-runs/71418615524",
+      "labels": [
+        "ubuntu-latest"
+      ],
+      "runner_id": 1000001537,
+      "runner_name": "GitHub Actions 1000001537",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 71418746831,
+      "run_id": 24444895416,
+      "workflow_name": "CI — Lint & Test",
+      "head_branch": "main",
+      "run_url": "https://api.github.com/repos/MarcoVanzo/Fusion-ERP/actions/runs/24444895416",
+      "run_attempt": 1,
+      "node_id": "CR_kwDORa9NQc8AAAAQoOOXzw",
+      "head_sha": "30c25ce5e089181905a6055e4addcf00ad88d65a",
+      "url": "https://api.github.com/repos/MarcoVanzo/Fusion-ERP/actions/jobs/71418746831",
+      "html_url": "https://github.com/MarcoVanzo/Fusion-ERP/actions/runs/24444895416/job/71418746831",
+      "status": "completed",
+      "conclusion": "skipped",
+      "created_at": "2026-04-15T08:40:57Z",
+      "started_at": "2026-04-15T08:40:57Z",
+      "completed_at": "2026-04-15T08:40:57Z",
+      "name": "E2E Smoke Test",
+      "steps": [
+
+      ],
+      "check_run_url": "https://api.github.com/repos/MarcoVanzo/Fusion-ERP/check-runs/71418746831",
+      "labels": [
+        "ubuntu-latest"
+      ],
+      "runner_id": null,
+      "runner_name": null,
+      "runner_group_id": null,
+      "runner_group_name": null
+    }
+  ]
+}

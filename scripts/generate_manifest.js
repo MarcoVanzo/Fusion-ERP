@@ -87,8 +87,19 @@ const EXCLUDE_PATHS = [
     'api/sessions',          // Server-side sessions dir
 ];
 
+const crypto = require('crypto');
+
+/**
+ * Calcola SHA-256 di un file.
+ */
+function fileSHA256(filePath) {
+    const content = fs.readFileSync(filePath);
+    return crypto.createHash('sha256').update(content).digest('hex');
+}
+
 /**
  * Recursively scan directory and collect deployable files.
+ * Returns array of {path, hash} objects.
  */
 function getFiles(dir, allFiles = []) {
     let entries;
@@ -142,7 +153,8 @@ function getFiles(dir, allFiles = []) {
                         if (assetStat.isDirectory() && allowedSubdirs.includes(assetEntry)) {
                             getFiles(assetPath, allFiles);
                         } else if (assetStat.isFile() && allowedRootFiles.includes(assetEntry)) {
-                            allFiles.push(assetRelPath);
+                            const hash = fileSHA256(assetPath);
+                            allFiles.push({ path: assetRelPath, hash });
                         }
                     } catch { /* skip */ }
                 });
@@ -169,7 +181,8 @@ function getFiles(dir, allFiles = []) {
             // Skip backup/original files
             if (baseName.includes('.bak') || baseName.includes('.orig')) return;
 
-            allFiles.push(relPath);
+            const hash = fileSHA256(filePath);
+            allFiles.push({ path: relPath, hash });
         }
     });
 
@@ -177,13 +190,24 @@ function getFiles(dir, allFiles = []) {
 }
 
 // ── Main ──
-console.log('📋 Generating deploy_manifest.json for Fusion ERP...');
+console.log('═══════════════════════════════════════════');
+console.log('  Fusion ERP — Manifest Generator v3');
+console.log('═══════════════════════════════════════════');
 try {
+    const startTime = Date.now();
     const files = getFiles(process.cwd());
-    files.sort(); // Alphabetical for easy diffing
+    files.sort((a, b) => a.path.localeCompare(b.path));
 
-    fs.writeFileSync('deploy_manifest.json', JSON.stringify(files, null, 2));
-    console.log(`✅ Success! ${files.length} files included in manifest.`);
+    const manifest = {
+        version: 3,
+        generated_at: new Date().toISOString(),
+        file_count: files.length,
+        files: files,
+    };
+
+    fs.writeFileSync('deploy_manifest.json', JSON.stringify(manifest, null, 2));
+    const elapsed = Date.now() - startTime;
+    console.log(`✅ Manifest generato: ${files.length} file con hash SHA-256 (${elapsed}ms)`);
 } catch (err) {
     console.error('❌ Error generating manifest:', err);
     process.exit(1);

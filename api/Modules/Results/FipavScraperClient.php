@@ -52,7 +52,6 @@ class FipavScraperClient
             $proxyHtml = curl_exec($ch);
             $proxyCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
             $proxyErr = curl_errno($ch);
-            curl_close($ch);
 
             if ($proxyErr === 0 && $proxyCode >= 200 && $proxyCode < 300 && is_string($proxyHtml) && strlen($proxyHtml) > 500) {
                 error_log("[Results] GAS proxy fetch OK for: {$url}");
@@ -131,7 +130,6 @@ class FipavScraperClient
             $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
             $curlError = curl_error($ch);
             $curlErrNo = curl_errno($ch);
-            curl_close($ch);
 
             // If SSL-related error (codes 35, 51, 60, 77), try next SSL config
             if (in_array($curlErrNo, [35, 51, 60, 77], true) && $idx < count($sslAttempts) - 1) {
@@ -171,7 +169,6 @@ class FipavScraperClient
                 $proxyRes = curl_exec($chProxy);
                 $proxyCode = (int)curl_getinfo($chProxy, CURLINFO_HTTP_CODE);
                 $proxyErr = curl_errno($chProxy);
-                curl_close($chProxy);
 
                 if ($proxyErr === 0 && $proxyCode >= 200 && $proxyCode < 300 && is_string($proxyRes)) {
                     if (strlen($proxyRes) > 500) {

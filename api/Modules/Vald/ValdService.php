@@ -52,7 +52,6 @@ class ValdService
 
         $response = curl_exec($ch);
         $data = json_decode($response ?: '', true);
-        curl_close($ch);
 
         if (!isset($data['access_token'])) {
             throw new \Exception('Failed to obtain VALD Access Token: ' . ($data['error_description'] ?? $data['error'] ?? $response));
@@ -84,7 +83,6 @@ class ValdService
 
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
 
         if ($httpCode >= 400) {
             error_log("[VALD API] Error $httpCode on $url: $response");

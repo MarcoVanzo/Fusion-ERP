@@ -108,3 +108,10 @@
   --transition-fast: 0.2s ease;
   --color-anatomy-default: rgba(255, 255, 255, 0.1);
 }
+
+@media (width <= 768px) {
+  :root {
+    --bg-surface: rgba(255, 255, 255, 0.08);
+    --border-subtle: rgba(255, 255, 255, 0.15);
+  }
+}

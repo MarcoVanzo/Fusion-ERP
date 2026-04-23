@@ -23,6 +23,7 @@ export class TalentDayView {
                         <p class="dash-subtitle">Registrazioni e misurazioni fisiche dei Talent Day</p>
                     </div>
                 </div>
+                <div id="td-stats-area" style="margin-bottom: 24px;"></div>
                 <div class="dash-card" style="padding:var(--sp-4)" id="td-content-area"></div>
             </div>
 
@@ -141,6 +142,76 @@ export class TalentDayView {
             <div id="td-side-panel" style="display:none;flex-direction:column;"></div>
         `;
     }
+
+    /* ═══════════════════════════════════════════════════════════════════
+     *  Stats Area
+     * ═══════════════════════════════════════════════════════════════════ */
+    static renderStatsSummary(entries) {
+        if (!entries) entries = [];
+        
+        // Count total
+        const total = entries.length;
+        
+        // Count per parsed location to avoid duplicates if tappa name was slightly changed
+        const countsByLocation = {};
+        const locationMap = {}; // Maps short location to full name for tooltip (optional)
+        
+        // Helper to extract location
+        const getLocation = (tappaStr) => {
+            let loc = tappaStr;
+            if (tappaStr.includes(',')) {
+                const parts = tappaStr.split(',');
+                if (parts.length > 1) {
+                    loc = parts[1].split('-')[0].trim();
+                }
+            }
+            return loc;
+        };
+
+        // Initialize with predefined locations
+        this.TAPPE.forEach(t => {
+            const loc = getLocation(t);
+            countsByLocation[loc] = 0;
+            locationMap[loc] = t;
+        });
+        
+        entries.forEach(e => {
+            if (e.tappa) {
+                const loc = getLocation(e.tappa);
+                countsByLocation[loc] = (countsByLocation[loc] || 0) + 1;
+                // Update mapping to use the latest/most common full string, optional
+                locationMap[loc] = locationMap[loc] || e.tappa;
+            }
+        });
+
+        // Generate cards for each location
+        const tappeCards = Object.entries(countsByLocation).map(([location, count]) => {
+            const fullTappaName = locationMap[location] || location;
+            return `
+                <div style="flex: 1 1 0; min-width: 0; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 12px 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: all 0.3s ease; cursor: default;" onmouseover="this.style.background='rgba(255,255,255,0.06)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.background='rgba(255,255,255,0.03)'; this.style.transform='translateY(0)';">
+                    <div style="font-size: 11px; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;" title="${window.Utils.escapeHtml(fullTappaName)}">${window.Utils.escapeHtml(location)}</div>
+                    <div style="font-size: 24px; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums;">${count}</div>
+                </div>
+            `;
+        }).join('');
+
+        return `
+            <div style="display: flex; flex-wrap: nowrap; gap: 8px; overflow: hidden; padding-bottom: 8px;">
+                <!-- Total Card -->
+                <div style="flex: 1.2 1 0; min-width: 0; background: linear-gradient(135deg, rgba(236,72,153,0.15), rgba(99,102,241,0.15)); border: 1px solid rgba(236,72,153,0.3); border-radius: 12px; padding: 12px 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
+                    <div style="position: absolute; top: -10px; right: -10px; opacity: 0.1; transform: rotate(15deg);">
+                        <i class="ph-fill ph-users" style="font-size: 80px; color: var(--accent-pink);"></i>
+                    </div>
+                    <div style="font-size: 11px; color: var(--accent-pink); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; font-weight: 600; z-index: 1; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;">Totale Iscritti</div>
+                    <div style="font-size: 30px; font-weight: 800; color: #fff; z-index: 1; font-variant-numeric: tabular-nums; text-shadow: 0 2px 10px rgba(0,0,0,0.3);">${total}</div>
+                </div>
+                
+                <!-- Tappe Cards -->
+                ${tappeCards}
+            </div>
+        `;
+    }
+
 
     /* ═══════════════════════════════════════════════════════════════════
      *  Table Area — toolbar + tabs + table

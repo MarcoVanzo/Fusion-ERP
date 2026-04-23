@@ -1,0 +1,388 @@
+﻿2026-04-15T08:40:07.9631190Z Current runner version: '2.333.1'
+2026-04-15T08:40:07.9652862Z ##[group]Runner Image Provisioner
+2026-04-15T08:40:07.9653721Z Hosted Compute Agent
+2026-04-15T08:40:07.9654321Z Version: 20260213.493
+2026-04-15T08:40:07.9654929Z Commit: 5c115507f6dd24b8de37d8bbe0bb4509d0cc0fa3
+2026-04-15T08:40:07.9655578Z Build Date: 2026-02-13T00:28:41Z
+2026-04-15T08:40:07.9656270Z Worker ID: {1bee5532-2b93-470a-816d-9160adf23875}
+2026-04-15T08:40:07.9656954Z Azure Region: westus
+2026-04-15T08:40:07.9657482Z ##[endgroup]
+2026-04-15T08:40:07.9659020Z ##[group]Operating System
+2026-04-15T08:40:07.9659604Z Ubuntu
+2026-04-15T08:40:07.9660066Z 24.04.4
+2026-04-15T08:40:07.9660469Z LTS
+2026-04-15T08:40:07.9660992Z ##[endgroup]
+2026-04-15T08:40:07.9661441Z ##[group]Runner Image
+2026-04-15T08:40:07.9661987Z Image: ubuntu-24.04
+2026-04-15T08:40:07.9662823Z Version: 20260406.80.1
+2026-04-15T08:40:07.9664042Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260406.80/images/ubuntu/Ubuntu2404-Readme.md
+2026-04-15T08:40:07.9665570Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260406.80
+2026-04-15T08:40:07.9666499Z ##[endgroup]
+2026-04-15T08:40:07.9667600Z ##[group]GITHUB_TOKEN Permissions
+2026-04-15T08:40:07.9669338Z Contents: read
+2026-04-15T08:40:07.9669883Z Metadata: read
+2026-04-15T08:40:07.9670468Z Packages: read
+2026-04-15T08:40:07.9670936Z ##[endgroup]
+2026-04-15T08:40:07.9673357Z Secret source: Actions
+2026-04-15T08:40:07.9674149Z Prepare workflow directory
+2026-04-15T08:40:08.0098328Z Prepare all required actions
+2026-04-15T08:40:08.0135769Z Getting action download info
+2026-04-15T08:40:08.5030621Z Download action repository 'actions/checkout@v4' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+2026-04-15T08:40:08.6407692Z Download action repository 'shivammathur/setup-php@v2' (SHA:accd6127cb78bee3e8082180cb391013d204ef9f)
+2026-04-15T08:40:09.0927828Z Download action repository 'actions/cache@v4' (SHA:0057852bfaa89a56745cba8c7296529d2fc39830)
+2026-04-15T08:40:09.3733363Z Complete job name: PHPUnit
+2026-04-15T08:40:09.4221996Z ##[group]Checking docker version
+2026-04-15T08:40:09.4234950Z ##[command]/usr/bin/docker version --format '{{.Server.APIVersion}}'
+2026-04-15T08:40:09.4547276Z '1.48'
+2026-04-15T08:40:09.4558435Z Docker daemon API version: '1.48'
+2026-04-15T08:40:09.4559199Z ##[command]/usr/bin/docker version --format '{{.Client.APIVersion}}'
+2026-04-15T08:40:09.4701647Z '1.48'
+2026-04-15T08:40:09.4712993Z Docker client API version: '1.48'
+2026-04-15T08:40:09.4718012Z ##[endgroup]
+2026-04-15T08:40:09.4720928Z ##[group]Clean up resources from previous jobs
+2026-04-15T08:40:09.4726279Z ##[command]/usr/bin/docker ps --all --quiet --no-trunc --filter "label=345074"
+2026-04-15T08:40:09.4856590Z ##[command]/usr/bin/docker network prune --force --filter "label=345074"
+2026-04-15T08:40:09.4973488Z ##[endgroup]
+2026-04-15T08:40:09.4974025Z ##[group]Create local container network
+2026-04-15T08:40:09.4984719Z ##[command]/usr/bin/docker network create --label 345074 github_network_1db38c69b377428b97bfe9ad5f85f779
+2026-04-15T08:40:09.5501569Z 982eac88c9a4c6e9daad8b4ec7e4d1e3edd54c7ef00198626f8b2bd8e96d1d07
+2026-04-15T08:40:09.5520135Z ##[endgroup]
+2026-04-15T08:40:09.5544500Z ##[group]Starting mysql service container
+2026-04-15T08:40:09.5566271Z ##[command]/usr/bin/docker pull mysql:8.0
+2026-04-15T08:40:10.4351680Z 8.0: Pulling from library/mysql
+2026-04-15T08:40:10.7032845Z 0c9513d9d126: Pulling fs layer
+2026-04-15T08:40:10.7035096Z 2bc0ec069c9c: Pulling fs layer
+2026-04-15T08:40:10.7036386Z b061cabbd0c3: Pulling fs layer
+2026-04-15T08:40:10.7037855Z 3fccd87f358c: Pulling fs layer
+2026-04-15T08:40:10.7039741Z 79d0deb4205f: Pulling fs layer
+2026-04-15T08:40:10.7041057Z 4641ac6bb997: Pulling fs layer
+2026-04-15T08:40:10.7042365Z 2d5cfd83619e: Pulling fs layer
+2026-04-15T08:40:10.7043697Z 93b9c9ef01e4: Pulling fs layer
+2026-04-15T08:40:10.7044713Z 4abc1d5ebae4: Pulling fs layer
+2026-04-15T08:40:10.7045756Z 083ea9601bec: Pulling fs layer
+2026-04-15T08:40:10.7046749Z 656ad78a0e00: Pulling fs layer
+2026-04-15T08:40:10.7048123Z 79d0deb4205f: Waiting
+2026-04-15T08:40:10.7049017Z 4641ac6bb997: Waiting
+2026-04-15T08:40:10.7049893Z 4abc1d5ebae4: Waiting
+2026-04-15T08:40:10.7050745Z 083ea9601bec: Waiting
+2026-04-15T08:40:10.7051806Z 2d5cfd83619e: Waiting
+2026-04-15T08:40:10.7052980Z 656ad78a0e00: Waiting
+2026-04-15T08:40:10.7054168Z 93b9c9ef01e4: Waiting
+2026-04-15T08:40:10.7055058Z 3fccd87f358c: Waiting
+2026-04-15T08:40:10.9434251Z b061cabbd0c3: Verifying Checksum
+2026-04-15T08:40:10.9435722Z b061cabbd0c3: Download complete
+2026-04-15T08:40:10.9547451Z 2bc0ec069c9c: Verifying Checksum
+2026-04-15T08:40:10.9548936Z 2bc0ec069c9c: Download complete
+2026-04-15T08:40:11.0979107Z 0c9513d9d126: Verifying Checksum
+2026-04-15T08:40:11.0981322Z 0c9513d9d126: Download complete
+2026-04-15T08:40:11.2007089Z 79d0deb4205f: Verifying Checksum
+2026-04-15T08:40:11.2010734Z 79d0deb4205f: Download complete
+2026-04-15T08:40:11.2072316Z 3fccd87f358c: Download complete
+2026-04-15T08:40:11.3348916Z 4641ac6bb997: Download complete
+2026-04-15T08:40:11.4299846Z 93b9c9ef01e4: Verifying Checksum
+2026-04-15T08:40:11.4305994Z 93b9c9ef01e4: Download complete
+2026-04-15T08:40:11.6500033Z 083ea9601bec: Download complete
+2026-04-15T08:40:11.6595189Z 2d5cfd83619e: Verifying Checksum
+2026-04-15T08:40:11.6595983Z 2d5cfd83619e: Download complete
+2026-04-15T08:40:11.9080560Z 656ad78a0e00: Verifying Checksum
+2026-04-15T08:40:11.9081753Z 656ad78a0e00: Download complete
+2026-04-15T08:40:12.0149835Z 4abc1d5ebae4: Download complete
+2026-04-15T08:40:12.8006391Z 0c9513d9d126: Pull complete
+2026-04-15T08:40:15.6037700Z 2bc0ec069c9c: Pull complete
+2026-04-15T08:40:15.6248098Z b061cabbd0c3: Pull complete
+2026-04-15T08:40:15.8111617Z 3fccd87f358c: Pull complete
+2026-04-15T08:40:15.8224569Z 79d0deb4205f: Pull complete
+2026-04-15T08:40:15.8321476Z 4641ac6bb997: Pull complete
+2026-04-15T08:40:16.5905562Z 2d5cfd83619e: Pull complete
+2026-04-15T08:40:16.6001232Z 93b9c9ef01e4: Pull complete
+2026-04-15T08:40:23.7101239Z 4abc1d5ebae4: Pull complete
+2026-04-15T08:40:23.7199580Z 083ea9601bec: Pull complete
+2026-04-15T08:40:23.7304651Z 656ad78a0e00: Pull complete
+2026-04-15T08:40:23.7343606Z Digest: sha256:529b4afa138686871cf698617ef6e347a857179fa2c58e6811b6c20862a1cd6a
+2026-04-15T08:40:23.7364468Z Status: Downloaded newer image for mysql:8.0
+2026-04-15T08:40:23.7374180Z docker.io/library/mysql:8.0
+2026-04-15T08:40:23.7432269Z ##[command]/usr/bin/docker create --name 2c8068a04d404ec29b92a86e8194c31a_mysql80_41ba4d --label 345074 --network github_network_1db38c69b377428b97bfe9ad5f85f779 --network-alias mysql -p 3306:3306 --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=5 -e "MYSQL_ROOT_PASSWORD=test" -e "MYSQL_DATABASE=fusion_erp_test" -e GITHUB_ACTIONS=true -e CI=true mysql:8.0
+2026-04-15T08:40:23.7681292Z ba8c1685425402763c58491fd24f3ed0e8a49f6603418d0449d6a90673437029
+2026-04-15T08:40:23.7700515Z ##[command]/usr/bin/docker start ba8c1685425402763c58491fd24f3ed0e8a49f6603418d0449d6a90673437029
+2026-04-15T08:40:23.9253193Z ba8c1685425402763c58491fd24f3ed0e8a49f6603418d0449d6a90673437029
+2026-04-15T08:40:23.9270099Z ##[command]/usr/bin/docker ps --all --filter id=ba8c1685425402763c58491fd24f3ed0e8a49f6603418d0449d6a90673437029 --filter status=running --no-trunc --format "{{.ID}} {{.Status}}"
+2026-04-15T08:40:23.9392243Z ba8c1685425402763c58491fd24f3ed0e8a49f6603418d0449d6a90673437029 Up Less than a second (health: starting)
+2026-04-15T08:40:23.9411033Z ##[command]/usr/bin/docker port ba8c1685425402763c58491fd24f3ed0e8a49f6603418d0449d6a90673437029
+2026-04-15T08:40:23.9550111Z 3306/tcp -> 0.0.0.0:3306
+2026-04-15T08:40:23.9550847Z 3306/tcp -> [::]:3306
+2026-04-15T08:40:23.9608919Z ##[endgroup]
+2026-04-15T08:40:23.9620913Z ##[group]Waiting for all services to be ready
+2026-04-15T08:40:23.9639050Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" ba8c1685425402763c58491fd24f3ed0e8a49f6603418d0449d6a90673437029
+2026-04-15T08:40:23.9766117Z starting
+2026-04-15T08:40:23.9785122Z mysql service is starting, waiting 2 seconds before checking again.
+2026-04-15T08:40:25.9785073Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" ba8c1685425402763c58491fd24f3ed0e8a49f6603418d0449d6a90673437029
+2026-04-15T08:40:25.9900537Z starting
+2026-04-15T08:40:25.9911280Z mysql service is starting, waiting 4 seconds before checking again.
+2026-04-15T08:40:30.2230787Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" ba8c1685425402763c58491fd24f3ed0e8a49f6603418d0449d6a90673437029
+2026-04-15T08:40:30.2370796Z starting
+2026-04-15T08:40:30.2384989Z mysql service is starting, waiting 8 seconds before checking again.
+2026-04-15T08:40:38.5021860Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" ba8c1685425402763c58491fd24f3ed0e8a49f6603418d0449d6a90673437029
+2026-04-15T08:40:38.5154115Z healthy
+2026-04-15T08:40:38.5179894Z mysql service is healthy.
+2026-04-15T08:40:38.5180534Z ##[endgroup]
+2026-04-15T08:40:38.5443075Z ##[group]Run actions/checkout@v4
+2026-04-15T08:40:38.5443652Z with:
+2026-04-15T08:40:38.5443845Z   repository: MarcoVanzo/Fusion-ERP
+2026-04-15T08:40:38.5444234Z   token: ***
+2026-04-15T08:40:38.5444411Z   ssh-strict: true
+2026-04-15T08:40:38.5444592Z   ssh-user: git
+2026-04-15T08:40:38.5444779Z   persist-credentials: true
+2026-04-15T08:40:38.5444984Z   clean: true
+2026-04-15T08:40:38.5445174Z   sparse-checkout-cone-mode: true
+2026-04-15T08:40:38.5445406Z   fetch-depth: 1
+2026-04-15T08:40:38.5445584Z   fetch-tags: false
+2026-04-15T08:40:38.5445760Z   show-progress: true
+2026-04-15T08:40:38.5445948Z   lfs: false
+2026-04-15T08:40:38.5446114Z   submodules: false
+2026-04-15T08:40:38.5446292Z   set-safe-directory: true
+2026-04-15T08:40:38.5446680Z ##[endgroup]
+2026-04-15T08:40:38.6560412Z Syncing repository: MarcoVanzo/Fusion-ERP
+2026-04-15T08:40:38.6561722Z ##[group]Getting Git version info
+2026-04-15T08:40:38.6562101Z Working directory is '/home/runner/work/Fusion-ERP/Fusion-ERP'
+2026-04-15T08:40:38.6562960Z [command]/usr/bin/git version
+2026-04-15T08:40:38.6598614Z git version 2.53.0
+2026-04-15T08:40:38.6624627Z ##[endgroup]
+2026-04-15T08:40:38.6640454Z Temporarily overriding HOME='/home/runner/work/_temp/76d9dfa7-3cce-4dba-b8c4-4d7907d6606b' before making global git config changes
+2026-04-15T08:40:38.6641862Z Adding repository directory to the temporary git global config as a safe directory
+2026-04-15T08:40:38.6646850Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/Fusion-ERP/Fusion-ERP
+2026-04-15T08:40:38.6677327Z Deleting the contents of '/home/runner/work/Fusion-ERP/Fusion-ERP'
+2026-04-15T08:40:38.6680585Z ##[group]Initializing the repository
+2026-04-15T08:40:38.6684899Z [command]/usr/bin/git init /home/runner/work/Fusion-ERP/Fusion-ERP
+2026-04-15T08:40:38.6766506Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-04-15T08:40:38.6767444Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-04-15T08:40:38.6768439Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-04-15T08:40:38.6769146Z hint: call:
+2026-04-15T08:40:38.6769444Z hint:
+2026-04-15T08:40:38.6769906Z hint: 	git config --global init.defaultBranch <name>
+2026-04-15T08:40:38.6770441Z hint:
+2026-04-15T08:40:38.6770969Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-04-15T08:40:38.6771887Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-04-15T08:40:38.6772817Z hint:
+2026-04-15T08:40:38.6773151Z hint: 	git branch -m <name>
+2026-04-15T08:40:38.6773526Z hint:
+2026-04-15T08:40:38.6774108Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-04-15T08:40:38.6775144Z Initialized empty Git repository in /home/runner/work/Fusion-ERP/Fusion-ERP/.git/
+2026-04-15T08:40:38.6780722Z [command]/usr/bin/git remote add origin https://github.com/MarcoVanzo/Fusion-ERP
+2026-04-15T08:40:38.6809616Z ##[endgroup]
+2026-04-15T08:40:38.6809988Z ##[group]Disabling automatic garbage collection
+2026-04-15T08:40:38.6819606Z [command]/usr/bin/git config --local gc.auto 0
+2026-04-15T08:40:38.6841254Z ##[endgroup]
+2026-04-15T08:40:38.6841851Z ##[group]Setting up auth
+2026-04-15T08:40:38.6849165Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-04-15T08:40:38.6878103Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-04-15T08:40:38.7148296Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-04-15T08:40:38.7175842Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-04-15T08:40:38.7385405Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-04-15T08:40:38.7420530Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-04-15T08:40:38.7632067Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-04-15T08:40:38.7662957Z ##[endgroup]
+2026-04-15T08:40:38.7663531Z ##[group]Fetching the repository
+2026-04-15T08:40:38.7671346Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +30c25ce5e089181905a6055e4addcf00ad88d65a:refs/remotes/origin/main
+2026-04-15T08:40:40.5377227Z From https://github.com/MarcoVanzo/Fusion-ERP
+2026-04-15T08:40:40.5377987Z  * [new ref]         30c25ce5e089181905a6055e4addcf00ad88d65a -> origin/main
+2026-04-15T08:40:40.5406705Z ##[endgroup]
+2026-04-15T08:40:40.5407261Z ##[group]Determining the checkout info
+2026-04-15T08:40:40.5408855Z ##[endgroup]
+2026-04-15T08:40:40.5414529Z [command]/usr/bin/git sparse-checkout disable
+2026-04-15T08:40:40.5449010Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-04-15T08:40:40.5473010Z ##[group]Checking out the ref
+2026-04-15T08:40:40.5477257Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+2026-04-15T08:40:40.7344763Z Switched to a new branch 'main'
+2026-04-15T08:40:40.7345355Z branch 'main' set up to track 'origin/main'.
+2026-04-15T08:40:40.7372126Z ##[endgroup]
+2026-04-15T08:40:40.7409164Z [command]/usr/bin/git log -1 --format=%H
+2026-04-15T08:40:40.7430893Z 30c25ce5e089181905a6055e4addcf00ad88d65a
+2026-04-15T08:40:40.7601188Z ##[group]Run shivammathur/setup-php@v2
+2026-04-15T08:40:40.7601460Z with:
+2026-04-15T08:40:40.7601636Z   php-version: 8.1
+2026-04-15T08:40:40.7601835Z   extensions: pdo, pdo_mysql
+2026-04-15T08:40:40.7602039Z   tools: composer
+2026-04-15T08:40:40.7602214Z   ini-file: production
+2026-04-15T08:40:40.7602869Z   github-token: ***
+2026-04-15T08:40:40.7603079Z ##[endgroup]
+2026-04-15T08:40:40.7942932Z [command]/usr/bin/bash /home/runner/work/_actions/shivammathur/setup-php/v2/src/scripts/run.sh
+2026-04-15T08:40:40.8352638Z 
+2026-04-15T08:40:40.8353181Z [90;1m==> [0m[37;1mSetup PHP[0m
+2026-04-15T08:40:45.2853355Z [32;1m✓ [0m[34;1mPHP [0m[90;1mInstalled PHP 8.1.34[0m
+2026-04-15T08:40:45.2853873Z 
+2026-04-15T08:40:45.2854064Z [90;1m==> [0m[37;1mSetup Extensions[0m
+2026-04-15T08:40:45.3278671Z [32;1m✓ [0m[34;1mpdo [0m[90;1mEnabled[0m
+2026-04-15T08:40:45.3293619Z [32;1m✓ [0m[34;1mpdo_mysql [0m[90;1mEnabled[0m
+2026-04-15T08:40:45.3295394Z 
+2026-04-15T08:40:45.3295820Z [90;1m==> [0m[37;1mSetup Tools[0m
+2026-04-15T08:40:45.5930554Z [32;1m✓ [0m[34;1mcomposer [0m[90;1mAdded composer 2.9.7[0m
+2026-04-15T08:40:45.5933124Z 
+2026-04-15T08:40:45.5933810Z [90;1m==> [0m[37;1mSponsor setup-php[0m
+2026-04-15T08:40:45.5934931Z [32;1m✓ [0m[34;1msetup-php [0m[90;1mhttps://setup-php.com/sponsor[0m
+2026-04-15T08:40:45.6645779Z ##[group]Run actions/cache@v4
+2026-04-15T08:40:45.6646184Z with:
+2026-04-15T08:40:45.6646347Z   path: vendor
+2026-04-15T08:40:45.6646671Z   key: composer-21df0da879a9886c16943a08bbbb2a817d53cb0206435b5a2a49aab362bc3723
+2026-04-15T08:40:45.6647081Z   restore-keys: composer-
+2026-04-15T08:40:45.6647304Z   enableCrossOsArchive: false
+2026-04-15T08:40:45.6647532Z   fail-on-cache-miss: false
+2026-04-15T08:40:45.6647734Z   lookup-only: false
+2026-04-15T08:40:45.6647917Z   save-always: false
+2026-04-15T08:40:45.6648082Z env:
+2026-04-15T08:40:45.6648247Z   COMPOSER_PROCESS_TIMEOUT: 0
+2026-04-15T08:40:45.6648465Z   COMPOSER_NO_INTERACTION: 1
+2026-04-15T08:40:45.6648688Z   COMPOSER_NO_AUDIT: 1
+2026-04-15T08:40:45.6648864Z ##[endgroup]
+2026-04-15T08:40:46.0498358Z Cache hit for: composer-21df0da879a9886c16943a08bbbb2a817d53cb0206435b5a2a49aab362bc3723
+2026-04-15T08:40:47.3775401Z Received 0 of 49787534 (0.0%), 0.0 MBs/sec
+2026-04-15T08:40:48.3797723Z Received 45593230 of 49787534 (91.6%), 21.7 MBs/sec
+2026-04-15T08:40:49.3786450Z Received 45593230 of 49787534 (91.6%), 14.5 MBs/sec
+2026-04-15T08:40:49.6636399Z Received 49787534 of 49787534 (100.0%), 14.4 MBs/sec
+2026-04-15T08:40:49.6638809Z Cache Size: ~47 MB (49787534 B)
+2026-04-15T08:40:49.6669737Z [command]/usr/bin/tar -xf /home/runner/work/_temp/e1daf543-8676-4de2-a34e-97015ed6264a/cache.tzst -P -C /home/runner/work/Fusion-ERP/Fusion-ERP --use-compress-program unzstd
+2026-04-15T08:40:49.9520634Z Cache restored successfully
+2026-04-15T08:40:49.9620339Z Cache restored from key: composer-21df0da879a9886c16943a08bbbb2a817d53cb0206435b5a2a49aab362bc3723
+2026-04-15T08:40:49.9730544Z ##[group]Run composer update --no-interaction --prefer-dist
+2026-04-15T08:40:49.9731005Z [36;1mcomposer update --no-interaction --prefer-dist[0m
+2026-04-15T08:40:49.9756132Z shell: /usr/bin/bash -e {0}
+2026-04-15T08:40:49.9756373Z env:
+2026-04-15T08:40:49.9756553Z   COMPOSER_PROCESS_TIMEOUT: 0
+2026-04-15T08:40:49.9756798Z   COMPOSER_NO_INTERACTION: 1
+2026-04-15T08:40:49.9757013Z   COMPOSER_NO_AUDIT: 1
+2026-04-15T08:40:49.9757216Z ##[endgroup]
+2026-04-15T08:40:50.1608051Z Loading composer repositories with package information
+2026-04-15T08:40:50.5777936Z Updating dependencies
+2026-04-15T08:40:50.5888962Z Lock file operations: 0 installs, 5 updates, 0 removals
+2026-04-15T08:40:50.5891358Z   - Upgrading phpstan/phpstan (2.1.46 => 2.1.47)
+2026-04-15T08:40:50.5892112Z   - Upgrading symfony/polyfill-ctype (v1.34.0 => v1.35.0)
+2026-04-15T08:40:50.5893211Z   - Upgrading symfony/polyfill-mbstring (v1.34.0 => v1.35.0)
+2026-04-15T08:40:50.5894058Z   - Upgrading symfony/polyfill-php80 (v1.34.0 => v1.35.0)
+2026-04-15T08:40:50.5894794Z   - Upgrading symfony/polyfill-php83 (v1.34.0 => v1.35.0)
+2026-04-15T08:40:50.5905914Z Writing lock file
+2026-04-15T08:40:50.5906435Z Installing dependencies from lock file (including require-dev)
+2026-04-15T08:40:50.5925598Z Package operations: 0 installs, 5 updates, 0 removals
+2026-04-15T08:40:50.5930786Z   - Downloading symfony/polyfill-php83 (v1.35.0)
+2026-04-15T08:40:50.5933544Z   - Downloading symfony/polyfill-php80 (v1.35.0)
+2026-04-15T08:40:50.5935508Z   - Downloading symfony/polyfill-mbstring (v1.35.0)
+2026-04-15T08:40:50.5937629Z   - Downloading symfony/polyfill-ctype (v1.35.0)
+2026-04-15T08:40:50.5939902Z   - Downloading phpstan/phpstan (2.1.47)
+2026-04-15T08:40:51.3558459Z   - Upgrading symfony/polyfill-php83 (v1.34.0 => v1.35.0): Extracting archive
+2026-04-15T08:40:51.3595202Z   - Upgrading symfony/polyfill-php80 (v1.34.0 => v1.35.0): Extracting archive
+2026-04-15T08:40:51.3630016Z   - Upgrading symfony/polyfill-mbstring (v1.34.0 => v1.35.0): Extracting archive
+2026-04-15T08:40:51.3668538Z   - Upgrading symfony/polyfill-ctype (v1.34.0 => v1.35.0): Extracting archive
+2026-04-15T08:40:51.3723893Z   - Upgrading phpstan/phpstan (2.1.46 => 2.1.47): Extracting archive
+2026-04-15T08:40:51.8767904Z Generating optimized autoload files
+2026-04-15T08:40:52.4509776Z 42 packages you are using are looking for funding.
+2026-04-15T08:40:52.4510389Z Use the `composer fund` command to find out more!
+2026-04-15T08:40:52.4853043Z ##[group]Run cat > .env << 'EOF'
+2026-04-15T08:40:52.4853365Z [36;1mcat > .env << 'EOF'[0m
+2026-04-15T08:40:52.4853594Z [36;1mDB_HOST=127.0.0.1[0m
+2026-04-15T08:40:52.4853806Z [36;1mDB_PORT=3306[0m
+2026-04-15T08:40:52.4854011Z [36;1mDB_NAME=fusion_erp_test[0m
+2026-04-15T08:40:52.4854237Z [36;1mDB_USER=root[0m
+2026-04-15T08:40:52.4854427Z [36;1mDB_PASS=test[0m
+2026-04-15T08:40:52.4854614Z [36;1mAPP_ENV=test[0m
+2026-04-15T08:40:52.4854795Z [36;1mEOF[0m
+2026-04-15T08:40:52.4875800Z shell: /usr/bin/bash -e {0}
+2026-04-15T08:40:52.4876028Z env:
+2026-04-15T08:40:52.4876199Z   COMPOSER_PROCESS_TIMEOUT: 0
+2026-04-15T08:40:52.4876434Z   COMPOSER_NO_INTERACTION: 1
+2026-04-15T08:40:52.4876653Z   COMPOSER_NO_AUDIT: 1
+2026-04-15T08:40:52.4876841Z ##[endgroup]
+2026-04-15T08:40:52.4950573Z ##[group]Run vendor/bin/phpunit --testdox
+2026-04-15T08:40:52.4950891Z [36;1mvendor/bin/phpunit --testdox[0m
+2026-04-15T08:40:52.4970912Z shell: /usr/bin/bash -e {0}
+2026-04-15T08:40:52.4971141Z env:
+2026-04-15T08:40:52.4971317Z   COMPOSER_PROCESS_TIMEOUT: 0
+2026-04-15T08:40:52.4971555Z   COMPOSER_NO_INTERACTION: 1
+2026-04-15T08:40:52.4971764Z   COMPOSER_NO_AUDIT: 1
+2026-04-15T08:40:52.4971954Z ##[endgroup]
+2026-04-15T08:40:52.5624974Z 
+2026-04-15T08:40:52.5624982Z 
+2026-04-15T08:40:52.5625338Z An error occurred inside PHPUnit.
+2026-04-15T08:40:52.5625738Z 
+2026-04-15T08:40:52.5626059Z Message:  Class "FusionERP\Shared\BaseRepository" not found
+2026-04-15T08:40:52.5626794Z Location: /home/runner/work/Fusion-ERP/Fusion-ERP/tests/Unit/BaseRepositoryTest.php:22
+2026-04-15T08:40:52.5627254Z 
+2026-04-15T08:40:52.5627705Z #0 /home/runner/work/Fusion-ERP/Fusion-ERP/vendor/phpunit/phpunit/src/Runner/TestSuiteLoader.php(115): require_once()
+2026-04-15T08:40:52.5628942Z #1 /home/runner/work/Fusion-ERP/Fusion-ERP/vendor/phpunit/phpunit/src/Runner/TestSuiteLoader.php(48): PHPUnit\Runner\TestSuiteLoader->loadSuiteClassFile()
+2026-04-15T08:40:52.5630227Z #2 /home/runner/work/Fusion-ERP/Fusion-ERP/vendor/phpunit/phpunit/src/Framework/TestSuite.php(251): PHPUnit\Runner\TestSuiteLoader->load()
+2026-04-15T08:40:52.5631458Z #3 /home/runner/work/Fusion-ERP/Fusion-ERP/vendor/phpunit/phpunit/src/Framework/TestSuite.php(269): PHPUnit\Framework\TestSuite->addTestFile()
+2026-04-15T08:40:52.5633209Z #4 /home/runner/work/Fusion-ERP/Fusion-ERP/vendor/phpunit/phpunit/src/TextUI/Configuration/Xml/TestSuiteMapper.php(102): PHPUnit\Framework\TestSuite->addTestFiles()
+2026-04-15T08:40:52.5634718Z #5 /home/runner/work/Fusion-ERP/Fusion-ERP/vendor/phpunit/phpunit/src/TextUI/Configuration/TestSuiteBuilder.php(79): PHPUnit\TextUI\XmlConfiguration\TestSuiteMapper->map()
+2026-04-15T08:40:52.5636118Z #6 /home/runner/work/Fusion-ERP/Fusion-ERP/vendor/phpunit/phpunit/src/TextUI/Application.php(394): PHPUnit\TextUI\Configuration\TestSuiteBuilder->build()
+2026-04-15T08:40:52.5637277Z #7 /home/runner/work/Fusion-ERP/Fusion-ERP/vendor/phpunit/phpunit/src/TextUI/Application.php(114): PHPUnit\TextUI\Application->buildTestSuite()
+2026-04-15T08:40:52.5638159Z #8 /home/runner/work/Fusion-ERP/Fusion-ERP/vendor/phpunit/phpunit/phpunit(104): PHPUnit\TextUI\Application->run()
+2026-04-15T08:40:52.5638798Z #9 /home/runner/work/Fusion-ERP/Fusion-ERP/vendor/bin/phpunit(122): include('...')
+2026-04-15T08:40:52.5639170Z #10 {main}
+2026-04-15T08:40:52.5704515Z ##[error]Process completed with exit code 255.
+2026-04-15T08:40:52.5811223Z Post job cleanup.
+2026-04-15T08:40:52.6747810Z [command]/usr/bin/git version
+2026-04-15T08:40:52.6783594Z git version 2.53.0
+2026-04-15T08:40:52.6825331Z Temporarily overriding HOME='/home/runner/work/_temp/b6a2ade6-70e5-41a2-b9ab-29a457207ca4' before making global git config changes
+2026-04-15T08:40:52.6826224Z Adding repository directory to the temporary git global config as a safe directory
+2026-04-15T08:40:52.6839746Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/Fusion-ERP/Fusion-ERP
+2026-04-15T08:40:52.6872236Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-04-15T08:40:52.6904383Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-04-15T08:40:52.7120253Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-04-15T08:40:52.7139730Z http.https://github.com/.extraheader
+2026-04-15T08:40:52.7151891Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-04-15T08:40:52.7182800Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-04-15T08:40:52.7391390Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-04-15T08:40:52.7419785Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-04-15T08:40:52.7714387Z Print service container logs: 2c8068a04d404ec29b92a86e8194c31a_mysql80_41ba4d
+2026-04-15T08:40:52.7719166Z ##[command]/usr/bin/docker logs --details ba8c1685425402763c58491fd24f3ed0e8a49f6603418d0449d6a90673437029
+2026-04-15T08:40:52.7837737Z  2026-04-15T08:40:24.176317Z 0 [Warning] [MY-011068] [Server] The syntax '--skip-host-cache' is deprecated and will be removed in a future release. Please use SET GLOBAL host_cache_size=0 instead.
+2026-04-15T08:40:52.7838865Z  2026-04-15T08:40:24.176391Z 0 [System] [MY-013169] [Server] /usr/sbin/mysqld (mysqld 8.0.45) initializing of server in progress as process 80
+2026-04-15T08:40:52.7839595Z  2026-04-15T08:40:24.180914Z 1 [System] [MY-013576] [InnoDB] InnoDB initialization has started.
+2026-04-15T08:40:52.7840148Z  2026-04-15T08:40:24.297050Z 1 [System] [MY-013577] [InnoDB] InnoDB initialization has ended.
+2026-04-15T08:40:52.7840755Z  2026-04-15 08:40:23+00:00 [Note] [Entrypoint]: Entrypoint script for MySQL Server 8.0.45-1.el9 started.
+2026-04-15T08:40:52.7841347Z  2026-04-15 08:40:24+00:00 [Note] [Entrypoint]: Switching to dedicated user 'mysql'
+2026-04-15T08:40:52.7841908Z  2026-04-15 08:40:24+00:00 [Note] [Entrypoint]: Entrypoint script for MySQL Server 8.0.45-1.el9 started.
+2026-04-15T08:40:52.7842592Z  2026-04-15 08:40:24+00:00 [Note] [Entrypoint]: Initializing database files
+2026-04-15T08:40:52.7847416Z  2026-04-15T08:40:24.867700Z 6 [Warning] [MY-010453] [Server] root@localhost is created with an empty password ! Please consider switching off the --initialize-insecure option.
+2026-04-15T08:40:52.7848805Z  2026-04-15 08:40:27+00:00 [Note] [Entrypoint]: Database files initialized
+2026-04-15T08:40:52.7849541Z  2026-04-15 08:40:27+00:00 [Note] [Entrypoint]: Starting temporary server
+2026-04-15T08:40:52.7850224Z  2026-04-15 08:40:27+00:00 [Note] [Entrypoint]: Temporary server started.
+2026-04-15T08:40:52.7850892Z  '/var/lib/mysql/mysql.sock' -> '/var/run/mysqld/mysqld.sock'
+2026-04-15T08:40:52.7851517Z  2026-04-15 08:40:29+00:00 [Note] [Entrypoint]: Creating database fusion_erp_test
+2026-04-15T08:40:52.7851871Z  
+2026-04-15T08:40:52.7852119Z  2026-04-15 08:40:29+00:00 [Note] [Entrypoint]: Stopping temporary server
+2026-04-15T08:40:52.7852779Z  2026-04-15 08:40:30+00:00 [Note] [Entrypoint]: Temporary server stopped
+2026-04-15T08:40:52.7853100Z  
+2026-04-15T08:40:52.7853387Z  2026-04-15 08:40:30+00:00 [Note] [Entrypoint]: MySQL init process done. Ready for start up.
+2026-04-15T08:40:52.7853755Z  
+2026-04-15T08:40:52.7855129Z  2026-04-15T08:40:27.237423Z 0 [Warning] [MY-011068] [Server] The syntax '--skip-host-cache' is deprecated and will be removed in a future release. Please use SET GLOBAL host_cache_size=0 instead.
+2026-04-15T08:40:52.7863462Z  2026-04-15T08:40:27.238106Z 0 [System] [MY-010116] [Server] /usr/sbin/mysqld (mysqld 8.0.45) starting as process 124
+2026-04-15T08:40:52.7864326Z  2026-04-15T08:40:27.246831Z 1 [System] [MY-013576] [InnoDB] InnoDB initialization has started.
+2026-04-15T08:40:52.7865286Z  2026-04-15T08:40:27.317099Z 1 [System] [MY-013577] [InnoDB] InnoDB initialization has ended.
+2026-04-15T08:40:52.7866260Z  2026-04-15T08:40:27.440642Z 0 [Warning] [MY-010068] [Server] CA certificate ca.pem is self signed.
+2026-04-15T08:40:52.7867220Z  2026-04-15T08:40:27.440680Z 0 [System] [MY-013602] [Server] Channel mysql_main configured to support TLS. Encrypted connections are now supported for this channel.
+2026-04-15T08:40:52.7868432Z  2026-04-15T08:40:27.442442Z 0 [Warning] [MY-011810] [Server] Insecure configuration for --pid-file: Location '/var/run/mysqld' in the path is accessible to all OS users. Consider choosing a different directory.
+2026-04-15T08:40:52.7869493Z  2026-04-15T08:40:27.454730Z 0 [System] [MY-011323] [Server] X Plugin ready for connections. Socket: /var/run/mysqld/mysqlx.sock
+2026-04-15T08:40:52.7870492Z  2026-04-15T08:40:27.454790Z 0 [System] [MY-010931] [Server] /usr/sbin/mysqld: ready for connections. Version: '8.0.45'  socket: '/var/run/mysqld/mysqld.sock'  port: 0  MySQL Community Server - GPL.
+2026-04-15T08:40:52.7871571Z  Warning: Unable to load '/usr/share/zoneinfo/iso3166.tab' as time zone. Skipping it.
+2026-04-15T08:40:52.7872136Z  Warning: Unable to load '/usr/share/zoneinfo/leap-seconds.list' as time zone. Skipping it.
+2026-04-15T08:40:52.7872995Z  Warning: Unable to load '/usr/share/zoneinfo/leapseconds' as time zone. Skipping it.
+2026-04-15T08:40:52.7873519Z  Warning: Unable to load '/usr/share/zoneinfo/tzdata.zi' as time zone. Skipping it.
+2026-04-15T08:40:52.7874031Z  Warning: Unable to load '/usr/share/zoneinfo/zone.tab' as time zone. Skipping it.
+2026-04-15T08:40:52.7874535Z  Warning: Unable to load '/usr/share/zoneinfo/zone1970.tab' as time zone. Skipping it.
+2026-04-15T08:40:52.7875205Z  2026-04-15T08:40:29.120042Z 11 [System] [MY-013172] [Server] Received SHUTDOWN from user root. Shutting down mysqld (Version: 8.0.45).
+2026-04-15T08:40:52.7876043Z  2026-04-15T08:40:29.947363Z 0 [System] [MY-010910] [Server] /usr/sbin/mysqld: Shutdown complete (mysqld 8.0.45)  MySQL Community Server - GPL.
+2026-04-15T08:40:52.7877106Z  2026-04-15T08:40:30.298591Z 0 [Warning] [MY-011068] [Server] The syntax '--skip-host-cache' is deprecated and will be removed in a future release. Please use SET GLOBAL host_cache_size=0 instead.
+2026-04-15T08:40:52.7878047Z  2026-04-15T08:40:30.299862Z 0 [System] [MY-010116] [Server] /usr/sbin/mysqld (mysqld 8.0.45) starting as process 1
+2026-04-15T08:40:52.7878664Z  2026-04-15T08:40:30.304657Z 1 [System] [MY-013576] [InnoDB] InnoDB initialization has started.
+2026-04-15T08:40:52.7879216Z  2026-04-15T08:40:30.377957Z 1 [System] [MY-013577] [InnoDB] InnoDB initialization has ended.
+2026-04-15T08:40:52.7879771Z  2026-04-15T08:40:30.526329Z 0 [Warning] [MY-010068] [Server] CA certificate ca.pem is self signed.
+2026-04-15T08:40:52.7880571Z  2026-04-15T08:40:30.526361Z 0 [System] [MY-013602] [Server] Channel mysql_main configured to support TLS. Encrypted connections are now supported for this channel.
+2026-04-15T08:40:52.7881754Z  2026-04-15T08:40:30.527890Z 0 [Warning] [MY-011810] [Server] Insecure configuration for --pid-file: Location '/var/run/mysqld' in the path is accessible to all OS users. Consider choosing a different directory.
+2026-04-15T08:40:52.7883238Z  2026-04-15T08:40:30.540699Z 0 [System] [MY-011323] [Server] X Plugin ready for connections. Bind-address: '::' port: 33060, socket: /var/run/mysqld/mysqlx.sock
+2026-04-15T08:40:52.7884354Z  2026-04-15T08:40:30.540802Z 0 [System] [MY-010931] [Server] /usr/sbin/mysqld: ready for connections. Version: '8.0.45'  socket: '/var/run/mysqld/mysqld.sock'  port: 3306  MySQL Community Server - GPL.
+2026-04-15T08:40:52.7890605Z Stop and remove container: 2c8068a04d404ec29b92a86e8194c31a_mysql80_41ba4d
+2026-04-15T08:40:52.7895518Z ##[command]/usr/bin/docker rm --force ba8c1685425402763c58491fd24f3ed0e8a49f6603418d0449d6a90673437029
+2026-04-15T08:40:54.5523641Z ba8c1685425402763c58491fd24f3ed0e8a49f6603418d0449d6a90673437029
+2026-04-15T08:40:54.5548567Z Remove container network: github_network_1db38c69b377428b97bfe9ad5f85f779
+2026-04-15T08:40:54.5553319Z ##[command]/usr/bin/docker network rm github_network_1db38c69b377428b97bfe9ad5f85f779
+2026-04-15T08:40:54.6607981Z github_network_1db38c69b377428b97bfe9ad5f85f779
+2026-04-15T08:40:54.6671223Z Cleaning up orphan processes
+2026-04-15T08:40:54.7012675Z ##[warning]Node.js 20 actions are deprecated. The following actions are running on Node.js 20 and may not work as expected: actions/cache@v4, actions/checkout@v4. Actions will be forced to run with Node.js 24 by default starting June 2nd, 2026. Node.js 20 will be removed from the runner on September 16th, 2026. Please check if updated versions of these actions are available that support Node.js 24. To opt into Node.js 24 now, set the FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true environment variable on the runner or in your workflow file. Once Node.js 24 becomes the default, you can temporarily opt out by setting ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
