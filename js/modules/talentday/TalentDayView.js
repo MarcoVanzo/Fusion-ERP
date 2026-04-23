@@ -2,7 +2,7 @@ export class TalentDayView {
 
     /** Predefined tappe for the Talent Day events */
     static TAPPE = [
-        '19 MAG 2026, Scandicci - Savino Del Bene Volley',
+        '19 MAG 2026, Firenze - Savino Del Bene Volley',
         '26 MAG 2026, Firenze - Savino Del Bene Volley',
         '28 MAG 2026, Roma - Civitavecchia',
         '3 GIU 2026, Venezia - Fusion Team Volley',
