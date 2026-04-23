@@ -60,7 +60,15 @@ class TalentDayModule {
     async refreshData(reRender = true) {
         try {
             const result = await TalentDayAPI.listEntries();
-            this._entries = result.entries || result || [];
+            let rawEntries = result.entries || result || [];
+            
+            // Normalize tappa names to ensure UI, filtering, and exports work consistently
+            this._entries = rawEntries.map(e => {
+                if (e.tappa && (e.tappa === 'Scandicci' || e.tappa.includes('Scandicci') || e.tappa.includes('19 MAG'))) {
+                    e.tappa = '19 MAG 2026, Firenze 2 - Savino Del Bene Volley';
+                }
+                return e;
+            });
 
             if (reRender) {
                 const area = document.getElementById("td-content-area");
