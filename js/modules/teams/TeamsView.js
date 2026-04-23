@@ -201,7 +201,7 @@ const TeamsView = {
                     <label class="form-label">Categoria</label>
                     <input type="text" id="team-category" class="form-input" list="team-category-list" placeholder="es. Giovanile" value="${Utils.escapeHtml(team?.category || '')}">
                     <datalist id="team-category-list">
-                        \${categories.map(c => \`<option value="\${Utils.escapeHtml(c)}"></option>\`).join('')}
+                        ${categories.map(c => `<option value="${Utils.escapeHtml(c)}"></option>`).join('')}
                     </datalist>
                 </div>
             </div>
