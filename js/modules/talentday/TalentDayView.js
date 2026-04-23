@@ -287,7 +287,6 @@ export class TalentDayView {
         // anagrafica — Nome/Cognome first, Tappa included
         return [
             ['Nome', 'nome'], ['Cognome', 'cognome'], ['Tappa', 'tappa'],
-            ['Privacy GDPR', 'privacy_consent'],
             ['Data Nascita', 'data_nascita'],
             ['Data Reg.', 'data_registrazione'], ['Ora', 'ora_registrazione'],
             ['Email', 'email'], ['Città/CAP', 'citta_cap'], ['Cellulare', 'cellulare'],
@@ -301,7 +300,8 @@ export class TalentDayView {
         const ths = cols.map(([label, key]) => {
             const isActive = sortCol === key;
             const activeClass = isActive ? ` sort-active${sortDir === 'desc' ? ' sort-desc' : ''}` : '';
-            return `<th style="text-align:left;padding:10px 12px;border-bottom:1px solid var(--color-border);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:var(--color-text-muted)">
+            const styleExtra = key === 'tappa' ? 'min-width:120px; white-space:nowrap;' : '';
+            return `<th style="${styleExtra}text-align:left;padding:10px 12px;border-bottom:1px solid var(--color-border);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:var(--color-text-muted)">
                 <span class="td-sort-header${activeClass}" data-sort-key="${key}">
                     ${label}
                     <i class="ph ph-caret-up td-sort-icon"></i>
@@ -366,7 +366,7 @@ export class TalentDayView {
                     if (location === 'Scandicci' || (typeof raw === 'string' && (raw.includes('Scandicci') || raw.includes('19 MAG')))) {
                         location = 'Firenze 2';
                     }
-                    return cell(location);
+                    return `<td style="padding:10px 12px;border-bottom:1px solid var(--color-border);white-space:nowrap;">${window.Utils.escapeHtml(location)}</td>`;
                 }
                 if (key.startsWith('salto_rincorsa')) {
                     const v = raw != null && raw !== '' ? parseFloat(raw) : null;
