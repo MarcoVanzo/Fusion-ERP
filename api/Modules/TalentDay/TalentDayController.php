@@ -34,7 +34,7 @@ class TalentDayController
                    nome, cognome, indirizzo, citta_cap, data_nascita, cellulare,
                    taglia_tshirt, club_tesseramento, ruolo, campionati,
                    nome_genitore, telefono_genitore, email_genitore, privacy_consent,
-                   altezza, peso, reach_cm, sit_and_reach, reach_2, cmj, salto_rincorsa,
+                   altezza, reach_cm, salto_rincorsa_1, salto_rincorsa_2, salto_rincorsa_3,
                    created_at
             FROM talent_day_entries
             WHERE tenant_id = :tenant_id
@@ -70,13 +70,13 @@ class TalentDayController
                  nome, cognome, indirizzo, citta_cap, data_nascita, cellulare,
                  taglia_tshirt, club_tesseramento, ruolo, campionati,
                  nome_genitore, telefono_genitore, email_genitore, privacy_consent,
-                 altezza, peso, reach_cm, sit_and_reach, reach_2, cmj, salto_rincorsa)
+                 altezza, reach_cm, salto_rincorsa_1, salto_rincorsa_2, salto_rincorsa_3)
             VALUES
                 (:tenant_id, :data_reg, :ora_reg, :email, :tappa,
                  :nome, :cognome, :indirizzo, :citta_cap, :data_nascita, :cellulare,
                  :taglia, :club, :ruolo, :campionati,
                  :nome_gen, :tel_gen, :email_gen, :privacy_consent,
-                 :altezza, :peso, :reach_cm, :sit_and_reach, :reach_2, :cmj, :salto_rincorsa)
+                 :altezza, :reach_cm, :salto_rincorsa_1, :salto_rincorsa_2, :salto_rincorsa_3)
         ");
 
         $stmt->execute([
@@ -100,12 +100,10 @@ class TalentDayController
             ':email_gen'    => $data['email_genitore'] ?? null,
             ':privacy_consent' => !empty($data['privacy_consent']) ? 1 : 0,
             ':altezza'      => !empty($data['altezza'])        ? (float)$data['altezza']        : null,
-            ':peso'         => !empty($data['peso'])           ? (float)$data['peso']           : null,
             ':reach_cm'     => !empty($data['reach_cm'])       ? (float)$data['reach_cm']       : null,
-            ':sit_and_reach'=> !empty($data['sit_and_reach'])  ? (float)$data['sit_and_reach']  : null,
-            ':reach_2'      => !empty($data['reach_2'])        ? (float)$data['reach_2']        : null,
-            ':cmj'          => !empty($data['cmj'])            ? (float)$data['cmj']            : null,
-            ':salto_rincorsa' => !empty($data['salto_rincorsa']) ? (float)$data['salto_rincorsa'] : null,
+            ':salto_rincorsa_1' => !empty($data['salto_rincorsa_1']) ? (float)$data['salto_rincorsa_1'] : null,
+            ':salto_rincorsa_2' => !empty($data['salto_rincorsa_2']) ? (float)$data['salto_rincorsa_2'] : null,
+            ':salto_rincorsa_3' => !empty($data['salto_rincorsa_3']) ? (float)$data['salto_rincorsa_3'] : null,
         ]);
 
         Response::success(['success' => true, 'id' => $this->db->lastInsertId()]);
@@ -146,12 +144,10 @@ class TalentDayController
                 email_genitore     = :email_gen,
                 privacy_consent    = :privacy_consent,
                 altezza            = :altezza,
-                peso               = :peso,
                 reach_cm           = :reach_cm,
-                sit_and_reach      = :sit_and_reach,
-                reach_2            = :reach_2,
-                cmj                = :cmj,
-                salto_rincorsa     = :salto_rincorsa
+                salto_rincorsa_1   = :salto_rincorsa_1,
+                salto_rincorsa_2   = :salto_rincorsa_2,
+                salto_rincorsa_3   = :salto_rincorsa_3
             WHERE id = :id AND tenant_id = :tenant_id
         ");
 
@@ -177,12 +173,10 @@ class TalentDayController
             ':email_gen'    => $data['email_genitore'] ?? null,
             ':privacy_consent' => !empty($data['privacy_consent']) ? 1 : 0,
             ':altezza'      => !empty($data['altezza'])        ? (float)$data['altezza']        : null,
-            ':peso'         => !empty($data['peso'])           ? (float)$data['peso']           : null,
             ':reach_cm'     => !empty($data['reach_cm'])       ? (float)$data['reach_cm']       : null,
-            ':sit_and_reach'=> !empty($data['sit_and_reach'])  ? (float)$data['sit_and_reach']  : null,
-            ':reach_2'      => !empty($data['reach_2'])        ? (float)$data['reach_2']        : null,
-            ':cmj'          => !empty($data['cmj'])            ? (float)$data['cmj']            : null,
-            ':salto_rincorsa' => !empty($data['salto_rincorsa']) ? (float)$data['salto_rincorsa'] : null,
+            ':salto_rincorsa_1' => !empty($data['salto_rincorsa_1']) ? (float)$data['salto_rincorsa_1'] : null,
+            ':salto_rincorsa_2' => !empty($data['salto_rincorsa_2']) ? (float)$data['salto_rincorsa_2'] : null,
+            ':salto_rincorsa_3' => !empty($data['salto_rincorsa_3']) ? (float)$data['salto_rincorsa_3'] : null,
         ]);
 
         if ($stmt->rowCount() === 0) {

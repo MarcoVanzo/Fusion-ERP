@@ -129,7 +129,7 @@ class TalentDayModule {
             const key = this._sortCol;
             const dir = this._sortDir === 'asc' ? 1 : -1;
             // Numeric keys for physical measurements
-            const numericKeys = new Set(['altezza', 'peso', 'reach_cm', 'sit_and_reach', 'reach_2', 'cmj', 'salto_rincorsa']);
+            const numericKeys = new Set(['altezza', 'reach_cm', 'salto_rincorsa_1', 'salto_rincorsa_2', 'salto_rincorsa_3']);
 
             data.sort((a, b) => {
                 let va = a[key] ?? '';
@@ -287,8 +287,8 @@ class TalentDayModule {
         const headers = [
             "Data Reg.", "Ora", "Tappa", "Nome", "Cognome", "Email", "Cellulare", 
             "Data Nascita", "Città/CAP", "Indirizzo", "Taglia", "Club", "Ruolo", 
-            "Campionati", "Genitore", "Tel. Gen.", "Email Gen.", "Altezza", "Peso", 
-            "Reach", "Sit e Reach", "Reach 2", "CMJ", "Salto Rinc", "Privacy GDPR"
+            "Campionati", "Genitore", "Tel. Gen.", "Email Gen.", "Altezza", 
+            "Reach", "Salto Rinc 1", "Salto Rinc 2", "Salto Rinc 3", "Privacy GDPR"
         ];
         
         const rows = data.map(e => [
@@ -310,12 +310,10 @@ class TalentDayModule {
             `"${(e.telefono_genitore || "").replace(/"/g, '""')}"`,
             `"${(e.email_genitore || "").replace(/"/g, '""')}"`,
             e.altezza || "",
-            e.peso || "",
             e.reach_cm || "",
-            e.sit_and_reach || "",
-            e.reach_2 || "",
-            e.cmj || "",
-            e.salto_rincorsa || "",
+            e.salto_rincorsa_1 || "",
+            e.salto_rincorsa_2 || "",
+            e.salto_rincorsa_3 || "",
             e.privacy_consent ? "SI" : "NO"
         ]);
 
@@ -380,12 +378,10 @@ class TalentDayModule {
                 telefono_genitore:  document.getElementById("td-tel-gen")?.value.trim() || null,
                 email_genitore:     document.getElementById("td-email-gen")?.value.trim() || null,
                 altezza:            document.getElementById("td-altezza")?.value || null,
-                peso:               document.getElementById("td-peso")?.value || null,
                 reach_cm:           document.getElementById("td-reach")?.value || null,
-                sit_and_reach:      document.getElementById("td-sit-reach")?.value || null,
-                reach_2:            document.getElementById("td-reach-2")?.value || null,
-                cmj:                document.getElementById("td-cmj")?.value || null,
-                salto_rincorsa:     document.getElementById("td-salto")?.value || null,
+                salto_rincorsa_1:   document.getElementById("td-salto-1")?.value || null,
+                salto_rincorsa_2:   document.getElementById("td-salto-2")?.value || null,
+                salto_rincorsa_3:   document.getElementById("td-salto-3")?.value || null,
             };
 
             if (isEdit) {

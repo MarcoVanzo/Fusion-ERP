@@ -276,9 +276,8 @@ export class TalentDayView {
         if (view === 'fisici') {
             return [
                 ['Nome', 'nome'], ['Cognome', 'cognome'], ['Anno Nascita', 'data_nascita'], ['Tappa', 'tappa'],
-                ['Altezza', 'altezza'], ['Peso', 'peso'], ['Reach', 'reach_cm'],
-                ['Sit e Reach', 'sit_and_reach'], ['Reach 2', 'reach_2'],
-                ['CMJ', 'cmj'], ['Salto Rincorsa', 'salto_rincorsa']
+                ['Altezza', 'altezza'], ['Reach', 'reach_cm'],
+                ['Salto Rincorsa 1', 'salto_rincorsa_1'], ['Salto Rincorsa 2', 'salto_rincorsa_2'], ['Salto Rincorsa 3', 'salto_rincorsa_3']
             ];
         }
         // anagrafica — Nome/Cognome first, Tappa included
@@ -336,7 +335,7 @@ export class TalentDayView {
         };
 
         // Metric keys that should use cellMetric rendering
-        const metricKeys = { altezza: 'cm', peso: 'kg', reach_cm: 'cm', sit_and_reach: 'cm', reach_2: 'cm', cmj: 'cm' };
+        const metricKeys = { altezza: 'cm', reach_cm: 'cm' };
         // Bold keys
         const boldKeys = new Set(['nome', 'cognome']);
         // Date formatting helper
@@ -362,7 +361,7 @@ export class TalentDayView {
                     }
                     return cell(location);
                 }
-                if (key === 'salto_rincorsa') {
+                if (key.startsWith('salto_rincorsa')) {
                     const v = raw != null && raw !== '' ? parseFloat(raw) : null;
                     if (v === null) return cell('—');
                     let color = 'var(--color-danger)'; // < 280
@@ -540,33 +539,23 @@ export class TalentDayView {
                         <input id="td-altezza" class="form-input" type="number" step="0.1" min="100" max="250" value="${e.altezza ?? ''}">
                     </div>
                     <div class="form-group">
-                        <label class="form-label" for="td-peso">Peso (kg)</label>
-                        <input id="td-peso" class="form-input" type="number" step="0.1" min="30" max="200" value="${e.peso ?? ''}">
-                    </div>
-                </div>
-                <div class="form-grid">
-                    <div class="form-group">
                         <label class="form-label" for="td-reach">Reach (cm)</label>
                         <input id="td-reach" class="form-input" type="number" step="0.1" min="100" max="400" value="${e.reach_cm ?? ''}">
                     </div>
-                    <div class="form-group">
-                        <label class="form-label" for="td-sit-reach">Sit e Reach (cm)</label>
-                        <input id="td-sit-reach" class="form-input" type="number" step="0.1" value="${e.sit_and_reach ?? ''}">
-                    </div>
                 </div>
                 <div class="form-grid">
                     <div class="form-group">
-                        <label class="form-label" for="td-reach-2">Reach 2 (cm)</label>
-                        <input id="td-reach-2" class="form-input" type="number" step="0.1" min="100" max="400" value="${e.reach_2 ?? ''}">
+                        <label class="form-label" for="td-salto-1">Salto con Rincorsa 1 (cm)</label>
+                        <input id="td-salto-1" class="form-input" type="number" step="0.1" min="0" max="400" value="${e.salto_rincorsa_1 ?? ''}">
                     </div>
                     <div class="form-group">
-                        <label class="form-label" for="td-cmj">CMJ (cm)</label>
-                        <input id="td-cmj" class="form-input" type="number" step="0.1" min="0" max="100" value="${e.cmj ?? ''}">
+                        <label class="form-label" for="td-salto-2">Salto con Rincorsa 2 (cm)</label>
+                        <input id="td-salto-2" class="form-input" type="number" step="0.1" min="0" max="400" value="${e.salto_rincorsa_2 ?? ''}">
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="form-label" for="td-salto">Salto con Rincorsa (cm)</label>
-                    <input id="td-salto" class="form-input" type="number" step="0.1" min="0" max="400" value="${e.salto_rincorsa ?? ''}">
+                    <label class="form-label" for="td-salto-3">Salto con Rincorsa 3 (cm)</label>
+                    <input id="td-salto-3" class="form-input" type="number" step="0.1" min="0" max="400" value="${e.salto_rincorsa_3 ?? ''}">
                 </div>
 
                 <div id="td-error" class="form-error hidden"></div>
