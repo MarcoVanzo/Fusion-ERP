@@ -268,6 +268,8 @@ class ScoutingModule {
                 altezza: document.getElementById("sc-altezza")?.value,
                 peso: document.getElementById("sc-peso")?.value,
                 reach_cm: document.getElementById("sc-reach")?.value,
+                sit_and_reach: document.getElementById("sc-sit-reach")?.value,
+                reach_2: document.getElementById("sc-reach-2")?.value,
                 cmj: document.getElementById("sc-cmj")?.value,
                 salto_rincorsa: document.getElementById("sc-salto")?.value
             };

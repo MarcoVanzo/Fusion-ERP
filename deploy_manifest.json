@@ -1,6 +1,6 @@
 {
   "version": 3,
-  "generated_at": "2026-04-23T09:32:59.113Z",
+  "generated_at": "2026-04-23T11:15:03.021Z",
   "file_count": 1714,
   "files": [
     {
@@ -213,7 +213,7 @@
     },
     {
       "path": "api/Modules/Scouting/ScoutingController.php",
-      "hash": "542c5f56a8a2612759e6585fe0a5559fd15efda0bd3d09f5c17fee97d8ee9516"
+      "hash": "7e455c6c625e6f3bcae355521c9f1ad7eb2fa7232f425f6901e51e97d39d7ff4"
     },
     {
       "path": "api/Modules/Social/SocialController.php",
@@ -249,7 +249,7 @@
     },
     {
       "path": "api/Modules/TalentDay/TalentDayController.php",
-      "hash": "5b0ab3d793ac2481a8fdd6878167cee434106f99714d01cc5b0004dfe5c5e3c4"
+      "hash": "56f81edb2be8d8b145e1b2caa9c35e11e39a0cd6baaf5b28062fe157d193967a"
     },
     {
       "path": "api/Modules/Tasks/TasksController.php",
@@ -633,7 +633,7 @@
     },
     {
       "path": "css/societa.css",
-      "hash": "f09939548249d50dc8d5bf9adf8bd81699bbbf64baf352a8e87c1edad3de03bb"
+      "hash": "275d02a80b8013ffa0e7d69dbbc72496249deee44ca905ed407b82b5dfdce5a3"
     },
     {
       "path": "css/squadre_premium.css",
@@ -1513,7 +1513,7 @@
     },
     {
       "path": "index.html",
-      "hash": "7527f3b568b198c8355d8d8ba2ddf4ce88f2b38c87134f3d5597fc8aec024a6f"
+      "hash": "5c745d150e466f1589de6499ece365bd907e3fd931e0c6ac17839d9617955b7e"
     },
     {
       "path": "js/api/athletes.api.js",
@@ -1593,7 +1593,7 @@
     },
     {
       "path": "js/modules/admin.js",
-      "hash": "1b9730480d1e07c7f40080938a93f434e41d0dfeb2639f0b91607e333acc8368"
+      "hash": "d8ff15beb8f501eb1fd51fa455ab6790da580af8acc655ee1113aefadd0c9d61"
     },
     {
       "path": "js/modules/admin/AdminBackup.js",
@@ -1765,7 +1765,7 @@
     },
     {
       "path": "js/modules/scouting/Scouting.js",
-      "hash": "6fedf20247ed6cf089be5eeb70e3fc54bf1aae3e8fe0edc4c2dceea5566576ab"
+      "hash": "110442ebfbd0e0d56cc94f749d4002705b77dfa212bed33467cb5d358cf18511"
     },
     {
       "path": "js/modules/scouting/ScoutingAPI.js",
@@ -1773,7 +1773,7 @@
     },
     {
       "path": "js/modules/scouting/ScoutingView.js",
-      "hash": "30e58291ac3c32f3bdab5f92ce7b819511a9924acb5734ad8c27d5dea9acb9a0"
+      "hash": "b5e8f6183d873804ad11ee0631d384922311d338bd76885058a2f813af0631ad"
     },
     {
       "path": "js/modules/site_stats.js",
@@ -1825,7 +1825,7 @@
     },
     {
       "path": "js/modules/talentday/TalentDay.js",
-      "hash": "dc7753c6264f97d7150277433c4042f5ac20f9776e8fb86a22f63596ca559003"
+      "hash": "7dd7bb3b3a2803fa38b076bffec0d776d9c498624894f883e553a908ebc21ed0"
     },
     {
       "path": "js/modules/talentday/TalentDayAPI.js",
@@ -1833,7 +1833,7 @@
     },
     {
       "path": "js/modules/talentday/TalentDayView.js",
-      "hash": "e8a7ab8b84ab15ef17ec43bef8a880762a6017d33b180ecae29d8f45eb2d4199"
+      "hash": "4c689d74f20d4485633f1af1aaa06fa1d1ac40fb9c714e51186b41aece2d102f"
     },
     {
       "path": "js/modules/tasks.js",

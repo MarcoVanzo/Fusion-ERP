@@ -129,7 +129,7 @@ class TalentDayModule {
             const key = this._sortCol;
             const dir = this._sortDir === 'asc' ? 1 : -1;
             // Numeric keys for physical measurements
-            const numericKeys = new Set(['altezza', 'peso', 'reach_cm', 'cmj', 'salto_rincorsa']);
+            const numericKeys = new Set(['altezza', 'peso', 'reach_cm', 'sit_and_reach', 'reach_2', 'cmj', 'salto_rincorsa']);
 
             data.sort((a, b) => {
                 let va = a[key] ?? '';
@@ -288,7 +288,7 @@ class TalentDayModule {
             "Data Reg.", "Ora", "Tappa", "Nome", "Cognome", "Email", "Cellulare", 
             "Data Nascita", "Città/CAP", "Indirizzo", "Taglia", "Club", "Ruolo", 
             "Campionati", "Genitore", "Tel. Gen.", "Email Gen.", "Altezza", "Peso", 
-            "Reach", "CMJ", "Salto Rinc", "Privacy GDPR"
+            "Reach", "Sit e Reach", "Reach 2", "CMJ", "Salto Rinc", "Privacy GDPR"
         ];
         
         const rows = data.map(e => [
@@ -312,6 +312,8 @@ class TalentDayModule {
             e.altezza || "",
             e.peso || "",
             e.reach_cm || "",
+            e.sit_and_reach || "",
+            e.reach_2 || "",
             e.cmj || "",
             e.salto_rincorsa || "",
             e.privacy_consent ? "SI" : "NO"
@@ -380,6 +382,8 @@ class TalentDayModule {
                 altezza:            document.getElementById("td-altezza")?.value || null,
                 peso:               document.getElementById("td-peso")?.value || null,
                 reach_cm:           document.getElementById("td-reach")?.value || null,
+                sit_and_reach:      document.getElementById("td-sit-reach")?.value || null,
+                reach_2:            document.getElementById("td-reach-2")?.value || null,
                 cmj:                document.getElementById("td-cmj")?.value || null,
                 salto_rincorsa:     document.getElementById("td-salto")?.value || null,
             };

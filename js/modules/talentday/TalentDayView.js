@@ -277,6 +277,7 @@ export class TalentDayView {
             return [
                 ['Nome', 'nome'], ['Cognome', 'cognome'], ['Tappa', 'tappa'],
                 ['Altezza', 'altezza'], ['Peso', 'peso'], ['Reach', 'reach_cm'],
+                ['Sit e Reach', 'sit_and_reach'], ['Reach 2', 'reach_2'],
                 ['CMJ', 'cmj'], ['Salto Rincorsa', 'salto_rincorsa']
             ];
         }
@@ -335,7 +336,7 @@ export class TalentDayView {
         };
 
         // Metric keys that should use cellMetric rendering
-        const metricKeys = { altezza: 'cm', peso: 'kg', reach_cm: 'cm', cmj: 'cm', salto_rincorsa: 'cm' };
+        const metricKeys = { altezza: 'cm', peso: 'kg', reach_cm: 'cm', sit_and_reach: 'cm', reach_2: 'cm', cmj: 'cm' };
         // Bold keys
         const boldKeys = new Set(['nome', 'cognome']);
         // Date formatting helper
@@ -360,6 +361,18 @@ export class TalentDayView {
                         }
                     }
                     return cell(location);
+                }
+                if (key === 'salto_rincorsa') {
+                    const v = raw != null && raw !== '' ? parseFloat(raw) : null;
+                    if (v === null) return cell('—');
+                    let color = 'var(--color-danger)'; // < 280
+                    if (v > 300) color = 'var(--color-pink)';
+                    else if (v >= 290) color = 'var(--color-success)';
+                    else if (v >= 280) color = 'var(--color-warning)';
+                    return `<td style="padding:10px 12px;border-bottom:1px solid var(--color-border);font-variant-numeric:tabular-nums">
+                        <span style="font-weight:600;color:${color}">${v}</span>
+                        <span style="font-size:11px;color:var(--color-text-muted);margin-left:2px">cm</span>
+                    </td>`;
                 }
                 if (metricKeys[key]) return cellMetric(raw, metricKeys[key]);
                 if (boldKeys.has(key)) return cellBold(raw);
@@ -528,6 +541,16 @@ export class TalentDayView {
                     <div class="form-group">
                         <label class="form-label" for="td-reach">Reach (cm)</label>
                         <input id="td-reach" class="form-input" type="number" step="0.1" min="100" max="400" value="${e.reach_cm ?? ''}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="td-sit-reach">Sit e Reach (cm)</label>
+                        <input id="td-sit-reach" class="form-input" type="number" step="0.1" value="${e.sit_and_reach ?? ''}">
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label" for="td-reach-2">Reach 2 (cm)</label>
+                        <input id="td-reach-2" class="form-input" type="number" step="0.1" min="100" max="400" value="${e.reach_2 ?? ''}">
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="td-cmj">CMJ (cm)</label>

@@ -89,7 +89,7 @@ export class ScoutingView {
     static renderTableArea(athletes, lastSync, canEdit, activeView = 'anagrafica') {
         let headers = [];
         if (activeView === 'fisici') {
-            headers = ["Nome", "Cognome", "Altezza", "Peso", "Reach", "CMJ", "Salto Rincorsa"];
+            headers = ["Nome", "Cognome", "Altezza", "Peso", "Reach", "Sit e Reach", "Reach 2", "CMJ", "Salto Rincorsa"];
         } else {
             headers = ["Nome", "Cognome", "Ruolo", "Società", "Email", "Cellulare", "Anno Nasc.", "Note", "Rilevatore", "Data", "Fonte"];
         }
@@ -151,7 +151,7 @@ export class ScoutingView {
      * @param {string} activeView The current view (anagrafica or fisici)
      */
     static renderRows(data, canEdit, activeView = 'anagrafica') {
-        const colCount = activeView === 'fisici' ? 7 : 11;
+        const colCount = activeView === 'fisici' ? 9 : 11;
         if (data.length === 0) {
             return `<tr><td colspan="${canEdit ? colCount + 1 : colCount}" style="text-align:center;padding:var(--sp-4);color:var(--color-text-muted)">Nessun atleta trovato nel database scouting.</td></tr>`;
         }
@@ -178,14 +178,30 @@ export class ScoutingView {
 
             let cols = '';
             if (activeView === 'fisici') {
+                let saltoColor = 'var(--color-danger)';
+                const saltoVal = parseFloat(athlete.salto_rincorsa);
+                if (!isNaN(saltoVal)) {
+                    if (saltoVal > 300) saltoColor = 'var(--color-pink)';
+                    else if (saltoVal >= 290) saltoColor = 'var(--color-success)';
+                    else if (saltoVal >= 280) saltoColor = 'var(--color-warning)';
+                }
+                const cellSalto = athlete.salto_rincorsa != null && athlete.salto_rincorsa !== '' 
+                    ? `<td style="padding:10px 12px;border-bottom:1px solid var(--color-border);font-variant-numeric:tabular-nums">
+                        <span style="font-weight:600;color:${saltoColor}">${saltoVal}</span>
+                        <span style="font-size:11px;color:var(--color-text-muted);margin-left:2px">cm</span>
+                       </td>`
+                    : `<td style="padding:10px 12px;border-bottom:1px solid var(--color-border)">—</td>`;
+
                 cols = `
                     <td style="padding:10px 12px;border-bottom:1px solid var(--color-border);font-weight:600">${window.Utils.escapeHtml(athlete.nome || "—")}</td>
                     <td style="padding:10px 12px;border-bottom:1px solid var(--color-border);font-weight:600">${window.Utils.escapeHtml(athlete.cognome || "—")}</td>
                     ${cellMetric(athlete.altezza, 'cm')}
                     ${cellMetric(athlete.peso, 'kg')}
                     ${cellMetric(athlete.reach_cm, 'cm')}
+                    ${cellMetric(athlete.sit_and_reach, 'cm')}
+                    ${cellMetric(athlete.reach_2, 'cm')}
                     ${cellMetric(athlete.cmj, 'cm')}
-                    ${cellMetric(athlete.salto_rincorsa, 'cm')}
+                    ${cellSalto}
                 `;
             } else {
                 cols = `
@@ -304,6 +320,16 @@ export class ScoutingView {
                     <div class="form-group">
                         <label class="form-label" for="sc-reach">Reach (cm)</label>
                         <input id="sc-reach" class="form-input" type="number" step="0.1" min="100" max="400" value="${athlete?.reach_cm ?? ''}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="sc-sit-reach">Sit e Reach (cm)</label>
+                        <input id="sc-sit-reach" class="form-input" type="number" step="0.1" value="${athlete?.sit_and_reach ?? ''}">
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label" for="sc-reach-2">Reach 2 (cm)</label>
+                        <input id="sc-reach-2" class="form-input" type="number" step="0.1" min="100" max="400" value="${athlete?.reach_2 ?? ''}">
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="sc-cmj">CMJ (cm)</label>

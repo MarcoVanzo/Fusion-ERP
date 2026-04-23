@@ -63,7 +63,7 @@ class ScoutingController
 
         // Security: limit to current tenant's records, ordered by recency
         $stmt = $this->db->prepare("
-            SELECT id, nome, cognome, societa_appartenenza, anno_nascita, ruolo, email, cellulare, note, rilevatore, data_rilevazione, source, is_locked_edit, altezza, peso, reach_cm, cmj, salto_rincorsa
+            SELECT id, nome, cognome, societa_appartenenza, anno_nascita, ruolo, email, cellulare, note, rilevatore, data_rilevazione, source, is_locked_edit, altezza, peso, reach_cm, sit_and_reach, reach_2, cmj, salto_rincorsa
             FROM scouting_athletes
             WHERE tenant_id = :tenant_id
             ORDER BY created_at DESC
@@ -107,8 +107,8 @@ class ScoutingController
         }
 
         $stmt = $this->db->prepare("
-            INSERT INTO scouting_athletes (tenant_id, nome, cognome, societa_appartenenza, anno_nascita, ruolo, email, cellulare, note, rilevatore, data_rilevazione, source, altezza, peso, reach_cm, cmj, salto_rincorsa)
-            VALUES (:tenant_id, :nome, :cognome, :societa, :anno, :ruolo, :email, :cellulare, :note, :rilevatore, :data_ril, 'manual', :altezza, :peso, :reach_cm, :cmj, :salto_rincorsa)
+            INSERT INTO scouting_athletes (tenant_id, nome, cognome, societa_appartenenza, anno_nascita, ruolo, email, cellulare, note, rilevatore, data_rilevazione, source, altezza, peso, reach_cm, sit_and_reach, reach_2, cmj, salto_rincorsa)
+            VALUES (:tenant_id, :nome, :cognome, :societa, :anno, :ruolo, :email, :cellulare, :note, :rilevatore, :data_ril, 'manual', :altezza, :peso, :reach_cm, :sit_and_reach, :reach_2, :cmj, :salto_rincorsa)
         ");
 
         $stmt->execute([
@@ -126,6 +126,8 @@ class ScoutingController
             ':altezza'   => !empty($data['altezza']) ? (float)$data['altezza'] : null,
             ':peso'      => !empty($data['peso']) ? (float)$data['peso'] : null,
             ':reach_cm'  => !empty($data['reach_cm']) ? (float)$data['reach_cm'] : null,
+            ':sit_and_reach' => !empty($data['sit_and_reach']) ? (float)$data['sit_and_reach'] : null,
+            ':reach_2'   => !empty($data['reach_2']) ? (float)$data['reach_2'] : null,
             ':cmj'       => !empty($data['cmj']) ? (float)$data['cmj'] : null,
             ':salto_rincorsa' => !empty($data['salto_rincorsa']) ? (float)$data['salto_rincorsa'] : null,
         ]);
@@ -163,6 +165,8 @@ class ScoutingController
                 altezza = :altezza,
                 peso = :peso,
                 reach_cm = :reach_cm,
+                sit_and_reach = :sit_and_reach,
+                reach_2 = :reach_2,
                 cmj = :cmj,
                 salto_rincorsa = :salto_rincorsa,
                 is_locked_edit = 1
@@ -185,6 +189,8 @@ class ScoutingController
             ':altezza'    => !empty($data['altezza']) ? (float)$data['altezza'] : null,
             ':peso'       => !empty($data['peso']) ? (float)$data['peso'] : null,
             ':reach_cm'   => !empty($data['reach_cm']) ? (float)$data['reach_cm'] : null,
+            ':sit_and_reach' => !empty($data['sit_and_reach']) ? (float)$data['sit_and_reach'] : null,
+            ':reach_2'    => !empty($data['reach_2']) ? (float)$data['reach_2'] : null,
             ':cmj'        => !empty($data['cmj']) ? (float)$data['cmj'] : null,
             ':salto_rincorsa' => !empty($data['salto_rincorsa']) ? (float)$data['salto_rincorsa'] : null,
         ]);
