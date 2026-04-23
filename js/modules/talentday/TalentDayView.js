@@ -2,7 +2,7 @@ export class TalentDayView {
 
     /** Predefined tappe for the Talent Day events */
     static TAPPE = [
-        '19 MAG 2026, Firenze - Savino Del Bene Volley',
+        '19 MAG 2026, Firenze 2 - Savino Del Bene Volley',
         '26 MAG 2026, Firenze - Savino Del Bene Volley',
         '28 MAG 2026, Roma - Civitavecchia',
         '3 GIU 2026, Venezia - Fusion Team Volley',
@@ -165,6 +165,9 @@ export class TalentDayView {
                 if (parts.length > 1) {
                     loc = parts[1].split('-')[0].trim();
                 }
+            }
+            if (loc === 'Scandicci' || (typeof tappaStr === 'string' && (tappaStr.includes('Scandicci') || tappaStr.includes('19 MAG')))) {
+                loc = 'Firenze 2';
             }
             return loc;
         };
@@ -360,6 +363,9 @@ export class TalentDayView {
                             location = parts[1].split('-')[0].trim();
                         }
                     }
+                    if (location === 'Scandicci' || (typeof raw === 'string' && (raw.includes('Scandicci') || raw.includes('19 MAG')))) {
+                        location = 'Firenze 2';
+                    }
                     return cell(location);
                 }
                 if (key.startsWith('salto_rincorsa')) {
@@ -409,7 +415,10 @@ export class TalentDayView {
      * ═══════════════════════════════════════════════════════════════════ */
     static renderSidePanelForm(entry = null) {
         const isEdit = entry !== null;
-        const e = entry || {};
+        const e = entry ? { ...entry } : {};
+        if (e.tappa && (e.tappa.includes('Scandicci') || e.tappa === '19 MAG 2026, Firenze - Savino Del Bene Volley')) {
+            e.tappa = '19 MAG 2026, Firenze 2 - Savino Del Bene Volley';
+        }
         const esc = (v) => window.Utils.escapeHtml(v || "");
         const today = new Date().toISOString().substring(0, 10);
 

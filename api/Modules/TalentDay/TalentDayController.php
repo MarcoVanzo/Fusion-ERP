@@ -472,6 +472,10 @@ class TalentDayController
         $nome         = htmlspecialchars(trim($data['nome'] ?? ''));
         $cognome      = htmlspecialchars(trim($data['cognome'] ?? ''));
         $tappa        = htmlspecialchars(trim($data['tappa'] ?? ''));
+        
+        // Rimuove il " 2" dal nome della tappa (es. "Firenze 2" diventa "Firenze") per l'email all'utente
+        $tappaForEmail = str_replace('Firenze 2', 'Firenze', $tappa);
+        
         $data_nascita = htmlspecialchars(trim($data['data_nascita'] ?? ''));
         $email        = htmlspecialchars(trim($data['email'] ?? ''));
         $cellulare    = htmlspecialchars(trim($data['cellulare'] ?? ''));
@@ -540,7 +544,7 @@ class TalentDayController
         <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fbfd;border:1px solid #e1e7f0;border-left:4px solid #C8A959;border-radius:6px;margin:24px 0;">
         <tr><td style="padding:20px 24px;">
             <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#C8A959;">Dove e quando?</p>
-            <p style="margin:4px 0;font-size:16px;color:#00205B;font-weight:bold;">{$tappa}</p>
+            <p style="margin:4px 0;font-size:16px;color:#00205B;font-weight:bold;">{$tappaForEmail}</p>
         </td></tr>
         </table>
 
