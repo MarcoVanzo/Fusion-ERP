@@ -16,8 +16,8 @@ try {
     $queries = [
         "ALTER TABLE scouting_athletes ADD COLUMN sit_and_reach DECIMAL(5,2) NULL AFTER peso",
         "ALTER TABLE scouting_athletes ADD COLUMN reach_2 DECIMAL(5,2) NULL AFTER reach_cm",
-        "ALTER TABLE talent_day_registrations ADD COLUMN sit_and_reach DECIMAL(5,2) NULL AFTER peso",
-        "ALTER TABLE talent_day_registrations ADD COLUMN reach_2 DECIMAL(5,2) NULL AFTER reach_cm"
+        "ALTER TABLE talent_day_entries ADD COLUMN sit_and_reach DECIMAL(5,2) NULL AFTER peso",
+        "ALTER TABLE talent_day_entries ADD COLUMN reach_2 DECIMAL(5,2) NULL AFTER reach_cm"
     ];
 
     $successCount = 0;
