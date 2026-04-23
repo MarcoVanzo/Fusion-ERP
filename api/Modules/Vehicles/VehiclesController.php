@@ -66,7 +66,7 @@ class VehiclesController
             ':notes' => $body['notes'] ?? null,
         ]);
 
-        Audit::log('INSERT', 'vehicles', $id, null, $body);
+        Audit::log('INSERT', 'mv_mezzi', $id, null, $body);
         Response::success(['id' => $id], 201);
     }
 
@@ -90,7 +90,7 @@ class VehiclesController
             Response::error('Veicolo non trovato', 404);
         }
 
-        Audit::log('UPDATE', 'vehicles', $body['id'], null, $body);
+        Audit::log('UPDATE', 'mv_mezzi', $body['id'], null, $body);
         Response::success(['message' => 'Veicolo aggiornato']);
     }
 
@@ -109,7 +109,7 @@ class VehiclesController
             Response::error('Veicolo non trovato', 404);
         }
 
-        Audit::log('DELETE', 'vehicles', $id, null, null);
+        Audit::log('DELETE', 'mv_mezzi', $id, null, null);
         Response::success(['message' => 'Veicolo eliminato']);
     }
 
@@ -134,7 +134,7 @@ class VehiclesController
             ':next_maintenance_mileage' => isset($body['next_maintenance_mileage']) ? (int)$body['next_maintenance_mileage'] : null,
         ]);
 
-        Audit::log('INSERT', 'vehicle_maintenance', $id, null, $body);
+        Audit::log('INSERT', 'mv_mezzi_manutenzioni', $id, null, $body);
         Response::success(['id' => $id], 201);
     }
 
@@ -159,7 +159,7 @@ class VehiclesController
         // Could also update vehicle status to 'maintenance' or 'out_of_service' depending on severity
         // if ($body['severity'] === 'critical') { ... }
 
-        Audit::log('INSERT', 'vehicle_anomalies', $id, null, $body);
+        Audit::log('INSERT', 'mv_mezzi_anomalie', $id, null, $body);
         Response::success(['id' => $id], 201);
     }
 
@@ -179,7 +179,7 @@ class VehiclesController
             Response::error('Anomalia non trovata', 404);
         }
 
-        Audit::log('UPDATE', 'vehicle_anomalies', $body['id'], null, $body);
+        Audit::log('UPDATE', 'mv_mezzi_anomalie', $body['id'], null, $body);
         Response::success(['message' => 'Stato anomalia aggiornato']);
     }
 }
