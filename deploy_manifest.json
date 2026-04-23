@@ -1,6 +1,6 @@
 {
   "version": 3,
-  "generated_at": "2026-04-23T11:39:22.220Z",
+  "generated_at": "2026-04-23T11:41:10.317Z",
   "file_count": 1715,
   "files": [
     {
@@ -1197,7 +1197,7 @@
     },
     {
       "path": "deploy.config",
-      "hash": "13a6d3e90d5495c96af4e2407bfc5a68ac712c81facdb05d8f6af7c62a2f5f6a"
+      "hash": "0fb9bd5df99387fbf541e3c92ad8b4975ae939692b01fc75841ec10facefc8ed"
     },
     {
       "path": "fusion-erp-react/dist/assets/index-D64VDMd1.css",
@@ -1517,7 +1517,7 @@
     },
     {
       "path": "index.html",
-      "hash": "c094c7a62751a42ffbf83fb6b31616a672ac6137d8ad42b51657b815fe49341f"
+      "hash": "7ba762d7bf9ba5b206a9a49fd83070779fa3e5e51dffa1362558ad5f00e7cab1"
     },
     {
       "path": "js/api/athletes.api.js",
