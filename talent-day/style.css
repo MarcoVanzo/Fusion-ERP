@@ -148,33 +148,27 @@ body::before {
 /* Tappa cards strip */
 .td-tappe-strip {
     display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
     gap: 12px;
-    padding: 24px 24px 0;
-    overflow-x: auto;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch; /* Momentum scroll fluid su iOS */
-    scroll-snap-type: x mandatory; /* UX Fluida: aggancio automatico schede */
+    padding: 24px 16px 0;
     margin-top: 16px;
     animation: floatIn 0.8s ease 0.6s both;
-    /* FIX: Centratura esatta per desktop (mantiene possibilità di scroll) */
-    width: max-content;
-    max-width: 100%;
+    width: 100%;
+    max-width: 1000px;
     margin-left: auto;
     margin-right: auto;
 }
 
-.td-tappe-strip::-webkit-scrollbar { display: none; }
-
 .td-tappa-card {
-    flex-shrink: 0;
-    scroll-snap-align: center; /* Allineamento al centro per mobile swipe */
+    flex: 1 1 200px;
+    max-width: 260px;
     background: rgba(20, 30, 48, 0.9); /* Molto più visibile, quasi solido */
     backdrop-filter: blur(12px);
     border: 1px solid rgba(200, 169, 89, 0.3); /* Bordo dorato evidente */
     border-radius: 12px;
     padding: 14px 22px;
     text-align: left;
-    min-width: 200px; /* Leggermente più larghe */
     transition: all 0.3s ease;
     cursor: pointer;
     box-shadow: 0 8px 24px rgba(0,0,0,0.6); /* Ombra pronunciata */
@@ -354,12 +348,12 @@ body::before {
     }
 
     .td-tappe-strip { 
-        padding: 16px 0 0; /* Padding rimosso ai lati per swipe infinito visivo */
-        scroll-padding: 16px; 
+        padding: 16px 8px 0; 
         gap: 8px; /* Tappe più ravvicinate su mobile */
     }
     .td-tappa-card {
-        min-width: 210px; /* Allungata proporzionalmente al click */
+        flex: 1 1 160px; /* Consente 2 colonne su schermi piccoli */
+        max-width: 100%; 
     }
     
     /* Espansione della card per un look nativo a tutto schermo */

@@ -1,6 +1,6 @@
 {
   "version": 3,
-  "generated_at": "2026-04-23T12:02:24.767Z",
+  "generated_at": "2026-04-23T12:05:21.179Z",
   "file_count": 1715,
   "files": [
     {
@@ -1517,7 +1517,7 @@
     },
     {
       "path": "index.html",
-      "hash": "fb8a28d54a359c7c9c708e784ae14251c7c94330ca6d783fced7803247f4ccf2"
+      "hash": "5d7d90f6883b5ad4bde28190206785add2cfaeb0a610f994adac12d8b4566a4c"
     },
     {
       "path": "js/api/athletes.api.js",
@@ -2021,7 +2021,7 @@
     },
     {
       "path": "talent-day/style.css",
-      "hash": "a299086284dafdd344c0cd4038b8e99791899ad106eebed4ba8d2d28216fac01"
+      "hash": "a348ef99fdaa0b0ce59a4ad4862ef65eb2adfec13c73778830e324e3a52b706f"
     },
     {
       "path": "templates/import_atlete_template.csv",
