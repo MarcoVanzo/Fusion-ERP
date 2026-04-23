@@ -179,6 +179,10 @@ const TeamsView = {
         const isEdit = !!team;
         const existingSeasons = [...new Set(allTeams.flatMap(t => (t.seasons || []).map(s => s.season)))].sort((a, b) => b.localeCompare(a));
         
+        const categories = [...new Set(allTeams.map(t => t.category).filter(Boolean))];
+        if (!categories.includes("Prova")) categories.push("Prova");
+        categories.sort((a, b) => a.localeCompare(b));
+        
         return `
             <div class="form-group">
                 <label class="form-label">Nome Squadra *</label>
@@ -195,7 +199,10 @@ const TeamsView = {
                 </div>
                 <div class="form-group">
                     <label class="form-label">Categoria</label>
-                    <input type="text" id="team-category" class="form-input" placeholder="es. Giovanile" value="${Utils.escapeHtml(team?.category || '')}">
+                    <input type="text" id="team-category" class="form-input" list="team-category-list" placeholder="es. Giovanile" value="${Utils.escapeHtml(team?.category || '')}">
+                    <datalist id="team-category-list">
+                        \${categories.map(c => \`<option value="\${Utils.escapeHtml(c)}"></option>\`).join('')}
+                    </datalist>
                 </div>
             </div>
             
