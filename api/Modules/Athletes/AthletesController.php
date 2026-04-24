@@ -348,7 +348,7 @@ class AthletesController
             Response::error('Formato non supportato (solo PDF, JPG, PNG, WEBP)', 415);
         }
 
-        $storagePath = rtrim(getenv('UPLOAD_STORAGE_PATH') ?: (dirname(__DIR__, 3) . '/storage/docs/athletes'), '/') . '/';
+        $storagePath = dirname(__DIR__, 3) . '/storage/docs/athletes/';
         if (!is_dir($storagePath)) {
             mkdir($storagePath, 0755, true);
         }
@@ -412,12 +412,24 @@ class AthletesController
 
         $fullPath = dirname(__DIR__, 3) . '/' . $athlete[$field];
         if (!file_exists($fullPath)) {
-            error_log("[downloadDoc] File fisico non trovato. path={$fullPath}");
-            Response::error('File fisico non trovato sul server', 404);
+            // Fallback per file caricati con il vecchio bug dell'UPLOAD_STORAGE_PATH
+            $fallbackPath = rtrim(getenv('UPLOAD_STORAGE_PATH') ?: '', '/') . '/' . basename($athlete[$field]);
+            if (!empty($fallbackPath) && file_exists($fallbackPath)) {
+                $fullPath = $fallbackPath;
+            } else {
+                error_log("[downloadDoc] File fisico non trovato. path={$fullPath}, fallback={$fallbackPath}");
+                Response::error('File fisico non trovato sul server', 404);
+            }
         }
 
         $finfo    = new \finfo(FILEINFO_MIME_TYPE);
         $mimeType = $finfo->file($fullPath);
+        
+        // Svuotiamo il buffer per evitare che eventuali spazi/newline corrompano il file
+        if (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+
         header('Content-Type: ' . $mimeType);
         header('Content-Disposition: inline; filename="' . basename($fullPath) . '"');
         header('Content-Length: ' . filesize($fullPath));
