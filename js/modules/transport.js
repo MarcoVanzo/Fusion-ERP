@@ -342,24 +342,23 @@ const Transport = {
 
         // Duplicate Transport buttons
         document.querySelectorAll(".btn-duplicate-transport").forEach(btn => {
-            btn.addEventListener("click", async (ev) => {
+            btn.addEventListener("click", (ev) => {
                 ev.stopPropagation();
                 const id = btn.dataset.transportId;
-                const confirmed = await UI.confirm("Vuoi duplicare questo viaggio?", "Il viaggio verrà copiato con tutti i dati.");
-                if (!confirmed) return;
-
-                try {
-                    UI.loading(true);
-                    const res = await TransportAPI.duplicateTransport(id);
-                    UI.toast("Viaggio duplicato con successo!", "success");
-                    // Refresh transports list and re-render dashboard
-                    this.transports = await TransportAPI.getTransports();
-                    await this.renderDashboard();
-                } catch (err) {
-                    UI.toast("Errore nella duplicazione: " + (err.message || err), "error");
-                } finally {
-                    UI.loading(false);
-                }
+                UI.confirm("Vuoi duplicare questo viaggio? Il viaggio verrà copiato con tutti i dati.", async () => {
+                    try {
+                        UI.loading(true);
+                        await TransportAPI.duplicateTransport(id);
+                        UI.toast("Viaggio duplicato con successo!", "success");
+                        // Refresh transports list and re-render dashboard
+                        this.transports = await TransportAPI.getTransports();
+                        await this.renderDashboard();
+                    } catch (err) {
+                        UI.toast("Errore nella duplicazione: " + (err.message || err), "error");
+                    } finally {
+                        UI.loading(false);
+                    }
+                });
             }, { signal: this.abortController.signal });
         });
     },
