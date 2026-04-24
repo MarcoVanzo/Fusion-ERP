@@ -1,6 +1,6 @@
 {
   "version": 3,
-  "generated_at": "2026-04-24T20:58:34.281Z",
+  "generated_at": "2026-04-24T21:30:49.100Z",
   "file_count": 1721,
   "files": [
     {
@@ -645,7 +645,7 @@
     },
     {
       "path": "css/squadre_premium.css",
-      "hash": "30559664b45552ea434ca4bb3dadc68a169dfd0b87a78ccf367e573da9d49003"
+      "hash": "9068d20d6b33e8d8186486a87da915648ae8a40c34dd1cf1f20455284dad644c"
     },
     {
       "path": "css/style_v2.css",
@@ -1533,7 +1533,7 @@
     },
     {
       "path": "index.html",
-      "hash": "470272b5bae9408ab2b00ba03f7680ac8a3abb93fcd6bfd080ea8b5232d912b1"
+      "hash": "5d8edae44eebd1e06194ca31c436bd2c1313e2710b55ac5f2a6e6a20baab1422"
     },
     {
       "path": "js/api/athletes.api.js",
@@ -1865,7 +1865,7 @@
     },
     {
       "path": "js/modules/teams/TeamsView.js",
-      "hash": "7058473abf95a6b69755c440f6ad818209c54871054abdfe6e1ace80b681a85a"
+      "hash": "bd30f40f7f848deec1afd0d449602b7ee3e7b6eb48594a94ee9703de0c38b8ab"
     },
     {
       "path": "js/modules/tournaments.js",
