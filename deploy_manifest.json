@@ -1,7 +1,7 @@
 {
   "version": 3,
-  "generated_at": "2026-04-24T11:59:31.211Z",
-  "file_count": 1715,
+  "generated_at": "2026-04-24T12:11:32.605Z",
+  "file_count": 1717,
   "files": [
     {
       "path": ".env.prod",
@@ -1192,6 +1192,10 @@
       "hash": "78ee088ea9f71c42e032c1cbd1561f49109eab8290d386c76f54007f1acdaf5b"
     },
     {
+      "path": "db/migrations/V124__unify_auth_to_mv_erp.sql",
+      "hash": "e6b2be24f308b01f719767382cdc19d929ae7caf880f49c42d12e30a628fdd6f"
+    },
+    {
       "path": "deploy_state.json",
       "hash": "e4e5d5698de0f46e78ac279c8024cd8131a53e4fa4eb1d1def49460fbbd44271"
     },
@@ -1517,7 +1521,7 @@
     },
     {
       "path": "index.html",
-      "hash": "3bbb74d23885f22ceda1982a8f5445fe24f6086fe7559b8135670c6050bf6304"
+      "hash": "cc51c68c12bcc046a1170ffeec48d8de8ef1bd53eb70a1719f5558bf5341c3f0"
     },
     {
       "path": "js/api/athletes.api.js",
@@ -2026,6 +2030,10 @@
     {
       "path": "templates/import_atlete_template.csv",
       "hash": "78bc95dc06309a02cf871b792f06f723682192da5c53b11495a0d0c34f2be357"
+    },
+    {
+      "path": "test.txt",
+      "hash": "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2"
     },
     {
       "path": "vendor/autoload.php",
