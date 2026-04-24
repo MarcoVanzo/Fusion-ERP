@@ -309,11 +309,15 @@ const Athletes = (() => {
             if (sentinel) sentinel.remove();
 
             // Costruisci e inietta le card
+            // FIX: Usare <tbody> come container temporaneo, perché <tr> dentro un <div>
+            // viene eliminato dal parser HTML del browser, perdendo l'attributo data-id
             const fragment = document.createDocumentFragment();
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = chunk.map(a => AthletesView.athleteCard(a, selectedIds.has(a.id), variant)).join('');
+            const tempTable = document.createElement('table');
+            const tempBody = document.createElement('tbody');
+            tempTable.appendChild(tempBody);
+            tempBody.innerHTML = chunk.map(a => AthletesView.athleteCard(a, selectedIds.has(a.id), variant)).join('');
             
-            Array.from(tempDiv.children).forEach(card => {
+            Array.from(tempBody.children).forEach(card => {
                 attachCardListeners(card, variant);
                 fragment.appendChild(card);
             });
