@@ -282,6 +282,16 @@ class AuthRepository
 
     public function getRecentPasswordHashes(string $userId, int $limit = 3): array
     {
+        return $this->getPasswordHistory($userId, $limit);
+    }
+
+    public function insertPasswordHistory(string $userId, string $hash): void
+    {
+        $this->savePasswordHistory($userId, $hash, 3);
+    }
+
+    public function getPasswordHistory(string $userId, int $limit = 5): array
+    {
         $stmt = $this->db->prepare(
             'SELECT pwd_hash FROM password_history
              WHERE user_id = :user_id
@@ -294,18 +304,40 @@ class AuthRepository
         return $stmt->fetchAll(\PDO::FETCH_COLUMN);
     }
 
-    public function insertPasswordHistory(string $userId, string $hash): void
+    public function savePasswordHistory(string $userId, string $hash, int $limit = 5): void
     {
         $id = 'PHS_' . bin2hex(random_bytes(4));
         $stmt = $this->db->prepare(
-            'INSERT INTO password_history (id, user_id, pwd_hash)
-             VALUES (:id, :user_id, :pwd_hash)'
+            'INSERT INTO password_history (id, user_id, pwd_hash) VALUES (:id, :user_id, :pwd_hash)'
         );
-        $stmt->execute([
-            ':id' => $id,
-            ':user_id' => $userId,
-            ':pwd_hash' => $hash
-        ]);
+        $stmt->execute([':id' => $id, ':user_id' => $userId, ':pwd_hash' => $hash]);
+
+        $stmtDelete = $this->db->prepare(
+            'DELETE FROM password_history
+             WHERE user_id = :user_id
+               AND id NOT IN (
+                   SELECT id FROM (
+                       SELECT id FROM password_history
+                       WHERE user_id = :user_id2
+                       ORDER BY created_at DESC
+                       LIMIT :limit
+                   ) AS recent
+               )'
+        );
+        $stmtDelete->bindValue(':user_id', $userId, \PDO::PARAM_STR);
+        $stmtDelete->bindValue(':user_id2', $userId, \PDO::PARAM_STR);
+        $stmtDelete->bindValue(':limit', $limit, \PDO::PARAM_INT);
+        $stmtDelete->execute();
+    }
+
+    public function setTemporaryPassword(string $userId, string $hash): void
+    {
+        // Set must_change_password to 1 via password_changed_at if must_change_password column is not present.
+        // Or if it's present, set it. We'll set password_changed_at to a very old date so isPasswordExpired returns true.
+        $stmt = $this->db->prepare(
+            'UPDATE users SET pwd_hash = :hash, password_changed_at = DATE_SUB(NOW(), INTERVAL 100 DAY), updated_at = NOW() WHERE id = :id AND deleted_at IS NULL'
+        );
+        $stmt->execute([':hash' => $hash, ':id' => $userId]);
     }
 
     public function setPasswordResetToken(string $userId, string $token, string $expiresAt): void

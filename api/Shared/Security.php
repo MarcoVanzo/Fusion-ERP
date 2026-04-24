@@ -54,7 +54,11 @@ class Security
 
     public static function generateJWT(array $payload): string
     {
-        $secret = getenv('APP_SECRET');
+        $secret = $_ENV['APP_SECRET'] ?? getenv('APP_SECRET') ?: '';
+        if ($secret === '') {
+            error_log('[SECURITY] APP_SECRET is empty or not set!');
+        }
+        
         $header = self::base64url_encode(json_encode(['alg' => 'HS256', 'typ' => 'JWT']));
         
         $payload['iat'] = time();
@@ -69,7 +73,12 @@ class Security
 
     public static function validateJWT(string $token): ?array
     {
-        $secret = getenv('APP_SECRET');
+        $secret = $_ENV['APP_SECRET'] ?? getenv('APP_SECRET') ?: '';
+        if ($secret === '') {
+            error_log('[SECURITY] APP_SECRET is empty or not set!');
+            return null;
+        }
+        
         $parts = explode('.', $token);
         if (count($parts) !== 3) return null;
 

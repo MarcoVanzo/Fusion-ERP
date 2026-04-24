@@ -73,6 +73,12 @@ export const AthleteHealth = {
             if (e.target === overlay) this._closeModal(overlay);
         }, { signal: this._modalAc.signal });
         
+        // Add listeners for close buttons inside the modal
+        const closeBtns = overlay.querySelectorAll('.close-modal-btn');
+        closeBtns.forEach(btn => {
+            btn.addEventListener('click', () => this._closeModal(overlay), { signal: this._modalAc.signal });
+        });
+
         return overlay;
     },
 
@@ -263,7 +269,7 @@ export const AthleteHealth = {
             </div>
             
             <div style="display:flex; justify-content:flex-end;">
-                <button type="button" class="btn btn-default" onclick="document.body.removeChild(this.closest('.modal-backdrop'))">Chiudi</button>
+                <button type="button" class="btn btn-default close-modal-btn">Chiudi</button>
             </div>
         `);
         
@@ -437,7 +443,7 @@ export const AthleteHealth = {
                 </div>
 
                 <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px;">
-                    <button type="button" class="btn btn-default" onclick="document.body.removeChild(this.closest('.modal-backdrop'))">Annulla</button>
+                    <button type="button" class="btn btn-default close-modal-btn">Annulla</button>
                     <button type="submit" class="btn btn-primary" style="background:#ef4444;"><i class="ph ph-floppy-disk"></i> Salva</button>
                 </div>
             </form>
@@ -573,7 +579,7 @@ export const AthleteHealth = {
                 </div>
 
                 <div style="display:flex; justify-content:space-between; gap:12px; margin-top:8px;">
-                    <button type="button" class="btn btn-default" style="padding:12px 24px; border-radius:8px; font-weight:600;" onclick="document.body.removeChild(this.closest('.modal-backdrop'))">Chiudi</button>
+                    <button type="button" class="btn btn-default close-modal-btn" style="padding:12px 24px; border-radius:8px; font-weight:600;">Chiudi</button>
                     <button type="submit" class="btn btn-primary" style="padding:12px 24px; border-radius:8px; font-weight:600; background:${isEdit ? '#3b82f6' : '#ef4444'}; box-shadow: 0 4px 12px ${isEdit ? 'rgba(59, 130, 246, 0.3)' : 'rgba(239, 68, 68, 0.3)'};">
                         ${isEdit ? '<i class="ph ph-floppy-disk"></i> Salva Modifiche' : '<i class="ph ph-plus"></i> Inserisci Infortunio'}
                     </button>
@@ -884,7 +890,7 @@ export const AthleteHealth = {
                                                 <div style="font-size:10px; background:rgba(16, 185, 129, 0.1); color:#10b981; padding:4px 10px; border-radius:100px; font-weight:800; text-transform:uppercase; letter-spacing:0.5px; border:1px solid rgba(16, 185, 129, 0.2);">VISITA</div>
                                             </div>
                                             <div style="font-size:13px; color:rgba(255,255,255,0.85); line-height:1.6; background:rgba(0,0,0,0.2); padding:16px; border-radius:8px; border:1px solid rgba(255,255,255,0.02);">
-                                                ${Utils.escapeHtml(c.outcome || c.notes || '(Nessuna nota registrata)').replace(/\\n/g, '<br>')}
+                                                ${Utils.escapeHtml(c.outcome || c.notes || '(Nessuna nota registrata)').replace(/\\n|\n/g, '<br>')}
                                             </div>
                                         </div>
                                     </div>
@@ -973,14 +979,14 @@ export const AthleteHealth = {
             return;
         }
 
-        // Sanitize URL for HTML attribute injection
-        const safeUrl = Utils.escapeHtml(url);
-
         if (type === 'other') {
             // Bypass the modal entirely and open directly in a popup window to save a click
-            window.open(safeUrl, '_blank', 'width=800,height=800,menubar=no,toolbar=no,location=no,status=no');
+            window.open(url, '_blank', 'width=800,height=800,menubar=no,toolbar=no,location=no,status=no');
             return;
         }
+
+        // Sanitize URL for HTML attribute injection
+        const safeUrl = Utils.escapeHtml(url);
 
         let contentHtml = '';
         if (type === 'img') {
@@ -1005,7 +1011,7 @@ export const AthleteHealth = {
                         </div>
                         <h3 style="color:#fff; font-size:20px; font-weight:900; margin:0; letter-spacing:-0.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${Utils.escapeHtml(title)}">${Utils.escapeHtml(title)}</h3>
                     </div>
-                    <button type="button" class="btn btn-ghost" style="background:rgba(255,255,255,0.05); color:#fff; border-radius:50%; width:44px; height:44px; padding:0; display:flex; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,0.1); cursor:pointer; flex-shrink:0; transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'" onclick="document.body.removeChild(this.closest('.modal-backdrop'))">
+                    <button type="button" class="btn btn-ghost close-modal-btn" style="background:rgba(255,255,255,0.05); color:#fff; border-radius:50%; width:44px; height:44px; padding:0; display:flex; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,0.1); cursor:pointer; flex-shrink:0; transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
                         <i class="ph ph-x" style="font-size:20px;"></i>
                     </button>
                 </div>
