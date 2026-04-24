@@ -1095,10 +1095,10 @@ export const AthletesView = {
                             </button>
                         ` : ''}
                         ${canUpload ? `
-                            <button class="btn btn-ghost btn-xs" id="upload-${doc.id}-btn" style="flex:${hasFile ? '0.5' : '1'}; background:rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.1);">
+                            <button type="button" class="btn btn-ghost btn-xs" id="upload-${doc.id}-btn" onclick="document.getElementById('upload-${doc.id}-input').click()" style="flex:${hasFile ? '0.5' : '1'}; background:rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.1);">
                                 <i class="ph ph-upload-simple"></i> ${hasFile ? 'Sostituisci' : 'Carica PDF/Foto'}
                             </button>
-                            <input type="file" id="upload-${doc.id}-input" style="display:none;" accept=".pdf,image/*">
+                            <input type="file" id="upload-${doc.id}-input" style="display:none;" accept=".pdf,image/*" onclick="this.value=''">
                         ` : ''}
                     </div>
                 </div>
