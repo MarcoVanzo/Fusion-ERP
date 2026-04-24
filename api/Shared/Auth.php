@@ -22,48 +22,24 @@ class Auth
         'admin'      => 5,
     ];
 
-    /**
-     * Initialize a secure session (call once at bootstrap).
-     */
     public static function startSession(): void
     {
+        // Session initialization is no longer needed with JWT, 
+        // but we keep the method for compatibility.
         if (session_status() === PHP_SESSION_NONE) {
-            $sessionName = getenv('SESSION_NAME') ?: 'fusion_session';
-            session_name($sessionName);
-
-            // Use a long-lasting session: 30 days (2592000 seconds)
-            $sessionLifetime = 2592000;
-
-            // Increase session lifetime on server (Garbage Collector)
-            ini_set('session.gc_maxlifetime', (string)$sessionLifetime);
-            ini_set('session.cookie_lifetime', (string)$sessionLifetime);
-
-            // Isolate session storage if allowed (prevents automatic cleanup on shared hosting)
-            $localSessionPath = __DIR__ . '/../sessions';
-            if (is_dir($localSessionPath) && is_writable($localSessionPath)) {
-                session_save_path($localSessionPath);
-            }
-
-            $isSecure = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') || 
-                        (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
-
-            session_set_cookie_params([
-                'lifetime' => $sessionLifetime,
-                'path' => '/',
-                'domain' => '',
-                'secure' => $isSecure,
-                'httponly' => true,
-                'samesite' => 'Lax',
-            ]);
-
             session_start();
         }
     }
 
     public static function user(): ?array
     {
-        self::startSession();
-        return $_SESSION['user'] ?? null;
+        if (isset($_COOKIE['auth_token'])) {
+            $payload = \FusionERP\Shared\Security::validateJWT($_COOKIE['auth_token']);
+            if ($payload) {
+                return $payload['user_data'] ?? null;
+            }
+        }
+        return null;
     }
 
     /**
@@ -98,16 +74,11 @@ class Auth
 
     /**
      * Require at least READ permission on a module (403 if 'none').
-     * Uses the permissions map stored in session: { 'athletes': 'write', 'social': 'none', ... }
-     * Admin users bypass all module-level checks.
-     *
-     * @return array The authenticated user
      */
     public static function requireRead(string $module): array
     {
         $user = self::requireAuth();
 
-        // Admin bypasses module-level checks
         if (($user['role'] ?? '') === 'admin') {
             return $user;
         }
@@ -116,9 +87,7 @@ class Auth
         $defaults = self::getDefaultPermissions($user['role'] ?? '');
         $perms = array_merge($defaults, $perms);
 
-        // Deny-by-default: if still no permissions map is configured, block access
         if (empty($perms)) {
-            error_log("[Auth] requireRead('{$module}'): user {$user['id']} has no permissions configured.");
             Response::error("Permessi non configurati per il modulo '{$module}'. Contatta l'amministratore.", 403);
         }
 
@@ -134,7 +103,6 @@ class Auth
     {
         $user = self::requireAuth();
 
-        // Admin bypasses module-level checks
         if (($user['role'] ?? '') === 'admin') {
             return $user;
         }
@@ -143,9 +111,7 @@ class Auth
         $defaults = self::getDefaultPermissions($user['role'] ?? '');
         $perms = array_merge($defaults, $perms);
 
-        // Deny-by-default: if still no permissions map is configured, block access
         if (empty($perms)) {
-            error_log("[Auth] requireWrite('{$module}'): user {$user['id']} has no permissions configured.");
             Response::error("Permessi di scrittura non configurati per il modulo '{$module}'. Contatta l'amministratore.", 403);
         }
 
@@ -158,33 +124,36 @@ class Auth
     }
 
     /**
-     * Set a user into the session after successful login.
+     * Set a user into the session (JWT cookie) after successful login.
      */
     public static function setUser(array $user): void
     {
-        // Regenerate session ID to prevent session fixation
-        // Wrapped in try-catch to prevent 500 errors on restrictive shared hosting (Aruba)
-        try {
-            if (session_status() === PHP_SESSION_ACTIVE) {
-                session_regenerate_id(true);
-            }
-        } catch (\Throwable $e) {
-            error_log('[Auth] session_regenerate_id failed: ' . $e->getMessage());
-        }
-
         $perms = $user['permissions'] ?? [];
         $defaults = self::getDefaultPermissions($user['role'] ?? '');
         $perms = array_merge($defaults, $perms);
 
-        $_SESSION['user'] = [
+        $userData = [
             'id' => $user['id'],
             'email' => $user['email'],
             'role' => $user['role'],
             'fullName' => $user['full_name'],
-            'tenant_id' => $user['tenantId'] ?? null,
+            'tenant_id' => $user['tenant_id'] ?? null,
             'parent_user_id' => $user['parent_user_id'] ?? null,
             'permissions' => $perms,
         ];
+
+        $token = \FusionERP\Shared\Security::generateJWT(['user_data' => $userData]);
+        $isSecure = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') || 
+                    (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+        
+        setcookie('auth_token', $token, [
+            'expires' => time() + 86400 * 30, // 30 days
+            'path' => '/',
+            'domain' => '',
+            'secure' => $isSecure,
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ]);
     }
 
     /**
@@ -192,12 +161,17 @@ class Auth
      */
     public static function logout(): void
     {
-        $_SESSION = [];
-        if (ini_get('session.use_cookies')) {
-            $p = session_get_cookie_params();
-            setcookie(session_name(), '', time() - 42000, $p['path'], $p['domain'], $p['secure'], $p['httponly']);
+        setcookie('auth_token', '', [
+            'expires' => time() - 3600,
+            'path' => '/',
+            'domain' => '',
+            'secure' => true,
+            'httponly' => true,
+            'samesite' => 'Lax'
+        ]);
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_destroy();
         }
-        session_destroy();
     }
 
     /**
