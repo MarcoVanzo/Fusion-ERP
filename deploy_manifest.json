@@ -1,7 +1,7 @@
 {
   "version": 3,
-  "generated_at": "2026-04-24T10:28:35.811Z",
-  "file_count": 1719,
+  "generated_at": "2026-04-24T10:29:18.217Z",
+  "file_count": 1715,
   "files": [
     {
       "path": ".env.prod",
@@ -18,10 +18,6 @@
     {
       "path": "api/check.php",
       "hash": "a0e9972bf23fb1eab66866c468d39a1643b18d493a7e98d3b1d34c6d12a2f199"
-    },
-    {
-      "path": "api/clean_emma.php",
-      "hash": "ee4b05d11d4b7fda3197964058d84fde050233e109046e093709c1417e0dda2b"
     },
     {
       "path": "api/clean_vald_all.php",
@@ -66,10 +62,6 @@
     {
       "path": "api/health.php",
       "hash": "4c64246fc448a47c7984eb643c5186d8f5a7748314ebef0238295ce57ce25289"
-    },
-    {
-      "path": "api/import_emma.php",
-      "hash": "0fd5f2ddd3a792a32c5e29d6429de6299071e8affb773ddad34e86528d3878af"
     },
     {
       "path": "api/migrate.php",
@@ -466,14 +458,6 @@
     {
       "path": "api/verify_document.php",
       "hash": "684fba1a9acbbd0c3e080101a2729e42af2f84faa43df055a51363a0b617566b"
-    },
-    {
-      "path": "api/verify_emma.php",
-      "hash": "5ec1553fe61f85bfc197762ac1fac1a369c707f9e479f459d74363ec7ba5c313"
-    },
-    {
-      "path": "api/verify_teams.php",
-      "hash": "3ec677298b55a695b895840fd2fe3644e92cef9e495f73079b2ef34367c4d427"
     },
     {
       "path": "capture_callback.php",
@@ -1533,7 +1517,7 @@
     },
     {
       "path": "index.html",
-      "hash": "9a74d016de1363533a59b5900d140b9076e710efb58f6a0cd4976a15c886b80c"
+      "hash": "49428cbd738ad53378e6cebf26e8d9f459581764f44cecdba6a4278a014b516c"
     },
     {
       "path": "js/api/athletes.api.js",
