@@ -86,73 +86,147 @@ export const AthleteHealth = {
         let activeInjuries = injuries.filter(i => i.rtp_cleared !== 1);
         let pastInjuries = injuries.filter(i => i.rtp_cleared === 1);
 
+        // Calculate KPI values
+        const totalInjuries = injuries.length;
+        const bloodType = anamnesi.blood_type || '—';
+        const hasMedicalData = !!(anamnesi.blood_type || anamnesi.chronic_conditions || anamnesi.regular_medications || anamnesi.past_surgeries);
+
         container.innerHTML = `
-            <!-- Anamnesi Medica -->
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-                <h3 style="font-family:var(--font-display); font-size:20px; font-weight:800; color:#fff; margin:0;">Anamnesi</h3>
-                <button class="btn btn-default btn-xs edit-anamnesi-btn" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);">
-                    <i class="ph ph-pencil-simple"></i> Modifica Anamnesi
-                </button>
-            </div>
-
-            <div class="card glass-card" style="padding:24px; margin-bottom:32px;">
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:24px;">
-                    <div>
-                        <h4 style="font-size:12px; font-weight:900; color:#ef4444; text-transform:uppercase; letter-spacing:1px; margin-bottom:12px;">Generale</h4>
-                        <div style="margin-bottom:12px;">
-                            <div style="font-size:11px; opacity:0.5; margin-bottom:4px; text-transform:uppercase;">Gruppo Sanguigno</div>
-                            <div style="font-size:14px; color:#fff;">${Utils.escapeHtml(anamnesi.blood_type || '—')}</div>
+            <div class="health-dashboard">
+                <!-- KPI Summary Row -->
+                <div class="health-kpi-row">
+                    <div class="health-kpi-card" style="--kpi-color: rgba(239, 68, 68, 0.3);">
+                        <div class="health-kpi-icon health-kpi-icon--danger">
+                            <i class="ph ph-warning-diamond"></i>
                         </div>
-                        <div style="margin-bottom:12px;">
-                            <div style="font-size:11px; opacity:0.5; margin-bottom:4px; text-transform:uppercase;">Malattie Croniche</div>
-                            <div style="font-size:14px; color:#fff;">${Utils.escapeHtml(anamnesi.chronic_conditions || '—')}</div>
+                        <div class="health-kpi-body">
+                            <div class="health-kpi-value">${activeInjuries.length}</div>
+                            <div class="health-kpi-label">Infortuni Attivi</div>
                         </div>
-                        <div style="margin-bottom:12px;">
-                            <div style="font-size:11px; opacity:0.5; margin-bottom:4px; text-transform:uppercase;">Farmaci Assunti</div>
-                            <div style="font-size:14px; color:#fff;">${Utils.escapeHtml(anamnesi.regular_medications || '—')}</div>
+                    </div>
+                    <div class="health-kpi-card" style="--kpi-color: rgba(16, 185, 129, 0.3);">
+                        <div class="health-kpi-icon health-kpi-icon--success">
+                            <i class="ph ph-check-circle"></i>
                         </div>
-                        <div>
-                            <div style="font-size:11px; opacity:0.5; margin-bottom:4px; text-transform:uppercase;">Interventi Chirurgici Pregressi</div>
-                            <div style="font-size:14px; color:#fff;">${Utils.escapeHtml(anamnesi.past_surgeries || '—')}</div>
+                        <div class="health-kpi-body">
+                            <div class="health-kpi-value">${pastInjuries.length}</div>
+                            <div class="health-kpi-label">Risolti</div>
+                        </div>
+                    </div>
+                    <div class="health-kpi-card" style="--kpi-color: rgba(59, 130, 246, 0.3);">
+                        <div class="health-kpi-icon health-kpi-icon--info">
+                            <i class="ph ph-drop"></i>
+                        </div>
+                        <div class="health-kpi-body">
+                            <div class="health-kpi-value">${Utils.escapeHtml(bloodType)}</div>
+                            <div class="health-kpi-label">Gruppo Sanguigno</div>
+                        </div>
+                    </div>
+                    <div class="health-kpi-card" style="--kpi-color: rgba(255, 0, 122, 0.3);">
+                        <div class="health-kpi-icon health-kpi-icon--pink">
+                            <i class="ph ph-clipboard-text"></i>
+                        </div>
+                        <div class="health-kpi-body">
+                            <div class="health-kpi-value">${totalInjuries}</div>
+                            <div class="health-kpi-label">Storico Totale</div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Infortuni Attivi -->
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-                <div style="display:flex; align-items:center; gap:12px;">
-                    <h3 style="font-family:var(--font-display); font-size:20px; font-weight:800; color:#fff; margin:0;">Infortuni Attivi</h3>
-                    ${activeInjuries.length > 0 ? `<span class="badge" style="background:rgba(239, 68, 68, 0.2); color:#ef4444; border:1px solid rgba(239, 68, 68, 0.4);">${activeInjuries.length}</span>` : ''}
-                </div>
-                <button class="btn btn-primary btn-sm add-injury-btn" style="background:#ef4444;">
-                    <i class="ph ph-plus"></i> Nuovo Infortunio
-                </button>
-            </div>
-
-            ${activeInjuries.length === 0 ? `
-                <div class="card glass-card" style="padding:40px; text-align:center; border:1px dashed rgba(255,255,255,0.1); background:rgba(255,255,255,0.01); margin-bottom:32px;">
-                    <div style="width:60px; height:60px; border-radius:50%; background:rgba(255,255,255,0.03); display:flex; align-items:center; justify-content:center; margin:0 auto 16px; color:rgba(255,255,255,0.1);">
-                        <i class="ph ph-check-circle" style="font-size:32px;"></i>
+                <!-- Anamnesi Medica -->
+                <div class="health-section-header">
+                    <div class="health-section-title">
+                        <h3>Anamnesi Medica</h3>
+                        ${hasMedicalData
+                            ? '<span class="health-count-badge health-count-badge--muted"><i class="ph ph-check"></i></span>'
+                            : '<span class="health-count-badge health-count-badge--danger">!</span>'}
                     </div>
-                    <p style="color:var(--color-text-muted); font-size:14px;">Nessun infortunio attualmente in corso.</p>
+                    <button class="health-edit-anamnesi-btn edit-anamnesi-btn">
+                        <i class="ph ph-pencil-simple"></i> Modifica
+                    </button>
                 </div>
-            ` : `
-                <div style="display:grid; gap:16px; margin-bottom:32px;">
-                    ${activeInjuries.map(i => this._renderInjuryCard(i)).join('')}
-                </div>
-            `}
 
-            <!-- Storico Infortuni -->
-            ${pastInjuries.length > 0 ? `
-                <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
-                    <h3 style="font-family:var(--font-display); font-size:18px; font-weight:800; color:var(--color-text-muted); margin:0;">Storico Risolti</h3>
+                <div class="health-anamnesi-card">
+                    <div class="health-anamnesi-grid">
+                        <div class="health-anamnesi-item">
+                            <div class="health-anamnesi-item__label"><i class="ph ph-drop"></i> Gruppo Sanguigno</div>
+                            <div class="health-anamnesi-item__value ${!anamnesi.blood_type ? 'health-anamnesi-item__value--empty' : ''}">${Utils.escapeHtml(anamnesi.blood_type || 'Non specificato')}</div>
+                        </div>
+                        <div class="health-anamnesi-item">
+                            <div class="health-anamnesi-item__label"><i class="ph ph-heartbeat"></i> Malattie Croniche</div>
+                            <div class="health-anamnesi-item__value ${!anamnesi.chronic_conditions ? 'health-anamnesi-item__value--empty' : ''}">${Utils.escapeHtml(anamnesi.chronic_conditions || 'Nessuna segnalata')}</div>
+                        </div>
+                        <div class="health-anamnesi-item">
+                            <div class="health-anamnesi-item__label"><i class="ph ph-pill"></i> Farmaci Assunti</div>
+                            <div class="health-anamnesi-item__value ${!anamnesi.regular_medications ? 'health-anamnesi-item__value--empty' : ''}">${Utils.escapeHtml(anamnesi.regular_medications || 'Nessuno')}</div>
+                        </div>
+                        <div class="health-anamnesi-item">
+                            <div class="health-anamnesi-item__label"><i class="ph ph-knife"></i> Interventi Chirurgici</div>
+                            <div class="health-anamnesi-item__value ${!anamnesi.past_surgeries ? 'health-anamnesi-item__value--empty' : ''}">${Utils.escapeHtml(anamnesi.past_surgeries || 'Nessuno pregresso')}</div>
+                        </div>
+                    </div>
                 </div>
-                <div style="display:grid; gap:12px;">
-                    ${pastInjuries.map(i => this._renderInjuryCard(i, true)).join('')}
+
+                <!-- Infortuni Attivi -->
+                <div class="health-section-header">
+                    <div class="health-section-title">
+                        <h3>Infortuni Attivi</h3>
+                        ${activeInjuries.length > 0
+                            ? `<span class="health-count-badge health-count-badge--danger">${activeInjuries.length}</span>`
+                            : ''}
+                    </div>
+                    <button class="health-add-injury-btn add-injury-btn">
+                        <i class="ph ph-plus"></i> Nuovo Infortunio
+                    </button>
                 </div>
-            ` : ''}
+
+                ${activeInjuries.length === 0 ? `
+                    <div class="health-empty-state">
+                        <div class="health-empty-state__icon">
+                            <i class="ph ph-shield-check"></i>
+                        </div>
+                        <h4 class="health-empty-state__title">Nessun Infortunio Attivo</h4>
+                        <p class="health-empty-state__subtitle">Ottimo! L'atleta è al completo e disponibile per allenamenti e gare.</p>
+                    </div>
+                ` : `
+                    <div class="health-injuries-grid">
+                        ${activeInjuries.map(i => this._renderInjuryCard(i)).join('')}
+                    </div>
+                `}
+
+                <!-- Storico Risolti -->
+                ${pastInjuries.length > 0 ? `
+                    <div class="health-storico-header health-storico-header--open" id="storico-toggle">
+                        <i class="ph ph-clock-counter-clockwise" style="font-size:20px; color:#10b981; opacity:0.6;"></i>
+                        <h3>Storico Risolti <span style="font-size:13px; font-weight:400; opacity:0.5;">(${pastInjuries.length})</span></h3>
+                        <i class="ph ph-caret-down health-storico-header__icon"></i>
+                    </div>
+                    <div class="health-storico-body health-storico-body--expanded" id="storico-body">
+                        <div class="health-injuries-grid">
+                            ${pastInjuries.map(i => this._renderInjuryCard(i, true)).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+            </div>
         `;
+
+        // Storico toggle logic
+        const storicoToggle = container.querySelector('#storico-toggle');
+        if (storicoToggle) {
+            storicoToggle.addEventListener('click', () => {
+                const body = container.querySelector('#storico-body');
+                const isOpen = storicoToggle.classList.contains('health-storico-header--open');
+                if (isOpen) {
+                    storicoToggle.classList.remove('health-storico-header--open');
+                    body.classList.remove('health-storico-body--expanded');
+                    body.classList.add('health-storico-body--collapsed');
+                } else {
+                    storicoToggle.classList.add('health-storico-header--open');
+                    body.classList.remove('health-storico-body--collapsed');
+                    body.classList.add('health-storico-body--expanded');
+                }
+            });
+        }
 
         this._addListeners(container, athlete, anamnesi, injuries);
     },
@@ -160,47 +234,73 @@ export const AthleteHealth = {
     _renderInjuryCard(injury, isPast = false) {
         const dDate = injury.injury_date ? new Date(injury.injury_date).toLocaleDateString('it-IT') : '—';
         let rDate = injury.estimated_return_date ? new Date(injury.estimated_return_date).toLocaleDateString('it-IT') : '—';
-        let statusBadge
+        let statusBadge;
         if (isPast) {
-            statusBadge = `<span class="badge" style="background:rgba(16, 185, 129, 0.1); color:#10b981; border:1px solid rgba(16, 185, 129, 0.3);">RTP OK (${rDate})</span>`;
+            statusBadge = `<span class="health-injury-card__badge health-injury-card__badge--success"><i class="ph ph-check-circle"></i> RTP OK (${rDate})</span>`;
         } else {
             const exp = injury.expected_rtp_date ? new Date(injury.expected_rtp_date) : null;
-            let estStr = exp ? `Previsto RTP: ${exp.toLocaleDateString('it-IT')}` : 'RTP Indefinito';
-            statusBadge = `<span class="badge" style="background:rgba(239, 68, 68, 0.1); color:#ef4444; border:1px solid rgba(239, 68, 68, 0.3);">${estStr}</span>`;
+            let estStr = exp ? `RTP: ${exp.toLocaleDateString('it-IT')}` : 'RTP Indefinito';
+            statusBadge = `<span class="health-injury-card__badge health-injury-card__badge--danger"><i class="ph ph-clock"></i> ${estStr}</span>`;
         }
 
         const visitCount = injury.visit_count || 0;
         const docCount = injury.doc_count || 0;
 
+        // Recovery progress calculation (for active injuries with expected RTP)
+        let progressHtml = '';
+        if (!isPast && injury.injury_date) {
+            const start = new Date(injury.injury_date).getTime();
+            const now = Date.now();
+            const exp = injury.expected_rtp_date ? new Date(injury.expected_rtp_date).getTime() : null;
+            if (exp && exp > start) {
+                const total = exp - start;
+                const elapsed = now - start;
+                const pct = Math.min(100, Math.max(0, Math.round((elapsed / total) * 100)));
+                const daysLeft = Math.max(0, Math.ceil((exp - now) / (1000 * 60 * 60 * 24)));
+                progressHtml = `
+                    <div class="health-injury-card__progress">
+                        <div class="health-injury-card__progress-bar-bg">
+                            <div class="health-injury-card__progress-bar-fill" style="width:${pct}%;"></div>
+                        </div>
+                        <div class="health-injury-card__progress-labels">
+                            <span>Recovery ${pct}%</span>
+                            <span>${daysLeft > 0 ? daysLeft + ' gg al rientro' : 'Rientro previsto oggi'}</span>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
         return `
-            <div class="card glass-card injury-card" data-id="${injury.id}" style="padding:20px; border-left:4px solid ${isPast ? '#10b981' : '#ef4444'}; cursor:pointer; transition:all 0.2s;">
-                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                    <div style="flex:1;">
-                        <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
-                            <span style="font-weight:800; color:#fff; font-size:16px;">${Utils.escapeHtml(injury.description || 'Non specificato')}</span>
+            <div class="health-injury-card ${isPast ? 'health-injury-card--resolved' : ''} injury-card" data-id="${injury.id}">
+                <div class="health-injury-card__header">
+                    <div class="health-injury-card__main">
+                        <div class="health-injury-card__title-row">
+                            <span class="health-injury-card__title">${Utils.escapeHtml(injury.description || 'Non specificato')}</span>
                             ${statusBadge}
                         </div>
-                        <div style="font-size:13px; color:var(--color-text-muted); display:flex; gap:16px; flex-wrap:wrap;">
+                        <div class="health-injury-card__meta">
                             <span><i class="ph ph-calendar"></i> ${dDate}</span>
                             <span><i class="ph ph-first-aid"></i> ${Utils.escapeHtml(injury.injury_type || '—')}</span>
                             <span><i class="ph ph-activity"></i> ${Utils.escapeHtml(injury.status || '—')}</span>
+                            ${injury.body_part ? `<span><i class="ph ph-person-arms-spread"></i> ${Utils.escapeHtml(injury.body_part)}</span>` : ''}
                         </div>
-                        ${injury.diagnosis ? `<div style="font-size:13px; color:rgba(255,255,255,0.7); margin-top:8px;"><strong>Diagnosi:</strong> ${Utils.escapeHtml(injury.diagnosis)}</div>` : ''}
-                        
-                        <div style="margin-top:12px; display:flex; gap:16px; align-items:center;">
-                            <div style="font-size:11px; color:#10b981; background:rgba(16, 185, 129, 0.1); padding:4px 8px; border-radius:6px; font-weight:700;">
-                                <i class="ph ph-stethoscope"></i> ${visitCount} VISITE / DECORSO
-                            </div>
-                            <div style="font-size:11px; color:#3b82f6; background:rgba(59, 130, 246, 0.1); padding:4px 8px; border-radius:6px; font-weight:700;">
-                                <i class="ph ph-file-text"></i> ${docCount} DOCUMENTI / REFERTI
-                            </div>
+                        ${injury.diagnosis ? `<div class="health-injury-card__diagnosis"><strong>Diagnosi:</strong> ${Utils.escapeHtml(injury.diagnosis)}</div>` : ''}
+                        ${progressHtml}
+                        <div class="health-injury-card__counters">
+                            <span class="health-injury-counter health-injury-counter--visits">
+                                <i class="ph ph-stethoscope"></i> ${visitCount} Visite
+                            </span>
+                            <span class="health-injury-counter health-injury-counter--docs">
+                                <i class="ph ph-file-text"></i> ${docCount} Referti
+                            </span>
                         </div>
                     </div>
-                    <div style="display:flex; flex-direction:column; gap:8px;">
-                        <button class="btn btn-default btn-xs ai-diagnosis-btn" data-id="${injury.id}" style="background:rgba(16, 185, 129, 0.1); border:1px solid rgba(16, 185, 129, 0.3); color:#10b981; width:100%; justify-content:center;">
+                    <div class="health-injury-card__actions">
+                        <button class="health-injury-action-btn health-injury-action-btn--ai ai-diagnosis-btn" data-id="${injury.id}">
                             <i class="ph ph-magic-wand"></i> AI Analisi
                         </button>
-                        <button class="btn btn-ghost btn-xs edit-injury-btn" data-id="${injury.id}" style="background:rgba(255,255,255,0.05); width:100%; justify-content:center;">
+                        <button class="health-injury-action-btn health-injury-action-btn--detail edit-injury-btn" data-id="${injury.id}">
                             <i class="ph ph-pencil-simple"></i> Dettagli
                         </button>
                     </div>

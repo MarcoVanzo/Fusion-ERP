@@ -1,0 +1,702 @@
+/*
+   Fusion ERP — Athlete Health Tab Premium Redesign
+   Glassmorphism · Micro-Animations · Premium Dashboard
+*/
+
+/* ─── Animations ──────────────────────────────────────── */
+@keyframes health-fadeInUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes health-slideInLeft {
+    from { opacity: 0; transform: translateX(-20px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes health-pulseGlow {
+    0%   { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.25); }
+    70%  { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+@keyframes health-shimmer {
+    0%   { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+@keyframes health-countUp {
+    from { opacity: 0; transform: scale(0.5); }
+    to   { opacity: 1; transform: scale(1); }
+}
+
+/* ─── Container ───────────────────────────────────────── */
+.health-dashboard {
+    animation: health-fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ─── KPI Summary Row ─────────────────────────────────── */
+.health-kpi-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.health-kpi-card {
+    position: relative;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.025);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 20px;
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: health-fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+.health-kpi-card:nth-child(1) { animation-delay: 0.05s; }
+.health-kpi-card:nth-child(2) { animation-delay: 0.1s; }
+.health-kpi-card:nth-child(3) { animation-delay: 0.15s; }
+.health-kpi-card:nth-child(4) { animation-delay: 0.2s; }
+
+.health-kpi-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+}
+
+.health-kpi-card::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, var(--kpi-color, rgba(255,255,255,0.03)) 0%, transparent 70%);
+    opacity: 0.08;
+    pointer-events: none;
+}
+
+.health-kpi-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+    transition: transform 0.3s;
+}
+
+.health-kpi-card:hover .health-kpi-icon {
+    transform: scale(1.1);
+}
+
+.health-kpi-icon--danger {
+    background: rgba(239, 68, 68, 0.12);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.health-kpi-icon--success {
+    background: rgba(16, 185, 129, 0.12);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.health-kpi-icon--info {
+    background: rgba(59, 130, 246, 0.12);
+    color: #3b82f6;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.health-kpi-icon--pink {
+    background: rgba(255, 0, 122, 0.12);
+    color: #ff007a;
+    border: 1px solid rgba(255, 0, 122, 0.2);
+}
+
+.health-kpi-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.health-kpi-value {
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    animation: health-countUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+.health-kpi-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: rgba(255, 255, 255, 0.4);
+    margin-top: 6px;
+    font-weight: 600;
+}
+
+/* ─── Section Headers ─────────────────────────────────── */
+.health-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.health-section-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.health-section-title h3 {
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 800;
+    color: #fff;
+    margin: 0;
+    letter-spacing: -0.02em;
+}
+
+.health-section-title .health-count-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 24px;
+    padding: 0 8px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 800;
+    animation: health-pulseGlow 2s infinite;
+}
+
+.health-count-badge--danger {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.health-count-badge--muted {
+    background: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    animation: none;
+}
+
+/* ─── Anamnesi Section ────────────────────────────────── */
+.health-anamnesi-card {
+    background: rgba(255, 255, 255, 0.02);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 24px;
+    padding: 28px;
+    margin-bottom: 36px;
+    animation: health-fadeInUp 0.5s 0.15s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+.health-anamnesi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+}
+
+.health-anamnesi-item {
+    padding: 16px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.health-anamnesi-item:hover {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.08);
+    transform: translateY(-2px);
+}
+
+.health-anamnesi-item__label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: rgba(255, 255, 255, 0.35);
+    margin-bottom: 8px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.health-anamnesi-item__label i {
+    font-size: 14px;
+    color: #ef4444;
+    opacity: 0.7;
+}
+
+.health-anamnesi-item__value {
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+    line-height: 1.4;
+}
+
+.health-anamnesi-item__value--empty {
+    color: rgba(255, 255, 255, 0.15);
+    font-style: italic;
+    font-weight: 400;
+}
+
+/* ─── Injury Cards ────────────────────────────────────── */
+.health-injuries-grid {
+    display: grid;
+    gap: 16px;
+    margin-bottom: 36px;
+}
+
+.health-injury-card {
+    position: relative;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.02);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 20px;
+    padding: 24px;
+    border-left: 4px solid #ef4444;
+    cursor: pointer;
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: health-fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+.health-injury-card:nth-child(1) { animation-delay: 0.05s; }
+.health-injury-card:nth-child(2) { animation-delay: 0.1s; }
+.health-injury-card:nth-child(3) { animation-delay: 0.15s; }
+
+.health-injury-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.health-injury-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(239, 68, 68, 0.04) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.health-injury-card--resolved {
+    border-left-color: #10b981;
+    opacity: 0.75;
+}
+
+.health-injury-card--resolved:hover {
+    opacity: 1;
+}
+
+.health-injury-card--resolved::before {
+    background: radial-gradient(circle, rgba(16, 185, 129, 0.04) 0%, transparent 70%);
+}
+
+.health-injury-card__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.health-injury-card__main {
+    flex: 1;
+    min-width: 0;
+}
+
+.health-injury-card__title-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
+.health-injury-card__title {
+    font-weight: 800;
+    font-size: 17px;
+    color: #fff;
+    letter-spacing: -0.01em;
+}
+
+.health-injury-card__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.health-injury-card__badge--danger {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.health-injury-card__badge--success {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.health-injury-card__meta {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.45);
+}
+
+.health-injury-card__meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.health-injury-card__meta i {
+    font-size: 14px;
+    opacity: 0.6;
+}
+
+.health-injury-card__diagnosis {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.6);
+    margin-top: 10px;
+    line-height: 1.5;
+    padding: 10px 14px;
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.health-injury-card__diagnosis strong {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* Progress / Recovery bar */
+.health-injury-card__progress {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.health-injury-card__progress-bar-bg {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.health-injury-card__progress-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, #ef4444, #f59e0b, #10b981);
+    transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.health-injury-card__progress-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.health-injury-card__progress-labels span:first-child { color: rgba(255,255,255,0.35); }
+.health-injury-card__progress-labels span:last-child  { color: #10b981; }
+
+/* Counters row */
+.health-injury-card__counters {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.health-injury-counter {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.health-injury-counter--visits {
+    background: rgba(16, 185, 129, 0.08);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.15);
+}
+
+.health-injury-counter--docs {
+    background: rgba(59, 130, 246, 0.08);
+    color: #3b82f6;
+    border: 1px solid rgba(59, 130, 246, 0.15);
+}
+
+.health-injury-counter i {
+    font-size: 15px;
+}
+
+/* Action buttons */
+.health-injury-card__actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.health-injury-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: all 0.25s;
+    white-space: nowrap;
+}
+
+.health-injury-action-btn:hover {
+    transform: translateY(-1px);
+}
+
+.health-injury-action-btn--ai {
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    color: #10b981;
+}
+
+.health-injury-action-btn--ai:hover {
+    background: rgba(16, 185, 129, 0.18);
+    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.15);
+}
+
+.health-injury-action-btn--detail {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.health-injury-action-btn--detail:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+}
+
+/* ─── Empty State ─────────────────────────────────────── */
+.health-empty-state {
+    padding: 48px 32px;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.015);
+    border: 1px dashed rgba(255, 255, 255, 0.08);
+    border-radius: 24px;
+    margin-bottom: 36px;
+    animation: health-fadeInUp 0.5s 0.2s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+.health-empty-state__icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(16, 185, 129, 0.03));
+    border: 1px solid rgba(16, 185, 129, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    color: #10b981;
+    font-size: 36px;
+}
+
+.health-empty-state__title {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 800;
+    color: #fff;
+    margin: 0 0 8px;
+    letter-spacing: -0.01em;
+}
+
+.health-empty-state__subtitle {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.35);
+    margin: 0;
+    max-width: 360px;
+    margin-inline: auto;
+    line-height: 1.5;
+}
+
+/* ─── Storico Collapsible Header ──────────────────────── */
+.health-storico-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    margin-top: 8px;
+    cursor: pointer;
+    padding: 12px 16px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.015);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    transition: all 0.25s;
+}
+
+.health-storico-header:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.health-storico-header h3 {
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 800;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+    flex: 1;
+}
+
+.health-storico-header__icon {
+    font-size: 18px;
+    color: rgba(255, 255, 255, 0.3);
+    transition: transform 0.3s;
+}
+
+.health-storico-header--open .health-storico-header__icon {
+    transform: rotate(180deg);
+}
+
+.health-storico-body {
+    overflow: hidden;
+    transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s;
+}
+
+.health-storico-body--collapsed {
+    max-height: 0;
+    opacity: 0;
+}
+
+.health-storico-body--expanded {
+    max-height: 2000px;
+    opacity: 1;
+}
+
+/* ─── Add Injury Button ───────────────────────────────── */
+.health-add-injury-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    background: #ef4444;
+    color: #fff;
+    transition: all 0.3s;
+    box-shadow: 0 4px 16px rgba(239, 68, 68, 0.25);
+}
+
+.health-add-injury-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(239, 68, 68, 0.35);
+}
+
+.health-edit-anamnesi-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.04);
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    transition: all 0.25s;
+}
+
+.health-edit-anamnesi-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* ─── Responsive ──────────────────────────────────────── */
+@media (max-width: 768px) {
+    .health-kpi-row {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    .health-kpi-card {
+        padding: 16px;
+        gap: 12px;
+    }
+
+    .health-kpi-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+    }
+
+    .health-kpi-value {
+        font-size: 22px;
+    }
+
+    .health-anamnesi-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .health-injury-card__header {
+        flex-direction: column;
+    }
+
+    .health-injury-card__actions {
+        flex-direction: row;
+        width: 100%;
+    }
+
+    .health-injury-action-btn {
+        flex: 1;
+    }
+
+    .health-injury-card__meta {
+        gap: 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    .health-kpi-row {
+        grid-template-columns: 1fr;
+    }
+}

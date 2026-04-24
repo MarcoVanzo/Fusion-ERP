@@ -1,7 +1,7 @@
 {
   "version": 3,
-  "generated_at": "2026-04-24T20:31:24.496Z",
-  "file_count": 1720,
+  "generated_at": "2026-04-24T20:44:59.076Z",
+  "file_count": 1721,
   "files": [
     {
       "path": ".env.prod",
@@ -586,6 +586,10 @@
     {
       "path": "css/dashboard_ui.css",
       "hash": "9ed0bab1ac1f96383e0878cd977e3b971396cc09f4209855f736a2902983da25"
+    },
+    {
+      "path": "css/modules/_athlete_health.css",
+      "hash": "a2ad001a57b579ab9b780c0768aab4097b22536fb05066f8826b665100344edf"
     },
     {
       "path": "css/modules/_athlete-profile.css",
@@ -1529,7 +1533,7 @@
     },
     {
       "path": "index.html",
-      "hash": "1a2be292d7ce56d5f0cfa6ee424328f0913dfab13b8067b9baa3fe33ed3690dc"
+      "hash": "ff689431121c19137f01d95d2a60b9ec1cde140b2e86ed8dd27bd0c7af432c1f"
     },
     {
       "path": "js/api/athletes.api.js",
@@ -1649,7 +1653,7 @@
     },
     {
       "path": "js/modules/athletes/AthleteHealth.js",
-      "hash": "ccd973a4783cfc96a4c55ee69782a77f4554fa9f828e147c3bbf4f848312c2be"
+      "hash": "1a827eea648bfe0940dba4d99a3228fe9079b88cf130e2a1adbdcb5b1800d963"
     },
     {
       "path": "js/modules/athletes/AthletesAPI.js",
