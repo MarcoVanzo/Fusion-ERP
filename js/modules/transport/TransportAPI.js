@@ -60,6 +60,10 @@ const TransportAPI = {
         return await Store.get("listTransports", "transport", { teamId });
     },
 
+    duplicateTransport: async (id) => {
+        return await Store.api("duplicateTransport", "transport", { id });
+    },
+
     getDrivers: async () => {
         return await Store.get("listDrivers", "transport");
     },
