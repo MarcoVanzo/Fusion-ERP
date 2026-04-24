@@ -60,10 +60,10 @@ try {
     echo "Tabella password_history verificata/creata.\\n";
 
     // 4. Marca la migrazione come eseguita
-    $stmt = $pdo->prepare("SELECT 1 FROM migrations WHERE version = 'V124__unify_auth_to_mv_erp.sql'");
+    $stmt = $pdo->prepare("SELECT 1 FROM migrations WHERE filename = 'V124__unify_auth_to_mv_erp.sql'");
     $stmt->execute();
     if (!$stmt->fetchColumn()) {
-        $pdo->exec("INSERT INTO migrations (version, executed_at) VALUES ('V124__unify_auth_to_mv_erp.sql', NOW())");
+        $pdo->exec("INSERT INTO migrations (filename, executed_at) VALUES ('V124__unify_auth_to_mv_erp.sql', NOW())");
         echo "Migrazione V124 segnata come completata.\\n";
     } else {
         echo "Migrazione V124 già presente nella tabella migrations.\\n";
