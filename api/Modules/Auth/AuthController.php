@@ -102,15 +102,27 @@ class AuthController
         $currentPwd = $body['currentPassword'] ?? '';
         $newPwd = $body['newPassword'] ?? '';
 
-        if (strlen($newPwd) < 10) Response::error('Password troppo breve', 400);
+        if (!\FusionERP\Shared\Security::validatePasswordComplexity($newPwd)) {
+            Response::error('La password deve essere di almeno 12 caratteri e contenere maiuscole, minuscole, numeri e caratteri speciali.', 400);
+        }
 
         $dbUser = $this->repo->getUserByEmail($user['email']);
         if (!$dbUser || !password_verify($currentPwd, $dbUser['pwd_hash'])) {
             Response::error('Password attuale errata', 401);
         }
 
+        // Check password history
+        $history = $this->repo->getPasswordHistory($user['id'], 5);
+        foreach ($history as $oldHash) {
+            if (password_verify($newPwd, $oldHash)) {
+                Response::error('Non puoi riutilizzare una delle ultime 5 password.', 400);
+            }
+        }
+
         $hash = password_hash($newPwd, PASSWORD_BCRYPT, ['cost' => 12]);
         $this->repo->updatePasswordHash($user['id'], $hash);
+        $this->repo->savePasswordHistory($user['id'], $hash);
+        
         Audit::log('PASSWORD_RESET', 'users', $user['id']);
         Response::success(['message' => 'Password aggiornata']);
     }
@@ -121,32 +133,23 @@ class AuthController
         $email = strtolower(trim($body['email'] ?? ''));
         $user = $this->repo->getUserByEmail($email);
         if ($user) {
-            $token = bin2hex(random_bytes(32));
-            $expiresAt = date('Y-m-d H:i:s', strtotime('+1 hour'));
-            $this->repo->setPasswordResetToken($user['id'], $token, $expiresAt);
-            $appUrl = rtrim(getenv('APP_URL') ?: 'https://www.fusionteamvolley.it/ERP', '/');
-            $resetLink = $appUrl . "/?reset=" . $token;
-            $subject = "Reimposta Password - Fusion ERP";
-            $htmlBody = "<p>Ciao {$user['full_name']}, clicca qui per resettare la password: <a href=\"{$resetLink}\">Reset</a></p>";
+            $tempPwd = \FusionERP\Shared\Security::generateTempPassword();
+            $hash = password_hash($tempPwd, PASSWORD_BCRYPT, ['cost' => 12]);
+            $this->repo->setTemporaryPassword($user['id'], $hash);
+            
+            $subject = "Password Temporanea - Fusion ERP";
+            $htmlBody = "<p>Ciao {$user['full_name']},</p>
+                         <p>E' stata richiesta una nuova password per il tuo account.</p>
+                         <p>La tua password temporanea è: <strong>{$tempPwd}</strong></p>
+                         <p>Accedi al sistema con questa password; ti verrà richiesto di sceglierne una nuova immediatamente.</p>";
             \FusionERP\Shared\Mailer::send($user['email'], $user['full_name'], $subject, $htmlBody);
         }
-        Response::success(['message' => 'Se l\'email è valida riceverai un link.']);
+        Response::success(['message' => 'Se l\'email è valida riceverai una password temporanea.']);
     }
 
     public function confirmPasswordReset(): void
     {
-        $body = Response::jsonBody();
-        $token = $body['token'] ?? '';
-        $newPwd = $body['newPassword'] ?? '';
-        if (empty($token) || strlen($newPwd) < 10) Response::error('Dati non validi', 400);
-
-        $user = $this->repo->getUserByResetToken($token);
-        if (!$user) Response::error('Token non valido', 400);
-
-        $hash = password_hash($newPwd, PASSWORD_BCRYPT, ['cost' => 12]);
-        $this->repo->setPasswordHash($user['id'], $hash);
-        $this->repo->clearPasswordResetToken($user['id']);
-        Response::success(['message' => 'Password aggiornata']);
+        Response::error('Endpoint deprecato. Usa la password temporanea per il login.', 400);
     }
 
     public function adminResetPassword(): void
