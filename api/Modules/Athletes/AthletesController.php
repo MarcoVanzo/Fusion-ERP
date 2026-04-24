@@ -400,16 +400,19 @@ class AthletesController
                     'photo_release_file_path', 'privacy_policy_file_path',
                     'guesthouse_rules_file_path', 'guesthouse_delegate_file_path', 'health_card_file_path'];
         if (empty($id) || !in_array($field, $allowed, true)) {
+            error_log("[downloadDoc] Parametri non validi. id={$id}, field={$field}");
             Response::error('Parametri non validi', 400);
         }
 
         $athlete = $this->repo->getAthleteById($id);
         if (!$athlete || empty($athlete[$field])) {
+            error_log("[downloadDoc] Documento non trovato nel db. id={$id}, field={$field}, db_value=" . ($athlete[$field] ?? 'null'));
             Response::error('Documento non trovato', 404);
         }
 
         $fullPath = dirname(__DIR__, 3) . '/' . $athlete[$field];
         if (!file_exists($fullPath)) {
+            error_log("[downloadDoc] File fisico non trovato. path={$fullPath}");
             Response::error('File fisico non trovato sul server', 404);
         }
 

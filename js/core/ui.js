@@ -247,8 +247,17 @@ const UI = (() => {
          * @param {string} title - Title of the modal
          */
         openPdf: function (url, title = 'Visualizzatore PDF') {
-            const body = `<iframe src="${url}" style="width:100%; height:85vh; border:none; border-radius:0 0 8px 8px; background:#fff; display:block;"></iframe>`;
-            modal({ title, body, footer: '', size: 'xlarge' });
+            const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+            
+            if (isIOS || isSafari) {
+                // Su iOS e Safari nativo, l'iframe per i PDF è buggato (schermo bianco o grigio).
+                // Apriamo direttamente in una nuova scheda.
+                window.open(url, '_blank');
+            } else {
+                const body = `<iframe src="${url}" style="width:100%; height:85vh; border:none; border-radius:0 0 8px 8px; background:#fff; display:block;"></iframe>`;
+                modal({ title, body, footer: '', size: 'xlarge' });
+            }
         }
     };
 })();
