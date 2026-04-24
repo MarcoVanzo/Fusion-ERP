@@ -247,6 +247,21 @@ class TransportController
         Response::success($this->repo->listTransports($teamId));
     }
 
+    public function duplicateTransport(): void
+    {
+        $user = Auth::requireWrite('transport');
+        $body = Response::jsonBody();
+        $id = $body['id'] ?? filter_input(INPUT_GET, 'id', FILTER_DEFAULT);
+
+        $this->handleServiceCall(function() use ($id, $user) {
+            $newId = $this->service->duplicateTransport($id, $user['id']);
+            return [
+                'id' => $newId,
+                'message' => 'Trasporto duplicato con successo.'
+            ];
+        });
+    }
+
     // ─── TEAMS (for dropdowns) ────────────────────────────────────────────────
 
     public function listTeams(): void

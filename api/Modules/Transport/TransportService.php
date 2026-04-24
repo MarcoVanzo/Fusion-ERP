@@ -27,6 +27,17 @@ class TransportService
 
     // ─── EVENTS ───────────────────────────────────────────────────────────────
 
+    public function duplicateTransport(string $id, string $userId): string
+    {
+        if (empty($id)) throw new \Exception('Transport ID is required', 400);
+        
+        $newId = 'TRP_' . bin2hex(random_bytes(4));
+        $this->repo->duplicateTransport($id, $newId, $userId);
+        
+        Audit::log('INSERT', 'transports', $newId, null, ['duplicated_from' => $id]);
+        return $newId;
+    }
+
     public function createEvent(array $user, array $body): array
     {
         Response::requireFields($body, ['team_id', 'type', 'title', 'event_date']);

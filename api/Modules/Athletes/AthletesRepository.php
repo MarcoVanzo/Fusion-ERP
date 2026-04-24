@@ -49,7 +49,7 @@ class AthletesRepository
                        COALESCE(t.name, "Nessuna squadra") AS team_name,
                        COALESCE(t.category, "Nessuna") AS category
                 FROM athletes a
-                LEFT JOIN teams t ON a.team_id = t.id';
+                LEFT JOIN teams t ON (a.team_id = t.id OR a.team_id = CONCAT("TEAM_", t.id) OR CONCAT("TEAM_", a.team_id) = t.id)';
 
         $params = [':tid' => $tid];
         if ($teamSeasonId !== '') {
@@ -115,7 +115,7 @@ class AthletesRepository
                        COALESCE(t.name, 'Nessuna squadra') AS team_name,
                        COALESCE(t.category, 'Nessuna') AS category
                 FROM athletes a
-                LEFT JOIN teams t ON a.team_id = t.id";
+                LEFT JOIN teams t ON (a.team_id = t.id OR a.team_id = CONCAT('TEAM_', t.id) OR CONCAT('TEAM_', a.team_id) = t.id)";
 
         $tid = TenantContext::id();
         $params = [':tid' => $tid];
@@ -182,7 +182,7 @@ class AthletesRepository
                     a.is_active,
                     t.name AS team_name, t.category
              FROM athletes a
-             LEFT JOIN teams t ON a.team_id = t.id
+             LEFT JOIN teams t ON (a.team_id = t.id OR a.team_id = CONCAT('TEAM_', t.id) OR CONCAT('TEAM_', a.team_id) = t.id)
              WHERE a.id = :id AND a.tenant_id = :tid AND a.deleted_at IS NULL
              LIMIT 1"
         );
@@ -234,7 +234,7 @@ class AthletesRepository
                     a.is_active,
                     t.name AS team_name, t.category
              FROM athletes a
-             LEFT JOIN teams t ON a.team_id = t.id
+             LEFT JOIN teams t ON (a.team_id = t.id OR a.team_id = CONCAT('TEAM_', t.id) OR CONCAT('TEAM_', a.team_id) = t.id)
              WHERE a.user_id = :user_id AND a.tenant_id = :tid AND a.deleted_at IS NULL
              LIMIT 1"
         );
@@ -283,7 +283,7 @@ class AthletesRepository
                     a.is_active,
                     t.name AS team_name, t.category
              FROM athletes a
-             LEFT JOIN teams t ON a.team_id = t.id
+             LEFT JOIN teams t ON (a.team_id = t.id OR a.team_id = CONCAT('TEAM_', t.id) OR CONCAT('TEAM_', a.team_id) = t.id)
              WHERE a.email = :email AND a.tenant_id = :tid AND a.deleted_at IS NULL
              LIMIT 1"
         );

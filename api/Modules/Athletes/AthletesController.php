@@ -53,7 +53,8 @@ class AthletesController
     {
         Auth::requireRead('athletes');
         $teamId = filter_input(INPUT_GET, 'teamId', FILTER_DEFAULT) ?? '';
-        Response::success($this->repo->listAthletesLight($teamId));
+        $data = $this->repo->listAthletesLight($teamId);
+        Response::success($data);
     }
 
 
