@@ -149,6 +149,28 @@ class AuthController
         Response::success(['message' => 'Password aggiornata']);
     }
 
+    public function adminResetPassword(): void
+    {
+        Auth::requireRole('admin');
+        $body = Response::jsonBody();
+        $userId = $body['userId'] ?? '';
+
+        if (empty($userId)) {
+            Response::error('ID utente mancante', 400);
+        }
+
+        $tempPassword = bin2hex(random_bytes(4)); // Genera una password temporanea di 8 caratteri
+        $hash = password_hash($tempPassword, PASSWORD_BCRYPT, ['cost' => 12]);
+
+        $this->repo->setPasswordHash($userId, $hash);
+        Audit::log('ADMIN_PASSWORD_RESET', 'users', $userId);
+
+        Response::success([
+            'message' => 'Password resettata con successo',
+            'tempPassword' => $tempPassword
+        ]);
+    }
+
     public function createUser(): void
     {
         Auth::requireRole('admin');

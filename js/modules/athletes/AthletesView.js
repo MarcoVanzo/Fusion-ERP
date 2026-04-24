@@ -1054,20 +1054,20 @@ export const AthletesView = {
      */
     tabDocumenti: (athlete, canUpload = false) => {
         const docs = [
-            { id: 'contract-file', label: 'Contratto / Iscrizione', path: athlete.contract_file_path, icon: 'ph-file-pdf' },
-            { id: 'id-doc-front', label: 'Documento ID (Fronte)', path: athlete.id_doc_front_file_path, icon: 'ph-identification-badge' },
-            { id: 'id-doc-back', label: 'Documento ID (Retro)', path: athlete.id_doc_back_file_path, icon: 'ph-identification-badge' },
-            { id: 'cf-doc-front', label: 'Codice Fiscale (Fronte)', path: athlete.cf_doc_front_file_path, icon: 'ph-identification-card' },
-            { id: 'cf-doc-back', label: 'Codice Fiscale (Retro)', path: athlete.cf_doc_back_file_path, icon: 'ph-identification-card' },
-            { id: 'med-cert', label: 'Certificato Medico', path: athlete.medical_cert_file_path, icon: 'ph-article-ny-times' },
-            { id: 'photo-release', label: 'Liberatoria Foto/Video', path: athlete.photo_release_file_path, icon: 'ph-camera' },
-            { id: 'privacy-policy', label: 'Informativa Privacy', path: athlete.privacy_policy_file_path, icon: 'ph-shield-checkered' }
+            { id: 'contract-file', field: 'contract_file_path', label: 'Contratto / Iscrizione', path: athlete.contract_file_path, icon: 'ph-file-pdf' },
+            { id: 'id-doc-front', field: 'id_doc_front_file_path', label: 'Documento ID (Fronte)', path: athlete.id_doc_front_file_path, icon: 'ph-identification-badge' },
+            { id: 'id-doc-back', field: 'id_doc_back_file_path', label: 'Documento ID (Retro)', path: athlete.id_doc_back_file_path, icon: 'ph-identification-badge' },
+            { id: 'cf-doc-front', field: 'cf_doc_front_file_path', label: 'Codice Fiscale (Fronte)', path: athlete.cf_doc_front_file_path, icon: 'ph-identification-card' },
+            { id: 'cf-doc-back', field: 'cf_doc_back_file_path', label: 'Codice Fiscale (Retro)', path: athlete.cf_doc_back_file_path, icon: 'ph-identification-card' },
+            { id: 'med-cert', field: 'medical_cert_file_path', label: 'Certificato Medico', path: athlete.medical_cert_file_path, icon: 'ph-article-ny-times' },
+            { id: 'photo-release', field: 'photo_release_file_path', label: 'Liberatoria Foto/Video', path: athlete.photo_release_file_path, icon: 'ph-camera' },
+            { id: 'privacy-policy', field: 'privacy_policy_file_path', label: 'Informativa Privacy', path: athlete.privacy_policy_file_path, icon: 'ph-shield-checkered' }
         ];
 
         const foresteriaDocs = [
-            { id: 'guesthouse-rules', label: 'Regolamento Foresteria', path: athlete.guesthouse_rules_file_path, icon: 'ph-house-line' },
-            { id: 'guesthouse-delegate', label: 'Delega', path: athlete.guesthouse_delegate_file_path, icon: 'ph-signature' },
-            { id: 'health-card', label: 'Tessera Sanitaria', path: athlete.health_card_file_path, icon: 'ph-identification-card' }
+            { id: 'guesthouse-rules', field: 'guesthouse_rules_file_path', label: 'Regolamento Foresteria', path: athlete.guesthouse_rules_file_path, icon: 'ph-house-line' },
+            { id: 'guesthouse-delegate', field: 'guesthouse_delegate_file_path', label: 'Delega', path: athlete.guesthouse_delegate_file_path, icon: 'ph-signature' },
+            { id: 'health-card', field: 'health_card_file_path', label: 'Tessera Sanitaria', path: athlete.health_card_file_path, icon: 'ph-identification-card' }
         ];
 
         const renderDocCard = (doc) => {
@@ -1090,7 +1090,7 @@ export const AthletesView = {
 
                     <div style="display:flex; gap:10px; margin-top:auto; padding-top:16px; border-top:1px solid rgba(255,255,255,0.05);">
                         ${hasFile ? `
-                            <button class="btn btn-default btn-xs" style="flex:1; background:rgba(0, 230, 118, 0.1); border-color:rgba(0, 230, 118, 0.2); color:var(--color-success);" onclick="UI.openPdf('api/?module=athletes&action=downloadDoc&id=${athlete.id}&field=${doc.id.replace(/-/g,'_')}_file_path', 'Documento Atleta')">
+                            <button class="btn btn-default btn-xs" style="flex:1; background:rgba(0, 230, 118, 0.1); border-color:rgba(0, 230, 118, 0.2); color:var(--color-success);" onclick="UI.openPdf('api/?module=athletes&action=downloadDoc&id=${athlete.id}&field=${doc.field}', '${doc.label}')">
                                 <i class="ph ph-eye"></i> Visualizza
                             </button>
                         ` : ''}
