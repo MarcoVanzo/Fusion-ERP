@@ -1,4 +1,8 @@
 <?php
+require_once __DIR__ . '/../vendor/autoload.php';
+$dotenv = Dotenv\Dotenv::createMutable(dirname(__DIR__));
+$dotenv->safeLoad();
+
 require_once __DIR__ . '/Shared/Database.php';
 use FusionERP\Shared\Database;
 
@@ -28,10 +32,19 @@ try {
     } else {
         // If she is deleted, restore her
         foreach ($athletes as $a) {
-            if ($a['deleted_at'] !== null) {
+            if ($a['deleted_at'] !== null || $a['is_active'] == 0) {
                 $db->exec("UPDATE athletes SET deleted_at = NULL, is_active = 1 WHERE id = '{$a['id']}'");
-                echo "Restored deleted athlete {$a['id']}.\n";
+                echo "Restored deleted/inactive athlete {$a['id']}.\n";
+            } else {
+                echo "Athlete {$a['id']} is already active and not deleted.\n";
             }
+        }
+        
+        // Let's also check if she is in the right team and athlete_teams
+        foreach ($athletes as $a) {
+            $db->exec("UPDATE athletes SET team_id = 'TEAM_u16a', tenant_id = 'TNT_default' WHERE id = '{$a['id']}'");
+            $db->exec("INSERT IGNORE INTO athlete_teams (athlete_id, team_season_id) VALUES ('{$a['id']}', 'TS_329e0ff21d9511f')");
+            echo "Ensured athlete {$a['id']} has correct team_id and athlete_teams record.\n";
         }
     }
 } catch (Exception $e) {
