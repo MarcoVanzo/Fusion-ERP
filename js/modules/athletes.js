@@ -428,6 +428,7 @@ const Athletes = (() => {
             Router.updateHash(Router.getCurrentRoute(), { id });
 
         } catch (e) {
+            console.error('[Athletes] renderProfile failed:', e?.message || e);
             UI.toast("Atleta non trovato", "error");
             renderDashboard();
         } finally {

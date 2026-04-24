@@ -349,9 +349,14 @@ class AthletesRepository
 
     public function createAthlete(array $data): void
     {
+        // Ensure tenant_id is always set for multi-tenant isolation
+        if (!isset($data[':tenant_id'])) {
+            $data[':tenant_id'] = TenantContext::id();
+        }
+
         $stmt = $this->db->prepare(
             'INSERT INTO athletes (
-                `id`, `user_id`, `team_id`,
+                `id`, `tenant_id`, `user_id`, `team_id`,
                 `first_name`, `last_name`, `full_name`,
                 `jersey_number`, `role`,
                 `birth_date`, `birth_place`,
@@ -370,7 +375,7 @@ class AthletesRepository
                 `shirt_size`, `shoe_size`,
                 `is_active`
              ) VALUES (
-                :id, :user_id, :team_id,
+                :id, :tenant_id, :user_id, :team_id,
                 :first_name, :last_name, :full_name,
                 :jersey_number, :role,
                 :birth_date, :birth_place,
