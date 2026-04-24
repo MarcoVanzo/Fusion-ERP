@@ -47,8 +47,7 @@ class AthletesRepository
                        a.phone, a.email, a.fiscal_code, a.medical_cert_expires_at,
                        a.residence_address, a.residence_city, a.parent_contact, a.parent_phone,
                        COALESCE(t.name, "Nessuna squadra") AS team_name,
-                       COALESCE(t.category, "Nessuna") AS category,
-                       (SELECT GROUP_CONCAT(at_sub.team_season_id SEPARATOR ",") FROM athlete_teams at_sub WHERE at_sub.athlete_id = a.id) AS team_season_ids
+                       COALESCE(t.category, "Nessuna") AS category
                 FROM athletes a
                 LEFT JOIN teams t ON a.team_id = t.id';
 
@@ -76,10 +75,7 @@ class AthletesRepository
         $stmt = $this->db->prepare($sql);
         $stmt->execute($params);
         $rows = $stmt->fetchAll();
-        foreach ($rows as &$row) {
-            $row['team_season_ids'] = !empty($row['team_season_ids']) ? explode(',', $row['team_season_ids']) : [];
-        }
-        return $rows;
+        return $this->_hydrateAthletes($rows, false);
     }
 
     /**
@@ -97,20 +93,9 @@ class AthletesRepository
             $docCols = ', a.' . implode(', a.', $docFields);
         }
 
-        $hasPaidField = '0';
-        if ($this->_hasColumn('event_attendees', 'has_paid')) {
-            $hasPaidField = 'ea.has_paid';
-        }
-
-        // VALD subqueries: only reference vald_profile_id if the column exists in production
+        // Se vald_profile_id esiste, lo tiriamo su per il mapping successivo
         $hasValdProfileId = $this->_hasColumn('athletes', 'vald_profile_id');
-        if ($hasValdProfileId) {
-            $valdMetricsSub = "(SELECT metrics FROM vald_test_results WHERE athlete_id = a.id OR (a.vald_profile_id IS NOT NULL AND athlete_id IN (SELECT id FROM athletes WHERE vald_profile_id = a.vald_profile_id)) ORDER BY test_date DESC LIMIT 1)";
-            $valdDateSub = "(SELECT test_date FROM vald_test_results WHERE athlete_id = a.id OR (a.vald_profile_id IS NOT NULL AND athlete_id IN (SELECT id FROM athletes WHERE vald_profile_id = a.vald_profile_id)) ORDER BY test_date DESC LIMIT 1)";
-        } else {
-            $valdMetricsSub = "(SELECT metrics FROM vald_test_results WHERE athlete_id = a.id ORDER BY test_date DESC LIMIT 1)";
-            $valdDateSub = "(SELECT test_date FROM vald_test_results WHERE athlete_id = a.id ORDER BY test_date DESC LIMIT 1)";
-        }
+        $valdProfileCol = $hasValdProfileId ? ', a.vald_profile_id' : '';
 
         $sql = "SELECT DISTINCT a.id, a.team_id, a.full_name, a.jersey_number, a.role, a.photo_path, a.is_active,
                        a.birth_date, a.height_cm, a.weight_kg,
@@ -120,14 +105,9 @@ class AthletesRepository
                        a.quota_foresteria, a.quota_foresteria_paid,
                        a.quota_trasporti, a.quota_trasporti_paid,
                        a.quota_payment_deadline,
-                       (SELECT GROUP_CONCAT(CONCAT_WS('||', td.event_id, e.title, IFNULL(td.fee_per_athlete, 0), IFNULL({$hasPaidField}, 0)) SEPARATOR ';;;') FROM event_attendees ea JOIN tournament_details td ON ea.event_id = td.event_id JOIN events e ON td.event_id = e.id WHERE ea.athlete_id = a.id AND ea.status = 'confirmed') AS tournaments_summary,
-                       a.medical_cert_expires_at{$docCols},
+                       a.medical_cert_expires_at{$docCols}{$valdProfileCol},
                        COALESCE(t.name, 'Nessuna squadra') AS team_name,
-                       COALESCE(t.category, 'Nessuna') AS category,
-                       (SELECT GROUP_CONCAT(at_sub.team_season_id SEPARATOR ',') FROM athlete_teams at_sub WHERE at_sub.athlete_id = a.id) AS team_season_ids,
-                       (SELECT GROUP_CONCAT(CONCAT_WS('||', ir.injury_date, ir.type, ir.current_status, IFNULL(ir.return_date, '')) SEPARATOR ';;;') FROM injury_records ir WHERE ir.athlete_id = a.id ORDER BY ir.injury_date DESC) AS injuries_summary,
-                       {$valdMetricsSub} AS latest_vald_metrics,
-                       {$valdDateSub} AS latest_vald_date
+                       COALESCE(t.category, 'Nessuna') AS category
                 FROM athletes a
                 LEFT JOIN teams t ON a.team_id = t.id";
 
@@ -151,10 +131,8 @@ class AthletesRepository
         $stmt = $this->db->prepare($sql);
         $stmt->execute($params);
         $rows = $stmt->fetchAll();
-        foreach ($rows as &$row) {
-            $row['team_season_ids'] = !empty($row['team_season_ids']) ? explode(',', $row['team_season_ids']) : [];
-        }
-        return $rows;
+        
+        return $this->_hydrateAthletes($rows, true);
     }
 
 
@@ -728,5 +706,112 @@ class AthletesRepository
         catch (\Throwable) {
             return false;
         }
+    }
+
+    /**
+     * PERF: Previene il problema di N+1 (Correlated Subqueries) idratando le collection in PHP.
+     * Trasforma O(N) query interne in O(1) bulk fetch per team, infortuni, tornei e VALD.
+     */
+    private function _hydrateAthletes(array $rows, bool $light): array
+    {
+        if (empty($rows)) return [];
+        $athleteIds = array_column($rows, 'id');
+        $inQuery = implode(',', array_fill(0, count($athleteIds), '?'));
+        
+        // --- 1. Hydrate Team Seasons (All modes) ---
+        $stmtTs = $this->db->prepare("SELECT athlete_id, GROUP_CONCAT(team_season_id SEPARATOR ',') AS team_season_ids FROM athlete_teams WHERE athlete_id IN ($inQuery) GROUP BY athlete_id");
+        $stmtTs->execute($athleteIds);
+        $tsMap = [];
+        foreach ($stmtTs->fetchAll() as $r) {
+            $tsMap[$r['athlete_id']] = explode(',', $r['team_season_ids']);
+        }
+
+        $tournamentsMap = [];
+        $injuriesMap = [];
+        $valdRows = [];
+        $testAthleteToProfile = [];
+
+        // --- 2. Hydrate Light specific (Tournaments, Injuries, VALD) ---
+        if ($light) {
+            // Tournaments
+            $hasPaidField = $this->_hasColumn('event_attendees', 'has_paid') ? 'ea.has_paid' : '0';
+            $stmtT = $this->db->prepare("
+                SELECT ea.athlete_id, GROUP_CONCAT(CONCAT_WS('||', td.event_id, e.title, IFNULL(td.fee_per_athlete, 0), IFNULL({$hasPaidField}, 0)) SEPARATOR ';;;') AS summary
+                FROM event_attendees ea 
+                JOIN tournament_details td ON ea.event_id = td.event_id 
+                JOIN events e ON td.event_id = e.id 
+                WHERE ea.athlete_id IN ($inQuery) AND ea.status = 'confirmed'
+                GROUP BY ea.athlete_id
+            ");
+            $stmtT->execute($athleteIds);
+            foreach ($stmtT->fetchAll() as $r) $tournamentsMap[$r['athlete_id']] = $r['summary'];
+            
+            // Injuries
+            $stmtI = $this->db->prepare("
+                SELECT athlete_id, GROUP_CONCAT(CONCAT_WS('||', injury_date, type, current_status, IFNULL(return_date, '')) ORDER BY injury_date DESC SEPARATOR ';;;') AS summary
+                FROM injury_records 
+                WHERE athlete_id IN ($inQuery)
+                GROUP BY athlete_id
+            ");
+            $stmtI->execute($athleteIds);
+            foreach ($stmtI->fetchAll() as $r) $injuriesMap[$r['athlete_id']] = $r['summary'];
+
+            // Vald
+            $hasValdProfileId = $this->_hasColumn('athletes', 'vald_profile_id');
+            $valdParams = $athleteIds;
+            $valdWhere = "athlete_id IN ($inQuery)";
+
+            if ($hasValdProfileId) {
+                $profiles = array_unique(array_filter(array_column($rows, 'vald_profile_id')));
+                if (!empty($profiles)) {
+                    $inProfiles = implode(',', array_fill(0, count($profiles), '?'));
+                    $valdWhere = "athlete_id IN ($inQuery) OR athlete_id IN (SELECT id FROM athletes WHERE vald_profile_id IN ($inProfiles))";
+                    $valdParams = array_merge($athleteIds, array_values($profiles));
+                }
+            }
+            
+            $stmtV = $this->db->prepare("SELECT athlete_id, metrics, test_date FROM vald_test_results WHERE $valdWhere ORDER BY test_date DESC");
+            $stmtV->execute($valdParams);
+            $valdRows = $stmtV->fetchAll();
+
+            if ($hasValdProfileId && !empty($valdRows)) {
+                $testAthletesIds = array_unique(array_column($valdRows, 'athlete_id'));
+                if (!empty($testAthletesIds)) {
+                    $inTestAthletes = implode(',', array_fill(0, count($testAthletesIds), '?'));
+                    $stmtTAP = $this->db->prepare("SELECT id, vald_profile_id FROM athletes WHERE id IN ($inTestAthletes) AND vald_profile_id IS NOT NULL");
+                    $stmtTAP->execute(array_values($testAthletesIds));
+                    foreach ($stmtTAP->fetchAll() as $tap) {
+                        $testAthleteToProfile[$tap['id']] = $tap['vald_profile_id'];
+                    }
+                }
+            }
+        }
+
+        // --- 3. Map back to rows ---
+        foreach ($rows as &$row) {
+            $id = $row['id'];
+            $row['team_season_ids'] = $tsMap[$id] ?? [];
+            
+            if ($light) {
+                $row['tournaments_summary'] = $tournamentsMap[$id] ?? null;
+                $row['injuries_summary'] = $injuriesMap[$id] ?? null;
+                $profileId = $row['vald_profile_id'] ?? null;
+                
+                $row['latest_vald_metrics'] = null;
+                $row['latest_vald_date'] = null;
+                
+                // Find the first matching VALD test (since they are ordered by date DESC)
+                foreach ($valdRows as $test) {
+                    if ($test['athlete_id'] === $id || ($profileId !== null && isset($testAthleteToProfile[$test['athlete_id']]) && $testAthleteToProfile[$test['athlete_id']] === $profileId)) {
+                        $row['latest_vald_metrics'] = $test['metrics'];
+                        $row['latest_vald_date'] = $test['test_date'];
+                        break;
+                    }
+                }
+            }
+            // Pulizia
+            unset($row['vald_profile_id']);
+        }
+        return $rows;
     }
 }

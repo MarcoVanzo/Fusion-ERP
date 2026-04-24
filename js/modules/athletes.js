@@ -20,6 +20,7 @@ const Athletes = (() => {
     let activeAthleteId = null;
     let isBulkMode = false;
     let selectedIds = new Set();
+    let renderObserver = null;
 
     function getVariantFromRoute() {
         if (typeof Router === "undefined") return 'anagrafica';
@@ -260,11 +261,17 @@ const Athletes = (() => {
     }
 
     /**
-     * Filtra e renderizza la griglia atleti
+     * Filtra e renderizza la griglia atleti (con Chunked Rendering)
      */
     function filterAndRenderGrid(searchTerm = "", variant = 'anagrafica') {
         const grid = document.getElementById("athletes-grid");
         if (!grid) return;
+
+        // Cleanup observer precedente se esiste
+        if (renderObserver) {
+            renderObserver.disconnect();
+            renderObserver = null;
+        }
 
         searchTerm = searchTerm.toLowerCase();
         
@@ -287,69 +294,114 @@ const Athletes = (() => {
             return;
         }
 
-        grid.innerHTML = filtered.map(a => AthletesView.athleteCard(a, selectedIds.has(a.id), variant)).join('');
+        grid.innerHTML = ""; // Reset grid
 
-        // Listeners sulle card
-        grid.querySelectorAll(".athlete-card").forEach(card => {
-            const id = card.dataset.id;
+        // Implementazione Chunked Rendering
+        const CHUNK_SIZE = 30;
+        let currentIndex = 0;
+
+        const renderNextChunk = () => {
+            const chunk = filtered.slice(currentIndex, currentIndex + CHUNK_SIZE);
+            if (chunk.length === 0) return;
+
+            // Rimuovi temporaneamente il sentinel observer se esiste
+            const sentinel = grid.querySelector('.scroll-sentinel');
+            if (sentinel) sentinel.remove();
+
+            // Costruisci e inietta le card
+            const fragment = document.createDocumentFragment();
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = chunk.map(a => AthletesView.athleteCard(a, selectedIds.has(a.id), variant)).join('');
             
-            // Edit rapido dalla lista
-            const editBtn = card.querySelector(".quick-edit-btn");
-            if (editBtn) {
-                editBtn.onclick = (e) => {
-                    e.stopPropagation();
-                    if (variant === 'quote') {
-                        renderProfile(id, 'quote');
-                    } else if (variant === 'infortuni') {
-                        const athlete = athletesData.find(a => String(a.id) === String(id));
-                        if (athlete) AthleteHealth.openNewInjury(athlete);
-                    } else {
-                        const athlete = athletesData.find(a => String(a.id) === String(id));
-                        if (athlete) renderEditForm(athlete);
-                    }
-                };
-            }
+            Array.from(tempDiv.children).forEach(card => {
+                attachCardListeners(card, variant);
+                fragment.appendChild(card);
+            });
 
-            // Inline editing per le quote (se nel tab quote)
-            if (variant === 'quote') {
-                card.querySelectorAll(".quota-inline-input").forEach(input => {
-                    input.onclick = (e) => e.stopPropagation();
-                    input.onchange = async (e) => {
-                        const { field } = e.target.dataset;
-                        const val = e.target.value;
-                        try {
-                            await AthletesAPI.update({ id, [field]: val });
-                            UI.toast("Quota salvata", "success", 1000);
-                            await refreshData('quote');
-                        } catch (err) {
-                            UI.toast(err.message, "error");
+            grid.appendChild(fragment);
+            currentIndex += CHUNK_SIZE;
+
+            // Se ci sono ancora elementi, aggiungi il sentinel per l'observer
+            if (currentIndex < filtered.length) {
+                const newSentinel = document.createElement('div');
+                newSentinel.className = 'scroll-sentinel';
+                newSentinel.style.height = '1px';
+                newSentinel.style.width = '100%';
+                grid.appendChild(newSentinel);
+                
+                if (!renderObserver) {
+                    renderObserver = new IntersectionObserver((entries) => {
+                        if (entries[0].isIntersecting) {
+                            renderNextChunk();
                         }
-                    };
-                });
-
-                card.querySelectorAll(".quota-status-toggle").forEach(btn => {
-                    btn.onclick = async (e) => {
-                        e.stopPropagation();
-                        const { field, value } = btn.dataset;
-                        try {
-                            await AthletesAPI.update({ id, [field]: value });
-                            UI.toast("Pagamento aggiornato", "success", 1000);
-                            await refreshData('quote');
-                        } catch (err) {
-                            UI.toast(err.message, "error");
-                        }
-                    };
-                });
+                    }, { rootMargin: '200px' });
+                }
+                renderObserver.observe(newSentinel);
             }
+        };
 
-            card.onclick = () => {
-                if (isBulkMode) {
-                    toggleSelection(id);
+        renderNextChunk();
+    }
+
+    function attachCardListeners(card, variant) {
+        const id = card.dataset.id;
+        
+        // Edit rapido dalla lista
+        const editBtn = card.querySelector(".quick-edit-btn");
+        if (editBtn) {
+            editBtn.onclick = (e) => {
+                e.stopPropagation();
+                if (variant === 'quote') {
+                    renderProfile(id, 'quote');
+                } else if (variant === 'infortuni') {
+                    const athlete = athletesData.find(a => String(a.id) === String(id));
+                    if (athlete) AthleteHealth.openNewInjury(athlete);
                 } else {
-                    renderProfile(id, variant === 'anagrafica' ? null : variant);
+                    const athlete = athletesData.find(a => String(a.id) === String(id));
+                    if (athlete) renderEditForm(athlete);
                 }
             };
-        });
+        }
+
+        // Inline editing per le quote (se nel tab quote)
+        if (variant === 'quote') {
+            card.querySelectorAll(".quota-inline-input").forEach(input => {
+                input.onclick = (e) => e.stopPropagation();
+                input.onchange = async (e) => {
+                    const { field } = e.target.dataset;
+                    const val = e.target.value;
+                    try {
+                        await AthletesAPI.update({ id, [field]: val });
+                        UI.toast("Quota salvata", "success", 1000);
+                        await refreshData('quote');
+                    } catch (err) {
+                        UI.toast(err.message, "error");
+                    }
+                };
+            });
+
+            card.querySelectorAll(".quota-status-toggle").forEach(btn => {
+                btn.onclick = async (e) => {
+                    e.stopPropagation();
+                    const { field, value } = btn.dataset;
+                    try {
+                        await AthletesAPI.update({ id, [field]: value });
+                        UI.toast("Pagamento aggiornato", "success", 1000);
+                        await refreshData('quote');
+                    } catch (err) {
+                        UI.toast(err.message, "error");
+                    }
+                };
+            });
+        }
+
+        card.onclick = () => {
+            if (isBulkMode) {
+                toggleSelection(id);
+            } else {
+                renderProfile(id, variant === 'anagrafica' ? null : variant);
+            }
+        };
     }
 
     /**
