@@ -1,7 +1,7 @@
 {
   "version": 3,
-  "generated_at": "2026-04-24T10:22:54.869Z",
-  "file_count": 1718,
+  "generated_at": "2026-04-24T10:23:44.439Z",
+  "file_count": 1719,
   "files": [
     {
       "path": ".env.prod",
@@ -10,6 +10,10 @@
     {
       "path": ".htaccess",
       "hash": "55d8f2f99caba088677b51f46d1df9995bd85964df10f508ce3080bcb3b154d2"
+    },
+    {
+      "path": "api/check_teams.php",
+      "hash": "24d65b538ffc620d406b1f6f8692f7537298596d47d4df427c61cc8bc323a2d9"
     },
     {
       "path": "api/check_vehicles_debug.php",
@@ -1529,7 +1533,7 @@
     },
     {
       "path": "index.html",
-      "hash": "d3e68c8eeae5a5e0f4d8dc19a86d93e85fda0d98bfef5ddcd5d5ad0962fc68a2"
+      "hash": "18e3354b1f0c575250b37653649d9b08c86058a26c9c64d8718134c05312e39c"
     },
     {
       "path": "js/api/athletes.api.js",
