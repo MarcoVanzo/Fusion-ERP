@@ -708,6 +708,62 @@ const Athletes = (() => {
         });
 
         // Event listener rimosso qui e spostato in attributi inline (onchange/onclick) in AthletesView.js per maggiore affidabilità
+
+        // View document buttons — fetch document via API and open in new tab
+        document.querySelectorAll('.view-doc-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const athleteId = btn.dataset.athleteId;
+                const field = btn.dataset.field;
+                
+                btn.disabled = true;
+                const originalHtml = btn.innerHTML;
+                btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Caricamento...';
+                
+                try {
+                    const response = await fetch(`api/?module=athletes&action=downloadDoc&id=${athleteId}&field=${field}`, {
+                        credentials: 'include',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    });
+                    
+                    if (!response.ok) {
+                        // Try to parse JSON error
+                        let errMsg = 'Errore nel download del documento';
+                        try {
+                            const errData = await response.json();
+                            errMsg = errData.error || errMsg;
+                        } catch (_) { /* ignore parse error */ }
+                        throw new Error(errMsg);
+                    }
+                    
+                    const contentType = response.headers.get('Content-Type') || 'application/octet-stream';
+                    const blob = await response.blob();
+                    const blobUrl = URL.createObjectURL(blob);
+                    
+                    // Open in new tab
+                    const newTab = window.open(blobUrl, '_blank');
+                    if (!newTab) {
+                        // Popup blocked — fallback to download
+                        const a = document.createElement('a');
+                        a.href = blobUrl;
+                        a.download = `documento_${field}.${contentType.includes('pdf') ? 'pdf' : 'jpg'}`;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        UI.toast('Documento scaricato (popup bloccato dal browser)', 'info');
+                    }
+                    
+                    // Cleanup blob URL after a delay to let the new tab load
+                    setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+                } catch (err) {
+                    console.error('[Athletes] Document view failed:', err);
+                    UI.toast(err.message || 'Errore nel caricamento del documento', 'error');
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = originalHtml;
+                }
+            });
+        });
     }
 
     async function renderSubUsers(panel, athlete) {
