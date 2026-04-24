@@ -158,7 +158,7 @@ export const AthleteHealth = {
     },
 
     _renderInjuryCard(injury, isPast = false) {
-        const dDate = new Date(injury.injury_date).toLocaleDateString('it-IT');
+        const dDate = injury.injury_date ? new Date(injury.injury_date).toLocaleDateString('it-IT') : '—';
         let rDate = injury.estimated_return_date ? new Date(injury.estimated_return_date).toLocaleDateString('it-IT') : '—';
         let statusBadge
         if (isPast) {
@@ -361,7 +361,8 @@ export const AthleteHealth = {
                         focused_injury_id: focusedInjuryId,
                         message: message,
                         history: chatHistory
-                    })
+                    }),
+                    signal: this._modalAc ? this._modalAc.signal : undefined
                 }).then(r => r.json());
 
                 const loadingEl = document.getElementById(loadingId);
@@ -379,6 +380,7 @@ export const AthleteHealth = {
                     throw new Error(res.error || "Errore AI");
                 }
             } catch (err) {
+                if (err.name === 'AbortError') return;
                 // Remove loading fallback
                 const loadingEl = messagesContainer.lastElementChild;
                 if(loadingEl && loadingEl.querySelector('.animate-spin')) {
@@ -451,7 +453,7 @@ export const AthleteHealth = {
         
         document.body.appendChild(theModal);
 
-        document.getElementById('anamnesi-form').addEventListener('submit', async (e) => {
+        theModal.querySelector('#anamnesi-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData(e.target);
             
@@ -460,7 +462,8 @@ export const AthleteHealth = {
                 const res = await fetch('api/?module=health&action=updateAnamnesi', {
                     method: 'POST',
                     headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                    body: formData
+                    body: formData,
+                    signal: this._modalAc ? this._modalAc.signal : undefined
                 }).then(r => r.json());
                 
                 if(res.success) {
@@ -471,6 +474,7 @@ export const AthleteHealth = {
                     throw new Error(res.error || "Errore sconosciuto");
                 }
             } catch (err) {
+                if (err.name === 'AbortError') return;
                 UI.toast(err.message, "error");
             } finally {
                 UI.loading(false);
@@ -755,7 +759,7 @@ export const AthleteHealth = {
         }
 
         // Details Form Submission
-        const detailsForm = document.getElementById('injury-form');
+        const detailsForm = theModal.querySelector('#injury-form');
         if (detailsForm) {
             detailsForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
@@ -771,7 +775,8 @@ export const AthleteHealth = {
                     const res = await fetch(`api/?module=health&action=${action}`, {
                         method: 'POST',
                         headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                        body: formData
+                        body: formData,
+                        signal: this._modalAc ? this._modalAc.signal : undefined
                     }).then(r => r.json());
                     
                     if(res.success) {
@@ -793,6 +798,7 @@ export const AthleteHealth = {
                         throw new Error(res.error || "Errore sconosciuto");
                     }
                 } catch (err) {
+                    if (err.name === 'AbortError') return;
                     UI.toast(err.message, "error");
                 } finally {
                     UI.loading(false);
@@ -801,7 +807,7 @@ export const AthleteHealth = {
         }
 
         // Checkup Form Submission
-        const checkupForm = document.getElementById('checkup-form');
+        const checkupForm = theModal.querySelector('#checkup-form');
         if (checkupForm) {
             checkupForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
@@ -812,7 +818,8 @@ export const AthleteHealth = {
                     const res = await fetch(`api/?module=health&action=addFollowup`, {
                         method: 'POST',
                         headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                        body: formData
+                        body: formData,
+                        signal: this._modalAc ? this._modalAc.signal : undefined
                     }).then(r => r.json());
                     
                     if (res.success) {
@@ -824,6 +831,7 @@ export const AthleteHealth = {
                         throw new Error(res.error || "Errore sconosciuto");
                     }
                 } catch (err) {
+                    if (err.name === 'AbortError') return;
                     UI.toast(err.message, "error");
                 } finally {
                     UI.loading(false);
@@ -832,7 +840,7 @@ export const AthleteHealth = {
         }
 
         // Doc Form Submission
-        const docForm = document.getElementById('doc-form');
+        const docForm = theModal.querySelector('#doc-form');
         if (docForm) {
             docForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
@@ -843,7 +851,8 @@ export const AthleteHealth = {
                     const res = await fetch(`api/?module=health&action=uploadDocument`, {
                         method: 'POST',
                         headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                        body: formData
+                        body: formData,
+                        signal: this._modalAc ? this._modalAc.signal : undefined
                     }).then(r => r.json());
                     
                     if (res.success) {
@@ -855,6 +864,7 @@ export const AthleteHealth = {
                         throw new Error(res.error || "Errore sconosciuto");
                     }
                 } catch (err) {
+                    if (err.name === 'AbortError') return;
                     UI.toast(err.message, "error");
                 } finally {
                     UI.loading(false);
@@ -866,7 +876,9 @@ export const AthleteHealth = {
     async _loadCheckups(injuryId, theModal) {
         const container = theModal.querySelector('#checkups-container');
         try {
-            const res = await fetch(`api/?module=health&action=getFollowups&injury_id=${injuryId}`).then(r => r.json());
+            const res = await fetch(`api/?module=health&action=getFollowups&injury_id=${injuryId}`, {
+                signal: this._modalAc ? this._modalAc.signal : undefined
+            }).then(r => r.json());
             if (res.success) {
                 const list = res.data || [];
                 if (list.length === 0) {
@@ -903,6 +915,7 @@ export const AthleteHealth = {
                 throw new Error(res.error);
             }
         } catch (e) {
+            if (e.name === 'AbortError') return;
             container.innerHTML = `<div style="color:#ef4444; padding:16px;">Errore caricamento visite: ${Utils.escapeHtml(e.message)}</div>`;
         }
     },
@@ -910,7 +923,9 @@ export const AthleteHealth = {
     async _loadDocs(injuryId, theModal) {
         const container = theModal.querySelector('#docs-container');
         try {
-            const res = await fetch(`api/?module=health&action=getDocuments&injury_id=${injuryId}`).then(r => r.json());
+            const res = await fetch(`api/?module=health&action=getDocuments&injury_id=${injuryId}`, {
+                signal: this._modalAc ? this._modalAc.signal : undefined
+            }).then(r => r.json());
             if (res.success) {
                 const list = res.data || [];
                 if (list.length === 0) {
@@ -968,6 +983,7 @@ export const AthleteHealth = {
                 throw new Error(res.error);
             }
         } catch (e) {
+            if (e.name === 'AbortError') return;
             container.innerHTML = `<div style="color:#ef4444; padding:16px;">Errore caricamento documenti: ${Utils.escapeHtml(e.message)}</div>`;
         }
     },
