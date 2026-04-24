@@ -1,6 +1,6 @@
 {
   "version": 3,
-  "generated_at": "2026-04-24T06:28:03.688Z",
+  "generated_at": "2026-04-24T09:41:21.379Z",
   "file_count": 1715,
   "files": [
     {
@@ -1517,7 +1517,7 @@
     },
     {
       "path": "index.html",
-      "hash": "0f494f27280a3661cec1bd634a19dcaf9f0d2271719e6521e1c1d50b1a2f83b9"
+      "hash": "349564bc097dbb244bcd1df6ecea1b2734b4875f8d819bbb9a469f2cc1cc70ee"
     },
     {
       "path": "js/api/athletes.api.js",
@@ -1813,7 +1813,7 @@
     },
     {
       "path": "js/modules/staff.js",
-      "hash": "34655f7d5d7def1bedf133ec39856a75ae76d1449288dab4206692b3c7ab1394"
+      "hash": "c3c8b324314c8a19340a61a5648e17c25bfbe359c77e09299b412e24ebbf5ac8"
     },
     {
       "path": "js/modules/staff/StaffAPI.js",

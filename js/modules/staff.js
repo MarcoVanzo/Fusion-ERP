@@ -716,4 +716,5 @@ const Staff = (() => {
     },
   };
 })();
+export default Staff;
 window.Staff = Staff;
