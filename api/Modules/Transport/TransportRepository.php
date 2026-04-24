@@ -392,6 +392,30 @@ class TransportRepository
         $stmt->execute([':ai_response' => $json, ':id' => $id, ':tid' => $tid]);
     }
 
+    public function duplicateTransport(string $originalId, string $newId, string $userId): void
+    {
+        $tid = TenantContext::id();
+        $stmt = $this->db->prepare("
+            INSERT INTO transports (id, tenant_id, team_id, event_id, destination_name, destination_address,
+                                  destination_lat, destination_lng, departure_address,
+                                  arrival_time, departure_time, transport_date,
+                                  athletes_json, timeline_json, stats_json, ai_response, created_by, driver_id, vehicle_id)
+            SELECT :newId, t.tenant_id, t.team_id, t.event_id, CONCAT(t.destination_name, ' (Copia)'), t.destination_address,
+                   t.destination_lat, t.destination_lng, t.departure_address,
+                   t.arrival_time, t.departure_time, t.transport_date,
+                   t.athletes_json, t.timeline_json, t.stats_json, t.ai_response, :userId, t.driver_id, t.vehicle_id
+            FROM transports t
+            JOIN teams tm ON tm.id = t.team_id
+            WHERE t.id = :originalId AND tm.tenant_id = :tid
+        ");
+        $stmt->execute([
+            ':newId' => $newId,
+            ':originalId' => $originalId,
+            ':userId' => $userId,
+            ':tid' => $tid
+        ]);
+    }
+
     // ─── DRIVERS ─────────────────────────────────────────────────────────────
 
     public function listDrivers(): array
