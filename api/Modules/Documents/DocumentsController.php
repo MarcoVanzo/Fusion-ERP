@@ -182,6 +182,10 @@ class DocumentsController
         $finfo = new \finfo(FILEINFO_MIME_TYPE);
         $mime = $finfo->file($filePath);
 
+        while (ob_get_level()) {
+            ob_end_clean();
+        }
+
         header('Content-Type: ' . $mime);
         header('Content-Disposition: inline; filename="' . basename($doc['file_name']) . '"');
         header('Content-Length: ' . filesize($filePath));

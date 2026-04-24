@@ -399,7 +399,7 @@ const Chat = (() => {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="ph ph-plus"></i> Crea Canale';
             }
-        });
+        }, { signal: _ac.signal });
     }
 
     // ─── HELPERS ───────────────────────────────────────────────────────────────

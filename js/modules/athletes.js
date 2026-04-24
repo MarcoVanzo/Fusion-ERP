@@ -169,10 +169,10 @@ const Athletes = (() => {
     function bindBulkQuotesModal(variant) {
         document.getElementById("close-bulk-modal")?.addEventListener("click", () => {
             document.getElementById("bulk-quotes-modal").style.display = "none";
-        });
+        }, { signal: abortController.signal });
         document.getElementById("cancel-bulk-modal")?.addEventListener("click", () => {
             document.getElementById("bulk-quotes-modal").style.display = "none";
-        });
+        }, { signal: abortController.signal });
 
         const teamSelect = document.getElementById("bulk-team-select");
         const container = document.getElementById("bulk-athletes-container");
@@ -208,7 +208,7 @@ const Athletes = (() => {
             `).join('');
 
             updateBulkSelectionCount();
-            container.querySelectorAll('.bulk-athlete-cb').forEach(cb => cb.addEventListener('change', updateBulkSelectionCount));
+            container.querySelectorAll('.bulk-athlete-cb').forEach(cb => cb.addEventListener('change', updateBulkSelectionCount, { signal: abortController.signal }));
         });
 
         function updateBulkSelectionCount() {
@@ -559,8 +559,8 @@ const Athletes = (() => {
         const app = document.getElementById("app");
         app.innerHTML = AthletesView.athleteForm(athlete, teamsData);
 
-        document.getElementById("cancel-form")?.addEventListener("click", () => renderProfile(athlete.id));
-        document.getElementById("cancel-form-btn")?.addEventListener("click", () => renderProfile(athlete.id));
+        document.getElementById("cancel-form")?.addEventListener("click", () => renderProfile(athlete.id), { signal: abortController.signal });
+        document.getElementById("cancel-form-btn")?.addEventListener("click", () => renderProfile(athlete.id), { signal: abortController.signal });
 
         document.getElementById("athlete-edit-form")?.addEventListener("submit", async (e) => {
             e.preventDefault();

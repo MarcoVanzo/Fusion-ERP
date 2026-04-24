@@ -13,6 +13,10 @@ const TransportMap = {
         TransportMap._activeIntervals = [];
     },
 
+    destroy: () => {
+        TransportMap.resetAllIntervals();
+    },
+
     initGoogleMaps: (callback) => {
         if (typeof google !== "undefined" && google.maps && google.maps.places) {
             TransportMap._injectStyles();

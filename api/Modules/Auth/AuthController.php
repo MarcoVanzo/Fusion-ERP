@@ -264,6 +264,10 @@ class AuthController
 
         if (empty($token) || empty($password)) Response::error('Dati mancanti', 400);
 
+        if (!\FusionERP\Shared\Security::validatePasswordComplexity($password)) {
+            Response::error('La password deve essere di almeno 12 caratteri e contenere maiuscole, minuscole, numeri e caratteri speciali.', 400);
+        }
+
         $invite = $this->repo->getInvitationByToken($token);
         if (!$invite) Response::error('Invito non valido', 404);
 
