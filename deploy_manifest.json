@@ -1,6 +1,6 @@
 {
   "version": 3,
-  "generated_at": "2026-04-24T12:47:47.055Z",
+  "generated_at": "2026-04-24T12:48:07.917Z",
   "file_count": 1718,
   "files": [
     {
@@ -1525,7 +1525,7 @@
     },
     {
       "path": "index.html",
-      "hash": "c194193d4a44d6657572af11b51f2f762df1075d276fa57b566feda294dad96b"
+      "hash": "ced84b8ebbbcb1f7094178888f14c5992c5260c81dadde22a921d236d10cad2f"
     },
     {
       "path": "js/api/athletes.api.js",
