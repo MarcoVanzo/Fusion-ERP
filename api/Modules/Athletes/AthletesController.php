@@ -438,6 +438,76 @@ class AthletesController
     }
 
 
+    /** TEMP DEBUG — rimuovere dopo fix */
+    public function debugDoc(): void
+    {
+        Auth::requireRead('athletes');
+        $db = \FusionERP\Shared\Database::getInstance();
+        $stmt = $db->prepare("SELECT id, full_name, 
+            medical_cert_file_path, contract_file_path, 
+            id_doc_front_file_path, id_doc_back_file_path,
+            cf_doc_front_file_path, cf_doc_back_file_path,
+            photo_release_file_path, privacy_policy_file_path,
+            guesthouse_rules_file_path, guesthouse_delegate_file_path,
+            health_card_file_path
+            FROM athletes WHERE full_name LIKE :name LIMIT 5");
+        $stmt->execute([':name' => '%Favaretto%']);
+        $athletes = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $result = [
+            'athletes_found' => count($athletes),
+            'server_paths' => [
+                'dirname2' => dirname(__DIR__, 2),
+                'dirname3' => dirname(__DIR__, 3),
+                'cwd' => getcwd(),
+                'upload_env' => getenv('UPLOAD_STORAGE_PATH') ?: 'NOT SET',
+            ],
+            'athletes' => [],
+            'dirs' => [],
+        ];
+
+        $docFields = ['medical_cert_file_path','contract_file_path','id_doc_front_file_path',
+            'id_doc_back_file_path','cf_doc_front_file_path','cf_doc_back_file_path',
+            'photo_release_file_path','privacy_policy_file_path','guesthouse_rules_file_path',
+            'guesthouse_delegate_file_path','health_card_file_path'];
+
+        foreach ($athletes as $a) {
+            $ad = ['id' => $a['id'], 'name' => $a['full_name'], 'docs' => []];
+            foreach ($docFields as $f) {
+                if (empty($a[$f])) continue;
+                $p3 = dirname(__DIR__, 3) . '/' . $a[$f];
+                $p2 = dirname(__DIR__, 2) . '/' . $a[$f];
+                $fb = rtrim(getenv('UPLOAD_STORAGE_PATH') ?: '', '/') . '/' . basename($a[$f]);
+                $ad['docs'][$f] = [
+                    'db' => $a[$f],
+                    'path3_exists' => file_exists($p3),
+                    'path3' => $p3,
+                    'path2_exists' => file_exists($p2),
+                    'path2' => $p2,
+                    'fallback_exists' => file_exists($fb),
+                    'fallback' => $fb,
+                ];
+            }
+            $result['athletes'][] = $ad;
+        }
+
+        // Lista directory
+        foreach ([
+            dirname(__DIR__, 3) . '/storage/docs/athletes',
+            dirname(__DIR__, 2) . '/storage/docs/athletes',
+            dirname(__DIR__, 3) . '/storage/uploads',
+            dirname(__DIR__, 2) . '/storage/uploads',
+        ] as $dir) {
+            if (is_dir($dir)) {
+                $result['dirs'][$dir] = array_diff(scandir($dir), ['.', '..']);
+            } else {
+                $result['dirs'][$dir] = 'NOT_FOUND';
+            }
+        }
+
+        Response::success($result);
+    }
+
     public function logMetric(): void
     {
         Auth::requireWrite('athletes');
