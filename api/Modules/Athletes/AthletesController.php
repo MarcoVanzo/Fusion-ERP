@@ -53,9 +53,7 @@ class AthletesController
     {
         Auth::requireRead('athletes');
         $teamId = filter_input(INPUT_GET, 'teamId', FILTER_DEFAULT) ?? '';
-        error_log("[Athletes::listLight] teamId='{$teamId}' | TenantID=" . \FusionERP\Shared\TenantContext::id());
         $data = $this->repo->listAthletesLight($teamId);
-        error_log("[Athletes::listLight] Returned " . count($data) . " athletes");
         Response::success($data);
     }
 
@@ -65,7 +63,6 @@ class AthletesController
     {
         Auth::requireRead('athletes');
         $id = filter_input(INPUT_GET, 'id', FILTER_DEFAULT) ?? '';
-        error_log("[Athletes::get] Requested ID: '{$id}' | TenantID: " . \FusionERP\Shared\TenantContext::id());
         $this->handleServiceCall(fn() => $this->service->getProfile($id));
     }
 
