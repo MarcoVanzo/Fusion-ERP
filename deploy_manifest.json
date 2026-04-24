@@ -1,7 +1,7 @@
 {
   "version": 3,
-  "generated_at": "2026-04-24T10:01:18.245Z",
-  "file_count": 1717,
+  "generated_at": "2026-04-24T10:20:11.293Z",
+  "file_count": 1718,
   "files": [
     {
       "path": ".env.prod",
@@ -10,6 +10,10 @@
     {
       "path": ".htaccess",
       "hash": "55d8f2f99caba088677b51f46d1df9995bd85964df10f508ce3080bcb3b154d2"
+    },
+    {
+      "path": "api/check_emma.php",
+      "hash": "5ec1553fe61f85bfc197762ac1fac1a369c707f9e479f459d74363ec7ba5c313"
     },
     {
       "path": "api/check_vehicles_debug.php",
@@ -1525,7 +1529,7 @@
     },
     {
       "path": "index.html",
-      "hash": "b2ed48c3e640b3106fecb62fb8eddfb43c6ace03a2f625f4a01cc61be1952f0c"
+      "hash": "d78f4b608564bdfde4034ad808fc92a06aa76706ab9b28e06763ade0d055b4d9"
     },
     {
       "path": "js/api/athletes.api.js",
