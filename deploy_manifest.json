@@ -1,7 +1,7 @@
 {
   "version": 3,
-  "generated_at": "2026-04-24T09:51:05.919Z",
-  "file_count": 1715,
+  "generated_at": "2026-04-24T09:58:15.133Z",
+  "file_count": 1716,
   "files": [
     {
       "path": ".env.prod",
@@ -64,6 +64,10 @@
       "hash": "4c64246fc448a47c7984eb643c5186d8f5a7748314ebef0238295ce57ce25289"
     },
     {
+      "path": "api/import_emma.php",
+      "hash": "be3af0818f78ede616561031651eba8da069c5d80a4f3f5db210e1ea74fa9a4f"
+    },
+    {
       "path": "api/migrate.php",
       "hash": "8c721a807b6d62ffcea1784f83297ce54b6586219ee732820699ad7a0c2d29a8"
     },
@@ -81,7 +85,7 @@
     },
     {
       "path": "api/Modules/Athletes/AthletesRepository.php",
-      "hash": "0de7a76887dd3942570813230fc23cf1358f56fa2161d572fcd56c1bd313c538"
+      "hash": "8c243712039217a14fbb63123445ab68f84f625a52f78dc9d482f87c38d16a17"
     },
     {
       "path": "api/Modules/Athletes/AthletesService.php",
@@ -1517,7 +1521,7 @@
     },
     {
       "path": "index.html",
-      "hash": "0d7e4d10d2300279f6e97efc888966400d61174513003f483c6ec4e92b867d04"
+      "hash": "26affd0f146c37eca95b946a4ebca1d93807de2ce473e684e7942b9740f52149"
     },
     {
       "path": "js/api/athletes.api.js",
