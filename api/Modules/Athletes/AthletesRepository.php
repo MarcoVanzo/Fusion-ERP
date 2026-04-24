@@ -53,10 +53,16 @@ class AthletesRepository
 
         $params = [':tid' => $tid];
         if ($teamSeasonId !== '') {
-            if (str_starts_with($teamSeasonId, 'TEAM_') || str_starts_with($teamSeasonId, 'TM_')) {
+            $isTeamFilter = str_starts_with($teamSeasonId, 'TEAM_');
+            $isLegacyTmFilter = str_starts_with($teamSeasonId, 'TM_');
+            
+            if ($isTeamFilter || $isLegacyTmFilter) {
                 // Support both legacy prefix and raw team_id format
-                $sql .= ' WHERE a.deleted_at IS NULL AND a.tenant_id = :tid AND a.team_id = :team_id';
-                $params[':team_id'] = $teamSeasonId;
+                $actualTeamId = $isTeamFilter ? substr($teamSeasonId, 5) : $teamSeasonId;
+                
+                $sql .= ' WHERE a.deleted_at IS NULL AND a.tenant_id = :tid AND (a.team_id = :team_id OR a.team_id = :team_id_raw)';
+                $params[':team_id'] = $actualTeamId;
+                $params[':team_id_raw'] = $teamSeasonId;
             } else {
                 $sql .= ' JOIN athlete_teams at2 ON a.id = at2.athlete_id';
                 $sql .= ' WHERE a.deleted_at IS NULL AND a.tenant_id = :tid AND at2.team_season_id = :team_season_id';
@@ -114,9 +120,14 @@ class AthletesRepository
         $tid = TenantContext::id();
         $params = [':tid' => $tid];
         if ($teamSeasonId !== '') {
-            if (str_starts_with($teamSeasonId, 'TEAM_') || str_starts_with($teamSeasonId, 'TM_')) {
-                $sql .= ' WHERE a.deleted_at IS NULL AND a.tenant_id = :tid AND a.is_active = 1 AND a.team_id = :team_id';
-                $params[':team_id'] = $teamSeasonId;
+            $isTeamFilter = str_starts_with($teamSeasonId, 'TEAM_');
+            $isLegacyTmFilter = str_starts_with($teamSeasonId, 'TM_');
+
+            if ($isTeamFilter || $isLegacyTmFilter) {
+                $actualTeamId = $isTeamFilter ? substr($teamSeasonId, 5) : $teamSeasonId;
+                $sql .= ' WHERE a.deleted_at IS NULL AND a.tenant_id = :tid AND a.is_active = 1 AND (a.team_id = :team_id OR a.team_id = :team_id_raw)';
+                $params[':team_id'] = $actualTeamId;
+                $params[':team_id_raw'] = $teamSeasonId;
             } else {
                 $sql .= ' JOIN athlete_teams at2 ON a.id = at2.athlete_id';
                 $sql .= ' WHERE a.deleted_at IS NULL AND a.tenant_id = :tid AND a.is_active = 1 AND at2.team_season_id = :team_season_id';
