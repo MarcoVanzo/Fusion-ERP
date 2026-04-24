@@ -1095,10 +1095,10 @@ export const AthletesView = {
                             </button>
                         ` : ''}
                         ${canUpload ? `
-                            <label for="upload-${doc.id}-input" class="btn btn-ghost btn-xs" style="flex:${hasFile ? '0.5' : '1'}; background:rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.1); cursor:pointer; margin:0; display:inline-flex; justify-content:center; align-items:center; gap:4px;">
+                            <label for="upload-${athlete.id}-${doc.id}-input" class="btn btn-ghost btn-xs" style="flex:${hasFile ? '0.5' : '1'}; background:rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.1); cursor:pointer; margin:0; display:inline-flex; justify-content:center; align-items:center; gap:4px;">
                                 <i class="ph ph-upload-simple"></i> ${hasFile ? 'Sostituisci' : 'Carica PDF/Foto'}
                             </label>
-                            <input type="file" id="upload-${doc.id}-input" style="opacity:0; position:absolute; z-index:-1; width:0.1px; height:0.1px; overflow:hidden;" accept=".pdf,image/*" onclick="this.value=''" onchange="window._handleAthleteDocumentUpload('${athlete.id}', '${doc.id}', this)">
+                            <input type="file" id="upload-${athlete.id}-${doc.id}-input" style="opacity:0; position:absolute; z-index:-1; width:0.1px; height:0.1px; overflow:hidden;" accept=".pdf,image/*" onchange="window._handleAthleteDocumentUpload('${athlete.id}', '${doc.id}', this)">
                         ` : ''}
                     </div>
                 </div>
