@@ -612,6 +612,28 @@ const Athletes = (() => {
         }
     }
 
+    window._handleAthleteDocumentUpload = async (athleteId, type, inputElement) => {
+        const file = inputElement.files[0];
+        if (!file) return;
+
+        // eslint-disable-next-line no-undef
+        UI.loading(true);
+        try {
+            await AthletesAPI.uploadDocument(athleteId, type, file);
+            // eslint-disable-next-line no-undef
+            UI.toast("Documento caricato con successo!", "success");
+            const updatedAthlete = await AthletesAPI.getById(athleteId);
+            switchTab(currentTab, updatedAthlete);
+        } catch (err) {
+            // eslint-disable-next-line no-undef
+            UI.toast(err.message || "Errore durante l'upload", "error");
+        } finally {
+            // eslint-disable-next-line no-undef
+            UI.loading(false);
+            inputElement.value = ''; // Reset per ricaricamenti multipli
+        }
+    };
+
     function addDocumentListeners(athlete) {
         const docTypes = [
             'contract-file', 'id-doc-front', 'id-doc-back', 'cf-doc-front', 'cf-doc-back', 'med-cert',
@@ -628,30 +650,7 @@ const Athletes = (() => {
             }
         });
 
-        docTypes.forEach(type => {
-            const btn = document.getElementById(`upload-${type}-btn`);
-            const input = document.getElementById(`upload-${type}-input`);
-            if (btn && input) {
-                btn.onclick = () => input.click();
-                input.onchange = async (e) => {
-                    const file = e.target.files[0];
-                    if (!file) return;
-
-                    UI.loading(true);
-                    try {
-                        await AthletesAPI.uploadDocument(athlete.id, type, file);
-                        UI.toast("Documento caricato con successo!", "success");
-                        // Ricarica i dati dell'atleta e aggiorna il tab
-                        const updatedAthlete = await AthletesAPI.getById(athlete.id);
-                        switchTab(currentTab, updatedAthlete);
-                    } catch (err) {
-                        UI.toast(err.message || "Errore durante l'upload", "error");
-                    } finally {
-                        UI.loading(false);
-                    }
-                };
-            }
-        });
+        // Event listener rimosso qui e spostato in attributi inline (onchange/onclick) in AthletesView.js per maggiore affidabilità
     }
 
     async function renderSubUsers(panel, athlete) {
