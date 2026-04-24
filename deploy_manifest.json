@@ -1,6 +1,6 @@
 {
   "version": 3,
-  "generated_at": "2026-04-24T10:26:09.250Z",
+  "generated_at": "2026-04-24T10:26:36.646Z",
   "file_count": 1719,
   "files": [
     {
@@ -473,7 +473,7 @@
     },
     {
       "path": "api/verify_teams.php",
-      "hash": "24d65b538ffc620d406b1f6f8692f7537298596d47d4df427c61cc8bc323a2d9"
+      "hash": "3ec677298b55a695b895840fd2fe3644e92cef9e495f73079b2ef34367c4d427"
     },
     {
       "path": "capture_callback.php",
@@ -1533,7 +1533,7 @@
     },
     {
       "path": "index.html",
-      "hash": "797c203f0ffe411a65589179ca81834c2cd43d7fbad15eee1312b723e8cbd511"
+      "hash": "6fbded637264a907a7bf7e9b1acffe3baa1b100c899e7f454a59c10497bc10d7"
     },
     {
       "path": "js/api/athletes.api.js",
