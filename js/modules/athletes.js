@@ -690,7 +690,8 @@ const Athletes = (() => {
                             }
 
                             UI.toast('Documento eliminato', 'success');
-                            // Refresh the athlete data and re-render the tab
+                            // Invalidate cache and refresh the athlete data
+                            Store.invalidate('athletes');
                             const updatedAthlete = await AthletesAPI.getById(athleteId);
                             switchTab('documenti', updatedAthlete);
                         } catch (err) {
