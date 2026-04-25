@@ -1088,14 +1088,22 @@ export const AthletesView = {
                         <p style="font-size:11px; color:var(--color-text-muted);">${hasFile ? 'Documento verificato e pronto per la consultazione.' : 'Il documento non è ancora stato caricato nel sistema.'}</p>
                     </div>
 
-                    <div style="display:flex; gap:10px; margin-top:auto; padding-top:16px; border-top:1px solid rgba(255,255,255,0.05);">
+                    <div style="display:flex; flex-direction:column; gap:8px; margin-top:auto; padding-top:16px; border-top:1px solid rgba(255,255,255,0.05);">
                         ${hasFile ? `
-                            <button type="button" class="btn btn-default btn-xs view-doc-btn" data-athlete-id="${athlete.id}" data-field="${doc.field}" onclick="window._viewAthleteDocument && window._viewAthleteDocument('${athlete.id}', '${doc.field}', this)" style="flex:1; background:rgba(0, 230, 118, 0.1); border-color:rgba(0, 230, 118, 0.2); color:var(--color-success); display:inline-flex; align-items:center; justify-content:center; gap:4px; cursor:pointer;">
+                            <button type="button" class="btn btn-default btn-xs view-doc-btn" data-athlete-id="${athlete.id}" data-field="${doc.field}" style="width:100%; background:rgba(0, 230, 118, 0.1); border-color:rgba(0, 230, 118, 0.2); color:var(--color-success); display:inline-flex; align-items:center; justify-content:center; gap:4px; cursor:pointer;">
                                 <i class="ph ph-eye"></i> Visualizza
                             </button>
+                            <div style="display:flex; gap:8px;">
+                                <button type="button" class="btn btn-ghost btn-xs download-doc-btn" data-athlete-id="${athlete.id}" data-field="${doc.field}" style="flex:1; display:inline-flex; align-items:center; justify-content:center; gap:4px; cursor:pointer; background:rgba(59,130,246,0.08); border-color:rgba(59,130,246,0.2); color:#60a5fa;">
+                                    <i class="ph ph-download-simple"></i> Scarica
+                                </button>
+                                <button type="button" class="btn btn-ghost btn-xs delete-doc-btn" data-athlete-id="${athlete.id}" data-field="${doc.field}" data-doc-label="${doc.label}" style="flex:1; display:inline-flex; align-items:center; justify-content:center; gap:4px; cursor:pointer; background:rgba(239,68,68,0.08); border-color:rgba(239,68,68,0.2); color:#f87171;">
+                                    <i class="ph ph-trash"></i> Elimina
+                                </button>
+                            </div>
                         ` : ''}
                         ${canUpload ? `
-                            <div style="position:relative; flex:${hasFile ? '0.5' : '1'}; display:inline-flex;">
+                            <div style="position:relative; display:inline-flex;">
                                 <button type="button" class="btn btn-ghost btn-xs" style="width:100%; pointer-events:none; background:rgba(255,255,255,0.03); border:1px dashed rgba(255,255,255,0.1); margin:0; display:inline-flex; justify-content:center; align-items:center; gap:4px;">
                                     <i class="ph ph-upload-simple"></i> ${hasFile ? 'Sostituisci' : 'Carica PDF/Foto'}
                                 </button>

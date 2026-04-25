@@ -70,5 +70,9 @@ export const AthletesAPI = {
         if (!action) throw new Error("Tipo documento non supportato");
 
         return await Store.api(action, "athletes", formData, "POST");
+    },
+
+    deleteDocument: async (id, field) => {
+        return await Store.api("deleteDoc", "athletes", { id, field }, "GET");
     }
 };

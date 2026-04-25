@@ -442,6 +442,38 @@ class AthletesController
         exit;
     }
 
+    /** Delete an athlete document (remove file + clear DB field) */
+    public function deleteDoc(): void
+    {
+        Auth::requireWrite('athletes');
+        $id    = filter_input(INPUT_GET, 'id',    FILTER_DEFAULT) ?? '';
+        $field = filter_input(INPUT_GET, 'field',  FILTER_DEFAULT) ?? '';
+
+        $allowed = ['contract_file_path', 'id_doc_front_file_path', 'id_doc_back_file_path',
+                    'cf_doc_front_file_path', 'cf_doc_back_file_path', 'medical_cert_file_path',
+                    'photo_release_file_path', 'privacy_policy_file_path',
+                    'guesthouse_rules_file_path', 'guesthouse_delegate_file_path', 'health_card_file_path'];
+        if (empty($id) || !in_array($field, $allowed, true)) {
+            Response::error('Parametri non validi', 400);
+        }
+
+        $athlete = $this->repo->getAthleteById($id);
+        if (!$athlete || empty($athlete[$field])) {
+            Response::error('Documento non trovato', 404);
+        }
+
+        // Delete the physical file
+        $fullPath = dirname(__DIR__, 3) . '/' . $athlete[$field];
+        if (file_exists($fullPath)) {
+            @unlink($fullPath);
+        }
+
+        // Clear the DB field
+        $this->repo->updateDocumentPath($id, $field, null);
+        Audit::log('DELETE', 'athletes', $id, [$field => $athlete[$field]], [$field => null]);
+        Response::success(['deleted' => true]);
+    }
+
 
     /** TEMP DEBUG — rimuovere dopo fix */
     public function debugDoc(): void

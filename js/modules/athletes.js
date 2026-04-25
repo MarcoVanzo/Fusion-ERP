@@ -3,8 +3,8 @@
  * Gestisce l'integrazione tra API, View e componenti specializzati (Wizard, Metrics).
  */
 
-import { AthletesAPI } from './athletes/AthletesAPI.js?v=3';
-import { AthletesView } from './athletes/AthletesView.js?v=1777131780';
+import { AthletesAPI } from './athletes/AthletesAPI.js?v=1777132800';
+import { AthletesView } from './athletes/AthletesView.js?v=1777132800';
 import { AthletesWizard } from './athletes/AthletesWizard.js?v=2';
 import { AthletesMetrics } from './athletes/AthletesMetricsV2.js?v=5';
 import { AthleteHealth } from './athletes/AthleteHealth.js?v=1777063500';
@@ -522,63 +522,183 @@ const Athletes = (() => {
             case 'documenti':
                 panel.innerHTML = AthletesView.tabDocumenti(athlete, true);
                 addDocumentListeners(athlete);
-                // Event delegation for view-doc buttons — most robust approach
+                
+                // Unified event delegation for all document actions
                 panel.addEventListener('click', async (e) => {
-                    const btn = e.target.closest('.view-doc-btn');
-                    if (!btn) return;
-                    e.stopPropagation();
-                    e.preventDefault();
-                    
-                    const athleteId = btn.dataset.athleteId;
-                    const field = btn.dataset.field;
-                    if (!athleteId || !field) return;
+                    // ── VISUALIZZA (modal viewer with close X) ──
+                    const viewBtn = e.target.closest('.view-doc-btn');
+                    if (viewBtn) {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        const athleteId = viewBtn.dataset.athleteId;
+                        const field = viewBtn.dataset.field;
+                        if (!athleteId || !field) return;
 
-                    btn.disabled = true;
-                    const originalHtml = btn.innerHTML;
-                    btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Caricamento...';
+                        viewBtn.disabled = true;
+                        const origHtml = viewBtn.innerHTML;
+                        viewBtn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Caricamento...';
 
-                    const fetchUrl = `api/router.php?module=athletes&action=downloadDoc&id=${encodeURIComponent(athleteId)}&field=${encodeURIComponent(field)}&_cb=${Date.now()}`;
+                        try {
+                            const fetchUrl = `api/router.php?module=athletes&action=downloadDoc&id=${encodeURIComponent(athleteId)}&field=${encodeURIComponent(field)}&_cb=${Date.now()}`;
+                            const response = await fetch(fetchUrl, {
+                                credentials: 'same-origin',
+                                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                                cache: 'no-store'
+                            });
 
-                    try {
-                        const response = await fetch(fetchUrl, {
-                            credentials: 'same-origin',
-                            headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                            cache: 'no-store'
-                        });
+                            if (!response.ok) {
+                                let errMsg = `Errore HTTP ${response.status}`;
+                                try { const d = await response.json(); errMsg = d.error || errMsg; } catch(_){}
+                                throw new Error(errMsg);
+                            }
 
-                        if (!response.ok) {
-                            let errMsg = `Errore HTTP ${response.status}`;
-                            try { const d = await response.json(); errMsg = d.error || errMsg; } catch(_){}
-                            throw new Error(errMsg);
+                            const ct = response.headers.get('Content-Type') || '';
+                            if (ct.includes('application/json')) {
+                                const d = await response.json();
+                                throw new Error(d.error || 'Risposta imprevista dal server');
+                            }
+
+                            const blob = await response.blob();
+                            if (blob.size === 0) throw new Error('Il documento è vuoto (0 bytes)');
+
+                            const blobUrl = URL.createObjectURL(blob);
+                            const isPdf = ct.includes('pdf');
+
+                            // Create fullscreen modal overlay
+                            const overlay = document.createElement('div');
+                            overlay.id = 'doc-viewer-overlay';
+                            overlay.style.cssText = 'position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.92);display:flex;align-items:center;justify-content:center;animation:fadeIn 0.2s ease;';
+
+                            // Close button (X)
+                            const closeBtn = document.createElement('button');
+                            closeBtn.innerHTML = '<i class="ph ph-x" style="font-size:24px;"></i>';
+                            closeBtn.style.cssText = 'position:absolute;top:20px;right:20px;z-index:9010;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;backdrop-filter:blur(8px);transition:all 0.2s;';
+                            closeBtn.onmouseover = () => { closeBtn.style.background = 'rgba(255,255,255,0.2)'; closeBtn.style.transform = 'scale(1.1)'; };
+                            closeBtn.onmouseout = () => { closeBtn.style.background = 'rgba(255,255,255,0.1)'; closeBtn.style.transform = 'scale(1)'; };
+                            closeBtn.onclick = () => { overlay.remove(); URL.revokeObjectURL(blobUrl); };
+
+                            // Content viewer
+                            let viewer;
+                            if (isPdf) {
+                                viewer = document.createElement('iframe');
+                                viewer.src = blobUrl;
+                                viewer.style.cssText = 'width:90vw;height:90vh;max-width:1200px;border:none;border-radius:12px;box-shadow:0 25px 60px rgba(0,0,0,0.5);';
+                            } else {
+                                viewer = document.createElement('img');
+                                viewer.src = blobUrl;
+                                viewer.style.cssText = 'max-width:90vw;max-height:90vh;object-fit:contain;border-radius:12px;box-shadow:0 25px 60px rgba(0,0,0,0.5);';
+                            }
+
+                            overlay.appendChild(closeBtn);
+                            overlay.appendChild(viewer);
+                            document.body.appendChild(overlay);
+
+                            // Close on click outside content
+                            overlay.addEventListener('click', (ev) => {
+                                if (ev.target === overlay) { overlay.remove(); URL.revokeObjectURL(blobUrl); }
+                            });
+
+                            // Close on Escape key
+                            const escHandler = (ev) => {
+                                if (ev.key === 'Escape') { overlay.remove(); URL.revokeObjectURL(blobUrl); document.removeEventListener('keydown', escHandler); }
+                            };
+                            document.addEventListener('keydown', escHandler);
+
+                        } catch (err) {
+                            console.error('[Athletes] Doc view error:', err);
+                            UI.toast(err.message || 'Errore nel caricamento del documento', 'error');
+                        } finally {
+                            viewBtn.disabled = false;
+                            viewBtn.innerHTML = origHtml;
                         }
+                        return;
+                    }
 
-                        const ct = response.headers.get('Content-Type') || '';
-                        if (ct.includes('application/json')) {
-                            const d = await response.json();
-                            throw new Error(d.error || 'Risposta imprevista dal server');
-                        }
+                    // ── SCARICA (download) ──
+                    const dlBtn = e.target.closest('.download-doc-btn');
+                    if (dlBtn) {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        const athleteId = dlBtn.dataset.athleteId;
+                        const field = dlBtn.dataset.field;
+                        if (!athleteId || !field) return;
 
-                        const blob = await response.blob();
-                        if (blob.size === 0) throw new Error('Il documento è vuoto (0 bytes)');
+                        dlBtn.disabled = true;
+                        const origHtml = dlBtn.innerHTML;
+                        dlBtn.innerHTML = '<i class="ph ph-spinner ph-spin"></i>';
 
-                        const blobUrl = URL.createObjectURL(blob);
-                        const newTab = window.open(blobUrl, '_blank');
-                        if (!newTab) {
+                        try {
+                            const fetchUrl = `api/router.php?module=athletes&action=downloadDoc&id=${encodeURIComponent(athleteId)}&field=${encodeURIComponent(field)}&_cb=${Date.now()}`;
+                            const response = await fetch(fetchUrl, {
+                                credentials: 'same-origin',
+                                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                                cache: 'no-store'
+                            });
+
+                            if (!response.ok) throw new Error(`Errore HTTP ${response.status}`);
+
+                            const ct = response.headers.get('Content-Type') || '';
+                            const blob = await response.blob();
+                            const ext = ct.includes('pdf') ? 'pdf' : ct.includes('png') ? 'png' : ct.includes('webp') ? 'webp' : 'jpg';
+                            const blobUrl = URL.createObjectURL(blob);
+
                             const a = document.createElement('a');
                             a.href = blobUrl;
-                            a.download = `documento_${field}.${ct.includes('pdf') ? 'pdf' : 'jpg'}`;
+                            a.download = `${field}_${athleteId}.${ext}`;
                             document.body.appendChild(a);
                             a.click();
                             document.body.removeChild(a);
-                            UI.toast('Documento scaricato (popup bloccato dal browser)', 'info');
+                            setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+                            UI.toast('Download avviato', 'success');
+                        } catch (err) {
+                            UI.toast(err.message || 'Errore download', 'error');
+                        } finally {
+                            dlBtn.disabled = false;
+                            dlBtn.innerHTML = origHtml;
                         }
-                        setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
-                    } catch (err) {
-                        console.error('[Athletes] Doc view error:', err);
-                        UI.toast(err.message || 'Errore nel caricamento del documento', 'error');
-                    } finally {
-                        btn.disabled = false;
-                        btn.innerHTML = originalHtml;
+                        return;
+                    }
+
+                    // ── ELIMINA (delete) ──
+                    const delBtn = e.target.closest('.delete-doc-btn');
+                    if (delBtn) {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        const athleteId = delBtn.dataset.athleteId;
+                        const field = delBtn.dataset.field;
+                        const docLabel = delBtn.dataset.docLabel || 'documento';
+                        if (!athleteId || !field) return;
+
+                        if (!confirm(`Sei sicuro di voler eliminare "${docLabel}"? Questa azione è irreversibile.`)) return;
+
+                        delBtn.disabled = true;
+                        const origHtml = delBtn.innerHTML;
+                        delBtn.innerHTML = '<i class="ph ph-spinner ph-spin"></i>';
+
+                        try {
+                            const fetchUrl = `api/router.php?module=athletes&action=deleteDoc&id=${encodeURIComponent(athleteId)}&field=${encodeURIComponent(field)}`;
+                            const response = await fetch(fetchUrl, {
+                                credentials: 'same-origin',
+                                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                                cache: 'no-store'
+                            });
+
+                            if (!response.ok) {
+                                let errMsg = `Errore HTTP ${response.status}`;
+                                try { const d = await response.json(); errMsg = d.error || errMsg; } catch(_){}
+                                throw new Error(errMsg);
+                            }
+
+                            UI.toast('Documento eliminato', 'success');
+                            // Refresh the athlete data and re-render the tab
+                            const updatedAthlete = await AthletesAPI.getById(athleteId);
+                            switchTab('documenti', updatedAthlete);
+                        } catch (err) {
+                            UI.toast(err.message || 'Errore eliminazione', 'error');
+                            delBtn.disabled = false;
+                            delBtn.innerHTML = origHtml;
+                        }
+                        return;
                     }
                 });
                 break;
