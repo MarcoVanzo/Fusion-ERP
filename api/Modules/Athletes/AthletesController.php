@@ -683,7 +683,7 @@ class AthletesController
         // Filter out internal/test teams (e.g. "prove") from public view
         $teams = array_values(array_filter(
             $this->repo->listTeams(),
-            fn(array $t) => strtolower(trim($t['name'])) !== 'prove'
+            fn(array $t) => !str_starts_with(strtolower(trim($t['name'])), 'prove')
         ));
         Response::success($teams);
     }
