@@ -354,11 +354,22 @@ class TalentDayController
         // ── Backend Limit Validation ───────────────────────────────────
         $tappa = trim($data['tappa']);
         $limit = 50; // Quota massima per tappa
-        $checkLimitStmt = $this->db->prepare("
-            SELECT COUNT(*) FROM talent_day_entries
-            WHERE tenant_id = 'TNT_fusion'
-              AND tappa = :tappa
-        ");
+
+        // For "Firenze 2" tappa, also count legacy records saved as "Scandicci"
+        $isFirenze2 = (strpos($tappa, 'Firenze 2') !== false || strpos($tappa, '19 MAG') !== false);
+        if ($isFirenze2) {
+            $checkLimitStmt = $this->db->prepare("
+                SELECT COUNT(*) FROM talent_day_entries
+                WHERE tenant_id = 'TNT_fusion'
+                  AND (tappa = :tappa OR tappa LIKE '%Scandicci%' OR tappa = '19 MAG 2026, Firenze - Savino Del Bene Volley')
+            ");
+        } else {
+            $checkLimitStmt = $this->db->prepare("
+                SELECT COUNT(*) FROM talent_day_entries
+                WHERE tenant_id = 'TNT_fusion'
+                  AND tappa = :tappa
+            ");
+        }
         $checkLimitStmt->execute([':tappa' => $tappa]);
         if ($checkLimitStmt->fetchColumn() >= $limit) {
             Response::error('Spiacenti, i posti per la tappa selezionata sono esauriti (SOLD OUT).', 400);

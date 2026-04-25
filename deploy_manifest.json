@@ -1,7 +1,7 @@
 {
   "version": 3,
-  "generated_at": "2026-04-25T16:22:14.016Z",
-  "file_count": 1721,
+  "generated_at": "2026-04-25T16:35:47.743Z",
+  "file_count": 1722,
   "files": [
     {
       "path": ".env.prod",
@@ -249,7 +249,7 @@
     },
     {
       "path": "api/Modules/TalentDay/TalentDayController.php",
-      "hash": "7dbe6aff884825a1ab2deb17f5d5d8073e4b8d6d85b74463065a1ab397d010ef"
+      "hash": "1119bb6574272b6ac42f7470b9920a883fe9bc5bc876aa369e9041a4e40615f2"
     },
     {
       "path": "api/Modules/Tasks/TasksController.php",
@@ -1208,6 +1208,10 @@
       "hash": "aa959f884b7f00001bd32ed0ea3643159e562a981b49fc874bf4cfae3c6b0619"
     },
     {
+      "path": "db/migrations/V126__normalize_talent_day_tappa_scandicci.sql",
+      "hash": "ae8fcad31c3693a75e2c99a63e6d0823f86f683a4e897844b84e92c68990ec3f"
+    },
+    {
       "path": "deploy_state.json",
       "hash": "e4e5d5698de0f46e78ac279c8024cd8131a53e4fa4eb1d1def49460fbbd44271"
     },
@@ -1533,7 +1537,7 @@
     },
     {
       "path": "index.html",
-      "hash": "c92699e19124cab43d8469ba84b3348d91ac29311f3a620b20864482f6517071"
+      "hash": "06ddbefdca00aba3af1f58235a9c357996fa93d1817bf675d0964adffe431d72"
     },
     {
       "path": "js/api/athletes.api.js",
