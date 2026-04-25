@@ -183,6 +183,7 @@ class WebsiteRepository
              FROM team_seasons ts
              JOIN teams t ON ts.team_id = t.id
              WHERE t.deleted_at IS NULL AND t.is_active = 1
+               AND LOWER(t.name) != \'prove\'
              ORDER BY ts.season DESC, t.category, t.name'
         );
         $stmt->execute();

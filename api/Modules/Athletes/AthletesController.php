@@ -680,7 +680,12 @@ class AthletesController
     public function getPublicTeams(): void
     {
         // Public endpoint allowed by router.php whitelist
-        Response::success($this->repo->listTeams());
+        // Filter out internal/test teams (e.g. "prove") from public view
+        $teams = array_values(array_filter(
+            $this->repo->listTeams(),
+            fn(array $t) => strtolower(trim($t['name'])) !== 'prove'
+        ));
+        Response::success($teams);
     }
 
     public function getPublicTeamAthletes(): void
