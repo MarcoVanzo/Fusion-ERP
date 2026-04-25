@@ -4,7 +4,7 @@
  */
 
 import { AthletesAPI } from './athletes/AthletesAPI.js?v=3';
-import { AthletesView } from './athletes/AthletesView.js?v=1777131060';
+import { AthletesView } from './athletes/AthletesView.js?v=1777131780';
 import { AthletesWizard } from './athletes/AthletesWizard.js?v=2';
 import { AthletesMetrics } from './athletes/AthletesMetricsV2.js?v=5';
 import { AthleteHealth } from './athletes/AthleteHealth.js?v=1777063500';
@@ -522,6 +522,65 @@ const Athletes = (() => {
             case 'documenti':
                 panel.innerHTML = AthletesView.tabDocumenti(athlete, true);
                 addDocumentListeners(athlete);
+                // Event delegation for view-doc buttons — most robust approach
+                panel.addEventListener('click', async (e) => {
+                    const btn = e.target.closest('.view-doc-btn');
+                    if (!btn) return;
+                    e.stopPropagation();
+                    e.preventDefault();
+                    
+                    const athleteId = btn.dataset.athleteId;
+                    const field = btn.dataset.field;
+                    if (!athleteId || !field) return;
+
+                    btn.disabled = true;
+                    const originalHtml = btn.innerHTML;
+                    btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Caricamento...';
+
+                    const fetchUrl = `api/router.php?module=athletes&action=downloadDoc&id=${encodeURIComponent(athleteId)}&field=${encodeURIComponent(field)}&_cb=${Date.now()}`;
+
+                    try {
+                        const response = await fetch(fetchUrl, {
+                            credentials: 'same-origin',
+                            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                            cache: 'no-store'
+                        });
+
+                        if (!response.ok) {
+                            let errMsg = `Errore HTTP ${response.status}`;
+                            try { const d = await response.json(); errMsg = d.error || errMsg; } catch(_){}
+                            throw new Error(errMsg);
+                        }
+
+                        const ct = response.headers.get('Content-Type') || '';
+                        if (ct.includes('application/json')) {
+                            const d = await response.json();
+                            throw new Error(d.error || 'Risposta imprevista dal server');
+                        }
+
+                        const blob = await response.blob();
+                        if (blob.size === 0) throw new Error('Il documento è vuoto (0 bytes)');
+
+                        const blobUrl = URL.createObjectURL(blob);
+                        const newTab = window.open(blobUrl, '_blank');
+                        if (!newTab) {
+                            const a = document.createElement('a');
+                            a.href = blobUrl;
+                            a.download = `documento_${field}.${ct.includes('pdf') ? 'pdf' : 'jpg'}`;
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            UI.toast('Documento scaricato (popup bloccato dal browser)', 'info');
+                        }
+                        setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+                    } catch (err) {
+                        console.error('[Athletes] Doc view error:', err);
+                        UI.toast(err.message || 'Errore nel caricamento del documento', 'error');
+                    } finally {
+                        btn.disabled = false;
+                        btn.innerHTML = originalHtml;
+                    }
+                });
                 break;
             case 'metrics':
                 await AthletesMetrics.render(panel, athlete.id);

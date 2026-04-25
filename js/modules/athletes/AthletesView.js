@@ -1090,7 +1090,7 @@ export const AthletesView = {
 
                     <div style="display:flex; gap:10px; margin-top:auto; padding-top:16px; border-top:1px solid rgba(255,255,255,0.05);">
                         ${hasFile ? `
-                            <button type="button" class="btn btn-default btn-xs" onclick="window._viewAthleteDocument('${athlete.id}', '${doc.field}', this)" style="flex:1; background:rgba(0, 230, 118, 0.1); border-color:rgba(0, 230, 118, 0.2); color:var(--color-success); display:inline-flex; align-items:center; justify-content:center; gap:4px; cursor:pointer;">
+                            <button type="button" class="btn btn-default btn-xs view-doc-btn" data-athlete-id="${athlete.id}" data-field="${doc.field}" onclick="window._viewAthleteDocument && window._viewAthleteDocument('${athlete.id}', '${doc.field}', this)" style="flex:1; background:rgba(0, 230, 118, 0.1); border-color:rgba(0, 230, 118, 0.2); color:var(--color-success); display:inline-flex; align-items:center; justify-content:center; gap:4px; cursor:pointer;">
                                 <i class="ph ph-eye"></i> Visualizza
                             </button>
                         ` : ''}
