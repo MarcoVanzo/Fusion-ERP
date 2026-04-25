@@ -859,6 +859,7 @@ const Athletes = (() => {
             await AthletesAPI.uploadDocument(athleteId, type, file);
             // eslint-disable-next-line no-undef
             UI.toast("Documento caricato con successo!", "success");
+            Store.invalidate('athletes');
             const updatedAthlete = await AthletesAPI.getById(athleteId);
             switchTab(currentTab, updatedAthlete);
         } catch (err) {
