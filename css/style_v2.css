@@ -3392,6 +3392,7 @@ textarea:focus-visible {
   background: linear-gradient(135deg, rgba(230, 0, 126, 0.1), transparent);
   opacity: 0;
   transition: opacity 0.3s ease;
+  pointer-events: none;
 }
 
 .doc-card:hover { 
