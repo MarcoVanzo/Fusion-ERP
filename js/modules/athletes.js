@@ -4,7 +4,7 @@
  */
 
 import { AthletesAPI } from './athletes/AthletesAPI.js?v=3';
-import { AthletesView } from './athletes/AthletesView.js?v=11';
+import { AthletesView } from './athletes/AthletesView.js?v=1777131060';
 import { AthletesWizard } from './athletes/AthletesWizard.js?v=2';
 import { AthletesMetrics } from './athletes/AthletesMetricsV2.js?v=5';
 import { AthleteHealth } from './athletes/AthleteHealth.js?v=1777063500';
