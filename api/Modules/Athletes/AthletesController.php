@@ -427,13 +427,17 @@ class AthletesController
         $mimeType = $finfo->file($fullPath);
         
         // Svuotiamo il buffer per evitare che eventuali spazi/newline corrompano il file
-        if (ob_get_level() > 0) {
+        while (ob_get_level() > 0) {
             ob_end_clean();
         }
 
+        // Prevent CDN/proxy caching of private document responses
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        header('Pragma: no-cache');
         header('Content-Type: ' . $mimeType);
         header('Content-Disposition: inline; filename="' . basename($fullPath) . '"');
         header('Content-Length: ' . filesize($fullPath));
+        header('Access-Control-Expose-Headers: Content-Type, Content-Disposition, Content-Length');
         readfile($fullPath);
         exit;
     }

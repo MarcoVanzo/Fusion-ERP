@@ -713,22 +713,37 @@ const Athletes = (() => {
         document.querySelectorAll('.view-doc-btn').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 e.stopPropagation();
+                e.preventDefault();
                 const athleteId = btn.dataset.athleteId;
                 const field = btn.dataset.field;
+                
+                if (!athleteId || !field) {
+                    console.error('[Athletes] Missing data attributes on view-doc-btn:', { athleteId, field });
+                    UI.toast('Errore: dati documento mancanti', 'error');
+                    return;
+                }
                 
                 btn.disabled = true;
                 const originalHtml = btn.innerHTML;
                 btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Caricamento...';
                 
+                // Build URL using the same pattern as Store (api/router.php) to avoid
+                // potential .htaccess rewrite issues with directory requests
+                const fetchUrl = `api/router.php?module=athletes&action=downloadDoc&id=${encodeURIComponent(athleteId)}&field=${encodeURIComponent(field)}&_cb=${Date.now()}`;
+                console.log('[Athletes] Fetching document:', fetchUrl);
+                
                 try {
-                    const response = await fetch(`api/?module=athletes&action=downloadDoc&id=${athleteId}&field=${field}`, {
-                        credentials: 'include',
-                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    const response = await fetch(fetchUrl, {
+                        credentials: 'same-origin',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        cache: 'no-store'
                     });
+                    
+                    console.log('[Athletes] Doc response:', response.status, response.headers.get('Content-Type'));
                     
                     if (!response.ok) {
                         // Try to parse JSON error
-                        let errMsg = 'Errore nel download del documento';
+                        let errMsg = `Errore HTTP ${response.status}`;
                         try {
                             const errData = await response.json();
                             errMsg = errData.error || errMsg;
@@ -737,16 +752,32 @@ const Athletes = (() => {
                     }
                     
                     const contentType = response.headers.get('Content-Type') || 'application/octet-stream';
+                    
+                    // Verify we got binary data, not a JSON error
+                    if (contentType.includes('application/json')) {
+                        const errData = await response.json();
+                        throw new Error(errData.error || 'Risposta imprevista dal server');
+                    }
+                    
                     const blob = await response.blob();
+                    
+                    if (blob.size === 0) {
+                        throw new Error('Il documento è vuoto (0 bytes)');
+                    }
+                    
                     const blobUrl = URL.createObjectURL(blob);
                     
                     // Open in new tab
                     const newTab = window.open(blobUrl, '_blank');
                     if (!newTab) {
-                        // Popup blocked — fallback to download
+                        // Popup blocked — fallback to download link
                         const a = document.createElement('a');
                         a.href = blobUrl;
-                        a.download = `documento_${field}.${contentType.includes('pdf') ? 'pdf' : 'jpg'}`;
+                        const ext = contentType.includes('pdf') ? 'pdf' 
+                                  : contentType.includes('png') ? 'png' 
+                                  : contentType.includes('webp') ? 'webp' 
+                                  : 'jpg';
+                        a.download = `documento_${field}.${ext}`;
                         document.body.appendChild(a);
                         a.click();
                         document.body.removeChild(a);
