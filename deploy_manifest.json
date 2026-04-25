@@ -1,6 +1,6 @@
 {
   "version": 3,
-  "generated_at": "2026-04-25T17:44:49.548Z",
+  "generated_at": "2026-04-25T18:47:50.365Z",
   "file_count": 1722,
   "files": [
     {
@@ -1537,7 +1537,7 @@
     },
     {
       "path": "index.html",
-      "hash": "f35cbaa3a37fca28ecb721a5feb84bb62f9f84bab297a83a20231905de8a1e5e"
+      "hash": "3ddcdf1388d2620163803ea13e68291e9d38c6050199728676f97c0c28c1778f"
     },
     {
       "path": "js/api/athletes.api.js",
@@ -1797,7 +1797,7 @@
     },
     {
       "path": "js/modules/scouting/ScoutingView.js",
-      "hash": "823cf2f04cb3e6341e73c35555b9f70d3ad882f609170f7f4eea25ebc7b5cf28"
+      "hash": "6bdfdcf9e031bcd1787110d77f85540fd601698b0abd49b993930eeb66970de2"
     },
     {
       "path": "js/modules/site_stats.js",

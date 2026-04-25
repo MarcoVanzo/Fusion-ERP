@@ -103,27 +103,27 @@ export class ScoutingView {
     static _colDefs(view) {
         if (view === 'fisici') {
             return [
-                ['Nome', 'nome'], ['Cognome', 'cognome'], ['Anno Nascita', 'anno_nascita'],
-                ['Altezza', 'altezza'], ['Peso', 'peso'], ['Reach', 'reach_cm'], 
-                ['Sit e Reach', 'sit_and_reach'], ['Reach 2', 'reach_2'], 
-                ['CMJ', 'cmj'], ['Salto Rincorsa', 'salto_rincorsa']
+                ['Nome', 'nome', '12%'], ['Cognome', 'cognome', '12%'], ['Anno Nascita', 'anno_nascita', '8%'],
+                ['Altezza', 'altezza', '8%'], ['Peso', 'peso', '8%'], ['Reach', 'reach_cm', '8%'], 
+                ['Sit e Reach', 'sit_and_reach', '9%'], ['Reach 2', 'reach_2', '8%'], 
+                ['CMJ', 'cmj', '8%'], ['Salto Rincorsa', 'salto_rincorsa', '12%']
             ];
         } else {
             return [
-                ['Nome', 'nome'], ['Cognome', 'cognome'], ['Ruolo', 'ruolo'], 
-                ['Società', 'societa_appartenenza'], ['Email', 'email'], ['Cellulare', 'cellulare'], 
-                ['Anno Nasc.', 'anno_nascita'], ['Note', 'note'], ['Rilevatore', 'rilevatore'], 
-                ['Data', 'data_rilevazione'], ['Fonte', 'source']
+                ['Nome', 'nome', '10%'], ['Cognome', 'cognome', '10%'], ['Ruolo', 'ruolo', '8%'], 
+                ['Società', 'societa_appartenenza', '11%'], ['Email', 'email', '14%'], ['Cellulare', 'cellulare', '10%'], 
+                ['Anno Nasc.', 'anno_nascita', '7%'], ['Note', 'note', '12%'], ['Rilevatore', 'rilevatore', '8%'], 
+                ['Data', 'data_rilevazione', '6%'], ['Fonte', 'source', '8%']
             ];
         }
     }
 
     static _headers(view, canEdit, sortCol = '', sortDir = '') {
         const cols = this._colDefs(view);
-        const ths = cols.map(([label, key]) => {
+        const ths = cols.map(([label, key, width]) => {
             const isActive = sortCol === key;
             const activeClass = isActive ? ` sort-active${sortDir === 'desc' ? ' sort-desc' : ''}` : '';
-            return `<th style="text-align:left;padding:10px 12px;border-bottom:1px solid var(--color-border);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:var(--color-text-muted)">
+            return `<th style="text-align:left;padding:10px 12px;border-bottom:1px solid var(--color-border);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:var(--color-text-muted);width:${width || 'auto'}">
                 <span class="td-sort-header${activeClass}" data-sort-key="${key}">
                     ${label}
                     <i class="ph ph-caret-up td-sort-icon"></i>
@@ -131,7 +131,7 @@ export class ScoutingView {
             </th>`;
         }).join('');
 
-        return ths + (canEdit ? `<th style="text-align:right;padding:10px 12px;border-bottom:1px solid var(--color-border);"></th>` : '');
+        return ths + (canEdit ? `<th style="text-align:right;padding:10px 12px;border-bottom:1px solid var(--color-border);width:5%"></th>` : '');
     }
 
     /**
@@ -177,7 +177,7 @@ export class ScoutingView {
                     </span>` : ""}
                 </div>
                 <div class="table-wrapper" style="overflow-x:auto">
-                    <table class="data-table" id="scouting-table" style="width:100%;border-collapse:collapse;font-size:14px">
+                    <table class="data-table" id="scouting-table" style="width:100%;border-collapse:collapse;font-size:14px;table-layout:fixed">
                         <thead>
                             <tr>
                                 ${this._headers(activeView, canEdit, sortCol, sortDir)}
@@ -253,15 +253,15 @@ export class ScoutingView {
                 `;
             } else {
                 cols = `
-                    <td style="padding:10px 12px;border-bottom:1px solid var(--color-border);font-weight:600">${window.Utils.escapeHtml(athlete.nome || "—")}</td>
-                    <td style="padding:10px 12px;border-bottom:1px solid var(--color-border);font-weight:600">${window.Utils.escapeHtml(athlete.cognome || "—")}</td>
-                    <td style="padding:10px 12px;border-bottom:1px solid var(--color-border)">${window.Utils.escapeHtml(athlete.ruolo || "—")}</td>
-                    <td style="padding:10px 12px;border-bottom:1px solid var(--color-border)">${window.Utils.escapeHtml(athlete.societa_appartenenza || "—")}</td>
-                    <td style="padding:10px 12px;border-bottom:1px solid var(--color-border)">${window.Utils.escapeHtml(athlete.email || "—")}</td>
-                    <td style="padding:10px 12px;border-bottom:1px solid var(--color-border)">${window.Utils.escapeHtml(athlete.cellulare || "—")}</td>
+                    <td style="padding:10px 12px;border-bottom:1px solid var(--color-border);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${window.Utils.escapeHtml(athlete.nome || "—")}</td>
+                    <td style="padding:10px 12px;border-bottom:1px solid var(--color-border);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${window.Utils.escapeHtml(athlete.cognome || "—")}</td>
+                    <td style="padding:10px 12px;border-bottom:1px solid var(--color-border);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${window.Utils.escapeHtml(athlete.ruolo || "—")}</td>
+                    <td style="padding:10px 12px;border-bottom:1px solid var(--color-border);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${window.Utils.escapeHtml(athlete.societa_appartenenza || "")}">${window.Utils.escapeHtml(athlete.societa_appartenenza || "—")}</td>
+                    <td style="padding:10px 12px;border-bottom:1px solid var(--color-border);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${window.Utils.escapeHtml(athlete.email || "")}">${window.Utils.escapeHtml(athlete.email || "—")}</td>
+                    <td style="padding:10px 12px;border-bottom:1px solid var(--color-border);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${window.Utils.escapeHtml(athlete.cellulare || "—")}</td>
                     <td style="padding:10px 12px;border-bottom:1px solid var(--color-border)">${athlete.anno_nascita || "—"}</td>
-                    <td style="padding:10px 12px;border-bottom:1px solid var(--color-border);max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${window.Utils.escapeHtml(athlete.note || "")}">${window.Utils.escapeHtml(athlete.note || "—")}</td>
-                    <td style="padding:10px 12px;border-bottom:1px solid var(--color-border)">${window.Utils.escapeHtml(athlete.rilevatore || "—")}</td>
+                    <td style="padding:10px 12px;border-bottom:1px solid var(--color-border);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${window.Utils.escapeHtml(athlete.note || "")}">${window.Utils.escapeHtml(athlete.note || "—")}</td>
+                    <td style="padding:10px 12px;border-bottom:1px solid var(--color-border);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${window.Utils.escapeHtml(athlete.rilevatore || "—")}</td>
                     <td style="padding:10px 12px;border-bottom:1px solid var(--color-border);font-size:12px">${athlete.data_rilevazione || "—"}</td>
                     <td style="padding:10px 12px;border-bottom:1px solid var(--color-border)">
                         <span class="status-badge" style="background:${src.bg};color:${src.color}">${window.Utils.escapeHtml(src.label)} ${athlete.is_locked_edit == 1 ? '<i class="ph ph-lock-key" title="Modificato manualmente" style="margin-left:4px"></i>' : ""}</span>
