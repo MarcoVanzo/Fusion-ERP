@@ -691,6 +691,85 @@ const Athletes = (() => {
         }
     };
 
+    /**
+     * Global handler for viewing athlete documents (called via inline onclick).
+     * Opens the document in a new tab, with popup-blocked download fallback.
+     */
+    window._viewAthleteDocument = async (athleteId, field, btnElement) => {
+        if (!athleteId || !field) {
+            UI.toast('Errore: dati documento mancanti', 'error');
+            return;
+        }
+
+        const btn = btnElement;
+        btn.disabled = true;
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Caricamento...';
+
+        const fetchUrl = `api/router.php?module=athletes&action=downloadDoc&id=${encodeURIComponent(athleteId)}&field=${encodeURIComponent(field)}&_cb=${Date.now()}`;
+        console.log('[Athletes] Fetching document:', fetchUrl);
+
+        try {
+            const response = await fetch(fetchUrl, {
+                credentials: 'same-origin',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                cache: 'no-store'
+            });
+
+            console.log('[Athletes] Doc response:', response.status, response.headers.get('Content-Type'));
+
+            if (!response.ok) {
+                let errMsg = `Errore HTTP ${response.status}`;
+                try {
+                    const errData = await response.json();
+                    errMsg = errData.error || errMsg;
+                } catch (_) { /* ignore parse error */ }
+                throw new Error(errMsg);
+            }
+
+            const contentType = response.headers.get('Content-Type') || 'application/octet-stream';
+
+            // Verify we got binary data, not a JSON error
+            if (contentType.includes('application/json')) {
+                const errData = await response.json();
+                throw new Error(errData.error || 'Risposta imprevista dal server');
+            }
+
+            const blob = await response.blob();
+
+            if (blob.size === 0) {
+                throw new Error('Il documento è vuoto (0 bytes)');
+            }
+
+            const blobUrl = URL.createObjectURL(blob);
+
+            // Open in new tab
+            const newTab = window.open(blobUrl, '_blank');
+            if (!newTab) {
+                // Popup blocked — fallback to download link
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                const ext = contentType.includes('pdf') ? 'pdf'
+                          : contentType.includes('png') ? 'png'
+                          : contentType.includes('webp') ? 'webp'
+                          : 'jpg';
+                a.download = `documento_${field}.${ext}`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                UI.toast('Documento scaricato (popup bloccato dal browser)', 'info');
+            }
+
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+        } catch (err) {
+            console.error('[Athletes] Document view failed:', err);
+            UI.toast(err.message || 'Errore nel caricamento del documento', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+        }
+    };
+
     function addDocumentListeners(athlete) {
         const docTypes = [
             'contract-file', 'id-doc-front', 'id-doc-back', 'cf-doc-front', 'cf-doc-back', 'med-cert',
@@ -709,92 +788,8 @@ const Athletes = (() => {
 
         // Event listener rimosso qui e spostato in attributi inline (onchange/onclick) in AthletesView.js per maggiore affidabilità
 
-        // View document buttons — fetch document via API and open in new tab
-        document.querySelectorAll('.view-doc-btn').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                const athleteId = btn.dataset.athleteId;
-                const field = btn.dataset.field;
-                
-                if (!athleteId || !field) {
-                    console.error('[Athletes] Missing data attributes on view-doc-btn:', { athleteId, field });
-                    UI.toast('Errore: dati documento mancanti', 'error');
-                    return;
-                }
-                
-                btn.disabled = true;
-                const originalHtml = btn.innerHTML;
-                btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Caricamento...';
-                
-                // Build URL using the same pattern as Store (api/router.php) to avoid
-                // potential .htaccess rewrite issues with directory requests
-                const fetchUrl = `api/router.php?module=athletes&action=downloadDoc&id=${encodeURIComponent(athleteId)}&field=${encodeURIComponent(field)}&_cb=${Date.now()}`;
-                console.log('[Athletes] Fetching document:', fetchUrl);
-                
-                try {
-                    const response = await fetch(fetchUrl, {
-                        credentials: 'same-origin',
-                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                        cache: 'no-store'
-                    });
-                    
-                    console.log('[Athletes] Doc response:', response.status, response.headers.get('Content-Type'));
-                    
-                    if (!response.ok) {
-                        // Try to parse JSON error
-                        let errMsg = `Errore HTTP ${response.status}`;
-                        try {
-                            const errData = await response.json();
-                            errMsg = errData.error || errMsg;
-                        } catch (_) { /* ignore parse error */ }
-                        throw new Error(errMsg);
-                    }
-                    
-                    const contentType = response.headers.get('Content-Type') || 'application/octet-stream';
-                    
-                    // Verify we got binary data, not a JSON error
-                    if (contentType.includes('application/json')) {
-                        const errData = await response.json();
-                        throw new Error(errData.error || 'Risposta imprevista dal server');
-                    }
-                    
-                    const blob = await response.blob();
-                    
-                    if (blob.size === 0) {
-                        throw new Error('Il documento è vuoto (0 bytes)');
-                    }
-                    
-                    const blobUrl = URL.createObjectURL(blob);
-                    
-                    // Open in new tab
-                    const newTab = window.open(blobUrl, '_blank');
-                    if (!newTab) {
-                        // Popup blocked — fallback to download link
-                        const a = document.createElement('a');
-                        a.href = blobUrl;
-                        const ext = contentType.includes('pdf') ? 'pdf' 
-                                  : contentType.includes('png') ? 'png' 
-                                  : contentType.includes('webp') ? 'webp' 
-                                  : 'jpg';
-                        a.download = `documento_${field}.${ext}`;
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
-                        UI.toast('Documento scaricato (popup bloccato dal browser)', 'info');
-                    }
-                    
-                    // Cleanup blob URL after a delay to let the new tab load
-                    setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
-                } catch (err) {
-                    console.error('[Athletes] Document view failed:', err);
-                    UI.toast(err.message || 'Errore nel caricamento del documento', 'error');
-                } finally {
-                    btn.disabled = false;
-                    btn.innerHTML = originalHtml;
-                }
-            });
-        });
+        // View document buttons — now handled via inline onclick → window._viewAthleteDocument()
+        // (see global handler registered at module load time below)
     }
 
     async function renderSubUsers(panel, athlete) {
