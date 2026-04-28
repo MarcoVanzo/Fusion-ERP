@@ -170,6 +170,42 @@ const Home = () => {
                 </div>
             </section>
 
+            {/* ═══ Open Day Promo Banner ═══ */}
+            <section className="w-full px-4 md:px-12 py-6">
+                <Link to="/open-day" className="group relative block w-full overflow-hidden rounded-2xl border border-brand-500/40 hover:border-brand-500 bg-gradient-to-r from-zinc-950 via-brand-950/30 to-zinc-950 transition-all duration-500 hover:shadow-[0_0_60px_rgba(217,70,239,0.2)]">
+                    {/* Glow */}
+                    <div className="absolute top-0 right-1/4 w-[400px] h-[200px] bg-brand-500/15 blur-[80px] rounded-full pointer-events-none"></div>
+                    <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-brand-500/60 to-transparent"></div>
+                    
+                    <div className="relative flex flex-col md:flex-row items-center justify-between gap-4 md:gap-8 px-6 md:px-12 py-6 md:py-8">
+                        {/* Left: badge + title */}
+                        <div className="flex items-center gap-4 md:gap-6">
+                            <div className="shrink-0 w-14 h-14 md:w-16 md:h-16 bg-brand-500/20 border border-brand-500/40 rounded-2xl flex flex-col items-center justify-center shadow-[0_0_20px_rgba(217,70,239,0.3)]">
+                                <span className="text-brand-400 font-heading text-xl md:text-2xl leading-none">27</span>
+                                <span className="text-brand-500/70 text-[9px] font-bold uppercase tracking-wider">MAG</span>
+                            </div>
+                            <div>
+                                <div className="flex items-center gap-3 mb-1">
+                                    <h3 className="font-heading text-2xl md:text-3xl text-white uppercase tracking-tight group-hover:text-brand-400 transition-colors">
+                                        OPEN <span className="text-brand-500">DAY</span> 2026
+                                    </h3>
+                                    <span className="bg-brand-500 text-zinc-950 text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full animate-pulse shadow-[0_0_12px_rgba(217,70,239,0.6)]">NEW</span>
+                                </div>
+                                <p className="text-zinc-400 text-sm md:text-base font-sans">Palavega, Trivignano — ore 17:00 · <span className="text-zinc-300">Iscriviti gratuitamente</span></p>
+                            </div>
+                        </div>
+
+                        {/* Right: CTA */}
+                        <div className="shrink-0 flex items-center gap-3 bg-brand-500 hover:bg-brand-400 text-zinc-950 font-heading text-sm md:text-base uppercase tracking-widest px-6 md:px-8 py-3 md:py-4 rounded-full transition-all duration-300 group-hover:scale-105 group-hover:shadow-[0_0_30px_rgba(217,70,239,0.5)] active:scale-95">
+                            ISCRIVITI ORA
+                            <ChevronRight size={18} />
+                        </div>
+                    </div>
+
+                    <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-brand-500/30 to-transparent"></div>
+                </Link>
+            </section>
+
             {/* Results + News — Side-by-Side Section */}
             <section className="w-full px-4 md:px-12 py-20 md:py-28 relative overflow-hidden">
                 {/* Background glows */}

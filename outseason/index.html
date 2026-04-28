@@ -218,6 +218,27 @@
             </div>
             <input type="hidden" id="come_vuoi_pagare" value="">
             <span class="os-field-error" data-for="come_vuoi_pagare">Seleziona un metodo di pagamento</span>
+
+            <!-- Bonifico Details -->
+            <div class="os-bonifico-info" id="bonifico-info" style="display:none">
+                <div class="bonifico-title"><i class="ph ph-bank"></i> Dati per il Bonifico</div>
+                <div class="bonifico-row">
+                    <span class="bonifico-label">Intestatario</span>
+                    <span class="bonifico-value">FUSION TEAM VOLLEY A.S.D.</span>
+                </div>
+                <div class="bonifico-row">
+                    <span class="bonifico-label">IBAN</span>
+                    <span class="bonifico-value" id="iban-value">IT19R0874936320000000039906</span>
+                    <button type="button" class="bonifico-copy" onclick="copyIban()" title="Copia IBAN"><i class="ph ph-copy"></i></button>
+                </div>
+                <div class="bonifico-row">
+                    <span class="bonifico-label">Causale</span>
+                    <span class="bonifico-value bonifico-causale">Iscrizione OutSeason 2026 — <em>Nome Cognome</em></span>
+                </div>
+                <div class="bonifico-note">
+                    <i class="ph ph-info"></i> Riceverai una mail di conferma con questi dati. L'iscrizione sarà confermata alla ricezione del bonifico.
+                </div>
+            </div>
         </div>
 
         <div class="os-divider"></div>
@@ -374,9 +395,24 @@
         selPay = el.dataset.val;
         document.getElementById('come_vuoi_pagare').value = selPay;
         clearErr('come_vuoi_pagare');
-        document.getElementById('submit-bonifico').style.display = selPay==='Bonifico Bancario'?'':'none';
+        const isBonifico = selPay==='Bonifico Bancario';
+        document.getElementById('submit-bonifico').style.display = isBonifico?'':'none';
         document.getElementById('paypal-button-container').style.display = selPay==='Carta/PayPal'?'':'none';
+        document.getElementById('bonifico-info').style.display = isBonifico?'':'none';
+        if (isBonifico) {
+            const nome = document.getElementById('nome_e_cognome').value.trim() || 'Nome Cognome';
+            document.querySelector('.bonifico-causale').innerHTML = 'Iscrizione OutSeason 2026 — <em>' + nome + '</em>';
+        }
         if (selPay==='Carta/PayPal' && !window._ppLoaded) { window._ppLoaded=true; loadPP(); }
+    };
+    window.copyIban = function() {
+        const iban = document.getElementById('iban-value').textContent;
+        navigator.clipboard.writeText(iban).then(() => {
+            const btn = document.querySelector('.bonifico-copy');
+            btn.innerHTML = '<i class="ph ph-check"></i>';
+            btn.style.color = 'var(--success)';
+            setTimeout(() => { btn.innerHTML = '<i class="ph ph-copy"></i>'; btn.style.color = ''; }, 2000);
+        });
     };
 
     function updatePrice() {
