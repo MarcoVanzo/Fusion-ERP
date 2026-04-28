@@ -480,27 +480,47 @@
 
     async function loadPP(){
         const cid='ASLH7D2ShGnOwYiNh1eLxO8lwTQE6QKP3136fGsQKJp9e4Sm5i7dGbWkj8l3NMSpU4u2pjgENvuyqtDM';
+        const cont=document.getElementById('paypal-button-container');
+        cont.innerHTML='<div style="text-align:center;padding:24px;color:#888;font-size:14px;"><div class="os-spinner" style="margin:0 auto 12px;width:32px;height:32px;border:3px solid rgba(0,0,0,.1);border-top-color:#0070ba;border-radius:50%;animation:spin .8s linear infinite;"></div>Caricamento PayPal…</div><style>@keyframes spin{to{transform:rotate(360deg)}}</style>';
         const s=document.createElement('script');
         s.src=`https://www.paypal.com/sdk/js?client-id=${cid}&currency=EUR&intent=capture&locale=it_IT`;
-        s.onload=renderPP;document.head.appendChild(s);
+        s.onload=function(){
+            console.log('[OutSeason] PayPal SDK loaded, paypal object:', !!window.paypal);
+            cont.innerHTML='';
+            renderPP();
+        };
+        s.onerror=function(){
+            console.error('[OutSeason] PayPal SDK failed to load');
+            cont.innerHTML='<p style="color:#e53e3e;text-align:center;padding:16px;">Impossibile caricare PayPal. Controlla la connessione o disabilita l\'ad blocker e riprova.</p>';
+            window._ppLoaded=false;
+        };
+        document.head.appendChild(s);
     }
     function renderPP(){
-        if(!window.paypal)return;
+        if(!window.paypal){console.error('[OutSeason] window.paypal not available after SDK load');return;}
         paypal.Buttons({
             style:{layout:'vertical',color:'gold',shape:'rect',label:'paypal',height:48},
             createOrder:async()=>{
                 if(!validate())throw new Error('Compila tutti i campi');
                 const r=await fetch(API+'publicRegister',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload())});
-                const d=await r.json();if(!r.ok||d.error)throw new Error(d.message||d.error||'Errore');
-                eId=d.data.entry_id;ppOrderId=d.data.paypal_order_id;return ppOrderId;
+                const d=await r.json();
+                console.log('[OutSeason] publicRegister response:', d);
+                if(!r.ok||d.error)throw new Error(d.message||d.error||'Errore');
+                eId=d.data.entry_id;ppOrderId=d.data.paypal_order_id;
+                console.log('[OutSeason] PayPal Order ID:', ppOrderId);
+                return ppOrderId;
             },
             onApprove:async(data)=>{
                 try{const r=await fetch(API+'capturePayment',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({paypal_order_id:data.orderID,entry_id:eId})});const d=await r.json();if(!r.ok||d.error)throw new Error(d.message||d.error||'Errore');showOK();}
                 catch(e){showGE('Pagamento approvato ma errore conferma: '+e.message);}
             },
-            onError:e=>showGE('Errore PayPal: '+(e.message||'Riprova')),
+            onError:e=>{console.error('[OutSeason] PayPal onError:',e);showGE('Errore PayPal: '+(e.message||'Riprova'));},
             onCancel:()=>showGE('Pagamento annullato.')
-        }).render('#paypal-button-container');
+        }).render('#paypal-button-container').then(()=>{
+            console.log('[OutSeason] PayPal buttons rendered successfully');
+        }).catch(err=>{
+            console.error('[OutSeason] PayPal buttons render failed:', err);
+        });
     }
 })();
 </script>
