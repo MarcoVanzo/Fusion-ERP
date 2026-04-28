@@ -1,7 +1,7 @@
 {
   "version": 3,
-  "generated_at": "2026-04-28T22:55:42.805Z",
-  "file_count": 1740,
+  "generated_at": "2026-04-28T22:58:40.524Z",
+  "file_count": 1741,
   "files": [
     {
       "path": ".env.prod",
@@ -361,7 +361,7 @@
     },
     {
       "path": "api/router.php",
-      "hash": "62bc940950820c539d6f2fba67f6dcb5f47c881b59a3ca41ee4c452fb88af967"
+      "hash": "1d5c213a35f87519b04251d2a9edab87fc57790c9e3479129df2cfe9201be743"
     },
     {
       "path": "api/self_heal.php",
@@ -1284,8 +1284,8 @@
       "hash": "bff23f6cbbda8e9f63374caad9603b813d7ac9dc5935d53e2f1c5831a7c66b61"
     },
     {
-      "path": "fusion-website/dist/assets/FamilyPortal-7_JejZkj.js",
-      "hash": "53bcfcec42142e7ede0ff5cf2e98887f61a6691647a9ed8f4dc588ddb517a31a"
+      "path": "fusion-website/dist/assets/FamilyPortal-HxWFOQ5P.js",
+      "hash": "0914c15d422901242b8496491fd0b21061bdb945c170a8af6b06da564c5e2edf"
     },
     {
       "path": "fusion-website/dist/assets/Foresteria-COBY5sGw.js",
@@ -1356,12 +1356,12 @@
       "hash": "b6262b3e9fd5e1b6a83ba32a3f9c2982cdea7fcbb24c0e824e4a3f139fc2e286"
     },
     {
-      "path": "fusion-website/dist/assets/index-CjRpaBMn.css",
-      "hash": "870facd7987f1e23d44d2b1da49375315daf09c3bf107b79eee4f400dc7b12f1"
+      "path": "fusion-website/dist/assets/index-Cv_-zKHp.js",
+      "hash": "a4e51575962bcb3c983909df775cb9cf469e42c75518b06016094c469a1154f6"
     },
     {
-      "path": "fusion-website/dist/assets/index-PhlAUmbp.js",
-      "hash": "b719b837e44cd8c57903b07796497c9fbd89cdfc4385bb39c088a354ce6fdbdd"
+      "path": "fusion-website/dist/assets/index-KkJmnjyj.css",
+      "hash": "d623a8f9b00369cb634f23093e2af6f0b6d79e3054992e1042af784e481d7ec2"
     },
     {
       "path": "fusion-website/dist/assets/logo-colorato.png",
@@ -1406,6 +1406,10 @@
     {
       "path": "fusion-website/dist/assets/ombra_uomo.png",
       "hash": "aa154e46c39b9710805a1646f7cdfda5f332995fad45fc094a9ad348fefc9ab7"
+    },
+    {
+      "path": "fusion-website/dist/assets/OpenDay-B_xh5ZQK.js",
+      "hash": "d1b7bb9b51a0227902e90e913fb8af2202662fee5530332af569de923406c035"
     },
     {
       "path": "fusion-website/dist/assets/oswald-cyrillic-600-normal-B7zyAoGs.woff",
@@ -1533,7 +1537,7 @@
     },
     {
       "path": "fusion-website/dist/index.html",
-      "hash": "e747b15418c6711095221e4d308b858c22f60f20876415752257139dab4e3d70"
+      "hash": "f91e692751b8bf430d77700e243009f34394f674f81cd8d1b4e36fdafc32e2fc"
     },
     {
       "path": "fusion-website/dist/privacy-policy.pdf",
@@ -1553,7 +1557,7 @@
     },
     {
       "path": "index.html",
-      "hash": "730e2e0198348ef38746b21677c7faf9c6ffeb5592beef2c2db3bce7c70bee3f"
+      "hash": "a9d65899c54d5e1f39105001a08fa7096ff89818c5851463ab7730b3e98101c5"
     },
     {
       "path": "js/api/athletes.api.js",

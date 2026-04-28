@@ -258,6 +258,7 @@ function dispatch(string $controllerName, string $action): void
         'Social'     => ['callback'],   // Meta OAuth redirect
         'TalentDay'  => ['publicRegister', 'publicStatus'], // Public registration form
         'OpenDay'    => ['publicRegister', 'publicStatus'], // Public Open Day registration
+        'OutSeason'  => ['publicRegister', 'capturePayment', 'publicStatus', 'validateDiscount'], // Public OutSeason form
     ];
     $isModuleException = isset($modulePublicExceptions[$controllerName])
         && in_array($action, $modulePublicExceptions[$controllerName], true);

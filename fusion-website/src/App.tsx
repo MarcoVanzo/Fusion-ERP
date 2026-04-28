@@ -30,6 +30,7 @@ const MenuProposal4 = React.lazy(() => import('./pages/MenuProposal4'));
 const MenuProposal5 = React.lazy(() => import('./pages/MenuProposal5'));
 const FamilyPortal = React.lazy(() => import('./pages/FamilyPortal'));
 const Scouting = React.lazy(() => import('./pages/Scouting'));
+const OpenDay = React.lazy(() => import('./pages/OpenDay'));
 
 // Fallback loader
 const PageLoader = () => (
@@ -78,6 +79,7 @@ function AppContent() {
               <Route path="/menu5" element={<MenuProposal5 />} />
               <Route path="/family-portal" element={<FamilyPortal />} />
               <Route path="/scouting" element={<Scouting />} />
+              <Route path="/open-day" element={<OpenDay />} />
             </Routes>
           </Suspense>
         </ErrorBoundary>
