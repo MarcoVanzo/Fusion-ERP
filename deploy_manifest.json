@@ -1,7 +1,7 @@
 {
   "version": 3,
-  "generated_at": "2026-04-28T23:54:13.407Z",
-  "file_count": 1744,
+  "generated_at": "2026-04-28T23:56:30.127Z",
+  "file_count": 1745,
   "files": [
     {
       "path": ".env.prod",
@@ -1228,6 +1228,10 @@
       "hash": "6111c6aea2f8e34a001f1958f0353bcc07e247d9cae3f83b7d2e9da5ec5d2e4e"
     },
     {
+      "path": "db/migrations/V129__outseason_paypal_columns.sql",
+      "hash": "27d3e5a914ef3e2753d313291f61613376b601f08a7193ee06c0ef073bbbf53d"
+    },
+    {
       "path": "deploy_state.json",
       "hash": "e4e5d5698de0f46e78ac279c8024cd8131a53e4fa4eb1d1def49460fbbd44271"
     },
@@ -1557,7 +1561,7 @@
     },
     {
       "path": "index.html",
-      "hash": "bdb8aa9f4d815aa16fe825fc7e3659691205f2b6732597893803a31e77f1b32c"
+      "hash": "a78a683732667cb0e5979b34723bd2d67db61db715ca5e0b5e511b41608066e7"
     },
     {
       "path": "js/api/athletes.api.js",
