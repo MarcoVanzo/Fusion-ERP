@@ -452,14 +452,14 @@
     REQ.forEach(id=>{const el=document.getElementById(id);if(!el)return;el.addEventListener('blur',()=>{if(!el.value.trim())showErr(id);else if(id==='email'&&!isEm(el.value.trim()))showErr(id);else clearErr(id);});el.addEventListener('input',()=>clearErr(id));});
 
     function validate(){
-        clearAll();let bad=false;
-        REQ.forEach(id=>{const el=document.getElementById(id);if(!el||!el.value.trim()){showErr(id);bad=true;}else if(id==='email'&&!isEm(el.value.trim())){showErr(id);bad=true;}});
-        if(!selWeek){showErr('settimana_scelta');bad=true;}
-        if(!selFormula){showErr('formula_scelta');bad=true;}
-        if(!selPay){showErr('come_vuoi_pagare');bad=true;}
-        if(!document.getElementById('privacy').checked){showErr('privacy');bad=true;}
-        if(!document.getElementById('terms').checked){showErr('terms');bad=true;}
-        if(bad){const f=document.querySelector('.error');if(f)f.scrollIntoView({behavior:'smooth',block:'center'});}
+        clearAll();let bad=false;let badFields=[];
+        REQ.forEach(id=>{const el=document.getElementById(id);if(!el||!el.value.trim()){showErr(id);bad=true;badFields.push(id);}else if(id==='email'&&!isEm(el.value.trim())){showErr(id);bad=true;badFields.push(id+' (email invalida)');}});
+        if(!selWeek){showErr('settimana_scelta');bad=true;badFields.push('settimana_scelta');}
+        if(!selFormula){showErr('formula_scelta');bad=true;badFields.push('formula_scelta');}
+        if(!selPay){showErr('come_vuoi_pagare');bad=true;badFields.push('come_vuoi_pagare');}
+        if(!document.getElementById('privacy').checked){showErr('privacy');bad=true;badFields.push('privacy');}
+        if(!document.getElementById('terms').checked){showErr('terms');bad=true;badFields.push('terms');}
+        if(bad){console.warn('[OutSeason] Validation failed:',badFields);const f=document.querySelector('.error');if(f)f.scrollIntoView({behavior:'smooth',block:'center'});}
         return !bad;
     }
 
