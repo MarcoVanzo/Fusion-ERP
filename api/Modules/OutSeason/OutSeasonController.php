@@ -801,15 +801,15 @@ PROMPT;
             ? '<span style="background:#f39c12;color:#fff;padding:4px 12px;border-radius:4px;font-weight:700;">IN ATTESA BONIFICO</span>'
             : '<span style="background:#27ae60;color:#fff;padding:4px 12px;border-radius:4px;font-weight:700;">PAGAMENTO CONFERMATO ✓</span>';
         $bonificoInfo = $isBonifico
-            ? '<div style="background:#fff8e1;border-left:4px solid #f39c12;padding:16px;margin:16px 0;border-radius:4px;"><p style="margin:0 0 8px;font-weight:700;color:#e67e22;">Istruzioni Bonifico</p><p style="margin:4px 0;font-size:14px;">Importo: <strong>€' . number_format($importoBonifico ?? 0, 2, ',', '.') . '</strong></p><p style="margin:4px 0;font-size:14px;">IBAN: <strong>IT XX XXXX XXXX XXXX XXXX XXXX XXX</strong></p><p style="margin:4px 0;font-size:14px;">Causale: <strong>OutSeason ' . self::seasonKey() . ' — ' . $nome . '</strong></p></div>'
+            ? '<div style="background:#fff8e1;border-left:4px solid #f39c12;padding:16px;margin:16px 0;border-radius:4px;"><p style="margin:0 0 8px;font-weight:700;color:#e67e22;">Istruzioni Bonifico</p><p style="margin:4px 0;font-size:14px;">Importo: <strong>€' . number_format($importoBonifico ?? 0, 2, ',', '.') . '</strong></p><p style="margin:4px 0;font-size:14px;">Intestatario: <strong>FUSION TEAM VOLLEY A.S.D.</strong></p><p style="margin:4px 0;font-size:14px;">IBAN: <strong>IT19R0874936320000000039906</strong></p><p style="margin:4px 0;font-size:14px;">Causale: <strong>OutSeason ' . self::seasonKey() . ' — ' . $nome . '</strong></p></div>'
             : '';
 
         return <<<HTML
 <!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
-<body style="margin:0;padding:0;background:#1a1a2e;font-family:'Segoe UI',Arial,sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#1a1a2e;"><tr><td align="center" style="padding:40px 16px;">
-<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.3);">
-<tr><td style="background:linear-gradient(135deg,#ff6b35,#9b59b6);padding:32px 24px;text-align:center;">
+<body style="margin:0;padding:0;background:#ededed;font-family:'Segoe UI',Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#ededed;"><tr><td align="center" style="padding:40px 16px;">
+<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.1);">
+<tr><td style="background:linear-gradient(180deg,#D9317F,#751450);padding:32px 24px;text-align:center;">
 <h1 style="margin:0;font-size:24px;color:#fff;font-weight:800;letter-spacing:0.05em;">OUTSEASON {$this->seasonKey()}</h1>
 <p style="margin:8px 0 0;color:rgba(255,255,255,0.85);font-size:14px;">Fusion Team Volley</p>
 </td></tr>
@@ -825,8 +825,8 @@ PROMPT;
 {$bonificoInfo}
 <p style="border-top:1px solid #eee;padding-top:16px;color:#888;font-size:12px;">ID Transazione: {$txId}</p>
 </td></tr>
-<tr><td style="padding:20px;background:#f4f4f8;text-align:center;border-top:1px solid #eee;">
-<p style="margin:0;font-size:12px;color:#999;">Fusion Team Volley — info@fusionteamvolley.it</p>
+<tr><td style="padding:20px;background:#D9317F;text-align:center;">
+<p style="margin:0;font-size:12px;color:#fff;">Fusion Team Volley ASD — outseason@fusionteamvolley.it</p>
 </td></tr>
 </table>
 </td></tr></table>

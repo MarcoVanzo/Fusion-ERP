@@ -170,41 +170,62 @@ const Home = () => {
                 </div>
             </section>
 
-            {/* ═══ Open Day Promo Banner ═══ */}
-            <section className="w-full px-4 md:px-12 py-6">
-                <Link to="/open-day" className="group relative block w-full overflow-hidden rounded-2xl border border-brand-500/40 hover:border-brand-500 bg-gradient-to-r from-zinc-950 via-brand-950/30 to-zinc-950 transition-all duration-500 hover:shadow-[0_0_60px_rgba(217,70,239,0.2)]">
-                    {/* Glow */}
-                    <div className="absolute top-0 right-1/4 w-[400px] h-[200px] bg-brand-500/15 blur-[80px] rounded-full pointer-events-none"></div>
-                    <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-brand-500/60 to-transparent"></div>
-                    
-                    <div className="relative flex flex-col md:flex-row items-center justify-between gap-4 md:gap-8 px-6 md:px-12 py-6 md:py-8">
-                        {/* Left: badge + title */}
-                        <div className="flex items-center gap-4 md:gap-6">
-                            <div className="shrink-0 w-14 h-14 md:w-16 md:h-16 bg-brand-500/20 border border-brand-500/40 rounded-2xl flex flex-col items-center justify-center shadow-[0_0_20px_rgba(217,70,239,0.3)]">
-                                <span className="text-brand-400 font-heading text-xl md:text-2xl leading-none">27</span>
-                                <span className="text-brand-500/70 text-[9px] font-bold uppercase tracking-wider">MAG</span>
+            {/* ═══ Open Day Promo Banner — HIGH IMPACT ═══ */}
+            <motion.section
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
+                className="w-full px-4 md:px-12 py-8"
+            >
+                <Link to="/open-day" className="group relative block w-full overflow-hidden rounded-3xl border-2 border-brand-500/50 hover:border-brand-500 bg-zinc-950 transition-all duration-500 hover:shadow-[0_0_80px_rgba(217,70,239,0.25)]">
+                    {/* Animated background */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-brand-950/40 via-brand-900/20 to-brand-950/40 opacity-60"></div>
+                    <div className="absolute top-0 left-1/3 w-[600px] h-[300px] bg-brand-500/20 blur-[100px] rounded-full pointer-events-none animate-pulse"></div>
+                    <div className="absolute bottom-0 right-1/4 w-[400px] h-[200px] bg-brand-600/15 blur-[80px] rounded-full pointer-events-none"></div>
+
+                    {/* Top gradient line */}
+                    <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-brand-500 to-transparent"></div>
+
+                    <div className="relative flex flex-col md:flex-row items-center justify-between gap-6 md:gap-10 px-8 md:px-16 py-10 md:py-14">
+                        {/* Left: date badge + info */}
+                        <div className="flex items-center gap-5 md:gap-8">
+                            {/* Date card */}
+                            <div className="shrink-0 w-20 h-20 md:w-24 md:h-24 bg-brand-500/15 border-2 border-brand-500/50 rounded-2xl flex flex-col items-center justify-center shadow-[0_0_30px_rgba(217,70,239,0.4)] group-hover:shadow-[0_0_50px_rgba(217,70,239,0.6)] transition-shadow duration-500">
+                                <span className="text-brand-400 font-heading text-3xl md:text-4xl leading-none">27</span>
+                                <span className="text-brand-500/80 text-[10px] md:text-xs font-bold uppercase tracking-widest">MAG</span>
                             </div>
                             <div>
-                                <div className="flex items-center gap-3 mb-1">
-                                    <h3 className="font-heading text-2xl md:text-3xl text-white uppercase tracking-tight group-hover:text-brand-400 transition-colors">
-                                        OPEN <span className="text-brand-500">DAY</span> 2026
+                                <div className="flex flex-wrap items-center gap-3 mb-2">
+                                    <h3 className="font-heading text-3xl md:text-4xl lg:text-5xl text-white uppercase tracking-tight group-hover:text-brand-400 transition-colors drop-shadow-[0_0_20px_rgba(255,255,255,0.1)]">
+                                        OPEN <span className="text-brand-500 drop-shadow-[0_0_20px_rgba(217,70,239,0.6)]">DAY</span> 2026
                                     </h3>
-                                    <span className="bg-brand-500 text-zinc-950 text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full animate-pulse shadow-[0_0_12px_rgba(217,70,239,0.6)]">NEW</span>
+                                    <span className="bg-brand-500 text-zinc-950 text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full animate-pulse shadow-[0_0_15px_rgba(217,70,239,0.7)]">NEW</span>
                                 </div>
-                                <p className="text-zinc-400 text-sm md:text-base font-sans">Palavega, Trivignano — ore 17:00 · <span className="text-zinc-300">Iscriviti gratuitamente</span></p>
+                                <p className="text-zinc-400 text-base md:text-lg font-sans">
+                                    📍 Palavega, Trivignano — ⏰ ore 17:00–20:00
+                                </p>
+                                <p className="text-zinc-500 text-sm font-sans mt-1">
+                                    Un pomeriggio di sport e talento con <span className="text-white font-semibold">Fusion Team Volley</span>
+                                </p>
                             </div>
                         </div>
 
-                        {/* Right: CTA */}
-                        <div className="shrink-0 flex items-center gap-3 bg-brand-500 hover:bg-brand-400 text-zinc-950 font-heading text-sm md:text-base uppercase tracking-widest px-6 md:px-8 py-3 md:py-4 rounded-full transition-all duration-300 group-hover:scale-105 group-hover:shadow-[0_0_30px_rgba(217,70,239,0.5)] active:scale-95">
-                            ISCRIVITI ORA
-                            <ChevronRight size={18} />
+                        {/* Right: CTA button */}
+                        <div className="shrink-0 relative">
+                            <div className="relative flex items-center gap-3 bg-gradient-to-r from-brand-600 via-brand-500 to-brand-400 bg-[length:200%_auto] text-white font-heading text-lg md:text-xl uppercase tracking-widest px-8 md:px-10 py-4 md:py-5 rounded-full transition-all duration-500 group-hover:bg-right group-hover:scale-105 group-hover:shadow-[0_0_40px_rgba(217,70,239,0.6)] active:scale-95 overflow-hidden border border-brand-400/30">
+                                {/* Shimmer sweep */}
+                                <div className="absolute top-0 -inset-full h-full w-1/2 z-5 block transform -skew-x-12 bg-gradient-to-r from-transparent to-white opacity-20 -left-[100%] group-hover:left-[200%] transition-all duration-1000 ease-in-out"></div>
+                                <span className="relative z-10 drop-shadow-md">ISCRIVITI ORA</span>
+                                <ChevronRight size={22} className="relative z-10" />
+                            </div>
                         </div>
                     </div>
 
-                    <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-brand-500/30 to-transparent"></div>
+                    {/* Bottom gradient line */}
+                    <div className="absolute bottom-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-brand-500/50 to-transparent"></div>
                 </Link>
-            </section>
+            </motion.section>
 
             {/* Results + News — Side-by-Side Section */}
             <section className="w-full px-4 md:px-12 py-20 md:py-28 relative overflow-hidden">

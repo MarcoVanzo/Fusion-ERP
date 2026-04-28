@@ -1,7 +1,7 @@
 {
   "version": 3,
-  "generated_at": "2026-04-28T23:16:57.370Z",
-  "file_count": 1743,
+  "generated_at": "2026-04-28T23:27:08.430Z",
+  "file_count": 1744,
   "files": [
     {
       "path": ".env.prod",
@@ -181,7 +181,7 @@
     },
     {
       "path": "api/Modules/OutSeason/OutSeasonController.php",
-      "hash": "bc29d4ef23320739e77a770cc4ac5e6064e9e30be5646385eb092a33592643f5"
+      "hash": "96a828253575c2a506aadc79ed6b0fe835d7ff042fa69beaaf4c36f4c2dfec4b"
     },
     {
       "path": "api/Modules/Payments/PaymentsController.php",
@@ -1284,8 +1284,8 @@
       "hash": "bff23f6cbbda8e9f63374caad9603b813d7ac9dc5935d53e2f1c5831a7c66b61"
     },
     {
-      "path": "fusion-website/dist/assets/FamilyPortal-DBEs8md1.js",
-      "hash": "8a6ef4b7e523395b2bce88ceb891376f3b3ae80025247c4113a8ee3b3658f862"
+      "path": "fusion-website/dist/assets/FamilyPortal-DemvF-wB.js",
+      "hash": "a121c83e05eabd73a6303b08697f57779c24f9fe07743a3f376adf04f5e7b05b"
     },
     {
       "path": "fusion-website/dist/assets/Foresteria-COBY5sGw.js",
@@ -1348,20 +1348,20 @@
       "hash": "23264c83d979d2034f0562b3b1b3411a15fa69415edddde029ce0727c14ed0c6"
     },
     {
-      "path": "fusion-website/dist/assets/Home-DPwgSXgB.js",
-      "hash": "22dafaa80411998c0101cc820d75c0c225eef2b9cbefefb44e74221aa8de4127"
+      "path": "fusion-website/dist/assets/Home-vCRsxCi-.js",
+      "hash": "56640d0dfb588d85ff1bab1a069fc3769472e34056974bc7225557cc94b90861"
     },
     {
       "path": "fusion-website/dist/assets/icons-lJskfNWJ.js",
       "hash": "b6262b3e9fd5e1b6a83ba32a3f9c2982cdea7fcbb24c0e824e4a3f139fc2e286"
     },
     {
-      "path": "fusion-website/dist/assets/index-CEe9doeA.js",
-      "hash": "2a0b59aad2dc55bf5e13d0ed407343b53241aafe48c5804f4caef769b486ea64"
+      "path": "fusion-website/dist/assets/index-Ba-tL95Q.js",
+      "hash": "7b9d45eccc2e5540776e51843b00775367b0bf0eb4b2e3efc7c0545e0c2709ec"
     },
     {
-      "path": "fusion-website/dist/assets/index-Djt_Ge4h.css",
-      "hash": "6f6cd0addb2601de532b2f4c357999b7da00bb447655517835542d76929c2d42"
+      "path": "fusion-website/dist/assets/index-C1Y3XytW.css",
+      "hash": "b05ea21060beecbe73de944aba11855beac518f23fe30a6d5acb69dbd2df66a5"
     },
     {
       "path": "fusion-website/dist/assets/logo-colorato.png",
@@ -1537,7 +1537,7 @@
     },
     {
       "path": "fusion-website/dist/index.html",
-      "hash": "ed9770e485a8b08091e6b92ad5a65acf215ed46b2bc21f4454bbd43884c965f1"
+      "hash": "bd1ded2982794eea87be00933be30863617ec4105255cbbb3c73391c87676e44"
     },
     {
       "path": "fusion-website/dist/privacy-policy.pdf",
@@ -1557,7 +1557,7 @@
     },
     {
       "path": "index.html",
-      "hash": "86d24f333a7209ede8568049f563aa51682ec25f33aa3cece96338963f6af04a"
+      "hash": "d6bd463494fc34e3d1c6b78ccbb438cf76d034d62c5809a38686ee980effc711"
     },
     {
       "path": "js/api/athletes.api.js",
@@ -2046,6 +2046,10 @@
     {
       "path": "open-day/style.css",
       "hash": "2f38cfe74f2a7730f2d370d706f46f06cdf2f924e0b0646f60efe72268e2f3cf"
+    },
+    {
+      "path": "outseason/email_preview.html",
+      "hash": "47676627d5510fae4c57ea6dfa0b93298d1a08c44adc92e263ded584a1bdaab8"
     },
     {
       "path": "outseason/index.html",
