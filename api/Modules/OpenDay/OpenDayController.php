@@ -476,8 +476,26 @@ class OpenDayController
             <p style="margin:0 0 12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#0f172a;">I tuoi dati</p>
             {$datiAtleta}
         </td></tr></table>
-        <p style="color:#444;font-size:15px;line-height:1.7;margin:24px 0 20px;">Ti raccomandiamo di presentarti con <strong>30 minuti di anticipo</strong>.</p>
-        <p style="border-top:1px solid #eee;padding-top:20px;color:#666;font-size:13px;line-height:1.7;margin:30px 0 0;">Per informazioni contattaci a <a href="mailto:info@fusionteamvolley.it" style="color:#D946EF;font-weight:bold;text-decoration:none;">info@fusionteamvolley.it</a>.</p>
+        <p style="color:#444;font-size:15px;line-height:1.7;margin:24px 0 20px;">Ti raccomandiamo di presentarti sul posto con <strong>30 minuti di anticipo</strong>. L'orario dell'allenamento e l'indirizzo della struttura verranno forniti una volta concluse le iscrizioni.</p>
+
+        <p style="color:#0f172a;font-size:16px;font-weight:bold;margin:30px 0 10px;">Cosa dovrai avere con te?</p>
+        <ul style="color:#444;font-size:14px;line-height:1.8;margin:0 0 20px;padding-left:20px;">
+            <li>documento di identità;</li>
+            <li>copia cartacea del certificato medico attività sportiva agonistica;</li>
+            <li>liberatoria immagini sottoscritta dal genitore (i moduli sono in allegato alla presente);</li>
+            <li>autorizzazione della tua società di appartenenza a partecipare all'allenamento firmata dal Presidente e/o legale rappresentante;</li>
+            <li>liberatoria scarico responsabilità sottoscritta dal genitore (i moduli sono in allegato alla presente);</li>
+            <li>borraccia ad uso personale (a disposizione per l'intera durata dell'allenamento);</li>
+            <li>occorrente per l'allenamento (ti verrà fornita una t-shirt dell'evento).</li>
+        </ul>
+
+        <p style="color:#0f172a;font-size:16px;font-weight:bold;margin:30px 0 10px;">Ricorda inoltre:</p>
+        <ul style="color:#444;font-size:14px;line-height:1.8;margin:0 0 24px;padding-left:20px;">
+            <li>L'ingresso del Palasport sarà consentito ad un massimo di <strong>due accompagnatori</strong> per ciascuna atleta;</li>
+            <li>È <strong>severamente vietato</strong> scattare fotografie ed effettuare riprese video.</li>
+        </ul>
+
+        <p style="border-top:1px solid #eee;padding-top:20px;color:#666;font-size:13px;line-height:1.7;margin:30px 0 0;">Per informazioni contattaci a <a href="mailto:recruiting@fusionteamvolley.it" style="color:#D946EF;font-weight:bold;text-decoration:none;">recruiting@fusionteamvolley.it</a>.</p>
     </td></tr>
     <tr><td style="padding:24px 28px;background:#f8fafc;border-top:1px solid #e2e8f0;text-align:center;">
         <p style="margin:0;font-size:12px;color:#777;line-height:1.6;"><strong>Fusion Team Volley ASD</strong><br>Trivignano (VE)</p>
