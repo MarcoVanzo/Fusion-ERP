@@ -195,6 +195,15 @@ body {
 }
 .os-avail-dot.free:hover { background: rgba(39,174,96,0.35); transform: scale(1.2); }
 
+/* Staggered pop-in for dots */
+.os-avail-panel.visible .os-avail-dot {
+  animation: dotPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes dotPop {
+  from { transform: scale(0); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
 .os-avail-count {
   font-family: 'Poppins',sans-serif;
   font-size: 11px; font-weight: 700;

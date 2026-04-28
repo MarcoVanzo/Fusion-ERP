@@ -10,7 +10,7 @@
     <meta property="og:image" content="https://www.fusionteamvolley.it/assets/logo-colorato.png">
     <meta property="og:type" content="website">
     <link rel="icon" href="https://www.fusionteamvolley.it/assets/logo-colorato.png" type="image/png">
-    <link rel="stylesheet" href="style.css?v=1003">
+    <link rel="stylesheet" href="style.css?v=1010">
     <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
 </head>
 <body>
@@ -36,6 +36,16 @@
             <div class="os-week-card" data-val="Settimana 3 (13 – 17 Lug)" onclick="selectWeek(this)">
                 <div class="date">Settimana 3</div>
                 <div class="range">13 – 17 Luglio</div>
+            </div>
+        </div>
+
+        <!-- Availability Panel -->
+        <div class="os-avail-panel" id="avail-panel">
+            <div class="os-avail-title">Posti Disponibili</div>
+            <div id="avail-rows"></div>
+            <div class="os-avail-legend">
+                <span><span class="leg-dot leg-free"></span> Disponibile</span>
+                <span><span class="leg-dot leg-taken"></span> Occupato</span>
             </div>
         </div>
     </div>
@@ -264,6 +274,80 @@
     const API = '../api/api.php?module=outseason&action=';
     const PF = 650, PD = 400;
     let selFormula='', selWeek='', selPay='', discPct=0, ppOrderId='', eId=0;
+    let availData = { by_role: {}, quotas: {} };
+
+    // ─── Availability ───────────────────────────────────────
+    const ROLE_CONFIG = [
+        { key: 'Palleggiatrice', icon: '🏐', label: 'Palleggiatrice' },
+        { key: 'Opposta',        icon: '💥', label: 'Opposta' },
+        { key: 'Schiacciatrice', icon: '⚡', label: 'Schiacciatrice' },
+        { key: 'Centrale',       icon: '🛡️', label: 'Centrale' },
+        { key: 'Libero',         icon: '🎯', label: 'Libero' },
+    ];
+
+    async function fetchAvailability() {
+        try {
+            const r = await fetch(API + 'publicStatus');
+            const d = await r.json();
+            if (d.data) {
+                availData.by_role = d.data.by_role || {};
+                availData.quotas = d.data.quotas || {};
+            }
+        } catch(e) { console.warn('Availability fetch failed', e); }
+    }
+
+    function renderAvailability(weekVal) {
+        const panel = document.getElementById('avail-panel');
+        const container = document.getElementById('avail-rows');
+        if (!weekVal) { panel.classList.remove('visible'); return; }
+
+        const weekRoles = availData.by_role[weekVal] || {};
+        let html = '';
+
+        ROLE_CONFIG.forEach((role, idx) => {
+            const quota = availData.quotas[role.key] || 4;
+            const taken = weekRoles[role.key] || 0;
+            const free = Math.max(0, quota - taken);
+            const isFull = free === 0;
+
+            let dots = '';
+            for (let i = 0; i < quota; i++) {
+                const cls = i < taken ? 'taken' : 'free';
+                const delay = (idx * 60) + (i * 40);
+                dots += `<span class="os-avail-dot ${cls}" style="animation-delay:${delay}ms" title="${i < taken ? 'Occupato' : 'Disponibile'}"></span>`;
+            }
+
+            html += `<div class="os-avail-row" style="animation: avSlide 0.4s ease ${idx * 80}ms both">
+                <div class="os-avail-role">${role.icon} ${role.label}</div>
+                <div class="os-avail-dots">${dots}</div>
+                <div class="os-avail-count${isFull ? ' full' : ''}"><span class="avail-num">${free}</span>/${quota}</div>
+            </div>`;
+        });
+
+        container.innerHTML = html;
+        panel.classList.remove('visible');
+        // Force reflow for re-animation
+        void panel.offsetWidth;
+        panel.classList.add('visible');
+        updateRoleSelect(weekVal);
+    }
+
+    function updateRoleSelect(weekVal) {
+        const sel = document.getElementById('ruolo');
+        if (!sel) return;
+        const weekRoles = availData.by_role[weekVal] || {};
+        Array.from(sel.options).forEach(opt => {
+            if (!opt.value) return; // skip placeholder
+            const quota = availData.quotas[opt.value] || 4;
+            const taken = weekRoles[opt.value] || 0;
+            const isFull = taken >= quota;
+            opt.disabled = isFull;
+            opt.textContent = opt.value + (isFull ? ' (COMPLETO)' : ` (${quota - taken} posti)`);
+        });
+    }
+
+    // Fetch on page load
+    fetchAvailability();
 
     window.selectWeek = function(el) {
         document.querySelectorAll('.os-week-card').forEach(c=>c.classList.remove('selected'));
@@ -271,6 +355,7 @@
         selWeek = el.dataset.val;
         document.getElementById('settimana_scelta').value = selWeek;
         clearErr('settimana_scelta');
+        renderAvailability(selWeek);
     };
     window.selectFormula = function(el) {
         document.querySelectorAll('.os-formula-card').forEach(c=>c.classList.remove('selected'));
