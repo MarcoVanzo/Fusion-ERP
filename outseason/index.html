@@ -451,16 +451,17 @@
 
     REQ.forEach(id=>{const el=document.getElementById(id);if(!el)return;el.addEventListener('blur',()=>{if(!el.value.trim())showErr(id);else if(id==='email'&&!isEm(el.value.trim()))showErr(id);else clearErr(id);});el.addEventListener('input',()=>clearErr(id));});
 
+    const LABEL_MAP={nome_e_cognome:'Nome e Cognome',email:'Email',cellulare:'Cellulare',codice_fiscale:'Codice Fiscale',data_di_nascita:'Data di Nascita',indirizzo:'Indirizzo',cap:'CAP',citta:'Città',provincia:'Provincia',ruolo:'Ruolo',taglia_kit:'Taglia KIT',settimana_scelta:'Settimana',formula_scelta:'Formula',come_vuoi_pagare:'Metodo Pagamento',privacy:'Privacy',terms:'Termini e Condizioni'};
     function validate(){
         clearAll();let bad=false;let badFields=[];
-        REQ.forEach(id=>{const el=document.getElementById(id);if(!el||!el.value.trim()){showErr(id);bad=true;badFields.push(id);}else if(id==='email'&&!isEm(el.value.trim())){showErr(id);bad=true;badFields.push(id+' (email invalida)');}});
-        if(!selWeek){showErr('settimana_scelta');bad=true;badFields.push('settimana_scelta');}
-        if(!selFormula){showErr('formula_scelta');bad=true;badFields.push('formula_scelta');}
-        if(!selPay){showErr('come_vuoi_pagare');bad=true;badFields.push('come_vuoi_pagare');}
-        if(!document.getElementById('privacy').checked){showErr('privacy');bad=true;badFields.push('privacy');}
-        if(!document.getElementById('terms').checked){showErr('terms');bad=true;badFields.push('terms');}
+        REQ.forEach(id=>{const el=document.getElementById(id);if(!el||!el.value.trim()){showErr(id);bad=true;badFields.push(LABEL_MAP[id]||id);}else if(id==='email'&&!isEm(el.value.trim())){showErr(id);bad=true;badFields.push('Email (non valida)');}});
+        if(!selWeek){showErr('settimana_scelta');bad=true;badFields.push(LABEL_MAP.settimana_scelta);}
+        if(!selFormula){showErr('formula_scelta');bad=true;badFields.push(LABEL_MAP.formula_scelta);}
+        if(!selPay){showErr('come_vuoi_pagare');bad=true;badFields.push(LABEL_MAP.come_vuoi_pagare);}
+        if(!document.getElementById('privacy').checked){showErr('privacy');bad=true;badFields.push(LABEL_MAP.privacy);}
+        if(!document.getElementById('terms').checked){showErr('terms');bad=true;badFields.push(LABEL_MAP.terms);}
         if(bad){console.warn('[OutSeason] Validation failed:',badFields);const f=document.querySelector('.error');if(f)f.scrollIntoView({behavior:'smooth',block:'center'});}
-        return !bad;
+        return bad ? badFields : true;
     }
 
     function payload(){
@@ -471,7 +472,7 @@
     function showGE(m){const g=document.getElementById('os-global-error');g.textContent=m;g.style.display='block';g.scrollIntoView({behavior:'smooth',block:'center'});}
 
     document.getElementById('os-form').addEventListener('submit',async e=>{
-        e.preventDefault();if(selPay!=='Bonifico Bancario')return;if(!validate())return;
+        e.preventDefault();if(selPay!=='Bonifico Bancario')return;if(validate()!==true)return;
         const b=document.getElementById('os-submit');b.classList.add('loading');b.disabled=true;
         try{const r=await fetch(API+'publicRegister',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload())});const d=await r.json();if(!r.ok||d.error)throw new Error(d.message||d.error||'Errore');showOK();}
         catch(e){showGE(e.message||'Errore. Riprova.');}
@@ -501,7 +502,7 @@
         paypal.Buttons({
             style:{layout:'vertical',color:'gold',shape:'rect',label:'paypal',height:48},
             createOrder:async()=>{
-                if(!validate())throw new Error('Compila tutti i campi');
+                const v=validate();if(v!==true){showGE('Campi mancanti: '+v.join(', '));throw new Error('Campi mancanti');}
                 const r=await fetch(API+'publicRegister',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload())});
                 const d=await r.json();
                 console.log('[OutSeason] publicRegister response:', d);
