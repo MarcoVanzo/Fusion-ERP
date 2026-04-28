@@ -1,7 +1,7 @@
 {
   "version": 3,
-  "generated_at": "2026-04-28T23:08:39.952Z",
-  "file_count": 1741,
+  "generated_at": "2026-04-28T23:10:58.236Z",
+  "file_count": 1743,
   "files": [
     {
       "path": ".env.prod",
@@ -177,7 +177,7 @@
     },
     {
       "path": "api/Modules/OpenDay/OpenDayController.php",
-      "hash": "133728185f26f000dca349d468076308fcb10066d68af43c8e99e7d73fe321a8"
+      "hash": "30d11fcae39dbc3f5dde9da3ecdced409ff4fdd13a92b58918c59308649b40c0"
     },
     {
       "path": "api/Modules/OutSeason/OutSeasonController.php",
@@ -1557,7 +1557,7 @@
     },
     {
       "path": "index.html",
-      "hash": "f38b0ac1b9507f378b1308d868e4902c634e414a0cebbedc29a0a8bc0e8b6d07"
+      "hash": "21ffd186f258b09d450ce2ccd2d1af7c61c882cf6b8a615c3d878db33d268152"
     },
     {
       "path": "js/api/athletes.api.js",
@@ -2030,6 +2030,14 @@
     {
       "path": "open-day/assets/logo-nome.png",
       "hash": "34cc30869f12f1687b453b263582ccb7a9b13f5b2eeacd0e9d71b32b2dac9ecb"
+    },
+    {
+      "path": "open-day/attachments/liberatoria immagini minori.doc",
+      "hash": "8256ca6578b5b500d2512bbb021a74a71db4847278ef0e900fa4b7c712d8d78f"
+    },
+    {
+      "path": "open-day/attachments/scarico responsabilit….docx",
+      "hash": "ea753333a9a932bf5aefb12e0538b09ebecb6c5178fe7ca8085a1c27de43f0a4"
     },
     {
       "path": "open-day/index.html",

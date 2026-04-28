@@ -383,19 +383,33 @@ class OpenDayController
         $subject = 'Conferma Registrazione — Open Day Fusion Team Volley';
         $htmlBody = $this->buildConfirmationEmail($data);
 
+        // Attachments from open-day/attachments/ directory (same docs as Talent Day)
+        $attachDir = realpath(__DIR__ . '/../../../open-day/attachments');
+        $attachments = [];
+        if ($attachDir && is_dir($attachDir)) {
+            foreach (glob($attachDir . '/*') as $file) {
+                if (is_file($file) && !str_contains(basename($file), '.DS_Store')) {
+                    $attachments[] = $file;
+                }
+            }
+        }
+
         $staffEmail = getenv('OPEN_DAY_STAFF_EMAIL') ?: 'info@fusionteamvolley.it';
 
-        Mailer::send(
+        Mailer::sendWithEmbeddedImages(
             $email,
             "{$nome} {$cognome}",
             $subject,
             $htmlBody,
             '',
+            $attachments,
+            [], // no embedded images
+            [], // cc
             $staffEmail,
             'Fusion Team Volley'
         );
 
-        // Staff copy
+        // Staff copy (no attachments needed)
         Mailer::send(
             $staffEmail,
             'Staff Open Day',
