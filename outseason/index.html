@@ -502,7 +502,7 @@
         paypal.Buttons({
             style:{layout:'vertical',color:'gold',shape:'rect',label:'paypal',height:48},
             createOrder:async()=>{
-                const v=validate();if(v!==true){showGE('Campi mancanti: '+v.join(', '));throw new Error('Campi mancanti');}
+                const v=validate();if(v!==true)throw new Error('Compila: '+v.join(', '));
                 const r=await fetch(API+'publicRegister',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload())});
                 const d=await r.json();
                 console.log('[OutSeason] publicRegister response:', d);
