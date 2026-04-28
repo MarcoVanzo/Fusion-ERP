@@ -322,6 +322,17 @@ class OpenDayController
             Response::error('Indirizzo email genitore non valido', 400);
         }
 
+        // Date of birth validation
+        $dob = trim($data['data_nascita'] ?? '');
+        $dobDate = \DateTime::createFromFormat('Y-m-d', $dob);
+        if (!$dobDate || $dobDate->format('Y-m-d') !== $dob) {
+            Response::error('Data di nascita non valida', 400);
+        }
+        $year = (int)$dobDate->format('Y');
+        if ($year < 1900 || $year > (int)date('Y')) {
+            Response::error('Anno di nascita non valido', 400);
+        }
+
         // Annata from payload or current year
         $annata = !empty($data['annata']) ? (int)$data['annata'] : (int)date('Y');
 

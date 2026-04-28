@@ -200,7 +200,7 @@ const OpenDay = () => {
                                             </div>
                                             <div className="space-y-2">
                                                 <label className={labelCls}>Data di Nascita *</label>
-                                                <input type="date" name="data_nascita" required value={formData.data_nascita} onChange={handleChange} className={inputCls} />
+                                                <input type="date" name="data_nascita" required min="2005-01-01" max="2020-12-31" value={formData.data_nascita} onChange={handleChange} className={inputCls} />
                                             </div>
                                             <div className="space-y-2">
                                                 <label className={labelCls}>Email *</label>
