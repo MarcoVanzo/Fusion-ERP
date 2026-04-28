@@ -20,6 +20,8 @@ use FusionERP\Shared\Database;
 use FusionERP\Shared\Response;
 use FusionERP\Shared\AIService;
 use FusionERP\Shared\TenantContext;
+use FusionERP\Shared\PayPalService;
+use FusionERP\Shared\Mailer;
 
 class OutSeasonController
 {
@@ -311,8 +313,8 @@ class OutSeasonController
         // ── Determine amount per formula ──────────────────────────────────────────────────
         // Prices are read from env vars to avoid hard-coding financial values.
         // OUTSEASON_PRICE_FULL and OUTSEASON_PRICE_PARTIAL can be set in .env.
-        $priceFull = (int)(($_ENV['OUTSEASON_PRICE_FULL'] ?? getenv('OUTSEASON_PRICE_FULL')) ?: 250);
-        $pricePartial = (int)(($_ENV['OUTSEASON_PRICE_PARTIAL'] ?? getenv('OUTSEASON_PRICE_PARTIAL')) ?: 150);
+        $priceFull = (int)(($_ENV['OUTSEASON_PRICE_FULL'] ?? getenv('OUTSEASON_PRICE_FULL')) ?: 650);
+        $pricePartial = (int)(($_ENV['OUTSEASON_PRICE_PARTIAL'] ?? getenv('OUTSEASON_PRICE_PARTIAL')) ?: 400);
 
         $entriesText = '';
         $bonificoList = [];
@@ -553,6 +555,245 @@ PROMPT;
         $rows = $stmt->fetchAll();
 
         Response::success(['season_key' => $seasonKey, 'results' => $rows]);
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════════
+    // PUBLIC ENDPOINTS (no auth — used by standalone registration form)
+    // ══════════════════════════════════════════════════════════════════════════════
+
+    private static function setCorsPublic(): void
+    {
+        $allowed = ['https://www.fusionteamvolley.it', 'https://fusionteamvolley.it'];
+        $appUrl = getenv('APP_URL') ?: '';
+        if ($appUrl) $allowed[] = rtrim($appUrl, '/');
+        $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+        foreach ($allowed as $ao) {
+            $p = parse_url($ao);
+            $base = ($p['scheme'] ?? 'https') . '://' . ($p['host'] ?? '');
+            if (!empty($p['port'])) $base .= ':' . $p['port'];
+            if ($origin === $base) { header("Access-Control-Allow-Origin: {$origin}"); header('Vary: Origin'); break; }
+        }
+        header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+        header('Access-Control-Allow-Headers: Content-Type');
+        if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
+    }
+
+    private static function priceFull(): int  { return (int)(($_ENV['OUTSEASON_PRICE_FULL'] ?? getenv('OUTSEASON_PRICE_FULL')) ?: 650); }
+    private static function pricePartial(): int { return (int)(($_ENV['OUTSEASON_PRICE_PARTIAL'] ?? getenv('OUTSEASON_PRICE_PARTIAL')) ?: 400); }
+
+    /* publicStatus — GET registration counts per week */
+    public function publicStatus(): void
+    {
+        self::setCorsPublic();
+        header('Cache-Control: no-cache, no-store, must-revalidate');
+        $pdo = Database::getInstance();
+        $stmt = $pdo->prepare("SELECT settimana_scelta AS week, COUNT(*) AS count FROM outseason_entries WHERE tenant_id='TNT_fusion' AND season_key=:sk AND is_deleted=0 GROUP BY settimana_scelta");
+        $stmt->execute([':sk' => self::seasonKey()]);
+        Response::success(['counts' => $stmt->fetchAll(\PDO::FETCH_ASSOC)]);
+    }
+
+    /* validateDiscount — POST validate a discount code */
+    public function validateDiscount(): void
+    {
+        self::setCorsPublic();
+        $body = json_decode(file_get_contents('php://input'), true);
+        $code = strtoupper(trim((string)($body['code'] ?? '')));
+        if (empty($code)) { Response::error('Codice sconto mancante.', 400); }
+
+        $pdo = Database::getInstance();
+        $stmt = $pdo->prepare("SELECT id, discount_percent, max_uses, current_uses FROM outseason_discount_codes WHERE tenant_id='TNT_fusion' AND code=:code AND season_key=:sk AND is_active=1");
+        $stmt->execute([':code' => $code, ':sk' => self::seasonKey()]);
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        if (!$row) { Response::error('Codice sconto non valido.', 404); }
+        if ($row['max_uses'] !== null && (int)$row['current_uses'] >= (int)$row['max_uses']) {
+            Response::error('Codice sconto esaurito.', 410);
+        }
+        Response::success(['discount_percent' => (float)$row['discount_percent']]);
+    }
+
+    /* publicRegister — POST save entry + create PayPal order (or bonifico) */
+    public function publicRegister(): void
+    {
+        try {
+        self::setCorsPublic();
+        $data = json_decode(file_get_contents('php://input'), true);
+        if (!$data) { Response::error('Dati non validi.', 400); }
+
+        // Validation
+        $required = ['nome_e_cognome','email','cellulare','codice_fiscale','data_di_nascita','indirizzo','cap','citta','provincia','ruolo','taglia_kit','settimana_scelta','formula_scelta','come_vuoi_pagare'];
+        foreach ($required as $f) {
+            if (empty(trim((string)($data[$f] ?? '')))) { Response::error("Il campo {$f} è obbligatorio.", 400); }
+        }
+        if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) { Response::error('Email non valida.', 400); }
+        if (empty($data['privacy_consent'])) { Response::error('Consenso privacy obbligatorio.', 400); }
+
+        // Price calculation
+        $isFullMaster = str_contains((string)$data['formula_scelta'], 'Full');
+        $basePrice = $isFullMaster ? self::priceFull() : self::pricePartial();
+        $discountPct = 0.0;
+        $discountCode = strtoupper(trim((string)($data['codice_sconto'] ?? '')));
+
+        if (!empty($discountCode)) {
+            $pdo2 = Database::getInstance();
+            $ds = $pdo2->prepare("SELECT id, discount_percent, max_uses, current_uses FROM outseason_discount_codes WHERE tenant_id='TNT_fusion' AND code=:c AND season_key=:sk AND is_active=1");
+            $ds->execute([':c' => $discountCode, ':sk' => self::seasonKey()]);
+            $dc = $ds->fetch(\PDO::FETCH_ASSOC);
+            if ($dc && ($dc['max_uses'] === null || (int)$dc['current_uses'] < (int)$dc['max_uses'])) {
+                $discountPct = (float)$dc['discount_percent'];
+            }
+        }
+        $finalPrice = round($basePrice * (1 - $discountPct / 100), 2);
+        $paymentMethod = trim((string)$data['come_vuoi_pagare']);
+
+        // Insert entry
+        $pdo = Database::getInstance();
+        $tid = 'TNT_fusion';
+        $sql = "INSERT INTO outseason_entries (tenant_id, season_key, nome_e_cognome, email, cellulare, codice_fiscale, data_di_nascita, indirizzo, cap, citta, provincia, club_di_appartenenza, ruolo, taglia_kit, settimana_scelta, formula_scelta, come_vuoi_pagare, codice_sconto, entry_date, entry_status, payment_status, payment_method, synced_at) VALUES (:tid,:sk,:nome,:email,:cell,:cf,:dob,:addr,:cap,:citta,:prov,:club,:ruolo,:kit,:week,:formula,:pagare,:sconto,NOW(),'Submitted',:ps,:pm,NOW())";
+        $stmt = $pdo->prepare($sql);
+        $ps = ($paymentMethod === 'Bonifico Bancario') ? 'PENDING' : 'PENDING';
+        $pm = ($paymentMethod === 'Bonifico Bancario') ? 'BONIFICO' : 'PAYPAL';
+        $stmt->execute([
+            ':tid'=>$tid, ':sk'=>self::seasonKey(), ':nome'=>trim($data['nome_e_cognome']),
+            ':email'=>trim($data['email']), ':cell'=>$data['cellulare']??null,
+            ':cf'=>$data['codice_fiscale']??null, ':dob'=>$data['data_di_nascita']??null,
+            ':addr'=>$data['indirizzo']??null, ':cap'=>$data['cap']??null,
+            ':citta'=>$data['citta']??null, ':prov'=>$data['provincia']??null,
+            ':club'=>$data['club_di_appartenenza']??null, ':ruolo'=>$data['ruolo']??null,
+            ':kit'=>$data['taglia_kit']??null, ':week'=>$data['settimana_scelta']??null,
+            ':formula'=>$data['formula_scelta']??null, ':pagare'=>$paymentMethod,
+            ':sconto'=>$discountCode?:null, ':ps'=>$ps, ':pm'=>$pm,
+        ]);
+        $entryId = (int)$pdo->lastInsertId();
+
+        // Increment discount code usage
+        if (!empty($discountCode) && $discountPct > 0) {
+            $pdo->prepare("UPDATE outseason_discount_codes SET current_uses=current_uses+1 WHERE tenant_id='TNT_fusion' AND code=:c AND season_key=:sk")->execute([':c'=>$discountCode,':sk'=>self::seasonKey()]);
+        }
+
+        // Bonifico: no PayPal, send info email
+        if ($paymentMethod === 'Bonifico Bancario') {
+            $this->sendBonificoEmail($data, $finalPrice, $entryId);
+            Response::success(['entry_id'=>$entryId, 'payment_method'=>'BONIFICO', 'amount'=>$finalPrice]);
+            return;
+        }
+
+        // PayPal: create order
+        $paypal = new PayPalService();
+        $order = $paypal->createOrder($finalPrice, "OutSeason " . self::seasonKey() . " — " . trim($data['nome_e_cognome']), ['entry_id'=>$entryId, 'season'=>self::seasonKey()]);
+        $pdo->prepare("UPDATE outseason_entries SET paypal_order_id=:oid WHERE id=:id")->execute([':oid'=>$order['id'], ':id'=>$entryId]);
+
+        Response::success([
+            'entry_id'=>$entryId, 'paypal_order_id'=>$order['id'],
+            'paypal_client_id'=>$paypal->getClientId(), 'amount'=>$finalPrice,
+        ]);
+        } catch (\Throwable $e) {
+            Response::error('Errore: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /* capturePayment — POST capture PayPal payment after buyer approval */
+    public function capturePayment(): void
+    {
+        try {
+        self::setCorsPublic();
+        $body = json_decode(file_get_contents('php://input'), true);
+        $orderId = trim((string)($body['paypal_order_id'] ?? ''));
+        $entryId = (int)($body['entry_id'] ?? 0);
+        if (empty($orderId) || $entryId < 1) { Response::error('Parametri mancanti.', 400); }
+
+        $pdo = Database::getInstance();
+        $check = $pdo->prepare("SELECT id, nome_e_cognome, email, formula_scelta, settimana_scelta, paypal_order_id, payment_status FROM outseason_entries WHERE id=:id AND tenant_id='TNT_fusion'");
+        $check->execute([':id'=>$entryId]);
+        $entry = $check->fetch(\PDO::FETCH_ASSOC);
+        if (!$entry) { Response::error('Iscrizione non trovata.', 404); }
+        if ($entry['paypal_order_id'] !== $orderId) { Response::error('Order ID non corrispondente.', 403); }
+        if ($entry['payment_status'] === 'PAID') { Response::success(['already_paid'=>true]); return; }
+
+        $paypal = new PayPalService();
+        $capture = $paypal->captureOrder($orderId);
+
+        if (($capture['status'] ?? '') !== 'COMPLETED') {
+            $pdo->prepare("UPDATE outseason_entries SET payment_status='FAILED' WHERE id=:id")->execute([':id'=>$entryId]);
+            Response::error('Pagamento non completato. Status: ' . ($capture['status'] ?? 'unknown'), 422);
+        }
+
+        $captureId = $capture['purchase_units'][0]['payments']['captures'][0]['id'] ?? null;
+        $payerEmail = $capture['payer']['email_address'] ?? null;
+        $paymentSource = array_key_first($capture['payment_source'] ?? []) ?? 'paypal';
+
+        $pdo->prepare("UPDATE outseason_entries SET payment_status='PAID', paypal_capture_id=:cid, payment_method=:pm, paid_at=NOW() WHERE id=:id")
+            ->execute([':cid'=>$captureId, ':pm'=>strtoupper($paymentSource), ':id'=>$entryId]);
+
+        // Send confirmation email
+        $this->sendConfirmationEmail($entry, $captureId, $payerEmail);
+
+        Response::success(['paid'=>true, 'capture_id'=>$captureId, 'payment_source'=>$paymentSource]);
+        } catch (\Throwable $e) {
+            Response::error('Errore cattura pagamento: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /* ─── Email helpers ───────────────────────────────────────────────── */
+
+    private function sendConfirmationEmail(array $entry, ?string $captureId, ?string $payerEmail): void
+    {
+        $nome = htmlspecialchars(trim($entry['nome_e_cognome'] ?? ''));
+        $email = trim($entry['email'] ?? '');
+        $formula = htmlspecialchars($entry['formula_scelta'] ?? '');
+        $settimana = htmlspecialchars($entry['settimana_scelta'] ?? '');
+        $html = $this->buildOutSeasonEmail($nome, $formula, $settimana, $captureId, 'PayPal/Carta');
+        Mailer::send($email, $nome, 'Conferma Iscrizione OutSeason ' . self::seasonKey() . ' — Fusion Team Volley', $html);
+    }
+
+    private function sendBonificoEmail(array $data, float $amount, int $entryId): void
+    {
+        $nome = htmlspecialchars(trim($data['nome_e_cognome'] ?? ''));
+        $email = trim($data['email'] ?? '');
+        $formula = htmlspecialchars($data['formula_scelta'] ?? '');
+        $settimana = htmlspecialchars($data['settimana_scelta'] ?? '');
+        $html = $this->buildOutSeasonEmail($nome, $formula, $settimana, "BON-{$entryId}", 'Bonifico Bancario', $amount);
+        Mailer::send($email, $nome, 'Iscrizione OutSeason ' . self::seasonKey() . ' — Istruzioni Bonifico', $html);
+    }
+
+    private function buildOutSeasonEmail(string $nome, string $formula, string $settimana, ?string $txId, string $metodo, ?float $importoBonifico = null): string
+    {
+        $isBonifico = ($metodo === 'Bonifico Bancario');
+        $statusBadge = $isBonifico
+            ? '<span style="background:#f39c12;color:#fff;padding:4px 12px;border-radius:4px;font-weight:700;">IN ATTESA BONIFICO</span>'
+            : '<span style="background:#27ae60;color:#fff;padding:4px 12px;border-radius:4px;font-weight:700;">PAGAMENTO CONFERMATO ✓</span>';
+        $bonificoInfo = $isBonifico
+            ? '<div style="background:#fff8e1;border-left:4px solid #f39c12;padding:16px;margin:16px 0;border-radius:4px;"><p style="margin:0 0 8px;font-weight:700;color:#e67e22;">Istruzioni Bonifico</p><p style="margin:4px 0;font-size:14px;">Importo: <strong>€' . number_format($importoBonifico ?? 0, 2, ',', '.') . '</strong></p><p style="margin:4px 0;font-size:14px;">IBAN: <strong>IT XX XXXX XXXX XXXX XXXX XXXX XXX</strong></p><p style="margin:4px 0;font-size:14px;">Causale: <strong>OutSeason ' . self::seasonKey() . ' — ' . $nome . '</strong></p></div>'
+            : '';
+
+        return <<<HTML
+<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#1a1a2e;font-family:'Segoe UI',Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#1a1a2e;"><tr><td align="center" style="padding:40px 16px;">
+<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.3);">
+<tr><td style="background:linear-gradient(135deg,#ff6b35,#9b59b6);padding:32px 24px;text-align:center;">
+<h1 style="margin:0;font-size:24px;color:#fff;font-weight:800;letter-spacing:0.05em;">OUTSEASON {$this->seasonKey()}</h1>
+<p style="margin:8px 0 0;color:rgba(255,255,255,0.85);font-size:14px;">Fusion Team Volley</p>
+</td></tr>
+<tr><td style="padding:32px;">
+<p style="font-size:16px;color:#333;">Ciao <strong>{$nome}</strong>,</p>
+<p style="font-size:15px;color:#555;line-height:1.7;">la tua iscrizione all'OutSeason {$this->seasonKey()} è stata registrata con successo!</p>
+<div style="text-align:center;margin:20px 0;">{$statusBadge}</div>
+<table width="100%" style="background:#f8f9fa;border-radius:8px;margin:20px 0;border-collapse:collapse;">
+<tr><td style="padding:12px 16px;border-bottom:1px solid #eee;font-size:14px;color:#888;">Formula</td><td style="padding:12px 16px;border-bottom:1px solid #eee;font-size:14px;font-weight:600;">{$formula}</td></tr>
+<tr><td style="padding:12px 16px;border-bottom:1px solid #eee;font-size:14px;color:#888;">Settimana</td><td style="padding:12px 16px;border-bottom:1px solid #eee;font-size:14px;font-weight:600;">{$settimana}</td></tr>
+<tr><td style="padding:12px 16px;font-size:14px;color:#888;">Metodo Pagamento</td><td style="padding:12px 16px;font-size:14px;font-weight:600;">{$metodo}</td></tr>
+</table>
+{$bonificoInfo}
+<p style="border-top:1px solid #eee;padding-top:16px;color:#888;font-size:12px;">ID Transazione: {$txId}</p>
+</td></tr>
+<tr><td style="padding:20px;background:#f4f4f8;text-align:center;border-top:1px solid #eee;">
+<p style="margin:0;font-size:12px;color:#999;">Fusion Team Volley — info@fusionteamvolley.it</p>
+</td></tr>
+</table>
+</td></tr></table>
+</body></html>
+HTML;
     }
 
     /* ─────────────────────────────────────────────────────────────────────

@@ -86,9 +86,11 @@ if ($module === 'whatsapp') {
 // Security: Require X-Requested-With header for all state-changing requests (CSRF protection)
 // Exception: public endpoints that are called from standalone forms (e.g. Talent Day registration)
 $publicEndpoints = [
-    'talentday' => ['publicRegister'],
-    'webhooks'  => ['stripe'],
-    'whatsapp'  => ['receive', 'verify'],
+    'talentday'  => ['publicRegister'],
+    'openday'    => ['publicRegister', 'publicStatus'],
+    'outseason'  => ['publicRegister', 'capturePayment', 'publicStatus', 'validateDiscount'],
+    'webhooks'   => ['stripe'],
+    'whatsapp'   => ['receive', 'verify'],
 ];
 $isPublicEndpoint = isset($publicEndpoints[$module]) && in_array($action, $publicEndpoints[$module], true);
 
@@ -156,6 +158,7 @@ try {
             'network' => dispatch('Network', $action),
             'scouting' => dispatch('Scouting', $action),
             'talentday' => dispatch('TalentDay', $action),
+            'openday'   => dispatch('OpenDay', $action),
             'esignature' => dispatch('ESignature', $action),
             'tenant' => dispatch('Tenant', $action),
             'whatsapp' => dispatchWebhook($action),
@@ -254,6 +257,7 @@ function dispatch(string $controllerName, string $action): void
         'ESignature' => ['callback'],   // OpenAPI.it e-signature webhook
         'Social'     => ['callback'],   // Meta OAuth redirect
         'TalentDay'  => ['publicRegister', 'publicStatus'], // Public registration form
+        'OpenDay'    => ['publicRegister', 'publicStatus'], // Public Open Day registration
     ];
     $isModuleException = isset($modulePublicExceptions[$controllerName])
         && in_array($action, $modulePublicExceptions[$controllerName], true);

@@ -26,6 +26,7 @@ const OutSeason = (() => {
     },
     i = "2026";
   function r(n) {
+    if (n.payment_status === 'PAID') return true;
     const t = n.order_summary || n.OrderSummary || "";
     return t.includes("Paid") && !t.includes("Unpaid");
   }
@@ -33,7 +34,7 @@ const OutSeason = (() => {
     return (n.formula_scelta || n.FormulaScelta || "").includes("Full");
   }
   function l(n) {
-    return d(n) ? 250 : 150;
+    return d(n) ? 650 : 400;
   }
   function c(n) {
     return n.nome_e_cognome || n.NomeECognome || "";

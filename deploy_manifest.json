@@ -1,7 +1,7 @@
 {
   "version": 3,
-  "generated_at": "2026-04-28T21:40:44.941Z",
-  "file_count": 1722,
+  "generated_at": "2026-04-28T22:46:17.535Z",
+  "file_count": 1739,
   "files": [
     {
       "path": ".env.prod",
@@ -176,8 +176,12 @@
       "hash": "bbfb9f45fc3736e50dc3fed41d41141476a14d8e6cc977da7e4243ddf04ef7a5"
     },
     {
+      "path": "api/Modules/OpenDay/OpenDayController.php",
+      "hash": "605c3e69ea3717381cb901bef0a5d042fd2a5d1f05e4abd7af0d8d8b542d4e98"
+    },
+    {
       "path": "api/Modules/OutSeason/OutSeasonController.php",
-      "hash": "dfc08e6c67f3885ea98264103534528056583e439bd37fa92b7fd435111b72e7"
+      "hash": "9ce68794c36b704e83c7f15b9e124dc395720121514b017dab8d2cc77b9a1d50"
     },
     {
       "path": "api/Modules/Payments/PaymentsController.php",
@@ -357,7 +361,7 @@
     },
     {
       "path": "api/router.php",
-      "hash": "703ba08bd9c0edd00d4e7616f001f8828cd377413259843a9e2525594a0347eb"
+      "hash": "62bc940950820c539d6f2fba67f6dcb5f47c881b59a3ca41ee4c452fb88af967"
     },
     {
       "path": "api/self_heal.php",
@@ -414,6 +418,10 @@
     {
       "path": "api/Shared/NotificationService.php",
       "hash": "856c3cb7c67005d38b412585fb618e299902935400f12df009b7ae40e38ce22c"
+    },
+    {
+      "path": "api/Shared/PayPalService.php",
+      "hash": "a78d0a3168128ecf9df133ea9eb1da264c674c385e6f4bdbddbb49bf00cce280"
     },
     {
       "path": "api/Shared/RateLimiter.php",
@@ -1212,6 +1220,10 @@
       "hash": "ae8fcad31c3693a75e2c99a63e6d0823f86f683a4e897844b84e92c68990ec3f"
     },
     {
+      "path": "db/migrations/V127__open_day.sql",
+      "hash": "010595d690e3377ea7f220c68e387b2b7bc32d3f5928267f74294414600d1629"
+    },
+    {
       "path": "deploy_state.json",
       "hash": "e4e5d5698de0f46e78ac279c8024cd8131a53e4fa4eb1d1def49460fbbd44271"
     },
@@ -1537,7 +1549,7 @@
     },
     {
       "path": "index.html",
-      "hash": "86dbe30fb32e5500a5e12fc33b952b1548fd210b5a2d65e603dc0191f8ff8acf"
+      "hash": "2813f243fbbc055111ae01a12c2be1e090c9654d836175652b7c1371e740413b"
     },
     {
       "path": "js/api/athletes.api.js",
@@ -1557,7 +1569,7 @@
     },
     {
       "path": "js/config/navigation.json",
-      "hash": "4c83745ffddfd21df18aaf8056c042d037b228b629241504259f8b8e9c4c0e90"
+      "hash": "bede8969575f9a522c917ab60fdbabe21f8edc80cc64e6ba7533c5c435ff73c2"
     },
     {
       "path": "js/core/auth.js",
@@ -1585,7 +1597,7 @@
     },
     {
       "path": "js/core/router.js",
-      "hash": "679f37d556a727feeb0637c8a35ead17c1b598ca692fd4d52de0cd995cebace0"
+      "hash": "fcdb16829b997483a1f1725554e8c3b5c4eee963832a6875b82889747582da2a"
     },
     {
       "path": "js/core/sanitize.js",
@@ -1768,8 +1780,20 @@
       "hash": "29db3a81fb0eba7e1917c880d7e8643c9bf8c0b51aa8981c9a41e4c92d8d0067"
     },
     {
+      "path": "js/modules/openday/OpenDay.js",
+      "hash": "b9a109939df92163805a0666fa8d625b8bf999a64d71a0248019c339f3d7d952"
+    },
+    {
+      "path": "js/modules/openday/OpenDayAPI.js",
+      "hash": "aab13962c752e6cb838bcd1fc6d29dedd46d871a4d2003d6e77f8ea8d83c89f1"
+    },
+    {
+      "path": "js/modules/openday/OpenDayView.js",
+      "hash": "df1c94afd6d497b2377742d23dfa5ea9e898fdd3de8e3f2602c09f6762658dd5"
+    },
+    {
       "path": "js/modules/outseason.js",
-      "hash": "e352d4fe2530726eb158c3b1c8367f4ab2d439223342ba93088fb3ada6994e83"
+      "hash": "608e32293a128d26cdf6dff4b6887b924b286ec87a81bbf7b1f0657216c82380"
     },
     {
       "path": "js/modules/results.js",
@@ -1970,6 +1994,50 @@
     {
       "path": "metadata.xml",
       "hash": "693ea4cd4aacb15d5f9105dad1a4418f6e666b4ab83ad23c0b3e9f05232b0713"
+    },
+    {
+      "path": "migrations/outseason_paypal_migration.sql",
+      "hash": "42ac85854b5b1c36d7cedcb63770d92f8e8373ac9ced0d5b54fc4d87a904fa35"
+    },
+    {
+      "path": "open-day/assets/hero-1.jpg",
+      "hash": "7b10d045e914a7c1e13747e63f20d0aefa0721eb79c7193e6db52dbd069b2f8a"
+    },
+    {
+      "path": "open-day/assets/hero-2.jpg",
+      "hash": "23264c83d979d2034f0562b3b1b3411a15fa69415edddde029ce0727c14ed0c6"
+    },
+    {
+      "path": "open-day/assets/hero-3.jpg",
+      "hash": "61259a5c5a70038067c45ea0519c24dda1bfb534aa53163c9b27501e3107a143"
+    },
+    {
+      "path": "open-day/assets/hero-4.jpg",
+      "hash": "55d24515dc847a324dde8910b9487f51fe9f589eaaed3f185792cfb1c41c5bf9"
+    },
+    {
+      "path": "open-day/assets/logo-fusion.png",
+      "hash": "d52372f045c7c9f694010ebc167082210768a30a7af87ce7f57fe29e283e9562"
+    },
+    {
+      "path": "open-day/assets/logo-nome.png",
+      "hash": "34cc30869f12f1687b453b263582ccb7a9b13f5b2eeacd0e9d71b32b2dac9ecb"
+    },
+    {
+      "path": "open-day/index.html",
+      "hash": "4a8216625943c2f938999bb9a791c45cf9647668fee0d6175b911a082c8e8d9b"
+    },
+    {
+      "path": "open-day/style.css",
+      "hash": "2f38cfe74f2a7730f2d370d706f46f06cdf2f924e0b0646f60efe72268e2f3cf"
+    },
+    {
+      "path": "outseason/index.html",
+      "hash": "48647f22e3e13034f20f0c0025592e4c066d27d642c9ff878df9fcc03249430a"
+    },
+    {
+      "path": "outseason/style.css",
+      "hash": "ef8156c0acaabb4482399d80ee33c6efe99e02524d9a281f6dade43485cda82c"
     },
     {
       "path": "pdf_export_tool/export_website_pdf.js",

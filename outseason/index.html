@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OutSeason 2026 — Fusion Team Volley</title>
+    <meta name="description" content="Iscriviti al Master OutSeason 2026 di Fusion Team Volley. Cinque giorni intensi di allenamenti con coach professionisti.">
+    <meta property="og:title" content="Registrati — FTV Out Season Master">
+    <meta property="og:description" content="Master di alta specializzazione: Full Master €650 o Daily Master €400. Paga con carta, PayPal o bonifico.">
+    <meta property="og:image" content="https://www.fusionteamvolley.it/assets/logo-colorato.png">
+    <meta property="og:type" content="website">
+    <link rel="icon" href="https://www.fusionteamvolley.it/assets/logo-colorato.png" type="image/png">
+    <link rel="stylesheet" href="style.css?v=1003">
+    <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+</head>
+<body>
+
+<!-- ═══════════ HERO ═══════════ -->
+<header class="os-hero">
+    <div class="os-hero-bg"></div>
+    <div class="os-hero-content">
+        <img src="https://www.fusionteamvolley.it/assets/logo-colorato.png" alt="Fusion Team Volley" class="os-hero-logo">
+        <div class="os-hero-season">Master di Alta Specializzazione</div>
+        <h1><span>#</span>Fusion Out Season</h1>
+        <p class="os-hero-subtitle">Vivi un'esperienza unica e fai crescere il tuo talento. Cinque giorni intensi di allenamenti con i coach professionisti.</p>
+
+        <div class="os-weeks-strip">
+            <div class="os-week-card" data-val="Settimana 1 (29 Giu – 3 Lug)" onclick="selectWeek(this)">
+                <div class="date">Settimana 1</div>
+                <div class="range">29 Giu – 3 Luglio</div>
+            </div>
+            <div class="os-week-card" data-val="Settimana 2 (6 – 10 Lug)" onclick="selectWeek(this)">
+                <div class="date">Settimana 2</div>
+                <div class="range">6 – 10 Luglio</div>
+            </div>
+            <div class="os-week-card" data-val="Settimana 3 (13 – 17 Lug)" onclick="selectWeek(this)">
+                <div class="date">Settimana 3</div>
+                <div class="range">13 – 17 Luglio</div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- ═══════════ FORM ═══════════ -->
+<main class="os-container">
+    <form id="os-form" class="os-form-card" novalidate>
+        <div class="os-form-error" id="os-global-error"></div>
+        <input type="hidden" id="settimana_scelta" value="">
+
+        <!-- ═══ Formula ═══ -->
+        <div class="os-section">
+            <div class="os-section-title"><i class="ph ph-star"></i> Formula</div>
+            <div class="os-formula-cards">
+                <div class="os-formula-card" data-val="Full Master" onclick="selectFormula(this)">
+                    <div class="formula-name">Full Master</div>
+                    <div class="formula-price">€650</div>
+                    <div class="formula-desc">Settimana completa</div>
+                </div>
+                <div class="os-formula-card" data-val="Daily Master" onclick="selectFormula(this)">
+                    <div class="formula-name">Daily Master</div>
+                    <div class="formula-price">€400</div>
+                    <div class="formula-desc">Frequenza giornaliera</div>
+                </div>
+            </div>
+            <input type="hidden" id="formula_scelta" value="">
+            <span class="os-field-error" data-for="formula_scelta">Seleziona una formula</span>
+        </div>
+
+        <div class="os-divider"></div>
+
+        <!-- ═══ Dati Personali ═══ -->
+        <div class="os-section">
+            <div class="os-section-title"><i class="ph ph-user"></i> Dati Personali</div>
+            <div class="os-grid">
+                <div class="os-field">
+                    <label class="os-label">Nome e Cognome <span class="req">*</span></label>
+                    <input id="nome_e_cognome" class="os-input" type="text" placeholder="Nome Cognome" required>
+                    <span class="os-field-error" data-for="nome_e_cognome">Campo obbligatorio</span>
+                </div>
+                <div class="os-field">
+                    <label class="os-label">Email <span class="req">*</span></label>
+                    <input id="email" class="os-input" type="email" placeholder="email@esempio.it" required>
+                    <span class="os-field-error" data-for="email">Inserisci un'email valida</span>
+                </div>
+            </div>
+            <div class="os-grid" style="margin-top:14px">
+                <div class="os-field">
+                    <label class="os-label">Cellulare <span class="req">*</span></label>
+                    <input id="cellulare" class="os-input" type="tel" placeholder="+39 333 ..." required>
+                    <span class="os-field-error" data-for="cellulare">Campo obbligatorio</span>
+                </div>
+                <div class="os-field">
+                    <label class="os-label">Codice Fiscale <span class="req">*</span></label>
+                    <input id="codice_fiscale" class="os-input" type="text" placeholder="RSSMRA00A01H501Z" required>
+                    <span class="os-field-error" data-for="codice_fiscale">Campo obbligatorio</span>
+                </div>
+            </div>
+            <div class="os-grid" style="margin-top:14px">
+                <div class="os-field">
+                    <label class="os-label">Data di Nascita <span class="req">*</span></label>
+                    <input id="data_di_nascita" class="os-input" type="date" required>
+                    <span class="os-field-error" data-for="data_di_nascita">Campo obbligatorio</span>
+                </div>
+                <div class="os-field">
+                    <label class="os-label">Club di Appartenenza</label>
+                    <input id="club_di_appartenenza" class="os-input" type="text" placeholder="Nome del club">
+                </div>
+            </div>
+        </div>
+
+        <div class="os-divider"></div>
+
+        <!-- ═══ Indirizzo ═══ -->
+        <div class="os-section">
+            <div class="os-section-title"><i class="ph ph-map-pin"></i> Indirizzo di Residenza</div>
+            <div class="os-grid single">
+                <div class="os-field">
+                    <label class="os-label">Indirizzo <span class="req">*</span></label>
+                    <input id="indirizzo" class="os-input" type="text" placeholder="Via Roma, 1" required>
+                    <span class="os-field-error" data-for="indirizzo">Campo obbligatorio</span>
+                </div>
+            </div>
+            <div class="os-grid triple" style="margin-top:14px">
+                <div class="os-field">
+                    <label class="os-label">Città <span class="req">*</span></label>
+                    <input id="citta" class="os-input" type="text" placeholder="Venezia" required>
+                    <span class="os-field-error" data-for="citta">Campo obbligatorio</span>
+                </div>
+                <div class="os-field">
+                    <label class="os-label">CAP <span class="req">*</span></label>
+                    <input id="cap" class="os-input" type="text" placeholder="30100" required>
+                    <span class="os-field-error" data-for="cap">Campo obbligatorio</span>
+                </div>
+                <div class="os-field">
+                    <label class="os-label">Provincia <span class="req">*</span></label>
+                    <input id="provincia" class="os-input" type="text" placeholder="VE" maxlength="2" required>
+                    <span class="os-field-error" data-for="provincia">Campo obbligatorio</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="os-divider"></div>
+
+        <!-- ═══ Sport ═══ -->
+        <div class="os-section">
+            <div class="os-section-title"><i class="ph ph-volleyball"></i> Info Sportive</div>
+            <div class="os-grid">
+                <div class="os-field">
+                    <label class="os-label">Ruolo <span class="req">*</span></label>
+                    <select id="ruolo" class="os-select" required>
+                        <option value="">— Seleziona —</option>
+                        <option>Palleggiatrice</option><option>Opposta</option>
+                        <option>Schiacciatrice</option><option>Centrale</option><option>Libero</option>
+                    </select>
+                    <span class="os-field-error" data-for="ruolo">Seleziona il ruolo</span>
+                </div>
+                <div class="os-field">
+                    <label class="os-label">Taglia KIT <span class="req">*</span></label>
+                    <select id="taglia_kit" class="os-select" required>
+                        <option value="">— Seleziona —</option>
+                        <option>XXS</option><option>XS</option><option>S</option>
+                        <option>M</option><option>L</option><option>XL</option><option>XXL</option>
+                    </select>
+                    <span class="os-field-error" data-for="taglia_kit">Seleziona la taglia</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="os-divider"></div>
+
+        <!-- ═══ Codice Sconto ═══ -->
+        <div class="os-section">
+            <div class="os-section-title"><i class="ph ph-ticket"></i> Codice Sconto</div>
+            <div class="os-discount-row">
+                <div class="os-field">
+                    <input id="codice_sconto" class="os-input" type="text" placeholder="Inserisci codice (opzionale)">
+                </div>
+                <button type="button" class="os-discount-btn" id="btn-validate-discount">Applica</button>
+            </div>
+            <div class="os-discount-result" id="discount-result"></div>
+        </div>
+
+        <!-- ═══ Price Summary ═══ -->
+        <div class="os-price-summary" id="price-summary" style="display:none">
+            <div class="label">Totale da pagare</div>
+            <div><span class="original-price" id="original-price" style="display:none"></span></div>
+            <div class="amount" id="final-price">€0</div>
+            <div class="discount-info" id="discount-info" style="display:none"></div>
+        </div>
+
+        <div class="os-divider"></div>
+
+        <!-- ═══ Metodo Pagamento ═══ -->
+        <div class="os-section">
+            <div class="os-section-title"><i class="ph ph-credit-card"></i> Metodo di Pagamento</div>
+            <div class="os-payment-cards">
+                <div class="os-payment-card" data-val="Carta/PayPal" onclick="selectPayment(this)">
+                    <div class="pay-icon">💳</div>
+                    <div class="pay-label">Carta / PayPal</div>
+                </div>
+                <div class="os-payment-card" data-val="Bonifico Bancario" onclick="selectPayment(this)">
+                    <div class="pay-icon">🏦</div>
+                    <div class="pay-label">Bonifico Bancario</div>
+                </div>
+            </div>
+            <input type="hidden" id="come_vuoi_pagare" value="">
+            <span class="os-field-error" data-for="come_vuoi_pagare">Seleziona un metodo di pagamento</span>
+        </div>
+
+        <div class="os-divider"></div>
+
+        <!-- ═══ Privacy + Termini ═══ -->
+        <div class="os-section">
+            <div class="os-section-title"><i class="ph ph-shield-check"></i> Consensi Obbligatori</div>
+
+            <div class="os-checkbox-wrap">
+                <input type="checkbox" id="privacy" required>
+                <label for="privacy">
+                    Ho letto e accetto l'<a href="https://mvconsultingsas.sharepoint.com/sites/Pallavolo/Documenti%20condivisi/Forms/AllItems.aspx?id=%2Fsites%2FPallavolo%2FDocumenti%20condivisi%2FFUSION%20TEAM%20VOLLEY%2F2025%2D2026%2FOut%20Season%2FTesti%2FInformative%2FInformativa%20form%20di%20registrazione%2Epdf&parent=%2Fsites%2FPallavolo%2FDocumenti%20condivisi%2FFUSION%20TEAM%20VOLLEY%2F2025%2D2026%2FOut%20Season%2FTesti%2FInformative&p=true&ga=1" target="_blank" rel="noopener">Informativa sulla Privacy</a>
+                    e autorizzo il trattamento dei dati personali ai sensi del GDPR (Reg. UE 2016/679). <span class="req">*</span>
+                </label>
+            </div>
+            <span class="os-field-error" data-for="privacy" style="margin-left:28px">Devi accettare l'informativa privacy</span>
+
+            <div class="os-checkbox-wrap" style="margin-top:8px">
+                <input type="checkbox" id="terms" required>
+                <label for="terms">
+                    Ho letto e accetto i <a href="https://mvconsultingsas.sharepoint.com/:b:/s/Pallavolo/IQA-F1DMC4YCT5GohzP6LJ9yAUAIv2FZzd3Z0nBNmKJPmPo?e=udVMxM" target="_blank" rel="noopener">Termini e Condizioni</a>
+                    del servizio OutSeason. <span class="req">*</span>
+                </label>
+            </div>
+            <span class="os-field-error" data-for="terms" style="margin-left:28px">Devi accettare i Termini e Condizioni</span>
+        </div>
+
+        <!-- ═══ Submit (Bonifico) ═══ -->
+        <div class="os-submit-wrap" id="submit-bonifico" style="display:none">
+            <button type="submit" class="os-submit-btn" id="os-submit">
+                <span class="btn-text"><i class="ph ph-paper-plane-tilt"></i> Invia Iscrizione (Bonifico)</span>
+                <span class="spinner"></span>
+            </button>
+        </div>
+
+        <!-- PayPal Buttons -->
+        <div id="paypal-button-container" style="display:none"></div>
+    </form>
+
+    <!-- Success -->
+    <div class="os-form-card os-success" id="os-success">
+        <div class="os-success-icon"><i class="ph ph-check-fat"></i></div>
+        <h2>Iscrizione Completata!</h2>
+        <p>Grazie per esserti iscritta all'<strong>OutSeason 2026</strong>.<br>Riceverai una mail di conferma all'indirizzo fornito con tutti i dettagli.</p>
+    </div>
+</main>
+
+<footer class="os-footer">
+    Fusion Team Volley ASD · Via Vicentino n. 1, 30174 Trivignano Venezia (VE) · P.I. 04375890276 ·
+    <a href="mailto:outseason@fusionteamvolley.it">outseason@fusionteamvolley.it</a>
+</footer>
+
+<!-- ═══════════ JAVASCRIPT ═══════════ -->
+<script>
+(function() {
+    'use strict';
+    const API = '../api/api.php?module=outseason&action=';
+    const PF = 650, PD = 400;
+    let selFormula='', selWeek='', selPay='', discPct=0, ppOrderId='', eId=0;
+
+    window.selectWeek = function(el) {
+        document.querySelectorAll('.os-week-card').forEach(c=>c.classList.remove('selected'));
+        el.classList.add('selected');
+        selWeek = el.dataset.val;
+        document.getElementById('settimana_scelta').value = selWeek;
+        clearErr('settimana_scelta');
+    };
+    window.selectFormula = function(el) {
+        document.querySelectorAll('.os-formula-card').forEach(c=>c.classList.remove('selected'));
+        el.classList.add('selected');
+        selFormula = el.dataset.val;
+        document.getElementById('formula_scelta').value = selFormula;
+        clearErr('formula_scelta');
+        updatePrice();
+    };
+    window.selectPayment = function(el) {
+        document.querySelectorAll('.os-payment-card').forEach(c=>c.classList.remove('selected'));
+        el.classList.add('selected');
+        selPay = el.dataset.val;
+        document.getElementById('come_vuoi_pagare').value = selPay;
+        clearErr('come_vuoi_pagare');
+        document.getElementById('submit-bonifico').style.display = selPay==='Bonifico Bancario'?'':'none';
+        document.getElementById('paypal-button-container').style.display = selPay==='Carta/PayPal'?'':'none';
+        if (selPay==='Carta/PayPal' && !window._ppLoaded) { window._ppLoaded=true; loadPP(); }
+    };
+
+    function updatePrice() {
+        const base = selFormula==='Full Master'?PF:(selFormula==='Daily Master'?PD:0);
+        if(!base){document.getElementById('price-summary').style.display='none';return;}
+        const fin = Math.round(base*(1-discPct/100));
+        document.getElementById('price-summary').style.display='';
+        document.getElementById('final-price').textContent='€'+fin;
+        if(discPct>0){
+            document.getElementById('original-price').textContent='€'+base;
+            document.getElementById('original-price').style.display='';
+            document.getElementById('discount-info').textContent='Sconto '+discPct+'% applicato!';
+            document.getElementById('discount-info').style.display='';
+        } else {
+            document.getElementById('original-price').style.display='none';
+            document.getElementById('discount-info').style.display='none';
+        }
+    }
+
+    document.getElementById('btn-validate-discount').addEventListener('click', async()=>{
+        const code=document.getElementById('codice_sconto').value.trim(), r=document.getElementById('discount-result');
+        if(!code){r.textContent='';return;}
+        try{
+            const res=await fetch(API+'validateDiscount',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code})});
+            const d=await res.json();
+            if(res.ok&&d.data){discPct=d.data.discount_percent;r.textContent='✓ Sconto '+discPct+'% applicato!';r.className='os-discount-result valid';updatePrice();}
+            else{discPct=0;r.textContent='✗ '+(d.message||d.error||'Codice non valido');r.className='os-discount-result invalid';updatePrice();}
+        }catch(e){r.textContent='✗ Errore di rete';r.className='os-discount-result invalid';}
+    });
+
+    const REQ=['nome_e_cognome','email','cellulare','codice_fiscale','data_di_nascita','indirizzo','cap','citta','provincia','ruolo','taglia_kit'];
+    const isEm=e=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+    function showErr(id){const el=document.getElementById(id),er=document.querySelector(`[data-for="${id}"]`);if(el)el.classList.add('error');if(er)er.style.display='block';}
+    function clearErr(id){const el=document.getElementById(id),er=document.querySelector(`[data-for="${id}"]`);if(el)el.classList.remove('error');if(er)er.style.display='none';}
+    function clearAll(){document.querySelectorAll('.error').forEach(e=>e.classList.remove('error'));document.querySelectorAll('.os-field-error').forEach(e=>e.style.display='none');document.getElementById('os-global-error').style.display='none';}
+
+    REQ.forEach(id=>{const el=document.getElementById(id);if(!el)return;el.addEventListener('blur',()=>{if(!el.value.trim())showErr(id);else if(id==='email'&&!isEm(el.value.trim()))showErr(id);else clearErr(id);});el.addEventListener('input',()=>clearErr(id));});
+
+    function validate(){
+        clearAll();let bad=false;
+        REQ.forEach(id=>{const el=document.getElementById(id);if(!el||!el.value.trim()){showErr(id);bad=true;}else if(id==='email'&&!isEm(el.value.trim())){showErr(id);bad=true;}});
+        if(!selWeek){showErr('settimana_scelta');bad=true;}
+        if(!selFormula){showErr('formula_scelta');bad=true;}
+        if(!selPay){showErr('come_vuoi_pagare');bad=true;}
+        if(!document.getElementById('privacy').checked){showErr('privacy');bad=true;}
+        if(!document.getElementById('terms').checked){showErr('terms');bad=true;}
+        if(bad){const f=document.querySelector('.error');if(f)f.scrollIntoView({behavior:'smooth',block:'center'});}
+        return !bad;
+    }
+
+    function payload(){
+        const v=id=>(document.getElementById(id)?.value||'').trim()||null;
+        return{nome_e_cognome:v('nome_e_cognome'),email:v('email'),cellulare:v('cellulare'),codice_fiscale:v('codice_fiscale'),data_di_nascita:v('data_di_nascita'),indirizzo:v('indirizzo'),cap:v('cap'),citta:v('citta'),provincia:v('provincia'),club_di_appartenenza:v('club_di_appartenenza'),ruolo:v('ruolo'),taglia_kit:v('taglia_kit'),settimana_scelta:selWeek,formula_scelta:selFormula,come_vuoi_pagare:selPay,codice_sconto:v('codice_sconto'),privacy_consent:1,terms_consent:1};
+    }
+    function showOK(){document.getElementById('os-form').style.display='none';const s=document.getElementById('os-success');s.classList.add('visible');window.scrollTo({top:s.offsetTop-100,behavior:'smooth'});}
+    function showGE(m){const g=document.getElementById('os-global-error');g.textContent=m;g.style.display='block';g.scrollIntoView({behavior:'smooth',block:'center'});}
+
+    document.getElementById('os-form').addEventListener('submit',async e=>{
+        e.preventDefault();if(selPay!=='Bonifico Bancario')return;if(!validate())return;
+        const b=document.getElementById('os-submit');b.classList.add('loading');b.disabled=true;
+        try{const r=await fetch(API+'publicRegister',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload())});const d=await r.json();if(!r.ok||d.error)throw new Error(d.message||d.error||'Errore');showOK();}
+        catch(e){showGE(e.message||'Errore. Riprova.');}
+        finally{b.classList.remove('loading');b.disabled=false;}
+    });
+
+    async function loadPP(){
+        const cid='AQQRXPof0DlrciC5VNSFdvobO2RIrXwGY_iNCOHKkGoUq4TAodUCDzf3tEn_aYWSJwZzds2KKbbYip63';
+        const s=document.createElement('script');
+        s.src=`https://www.paypal.com/sdk/js?client-id=${cid}&currency=EUR&intent=capture&locale=it_IT`;
+        s.onload=renderPP;document.head.appendChild(s);
+    }
+    function renderPP(){
+        if(!window.paypal)return;
+        paypal.Buttons({
+            style:{layout:'vertical',color:'gold',shape:'rect',label:'paypal',height:48},
+            createOrder:async()=>{
+                if(!validate())throw new Error('Compila tutti i campi');
+                const r=await fetch(API+'publicRegister',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload())});
+                const d=await r.json();if(!r.ok||d.error)throw new Error(d.message||d.error||'Errore');
+                eId=d.data.entry_id;ppOrderId=d.data.paypal_order_id;return ppOrderId;
+            },
+            onApprove:async(data)=>{
+                try{const r=await fetch(API+'capturePayment',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({paypal_order_id:data.orderID,entry_id:eId})});const d=await r.json();if(!r.ok||d.error)throw new Error(d.message||d.error||'Errore');showOK();}
+                catch(e){showGE('Pagamento approvato ma errore conferma: '+e.message);}
+            },
+            onError:e=>showGE('Errore PayPal: '+(e.message||'Riprova')),
+            onCancel:()=>showGE('Pagamento annullato.')
+        }).render('#paypal-button-container');
+    }
+})();
+</script>
+</body>
+</html>

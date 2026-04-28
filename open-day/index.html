@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Open Day 2026 — Fusion Team Volley</title>
+    <meta name="description" content="Registrazione Open Day Fusion Team Volley — 27 Maggio 2026, Palavega Trivignano, ore 17:00-20:00. Iscriviti ora!">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Open Day 2026 — Fusion Team Volley">
+    <meta property="og:description" content="Vieni a scoprire il mondo della Fusion Team Volley! 27 Maggio 2026, Palavega Trivignano.">
+    <meta property="og:image" content="https://www.fusionteamvolley.it/assets/logo-colorato.png">
+    <link rel="icon" type="image/png" href="assets/logo-fusion.png">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="od-page">
+
+    <!-- ═══ LEFT SIDE: Hero / Image ═══ -->
+    <div class="od-hero-side">
+        <div class="od-hero-bg" id="heroSlideshow">
+            <img src="assets/hero-1.jpg" class="active" alt="Fusion Team Volley">
+            <img src="assets/hero-2.jpg" alt="Fusion Team Volley">
+            <img src="assets/hero-3.jpg" alt="Fusion Team Volley">
+            <img src="assets/hero-4.jpg" alt="Fusion Team Volley">
+        </div>
+        <div class="od-hero-overlay"></div>
+
+        <div class="od-hero-content">
+            <div class="od-brand-bar"></div>
+            <h1 class="od-hero-title">
+                OPEN<br>
+                <span>DAY</span>
+            </h1>
+            <p class="od-hero-desc">
+                Vieni a scoprire il mondo della pallavolo. Un pomeriggio di sport, divertimento e talento con <strong>Fusion Team Volley</strong>.
+            </p>
+
+            <div class="od-event-info">
+                <div class="od-event-row highlight">
+                    <i>📅</i>
+                    <span><strong>Martedì 27 Maggio 2026</strong></span>
+                </div>
+                <div class="od-event-row highlight">
+                    <i>📍</i>
+                    <span><strong>Palavega</strong> — Trivignano (VE)</span>
+                </div>
+                <div class="od-event-row">
+                    <i>🕐</i>
+                    <span>Ore <strong>17:00 – 20:00</strong></span>
+                </div>
+            </div>
+
+            <div class="od-spots" id="spotsCounter">
+                <span id="spotsIcon">⏳</span>
+                <span id="spotsText">Caricamento posti...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ RIGHT SIDE: Form ═══ -->
+    <div class="od-form-side">
+        <div class="od-form-wrap">
+
+            <div class="od-mobile-title">Compila il modulo</div>
+
+            <!-- Registration Form -->
+            <div id="formContainer">
+                <form id="registrationForm" novalidate>
+                    <div class="od-form-card">
+
+                        <div class="od-form-error" id="formError"></div>
+
+                        <!-- Dati Atleta -->
+                        <div class="od-section-divider">Dati dell'Atleta</div>
+                        <div class="od-grid cols-2">
+                            <div class="od-field">
+                                <label class="od-label" for="nome">Nome *</label>
+                                <input type="text" id="nome" class="od-input" placeholder="Il tuo nome" required autocomplete="given-name">
+                                <span class="od-field-error" id="nomeError">Inserisci il nome</span>
+                            </div>
+                            <div class="od-field">
+                                <label class="od-label" for="cognome">Cognome *</label>
+                                <input type="text" id="cognome" class="od-input" placeholder="Il tuo cognome" required autocomplete="family-name">
+                                <span class="od-field-error" id="cognomeError">Inserisci il cognome</span>
+                            </div>
+                        </div>
+                        <div class="od-grid cols-2" style="margin-top:18px">
+                            <div class="od-field">
+                                <label class="od-label" for="data_nascita">Data di Nascita *</label>
+                                <input type="date" id="data_nascita" class="od-input" required>
+                                <span class="od-field-error" id="dataNascitaError">Seleziona la data</span>
+                            </div>
+                            <div class="od-field">
+                                <label class="od-label" for="email">Email *</label>
+                                <input type="email" id="email" class="od-input" placeholder="La tua email" required autocomplete="email">
+                                <span class="od-field-error" id="emailError">Email non valida</span>
+                            </div>
+                        </div>
+                        <div class="od-grid cols-2" style="margin-top:18px">
+                            <div class="od-field">
+                                <label class="od-label" for="cellulare">Cellulare *</label>
+                                <input type="tel" id="cellulare" class="od-input" placeholder="Il tuo numero" required autocomplete="tel">
+                                <span class="od-field-error" id="cellulareError">Inserisci il cellulare</span>
+                            </div>
+                            <div class="od-field">
+                                <label class="od-label" for="taglia_tshirt">Taglia T-Shirt *</label>
+                                <select id="taglia_tshirt" class="od-select" required>
+                                    <option value="">Seleziona taglia...</option>
+                                    <option value="XXS">XXS</option>
+                                    <option value="XS">XS</option>
+                                    <option value="S">S</option>
+                                    <option value="M">M</option>
+                                    <option value="L">L</option>
+                                    <option value="XL">XL</option>
+                                    <option value="XXL">XXL</option>
+                                </select>
+                                <span class="od-field-error" id="tagliaError">Seleziona la taglia</span>
+                            </div>
+                        </div>
+                        <div class="od-grid cols-2" style="margin-top:18px">
+                            <div class="od-field">
+                                <label class="od-label" for="indirizzo">Indirizzo *</label>
+                                <input type="text" id="indirizzo" class="od-input" placeholder="Via Roma 1" required autocomplete="street-address">
+                                <span class="od-field-error" id="indirizzoError">Inserisci l'indirizzo</span>
+                            </div>
+                            <div class="od-field">
+                                <label class="od-label" for="citta_cap">Città / CAP *</label>
+                                <input type="text" id="citta_cap" class="od-input" placeholder="Venezia 30100" required>
+                                <span class="od-field-error" id="cittaCapError">Inserisci la città</span>
+                            </div>
+                        </div>
+
+                        <!-- Esperienza Sportiva -->
+                        <div class="od-section-divider">Esperienza Sportiva</div>
+                        <div class="od-grid cols-2">
+                            <div class="od-field">
+                                <label class="od-label" for="club_tesseramento">Club Attuale *</label>
+                                <input type="text" id="club_tesseramento" class="od-input" placeholder="Nome della tua società" required>
+                                <span class="od-field-error" id="clubError">Inserisci il club</span>
+                            </div>
+                            <div class="od-field">
+                                <label class="od-label" for="ruolo">Ruolo *</label>
+                                <select id="ruolo" class="od-select" required>
+                                    <option value="">Seleziona ruolo...</option>
+                                    <option value="Palleggiatrice">Palleggiatrice</option>
+                                    <option value="Schiacciatrice">Schiacciatrice</option>
+                                    <option value="Centrale">Centrale</option>
+                                    <option value="Opposta">Opposta</option>
+                                    <option value="Libero">Libero</option>
+                                </select>
+                                <span class="od-field-error" id="ruoloError">Seleziona il ruolo</span>
+                            </div>
+                        </div>
+                        <div class="od-grid" style="margin-top:18px">
+                            <div class="od-field">
+                                <label class="od-label" for="campionati">Campionati Disputati *</label>
+                                <input type="text" id="campionati" class="od-input" placeholder="Es. Under 16, Prima Divisione" required>
+                                <span class="od-field-error" id="campionatiError">Inserisci i campionati</span>
+                            </div>
+                        </div>
+
+                        <!-- Genitore -->
+                        <div class="od-section-divider">Genitore / Tutore</div>
+                        <div class="od-grid cols-2">
+                            <div class="od-field">
+                                <label class="od-label" for="nome_genitore">Nome e Cognome *</label>
+                                <input type="text" id="nome_genitore" class="od-input" placeholder="Nome del genitore" required>
+                                <span class="od-field-error" id="nomeGenitoreError">Inserisci il nome</span>
+                            </div>
+                            <div class="od-field">
+                                <label class="od-label" for="telefono_genitore">Telefono *</label>
+                                <input type="tel" id="telefono_genitore" class="od-input" placeholder="Numero di telefono" required>
+                                <span class="od-field-error" id="telefonoGenitoreError">Inserisci il telefono</span>
+                            </div>
+                        </div>
+                        <div class="od-grid" style="margin-top:18px">
+                            <div class="od-field">
+                                <label class="od-label" for="email_genitore">Email Genitore *</label>
+                                <input type="email" id="email_genitore" class="od-input" placeholder="Email del genitore" required>
+                                <span class="od-field-error" id="emailGenitoreError">Email non valida</span>
+                            </div>
+                        </div>
+
+                        <!-- Privacy -->
+                        <div class="od-checkbox-wrap">
+                            <input type="checkbox" id="privacy_consent" required>
+                            <label for="privacy_consent">
+                                Autorizzo il trattamento dei dati personali ai sensi del Regolamento UE 2016/679 (GDPR).
+                                I dati forniti saranno utilizzati esclusivamente per la gestione dell'Open Day 2026. <span style="color:#fca5a5;">*</span>
+                            </label>
+                        </div>
+                        <span class="od-field-error" id="privacyError" style="margin-left:32px">Il consenso è obbligatorio</span>
+
+                        <!-- Submit -->
+                        <button type="submit" class="od-submit-btn" id="submitBtn">
+                            <span class="btn-text">Invia Registrazione</span>
+                            <span class="spinner"></span>
+                        </button>
+
+                    </div>
+                </form>
+            </div>
+
+            <!-- Success State -->
+            <div class="od-success" id="successState">
+                <div class="od-success-icon">
+                    <svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"></path></svg>
+                </div>
+                <h2>Registrazione Completata</h2>
+                <p>
+                    Abbiamo ricevuto i tuoi dati per l'<strong>Open Day 2026</strong>!
+                    Riceverai una email di conferma con tutti i dettagli.<br><br>
+                    Ti aspettiamo il <strong>27 Maggio</strong> al Palavega di Trivignano!
+                </p>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<footer class="od-footer">
+    <strong>Fusion Team Volley ASD</strong> — Trivignano (VE) ·
+    <a href="https://www.fusionteamvolley.it">fusionteamvolley.it</a> ·
+    <a href="mailto:info@fusionteamvolley.it">info@fusionteamvolley.it</a>
+</footer>
+
+<script>
+(() => {
+    'use strict';
+
+    /* ── API ──────────────────────────────────────────────────── */
+    const API_BASE = (() => {
+        const loc = window.location;
+        if (loc.hostname.includes('fusionteamvolley.it')) return 'https://erp.fusionteamvolley.it/api/router.php';
+        return loc.origin + '/Fusion%20ERP/api/router.php';
+    })();
+
+    /* ── Background Slideshow ─────────────────────────────────── */
+    const slides = document.querySelectorAll('#heroSlideshow img');
+    let current = 0;
+    if (slides.length > 1) {
+        setInterval(() => {
+            slides[current].classList.remove('active');
+            current = (current + 1) % slides.length;
+            slides[current].classList.add('active');
+        }, 5000);
+    }
+
+    /* ── Spots Counter ────────────────────────────────────────── */
+    async function loadSpots() {
+        try {
+            const res = await fetch(`${API_BASE}?module=openday&action=publicStatus`);
+            const data = await res.json();
+            const icon = document.getElementById('spotsIcon');
+            const text = document.getElementById('spotsText');
+            const badge = document.getElementById('spotsCounter');
+
+            if (data.success) {
+                const remaining = (data.data.limit || 50) - (data.data.count || 0);
+                if (remaining <= 0) {
+                    icon.textContent = '🚫';
+                    text.textContent = 'SOLD OUT — Posti esauriti';
+                    badge.classList.add('sold-out');
+                    document.getElementById('submitBtn').disabled = true;
+                    document.getElementById('submitBtn').querySelector('.btn-text').textContent = 'POSTI ESAURITI';
+                } else {
+                    icon.textContent = '✅';
+                    text.textContent = `${remaining} posti disponibili su ${data.data.limit}`;
+                }
+            }
+        } catch (e) {
+            document.getElementById('spotsText').textContent = 'Registrazioni aperte';
+            document.getElementById('spotsIcon').textContent = '✅';
+        }
+    }
+    loadSpots();
+
+    /* ── Form Validation & Submit ─────────────────────────────── */
+    const form = document.getElementById('registrationForm');
+    const fields = [
+        { id: 'nome',              errorId: 'nomeError',            validate: v => v.trim().length > 0 },
+        { id: 'cognome',           errorId: 'cognomeError',         validate: v => v.trim().length > 0 },
+        { id: 'data_nascita',      errorId: 'dataNascitaError',     validate: v => !!v },
+        { id: 'email',             errorId: 'emailError',           validate: v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) },
+        { id: 'cellulare',         errorId: 'cellulareError',       validate: v => v.trim().length >= 6 },
+        { id: 'taglia_tshirt',     errorId: 'tagliaError',          validate: v => !!v },
+        { id: 'indirizzo',         errorId: 'indirizzoError',       validate: v => v.trim().length > 0 },
+        { id: 'citta_cap',         errorId: 'cittaCapError',        validate: v => v.trim().length > 0 },
+        { id: 'club_tesseramento', errorId: 'clubError',            validate: v => v.trim().length > 0 },
+        { id: 'ruolo',             errorId: 'ruoloError',           validate: v => !!v },
+        { id: 'campionati',        errorId: 'campionatiError',      validate: v => v.trim().length > 0 },
+        { id: 'nome_genitore',     errorId: 'nomeGenitoreError',    validate: v => v.trim().length > 0 },
+        { id: 'telefono_genitore', errorId: 'telefonoGenitoreError',validate: v => v.trim().length >= 6 },
+        { id: 'email_genitore',    errorId: 'emailGenitoreError',   validate: v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) },
+    ];
+
+    // Live validation
+    fields.forEach(f => {
+        const el = document.getElementById(f.id);
+        if (!el) return;
+        el.addEventListener('blur', () => {
+            const valid = f.validate(el.value);
+            el.classList.toggle('error', !valid);
+            document.getElementById(f.errorId).style.display = valid ? 'none' : 'block';
+        });
+        el.addEventListener('input', () => {
+            if (el.classList.contains('error') && f.validate(el.value)) {
+                el.classList.remove('error');
+                document.getElementById(f.errorId).style.display = 'none';
+            }
+        });
+    });
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formError = document.getElementById('formError');
+        formError.style.display = 'none';
+        let hasError = false;
+
+        fields.forEach(f => {
+            const el = document.getElementById(f.id);
+            const valid = f.validate(el.value);
+            el.classList.toggle('error', !valid);
+            document.getElementById(f.errorId).style.display = valid ? 'none' : 'block';
+            if (!valid) hasError = true;
+        });
+
+        const privacy = document.getElementById('privacy_consent');
+        const privacyError = document.getElementById('privacyError');
+        if (!privacy.checked) {
+            hasError = true;
+            privacyError.style.display = 'block';
+        } else {
+            privacyError.style.display = 'none';
+        }
+
+        if (hasError) {
+            formError.textContent = 'Per favore compila tutti i campi obbligatori.';
+            formError.style.display = 'flex';
+            formError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
+
+        const payload = {};
+        fields.forEach(f => { payload[f.id] = document.getElementById(f.id).value; });
+        payload.privacy_consent = 1;
+
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.classList.add('loading');
+        submitBtn.disabled = true;
+
+        try {
+            const res = await fetch(`${API_BASE}?module=openday&action=publicRegister`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+            const result = await res.json();
+            if (!res.ok || !result.success) {
+                throw new Error(result.error || result.message || 'Errore durante la registrazione');
+            }
+
+            document.getElementById('formContainer').style.display = 'none';
+            document.getElementById('successState').classList.add('visible');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        } catch (err) {
+            formError.textContent = err.message;
+            formError.style.display = 'flex';
+            submitBtn.classList.remove('loading');
+            submitBtn.disabled = false;
+        }
+    });
+})();
+</script>
+
+</body>
+</html>

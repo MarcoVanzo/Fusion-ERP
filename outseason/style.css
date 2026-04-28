@@ -1,0 +1,327 @@
+/* ═══════════════════════════════════════════════════════════════════
+   OutSeason Registration Form — Embeddable in ftvoutseason.it
+   Design tokens extracted from Elementor kit-14 + post-130:
+     --e-global-color-primary:   #D9317F
+     --e-global-color-accent:    #D5126C
+     --e-global-color-secondary: #3A3A3A
+     --e-global-color-text:      #7A7A7A
+     --e-global-color-3794769:   #2E3B4E (dark blue-grey)
+     Fonts: Roboto 400/500/600 (body), Poppins 500-900 (headings),
+            Roboto Slab 400 (secondary headings)
+     Buttons: gradient #D9317F → #751450, border-radius 50px
+     Background: #ededed (body), #000000 (dark sections)
+   ═══════════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Roboto:wght@300;400;500;600;700&family=Roboto+Slab:wght@400;500;700;900&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  /* — FTV Elementor Global Tokens — */
+  --ftv-primary: #D9317F;
+  --ftv-accent: #D5126C;
+  --ftv-secondary: #3A3A3A;
+  --ftv-text: #7A7A7A;
+  --ftv-dark: #2E3B4E;
+  --ftv-black: #000000;
+  --ftv-pink-light: #FF92C5;
+  --ftv-pink-hot: #FA2589;
+  --ftv-pink-soft: #FFCDE4;
+  --ftv-red-hover: #E64D43;
+
+  /* — Form specific — */
+  --bg-page: #ededed;
+  --bg-card: #ffffff;
+  --bg-input: #f7f7f9;
+  --border-light: #e2e2e6;
+  --border-focus: var(--ftv-primary);
+  --text-dark: var(--ftv-secondary);
+  --text-body: var(--ftv-text);
+  --text-muted: #a0a0b0;
+  --accent: var(--ftv-primary);
+  --accent-dark: #751450;
+  --accent-soft: rgba(217,49,127,0.07);
+  --btn-gradient: linear-gradient(180deg, #D9317F 0%, #751450 100%);
+  --success: #27ae60;
+  --error: #e74c3c;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow-card: 0 2px 24px rgba(0,0,0,0.06);
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg-page);
+  color: var(--text-dark);
+  min-height: 100vh;
+  line-height: 1.6;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── Hero Banner ──────────────────────────────────────────────────── */
+.os-hero {
+  position: relative;
+  text-align: center;
+  min-height: 460px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: var(--ftv-black);
+}
+.os-hero-bg {
+  position: absolute; inset: 0;
+  background: url('https://www.ftvoutseason.it/wp-content/uploads/2026/01/ftv_out_of_season_bkg-scaled.jpg') center/cover no-repeat;
+  background-attachment: fixed;
+  z-index: 0;
+}
+.os-hero-bg::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg, #000000 0%, var(--ftv-primary) 100%);
+  opacity: 0.25;
+}
+.os-hero-content {
+  position: relative; z-index: 1;
+  padding: 50px 30px 48px;
+}
+.os-hero-logo {
+  width: 80px; height: auto;
+  margin-bottom: 14px;
+  filter: drop-shadow(0 4px 20px rgba(217,49,127,0.15));
+}
+.os-hero h1 {
+  font-family: 'Poppins', sans-serif;
+  font-size: clamp(2rem, 5.5vw, 3.5rem);
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.2;
+  text-shadow: 0px 0px 2px #666666;
+  margin-bottom: 4px;
+}
+.os-hero h1 span { color: var(--ftv-primary); }
+.os-hero-season {
+  font-family: 'Poppins', sans-serif;
+  font-size: 13px; font-weight: 500;
+  color: var(--ftv-pink-light);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.os-hero-subtitle {
+  font-family: 'Poppins', sans-serif;
+  font-size: 15px; font-weight: 400;
+  color: rgba(255,255,255,0.65);
+  max-width: 500px;
+  margin: 12px auto 0;
+  line-height: 1.7;
+}
+
+/* ─── Week Cards (hero) ────────────────────────────────────────────── */
+.os-weeks-strip {
+  display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 28px;
+}
+.os-week-card {
+  min-width: 145px; padding: 12px 16px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 5px;
+  cursor: pointer; transition: all 0.3s ease;
+  text-align: center; backdrop-filter: blur(6px);
+}
+.os-week-card:hover { background: rgba(255,255,255,0.14); border-color: rgba(217,49,127,0.5); transform: translateY(-2px); }
+.os-week-card.selected { background: rgba(217,49,127,0.18); border-color: var(--ftv-primary); box-shadow: 0 0 20px rgba(217,49,127,0.15); }
+.os-week-card .date { font-family: 'Poppins',sans-serif; font-size: 14px; font-weight: 600; color: #fff; text-transform: uppercase; }
+.os-week-card .range { font-size: 11px; color: rgba(255,255,255,0.55); margin-top: 2px; }
+
+/* ─── Container ────────────────────────────────────────────────────── */
+.os-container { max-width: 660px; margin: -30px auto 0; padding: 0 16px 50px; position: relative; z-index: 2; }
+
+.os-form-card {
+  background: var(--bg-card);
+  border-radius: 0; /* Elementor uses no border-radius on content cards */
+  padding: 40px 36px;
+  box-shadow: var(--shadow-card);
+}
+@media (max-width: 600px) { .os-form-card { padding: 24px 18px; } }
+
+/* ─── Sections ─────────────────────────────────────────────────────── */
+.os-section { margin-bottom: 28px; }
+.os-section-title {
+  font-family: 'Roboto', sans-serif;
+  font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.12em;
+  color: var(--ftv-primary);
+  margin-bottom: 14px;
+  display: flex; align-items: center; gap: 7px;
+}
+.os-section-title i { font-size: 15px; }
+.os-divider { height: 1px; background: var(--border-light); margin: 24px 0; }
+
+/* ─── Grid ─────────────────────────────────────────────────────────── */
+.os-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.os-grid.single { grid-template-columns: 1fr; }
+.os-grid.triple { grid-template-columns: 1fr 1fr 1fr; }
+@media (max-width: 600px) { .os-grid, .os-grid.triple { grid-template-columns: 1fr; } }
+
+/* ─── Form Fields ──────────────────────────────────────────────────── */
+.os-field { display: flex; flex-direction: column; gap: 5px; }
+.os-label { font-size: 12px; font-weight: 500; color: var(--text-body); }
+.os-label .req { color: var(--ftv-primary); }
+.os-input, .os-select {
+  padding: 12px 14px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-light);
+  border-radius: 5px;
+  color: var(--text-dark);
+  font-size: 14px; font-family: 'Roboto', sans-serif; font-weight: 400;
+  transition: border-color 0.3s, box-shadow 0.3s;
+  outline: none; width: 100%;
+}
+.os-input::placeholder { color: #b5b5c5; }
+.os-input:focus, .os-select:focus { border-color: var(--ftv-primary); box-shadow: 0 0 0 3px var(--accent-soft); }
+.os-input.error, .os-select.error { border-color: var(--error); box-shadow: 0 0 0 3px rgba(231,76,60,0.08); }
+.os-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%237A7A7A' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px;
+}
+.os-field-error { display: none; font-size: 11px; color: var(--error); font-weight: 500; }
+.os-form-error { display: none; background: rgba(231,76,60,0.06); border: 1px solid rgba(231,76,60,0.15); border-radius: 5px; padding: 12px 16px; font-size: 13px; color: var(--error); margin-bottom: 18px; }
+
+/* ─── Formula Cards ────────────────────────────────────────────────── */
+.os-formula-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 600px) { .os-formula-cards { grid-template-columns: 1fr; } }
+.os-formula-card {
+  padding: 22px 16px;
+  background: var(--bg-input);
+  border: 2px solid var(--border-light);
+  border-radius: 5px;
+  cursor: pointer; transition: all 0.3s ease;
+  text-align: center;
+}
+.os-formula-card:hover { border-color: rgba(217,49,127,0.35); background: var(--accent-soft); }
+.os-formula-card.selected { border-color: var(--ftv-primary); background: var(--accent-soft); box-shadow: 0 0 0 3px rgba(217,49,127,0.08); }
+.os-formula-card .formula-name { font-family: 'Poppins',sans-serif; font-size: 15px; font-weight: 600; color: var(--text-dark); text-transform: uppercase; }
+.os-formula-card .formula-price {
+  font-family: 'Poppins',sans-serif;
+  font-size: 32px; font-weight: 900; margin: 4px 0;
+  color: var(--ftv-primary);
+}
+.os-formula-card .formula-desc { font-size: 12px; color: var(--text-body); }
+
+/* ─── Payment Cards ────────────────────────────────────────────────── */
+.os-payment-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 600px) { .os-payment-cards { grid-template-columns: 1fr; } }
+.os-payment-card {
+  padding: 16px;
+  background: var(--bg-input);
+  border: 2px solid var(--border-light);
+  border-radius: 5px;
+  cursor: pointer; transition: all 0.3s ease;
+  text-align: center;
+}
+.os-payment-card:hover { border-color: rgba(217,49,127,0.35); }
+.os-payment-card.selected { border-color: var(--ftv-primary); background: var(--accent-soft); }
+.os-payment-card .pay-icon { font-size: 24px; margin-bottom: 2px; }
+.os-payment-card .pay-label { font-family: 'Poppins',sans-serif; font-size: 13px; font-weight: 600; color: var(--text-dark); }
+
+/* ─── Price Summary ────────────────────────────────────────────────── */
+.os-price-summary {
+  background: var(--accent-soft);
+  border: 1px solid rgba(217,49,127,0.12);
+  border-radius: 5px;
+  padding: 20px; margin: 22px 0;
+  text-align: center;
+}
+.os-price-summary .label { font-family: 'Roboto',sans-serif; font-size: 11px; color: var(--text-body); text-transform: uppercase; letter-spacing: 0.1em; }
+.os-price-summary .amount { font-family: 'Poppins',sans-serif; font-size: 38px; font-weight: 900; color: var(--ftv-primary); }
+.os-price-summary .discount-info { font-size: 12px; color: var(--success); margin-top: 4px; }
+.os-price-summary .original-price { text-decoration: line-through; color: var(--text-body); font-size: 15px; }
+
+/* ─── Discount ─────────────────────────────────────────────────────── */
+.os-discount-row { display: flex; gap: 8px; align-items: flex-end; }
+.os-discount-row .os-field { flex: 1; }
+.os-discount-btn {
+  padding: 12px 18px;
+  background: var(--bg-input); border: 1px solid var(--border-light);
+  border-radius: 5px;
+  color: var(--text-dark); font-family: 'Roboto',sans-serif; font-size: 12px; font-weight: 500;
+  cursor: pointer; transition: all 0.3s;
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+.os-discount-btn:hover { background: var(--accent-soft); border-color: var(--ftv-primary); color: var(--ftv-primary); }
+.os-discount-result { font-size: 12px; margin-top: 6px; }
+.os-discount-result.valid { color: var(--success); }
+.os-discount-result.invalid { color: var(--error); }
+
+/* ─── Checkboxes ───────────────────────────────────────────────────── */
+.os-checkbox-wrap { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 10px; }
+.os-checkbox-wrap input[type="checkbox"] {
+  width: 18px; height: 18px; accent-color: var(--ftv-primary);
+  margin-top: 2px; flex-shrink: 0; cursor: pointer;
+}
+.os-checkbox-wrap label { font-size: 12px; color: var(--text-body); line-height: 1.5; cursor: pointer; }
+.os-checkbox-wrap a { color: var(--ftv-primary); text-decoration: none; font-weight: 500; }
+.os-checkbox-wrap a:hover { text-decoration: underline; }
+
+/* ─── Submit (FTV Button Style) ────────────────────────────────────── */
+.os-submit-wrap { text-align: center; margin-top: 26px; }
+.os-submit-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 18px 40px;
+  background-image: var(--btn-gradient);
+  background-color: transparent;
+  border: none; border-radius: 50px;
+  color: #fff;
+  font-family: 'Poppins', sans-serif;
+  font-size: 16px; font-weight: 500;
+  text-transform: uppercase; text-decoration: none;
+  cursor: pointer; transition: all 0.3s ease;
+  box-shadow: 0 4px 20px rgba(217,49,127,0.2);
+}
+.os-submit-btn:hover { background-color: var(--ftv-dark); background-image: none; transform: translateY(-2px); box-shadow: 0 8px 30px rgba(46,59,78,0.3); }
+.os-submit-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.os-submit-btn .spinner { display: none; width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; }
+.os-submit-btn.loading .btn-text { display: none; }
+.os-submit-btn.loading .spinner { display: inline-block; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+#paypal-button-container { margin-top: 18px; min-height: 55px; }
+
+/* ─── Success ──────────────────────────────────────────────────────── */
+.os-success { display: none; text-align: center; padding: 50px 24px; }
+.os-success.visible { display: block; animation: fadeUp 0.5s ease; }
+.os-success-icon { font-size: 56px; color: var(--success); margin-bottom: 14px; }
+.os-success h2 { font-family: 'Poppins',sans-serif; font-size: 22px; font-weight: 700; color: var(--text-dark); }
+.os-success p { color: var(--text-body); font-size: 14px; line-height: 1.7; margin-top: 8px; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ─── Footer (matches FTV footer bar) ──────────────────────────────── */
+.os-footer {
+  text-align: center; padding: 16px 20px;
+  background: var(--ftv-primary);
+  font-family: 'Poppins',sans-serif;
+  font-size: 11px; font-weight: 400; color: #fff;
+}
+.os-footer a { color: #fff; text-decoration: none; opacity: 0.8; }
+.os-footer a:hover { opacity: 1; }
+
+/* ─── Responsive ───────────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .os-hero { min-height: 380px; }
+  .os-hero h1 { font-size: 2.2rem; }
+  .os-hero-bg { background-attachment: scroll; }
+}
+@media (max-width: 767px) {
+  .os-hero { min-height: 280px; }
+  .os-hero-content { padding: 40px 20px 30px; }
+  .os-hero h1 { font-size: 1.8rem; }
+  .os-hero-subtitle { font-size: 14px; }
+  .os-hero-bg { background-attachment: scroll; }
+  .os-submit-btn { padding: 14px 30px; font-size: 14px; }
+  .os-container { margin-top: -20px; }
+}
