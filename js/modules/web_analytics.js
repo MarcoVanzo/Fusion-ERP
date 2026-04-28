@@ -13,13 +13,13 @@ window.WebAnalytics = (() => {
         id: "site1",
         name: "Fusion Team Volley",
         // Sostituisci questo URL con l'Embed URL generato da Looker Studio
-        url: "https://lookerstudio.google.com/embed/reporting/60af0b7f-f543-46ac-ba17-9c66c1c40cc2/page/B0usF",
+        url: "https://datastudio.google.com/embed/reporting/60af0b7f-f543-46ac-ba17-9c66c1c40cc2/page/B0usF",
       },
       site2: {
         id: "site2",
         name: "OutSeason",
         // Sostituisci questo URL con l'Embed URL generato da Looker Studio
-        url: "https://lookerstudio.google.com/embed/reporting/a0244411-6043-4111-84c2-e90d12eafd83/page/v3usF",
+        url: "https://datastudio.google.com/embed/reporting/a0244411-6043-4111-84c2-e90d12eafd83/page/v3usF",
       },
     },
   };
@@ -81,7 +81,7 @@ window.WebAnalytics = (() => {
     const activeData = state.sites[state.activeSite];
 
     if (activeData.url) {
-      container.innerHTML = `<iframe src="${activeData.url}" style="width:100%; height:100%; border:none; display:block;" allowfullscreen></iframe>`;
+      container.innerHTML = `<iframe src="${activeData.url}" style="width:100%; height:100%; border:none; display:block;" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>`;
     } else {
       container.innerHTML = `
                 <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; font-family:var(--font-body); color:var(--text-muted); background:var(--bg-body); text-align:center; padding:2rem;">
