@@ -64,7 +64,7 @@ const Navbar = () => {
 
     const splitRightLinks: NavLink[] = [
         { name: 'NEWS', path: '/news' },
-        { name: 'MATCH CENTER', path: '/results', badge: 'LIVE' },
+        { name: 'MATCH CENTER', path: '/results' },
         { name: 'OPEN DAY', path: '/open-day', badge: 'NEW' },
         { name: 'OUTSEASON', path: '/outseason' },
         { name: 'STORE', path: '/shop' },
