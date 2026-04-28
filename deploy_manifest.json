@@ -1,7 +1,7 @@
 {
   "version": 3,
-  "generated_at": "2026-04-28T22:46:28.251Z",
-  "file_count": 1739,
+  "generated_at": "2026-04-28T22:52:43.919Z",
+  "file_count": 1740,
   "files": [
     {
       "path": ".env.prod",
@@ -177,11 +177,11 @@
     },
     {
       "path": "api/Modules/OpenDay/OpenDayController.php",
-      "hash": "605c3e69ea3717381cb901bef0a5d042fd2a5d1f05e4abd7af0d8d8b542d4e98"
+      "hash": "9d0db6296af69f80b626789d47bfb95fff1ae95ef58cd712c328eb0c8f847a54"
     },
     {
       "path": "api/Modules/OutSeason/OutSeasonController.php",
-      "hash": "9ce68794c36b704e83c7f15b9e124dc395720121514b017dab8d2cc77b9a1d50"
+      "hash": "d4a450cd7e7c0dd737890636996b90443ec74ea7ec2b6eb96102b3cf2247d258"
     },
     {
       "path": "api/Modules/Payments/PaymentsController.php",
@@ -1224,6 +1224,10 @@
       "hash": "010595d690e3377ea7f220c68e387b2b7bc32d3f5928267f74294414600d1629"
     },
     {
+      "path": "db/migrations/V128__open_day_annata.sql",
+      "hash": "6111c6aea2f8e34a001f1958f0353bcc07e247d9cae3f83b7d2e9da5ec5d2e4e"
+    },
+    {
       "path": "deploy_state.json",
       "hash": "e4e5d5698de0f46e78ac279c8024cd8131a53e4fa4eb1d1def49460fbbd44271"
     },
@@ -1549,7 +1553,7 @@
     },
     {
       "path": "index.html",
-      "hash": "0fe54cb69f37db8e979412c0972f508444d6390740a3636d81dbdc7d60a5eb03"
+      "hash": "0002fe7017a6f732abcdf70a29c10d71d9d384095403215108f9d09b60c8874a"
     },
     {
       "path": "js/api/athletes.api.js",
@@ -1781,15 +1785,15 @@
     },
     {
       "path": "js/modules/openday/OpenDay.js",
-      "hash": "b9a109939df92163805a0666fa8d625b8bf999a64d71a0248019c339f3d7d952"
+      "hash": "350cb94c5d45c25b77af1c26761ade5ebe2a5eb133e8e3d54ab2315c69c5578b"
     },
     {
       "path": "js/modules/openday/OpenDayAPI.js",
-      "hash": "aab13962c752e6cb838bcd1fc6d29dedd46d871a4d2003d6e77f8ea8d83c89f1"
+      "hash": "d15fab252860d834870250671f15d671eca369d71038493bbba8971c35092e0f"
     },
     {
       "path": "js/modules/openday/OpenDayView.js",
-      "hash": "df1c94afd6d497b2377742d23dfa5ea9e898fdd3de8e3f2602c09f6762658dd5"
+      "hash": "3758f4c99e119e59844b296824f54c83831ac9f215563b81f9bf8a45ae374ec9"
     },
     {
       "path": "js/modules/outseason.js",
@@ -2025,7 +2029,7 @@
     },
     {
       "path": "open-day/index.html",
-      "hash": "4a8216625943c2f938999bb9a791c45cf9647668fee0d6175b911a082c8e8d9b"
+      "hash": "b1b1e681c5617b4c79fc1e614e18bffe2a59327bdb635b612b4596baf63ba837"
     },
     {
       "path": "open-day/style.css",

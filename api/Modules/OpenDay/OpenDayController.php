@@ -28,24 +28,37 @@ class OpenDayController
         Auth::requireRole('allenatore');
         $tenantId = TenantContext::id();
 
+        $annata = isset($_GET['annata']) ? (int)$_GET['annata'] : (int)date('Y');
+
         $stmt = $this->db->prepare("
-            SELECT id, data_registrazione, ora_registrazione, email,
+            SELECT id, annata, data_registrazione, ora_registrazione, email,
                    nome, cognome, indirizzo, citta_cap, data_nascita, cellulare,
                    taglia_tshirt, club_tesseramento, ruolo, campionati,
                    nome_genitore, telefono_genitore, email_genitore, privacy_consent,
                    altezza, reach_cm, salto_rincorsa_1, salto_rincorsa_2, salto_rincorsa_3,
                    created_at
             FROM open_day_entries
-            WHERE tenant_id = :tenant_id
+            WHERE tenant_id = :tenant_id AND annata = :annata
             ORDER BY created_at DESC
             LIMIT 500
         ");
-        $stmt->execute([':tenant_id' => $tenantId]);
+        $stmt->execute([':tenant_id' => $tenantId, ':annata' => $annata]);
         $entries = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+        // Fetch all distinct years for the dropdown
+        $yearsStmt = $this->db->prepare("SELECT DISTINCT annata FROM open_day_entries WHERE tenant_id = :tid ORDER BY annata DESC");
+        $yearsStmt->execute([':tid' => $tenantId]);
+        $years = $yearsStmt->fetchAll(PDO::FETCH_COLUMN);
+        if (!in_array((string)$annata, $years) && !in_array($annata, $years)) {
+            $years[] = $annata;
+            rsort($years);
+        }
+
         Response::success([
-            'entries' => $entries,
-            'count'   => count($entries),
+            'entries'       => $entries,
+            'count'         => count($entries),
+            'annata'        => $annata,
+            'available_years' => array_map('intval', $years),
         ]);
     }
 
@@ -62,15 +75,17 @@ class OpenDayController
             Response::error('Nome e cognome obbligatori', 400);
         }
 
+        $annata = !empty($data['annata']) ? (int)$data['annata'] : (int)date('Y');
+
         $stmt = $this->db->prepare("
             INSERT INTO open_day_entries
-                (tenant_id, data_registrazione, ora_registrazione, email,
+                (tenant_id, annata, data_registrazione, ora_registrazione, email,
                  nome, cognome, indirizzo, citta_cap, data_nascita, cellulare,
                  taglia_tshirt, club_tesseramento, ruolo, campionati,
                  nome_genitore, telefono_genitore, email_genitore, privacy_consent,
                  altezza, reach_cm, salto_rincorsa_1, salto_rincorsa_2, salto_rincorsa_3)
             VALUES
-                (:tenant_id, :data_reg, :ora_reg, :email,
+                (:tenant_id, :annata, :data_reg, :ora_reg, :email,
                  :nome, :cognome, :indirizzo, :citta_cap, :data_nascita, :cellulare,
                  :taglia, :club, :ruolo, :campionati,
                  :nome_gen, :tel_gen, :email_gen, :privacy_consent,
@@ -79,6 +94,7 @@ class OpenDayController
 
         $stmt->execute([
             ':tenant_id'    => $tenantId,
+            ':annata'       => $annata,
             ':data_reg'     => !empty($data['data_registrazione']) ? $data['data_registrazione'] : null,
             ':ora_reg'      => !empty($data['ora_registrazione'])  ? $data['ora_registrazione']  : null,
             ':email'        => $data['email'] ?? null,
@@ -239,13 +255,15 @@ class OpenDayController
 
         header('Cache-Control: no-cache, no-store, must-revalidate');
 
+        $annata = isset($_GET['annata']) ? (int)$_GET['annata'] : (int)date('Y');
+
         $stmt = $this->db->prepare("
-            SELECT COUNT(*) as count FROM open_day_entries WHERE tenant_id = 'TNT_fusion'
+            SELECT COUNT(*) as count FROM open_day_entries WHERE tenant_id = 'TNT_fusion' AND annata = :annata
         ");
-        $stmt->execute();
+        $stmt->execute([':annata' => $annata]);
         $count = (int)$stmt->fetchColumn();
 
-        Response::success(['count' => $count, 'limit' => 50]);
+        Response::success(['count' => $count, 'limit' => 50, 'annata' => $annata]);
     }
 
     /* ─────────────────────────────────────────────────────────────────────
@@ -304,12 +322,15 @@ class OpenDayController
             Response::error('Indirizzo email genitore non valido', 400);
         }
 
-        // Quota check (single event, max 50)
+        // Annata from payload or current year
+        $annata = !empty($data['annata']) ? (int)$data['annata'] : (int)date('Y');
+
+        // Quota check (per annata, max 50)
         $limit = 50;
         $checkLimitStmt = $this->db->prepare("
-            SELECT COUNT(*) FROM open_day_entries WHERE tenant_id = 'TNT_fusion'
+            SELECT COUNT(*) FROM open_day_entries WHERE tenant_id = 'TNT_fusion' AND annata = :annata
         ");
-        $checkLimitStmt->execute();
+        $checkLimitStmt->execute([':annata' => $annata]);
         if ($checkLimitStmt->fetchColumn() >= $limit) {
             Response::error('Spiacenti, i posti per l\'Open Day sono esauriti (SOLD OUT).', 400);
         }
@@ -320,18 +341,19 @@ class OpenDayController
 
         $stmt = $this->db->prepare("
             INSERT INTO open_day_entries
-                (tenant_id, data_registrazione, ora_registrazione, email,
+                (tenant_id, annata, data_registrazione, ora_registrazione, email,
                  nome, cognome, indirizzo, citta_cap, data_nascita, cellulare,
                  taglia_tshirt, club_tesseramento, ruolo, campionati,
                  nome_genitore, telefono_genitore, email_genitore, privacy_consent)
             VALUES
-                ('TNT_fusion', :data_reg, :ora_reg, :email,
+                ('TNT_fusion', :annata, :data_reg, :ora_reg, :email,
                  :nome, :cognome, :indirizzo, :citta_cap, :data_nascita, :cellulare,
                  :taglia, :club, :ruolo, :campionati,
                  :nome_gen, :tel_gen, :email_gen, :privacy_consent)
         ");
 
         $stmt->execute([
+            ':annata'       => $annata,
             ':data_reg'     => $now,
             ':ora_reg'      => $time,
             ':email'        => trim($data['email']),

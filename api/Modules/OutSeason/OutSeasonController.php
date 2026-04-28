@@ -581,15 +581,41 @@ PROMPT;
     private static function priceFull(): int  { return (int)(($_ENV['OUTSEASON_PRICE_FULL'] ?? getenv('OUTSEASON_PRICE_FULL')) ?: 650); }
     private static function pricePartial(): int { return (int)(($_ENV['OUTSEASON_PRICE_PARTIAL'] ?? getenv('OUTSEASON_PRICE_PARTIAL')) ?: 400); }
 
-    /* publicStatus — GET registration counts per week */
+    /* publicStatus — GET registration counts per week + per role */
     public function publicStatus(): void
     {
         self::setCorsPublic();
         header('Cache-Control: no-cache, no-store, must-revalidate');
         $pdo = Database::getInstance();
+        $sk = self::seasonKey();
+
+        // Total per week
         $stmt = $pdo->prepare("SELECT settimana_scelta AS week, COUNT(*) AS count FROM outseason_entries WHERE tenant_id='TNT_fusion' AND season_key=:sk AND is_deleted=0 GROUP BY settimana_scelta");
-        $stmt->execute([':sk' => self::seasonKey()]);
-        Response::success(['counts' => $stmt->fetchAll(\PDO::FETCH_ASSOC)]);
+        $stmt->execute([':sk' => $sk]);
+        $totals = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        // Per week + ruolo breakdown
+        $stmt2 = $pdo->prepare("SELECT settimana_scelta AS week, ruolo AS role, COUNT(*) AS count FROM outseason_entries WHERE tenant_id='TNT_fusion' AND season_key=:sk AND is_deleted=0 GROUP BY settimana_scelta, ruolo");
+        $stmt2->execute([':sk' => $sk]);
+        $byRole = [];
+        foreach ($stmt2->fetchAll(\PDO::FETCH_ASSOC) as $r) {
+            $byRole[$r['week']][$r['role']] = (int)$r['count'];
+        }
+
+        // Quota per role
+        $quotas = [
+            'Palleggiatrice' => 4,
+            'Opposta'        => 4,
+            'Schiacciatrice' => 8,
+            'Centrale'       => 8,
+            'Libero'         => 4,
+        ];
+
+        Response::success([
+            'counts' => $totals,
+            'by_role' => $byRole,
+            'quotas'  => $quotas,
+        ]);
     }
 
     /* validateDiscount — POST validate a discount code */

@@ -3,13 +3,21 @@ export class OpenDayView {
     /* ═══════════════════════════════════════════════════════════════════
      *  Main Layout — header + content area + side panel shell
      * ═══════════════════════════════════════════════════════════════════ */
-    static renderMainLayout() {
+    static renderMainLayout(annata = new Date().getFullYear(), availableYears = []) {
+        if (!availableYears.includes(annata)) { availableYears.push(annata); availableYears.sort((a, b) => b - a); }
+        const yearOptions = availableYears.map(y => `<option value="${y}" ${y === annata ? 'selected' : ''}>Open Day ${y}</option>`).join('');
+
         return `
             <div class="transport-dashboard" style="min-height: 100vh;">
                 <div class="dash-top-bar" style="border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 24px; margin-bottom: 24px;">
                     <div>
                         <h1 class="dash-title"><i class="ph ph-calendar-plus" style="color:var(--color-success);margin-right:8px"></i>Open <span style="color:var(--color-success);">Day</span></h1>
-                        <p class="dash-subtitle">Registrazioni Open Day — 27 Maggio 2026, Palavega Trivignano (17:00-20:00)</p>
+                        <p class="dash-subtitle">Registrazioni Open Day — Gestione per annata</p>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <select id="od-annata-select" style="padding:10px 16px;border-radius:10px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.06);color:#fff;font-size:14px;font-weight:600;cursor:pointer;min-width:170px;outline:none;transition:border-color .2s ease;">
+                            ${yearOptions}
+                        </select>
                     </div>
                 </div>
                 <div id="od-stats-area" style="margin-bottom: 24px;"></div>
@@ -43,7 +51,7 @@ export class OpenDayView {
     /* ═══════════════════════════════════════════════════════════════════
      *  Stats Area — single total card (no tappa breakdown)
      * ═══════════════════════════════════════════════════════════════════ */
-    static renderStatsSummary(entries) {
+    static renderStatsSummary(entries, annata = new Date().getFullYear()) {
         if (!entries) entries = [];
         const total = entries.length;
 
@@ -53,13 +61,13 @@ export class OpenDayView {
                     <div style="position: absolute; top: -10px; right: -10px; opacity: 0.1; transform: rotate(15deg);">
                         <i class="ph-fill ph-users" style="font-size: 80px; color: var(--color-success);"></i>
                     </div>
-                    <div style="font-size: 11px; color: var(--color-success); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; font-weight: 600; z-index: 1;">Totale Iscritti</div>
+                    <div style="font-size: 11px; color: var(--color-success); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; font-weight: 600; z-index: 1;">Iscritti ${annata}</div>
                     <div style="font-size: 30px; font-weight: 800; color: #fff; z-index: 1; font-variant-numeric: tabular-nums; text-shadow: 0 2px 10px rgba(0,0,0,0.3);">${total}</div>
                 </div>
                 <div style="flex: 1; max-width: 400px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 16px 20px; display: flex; flex-direction: column; justify-content: center;">
-                    <div style="font-size: 11px; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">Evento</div>
-                    <div style="font-size: 15px; font-weight: 600; color: #fff;">27 Maggio 2026 — Palavega, Trivignano</div>
-                    <div style="font-size: 12px; color: var(--color-text-muted); margin-top: 2px;">Ore 17:00 – 20:00</div>
+                    <div style="font-size: 11px; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">Edizione</div>
+                    <div style="font-size: 15px; font-weight: 600; color: #fff;">Open Day ${annata}</div>
+                    <div style="font-size: 12px; color: var(--color-text-muted); margin-top: 2px;">Annata selezionata</div>
                 </div>
             </div>
         `;

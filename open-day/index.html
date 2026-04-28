@@ -251,7 +251,7 @@
     /* ── Spots Counter ────────────────────────────────────────── */
     async function loadSpots() {
         try {
-            const res = await fetch(`${API_BASE}?module=openday&action=publicStatus`);
+            const res = await fetch(`${API_BASE}?module=openday&action=publicStatus&annata=2026`);
             const data = await res.json();
             const icon = document.getElementById('spotsIcon');
             const text = document.getElementById('spotsText');
@@ -346,6 +346,7 @@
         const payload = {};
         fields.forEach(f => { payload[f.id] = document.getElementById(f.id).value; });
         payload.privacy_consent = 1;
+        payload.annata = 2026;
 
         const submitBtn = document.getElementById('submitBtn');
         submitBtn.classList.add('loading');

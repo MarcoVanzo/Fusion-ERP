@@ -3,11 +3,13 @@
  */
 export class OpenDayAPI {
     /**
-     * Fetch all Open Day registrations for the current tenant.
-     * @returns {Promise<{entries: Array, count: number}>}
+     * Fetch Open Day registrations for the current tenant, filtered by annata.
+     * @param {number} [annata] - Edition year (defaults to current year on server)
+     * @returns {Promise<{entries: Array, count: number, annata: number, available_years: number[]}>}
      */
-    static async listEntries() {
-        return window.Store.get("listEntries", "openday");
+    static async listEntries(annata) {
+        const params = annata ? { annata } : {};
+        return window.Store.get("listEntries", "openday", params);
     }
 
     /**

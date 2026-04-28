@@ -1,5 +1,5 @@
-import { OpenDayAPI } from './OpenDayAPI.js?v=1001';
-import { OpenDayView } from './OpenDayView.js?v=1001';
+import { OpenDayAPI } from './OpenDayAPI.js?v=1002';
+import { OpenDayView } from './OpenDayView.js?v=1002';
 
 class OpenDayModule {
     constructor() {
@@ -9,6 +9,8 @@ class OpenDayModule {
         this._sortCol = '';
         this._sortDir = '';
         this._searchTerm = '';
+        this._annata = new Date().getFullYear();
+        this._availableYears = [this._annata];
     }
 
     sig() { return { signal: this._abort.signal }; }
@@ -21,6 +23,8 @@ class OpenDayModule {
         this._sortCol = '';
         this._sortDir = '';
         this._searchTerm = '';
+        this._annata = new Date().getFullYear();
+        this._availableYears = [this._annata];
     }
 
     async init() {
@@ -32,11 +36,13 @@ class OpenDayModule {
 
         try {
             await this.refreshData(false);
-            container.innerHTML = OpenDayView.renderMainLayout();
+            container.innerHTML = OpenDayView.renderMainLayout(this._annata, this._availableYears);
             this.renderTableData(document.getElementById("od-content-area"));
 
             const statsArea = document.getElementById("od-stats-area");
-            if (statsArea) statsArea.innerHTML = OpenDayView.renderStatsSummary(this._entries);
+            if (statsArea) statsArea.innerHTML = OpenDayView.renderStatsSummary(this._entries, this._annata);
+
+            this.bindYearSelector();
         } catch (err) {
             console.error("[OpenDay] Init error", err);
             container.innerHTML = window.Utils.emptyState("Errore di caricamento", err.message);
@@ -46,17 +52,48 @@ class OpenDayModule {
         }
     }
 
+    bindYearSelector() {
+        const sel = document.getElementById("od-annata-select");
+        if (!sel) return;
+        sel.addEventListener("change", async () => {
+            this._annata = parseInt(sel.value, 10);
+            window.Store.invalidate("openday");
+            await this.refreshData(true);
+
+            const statsArea = document.getElementById("od-stats-area");
+            if (statsArea) statsArea.innerHTML = OpenDayView.renderStatsSummary(this._entries, this._annata);
+        }, this.sig());
+    }
+
     async refreshData(reRender = true) {
         try {
-            const result = await OpenDayAPI.listEntries();
+            const result = await OpenDayAPI.listEntries(this._annata);
             this._entries = result.entries || result || [];
+            if (result.available_years && result.available_years.length > 0) {
+                this._availableYears = result.available_years;
+            }
 
             if (reRender) {
                 const area = document.getElementById("od-content-area");
                 if (area) this.renderTableData(area);
 
                 const statsArea = document.getElementById("od-stats-area");
-                if (statsArea) statsArea.innerHTML = OpenDayView.renderStatsSummary(this._entries);
+                if (statsArea) statsArea.innerHTML = OpenDayView.renderStatsSummary(this._entries, this._annata);
+
+                // Update year selector options if new years appeared
+                const sel = document.getElementById("od-annata-select");
+                if (sel) {
+                    const currentOpts = Array.from(sel.options).map(o => parseInt(o.value, 10));
+                    this._availableYears.forEach(y => {
+                        if (!currentOpts.includes(y)) {
+                            const opt = document.createElement("option");
+                            opt.value = y;
+                            opt.textContent = y;
+                            sel.prepend(opt);
+                        }
+                    });
+                    sel.value = this._annata;
+                }
             }
         } catch (err) {
             console.error("[OpenDay] Data fetch error", err);
@@ -255,7 +292,7 @@ class OpenDayModule {
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `OpenDay_Export_${new Date().toISOString().substring(0, 10)}.csv`;
+        a.download = `OpenDay_${this._annata}_Export_${new Date().toISOString().substring(0, 10)}.csv`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -267,7 +304,7 @@ class OpenDayModule {
         const panel = document.getElementById("od-side-panel");
         if (!panel) return;
 
-        panel.innerHTML = OpenDayView.renderSidePanelForm(entry);
+        panel.innerHTML = OpenDayView.renderSidePanelForm(entry, this._annata);
         panel.style.display = "flex";
         void panel.offsetWidth;
         panel.classList.add("open");
@@ -285,6 +322,7 @@ class OpenDayModule {
             const saveBtn = ev.currentTarget;
 
             const payload = {
+                annata:             this._annata,
                 data_registrazione: document.getElementById("od-data-reg")?.value || null,
                 ora_registrazione:  document.getElementById("od-ora-reg")?.value || null,
                 email:              document.getElementById("od-email")?.value.trim() || null,
