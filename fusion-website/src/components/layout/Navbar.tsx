@@ -62,13 +62,18 @@ const Navbar = () => {
         { name: 'SPONSOR', path: '/sponsors' },
     ];
 
+    // Open Day promo attiva fino al 30 maggio 2026, poi torna CANDIDATI
+    const isOpenDayActive = new Date() < new Date('2026-05-30T00:00:00');
+
     const splitRightLinks: NavLink[] = [
         { name: 'NEWS', path: '/news' },
         { name: 'MATCH CENTER', path: '/results' },
-        { name: 'OPEN DAY', path: '/open-day', badge: 'NEW' },
+        ...(isOpenDayActive ? [] : [{ name: 'OPEN DAY', path: '/open-day' } as NavLink]),
         { name: 'OUTSEASON', path: '/outseason' },
         { name: 'STORE', path: '/shop' },
-        { name: 'ENTRA NELLA NOSTRA FAMIGLIA', path: '/candidatura-scouting', isHighlight: true },
+        isOpenDayActive
+            ? { name: 'OPEN DAY 2026', path: '/open-day', isHighlight: true, badge: 'NEW' }
+            : { name: 'ENTRA NELLA NOSTRA FAMIGLIA', path: '/candidatura-scouting', isHighlight: true },
     ];
 
     const allLinks = [...splitLeftLinks, ...splitRightLinks];
@@ -134,7 +139,7 @@ const Navbar = () => {
                     <div className="hidden lg:flex items-center gap-3 xl:gap-6">
                         {splitRightLinks.map(link => {
                             const isActive = location.pathname === link.path || (link.path !== '/' && location.pathname.startsWith(link.path));
-                            const linkName = link.name === 'ENTRA NELLA NOSTRA FAMIGLIA' ? 'CANDIDATI' : link.name;
+                            const linkName = link.name === 'ENTRA NELLA NOSTRA FAMIGLIA' ? 'CANDIDATI' : (link.name === 'OPEN DAY 2026' ? 'OPEN DAY' : link.name);
                             return (
                                 <Link 
                                     key={link.name} 
@@ -166,16 +171,16 @@ const Navbar = () => {
                         })}
                     </div>
 
-                    {/* Mobile CANDIDATI Button (High Impact) */}
+                    {/* Mobile CTA Button (date-driven) */}
                     <Link 
-                        to="/candidatura-scouting" 
+                        to={isOpenDayActive ? "/open-day" : "/candidatura-scouting"} 
                         className="lg:hidden relative group transition-transform hover:scale-110 active:scale-95 px-1 py-1"
                     >
                         <span 
                             className="relative z-10 text-[20px] sm:text-[24px] text-brand-500 drop-shadow-[0_0_10px_rgba(217,70,239,0.7)] animate-neon-pulse whitespace-nowrap" 
                             style={{ fontFamily: "'Rubik Dirt', system-ui", lineHeight: 1 }}
                         >
-                            CANDIDATI
+                            {isOpenDayActive ? 'OPEN DAY' : 'CANDIDATI'}
                         </span>
                     </Link>
 
@@ -225,7 +230,7 @@ const Navbar = () => {
                                                 className={link.isHighlight ? "text-brand-500 animate-neon-pulse" : ""}
                                                 style={link.isHighlight ? { fontFamily: "'Rubik Dirt', system-ui", fontSize: '32px' } : {}}
                                             >
-                                                {link.isHighlight ? 'CANDIDATI' : link.name}
+                                                {link.isHighlight ? (link.name === 'OPEN DAY 2026' ? 'OPEN DAY' : 'CANDIDATI') : link.name}
                                             </span>
                                             {link.badge && (
                                                 <span className="bg-red-600/90 shadow-[0_0_12px_rgba(220,38,38,0.8)] text-white font-sans text-xs font-bold px-3 py-1.5 rounded animate-pulse tracking-normal">

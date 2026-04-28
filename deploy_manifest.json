@@ -1,6 +1,6 @@
 {
   "version": 3,
-  "generated_at": "2026-04-28T23:51:39.835Z",
+  "generated_at": "2026-04-28T23:53:44.937Z",
   "file_count": 1744,
   "files": [
     {
@@ -1284,8 +1284,8 @@
       "hash": "bff23f6cbbda8e9f63374caad9603b813d7ac9dc5935d53e2f1c5831a7c66b61"
     },
     {
-      "path": "fusion-website/dist/assets/FamilyPortal-Du7rrNuP.js",
-      "hash": "984dafb16b6f963538509f17a90cfce2cdb10fc995e628fd84b5414b59aec9d1"
+      "path": "fusion-website/dist/assets/FamilyPortal-BQdhA5zD.js",
+      "hash": "e8b4125d3d72d0c4da5f1ac922eec2a00c5b803bfbd42825ac2baa28eb789baf"
     },
     {
       "path": "fusion-website/dist/assets/Foresteria-COBY5sGw.js",
@@ -1360,8 +1360,8 @@
       "hash": "b05ea21060beecbe73de944aba11855beac518f23fe30a6d5acb69dbd2df66a5"
     },
     {
-      "path": "fusion-website/dist/assets/index-C2IgVAwP.js",
-      "hash": "c570d77feb60508adeda4fd7abca108dbcbb7c7b7f672128ec97d37df0b8d6e0"
+      "path": "fusion-website/dist/assets/index-DWsQ18Nn.js",
+      "hash": "1dda4eb801f1441c3c5681efa58e3d3afa19d56de63213b116ec94aa0b89c524"
     },
     {
       "path": "fusion-website/dist/assets/logo-colorato.png",
@@ -1537,7 +1537,7 @@
     },
     {
       "path": "fusion-website/dist/index.html",
-      "hash": "27758c4e0d170a2ab951500dccb5a02712727b9a615315c8d4772ceb079f884b"
+      "hash": "27bbd695040de0d494a3b25c6ba004abbaa7543d3d630271e807872a48808454"
     },
     {
       "path": "fusion-website/dist/privacy-policy.pdf",
@@ -1557,7 +1557,7 @@
     },
     {
       "path": "index.html",
-      "hash": "9b1a20fd49f621f7ee6f73950166e9260ec891fcd9904367b4c8f51bde279320"
+      "hash": "5846d318f49c4f295af2e69fb9b7a326ccf2f989de44daff56867505e17aad09"
     },
     {
       "path": "js/api/athletes.api.js",
