@@ -335,7 +335,12 @@ def deploy_files_via_ftp(dry_run=False):
         print("🔍 Scanning for modified files...")
         for root, dirs, files in os.walk('.'):
             # Prune ignored directories in-place
+            rel_path_check = os.path.relpath(root, '.').replace('\\', '/')
+            is_react_app_root = rel_path_check in ['fusion-website', 'fusion-erp-react']
             for d in list(dirs):
+                # Keep 'dist' inside React app roots so builds get deployed
+                if d == 'dist' and is_react_app_root:
+                    continue
                 if d in ignore_dirs:
                     dirs.remove(d)
 
