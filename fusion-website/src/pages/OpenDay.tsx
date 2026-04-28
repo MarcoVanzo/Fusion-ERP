@@ -107,7 +107,7 @@ const OpenDay = () => {
                         {/* Event info cards */}
                         <div className="mt-10 space-y-3">
                             {[
-                                { icon: '📅', text: 'Martedì 27 Maggio 2026', bold: true },
+                                { icon: '📅', text: 'Mercoledì 27 Maggio 2026', bold: true },
                                 { icon: '📍', text: 'Palavega — Trivignano (VE)', bold: true },
                                 { icon: '🕐', text: 'Ore 17:00 – 20:00', bold: false },
                             ].map((item, i) => (

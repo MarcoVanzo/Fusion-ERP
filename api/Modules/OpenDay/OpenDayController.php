@@ -528,7 +528,7 @@ class OpenDayController
                     </td>
                     <td valign="top">
                         <p style="margin:0 0 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.15em;color:#D946EF;">Dove e quando</p>
-                        <p style="margin:0 0 4px;font-size:18px;color:#ffffff;font-weight:800;">Martedì 27 Maggio 2026</p>
+                        <p style="margin:0 0 4px;font-size:18px;color:#ffffff;font-weight:800;">Mercoledì 27 Maggio 2026</p>
                         <p style="margin:0;font-size:14px;color:#a1a1aa;">📍 Palavega — Trivignano (VE) &nbsp;·&nbsp; 🕐 Ore 17:00 – 20:00</p>
                     </td>
                 </tr>
