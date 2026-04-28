@@ -342,7 +342,7 @@
             const taken = weekRoles[opt.value] || 0;
             const isFull = taken >= quota;
             opt.disabled = isFull;
-            opt.textContent = opt.value + (isFull ? ' (COMPLETO)' : ` (${quota - taken} posti)`);
+            opt.textContent = isFull ? opt.value + ' — ESAURITO' : opt.value;
         });
     }
 
