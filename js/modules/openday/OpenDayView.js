@@ -11,7 +11,7 @@ export class OpenDayView {
             <div class="transport-dashboard" style="min-height: 100vh;">
                 <div class="dash-top-bar" style="border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 24px; margin-bottom: 24px;">
                     <div>
-                        <h1 class="dash-title"><i class="ph ph-calendar-plus" style="color:var(--color-success);margin-right:8px"></i>Open <span style="color:var(--color-success);">Day</span></h1>
+                        <h1 class="dash-title"><i class="ph ph-calendar-plus" style="color:var(--color-pink);margin-right:8px"></i>Open <span style="color:var(--color-pink);">Day</span></h1>
                         <p class="dash-subtitle">Registrazioni Open Day — Gestione per annata</p>
                     </div>
                     <div style="display:flex;align-items:center;gap:12px;">
@@ -34,14 +34,14 @@ export class OpenDayView {
                 .od-view-tabs { display: flex; gap: 4px; background: rgba(255,255,255,0.04); border-radius: 12px; padding: 4px; border: 1px solid rgba(255,255,255,0.06); }
                 .od-view-tab { padding: 8px 18px; border-radius: 10px; font-size: 13px; font-weight: 600; color: var(--color-text-muted); cursor: pointer; transition: all .25s ease; border: none; background: transparent; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
                 .od-view-tab:hover { color: #fff; background: rgba(255,255,255,0.06); }
-                .od-view-tab.active { background: linear-gradient(135deg, var(--color-success), var(--color-primary)); color: #fff; box-shadow: 0 2px 12px rgba(16,185,129,0.3); }
+                .od-view-tab.active { background: linear-gradient(135deg, var(--color-pink), var(--color-primary)); color: #fff; box-shadow: 0 2px 12px rgba(217,70,239,0.3); }
                 #od-table th { position: sticky; top: 0; background: var(--bg-dark, #12161F); z-index: 2; }
                 .od-sort-header { cursor: pointer; user-select: none; transition: color .2s ease; display: inline-flex; align-items: center; gap: 4px; }
                 .od-sort-header:hover { color: #fff; }
                 .od-sort-header .od-sort-icon { font-size: 12px; opacity: 0.35; transition: opacity .2s ease, transform .2s ease; }
-                .od-sort-header.sort-active .od-sort-icon { opacity: 1; color: var(--color-success); }
+                .od-sort-header.sort-active .od-sort-icon { opacity: 1; color: var(--color-pink); }
                 .od-sort-header.sort-desc .od-sort-icon { transform: rotate(180deg); }
-                .od-form-section { display: flex; align-items: center; gap: 8px; padding: 6px 0 8px; margin-top: 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--color-success); border-bottom: 1px solid rgba(255,255,255,0.06); }
+                .od-form-section { display: flex; align-items: center; gap: 8px; padding: 6px 0 8px; margin-top: 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--color-pink); border-bottom: 1px solid rgba(255,255,255,0.06); }
             </style>
 
             <div id="od-side-panel" style="display:none;flex-direction:column;"></div>
@@ -57,11 +57,11 @@ export class OpenDayView {
 
         return `
             <div style="display: flex; gap: 12px; overflow: hidden; padding-bottom: 8px;">
-                <div style="flex: 1; max-width: 280px; background: linear-gradient(135deg, rgba(16,185,129,0.15), rgba(99,102,241,0.15)); border: 1px solid rgba(16,185,129,0.3); border-radius: 12px; padding: 16px 20px; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
+                <div style="flex: 1; max-width: 280px; background: linear-gradient(135deg, rgba(217,70,239,0.15), rgba(99,102,241,0.15)); border: 1px solid rgba(217,70,239,0.3); border-radius: 12px; padding: 16px 20px; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
                     <div style="position: absolute; top: -10px; right: -10px; opacity: 0.1; transform: rotate(15deg);">
-                        <i class="ph-fill ph-users" style="font-size: 80px; color: var(--color-success);"></i>
+                        <i class="ph-fill ph-users" style="font-size: 80px; color: var(--color-pink);"></i>
                     </div>
-                    <div style="font-size: 11px; color: var(--color-success); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; font-weight: 600; z-index: 1;">Iscritti ${annata}</div>
+                    <div style="font-size: 11px; color: var(--color-pink); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; font-weight: 600; z-index: 1;">Iscritti ${annata}</div>
                     <div style="font-size: 30px; font-weight: 800; color: #fff; z-index: 1; font-variant-numeric: tabular-nums; text-shadow: 0 2px 10px rgba(0,0,0,0.3);">${total}</div>
                 </div>
                 <div style="flex: 1; max-width: 400px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 16px 20px; display: flex; flex-direction: column; justify-content: center;">
@@ -98,7 +98,7 @@ export class OpenDayView {
                             </button>
                         </div>
                         ${canEdit ? `
-                            <button class="btn-dash" id="od-add-btn" type="button" style="background:var(--color-success);color:#fff;">
+                            <button class="btn-dash" id="od-add-btn" type="button" style="background:var(--color-pink);color:#fff;">
                                 <i class="ph ph-plus-circle" style="font-size:18px;"></i> NUOVA REGISTRAZIONE
                             </button>
                             <button class="btn-dash" id="od-export-btn" type="button" style="background-color: #217346; color: white;">
@@ -235,7 +235,7 @@ export class OpenDayView {
         return `
             <div style="padding:var(--sp-3) var(--sp-4); border-bottom:1px solid var(--color-border); display:flex; justify-content:space-between; align-items:center; background:var(--color-bg);">
                 <h3 style="margin:0; font-size:16px; font-weight:600;">
-                    <i class="ph ph-${isEdit ? 'pencil-simple' : 'plus-circle'}" style="margin-right:6px;color:var(--color-success)"></i>
+                    <i class="ph ph-${isEdit ? 'pencil-simple' : 'plus-circle'}" style="margin-right:6px;color:var(--color-pink)"></i>
                     ${isEdit ? "Modifica Registrazione" : "Nuova Registrazione"}
                 </h3>
                 <button class="btn btn-icon btn-ghost btn-sm" id="od-cancel-panel" title="Chiudi">
@@ -262,7 +262,7 @@ export class OpenDayView {
                     </div>
                 </div>
                 <div class="form-group" style="margin-top:12px;background:rgba(255,255,255,0.03);padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.05);display:flex;align-items:center;gap:10px;">
-                    <input id="od-privacy-consent" type="checkbox" style="width:18px;height:18px;accent-color:var(--color-success)" ${e.privacy_consent === 1 || e.privacy_consent === true || !isEdit ? 'checked' : ''}>
+                    <input id="od-privacy-consent" type="checkbox" style="width:18px;height:18px;accent-color:var(--color-pink)" ${e.privacy_consent === 1 || e.privacy_consent === true || !isEdit ? 'checked' : ''}>
                     <label class="form-label" for="od-privacy-consent" style="margin:0;cursor:pointer;">Consenso Privacy Autorizzato (GDPR) <span style="color:var(--color-red)">*</span></label>
                 </div>
 
