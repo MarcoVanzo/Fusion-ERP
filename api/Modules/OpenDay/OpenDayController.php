@@ -444,16 +444,16 @@ class OpenDayController
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#0f172a;">
 <tr><td align="center" style="padding:40px 16px;">
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.1);">
-    <tr><td style="background-color:#ffffff;padding:32px 24px;text-align:center;border-bottom:3px solid #10B981;">
+    <tr><td style="background-color:#ffffff;padding:32px 24px;text-align:center;border-bottom:3px solid #D946EF;">
         <h1 style="margin:0;font-size:25px;font-weight:900;color:#0f172a;letter-spacing:0.08em;text-transform:uppercase;">OPEN DAY 2026</h1>
         <p style="margin:8px 0 0;font-size:14px;color:#64748b;">Fusion Team Volley</p>
     </td></tr>
     <tr><td style="padding:40px 32px;">
         <p style="color:#222;font-size:16px;line-height:1.7;margin:0 0 20px;">Ciao <strong>{$nome} {$cognome}</strong>,</p>
         <p style="color:#444;font-size:15px;line-height:1.7;margin:0 0 24px;">la tua registrazione all'<strong style="color:#0f172a;">Open Day 2026</strong> della Fusion Team Volley è stata confermata!</p>
-        <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fdf4;border:1px solid #bbf7d0;border-left:4px solid #10B981;border-radius:6px;margin:24px 0;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="background:#fdf4ff;border:1px solid #f0abfc;border-left:4px solid #D946EF;border-radius:6px;margin:24px 0;">
         <tr><td style="padding:20px 24px;">
-            <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#10B981;">Dove e quando?</p>
+            <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#D946EF;">Dove e quando?</p>
             <p style="margin:4px 0;font-size:16px;color:#0f172a;font-weight:bold;">27 Maggio 2026 — Palavega, Trivignano</p>
             <p style="margin:4px 0;font-size:14px;color:#64748b;">Ore 17:00 – 20:00</p>
         </td></tr></table>
@@ -463,7 +463,7 @@ class OpenDayController
             {$datiAtleta}
         </td></tr></table>
         <p style="color:#444;font-size:15px;line-height:1.7;margin:24px 0 20px;">Ti raccomandiamo di presentarti con <strong>30 minuti di anticipo</strong>.</p>
-        <p style="border-top:1px solid #eee;padding-top:20px;color:#666;font-size:13px;line-height:1.7;margin:30px 0 0;">Per informazioni contattaci a <a href="mailto:info@fusionteamvolley.it" style="color:#10B981;font-weight:bold;text-decoration:none;">info@fusionteamvolley.it</a>.</p>
+        <p style="border-top:1px solid #eee;padding-top:20px;color:#666;font-size:13px;line-height:1.7;margin:30px 0 0;">Per informazioni contattaci a <a href="mailto:info@fusionteamvolley.it" style="color:#D946EF;font-weight:bold;text-decoration:none;">info@fusionteamvolley.it</a>.</p>
     </td></tr>
     <tr><td style="padding:24px 28px;background:#f8fafc;border-top:1px solid #e2e8f0;text-align:center;">
         <p style="margin:0;font-size:12px;color:#777;line-height:1.6;"><strong>Fusion Team Volley ASD</strong><br>Trivignano (VE)</p>
