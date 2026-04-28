@@ -589,17 +589,29 @@ PROMPT;
         $pdo = Database::getInstance();
         $sk = self::seasonKey();
 
+        // Normalize legacy Cognito role names → canonical names
+        $roleMap = [
+            'Alzatrice'      => 'Palleggiatrice',
+            'Palleggiatrice' => 'Palleggiatrice',
+            'Opposto'        => 'Opposta',
+            'Opposta'        => 'Opposta',
+            'Schiacciatrice' => 'Schiacciatrice',
+            'Centrale'       => 'Centrale',
+            'Libero'         => 'Libero',
+        ];
+
         // Total per week
         $stmt = $pdo->prepare("SELECT settimana_scelta AS week, COUNT(*) AS count FROM outseason_entries WHERE tenant_id='TNT_fusion' AND season_key=:sk AND is_deleted=0 GROUP BY settimana_scelta");
         $stmt->execute([':sk' => $sk]);
         $totals = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
-        // Per week + ruolo breakdown
+        // Per week + ruolo breakdown (with normalization)
         $stmt2 = $pdo->prepare("SELECT settimana_scelta AS week, ruolo AS role, COUNT(*) AS count FROM outseason_entries WHERE tenant_id='TNT_fusion' AND season_key=:sk AND is_deleted=0 GROUP BY settimana_scelta, ruolo");
         $stmt2->execute([':sk' => $sk]);
         $byRole = [];
         foreach ($stmt2->fetchAll(\PDO::FETCH_ASSOC) as $r) {
-            $byRole[$r['week']][$r['role']] = (int)$r['count'];
+            $canonical = $roleMap[$r['role']] ?? $r['role'];
+            $byRole[$r['week']][$canonical] = ($byRole[$r['week']][$canonical] ?? 0) + (int)$r['count'];
         }
 
         // Quota per role
