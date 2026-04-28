@@ -137,6 +137,89 @@ body {
 .os-week-card .date { font-family: 'Poppins',sans-serif; font-size: 14px; font-weight: 600; color: #fff; text-transform: uppercase; }
 .os-week-card .range { font-size: 11px; color: rgba(255,255,255,0.55); margin-top: 2px; }
 
+/* ─── Availability Panel (appears below week cards) ────────────────── */
+.os-avail-panel {
+  max-width: 520px; margin: 22px auto 0;
+  background: rgba(0,0,0,0.35);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  padding: 18px 20px 14px;
+  display: none;
+  animation: avSlide 0.4s ease;
+}
+.os-avail-panel.visible { display: block; }
+@keyframes avSlide { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: translateY(0); } }
+
+.os-avail-title {
+  font-family: 'Poppins',sans-serif;
+  font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--ftv-pink-light);
+  margin-bottom: 12px; text-align: center;
+}
+
+.os-avail-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.os-avail-row:last-child { border-bottom: none; }
+
+.os-avail-role {
+  width: 110px; flex-shrink: 0;
+  font-family: 'Poppins',sans-serif;
+  font-size: 11px; font-weight: 600;
+  color: rgba(255,255,255,0.8);
+  text-transform: uppercase; letter-spacing: 0.04em;
+}
+
+.os-avail-dots {
+  display: flex; gap: 5px; flex: 1;
+  align-items: center;
+}
+.os-avail-dot {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  transition: all 0.4s ease;
+}
+.os-avail-dot.free {
+  border: 2px solid rgba(39,174,96,0.6);
+  background: rgba(39,174,96,0.15);
+  box-shadow: 0 0 6px rgba(39,174,96,0.2);
+}
+.os-avail-dot.taken {
+  background: var(--ftv-primary);
+  border: 2px solid var(--ftv-primary);
+  box-shadow: 0 0 8px rgba(217,49,127,0.3);
+}
+.os-avail-dot.free:hover { background: rgba(39,174,96,0.35); transform: scale(1.2); }
+
+.os-avail-count {
+  font-family: 'Poppins',sans-serif;
+  font-size: 11px; font-weight: 700;
+  color: rgba(255,255,255,0.5);
+  width: 42px; text-align: right; flex-shrink: 0;
+}
+.os-avail-count .avail-num { color: var(--success); }
+.os-avail-count.full .avail-num { color: var(--error); }
+
+.os-avail-legend {
+  display: flex; gap: 16px; justify-content: center;
+  margin-top: 12px; padding-top: 10px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+.os-avail-legend span {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 10px; color: rgba(255,255,255,0.5);
+  font-family: 'Roboto',sans-serif;
+}
+.os-avail-legend .leg-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+}
+.os-avail-legend .leg-free { border: 2px solid rgba(39,174,96,0.6); background: rgba(39,174,96,0.15); }
+.os-avail-legend .leg-taken { background: var(--ftv-primary); border: 2px solid var(--ftv-primary); }
+
 /* ─── Container ────────────────────────────────────────────────────── */
 .os-container { max-width: 660px; margin: -30px auto 0; padding: 0 16px 50px; position: relative; z-index: 2; }
 
