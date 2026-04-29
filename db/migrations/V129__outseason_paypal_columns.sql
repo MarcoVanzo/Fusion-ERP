@@ -1,7 +1,43 @@
 -- V129__outseason_paypal_columns.sql
 -- Add PayPal payment columns to outseason_entries for native payment processing
--- Uses safe_add_column procedure (created in V085)
 
+-- ─── Helper: safe_add_column ─────────────────────────────────────────────────
+DROP PROCEDURE IF EXISTS safe_add_column;
+
+DELIMITER //
+CREATE PROCEDURE safe_add_column(
+    IN p_table VARCHAR(64),
+    IN p_column VARCHAR(64),
+    IN p_definition TEXT
+)
+BEGIN
+    SET @tbl_exists = 0;
+    SELECT COUNT(*) INTO @tbl_exists
+    FROM information_schema.TABLES
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = p_table;
+
+    IF @tbl_exists = 0 THEN
+        SET @col_exists = 1;
+    ELSE
+        SET @col_exists = 0;
+        SELECT COUNT(*) INTO @col_exists
+        FROM information_schema.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME = p_table
+          AND COLUMN_NAME = p_column;
+    END IF;
+
+    IF @col_exists = 0 THEN
+        SET @ddl = CONCAT('ALTER TABLE `', p_table, '` ADD COLUMN `', p_column, '` ', p_definition);
+        PREPARE stmt FROM @ddl;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+    END IF;
+END //
+DELIMITER ;
+
+-- ─── Add PayPal columns ─────────────────────────────────────────────────────
 CALL safe_add_column('outseason_entries', 'payment_status', "ENUM('PENDING','PAID','FAILED','REFUNDED') NOT NULL DEFAULT 'PENDING'");
 CALL safe_add_column('outseason_entries', 'paypal_order_id', "VARCHAR(50) NULL");
 CALL safe_add_column('outseason_entries', 'paypal_capture_id', "VARCHAR(50) NULL");
@@ -29,3 +65,6 @@ CREATE TABLE IF NOT EXISTS outseason_discount_codes (
 INSERT INTO outseason_discount_codes (tenant_id, code, discount_percent, season_key)
 VALUES ('TNT_fusion', 'FUSION10', 10.00, '2026')
 ON DUPLICATE KEY UPDATE discount_percent = VALUES(discount_percent);
+
+-- Clean up
+DROP PROCEDURE IF EXISTS safe_add_column;
