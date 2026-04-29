@@ -1,7 +1,7 @@
 {
   "version": 3,
-  "generated_at": "2026-04-29T12:09:48.928Z",
-  "file_count": 1751,
+  "generated_at": "2026-04-29T12:12:36.752Z",
+  "file_count": 1752,
   "files": [
     {
       "path": ".env.prod",
@@ -1569,7 +1569,7 @@
     },
     {
       "path": "index.html",
-      "hash": "9b8686840f7ba68d3a10259d375cf82a760fd2bdc10d22f7e1382aa690fba8b7"
+      "hash": "7de3109952af6a2110475dbd643283c230eeee6de56de551c021cfde89c6a67c"
     },
     {
       "path": "js/api/athletes.api.js",
@@ -2065,7 +2065,7 @@
     },
     {
       "path": "outseason/index.html",
-      "hash": "9e83075026e5297648a07df8efb43010d0f5022e5ba5e450e4b4bbabaa3d60a7"
+      "hash": "db77d645b5ed9a6a3108d7e1342b272e1a3572cd5410095ff38fb56c30b97f6e"
     },
     {
       "path": "outseason/logo-outseason.png",
@@ -2162,6 +2162,10 @@
     {
       "path": "templates/import_atlete_template.csv",
       "hash": "78bc95dc06309a02cf871b792f06f723682192da5c53b11495a0d0c34f2be357"
+    },
+    {
+      "path": "test.js",
+      "hash": "4ba1ec1491f9ab9fc0775b8eeac5ff8ffd25d0443e4b2c7d2ac6adec968f74bb"
     },
     {
       "path": "test.php",
