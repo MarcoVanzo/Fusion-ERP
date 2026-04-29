@@ -525,6 +525,51 @@ PROMPT;
             }
         }
 
+        // ── Compute and update saldo on outseason_entries ──────────────────────
+        // For each verified entry (found=true), calculate:
+        //   saldo = prezzo_totale - importo_caparra_verificato
+        $priceFull = (int)(($_ENV['OUTSEASON_PRICE_FULL'] ?? getenv('OUTSEASON_PRICE_FULL')) ?: 650);
+        $pricePartial = (int)(($_ENV['OUTSEASON_PRICE_PARTIAL'] ?? getenv('OUTSEASON_PRICE_PARTIAL')) ?: 400);
+
+        $saldoStmt = $pdo->prepare(
+            'UPDATE outseason_entries SET saldo = :saldo
+             WHERE tenant_id = :tid AND season_key = :sk AND LOWER(TRIM(nome_e_cognome)) = LOWER(TRIM(:nome)) AND is_deleted = 0'
+        );
+
+        foreach ($results as $r) {
+            if (empty($r['name'])) continue;
+            $rFound = !empty($r['found']) ? true : false;
+            $txAmount = isset($r['transaction_amount']) ? (float)$r['transaction_amount'] : null;
+
+            if ($rFound && $txAmount !== null && $txAmount > 0) {
+                // Look up the entry's formula to determine the full price
+                $lookupStmt = $pdo->prepare(
+                    'SELECT formula_scelta FROM outseason_entries
+                     WHERE tenant_id = :tid AND season_key = :sk AND LOWER(TRIM(nome_e_cognome)) = LOWER(TRIM(:nome)) AND is_deleted = 0
+                     LIMIT 1'
+                );
+                $lookupStmt->execute([':tid' => $tid, ':sk' => $seasonKey, ':nome' => $r['name']]);
+                $formula = $lookupStmt->fetchColumn();
+
+                if ($formula !== false) {
+                    $totalPrice = str_contains((string)$formula, 'Full') ? $priceFull : $pricePartial;
+                    $saldo = round($totalPrice - $txAmount, 2);
+
+                    try {
+                        $saldoStmt->execute([
+                            ':saldo' => $saldo,
+                            ':tid' => $tid,
+                            ':sk' => $seasonKey,
+                            ':nome' => $r['name'],
+                        ]);
+                    } catch (\PDOException $e) {
+                        $errors[] = "Saldo update failed for {$r['name']}: " . $e->getMessage();
+                        error_log("[OutSeason] Saldo update failed for {$r['name']}: " . $e->getMessage());
+                    }
+                }
+            }
+        }
+
         Response::success(['saved' => $saved, 'season_key' => $seasonKey, 'errors' => $errors]);
     }
 
