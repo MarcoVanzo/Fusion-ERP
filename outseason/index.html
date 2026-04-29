@@ -569,6 +569,30 @@
             console.error('[OutSeason] PayPal buttons render failed:', err);
         });
     }
+    // ─── Embed Mode ──────────────────────────────────────────────
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('embed') === '1') {
+        document.body.classList.add('os-embed-mode');
+        // Insert inline week selector before the form
+        const form = document.getElementById('os-form');
+        const weeksHTML = `<div class="os-embed-weeks">
+            <div class="os-week-card" data-val="29 Giugno - 3 Luglio" onclick="selectWeek(this)"><div class="date">Settimana 1</div><div class="range">29 Giu – 3 Luglio</div></div>
+            <div class="os-week-card" data-val="6 Luglio - 10 Luglio" onclick="selectWeek(this)"><div class="date">Settimana 2</div><div class="range">6 – 10 Luglio</div></div>
+            <div class="os-week-card" data-val="13 Luglio - 17 Luglio" onclick="selectWeek(this)"><div class="date">Settimana 3</div><div class="range">13 – 17 Luglio</div></div>
+        </div>`;
+        form.insertAdjacentHTML('beforebegin', weeksHTML);
+        // Avail panel: move inside container for embed
+        const availPanel = document.getElementById('avail-panel');
+        if (availPanel) form.parentNode.insertBefore(availPanel, form);
+        // Auto-resize iframe
+        function notifyParent() {
+            const h = document.documentElement.scrollHeight;
+            window.parent.postMessage({ type: 'os-resize', height: h }, '*');
+        }
+        new MutationObserver(notifyParent).observe(document.body, { childList: true, subtree: true, attributes: true });
+        window.addEventListener('resize', notifyParent);
+        setTimeout(notifyParent, 500);
+    }
 })();
 </script>
 </body>
