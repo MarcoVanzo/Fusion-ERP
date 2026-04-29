@@ -1,7 +1,7 @@
 {
   "version": 3,
-  "generated_at": "2026-04-29T17:49:59.499Z",
-  "file_count": 1762,
+  "generated_at": "2026-04-29T19:22:52.300Z",
+  "file_count": 1761,
   "files": [
     {
       "path": ".env.prod",
@@ -1585,7 +1585,7 @@
     },
     {
       "path": "index.html",
-      "hash": "856ed0067b984b40f4be7b1335a7fec60ee2cb8a3e68516da089ed0cd1303e51"
+      "hash": "1079655dc86f0bce1ac840608e09475b63ed468c85a37e713a6372d45e908a8c"
     },
     {
       "path": "js/api/athletes.api.js",
@@ -1662,10 +1662,6 @@
     {
       "path": "js/core/utils.src.js",
       "hash": "b9b8d0741976b40de0508ddb7a04965e7057de5fd21dc8d49184cdea3b94f3f6"
-    },
-    {
-      "path": "js/modules/admin.js",
-      "hash": "d8ff15beb8f501eb1fd51fa455ab6790da580af8acc655ee1113aefadd0c9d61"
     },
     {
       "path": "js/modules/admin/AdminBackup.js",
@@ -1849,7 +1845,7 @@
     },
     {
       "path": "js/modules/outseason.js",
-      "hash": "39987ed9c5d3ca32dce7269658348804b167839070ef590805a21fcbe015a58c"
+      "hash": "c625b40d983fa2fdca93e322c05750ae89acb316cd143c2f1b38d64e5c42df61"
     },
     {
       "path": "js/modules/results.js",
@@ -2101,7 +2097,7 @@
     },
     {
       "path": "outseason/index.html",
-      "hash": "182ff06211a1e7356c52339e22211014748d303f7ead74a20b95fb4c5e0ba8d4"
+      "hash": "891e571dbc77556290b4ae05de8114030292de4c7c914d7d13076d753225f949"
     },
     {
       "path": "outseason/logo-outseason.png",
@@ -2117,11 +2113,11 @@
     },
     {
       "path": "outseason/seo-fixes.php",
-      "hash": "c9b717e8b9bdabbcd0cb05af15dae70890296b71097f0b4d85be5fbec9fed8c5"
+      "hash": "10b8a57377a6435b4e26948b528f0f4648bf3459702bf816ca0cd29c398a9791"
     },
     {
       "path": "outseason/style.css",
-      "hash": "ab523430c129fa734f307c2aab62f7210508b2c49329d2a9e491601b726117cd"
+      "hash": "95f6d886cc8765664709abf4be49cd75224d664125444a4b38b53abef1efce42"
     },
     {
       "path": "pdf_export_tool/export_website_pdf.js",

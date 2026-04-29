@@ -175,6 +175,36 @@ add_action('wp_head', function () {
         'event' => [
             [
                 '@type'     => 'SportsEvent',
+                'name'      => 'FTV Out Season — Tappa 1 Udine',
+                'startDate' => '2026-06-05',
+                'endDate'   => '2026-06-05',
+                'location'  => [
+                    '@type'   => 'Place',
+                    'name'    => 'Rizzi Volley',
+                    'address' => 'Udine (UD)',
+                ],
+                'offers' => [
+                    ['@type' => 'Offer', 'name' => 'Full Master',  'price' => '650', 'priceCurrency' => 'EUR', 'url' => 'https://www.ftvoutseason.it/ftv-out-season-registrati/'],
+                    ['@type' => 'Offer', 'name' => 'Daily Master', 'price' => '400', 'priceCurrency' => 'EUR', 'url' => 'https://www.ftvoutseason.it/ftv-out-season-registrati/'],
+                ],
+            ],
+            [
+                '@type'     => 'SportsEvent',
+                'name'      => 'FTV Out Season — Tappa 2 Cagliari',
+                'startDate' => '2026-06-29',
+                'endDate'   => '2026-06-29',
+                'location'  => [
+                    '@type'   => 'Place',
+                    'name'    => 'Audax Quartucciu',
+                    'address' => 'Cagliari (CA)',
+                ],
+                'offers' => [
+                    ['@type' => 'Offer', 'name' => 'Full Master',  'price' => '650', 'priceCurrency' => 'EUR', 'url' => 'https://www.ftvoutseason.it/ftv-out-season-registrati/'],
+                    ['@type' => 'Offer', 'name' => 'Daily Master', 'price' => '400', 'priceCurrency' => 'EUR', 'url' => 'https://www.ftvoutseason.it/ftv-out-season-registrati/'],
+                ],
+            ],
+            [
+                '@type'     => 'SportsEvent',
                 'name'      => 'FTV Out Season — Settimana 1',
                 'startDate' => '2026-06-29',
                 'endDate'   => '2026-07-03',

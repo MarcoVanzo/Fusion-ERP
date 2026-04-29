@@ -5,6 +5,16 @@ const OutSeason = (() => {
     e = [];
   const o = [
       {
+        key: "5 Giugno - Udine",
+        label: "5 Giu – Udine (Rizzi Volley)",
+        color: "#e11d48",
+      },
+      {
+        key: "29 Giugno - Cagliari",
+        label: "29 Giu – Cagliari (Audax Quartucciu)",
+        color: "#0ea5e9",
+      },
+      {
         key: "29 Giugno - 3 Luglio",
         label: "29 Giu – 3 Lug",
         color: "#6366f1",
