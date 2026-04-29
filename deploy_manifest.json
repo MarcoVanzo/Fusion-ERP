@@ -1,7 +1,7 @@
 {
   "version": 3,
-  "generated_at": "2026-04-29T17:14:11.330Z",
-  "file_count": 1753,
+  "generated_at": "2026-04-29T17:49:50.212Z",
+  "file_count": 1762,
   "files": [
     {
       "path": ".env.prod",
@@ -181,7 +181,23 @@
     },
     {
       "path": "api/Modules/OutSeason/OutSeasonController.php",
-      "hash": "80b3094ee25d63348a63cc0d3191359fe252dc4c4cd43f803bb189897316964c"
+      "hash": "0ae45d202443f6be22ba53003459bcc9bca7f6d8a6c72030e2a8e3d4a2b69bb7"
+    },
+    {
+      "path": "api/Modules/OutSeason/Services/OutSeasonEmailService.php",
+      "hash": "adc27c078747a042fbe8d9c160e831bb6114122a6032bf7ad43ffcb964217194"
+    },
+    {
+      "path": "api/Modules/OutSeason/Services/OutSeasonPaymentService.php",
+      "hash": "8e2de2cae5371941cb6a95e7fa8ce5857f62082f71e84977abf8a032e57be610"
+    },
+    {
+      "path": "api/Modules/OutSeason/Services/OutSeasonRegistrationService.php",
+      "hash": "6ebb18bb49dea904b26289875147aecc823fa6142bae20dfbb11503cdd20e2e5"
+    },
+    {
+      "path": "api/Modules/OutSeason/Services/OutSeasonSyncService.php",
+      "hash": "b93f6105a36363bd4df5e782767cf4169680a9b4a3d60cdc106e6f116f2a4a80"
     },
     {
       "path": "api/Modules/Payments/PaymentsController.php",
@@ -1569,7 +1585,7 @@
     },
     {
       "path": "index.html",
-      "hash": "4b54f42a01bc2f4c2be6f3283bf73cc6e738abb6028b3980651de0e5a9573e85"
+      "hash": "b70c23361ec2adefeb5cd9878de6e6fb50ee836508265f94dcbc86248e39cc8b"
     },
     {
       "path": "js/api/athletes.api.js",
@@ -1689,7 +1705,7 @@
     },
     {
       "path": "js/modules/athletes/AthleteHealth.js",
-      "hash": "fd5a92446cd89dcb1b30b7b9f4496f2385b5f6553deb45890d80aae4b9b8828c"
+      "hash": "1f331d468d8fe056340df661c09dc85d61f71cfea73dca70786d54392d4177af"
     },
     {
       "path": "js/modules/athletes/AthletesAPI.js",
@@ -1714,6 +1730,26 @@
     {
       "path": "js/modules/athletes/AthletesWizard.js",
       "hash": "fc37b04917883a836a3079d97c31a50edf262df30452c6ad9dceb0c66dda0f17"
+    },
+    {
+      "path": "js/modules/athletes/modals/AiDiagnosisModal.js",
+      "hash": "8493882b2f0b991d31262ead4654c0c6d0dc761149c5f095257f1f44428ec6f8"
+    },
+    {
+      "path": "js/modules/athletes/modals/AnamnesiModal.js",
+      "hash": "f381d2f4e5bd99613e9a2a146b2b2922060457259c376d60dd272a2504737e82"
+    },
+    {
+      "path": "js/modules/athletes/modals/DocViewerModal.js",
+      "hash": "7420deeaaeb37fca98c63ef014d55ba76c635b1f0f1fb5be25a8d14b3dc9626c"
+    },
+    {
+      "path": "js/modules/athletes/modals/InjuryModal.js",
+      "hash": "c4a3d5b4eec23f0d349fae5fd17de5af5c3a61be921ae34c4516ec8bc556beb4"
+    },
+    {
+      "path": "js/modules/athletes/modals/ModalUtils.js",
+      "hash": "5d5e3eedd400cec28ff9dae3f2fb877d96822a8035bda276dcc03f944cad517e"
     },
     {
       "path": "js/modules/athletes/ValdAI_v2.js",
