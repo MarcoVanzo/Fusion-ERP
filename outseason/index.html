@@ -697,6 +697,13 @@
 
         const expressCheckoutElement = globalStripeElements.create('expressCheckout', {
             layout: { type: 'accordion' },
+            wallets: {
+                applePay: 'auto',
+                googlePay: 'auto',
+                link: 'never',
+                amazonPay: 'never',
+                paypal: 'never'
+            },
             buttonTheme: {
                 applePay: 'black',
                 googlePay: 'black'
@@ -826,11 +833,12 @@
             // Clear previous elements
             document.getElementById('stripe-payment-element').innerHTML = '';
 
-            // Mount Payment Element (supports Card, Google Pay, Apple Pay)
+            // Mount Payment Element (supports Card, Klarna)
+            // Disabilitiamo i wallet qui dentro poiché li gestiamo già tramite ExpressCheckout
             const paymentElement = stripeElements.create('payment', {
                 wallets: {
-                    googlePay: walletType === 'google_pay' ? 'auto' : 'auto',
-                    applePay: walletType === 'apple_pay' ? 'auto' : 'auto',
+                    googlePay: 'never',
+                    applePay: 'never',
                 },
             });
             paymentElement.mount('#stripe-payment-element');

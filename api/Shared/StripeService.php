@@ -51,7 +51,8 @@ class StripeService
             'amount'               => (int)round($amount * 100), // Stripe uses cents
             'currency'             => 'eur',
             'description'          => mb_substr($description, 0, 500),
-            'automatic_payment_methods[enabled]' => 'true',
+            'payment_method_types[0]' => 'card',
+            'payment_method_types[1]' => 'klarna',
         ];
 
         // Add metadata
