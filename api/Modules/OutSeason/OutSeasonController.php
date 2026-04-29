@@ -680,16 +680,7 @@ PROMPT;
         $isFullMaster = str_contains((string)$data['formula_scelta'], 'Full');
         $basePrice = $isFullMaster ? self::priceFull() : self::pricePartial();
 
-        // Foresteria capacity check: max 12 Full Master per week
-        if ($isFullMaster) {
-            $pdo = Database::getInstance();
-            $fcStmt = $pdo->prepare("SELECT COUNT(*) FROM outseason_entries WHERE tenant_id='TNT_fusion' AND season_key=:sk AND is_deleted=0 AND formula_scelta LIKE '%Full%' AND settimana_scelta=:week");
-            $fcStmt->execute([':sk' => self::seasonKey(), ':week' => trim((string)$data['settimana_scelta'])]);
-            $fullCount = (int)$fcStmt->fetchColumn();
-            if ($fullCount >= 12) {
-                Response::error('I posti in foresteria per questa settimana sono esauriti (massimo 12 Full Camp). Puoi scegliere la formula Daily Master oppure un\'altra settimana.', 409);
-            }
-        }
+        // Discount code lookup (outside transaction — read-only)
         $discountPct = 0.0;
         $discountCode = strtoupper(trim((string)($data['codice_sconto'] ?? '')));
 
@@ -705,25 +696,45 @@ PROMPT;
         $finalPrice = round($basePrice * (1 - $discountPct / 100), 2);
         $paymentMethod = trim((string)$data['come_vuoi_pagare']);
 
-        // Insert entry
+        // ── Atomic capacity check + INSERT (transaction with row-level lock) ──
         $pdo = Database::getInstance();
         $tid = 'TNT_fusion';
-        $sql = "INSERT INTO outseason_entries (tenant_id, season_key, nome_e_cognome, email, cellulare, codice_fiscale, data_di_nascita, indirizzo, cap, citta, provincia, club_di_appartenenza, ruolo, taglia_kit, settimana_scelta, formula_scelta, come_vuoi_pagare, codice_sconto, entry_date, entry_status, payment_status, payment_method, synced_at) VALUES (:tid,:sk,:nome,:email,:cell,:cf,:dob,:addr,:cap,:citta,:prov,:club,:ruolo,:kit,:week,:formula,:pagare,:sconto,NOW(),'Submitted',:ps,:pm,NOW())";
-        $stmt = $pdo->prepare($sql);
-        $ps = ($paymentMethod === 'Bonifico Bancario') ? 'PENDING' : 'PENDING';
-        $pm = ($paymentMethod === 'Bonifico Bancario') ? 'BONIFICO' : 'PAYPAL';
-        $stmt->execute([
-            ':tid'=>$tid, ':sk'=>self::seasonKey(), ':nome'=>trim($data['nome_e_cognome']),
-            ':email'=>trim($data['email']), ':cell'=>$data['cellulare']??null,
-            ':cf'=>$data['codice_fiscale']??null, ':dob'=>$data['data_di_nascita']??null,
-            ':addr'=>$data['indirizzo']??null, ':cap'=>$data['cap']??null,
-            ':citta'=>$data['citta']??null, ':prov'=>$data['provincia']??null,
-            ':club'=>$data['club_di_appartenenza']??null, ':ruolo'=>$data['ruolo']??null,
-            ':kit'=>$data['taglia_kit']??null, ':week'=>$data['settimana_scelta']??null,
-            ':formula'=>$data['formula_scelta']??null, ':pagare'=>$paymentMethod,
-            ':sconto'=>$discountCode?:null, ':ps'=>$ps, ':pm'=>$pm,
-        ]);
-        $entryId = (int)$pdo->lastInsertId();
+        $pdo->beginTransaction();
+        try {
+            // Foresteria capacity check: max 12 Full Master per week (locked read)
+            if ($isFullMaster) {
+                $fcStmt = $pdo->prepare("SELECT COUNT(*) FROM outseason_entries WHERE tenant_id='TNT_fusion' AND season_key=:sk AND is_deleted=0 AND formula_scelta LIKE '%Full%' AND settimana_scelta=:week FOR UPDATE");
+                $fcStmt->execute([':sk' => self::seasonKey(), ':week' => trim((string)$data['settimana_scelta'])]);
+                $fullCount = (int)$fcStmt->fetchColumn();
+                if ($fullCount >= 12) {
+                    $pdo->rollBack();
+                    Response::error('I posti in foresteria per questa settimana sono esauriti (massimo 12 Full Camp). Puoi scegliere la formula Daily Master oppure un\'altra settimana.', 409);
+                }
+            }
+
+            // Insert entry
+            $sql = "INSERT INTO outseason_entries (tenant_id, season_key, nome_e_cognome, email, cellulare, codice_fiscale, data_di_nascita, indirizzo, cap, citta, provincia, club_di_appartenenza, ruolo, taglia_kit, settimana_scelta, formula_scelta, come_vuoi_pagare, codice_sconto, entry_date, entry_status, payment_status, payment_method, synced_at) VALUES (:tid,:sk,:nome,:email,:cell,:cf,:dob,:addr,:cap,:citta,:prov,:club,:ruolo,:kit,:week,:formula,:pagare,:sconto,NOW(),'Submitted',:ps,:pm,NOW())";
+            $stmt = $pdo->prepare($sql);
+            $ps = 'PENDING';
+            $pm = ($paymentMethod === 'Bonifico Bancario') ? 'BONIFICO' : 'PAYPAL';
+            $stmt->execute([
+                ':tid'=>$tid, ':sk'=>self::seasonKey(), ':nome'=>trim($data['nome_e_cognome']),
+                ':email'=>trim($data['email']), ':cell'=>$data['cellulare']??null,
+                ':cf'=>$data['codice_fiscale']??null, ':dob'=>$data['data_di_nascita']??null,
+                ':addr'=>$data['indirizzo']??null, ':cap'=>$data['cap']??null,
+                ':citta'=>$data['citta']??null, ':prov'=>$data['provincia']??null,
+                ':club'=>$data['club_di_appartenenza']??null, ':ruolo'=>$data['ruolo']??null,
+                ':kit'=>$data['taglia_kit']??null, ':week'=>$data['settimana_scelta']??null,
+                ':formula'=>$data['formula_scelta']??null, ':pagare'=>$paymentMethod,
+                ':sconto'=>$discountCode?:null, ':ps'=>$ps, ':pm'=>$pm,
+            ]);
+            $entryId = (int)$pdo->lastInsertId();
+
+            $pdo->commit();
+        } catch (\Throwable $txErr) {
+            if ($pdo->inTransaction()) { $pdo->rollBack(); }
+            throw $txErr;
+        }
 
         // Increment discount code usage
         if (!empty($discountCode) && $discountPct > 0) {
@@ -825,18 +836,20 @@ PROMPT;
             ? '<div style="background:#fff8e1;border-left:4px solid #f39c12;padding:16px;margin:16px 0;border-radius:4px;"><p style="margin:0 0 8px;font-weight:700;color:#e67e22;">Istruzioni Bonifico</p><p style="margin:4px 0;font-size:14px;">Importo: <strong>€' . number_format($importoBonifico ?? 0, 2, ',', '.') . '</strong></p><p style="margin:4px 0;font-size:14px;">Intestatario: <strong>FUSION TEAM VOLLEY A.S.D.</strong></p><p style="margin:4px 0;font-size:14px;">IBAN: <strong>IT19R0874936320000000039906</strong></p><p style="margin:4px 0;font-size:14px;">Causale: <strong>OutSeason ' . self::seasonKey() . ' — ' . $nome . '</strong></p></div>'
             : '';
 
+        $seasonKey = self::seasonKey();
+
         return <<<HTML
 <!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
 <body style="margin:0;padding:0;background:#ededed;font-family:'Segoe UI',Arial,sans-serif;">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#ededed;"><tr><td align="center" style="padding:40px 16px;">
 <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.1);">
 <tr><td style="background:linear-gradient(180deg,#D9317F,#751450);padding:32px 24px;text-align:center;">
-<h1 style="margin:0;font-size:24px;color:#fff;font-weight:800;letter-spacing:0.05em;">OUTSEASON {$this->seasonKey()}</h1>
+<h1 style="margin:0;font-size:24px;color:#fff;font-weight:800;letter-spacing:0.05em;">OUTSEASON {$seasonKey}</h1>
 <p style="margin:8px 0 0;color:rgba(255,255,255,0.85);font-size:14px;">Fusion Team Volley</p>
 </td></tr>
 <tr><td style="padding:32px;">
 <p style="font-size:16px;color:#333;">Ciao <strong>{$nome}</strong>,</p>
-<p style="font-size:15px;color:#555;line-height:1.7;">la tua iscrizione all'OutSeason {$this->seasonKey()} è stata registrata con successo!</p>
+<p style="font-size:15px;color:#555;line-height:1.7;">la tua iscrizione all'OutSeason {$seasonKey} è stata registrata con successo!</p>
 <div style="text-align:center;margin:20px 0;">{$statusBadge}</div>
 <table width="100%" style="background:#f8f9fa;border-radius:8px;margin:20px 0;border-collapse:collapse;">
 <tr><td style="padding:12px 16px;border-bottom:1px solid #eee;font-size:14px;color:#888;">Formula</td><td style="padding:12px 16px;border-bottom:1px solid #eee;font-size:14px;font-weight:600;">{$formula}</td></tr>

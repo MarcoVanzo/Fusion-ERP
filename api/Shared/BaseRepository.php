@@ -324,7 +324,7 @@ abstract class BaseRepository
 
     /**
      * Build a WHERE clause from conditions array.
-     * Automatically adds soft-delete filter if enabled.
+     * Automatically adds soft-delete and tenant-scoping filters if enabled.
      *
      * @param array $conditions Column => value pairs
      * @return string SQL WHERE clause (without "WHERE")
@@ -335,6 +335,10 @@ abstract class BaseRepository
 
         if ($this->softDelete) {
             $clauses[] = 'deleted_at IS NULL';
+        }
+
+        if ($this->tenantScoped) {
+            $clauses[] = '`tenant_id` = :_tenant_id';
         }
 
         foreach ($conditions as $col => $val) {
@@ -358,6 +362,11 @@ abstract class BaseRepository
     private function buildParams(array $conditions): array
     {
         $params = [];
+
+        if ($this->tenantScoped) {
+            $params[':_tenant_id'] = TenantContext::id();
+        }
+
         foreach ($conditions as $col => $val) {
             if ($val !== null) {
                 $cleanCol = ltrim($col, ':');

@@ -7,6 +7,8 @@ const MAX_CHAT_HISTORY = 30;
 export const AthleteHealth = {
     // Active AbortController for the current open modal — prevents listener accumulation
     _modalAc: null,
+    // AbortController for main UI listeners (storico toggle, etc.) — prevents accumulation on re-render
+    _uiAc: null,
     async render(container, athlete) {
         container.innerHTML = `
             <div class="health-dashboard">
@@ -83,6 +85,10 @@ export const AthleteHealth = {
     },
 
     _renderUi(container, athlete, anamnesi, injuries) {
+        // Abort previous UI listeners to prevent accumulation on re-render
+        if (this._uiAc) { this._uiAc.abort(); }
+        this._uiAc = new AbortController();
+
         let activeInjuries = injuries.filter(i => i.rtp_cleared !== 1);
         let pastInjuries = injuries.filter(i => i.rtp_cleared === 1);
 
@@ -225,7 +231,7 @@ export const AthleteHealth = {
                     body.classList.remove('health-storico-body--collapsed');
                     body.classList.add('health-storico-body--expanded');
                 }
-            });
+            }, { signal: this._uiAc ? this._uiAc.signal : undefined });
         }
 
         this._addListeners(container, athlete, anamnesi, injuries);
@@ -887,7 +893,7 @@ export const AthleteHealth = {
                             this._closeModal(theModal);
                             await this._loadData(container, athlete);
                             // Auto-open in edit mode
-                            const injuries = await fetch(`api/?module=health&action=getInjuries&id=${athlete.id}`).then(r => r.json());
+                            const injuries = await fetch(`api/?module=health&action=getInjuries&athlete_id=${athlete.id}`).then(r => r.json());
                             const newInj = injuries.data?.find(i => i.id === res.id);
                             if (newInj) this._openInjuryModal(container, athlete, newInj);
                         } else {

@@ -30,7 +30,7 @@
   --ftv-red-hover: #E64D43;
 
   /* — Form specific — */
-  --bg-page: #ededed;
+  --bg-page: #000000;
   --bg-card: #ffffff;
   --bg-input: #f7f7f9;
   --border-light: #e2e2e6;
@@ -358,7 +358,7 @@ body {
 }
 
 /* ─── Container ────────────────────────────────────────────────────── */
-.os-container { max-width: 660px; margin: -30px auto 0; padding: 0 16px 50px; position: relative; z-index: 2; }
+.os-container { max-width: 660px; margin: 0 auto; padding: 0 16px 50px; position: relative; z-index: 2; }
 
 .os-form-card {
   background: #000000;

@@ -85,7 +85,7 @@ class HealthController
         $this->repo->updateAnamnesi($body['athlete_id'], [
             ':blood_group' => $body['blood_group'] ?? $body['blood_type'] ?? null,
             ':allergies' => $body['allergies'] ?? null,
-            ':medications' => $body['medications'] ?? null,
+            ':medications' => $body['medications'] ?? $body['regular_medications'] ?? null,
             ':chronic_diseases' => $body['chronic_conditions'] ?? $body['chronic_diseases'] ?? null, // UI currently sends chronic_conditions
             ':past_surgeries' => $body['past_surgeries'] ?? null,
             ':past_injuries' => $body['past_injuries'] ?? null,

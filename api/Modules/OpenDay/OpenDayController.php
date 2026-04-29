@@ -440,7 +440,8 @@ class OpenDayController
 
         Response::success(['success' => true, 'id' => $insertId]);
         } catch (\Throwable $e) {
-            Response::error('PHP_ERROR: ' . $e->getMessage() . ' in ' . basename($e->getFile()) . ':' . $e->getLine(), 500);
+            error_log('[OpenDay] publicRegister error: ' . $e->getMessage() . ' in ' . basename($e->getFile()) . ':' . $e->getLine());
+            Response::error('Errore interno durante la registrazione. Riprova più tardi.', 500);
         }
     }
 
