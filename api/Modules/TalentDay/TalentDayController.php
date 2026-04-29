@@ -34,7 +34,7 @@ class TalentDayController
                    nome, cognome, indirizzo, citta_cap, data_nascita, cellulare,
                    taglia_tshirt, club_tesseramento, ruolo, campionati,
                    nome_genitore, telefono_genitore, email_genitore, privacy_consent,
-                   altezza, peso, reach_cm, cmj, salto_rincorsa,
+                   altezza, reach_cm, salto_rincorsa_1, salto_rincorsa_2, salto_rincorsa_3,
                    created_at
             FROM talent_day_entries
             WHERE tenant_id = :tenant_id
@@ -70,13 +70,13 @@ class TalentDayController
                  nome, cognome, indirizzo, citta_cap, data_nascita, cellulare,
                  taglia_tshirt, club_tesseramento, ruolo, campionati,
                  nome_genitore, telefono_genitore, email_genitore, privacy_consent,
-                 altezza, peso, reach_cm, cmj, salto_rincorsa)
+                 altezza, reach_cm, salto_rincorsa_1, salto_rincorsa_2, salto_rincorsa_3)
             VALUES
                 (:tenant_id, :data_reg, :ora_reg, :email, :tappa,
                  :nome, :cognome, :indirizzo, :citta_cap, :data_nascita, :cellulare,
                  :taglia, :club, :ruolo, :campionati,
                  :nome_gen, :tel_gen, :email_gen, :privacy_consent,
-                 :altezza, :peso, :reach_cm, :cmj, :salto_rincorsa)
+                 :altezza, :reach_cm, :salto_rincorsa_1, :salto_rincorsa_2, :salto_rincorsa_3)
         ");
 
         $stmt->execute([
@@ -100,10 +100,10 @@ class TalentDayController
             ':email_gen'    => $data['email_genitore'] ?? null,
             ':privacy_consent' => !empty($data['privacy_consent']) ? 1 : 0,
             ':altezza'      => !empty($data['altezza'])        ? (float)$data['altezza']        : null,
-            ':peso'         => !empty($data['peso'])           ? (float)$data['peso']           : null,
             ':reach_cm'     => !empty($data['reach_cm'])       ? (float)$data['reach_cm']       : null,
-            ':cmj'          => !empty($data['cmj'])            ? (float)$data['cmj']            : null,
-            ':salto_rincorsa' => !empty($data['salto_rincorsa']) ? (float)$data['salto_rincorsa'] : null,
+            ':salto_rincorsa_1' => !empty($data['salto_rincorsa_1']) ? (float)$data['salto_rincorsa_1'] : null,
+            ':salto_rincorsa_2' => !empty($data['salto_rincorsa_2']) ? (float)$data['salto_rincorsa_2'] : null,
+            ':salto_rincorsa_3' => !empty($data['salto_rincorsa_3']) ? (float)$data['salto_rincorsa_3'] : null,
         ]);
 
         Response::success(['success' => true, 'id' => $this->db->lastInsertId()]);
@@ -144,10 +144,10 @@ class TalentDayController
                 email_genitore     = :email_gen,
                 privacy_consent    = :privacy_consent,
                 altezza            = :altezza,
-                peso               = :peso,
                 reach_cm           = :reach_cm,
-                cmj                = :cmj,
-                salto_rincorsa     = :salto_rincorsa
+                salto_rincorsa_1   = :salto_rincorsa_1,
+                salto_rincorsa_2   = :salto_rincorsa_2,
+                salto_rincorsa_3   = :salto_rincorsa_3
             WHERE id = :id AND tenant_id = :tenant_id
         ");
 
@@ -173,10 +173,10 @@ class TalentDayController
             ':email_gen'    => $data['email_genitore'] ?? null,
             ':privacy_consent' => !empty($data['privacy_consent']) ? 1 : 0,
             ':altezza'      => !empty($data['altezza'])        ? (float)$data['altezza']        : null,
-            ':peso'         => !empty($data['peso'])           ? (float)$data['peso']           : null,
             ':reach_cm'     => !empty($data['reach_cm'])       ? (float)$data['reach_cm']       : null,
-            ':cmj'          => !empty($data['cmj'])            ? (float)$data['cmj']            : null,
-            ':salto_rincorsa' => !empty($data['salto_rincorsa']) ? (float)$data['salto_rincorsa'] : null,
+            ':salto_rincorsa_1' => !empty($data['salto_rincorsa_1']) ? (float)$data['salto_rincorsa_1'] : null,
+            ':salto_rincorsa_2' => !empty($data['salto_rincorsa_2']) ? (float)$data['salto_rincorsa_2'] : null,
+            ':salto_rincorsa_3' => !empty($data['salto_rincorsa_3']) ? (float)$data['salto_rincorsa_3'] : null,
         ]);
 
         if ($stmt->rowCount() === 0) {
@@ -354,11 +354,22 @@ class TalentDayController
         // ── Backend Limit Validation ───────────────────────────────────
         $tappa = trim($data['tappa']);
         $limit = 50; // Quota massima per tappa
-        $checkLimitStmt = $this->db->prepare("
-            SELECT COUNT(*) FROM talent_day_entries
-            WHERE tenant_id = 'TNT_fusion'
-              AND tappa = :tappa
-        ");
+
+        // For "Firenze 2" tappa, also count legacy records saved as "Scandicci"
+        $isFirenze2 = (strpos($tappa, 'Firenze 2') !== false || strpos($tappa, '19 MAG') !== false);
+        if ($isFirenze2) {
+            $checkLimitStmt = $this->db->prepare("
+                SELECT COUNT(*) FROM talent_day_entries
+                WHERE tenant_id = 'TNT_fusion'
+                  AND (tappa = :tappa OR tappa LIKE '%Scandicci%' OR tappa = '19 MAG 2026, Firenze - Savino Del Bene Volley')
+            ");
+        } else {
+            $checkLimitStmt = $this->db->prepare("
+                SELECT COUNT(*) FROM talent_day_entries
+                WHERE tenant_id = 'TNT_fusion'
+                  AND tappa = :tappa
+            ");
+        }
         $checkLimitStmt->execute([':tappa' => $tappa]);
         if ($checkLimitStmt->fetchColumn() >= $limit) {
             Response::error('Spiacenti, i posti per la tappa selezionata sono esauriti (SOLD OUT).', 400);
@@ -472,6 +483,10 @@ class TalentDayController
         $nome         = htmlspecialchars(trim($data['nome'] ?? ''));
         $cognome      = htmlspecialchars(trim($data['cognome'] ?? ''));
         $tappa        = htmlspecialchars(trim($data['tappa'] ?? ''));
+        
+        // Rimuove il " 2" dal nome della tappa (es. "Firenze 2" diventa "Firenze") per l'email all'utente
+        $tappaForEmail = str_replace('Firenze 2', 'Firenze', $tappa);
+        
         $data_nascita = htmlspecialchars(trim($data['data_nascita'] ?? ''));
         $email        = htmlspecialchars(trim($data['email'] ?? ''));
         $cellulare    = htmlspecialchars(trim($data['cellulare'] ?? ''));
@@ -540,7 +555,7 @@ class TalentDayController
         <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fbfd;border:1px solid #e1e7f0;border-left:4px solid #C8A959;border-radius:6px;margin:24px 0;">
         <tr><td style="padding:20px 24px;">
             <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#C8A959;">Dove e quando?</p>
-            <p style="margin:4px 0;font-size:16px;color:#00205B;font-weight:bold;">{$tappa}</p>
+            <p style="margin:4px 0;font-size:16px;color:#00205B;font-weight:bold;">{$tappaForEmail}</p>
         </td></tr>
         </table>
 

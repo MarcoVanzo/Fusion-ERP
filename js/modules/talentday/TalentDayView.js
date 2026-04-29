@@ -2,6 +2,7 @@ export class TalentDayView {
 
     /** Predefined tappe for the Talent Day events */
     static TAPPE = [
+        '19 MAG 2026, Firenze 2 - Savino Del Bene Volley',
         '26 MAG 2026, Firenze - Savino Del Bene Volley',
         '28 MAG 2026, Roma - Civitavecchia',
         '3 GIU 2026, Venezia - Fusion Team Volley',
@@ -36,6 +37,7 @@ export class TalentDayView {
                     width: 500px;
                     max-width: 100vw;
                     height: 100vh;
+                    height: 100dvh;
                     background: var(--color-bg);
                     z-index: 10000;
                     box-shadow: -10px 0 30px rgba(0,0,0,0.8);
@@ -165,6 +167,9 @@ export class TalentDayView {
                     loc = parts[1].split('-')[0].trim();
                 }
             }
+            if (loc === 'Scandicci' || (typeof tappaStr === 'string' && (tappaStr.includes('Scandicci') || tappaStr.includes('19 MAG')))) {
+                loc = 'Firenze 2';
+            }
             return loc;
         };
 
@@ -275,15 +280,14 @@ export class TalentDayView {
     static _colDefs(view) {
         if (view === 'fisici') {
             return [
-                ['Nome', 'nome'], ['Cognome', 'cognome'], ['Tappa', 'tappa'],
-                ['Altezza', 'altezza'], ['Peso', 'peso'], ['Reach', 'reach_cm'],
-                ['CMJ', 'cmj'], ['Salto Rincorsa', 'salto_rincorsa']
+                ['Nome', 'nome'], ['Cognome', 'cognome'], ['Anno Nascita', 'data_nascita'], ['Tappa', 'tappa'],
+                ['Altezza', 'altezza'], ['Reach', 'reach_cm'],
+                ['Salto Rincorsa 1', 'salto_rincorsa_1'], ['Salto Rincorsa 2', 'salto_rincorsa_2'], ['Salto Rincorsa 3', 'salto_rincorsa_3']
             ];
         }
         // anagrafica — Nome/Cognome first, Tappa included
         return [
             ['Nome', 'nome'], ['Cognome', 'cognome'], ['Tappa', 'tappa'],
-            ['Privacy GDPR', 'privacy_consent'],
             ['Data Nascita', 'data_nascita'],
             ['Data Reg.', 'data_registrazione'], ['Ora', 'ora_registrazione'],
             ['Email', 'email'], ['Città/CAP', 'citta_cap'], ['Cellulare', 'cellulare'],
@@ -297,7 +301,8 @@ export class TalentDayView {
         const ths = cols.map(([label, key]) => {
             const isActive = sortCol === key;
             const activeClass = isActive ? ` sort-active${sortDir === 'desc' ? ' sort-desc' : ''}` : '';
-            return `<th style="text-align:left;padding:10px 12px;border-bottom:1px solid var(--color-border);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:var(--color-text-muted)">
+            const styleExtra = key === 'tappa' ? 'min-width:120px; white-space:nowrap;' : '';
+            return `<th style="${styleExtra}text-align:left;padding:10px 12px;border-bottom:1px solid var(--color-border);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:var(--color-text-muted)">
                 <span class="td-sort-header${activeClass}" data-sort-key="${key}">
                     ${label}
                     <i class="ph ph-caret-up td-sort-icon"></i>
@@ -335,7 +340,7 @@ export class TalentDayView {
         };
 
         // Metric keys that should use cellMetric rendering
-        const metricKeys = { altezza: 'cm', peso: 'kg', reach_cm: 'cm', cmj: 'cm', salto_rincorsa: 'cm' };
+        const metricKeys = { altezza: 'cm', reach_cm: 'cm' };
         // Bold keys
         const boldKeys = new Set(['nome', 'cognome']);
         // Date formatting helper
@@ -359,11 +364,33 @@ export class TalentDayView {
                             location = parts[1].split('-')[0].trim();
                         }
                     }
-                    return cell(location);
+                    if (location === 'Scandicci' || (typeof raw === 'string' && (raw.includes('Scandicci') || raw.includes('19 MAG')))) {
+                        location = 'Firenze 2';
+                    }
+                    return `<td style="padding:10px 12px;border-bottom:1px solid var(--color-border);white-space:nowrap;">${window.Utils.escapeHtml(location)}</td>`;
+                }
+                if (key.startsWith('salto_rincorsa')) {
+                    const v = raw != null && raw !== '' ? parseFloat(raw) : null;
+                    if (v === null) return cell('—');
+                    let color = 'var(--color-danger)'; // < 280
+                    if (v > 300) color = 'var(--color-pink)';
+                    else if (v >= 290) color = 'var(--color-success)';
+                    else if (v >= 280) color = 'var(--color-warning)';
+                    return `<td style="padding:10px 12px;border-bottom:1px solid var(--color-border);font-variant-numeric:tabular-nums">
+                        <span style="font-weight:600;color:${color}">${v}</span>
+                        <span style="font-size:11px;color:var(--color-text-muted);margin-left:2px">cm</span>
+                    </td>`;
                 }
                 if (metricKeys[key]) return cellMetric(raw, metricKeys[key]);
-                if (boldKeys.has(key)) return cellBold(raw);
-                if (key === 'data_registrazione' || key === 'data_nascita') return cell(fmtDate(raw));
+                if (key === 'data_nascita') {
+                    if (!raw) return cell('—');
+                    try {
+                        return view === 'fisici' ? cell(new Date(raw).getFullYear()) : cell(fmtDate(raw));
+                    } catch {
+                        return cell(raw);
+                    }
+                }
+                if (key === 'data_registrazione') return cell(fmtDate(raw));
                 if (key === 'ora_registrazione') return cell(fmtTime(raw));
                 return cell(raw);
             }).join('');
@@ -389,7 +416,10 @@ export class TalentDayView {
      * ═══════════════════════════════════════════════════════════════════ */
     static renderSidePanelForm(entry = null) {
         const isEdit = entry !== null;
-        const e = entry || {};
+        const e = entry ? { ...entry } : {};
+        if (e.tappa && (e.tappa.includes('Scandicci') || e.tappa === '19 MAG 2026, Firenze - Savino Del Bene Volley')) {
+            e.tappa = '19 MAG 2026, Firenze 2 - Savino Del Bene Volley';
+        }
         const esc = (v) => window.Utils.escapeHtml(v || "");
         const today = new Date().toISOString().substring(0, 10);
 
@@ -520,23 +550,23 @@ export class TalentDayView {
                         <input id="td-altezza" class="form-input" type="number" step="0.1" min="100" max="250" value="${e.altezza ?? ''}">
                     </div>
                     <div class="form-group">
-                        <label class="form-label" for="td-peso">Peso (kg)</label>
-                        <input id="td-peso" class="form-input" type="number" step="0.1" min="30" max="200" value="${e.peso ?? ''}">
+                        <label class="form-label" for="td-reach">Reach (cm)</label>
+                        <input id="td-reach" class="form-input" type="number" step="0.1" min="100" max="400" value="${e.reach_cm ?? ''}">
                     </div>
                 </div>
                 <div class="form-grid">
                     <div class="form-group">
-                        <label class="form-label" for="td-reach">Reach (cm)</label>
-                        <input id="td-reach" class="form-input" type="number" step="0.1" min="100" max="400" value="${e.reach_cm ?? ''}">
+                        <label class="form-label" for="td-salto-1">Salto con Rincorsa 1 (cm)</label>
+                        <input id="td-salto-1" class="form-input" type="number" step="0.1" min="0" max="400" value="${e.salto_rincorsa_1 ?? ''}">
                     </div>
                     <div class="form-group">
-                        <label class="form-label" for="td-cmj">CMJ (cm)</label>
-                        <input id="td-cmj" class="form-input" type="number" step="0.1" min="0" max="100" value="${e.cmj ?? ''}">
+                        <label class="form-label" for="td-salto-2">Salto con Rincorsa 2 (cm)</label>
+                        <input id="td-salto-2" class="form-input" type="number" step="0.1" min="0" max="400" value="${e.salto_rincorsa_2 ?? ''}">
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="form-label" for="td-salto">Salto con Rincorsa (cm)</label>
-                    <input id="td-salto" class="form-input" type="number" step="0.1" min="0" max="400" value="${e.salto_rincorsa ?? ''}">
+                    <label class="form-label" for="td-salto-3">Salto con Rincorsa 3 (cm)</label>
+                    <input id="td-salto-3" class="form-input" type="number" step="0.1" min="0" max="400" value="${e.salto_rincorsa_3 ?? ''}">
                 </div>
 
                 <div id="td-error" class="form-error hidden"></div>

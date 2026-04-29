@@ -60,7 +60,15 @@ class TalentDayModule {
     async refreshData(reRender = true) {
         try {
             const result = await TalentDayAPI.listEntries();
-            this._entries = result.entries || result || [];
+            let rawEntries = result.entries || result || [];
+            
+            // Normalize tappa names to ensure UI, filtering, and exports work consistently
+            this._entries = rawEntries.map(e => {
+                if (e.tappa && (e.tappa === 'Scandicci' || e.tappa.includes('Scandicci') || e.tappa.includes('19 MAG'))) {
+                    e.tappa = '19 MAG 2026, Firenze 2 - Savino Del Bene Volley';
+                }
+                return e;
+            });
 
             if (reRender) {
                 const area = document.getElementById("td-content-area");
@@ -129,7 +137,7 @@ class TalentDayModule {
             const key = this._sortCol;
             const dir = this._sortDir === 'asc' ? 1 : -1;
             // Numeric keys for physical measurements
-            const numericKeys = new Set(['altezza', 'peso', 'reach_cm', 'cmj', 'salto_rincorsa']);
+            const numericKeys = new Set(['altezza', 'reach_cm', 'salto_rincorsa_1', 'salto_rincorsa_2', 'salto_rincorsa_3']);
 
             data.sort((a, b) => {
                 let va = a[key] ?? '';
@@ -263,27 +271,7 @@ class TalentDayModule {
             }, this.sig());
         });
 
-        // Re-bind tbody delegation for edit/delete on new rows
-        if (canEdit) {
-            const newTbody = container.querySelector("#td-tbody");
-            if (newTbody) {
-                newTbody.addEventListener("click", (e) => {
-                    const editBtn = e.target.closest(".td-edit-btn");
-                    if (editBtn) {
-                        e.stopPropagation();
-                        const entry = this._entries.find(a => a.id == editBtn.dataset.id);
-                        if (entry) this.openSidePanel(entry);
-                    }
-                    const delBtn = e.target.closest(".td-delete-btn");
-                    if (delBtn) {
-                        e.stopPropagation();
-                        if (confirm("Sei sicuro di voler eliminare questa registrazione?")) {
-                            this.handleDelete(delBtn.dataset.id);
-                        }
-                    }
-                }, this.sig());
-            }
-        }
+
     }
 
     async handleDelete(id) {
@@ -307,8 +295,8 @@ class TalentDayModule {
         const headers = [
             "Data Reg.", "Ora", "Tappa", "Nome", "Cognome", "Email", "Cellulare", 
             "Data Nascita", "Città/CAP", "Indirizzo", "Taglia", "Club", "Ruolo", 
-            "Campionati", "Genitore", "Tel. Gen.", "Email Gen.", "Altezza", "Peso", 
-            "Reach", "CMJ", "Salto Rinc", "Privacy GDPR"
+            "Campionati", "Genitore", "Tel. Gen.", "Email Gen.", "Altezza", 
+            "Reach", "Salto Rinc 1", "Salto Rinc 2", "Salto Rinc 3", "Privacy GDPR"
         ];
         
         const rows = data.map(e => [
@@ -330,10 +318,10 @@ class TalentDayModule {
             `"${(e.telefono_genitore || "").replace(/"/g, '""')}"`,
             `"${(e.email_genitore || "").replace(/"/g, '""')}"`,
             e.altezza || "",
-            e.peso || "",
             e.reach_cm || "",
-            e.cmj || "",
-            e.salto_rincorsa || "",
+            e.salto_rincorsa_1 || "",
+            e.salto_rincorsa_2 || "",
+            e.salto_rincorsa_3 || "",
             e.privacy_consent ? "SI" : "NO"
         ]);
 
@@ -361,10 +349,29 @@ class TalentDayModule {
         void panel.offsetWidth;
         panel.classList.add("open");
 
+        const updateHeight = () => {
+            if (window.visualViewport) {
+                panel.style.height = window.visualViewport.height + "px";
+                panel.style.top = window.visualViewport.offsetTop + "px";
+            }
+        };
+        
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener("resize", updateHeight);
+            window.visualViewport.addEventListener("scroll", updateHeight);
+            updateHeight();
+        }
+
         const closeModal = () => {
             panel.classList.remove("open");
+            if (window.visualViewport) {
+                window.visualViewport.removeEventListener("resize", updateHeight);
+                window.visualViewport.removeEventListener("scroll", updateHeight);
+            }
             setTimeout(() => {
                 panel.style.display = "none";
+                panel.style.height = "";
+                panel.style.top = "";
                 panel.innerHTML = "";
             }, 300);
         };
@@ -398,10 +405,10 @@ class TalentDayModule {
                 telefono_genitore:  document.getElementById("td-tel-gen")?.value.trim() || null,
                 email_genitore:     document.getElementById("td-email-gen")?.value.trim() || null,
                 altezza:            document.getElementById("td-altezza")?.value || null,
-                peso:               document.getElementById("td-peso")?.value || null,
                 reach_cm:           document.getElementById("td-reach")?.value || null,
-                cmj:                document.getElementById("td-cmj")?.value || null,
-                salto_rincorsa:     document.getElementById("td-salto")?.value || null,
+                salto_rincorsa_1:   document.getElementById("td-salto-1")?.value || null,
+                salto_rincorsa_2:   document.getElementById("td-salto-2")?.value || null,
+                salto_rincorsa_3:   document.getElementById("td-salto-3")?.value || null,
             };
 
             if (isEdit) {
