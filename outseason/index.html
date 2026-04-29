@@ -695,54 +695,7 @@
             }
         });
 
-        const expressCheckoutElement = globalStripeElements.create('expressCheckout', {
-            layout: { type: 'accordion' },
-            paymentMethods: {
-                applePay: 'auto',
-                googlePay: 'auto',
-                amazonPay: 'auto',
-                link: 'never',
-                paypal: 'never'
-            },
-            buttonTheme: {
-                applePay: 'black',
-                googlePay: 'black'
-            }
-        });
-
-        expressCheckoutElement.mount('#stripe-express-checkout');
-
-        expressCheckoutElement.on('click', (event) => {
-            const v = validate();
-            if (v !== true) {
-                event.preventDefault(); // Blocca l'apertura del portafoglio se la form non è compilata
-            }
-        });
-
-        expressCheckoutElement.on('confirm', async (event) => {
-            const {error: submitError} = await globalStripeElements.submit();
-            if (submitError) return;
-
-            try {
-                const r = await fetch(API+'createStripeIntent', {
-                    method:'POST', headers:{'Content-Type':'application/json'},
-                    body: JSON.stringify(payload()),
-                });
-                const d = await r.json();
-                if (!r.ok || d.error) throw new Error(d.message || d.error || 'Errore');
-
-                const {error} = await globalStripe.confirmPayment({
-                    elements: globalStripeElements,
-                    clientSecret: d.data.client_secret,
-                    confirmParams: {
-                        return_url: window.location.origin + window.location.pathname + '?payment_status=success',
-                    },
-                });
-                if (error) throw new Error(error.message);
-            } catch(e) {
-                showGE('Errore: ' + e.message);
-            }
-        });
+        // Express Checkout è stato rimosso per consolidare i wallet nel Payment Element.
     }
 
     // Card button → show Stripe Payment Element inline
@@ -833,12 +786,11 @@
             // Clear previous elements
             document.getElementById('stripe-payment-element').innerHTML = '';
 
-            // Mount Payment Element (supports Card, Klarna)
-            // Disabilitiamo i wallet qui dentro poiché li gestiamo già tramite ExpressCheckout
+            // Mount Payment Element (supports Card, Klarna, Wallets)
             const paymentElement = stripeElements.create('payment', {
                 wallets: {
-                    googlePay: 'never',
-                    applePay: 'never',
+                    googlePay: 'auto',
+                    applePay: 'auto',
                 },
             });
             paymentElement.mount('#stripe-payment-element');
