@@ -36,6 +36,16 @@ const OutSeason = (() => {
   function l(n) {
     return d(n) ? 250 : 150;
   }
+  function getSaldo(n) {
+    const v = n.saldo ?? n.Saldo ?? null;
+    return v !== null && v !== '' ? parseFloat(v) : null;
+  }
+  function fmtSaldo(n) {
+    const v = getSaldo(n);
+    if (v === null) return '<span style="opacity:.4;">—</span>';
+    if (v <= 0) return '<span style="color:#10b981;font-weight:700;">0 €</span>';
+    return `<span style="color:#f59e0b;font-weight:700;">${v.toLocaleString("it-IT")} €</span>`;
+  }
   function c(n) {
     return n.nome_e_cognome || n.NomeECognome || "";
   }
@@ -68,6 +78,7 @@ const OutSeason = (() => {
         "Cellulare / Emergenza",
         "Note",
         "Pagato",
+        "Saldo",
       ].join(","),
     ];
     e.forEach((e) => {
@@ -85,6 +96,7 @@ const OutSeason = (() => {
           "",
         (e.note || e.Note || "").replace(/\r?\n|\r/g, " "),
         r(e) || isVer(c(e)) ? "Si" : "No",
+        getSaldo(e) !== null ? getSaldo(e).toFixed(2) : "",
       ].map((n) => `"${String(n).replace(/"/g, '""')}"`);
       n.push(o.join(","));
     });
@@ -528,6 +540,7 @@ const OutSeason = (() => {
                     : "💳 Carta/PayPal"
                 }</td>
                 <td>${r(n) || isVer(c(n)) ? '<span class="os-badge-paid">● Pagato</span>' : '<span class="os-badge-unpaid">● Da pagare</span>'}</td>
+                <td>${fmtSaldo(n)}</td>
                 <td style="opacity:.7;">${(function (n) {
                   const t = new Date(n.entry_date || n.EntryDate || "");
                   return isNaN(t)
@@ -564,7 +577,7 @@ const OutSeason = (() => {
             <div style="overflow-x:auto;">
             <table class="os-table">
                 <thead><tr>
-                    <th>#</th><th>Nome</th><th>Club</th><th>Formula</th><th>Caparra</th><th>Metodo</th><th>Stato</th><th>Data Iscr.</th><th>Sconto</th><th>Azioni</th>
+                    <th>#</th><th>Nome</th><th>Club</th><th>Formula</th><th>Caparra</th><th>Metodo</th><th>Stato</th><th>Saldo</th><th>Data Iscr.</th><th>Sconto</th><th>Azioni</th>
                 </tr></thead>
                 <tbody>
                     ${s}
@@ -574,6 +587,7 @@ const OutSeason = (() => {
                         <td>${(i + p).toLocaleString("it-IT")} €</td>
                         <td></td>
                         <td><span class="os-badge-paid">${i.toLocaleString("it-IT")} €</span> <span class="os-badge-unpaid">${p.toLocaleString("it-IT")} €</span></td>
+                        <td>${(function(){ const tot = e.reduce((acc, x) => { const s = getSaldo(x); return s !== null ? acc + s : acc; }, 0); const cnt = e.filter(x => getSaldo(x) !== null).length; return cnt > 0 ? '<span style="color:#f59e0b;font-weight:700;">' + tot.toLocaleString('it-IT') + ' €</span>' : '—'; })()}</td>
                         <td colspan="3"></td>
                     </tr>
                 </tbody>
