@@ -236,20 +236,42 @@
         <!-- ═══ Metodo Pagamento ═══ -->
         <div class="os-section">
             <div class="os-section-title"><i class="ph ph-credit-card"></i> Metodo di Pagamento</div>
-            <div class="os-payment-cards">
-                <div class="os-payment-card" data-val="Carta/PayPal" onclick="selectPayment(this)">
-                    <div class="pay-icon">💳</div>
-                    <div class="pay-label">Carta / PayPal / Google Pay / Apple Pay</div>
+            <input type="hidden" id="come_vuoi_pagare" value="Carta/PayPal">
+
+            <!-- PayPal SDK Buttons — loaded immediately -->
+            <div id="submit-paypal">
+                <div id="pp-loading" style="text-align:center;padding:18px;color:rgba(255,255,255,.4);font-size:13px;">
+                    <div style="width:28px;height:28px;border:3px solid rgba(255,255,255,.1);border-top-color:#0070ba;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 10px;"></div>
+                    Caricamento metodi di pagamento…
                 </div>
-                <div class="os-payment-card" data-val="Bonifico Bancario" onclick="selectPayment(this)">
-                    <div class="pay-icon">🏦</div>
-                    <div class="pay-label">Bonifico Bancario</div>
+                <div id="paypal-button-container" style="min-height:55px;"></div>
+                <!-- Fallback if SDK blocked -->
+                <div id="pp-fallback" style="display:none;">
+                    <div style="text-align:center;margin-bottom:14px;font-size:12px;color:rgba(255,255,255,.35);">
+                        ⚠️ Alcuni metodi di pagamento non si caricano? <a href="#" id="pp-fallback-link" style="color:#D9317F;text-decoration:underline;">Apri il checkout in una nuova scheda</a> per tutte le opzioni.
+                    </div>
+                    <button type="button" class="os-submit-btn os-paypal-btn" id="os-paypal-fallback" style="width:100%;">
+                        <span class="btn-text">🔗 Paga con PayPal / Carta</span>
+                        <span class="spinner"></span>
+                    </button>
+                    <div style="text-align:center;margin-top:8px;font-size:11px;color:rgba(255,255,255,.3);">Potrai pagare con conto PayPal o carta di credito/debito</div>
                 </div>
             </div>
-            <input type="hidden" id="come_vuoi_pagare" value="">
-            <span class="os-field-error" data-for="come_vuoi_pagare">Seleziona un metodo di pagamento</span>
 
-            <!-- Bonifico Details -->
+            <!-- Divider -->
+            <div style="display:flex;align-items:center;gap:12px;margin:20px 0;color:rgba(255,255,255,.25);font-size:12px;">
+                <div style="flex:1;height:1px;background:rgba(255,255,255,.1);"></div>
+                oppure
+                <div style="flex:1;height:1px;background:rgba(255,255,255,.1);"></div>
+            </div>
+
+            <!-- Bonifico option -->
+            <div class="os-payment-card" data-val="Bonifico Bancario" onclick="selectPayment(this)" style="max-width:100%;cursor:pointer;">
+                <div class="pay-icon">🏦</div>
+                <div class="pay-label">Bonifico Bancario</div>
+            </div>
+
+            <!-- Bonifico Details (hidden until selected) -->
             <div class="os-bonifico-info" id="bonifico-info" style="display:none">
                 <div class="bonifico-title"><i class="ph ph-bank"></i> Dati per il Bonifico</div>
                 <div class="bonifico-row">
@@ -271,34 +293,12 @@
             </div>
         </div>
 
-        <!-- ═══ Submit (Bonifico) ═══ -->
+        <!-- Submit (Bonifico only) -->
         <div class="os-submit-wrap" id="submit-bonifico" style="display:none">
             <button type="submit" class="os-submit-btn" id="os-submit">
                 <span class="btn-text"><i class="ph ph-paper-plane-tilt"></i> Invia Iscrizione (Bonifico)</span>
                 <span class="spinner"></span>
             </button>
-        </div>
-
-        <!-- PayPal SDK Buttons (shows PayPal, Card, GPay, ApplePay, PayLater) -->
-        <div id="submit-paypal" style="display:none">
-            <!-- SDK loading indicator -->
-            <div id="pp-loading" style="text-align:center;padding:18px;color:rgba(255,255,255,.4);font-size:13px;">
-                <div style="width:28px;height:28px;border:3px solid rgba(255,255,255,.1);border-top-color:#0070ba;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 10px;"></div>
-                Caricamento metodi di pagamento…
-            </div>
-            <!-- SDK renders buttons here -->
-            <div id="paypal-button-container" style="min-height:55px;margin-top:12px;"></div>
-            <!-- Fallback buttons (shown if SDK is blocked by ad blocker) -->
-            <div id="pp-fallback" style="display:none;margin-top:12px;">
-                <div style="text-align:center;margin-bottom:14px;font-size:12px;color:rgba(255,255,255,.35);">
-                    ⚠️ Alcuni metodi di pagamento non si caricano? <a href="#" id="pp-fallback-link" style="color:#D9317F;text-decoration:underline;">Apri il checkout in una nuova scheda</a> per tutte le opzioni.
-                </div>
-                <button type="button" class="os-submit-btn os-paypal-btn" id="os-paypal-fallback" style="width:100%;">
-                    <span class="btn-text">🔗 Paga su PayPal</span>
-                    <span class="spinner"></span>
-                </button>
-                <div style="text-align:center;margin-top:8px;font-size:11px;color:rgba(255,255,255,.3);">Potrai pagare con conto PayPal o carta di credito/debito</div>
-            </div>
         </div>
     </form>
 
@@ -321,7 +321,7 @@
     'use strict';
     const API = '../api/api.php?module=outseason&action=';
     const PF = 650, PD = 400;
-    let selFormula='', selWeek='', selPay='', discPct=0, ppOrderId='', eId=0;
+    let selFormula='', selWeek='', selPay='Carta/PayPal', discPct=0, ppOrderId='', eId=0;
     let availData = { by_role: {}, quotas: {}, foresteria_quota: 12, foresteria_counts: {} };
 
     // ─── Availability ───────────────────────────────────────
@@ -462,9 +462,8 @@
         clearErr('come_vuoi_pagare');
         const isBonifico = selPay==='Bonifico Bancario';
         document.getElementById('submit-bonifico').style.display = isBonifico?'':'none';
-        document.getElementById('submit-paypal').style.display = selPay==='Carta/PayPal'?'':'none';
+        document.getElementById('submit-paypal').style.display = isBonifico?'none':'';
         document.getElementById('bonifico-info').style.display = isBonifico?'':'none';
-        if (selPay === 'Carta/PayPal') { loadPayPalSDK(); }
         if (isBonifico) {
             const nome = document.getElementById('nome_e_cognome').value.trim() || 'Nome Cognome';
             document.querySelector('.bonifico-causale').innerHTML = 'Iscrizione OutSeason 2026 — <em>' + nome + '</em>';
@@ -580,6 +579,9 @@
         };
         document.head.appendChild(s);
     }
+
+    // Load SDK immediately — buttons appear directly in the form
+    loadPayPalSDK();
 
     function renderPayPalButtons() {
         if (!window.paypal) { console.error('[OutSeason] paypal not available'); return; }
