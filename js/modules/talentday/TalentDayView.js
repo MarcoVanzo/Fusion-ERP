@@ -7,9 +7,11 @@ export class TalentDayView {
         '28 MAG 2026, Roma - Civitavecchia',
         '3 GIU 2026, Venezia - Fusion Team Volley',
         '4 GIU 2026, Trieste - Azzurra Volley',
+        '5 GIU 2026, Udine - Rizzi Volley',
         '10 GIU 2026, Torino - Volavalley',
         '11 GIU 2026, Lecce - Melendugno Volley',
         '19 GIU 2026, Catania - Ciclope Volley Bronte',
+        '29 GIU 2026, Cagliari - Audax Quartucciu',
     ];
 
     /* ═══════════════════════════════════════════════════════════════════
