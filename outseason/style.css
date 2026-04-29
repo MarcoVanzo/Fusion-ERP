@@ -517,7 +517,7 @@ body {
 .os-payment-card:hover { border-color: rgba(217,49,127,0.35); }
 .os-payment-card.selected { border-color: var(--ftv-primary); background: var(--accent-soft); }
 .os-payment-card .pay-icon { font-size: 24px; margin-bottom: 2px; }
-.os-payment-card .pay-label { font-family: 'Poppins',sans-serif; font-size: 13px; font-weight: 600; color: var(--text-dark); }
+.os-payment-card .pay-label { font-family: 'Poppins',sans-serif; font-size: 11px; font-weight: 600; color: var(--text-dark); line-height: 1.4; }
 
 /* ─── Bonifico Info Panel ──────────────────────────────────────────── */
 .os-bonifico-info {

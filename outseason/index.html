@@ -6,7 +6,7 @@
     <title>OutSeason 2026 — Fusion Team Volley</title>
     <meta name="description" content="Iscriviti al Master OutSeason 2026 di Fusion Team Volley. Cinque giorni intensi di allenamenti con coach professionisti.">
     <meta property="og:title" content="Registrati — FTV Out Season Master">
-    <meta property="og:description" content="Master di alta specializzazione: Full Master €650 o Daily Master €400. Paga con carta, PayPal o bonifico.">
+    <meta property="og:description" content="Master di alta specializzazione: Full Master €650 o Daily Master €400. Paga con carta, PayPal, Google Pay, Apple Pay o bonifico.">
     <meta property="og:image" content="https://www.fusionteamvolley.it/assets/logo-colorato.png">
     <meta property="og:type" content="website">
     <link rel="icon" href="https://www.fusionteamvolley.it/assets/logo-colorato.png" type="image/png">
@@ -214,7 +214,7 @@
             <div class="os-payment-cards">
                 <div class="os-payment-card" data-val="Carta/PayPal" onclick="selectPayment(this)">
                     <div class="pay-icon">💳</div>
-                    <div class="pay-label">Carta / PayPal</div>
+                    <div class="pay-label">Carta / PayPal / Google Pay / Apple Pay</div>
                 </div>
                 <div class="os-payment-card" data-val="Bonifico Bancario" onclick="selectPayment(this)">
                     <div class="pay-icon">🏦</div>
@@ -530,7 +530,7 @@
         const cont=document.getElementById('paypal-button-container');
         cont.innerHTML='<div style="text-align:center;padding:24px;color:#888;font-size:14px;"><div class="os-spinner" style="margin:0 auto 12px;width:32px;height:32px;border:3px solid rgba(0,0,0,.1);border-top-color:#0070ba;border-radius:50%;animation:spin .8s linear infinite;"></div>Caricamento PayPal…</div><style>@keyframes spin{to{transform:rotate(360deg)}}</style>';
         const s=document.createElement('script');
-        s.src=`https://www.paypal.com/sdk/js?client-id=${cid}&currency=EUR&intent=capture&locale=it_IT`;
+        s.src=`https://www.paypal.com/sdk/js?client-id=${cid}&currency=EUR&intent=capture&locale=it_IT&enable-funding=googlepay,applepay,paylater`;
         s.onload=function(){
             console.log('[OutSeason] PayPal SDK loaded, paypal object:', !!window.paypal);
             cont.innerHTML='';
@@ -546,7 +546,7 @@
     function renderPP(){
         if(!window.paypal){console.error('[OutSeason] window.paypal not available after SDK load');return;}
         paypal.Buttons({
-            style:{layout:'vertical',color:'gold',shape:'rect',label:'paypal',height:48},
+            style:{layout:'vertical',color:'gold',shape:'rect',label:'pay',height:48},
             createOrder:async()=>{
                 const v=validate();if(v!==true)throw new Error('Compila: '+v.join(', '));
                 const r=await fetch(API+'publicRegister',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload())});
