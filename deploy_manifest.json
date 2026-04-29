@@ -1,6 +1,6 @@
 {
   "version": 3,
-  "generated_at": "2026-04-29T09:06:56.469Z",
+  "generated_at": "2026-04-29T09:08:52.804Z",
   "file_count": 1747,
   "files": [
     {
@@ -1292,8 +1292,8 @@
       "hash": "bff23f6cbbda8e9f63374caad9603b813d7ac9dc5935d53e2f1c5831a7c66b61"
     },
     {
-      "path": "fusion-website/dist/assets/FamilyPortal-IqujHHNE.js",
-      "hash": "2be1480889ebbb3e6cb97045e5dec0133a5dab551627b06eb061f624f300ac4c"
+      "path": "fusion-website/dist/assets/FamilyPortal-BCTJPWla.js",
+      "hash": "a6abe0689c8d381e6aeeab93904a3ddd22d28f28eee7d104a8b8411e9907b7bc"
     },
     {
       "path": "fusion-website/dist/assets/Foresteria-COBY5sGw.js",
@@ -1364,12 +1364,12 @@
       "hash": "b6262b3e9fd5e1b6a83ba32a3f9c2982cdea7fcbb24c0e824e4a3f139fc2e286"
     },
     {
-      "path": "fusion-website/dist/assets/index-C1Y3XytW.css",
-      "hash": "b05ea21060beecbe73de944aba11855beac518f23fe30a6d5acb69dbd2df66a5"
+      "path": "fusion-website/dist/assets/index-D2jqhOAN.js",
+      "hash": "984df2f078652cbbb36e5fe02de80c3f507b8a5bc2ac053bfac3a43509aeb093"
     },
     {
-      "path": "fusion-website/dist/assets/index-lIR1DAt2.js",
-      "hash": "25967f52dc68a3a6f57c9b03947a14a87a1cb719a840c6698a075db2ad6364a8"
+      "path": "fusion-website/dist/assets/index-uvBbVoTx.css",
+      "hash": "676bde2600fbeb7dc102dd7249fb21a979f0ee2cce879b0c8f6728062f9d632a"
     },
     {
       "path": "fusion-website/dist/assets/logo-colorato.png",
@@ -1545,7 +1545,7 @@
     },
     {
       "path": "fusion-website/dist/index.html",
-      "hash": "0896c8a4df0e6a7ead093a203acfa2ad51c2b0a1fe020532f7579c03b3947eb3"
+      "hash": "f89b5436d5258b4f67734ba80ecdfb04272a046644069ad5eb551ef51912b6e6"
     },
     {
       "path": "fusion-website/dist/privacy-policy.pdf",
@@ -1565,7 +1565,7 @@
     },
     {
       "path": "index.html",
-      "hash": "b35560959409fb08bafb06df9ca3a387b11858751496b33763357bc434bde566"
+      "hash": "0227b57c25fb7fb271b3dff2397ac94d3af2035438294588d486e7588013d0a5"
     },
     {
       "path": "js/api/athletes.api.js",
@@ -1809,7 +1809,7 @@
     },
     {
       "path": "js/modules/outseason.js",
-      "hash": "f8e4f8743c0c7c898f6954fc059fb1402d430daad9e23931b207c8268bf74447"
+      "hash": "1b888621cf6f58481005ae5df3cdfdba3aefdb01910d798150fcc8304f555d81"
     },
     {
       "path": "js/modules/results.js",
