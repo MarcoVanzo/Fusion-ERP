@@ -1,11 +1,11 @@
 {
   "version": 3,
-  "generated_at": "2026-04-22T20:36:08.313Z",
-  "file_count": 1706,
+  "generated_at": "2026-04-29T19:25:29.379Z",
+  "file_count": 1698,
   "files": [
     {
       "path": ".env.prod",
-      "hash": "a6f61a530ef094c7b568d06115a96c0a937b541249102cb31c14300ddf9d6ebf"
+      "hash": "08b3a8ec2bd11d2b9ae9ba84876c6fdc11fb520af38bfc57edcb80cb9d446183"
     },
     {
       "path": ".htaccess",
@@ -364,76 +364,12 @@
       "hash": "5364fe1f74d04c645cf75ebcb79db3ab2dcfdf82135f4ed8518755938cc07bef"
     },
     {
-      "path": "api/Shared/AIConfig.php",
-      "hash": "694874490006a15eb8a9e2332d4e269acb0040f85675ce8001fb8516143fd61e"
-    },
-    {
-      "path": "api/Shared/AIService.php",
-      "hash": "3a8f91d0252f731668ddb7c4b28ea77a657eb0a81b43f5346dcaed3a0668e9a5"
-    },
-    {
-      "path": "api/Shared/Audit.php",
-      "hash": "96228c26696e70f4472eeeb9a940ba27f098f6dec759740331e8f4aebe2e7fb0"
-    },
-    {
       "path": "api/Shared/Auth.php",
       "hash": "52e2a2c722c4fab6cf433d576ea12e59ca3777a6408322123a8f3033529f23e0"
     },
     {
-      "path": "api/Shared/BackupService.php",
-      "hash": "88bf3599674825a000ec4f9284cb5d377aae2c8db362e98de2d0a0a630fd2883"
-    },
-    {
       "path": "api/Shared/BaseRepository.php",
       "hash": "41fc522e75f17dc15c5f53de2ca0a528279a5716f391313f2159481ee72be6fd"
-    },
-    {
-      "path": "api/Shared/cacert.pem",
-      "hash": "f1407d974c5ed87d544bd931a278232e13925177e239fca370619aba63c757b4"
-    },
-    {
-      "path": "api/Shared/Database.php",
-      "hash": "35ef703b3399744e1f979434a3234dd263d3bbc8399bf18a1a3312147a238507"
-    },
-    {
-      "path": "api/Shared/ESignatureService.php",
-      "hash": "33254b158bc0d4112ff3904936f5545ccceb191b7d78ef376e97ad3e1570fe22"
-    },
-    {
-      "path": "api/Shared/GoogleDrive.php",
-      "hash": "090c2d883f7a1519bd3a81ff999236ba64c03712bdc49b689b4c1b2566680778"
-    },
-    {
-      "path": "api/Shared/Mailer.php",
-      "hash": "46ca8af641cb7c5f6d79dd4f0ba2982eb554d4002cd22132ec45324199e02941"
-    },
-    {
-      "path": "api/Shared/MigrationRunner.php",
-      "hash": "00ca9320036299ac039272a7266a87d9b4cb8d01c23c0726d88eb1a9c0490f28"
-    },
-    {
-      "path": "api/Shared/NotificationService.php",
-      "hash": "856c3cb7c67005d38b412585fb618e299902935400f12df009b7ae40e38ce22c"
-    },
-    {
-      "path": "api/Shared/RateLimiter.php",
-      "hash": "08d335459c770fd1b0a3ccd6f1b02d63e0d3da2d6832bee50a97c116f4cb705f"
-    },
-    {
-      "path": "api/Shared/Response.php",
-      "hash": "8a46f28aa779c1d072a5366d6f01300efefe5f5dbb7e726c1b08ed0ca9589d57"
-    },
-    {
-      "path": "api/Shared/TenantContext.php",
-      "hash": "600909f61e2b49ca774b247568ea91cd677837ced17732eb035910cb86f2cdf7"
-    },
-    {
-      "path": "api/Shared/Validator.php",
-      "hash": "484fdfa9cf9199455c2b5f408d7c1ae21e74d5b4ec766e0c8416e814af3c3ba6"
-    },
-    {
-      "path": "api/Shared/WhatsAppClient.php",
-      "hash": "db8d548c7260d0edb0dca8ade1d0108655b852ac4b8f7e05dd44851967541d57"
     },
     {
       "path": "api/templates/email_certificate_expiry.php",
@@ -1224,8 +1160,8 @@
       "hash": "bff23f6cbbda8e9f63374caad9603b813d7ac9dc5935d53e2f1c5831a7c66b61"
     },
     {
-      "path": "fusion-website/dist/assets/FamilyPortal-7_JejZkj.js",
-      "hash": "53bcfcec42142e7ede0ff5cf2e98887f61a6691647a9ed8f4dc588ddb517a31a"
+      "path": "fusion-website/dist/assets/FamilyPortal-BCTJPWla.js",
+      "hash": "a6abe0689c8d381e6aeeab93904a3ddd22d28f28eee7d104a8b8411e9907b7bc"
     },
     {
       "path": "fusion-website/dist/assets/Foresteria-COBY5sGw.js",
@@ -1288,20 +1224,20 @@
       "hash": "23264c83d979d2034f0562b3b1b3411a15fa69415edddde029ce0727c14ed0c6"
     },
     {
-      "path": "fusion-website/dist/assets/Home-CwfQCNT8.js",
-      "hash": "534f6726b26e110c5642a185524e74eb61d2a2ac9fd3fd298ae8ec235be93af6"
+      "path": "fusion-website/dist/assets/Home-vCRsxCi-.js",
+      "hash": "56640d0dfb588d85ff1bab1a069fc3769472e34056974bc7225557cc94b90861"
     },
     {
       "path": "fusion-website/dist/assets/icons-lJskfNWJ.js",
       "hash": "b6262b3e9fd5e1b6a83ba32a3f9c2982cdea7fcbb24c0e824e4a3f139fc2e286"
     },
     {
-      "path": "fusion-website/dist/assets/index-CjRpaBMn.css",
-      "hash": "870facd7987f1e23d44d2b1da49375315daf09c3bf107b79eee4f400dc7b12f1"
+      "path": "fusion-website/dist/assets/index-D2jqhOAN.js",
+      "hash": "984df2f078652cbbb36e5fe02de80c3f507b8a5bc2ac053bfac3a43509aeb093"
     },
     {
-      "path": "fusion-website/dist/assets/index-PhlAUmbp.js",
-      "hash": "b719b837e44cd8c57903b07796497c9fbd89cdfc4385bb39c088a354ce6fdbdd"
+      "path": "fusion-website/dist/assets/index-uvBbVoTx.css",
+      "hash": "676bde2600fbeb7dc102dd7249fb21a979f0ee2cce879b0c8f6728062f9d632a"
     },
     {
       "path": "fusion-website/dist/assets/logo-colorato.png",
@@ -1348,6 +1284,10 @@
       "hash": "aa154e46c39b9710805a1646f7cdfda5f332995fad45fc094a9ad348fefc9ab7"
     },
     {
+      "path": "fusion-website/dist/assets/OpenDay-CNpWuW3x.js",
+      "hash": "e91328be240bdd0b115c583e804eb698a3695e6800c1bcb7181da2dddfcdb89e"
+    },
+    {
       "path": "fusion-website/dist/assets/oswald-cyrillic-600-normal-B7zyAoGs.woff",
       "hash": "b80e140a0b8b5186905614373ee3a70f82999ddebea67fd5003270f61d8aaefb"
     },
@@ -1388,8 +1328,8 @@
       "hash": "79c8db81d80299500f3643d63278fbe6193b2ff5d2fc780cac5109d73cf8cfa6"
     },
     {
-      "path": "fusion-website/dist/assets/Outseason-BISf5vdr.js",
-      "hash": "f70366dd657bfb752b582b711d166ed31b5b32a93a7284e3a45c72a7dc85726d"
+      "path": "fusion-website/dist/assets/Outseason-EP6LF_Zt.js",
+      "hash": "c76180432a16e82805f97612672f419ad28567358b9c54298fec95d816c33f48"
     },
     {
       "path": "fusion-website/dist/assets/Proposal1-o4UMApTy.js",
@@ -1473,7 +1413,7 @@
     },
     {
       "path": "fusion-website/dist/index.html",
-      "hash": "e747b15418c6711095221e4d308b858c22f60f20876415752257139dab4e3d70"
+      "hash": "f89b5436d5258b4f67734ba80ecdfb04272a046644069ad5eb551ef51912b6e6"
     },
     {
       "path": "fusion-website/dist/privacy-policy.pdf",
@@ -1493,7 +1433,7 @@
     },
     {
       "path": "index.html",
-      "hash": "9ef71225cbda73eb9cc43b1897a687ebc06dee1e5bdeeabe58001cfb5bb91eff"
+      "hash": "5ce6ed58fd667b0402abf3dd732c2f33ef96a8d924fdb65c9a484c19a40b6bfe"
     },
     {
       "path": "js/api/athletes.api.js",
@@ -1725,7 +1665,7 @@
     },
     {
       "path": "js/modules/outseason.js",
-      "hash": "3f66ffee2fd8bc222f55e5ecb2fd3d40c4f1392478d3d0bf4da605736c9a7b92"
+      "hash": "c625b40d983fa2fdca93e322c05750ae89acb316cd143c2f1b38d64e5c42df61"
     },
     {
       "path": "js/modules/results.js",
@@ -1928,6 +1868,22 @@
       "hash": "693ea4cd4aacb15d5f9105dad1a4418f6e666b4ab83ad23c0b3e9f05232b0713"
     },
     {
+      "path": "outseason/index.html",
+      "hash": "891e571dbc77556290b4ae05de8114030292de4c7c914d7d13076d753225f949"
+    },
+    {
+      "path": "outseason/seo-fixes.php",
+      "hash": "10b8a57377a6435b4e26948b528f0f4648bf3459702bf816ca0cd29c398a9791"
+    },
+    {
+      "path": "outseason/style.css",
+      "hash": "95f6d886cc8765664709abf4be49cd75224d664125444a4b38b53abef1efce42"
+    },
+    {
+      "path": "remote.env",
+      "hash": "9700ba46820cafa437ab6ba822f23fada26bcf54ef4675a1067cdd92fe4646d7"
+    },
+    {
       "path": "resend.php",
       "hash": "9278a9a72c45cb1cabb6c0849610e47eef7f96b084c2e8674e06b3388e4d32e3"
     },
@@ -1990,6 +1946,18 @@
     {
       "path": "templates/import_atlete_template.csv",
       "hash": "78bc95dc06309a02cf871b792f06f723682192da5c53b11495a0d0c34f2be357"
+    },
+    {
+      "path": "test.js",
+      "hash": "4ba1ec1491f9ab9fc0775b8eeac5ff8ffd25d0443e4b2c7d2ac6adec968f74bb"
+    },
+    {
+      "path": "test.php",
+      "hash": "a1d5b93af1ef273d774b2cc6f23754c0c9ff5e736b6fa46c51f15de06cdbcf91"
+    },
+    {
+      "path": "test.txt",
+      "hash": "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2"
     },
     {
       "path": "vendor/autoload.php",
