@@ -1,7 +1,7 @@
 {
   "version": 3,
-  "generated_at": "2026-04-29T19:27:38.559Z",
-  "file_count": 1697,
+  "generated_at": "2026-04-29T19:32:41.365Z",
+  "file_count": 1698,
   "files": [
     {
       "path": ".env.prod",
@@ -1160,8 +1160,8 @@
       "hash": "bff23f6cbbda8e9f63374caad9603b813d7ac9dc5935d53e2f1c5831a7c66b61"
     },
     {
-      "path": "fusion-website/dist/assets/FamilyPortal-7_JejZkj.js",
-      "hash": "53bcfcec42142e7ede0ff5cf2e98887f61a6691647a9ed8f4dc588ddb517a31a"
+      "path": "fusion-website/dist/assets/FamilyPortal-BCTJPWla.js",
+      "hash": "a6abe0689c8d381e6aeeab93904a3ddd22d28f28eee7d104a8b8411e9907b7bc"
     },
     {
       "path": "fusion-website/dist/assets/Foresteria-COBY5sGw.js",
@@ -1224,20 +1224,20 @@
       "hash": "23264c83d979d2034f0562b3b1b3411a15fa69415edddde029ce0727c14ed0c6"
     },
     {
-      "path": "fusion-website/dist/assets/Home-CwfQCNT8.js",
-      "hash": "534f6726b26e110c5642a185524e74eb61d2a2ac9fd3fd298ae8ec235be93af6"
+      "path": "fusion-website/dist/assets/Home-vCRsxCi-.js",
+      "hash": "56640d0dfb588d85ff1bab1a069fc3769472e34056974bc7225557cc94b90861"
     },
     {
       "path": "fusion-website/dist/assets/icons-lJskfNWJ.js",
       "hash": "b6262b3e9fd5e1b6a83ba32a3f9c2982cdea7fcbb24c0e824e4a3f139fc2e286"
     },
     {
-      "path": "fusion-website/dist/assets/index-CjRpaBMn.css",
-      "hash": "870facd7987f1e23d44d2b1da49375315daf09c3bf107b79eee4f400dc7b12f1"
+      "path": "fusion-website/dist/assets/index-D2jqhOAN.js",
+      "hash": "984df2f078652cbbb36e5fe02de80c3f507b8a5bc2ac053bfac3a43509aeb093"
     },
     {
-      "path": "fusion-website/dist/assets/index-PhlAUmbp.js",
-      "hash": "b719b837e44cd8c57903b07796497c9fbd89cdfc4385bb39c088a354ce6fdbdd"
+      "path": "fusion-website/dist/assets/index-uvBbVoTx.css",
+      "hash": "676bde2600fbeb7dc102dd7249fb21a979f0ee2cce879b0c8f6728062f9d632a"
     },
     {
       "path": "fusion-website/dist/assets/logo-colorato.png",
@@ -1284,6 +1284,10 @@
       "hash": "aa154e46c39b9710805a1646f7cdfda5f332995fad45fc094a9ad348fefc9ab7"
     },
     {
+      "path": "fusion-website/dist/assets/OpenDay-CNpWuW3x.js",
+      "hash": "e91328be240bdd0b115c583e804eb698a3695e6800c1bcb7181da2dddfcdb89e"
+    },
+    {
       "path": "fusion-website/dist/assets/oswald-cyrillic-600-normal-B7zyAoGs.woff",
       "hash": "b80e140a0b8b5186905614373ee3a70f82999ddebea67fd5003270f61d8aaefb"
     },
@@ -1324,8 +1328,8 @@
       "hash": "79c8db81d80299500f3643d63278fbe6193b2ff5d2fc780cac5109d73cf8cfa6"
     },
     {
-      "path": "fusion-website/dist/assets/Outseason-BISf5vdr.js",
-      "hash": "f70366dd657bfb752b582b711d166ed31b5b32a93a7284e3a45c72a7dc85726d"
+      "path": "fusion-website/dist/assets/Outseason-EP6LF_Zt.js",
+      "hash": "c76180432a16e82805f97612672f419ad28567358b9c54298fec95d816c33f48"
     },
     {
       "path": "fusion-website/dist/assets/Proposal1-o4UMApTy.js",
@@ -1409,7 +1413,7 @@
     },
     {
       "path": "fusion-website/dist/index.html",
-      "hash": "e747b15418c6711095221e4d308b858c22f60f20876415752257139dab4e3d70"
+      "hash": "f89b5436d5258b4f67734ba80ecdfb04272a046644069ad5eb551ef51912b6e6"
     },
     {
       "path": "fusion-website/dist/privacy-policy.pdf",
@@ -1429,7 +1433,7 @@
     },
     {
       "path": "index.html",
-      "hash": "ae0d7d8d9ee8e8a188f4bc42abee91315d7f99abad3b1b567112aed9164c8185"
+      "hash": "4c1ba3f2ba7f2e422a5551d2d9a02d649cf46917efc477d8f46d2af202a09c2c"
     },
     {
       "path": "js/api/athletes.api.js",
@@ -1661,7 +1665,7 @@
     },
     {
       "path": "js/modules/outseason.js",
-      "hash": "c625b40d983fa2fdca93e322c05750ae89acb316cd143c2f1b38d64e5c42df61"
+      "hash": "39987ed9c5d3ca32dce7269658348804b167839070ef590805a21fcbe015a58c"
     },
     {
       "path": "js/modules/results.js",
@@ -1749,7 +1753,7 @@
     },
     {
       "path": "js/modules/talentday/TalentDayView.js",
-      "hash": "ca38ea6806fea4a86a21f3128110ea22680bb7e382c0f2dee2a0335a6cd883c5"
+      "hash": "46c8cb7bd900fc564c65d8427db4aa26260e23ac9950cf2566bb64caecfd2024"
     },
     {
       "path": "js/modules/tasks.js",
@@ -1865,15 +1869,15 @@
     },
     {
       "path": "outseason/index.html",
-      "hash": "891e571dbc77556290b4ae05de8114030292de4c7c914d7d13076d753225f949"
+      "hash": "182ff06211a1e7356c52339e22211014748d303f7ead74a20b95fb4c5e0ba8d4"
     },
     {
       "path": "outseason/seo-fixes.php",
-      "hash": "10b8a57377a6435b4e26948b528f0f4648bf3459702bf816ca0cd29c398a9791"
+      "hash": "c9b717e8b9bdabbcd0cb05af15dae70890296b71097f0b4d85be5fbec9fed8c5"
     },
     {
       "path": "outseason/style.css",
-      "hash": "95f6d886cc8765664709abf4be49cd75224d664125444a4b38b53abef1efce42"
+      "hash": "ab523430c129fa734f307c2aab62f7210508b2c49329d2a9e491601b726117cd"
     },
     {
       "path": "remote.env",
@@ -1933,7 +1937,7 @@
     },
     {
       "path": "talent-day/index.html",
-      "hash": "e322914d32d79a82c4bff9dfc585679c6b47f5c7bd0c24927c8a7195f60c9b87"
+      "hash": "3ed4a2ef2d0d8af33634526fc55498fdab73d210e1776e3e7a8e6566c4039eba"
     },
     {
       "path": "talent-day/style.css",
