@@ -718,14 +718,21 @@
 
         // If Stripe.js not loaded yet, load it
         if (!window.Stripe) {
-            const script = document.createElement('script');
-            script.src = 'https://js.stripe.com/v3/';
-            script.async = true;
-            await new Promise((resolve, reject) => {
-                script.onload = resolve;
-                script.onerror = reject;
-                document.head.appendChild(script);
-            });
+            try {
+                const script = document.createElement('script');
+                script.src = 'https://js.stripe.com/v3/';
+                script.async = true;
+                await new Promise((resolve, reject) => {
+                    script.onload = resolve;
+                    script.onerror = () => reject(new Error('Impossibile caricare Stripe (verifica ad-blocker o connessione).'));
+                    document.head.appendChild(script);
+                });
+            } catch (err) {
+                errEl.textContent = err.message;
+                errEl.style.display = 'block';
+                cardForm.style.display = 'block';
+                return;
+            }
         }
 
         // Create PaymentIntent on backend
