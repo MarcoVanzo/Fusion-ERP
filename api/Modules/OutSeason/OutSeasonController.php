@@ -297,9 +297,10 @@ class OutSeasonController
         $pdo = Database::getInstance();
         $tid = TenantContext::id();
         $stmt = $pdo->prepare(
-            "SELECT nome_e_cognome, formula_scelta, order_summary
+            "SELECT nome_e_cognome, formula_scelta, order_summary, codice_sconto
              FROM outseason_entries
              WHERE season_key = :sk AND tenant_id = :tid AND come_vuoi_pagare = 'Bonifico Bancario'
+               AND is_deleted = 0 AND payment_status NOT IN ('AWAITING_PAYMENT','FAILED')
              ORDER BY nome_e_cognome"
         );
         $stmt->execute([':sk' => self::seasonKey(), ':tid' => $tid]);
@@ -322,8 +323,12 @@ class OutSeasonController
         $bonificoList = [];
         foreach ($bonificoEntries as $i => $entry) {
             $amount = str_contains((string)$entry['formula_scelta'], 'Full') ? $priceFull : $pricePartial;
+            // If a discount code was applied, reduce by 10%
+            if (!empty(trim((string)($entry['codice_sconto'] ?? '')))) {
+                $amount = round($amount * 0.9, 2);
+            }
             $n = $i + 1;
-            $entriesText .= $n . '. ' . $entry['nome_e_cognome'] . ' — ' . (string)$amount . ",00 €\n";
+            $entriesText .= $n . '. ' . $entry['nome_e_cognome'] . ' — ' . number_format($amount, 2, ',', '.') . " €\n";
             $bonificoList[] = ['name' => $entry['nome_e_cognome'], 'amount' => $amount];
         }
 
@@ -544,17 +549,22 @@ PROMPT;
             $txAmount = isset($r['transaction_amount']) ? (float)$r['transaction_amount'] : null;
 
             if ($rFound && $txAmount !== null && $txAmount > 0) {
-                // Look up the entry's formula to determine the full price
+                // Look up the entry's formula and discount code to determine the full price
                 $lookupStmt = $pdo->prepare(
-                    'SELECT formula_scelta FROM outseason_entries
+                    'SELECT formula_scelta, codice_sconto FROM outseason_entries
                      WHERE tenant_id = :tid AND season_key = :sk AND LOWER(TRIM(nome_e_cognome)) = LOWER(TRIM(:nome)) AND is_deleted = 0
                      LIMIT 1'
                 );
                 $lookupStmt->execute([':tid' => $tid, ':sk' => $seasonKey, ':nome' => $r['name']]);
-                $formula = $lookupStmt->fetchColumn();
+                $entryRow = $lookupStmt->fetch(\PDO::FETCH_ASSOC);
 
-                if ($formula !== false) {
+                if ($entryRow !== false) {
+                    $formula = $entryRow['formula_scelta'];
                     $totalPrice = str_contains((string)$formula, 'Full') ? $priceFull : $pricePartial;
+                    // Apply 10% discount if a discount code was used
+                    if (!empty(trim((string)($entryRow['codice_sconto'] ?? '')))) {
+                        $totalPrice = round($totalPrice * 0.9, 2);
+                    }
                     $saldo = round($totalPrice - $txAmount, 2);
 
                     try {

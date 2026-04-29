@@ -34,7 +34,9 @@ const OutSeason = (() => {
     return (n.formula_scelta || n.FormulaScelta || "").includes("Full");
   }
   function l(n) {
-    return d(n) ? 250 : 150;
+    const base = d(n) ? 250 : 150;
+    const sc = n.codice_sconto || n.CodiceSconto || null;
+    return sc ? Math.round(base * 0.9) : base;
   }
   function getSaldo(n) {
     const v = n.saldo ?? n.Saldo ?? null;
@@ -529,7 +531,7 @@ const OutSeason = (() => {
                 <td>${g(n)}</td>
                 <td><span class="os-badge-formula ${d(n) ? "os-badge-full" : "os-badge-daily"}">${b(n)}</span></td>
                 <td style="font-weight:600;">${(function (n) {
-                  return d(n) ? "250 €" : "150 €";
+                  return l(n) + " €";
                 })(n)}</td>
                 <td>${
                   "Bonifico Bancario" ===

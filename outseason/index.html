@@ -776,7 +776,7 @@
     }
 
     // Stripe "Paga Ora" button
-    document.getElementById('stripe-pay-btn')?.addEventListener('click', async function() {
+    document.getElementById('os-btn-stripe-submit')?.addEventListener('click', async function() {
         if (!stripeInstance || !stripeElements) return;
         const btn = this;
         const errEl = document.getElementById('stripe-error');
