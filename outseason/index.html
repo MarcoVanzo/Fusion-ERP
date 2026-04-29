@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OutSeason 2026 — Fusion Team Volley</title>
+    <meta name="description" content="Iscriviti al Master OutSeason 2026 di Fusion Team Volley. Cinque giorni intensi di allenamenti con coach professionisti.">
+    <meta property="og:title" content="Registrati — FTV Out Season Master">
+    <meta property="og:description" content="Master di alta specializzazione: Full Master €650 o Daily Master €400. Paga con carta, PayPal, Google Pay, Apple Pay o bonifico.">
+    <meta property="og:image" content="https://www.fusionteamvolley.it/assets/logo-colorato.png">
+    <meta property="og:type" content="website">
+    <link rel="icon" href="https://www.fusionteamvolley.it/assets/logo-colorato.png" type="image/png">
+    <link rel="stylesheet" href="style.css?v=20260429115100">
+    <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+    <style>
+        @keyframes fadeInUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes spin { to { transform:rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<!-- ═══════════ HERO ═══════════ -->
+<header class="os-hero">
+    <div class="os-hero-bg"></div>
+    <div class="os-hero-content">
+        <img src="https://www.fusionteamvolley.it/assets/logo-colorato.png" alt="Fusion Team Volley" class="os-hero-logo">
+        <div class="os-hero-season">Master di Alta Specializzazione</div>
+        <h1><span>#</span>Fusion Out Season</h1>
+        <p class="os-hero-subtitle">Vivi un'esperienza unica e fai crescere il tuo talento. Cinque giorni intensi di allenamenti con i coach professionisti.</p>
+
+        <div class="os-weeks-strip">
+            <div class="os-week-card" data-val="5 Giugno - Udine" onclick="selectWeek(this)">
+                <div class="date">Tappa 1</div>
+                <div class="range">5 Giu – Udine</div>
+                <div class="host">Rizzi Volley</div>
+            </div>
+            <div class="os-week-card" data-val="29 Giugno - Cagliari" onclick="selectWeek(this)">
+                <div class="date">Tappa 2</div>
+                <div class="range">29 Giu – Cagliari</div>
+                <div class="host">Audax Quartucciu</div>
+            </div>
+            <div class="os-week-card" data-val="29 Giugno - 3 Luglio" onclick="selectWeek(this)">
+                <div class="date">Settimana 1</div>
+                <div class="range">29 Giu – 3 Luglio</div>
+            </div>
+            <div class="os-week-card" data-val="6 Luglio - 10 Luglio" onclick="selectWeek(this)">
+                <div class="date">Settimana 2</div>
+                <div class="range">6 – 10 Luglio</div>
+            </div>
+            <div class="os-week-card" data-val="13 Luglio - 17 Luglio" onclick="selectWeek(this)">
+                <div class="date">Settimana 3</div>
+                <div class="range">13 – 17 Luglio</div>
+            </div>
+        </div>
+
+        <!-- Availability Panel -->
+        <div class="os-avail-panel" id="avail-panel">
+            <div class="os-avail-title">Posti Disponibili</div>
+            <div id="avail-rows"></div>
+
+            <div class="os-avail-legend">
+                <span><span class="leg-dot leg-free"></span> Disponibile</span>
+                <span><span class="leg-dot leg-taken"></span> Occupato</span>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- ═══════════ FORM ═══════════ -->
+<main class="os-container">
+    <form id="os-form" class="os-form-card" novalidate>
+        <div class="os-form-error" id="os-global-error"></div>
+        <input type="hidden" id="settimana_scelta" value="">
+
+        <!-- ═══ Formula ═══ -->
+        <div class="os-section">
+            <div class="os-section-title"><i class="ph ph-star"></i> Formula</div>
+            <div class="os-formula-cards">
+                <div class="os-formula-card" data-val="Full Master" onclick="selectFormula(this)">
+                    <div class="formula-name">Full Master</div>
+                    <div class="formula-price">€650</div>
+                    <div class="formula-desc">Settimana completa</div>
+                    <div class="formula-foresteria-badge" id="foresteria-badge">
+                        <i class="ph ph-house"></i>
+                        <span id="foresteria-badge-text">Foresteria: 12 posti</span>
+                    </div>
+                </div>
+                <div class="os-formula-card" data-val="Daily Master" onclick="selectFormula(this)">
+                    <div class="formula-name">Daily Master</div>
+                    <div class="formula-price">€400</div>
+                    <div class="formula-desc">Frequenza giornaliera</div>
+                </div>
+            </div>
+            <input type="hidden" id="formula_scelta" value="">
+            <span class="os-field-error" data-for="formula_scelta">Seleziona una formula</span>
+        </div>
+
+        <div class="os-divider"></div>
+
+        <!-- ═══ Dati Personali ═══ -->
+        <div class="os-section">
+            <div class="os-section-title"><i class="ph ph-user"></i> Dati Personali</div>
+            <div class="os-grid">
+                <div class="os-field">
+                    <label class="os-label">Nome e Cognome <span class="req">*</span></label>
+                    <input id="nome_e_cognome" class="os-input" type="text" placeholder="Nome Cognome" required>
+                    <span class="os-field-error" data-for="nome_e_cognome">Campo obbligatorio</span>
+                </div>
+                <div class="os-field">
+                    <label class="os-label">Email <span class="req">*</span></label>
+                    <input id="email" class="os-input" type="email" placeholder="email@esempio.it" required>
+                    <span class="os-field-error" data-for="email">Inserisci un'email valida</span>
+                </div>
+            </div>
+            <div class="os-grid" style="margin-top:14px">
+                <div class="os-field">
+                    <label class="os-label">Cellulare <span class="req">*</span></label>
+                    <input id="cellulare" class="os-input" type="tel" placeholder="+39 333 ..." required>
+                    <span class="os-field-error" data-for="cellulare">Campo obbligatorio</span>
+                </div>
+                <div class="os-field">
+                    <label class="os-label">Codice Fiscale <span class="req">*</span></label>
+                    <input id="codice_fiscale" class="os-input" type="text" placeholder="RSSMRA00A01H501Z" required>
+                    <span class="os-field-error" data-for="codice_fiscale">Campo obbligatorio</span>
+                </div>
+            </div>
+            <div class="os-grid" style="margin-top:14px">
+                <div class="os-field">
+                    <label class="os-label">Data di Nascita <span class="req">*</span></label>
+                    <input id="data_di_nascita" class="os-input" type="date" min="1920-01-01" max="2025-12-31" required>
+                    <span class="os-field-error" data-for="data_di_nascita">Campo obbligatorio</span>
+                </div>
+                <div class="os-field">
+                    <label class="os-label">Club di Appartenenza</label>
+                    <input id="club_di_appartenenza" class="os-input" type="text" placeholder="Nome del club">
+                </div>
+            </div>
+        </div>
+
+        <div class="os-divider"></div>
+
+        <!-- ═══ Indirizzo ═══ -->
+        <div class="os-section">
+            <div class="os-section-title"><i class="ph ph-map-pin"></i> Indirizzo di Residenza</div>
+            <div class="os-grid single">
+                <div class="os-field">
+                    <label class="os-label">Indirizzo <span class="req">*</span></label>
+                    <input id="indirizzo" class="os-input" type="text" placeholder="Via Roma, 1" required>
+                    <span class="os-field-error" data-for="indirizzo">Campo obbligatorio</span>
+                </div>
+            </div>
+            <div class="os-grid triple" style="margin-top:14px">
+                <div class="os-field">
+                    <label class="os-label">Città <span class="req">*</span></label>
+                    <input id="citta" class="os-input" type="text" placeholder="Venezia" required>
+                    <span class="os-field-error" data-for="citta">Campo obbligatorio</span>
+                </div>
+                <div class="os-field">
+                    <label class="os-label">CAP <span class="req">*</span></label>
+                    <input id="cap" class="os-input" type="text" placeholder="30100" required>
+                    <span class="os-field-error" data-for="cap">Campo obbligatorio</span>
+                </div>
+                <div class="os-field">
+                    <label class="os-label">Provincia <span class="req">*</span></label>
+                    <input id="provincia" class="os-input" type="text" placeholder="VE" maxlength="2" required>
+                    <span class="os-field-error" data-for="provincia">Campo obbligatorio</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="os-divider"></div>
+
+        <!-- ═══ Sport ═══ -->
+        <div class="os-section">
+            <div class="os-section-title"><i class="ph ph-volleyball"></i> Info Sportive</div>
+            <div class="os-grid">
+                <div class="os-field">
+                    <label class="os-label">Ruolo <span class="req">*</span></label>
+                    <select id="ruolo" class="os-select" required>
+                        <option value="">— Seleziona —</option>
+                        <option value="Palleggiatrice">Palleggiatrice</option>
+                        <option value="Opposta">Opposta</option>
+                        <option value="Schiacciatrice">Schiacciatrice</option>
+                        <option value="Centrale">Centrale</option>
+                        <option value="Libero">Libero</option>
+                    </select>
+                    <span class="os-field-error" data-for="ruolo">Seleziona il ruolo</span>
+                </div>
+                <div class="os-field">
+                    <label class="os-label">Taglia KIT <span class="req">*</span></label>
+                    <select id="taglia_kit" class="os-select" required>
+                        <option value="">— Seleziona —</option>
+                        <option>XXS</option><option>XS</option><option>S</option>
+                        <option>M</option><option>L</option><option>XL</option><option>XXL</option>
+                    </select>
+                    <span class="os-field-error" data-for="taglia_kit">Seleziona la taglia</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="os-divider"></div>
+
+        <!-- ═══ Codice Sconto ═══ -->
+        <div class="os-section">
+            <div class="os-section-title"><i class="ph ph-ticket"></i> Codice Sconto</div>
+            <div class="os-discount-row">
+                <div class="os-field">
+                    <input id="codice_sconto" class="os-input" type="text" placeholder="Inserisci codice (opzionale)">
+                </div>
+                <button type="button" class="os-discount-btn" id="btn-validate-discount">Applica</button>
+            </div>
+            <div class="os-discount-result" id="discount-result"></div>
+        </div>
+
+        <!-- ═══ Price Summary ═══ -->
+        <div class="os-price-summary" id="price-summary" style="display:none">
+            <div class="label">Totale da pagare</div>
+            <div><span class="original-price" id="original-price" style="display:none"></span></div>
+            <div class="amount" id="final-price">€0</div>
+            <div class="discount-info" id="discount-info" style="display:none"></div>
+        </div>
+
+        <div class="os-divider"></div>
+
+        <!-- ═══ Privacy + Termini ═══ -->
+        <div class="os-section">
+            <div class="os-section-title"><i class="ph ph-shield-check"></i> Consensi Obbligatori</div>
+
+            <div class="os-checkbox-wrap">
+                <input type="checkbox" id="privacy" required>
+                <label for="privacy">
+                    Ho letto e accetto l'<a href="https://mvconsultingsas.sharepoint.com/sites/Pallavolo/Documenti%20condivisi/Forms/AllItems.aspx?id=%2Fsites%2FPallavolo%2FDocumenti%20condivisi%2FFUSION%20TEAM%20VOLLEY%2F2025%2D2026%2FOut%20Season%2FTesti%2FInformative%2FInformativa%20form%20di%20registrazione%2Epdf&parent=%2Fsites%2FPallavolo%2FDocumenti%20condivisi%2FFUSION%20TEAM%20VOLLEY%2F2025%2D2026%2FOut%20Season%2FTesti%2FInformative&p=true&ga=1" target="_blank" rel="noopener">Informativa sulla Privacy</a>
+                    e autorizzo il trattamento dei dati personali ai sensi del GDPR (Reg. UE 2016/679). <span class="req">*</span>
+                </label>
+            </div>
+            <span class="os-field-error" data-for="privacy" style="margin-left:28px">Devi accettare l'informativa privacy</span>
+
+            <div class="os-checkbox-wrap" style="margin-top:8px">
+                <input type="checkbox" id="terms" required>
+                <label for="terms">
+                    Ho letto e accetto i <a href="https://mvconsultingsas.sharepoint.com/:b:/s/Pallavolo/IQA-F1DMC4YCT5GohzP6LJ9yAUAIv2FZzd3Z0nBNmKJPmPo?e=udVMxM" target="_blank" rel="noopener">Termini e Condizioni</a>
+                    del servizio OutSeason. <span class="req">*</span>
+                </label>
+            </div>
+            <span class="os-field-error" data-for="terms" style="margin-left:28px">Devi accettare i Termini e Condizioni</span>
+        </div>
+
+        <div class="os-divider"></div>
+
+        <!-- ═══ Metodo Pagamento ═══ -->
+        <div class="os-section">
+            <div class="os-section-title"><i class="ph ph-credit-card"></i> Metodo di Pagamento</div>
+            <input type="hidden" id="come_vuoi_pagare" value="Carta/PayPal">
+
+            <!-- PayPal SDK Buttons — hidden, used only if user clicks PayPal -->
+            <div id="submit-paypal" style="display:none;">
+                <div id="paypal-button-container" style="min-height:55px;"></div>
+            </div>
+
+            <!-- ═══════════ STRIPE PAYMENT SECTION ═══════════ -->
+            <div id="stripe-payment-section">
+                <div style="display:flex;flex-direction:column;gap:12px;">
+                    <!-- 💳 Carta di Credito/Debito (Stripe) -->
+                    <button type="button" id="os-btn-card" style="display:flex;align-items:center;width:100%;padding:18px 22px;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);border:1px solid rgba(255,255,255,.12);border-radius:14px;color:#fff;font-family:'Poppins',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:all .25s ease;gap:16px;" onmouseover="this.style.borderColor='rgba(255,255,255,.25)';this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 20px rgba(0,0,0,.3)'" onmouseout="this.style.borderColor='rgba(255,255,255,.12)';this.style.transform='';this.style.boxShadow=''">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><rect x="2" y="4" width="20" height="16" rx="3" stroke="#fff" stroke-width="1.5"/><path d="M2 10h20" stroke="#fff" stroke-width="1.5"/><rect x="5" y="14" width="6" height="2" rx="1" fill="rgba(255,255,255,.4)"/></svg>
+                        <span style="flex:1;text-align:left;">Carta di Credito / Debito</span>
+                        <span style="display:flex;gap:6px;align-items:center;">
+                            <svg width="38" height="24" viewBox="0 0 38 24" fill="none"><rect width="38" height="24" rx="4" fill="#1A1F71"/><path d="M15.5 16.5l2-9h2.5l-2 9h-2.5zm-4.5 0l2.4-9h2.3l-2.4 9H11zm10 0l1.2-3.5L23.5 7.5h2.3l.6 5.5 2.6-5.5h2.3l-4.5 9H23l-.5-5-2.2 5h-1.8z" fill="#fff"/></svg>
+                            <svg width="38" height="24" viewBox="0 0 38 24" fill="none"><rect width="38" height="24" rx="4" fill="#252525"/><circle cx="15" cy="12" r="7" fill="#EB001B"/><circle cx="23" cy="12" r="7" fill="#F79E1B"/><path d="M19 7.5a7 7 0 010 9 7 7 0 000-9z" fill="#FF5F00"/></svg>
+                        </span>
+                    </button>
+
+                    <!-- Stripe Elements card form (hidden by default) -->
+                    <div id="stripe-card-form" style="display:none;animation:fadeInUp .3s ease;">
+                        <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:20px;">
+                            <div id="stripe-payment-element" style="min-height:90px;">
+                                <!-- Stripe Elements injected here -->
+                            </div>
+                            <button type="button" id="stripe-pay-btn" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;margin-top:16px;padding:16px;background:linear-gradient(135deg,#D9317F,#b3246a);border:none;border-radius:12px;color:#fff;font-family:'Poppins',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:all .25s ease;" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 20px rgba(217,49,127,.4)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                Paga Ora
+                            </button>
+                            <div id="stripe-error" style="color:#ff6b6b;font-size:13px;margin-top:10px;text-align:center;display:none;"></div>
+                        </div>
+                    </div>
+
+                    <!-- 🅿️ PayPal -->
+                    <button type="button" id="os-btn-paypal" style="display:flex;align-items:center;width:100%;padding:18px 22px;background:linear-gradient(135deg,#003087 0%,#009cde 100%);border:none;border-radius:14px;color:#fff;font-family:'Poppins',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:all .25s ease;gap:16px;" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 20px rgba(0,112,186,.4)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><path d="M7.5 20.5l.8-5h2.7c3.5 0 6.3-2.4 6.8-5.8.5-3.4-1.8-5.7-5.5-5.7H7L4 20.5h3.5z" fill="#fff"/><path d="M9 14l.5-3h1.7c1.8 0 3-.8 3.3-2.5.3-1.7-.7-2.5-2.5-2.5H9.5L8.5 14H9z" fill="#003087"/></svg>
+                        <span style="flex:1;text-align:left;">PayPal</span>
+                        <span style="font-size:12px;opacity:.7;">Paga con il tuo conto</span>
+                    </button>
+
+                    <!-- Express Checkout (Google Pay + Apple Pay + Link) -->
+                    <div id="stripe-express-checkout" style="min-height:44px; margin-top:4px;"></div>
+                    <div style="text-align:center;font-size:11px;color:rgba(255,255,255,.2);margin-top:4px;">🔒 Pagamento sicuro — Stripe & PayPal</div>
+                </div>
+            </div>
+
+            <!-- Divider -->
+            <div style="display:flex;align-items:center;gap:12px;margin:20px 0;color:rgba(255,255,255,.25);font-size:12px;">
+                <div style="flex:1;height:1px;background:rgba(255,255,255,.1);"></div>
+                oppure
+                <div style="flex:1;height:1px;background:rgba(255,255,255,.1);"></div>
+            </div>
+
+            <!-- Bonifico option -->
+            <button type="button" class="os-payment-card" data-val="Bonifico Bancario" onclick="selectPayment(this)" style="display:flex;align-items:center;width:100%;padding:18px 22px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:14px;color:rgba(255,255,255,.6);font-family:'Poppins',sans-serif;font-size:15px;font-weight:500;cursor:pointer;transition:all .25s ease;gap:16px;" onmouseover="this.style.borderColor='rgba(255,255,255,.15)'" onmouseout="this.style.borderColor='rgba(255,255,255,.08)'">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><path d="M3 21h18M4 17h16M12 3l9 6H3l9-6z" stroke="rgba(255,255,255,.5)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 10v7m4-7v7m4-7v7m4-7v7" stroke="rgba(255,255,255,.3)" stroke-width="1.5"/></svg>
+                <span style="flex:1;text-align:left;">Bonifico Bancario</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="rgba(255,255,255,.3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+
+            <!-- Bonifico Details (hidden until selected) -->
+            <div class="os-bonifico-info" id="bonifico-info" style="display:none">
+                <div class="bonifico-title"><i class="ph ph-bank"></i> Dati per il Bonifico</div>
+                <div class="bonifico-row">
+                    <span class="bonifico-label">Intestatario</span>
+                    <span class="bonifico-value">FUSION TEAM VOLLEY A.S.D.</span>
+                </div>
+                <div class="bonifico-row">
+                    <span class="bonifico-label">IBAN</span>
+                    <span class="bonifico-value" id="iban-value">IT19R0874936320000000039906</span>
+                    <button type="button" class="bonifico-copy" onclick="copyIban()" title="Copia IBAN"><i class="ph ph-copy"></i></button>
+                </div>
+                <div class="bonifico-row">
+                    <span class="bonifico-label">Causale</span>
+                    <span class="bonifico-value bonifico-causale">Iscrizione OutSeason 2026 — <em>Nome Cognome</em></span>
+                </div>
+                <div class="bonifico-note">
+                    <i class="ph ph-info"></i> Riceverai una mail di conferma con questi dati. L'iscrizione sarà confermata alla ricezione del bonifico.
+                </div>
+            </div>
+        </div>
+
+        <!-- Submit (Bonifico only) -->
+        <div class="os-submit-wrap" id="submit-bonifico" style="display:none">
+            <button type="submit" class="os-submit-btn" id="os-submit">
+                <span class="btn-text"><i class="ph ph-paper-plane-tilt"></i> Invia Iscrizione (Bonifico)</span>
+                <span class="spinner"></span>
+            </button>
+        </div>
+    </form>
+
+    <!-- Success -->
+    <div class="os-form-card os-success" id="os-success">
+        <div class="os-success-icon"><i class="ph ph-check-fat"></i></div>
+        <h2>Iscrizione Completata!</h2>
+        <p>Grazie per esserti iscritta all'<strong>OutSeason 2026</strong>.<br>Riceverai una mail di conferma all'indirizzo fornito con tutti i dettagli.</p>
+    </div>
+</main>
+
+<footer class="os-footer">
+    Fusion Team Volley ASD · Via Vicentino n. 1, 30174 Trivignano Venezia (VE) · P.I. 04375890276 ·
+    <a href="mailto:outseason@fusionteamvolley.it">outseason@fusionteamvolley.it</a>
+</footer>
+
+<!-- ═══════════ JAVASCRIPT ═══════════ -->
+<script>
+(function() {
+    'use strict';
+    const API = '../api/api.php?module=outseason&action=';
+    const PF = 650, PD = 400;
+    let selFormula='', selWeek='', selPay='Carta/PayPal', discPct=0, ppOrderId='', eId=0;
+    let availData = { by_role: {}, quotas: {}, foresteria_quota: 12, foresteria_counts: {} };
+
+    // ─── Availability ───────────────────────────────────────
+    const ROLE_CONFIG = [
+        { key: 'Palleggiatrice', icon: '🏐', label: 'Palleggiatrice' },
+        { key: 'Opposta',        icon: '💥', label: 'Opposta' },
+        { key: 'Schiacciatrice', icon: '⚡', label: 'Schiacciatrice' },
+        { key: 'Centrale',       icon: '🛡️', label: 'Centrale' },
+        { key: 'Libero',         icon: '🎯', label: 'Libero' },
+    ];
+
+    async function fetchAvailability() {
+        try {
+            const r = await fetch(API + 'publicStatus');
+            const d = await r.json();
+            if (d.data) {
+                availData.by_role = d.data.by_role || {};
+                availData.quotas = d.data.quotas || {};
+                availData.foresteria_quota = d.data.foresteria_quota || 12;
+                availData.foresteria_counts = d.data.foresteria_counts || {};
+                if (d.data.stripe_pk) {
+                    initStripeGlobal(d.data.stripe_pk);
+                }
+            }
+        } catch(e) { console.warn('Availability fetch failed', e); }
+    }
+
+    function renderAvailability(weekVal) {
+        const panel = document.getElementById('avail-panel');
+        const container = document.getElementById('avail-rows');
+        if (!weekVal) { panel.classList.remove('visible'); return; }
+
+        const weekRoles = availData.by_role[weekVal] || {};
+        let html = '';
+
+        ROLE_CONFIG.forEach((role, idx) => {
+            const quota = availData.quotas[role.key] || 4;
+            const taken = weekRoles[role.key] || 0;
+            const free = Math.max(0, quota - taken);
+            const isFull = free === 0;
+
+            let dots = '';
+            for (let i = 0; i < quota; i++) {
+                const cls = i < taken ? 'taken' : 'free';
+                const delay = (idx * 60) + (i * 40);
+                dots += `<span class="os-avail-dot ${cls}" style="animation-delay:${delay}ms" title="${i < taken ? 'Occupato' : 'Disponibile'}"></span>`;
+            }
+
+            html += `<div class="os-avail-row" style="animation: avSlide 0.4s ease ${idx * 80}ms both">
+                <div class="os-avail-role">${role.icon} ${role.label}</div>
+                <div class="os-avail-dots">${dots}</div>
+                <div class="os-avail-count${isFull ? ' full' : ''}"><span class="avail-num">${free}</span>/${quota}</div>
+            </div>`;
+        });
+
+        container.innerHTML = html;
+        panel.classList.remove('visible');
+        // Force reflow for re-animation
+        void panel.offsetWidth;
+        panel.classList.add('visible');
+        updateRoleSelect(weekVal);
+        updateFullMasterCard(weekVal);
+    }
+
+    function updateRoleSelect(weekVal) {
+        const sel = document.getElementById('ruolo');
+        if (!sel) return;
+        const weekRoles = availData.by_role[weekVal] || {};
+        Array.from(sel.options).forEach(opt => {
+            if (!opt.value) return; // skip placeholder
+            const quota = availData.quotas[opt.value] || 4;
+            const taken = weekRoles[opt.value] || 0;
+            const isFull = taken >= quota;
+            opt.disabled = isFull;
+            opt.textContent = isFull ? opt.value + ' — ESAURITO' : opt.value;
+        });
+    }
+
+
+    function updateFullMasterCard(weekVal) {
+        const card = document.querySelector('.os-formula-card[data-val="Full Master"]');
+        const badge = document.getElementById('foresteria-badge');
+        const badgeText = document.getElementById('foresteria-badge-text');
+        if (!card || !badge) return;
+
+        if (!weekVal) {
+            badge.className = 'formula-foresteria-badge';
+            badgeText.textContent = 'Foresteria: 12 posti per settimana';
+            card.classList.remove('disabled');
+            return;
+        }
+
+        const quota = availData.foresteria_quota || 12;
+        const taken = availData.foresteria_counts[weekVal] || 0;
+        const free = Math.max(0, quota - taken);
+        const isFull = free === 0;
+
+        if (isFull) {
+            badgeText.textContent = 'Foresteria ESAURITA per questa settimana';
+            badge.className = 'formula-foresteria-badge badge-full';
+            card.classList.add('disabled');
+            // If Full Master was selected, deselect it
+            if (selFormula === 'Full Master') {
+                card.classList.remove('selected');
+                selFormula = '';
+                document.getElementById('formula_scelta').value = '';
+                updatePrice();
+            }
+        } else {
+            badgeText.textContent = `Foresteria: ${free}/${quota} posti disponibili`;
+            badge.className = 'formula-foresteria-badge' + (free <= 3 ? ' badge-warn' : '');
+            card.classList.remove('disabled');
+        }
+    }
+
+    // Fetch on page load
+    fetchAvailability();
+
+    window.selectWeek = function(el) {
+        document.querySelectorAll('.os-week-card').forEach(c=>c.classList.remove('selected'));
+        el.classList.add('selected');
+        selWeek = el.dataset.val;
+        document.getElementById('settimana_scelta').value = selWeek;
+        clearErr('settimana_scelta');
+        renderAvailability(selWeek);
+    };
+    window.selectFormula = function(el) {
+        if (el.classList.contains('disabled')) return; // foresteria full, block Full Master
+        document.querySelectorAll('.os-formula-card').forEach(c=>c.classList.remove('selected'));
+        el.classList.add('selected');
+        selFormula = el.dataset.val;
+        document.getElementById('formula_scelta').value = selFormula;
+        clearErr('formula_scelta');
+        updatePrice();
+    };
+    window.selectPayment = function(el) {
+        document.querySelectorAll('.os-payment-card').forEach(c=>c.classList.remove('selected'));
+        el.classList.add('selected');
+        selPay = el.dataset.val;
+        document.getElementById('come_vuoi_pagare').value = selPay;
+        clearErr('come_vuoi_pagare');
+        const isBonifico = selPay==='Bonifico Bancario';
+        document.getElementById('submit-bonifico').style.display = isBonifico?'':'none';
+        document.getElementById('submit-paypal').style.display = isBonifico?'none':'';
+        document.getElementById('bonifico-info').style.display = isBonifico?'':'none';
+        if (isBonifico) {
+            const nome = document.getElementById('nome_e_cognome').value.trim() || 'Nome Cognome';
+            document.querySelector('.bonifico-causale').innerHTML = 'Iscrizione OutSeason 2026 — <em>' + nome + '</em>';
+        }
+    };
+    window.copyIban = function() {
+        const iban = document.getElementById('iban-value').textContent;
+        navigator.clipboard.writeText(iban).then(() => {
+            const btn = document.querySelector('.bonifico-copy');
+            btn.innerHTML = '<i class="ph ph-check"></i>';
+            btn.style.color = 'var(--success)';
+            setTimeout(() => { btn.innerHTML = '<i class="ph ph-copy"></i>'; btn.style.color = ''; }, 2000);
+        });
+    };
+
+    function updatePrice() {
+        const base = selFormula==='Full Master'?PF:(selFormula==='Daily Master'?PD:0);
+        if(!base){document.getElementById('price-summary').style.display='none';return;}
+        const fin = Math.round(base*(1-discPct/100));
+        document.getElementById('price-summary').style.display='';
+        document.getElementById('final-price').textContent='€'+fin;
+        if(discPct>0){
+            document.getElementById('original-price').textContent='€'+base;
+            document.getElementById('original-price').style.display='';
+            document.getElementById('discount-info').textContent='Sconto '+discPct+'% applicato!';
+            document.getElementById('discount-info').style.display='';
+        } else {
+            document.getElementById('original-price').style.display='none';
+            document.getElementById('discount-info').style.display='none';
+        }
+        
+        // Aggiorna Stripe Express Checkout se inizializzato
+        if (globalStripeElements && typeof globalStripeElements.update === 'function') {
+            try { globalStripeElements.update({ amount: fin * 100 }); } catch(e){}
+        }
+    }
+
+    document.getElementById('btn-validate-discount').addEventListener('click', async()=>{
+        const code=document.getElementById('codice_sconto').value.trim(), r=document.getElementById('discount-result');
+        if(!code){r.textContent='';return;}
+        try{
+            const res=await fetch(API+'validateDiscount',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code})});
+            const d=await res.json();
+            if(res.ok&&d.data){discPct=d.data.discount_percent;r.textContent='✓ Sconto '+discPct+'% applicato!';r.className='os-discount-result valid';updatePrice();}
+            else{discPct=0;r.textContent='✗ '+(d.message||d.error||'Codice non valido');r.className='os-discount-result invalid';updatePrice();}
+        }catch(e){r.textContent='✗ Errore di rete';r.className='os-discount-result invalid';}
+    });
+
+    const REQ=['nome_e_cognome','email','cellulare','codice_fiscale','data_di_nascita','indirizzo','cap','citta','provincia','ruolo','taglia_kit'];
+    const isEm=e=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+    function showErr(id){const el=document.getElementById(id),er=document.querySelector(`[data-for="${id}"]`);if(el)el.classList.add('error');if(er)er.style.display='block';}
+    function clearErr(id){const el=document.getElementById(id),er=document.querySelector(`[data-for="${id}"]`);if(el)el.classList.remove('error');if(er)er.style.display='none';}
+    function clearAll(){document.querySelectorAll('.error').forEach(e=>e.classList.remove('error'));document.querySelectorAll('.os-field-error').forEach(e=>e.style.display='none');document.getElementById('os-global-error').style.display='none';}
+
+    REQ.forEach(id=>{const el=document.getElementById(id);if(!el)return;el.addEventListener('blur',()=>{if(!el.value.trim())showErr(id);else if(id==='email'&&!isEm(el.value.trim()))showErr(id);else clearErr(id);});el.addEventListener('input',()=>clearErr(id));});
+
+    const LABEL_MAP={nome_e_cognome:'Nome e Cognome',email:'Email',cellulare:'Cellulare',codice_fiscale:'Codice Fiscale',data_di_nascita:'Data di Nascita',indirizzo:'Indirizzo',cap:'CAP',citta:'Città',provincia:'Provincia',ruolo:'Ruolo',taglia_kit:'Taglia KIT',settimana_scelta:'Settimana',formula_scelta:'Formula',come_vuoi_pagare:'Metodo Pagamento',privacy:'Privacy',terms:'Termini e Condizioni'};
+    function validate(){
+        clearAll();let bad=false;let badFields=[];
+        REQ.forEach(id=>{const el=document.getElementById(id);if(!el||!el.value.trim()){showErr(id);bad=true;badFields.push(LABEL_MAP[id]||id);}else if(id==='email'&&!isEm(el.value.trim())){showErr(id);bad=true;badFields.push('Email (non valida)');}else if(id==='data_di_nascita'){const y=parseInt(el.value.split('-')[0],10);if(isNaN(y)||y<1920||y>2025){showErr(id);bad=true;badFields.push('Data di Nascita (anno non valido)');}}});
+        if(!selWeek){showErr('settimana_scelta');bad=true;badFields.push(LABEL_MAP.settimana_scelta);}
+        if(!selFormula){showErr('formula_scelta');bad=true;badFields.push(LABEL_MAP.formula_scelta);}
+        if(!selPay){showErr('come_vuoi_pagare');bad=true;badFields.push(LABEL_MAP.come_vuoi_pagare);}
+        if(!document.getElementById('privacy').checked){showErr('privacy');bad=true;badFields.push(LABEL_MAP.privacy);}
+        if(!document.getElementById('terms').checked){showErr('terms');bad=true;badFields.push(LABEL_MAP.terms);}
+        if(bad){console.warn('[OutSeason] Validation failed:',badFields);const f=document.querySelector('.error');if(f)f.scrollIntoView({behavior:'smooth',block:'center'});}
+        return bad ? badFields : true;
+    }
+
+    function payload(){
+        const v=id=>(document.getElementById(id)?.value||'').trim()||null;
+        return{nome_e_cognome:v('nome_e_cognome'),email:v('email'),cellulare:v('cellulare'),codice_fiscale:v('codice_fiscale'),data_di_nascita:v('data_di_nascita'),indirizzo:v('indirizzo'),cap:v('cap'),citta:v('citta'),provincia:v('provincia'),club_di_appartenenza:v('club_di_appartenenza'),ruolo:v('ruolo'),taglia_kit:v('taglia_kit'),settimana_scelta:selWeek,formula_scelta:selFormula,come_vuoi_pagare:selPay,codice_sconto:v('codice_sconto'),privacy_consent:1,terms_consent:1};
+    }
+    function showOK(){document.getElementById('os-form').style.display='none';const s=document.getElementById('os-success');s.classList.add('visible');window.scrollTo({top:s.offsetTop-100,behavior:'smooth'});}
+    function showGE(m){const g=document.getElementById('os-global-error');g.textContent=m;g.style.display='block';g.scrollIntoView({behavior:'smooth',block:'center'});}
+
+    document.getElementById('os-form').addEventListener('submit',async e=>{
+        e.preventDefault();if(selPay!=='Bonifico Bancario')return;if(validate()!==true)return;
+        const b=document.getElementById('os-submit');b.classList.add('loading');b.disabled=true;
+        try{const r=await fetch(API+'publicRegister',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload())});const d=await r.json();if(!r.ok||d.error)throw new Error(d.message||d.error||'Errore');showOK();}
+        catch(e){showGE(e.message||'Errore. Riprova.');}
+        finally{b.classList.remove('loading');b.disabled=false;}
+    });
+
+    // ─── PayPal SDK Inline (loads buttons directly: PayPal, Carta, GPay, ApplePay, PayLater) ───
+    const PP_CID = 'ASLH7D2ShGnOwYiNh1eLxO8lwTQE6QKP3136fGsQKJp9e4Sm5i7dGbWkj8l3NMSpU4u2pjgENvuyqtDM';
+    let _ppLoaded = false;
+
+    function loadPayPalSDK() {
+        if (_ppLoaded) return;
+        _ppLoaded = true;
+
+        const loadingEl = document.getElementById('pp-loading');
+        const fallbackEl = document.getElementById('pp-fallback');
+
+        // Timeout: if SDK doesn't load in 6s, show fallback
+        const sdkTimeout = setTimeout(function() {
+            console.warn('[OutSeason] PayPal SDK timed out');
+            if (loadingEl) loadingEl.style.display = 'none';
+            if (fallbackEl) fallbackEl.style.display = 'block';
+        }, 6000);
+
+        const s = document.createElement('script');
+        s.src = 'https://www.paypal.com/sdk/js?client-id=' + PP_CID
+            + '&currency=EUR&intent=capture&locale=it_IT'
+            + '&enable-funding=googlepay,applepay,paylater';
+        s.onload = function() {
+            clearTimeout(sdkTimeout);
+            console.log('[OutSeason] PayPal SDK loaded ✓');
+            if (loadingEl) loadingEl.style.display = 'none';
+            renderPayPalButtons();
+        };
+        s.onerror = function() {
+            clearTimeout(sdkTimeout);
+            console.warn('[OutSeason] PayPal SDK blocked — showing fallback');
+            if (loadingEl) loadingEl.style.display = 'none';
+            if (fallbackEl) fallbackEl.style.display = 'block';
+        };
+        document.head.appendChild(s);
+    }
+
+    // Load SDK immediately — buttons appear directly in the form
+    loadPayPalSDK();
+
+    function renderPayPalButtons() {
+        if (!window.paypal) { console.error('[OutSeason] paypal not available'); return; }
+        paypal.Buttons({
+            style: { layout:'vertical', color:'gold', shape:'rect', label:'pay', height:48 },
+            createOrder: async function() {
+                const v = validate();
+                if (v !== true) throw new Error('Compila: ' + v.join(', '));
+                const r = await fetch(API+'publicRegister', {
+                    method:'POST', headers:{'Content-Type':'application/json'},
+                    body: JSON.stringify(payload()),
+                });
+                const d = await r.json();
+                console.log('[OutSeason] publicRegister response:', d);
+                if (!r.ok || d.error) throw new Error(d.message || d.error || 'Errore');
+                eId = d.data.entry_id;
+                ppOrderId = d.data.paypal_order_id;
+                return ppOrderId;
+            },
+            onApprove: async function(data) {
+                try {
+                    const r = await fetch(API+'capturePayment', {
+                        method:'POST', headers:{'Content-Type':'application/json'},
+                        body: JSON.stringify({ paypal_order_id: data.orderID, entry_id: eId }),
+                    });
+                    const d = await r.json();
+                    if (!r.ok || d.error) throw new Error(d.message || d.error || 'Errore');
+                    showOK();
+                } catch(e) { showGE('Pagamento approvato ma errore conferma: ' + e.message); }
+            },
+            onError: function(err) { console.error('[OutSeason] PayPal onError:', err); showGE('Errore PayPal: ' + (err.message || 'Riprova.')); },
+            onCancel: function() { showGE('Pagamento annullato.'); },
+        }).render('#paypal-button-container').then(function() {
+            console.log('[OutSeason] PayPal buttons rendered ✓');
+        }).catch(function(err) {
+            console.error('[OutSeason] PayPal render failed:', err);
+            document.getElementById('pp-fallback').style.display = 'block';
+        });
+    }
+
+    // ─── STRIPE INTEGRATION ───────────────────────────────────────
+    console.log('[OutSeason] Stripe Integration v1.1 initialized');
+    let stripeInstance = null;
+    let stripeElements = null;
+    let stripeEntryId = null;
+    let stripeClientSecret = null;
+    let globalStripe = null;
+    let globalStripeElements = null;
+
+    async function initStripeGlobal(pk) {
+        if (!window.Stripe) {
+            const script = document.createElement('script');
+            script.src = 'https://js.stripe.com/v3/';
+            await new Promise((resolve) => {
+                script.onload = resolve;
+                document.head.appendChild(script);
+            });
+        }
+        globalStripe = Stripe(pk);
+        globalStripeElements = globalStripe.elements({
+            mode: 'payment',
+            amount: 65000, // Default a Full Master, viene poi sovrascritto
+            currency: 'eur',
+            appearance: {
+                theme: 'night',
+                variables: {
+                    colorPrimary: '#D9317F',
+                    colorBackground: '#0d0d1a',
+                    colorText: '#ffffff',
+                    fontFamily: "'Poppins', sans-serif",
+                    borderRadius: '10px',
+                }
+            }
+        });
+
+        // Express Checkout è stato rimosso per consolidare i wallet nel Payment Element.
+    }
+
+    // Card button → show Stripe Payment Element inline
+    document.getElementById('os-btn-card')?.addEventListener('click', async function() {
+        const cardForm = document.getElementById('stripe-card-form');
+        if (cardForm.style.display !== 'none') { cardForm.style.display = 'none'; return; }
+        await initStripePayment('card');
+    });
+
+    // PayPal button → redirect via PayPal API
+    document.getElementById('os-btn-paypal')?.addEventListener('click', async function() {
+        const v = validate();
+        if (v !== true) return;
+        const btn = this;
+        btn.style.opacity = '.5'; btn.style.pointerEvents = 'none';
+        try {
+            const r = await fetch(API+'publicRegister', {
+                method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify(payload()),
+            });
+            const d = await r.json();
+            if (!r.ok || d.error) throw new Error(d.message || d.error || 'Errore');
+            eId = d.data.entry_id;
+            ppOrderId = d.data.paypal_order_id;
+            if (d.data.approve_url) {
+                window.open(d.data.approve_url, '_blank');
+                showGE('Si è aperta una nuova scheda per il pagamento su PayPal. Dopo il completamento, riceverai una email di conferma.');
+            }
+        } catch(e) { showGE(e.message || 'Errore. Riprova.'); }
+        finally { btn.style.opacity = '1'; btn.style.pointerEvents = ''; }
+    });
+
+    async function initStripePayment(walletType) {
+        const v = validate();
+        if (v !== true) return;
+
+        const cardForm = document.getElementById('stripe-card-form');
+        const errEl = document.getElementById('stripe-error');
+        errEl.style.display = 'none';
+
+        // If Stripe.js not loaded yet, load it
+        if (!window.Stripe) {
+            try {
+                const script = document.createElement('script');
+                script.src = 'https://js.stripe.com/v3/';
+                script.async = true;
+                await new Promise((resolve, reject) => {
+                    script.onload = resolve;
+                    script.onerror = () => reject(new Error('Impossibile caricare Stripe (verifica ad-blocker o connessione).'));
+                    document.head.appendChild(script);
+                });
+            } catch (err) {
+                errEl.textContent = err.message;
+                errEl.style.display = 'block';
+                cardForm.style.display = 'block';
+                return;
+            }
+        }
+
+        // Create PaymentIntent on backend
+        try {
+            const r = await fetch(API+'createStripeIntent', {
+                method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify(payload()),
+            });
+            const d = await r.json();
+            if (!r.ok || d.error) throw new Error(d.message || d.error || 'Errore creazione pagamento');
+            stripeEntryId = d.data.entry_id;
+            stripeClientSecret = d.data.client_secret;
+
+            // Init Stripe
+            stripeInstance = Stripe(d.data.stripe_pk);
+            stripeElements = stripeInstance.elements({
+                clientSecret: stripeClientSecret,
+                appearance: {
+                    theme: 'night',
+                    variables: {
+                        colorPrimary: '#D9317F',
+                        colorBackground: '#0d0d1a',
+                        colorText: '#ffffff',
+                        colorDanger: '#ff6b6b',
+                        fontFamily: "'Poppins', sans-serif",
+                        borderRadius: '10px',
+                    },
+                },
+            });
+
+            // Clear previous elements
+            document.getElementById('stripe-payment-element').innerHTML = '';
+
+            // Mount Payment Element (supports Card, Klarna, Wallets)
+            const paymentElement = stripeElements.create('payment', {
+                wallets: {
+                    googlePay: 'auto',
+                    applePay: 'auto',
+                },
+            });
+            paymentElement.mount('#stripe-payment-element');
+            cardForm.style.display = 'block';
+
+        } catch(e) {
+            errEl.textContent = e.message;
+            errEl.style.display = 'block';
+            cardForm.style.display = 'block';
+        }
+    }
+
+    // Stripe "Paga Ora" button
+    document.getElementById('os-btn-stripe-submit')?.addEventListener('click', async function() {
+        if (!stripeInstance || !stripeElements) return;
+        const btn = this;
+        const errEl = document.getElementById('stripe-error');
+        errEl.style.display = 'none';
+        btn.innerHTML = '<div style="width:20px;height:20px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;"></div> Elaborazione…';
+        btn.style.opacity = '.7'; btn.style.pointerEvents = 'none';
+
+        try {
+            const { error, paymentIntent } = await stripeInstance.confirmPayment({
+                elements: stripeElements,
+                confirmParams: {
+                    return_url: window.location.origin + window.location.pathname + '?payment_status=success',
+                },
+                redirect: 'if_required',
+            });
+
+            if (error) {
+                errEl.textContent = error.message;
+                errEl.style.display = 'block';
+                return;
+            }
+
+            if (paymentIntent && paymentIntent.status === 'succeeded') {
+                // Confirm on backend
+                const cr = await fetch(API+'confirmStripePayment', {
+                    method:'POST', headers:{'Content-Type':'application/json'},
+                    body: JSON.stringify({ payment_intent_id: paymentIntent.id, entry_id: stripeEntryId }),
+                });
+                const cd = await cr.json();
+                if (!cr.ok || cd.error) throw new Error(cd.message || cd.error || 'Errore conferma');
+                showOK();
+            } else {
+                errEl.textContent = 'Pagamento non completato. Riprova.';
+                errEl.style.display = 'block';
+            }
+        } catch(e) {
+            errEl.textContent = e.message;
+            errEl.style.display = 'block';
+        } finally {
+            btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Paga Ora';
+            btn.style.opacity = '1'; btn.style.pointerEvents = '';
+        }
+    });
+
+    // Listen for payment completion from popup/new tab
+    window.addEventListener('message', function(evt) {
+        if (evt.data && evt.data.type === 'os-payment-complete') {
+            console.log('[OutSeason] Payment complete via popup:', evt.data);
+            showOK();
+        }
+    });
+
+    // Check if returning from Stripe redirect
+    const urlCheck = new URLSearchParams(window.location.search);
+    if (urlCheck.get('payment_status') === 'success' || urlCheck.get('redirect_status') === 'succeeded') {
+        showOK();
+    }
+    // ─── Embed Mode ──────────────────────────────────────────────
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('embed') === '1') {
+        document.body.classList.add('os-embed-mode');
+        // Insert inline week selector before the form
+        const form = document.getElementById('os-form');
+        const weeksHTML = `<div class="os-embed-weeks">
+            <div class="os-week-card" data-val="5 Giugno - Udine" onclick="selectWeek(this)"><div class="date">Tappa 1</div><div class="range">5 Giu – Udine</div><div class="host">Rizzi Volley</div></div>
+            <div class="os-week-card" data-val="29 Giugno - Cagliari" onclick="selectWeek(this)"><div class="date">Tappa 2</div><div class="range">29 Giu – Cagliari</div><div class="host">Audax Quartucciu</div></div>
+            <div class="os-week-card" data-val="29 Giugno - 3 Luglio" onclick="selectWeek(this)"><div class="date">Settimana 1</div><div class="range">29 Giu – 3 Luglio</div></div>
+            <div class="os-week-card" data-val="6 Luglio - 10 Luglio" onclick="selectWeek(this)"><div class="date">Settimana 2</div><div class="range">6 – 10 Luglio</div></div>
+            <div class="os-week-card" data-val="13 Luglio - 17 Luglio" onclick="selectWeek(this)"><div class="date">Settimana 3</div><div class="range">13 – 17 Luglio</div></div>
+        </div>`;
+        form.insertAdjacentHTML('beforebegin', weeksHTML);
+        // Avail panel: move inside container for embed
+        const availPanel = document.getElementById('avail-panel');
+        if (availPanel) form.parentNode.insertBefore(availPanel, form);
+        // Auto-resize iframe — aggressive approach
+        function notifyParent() {
+            const h = document.documentElement.scrollHeight;
+            window.parent.postMessage({ type: 'os-resize', height: h }, '*');
+        }
+        new MutationObserver(notifyParent).observe(document.body, { childList: true, subtree: true, attributes: true });
+        window.addEventListener('resize', notifyParent);
+        document.addEventListener('click', () => setTimeout(notifyParent, 300));
+        document.addEventListener('input', () => setTimeout(notifyParent, 100));
+        // Fire multiple times on load to catch late renders
+        setTimeout(notifyParent, 100);
+        setTimeout(notifyParent, 500);
+        setTimeout(notifyParent, 1500);
+        setTimeout(notifyParent, 3000);
+    }
+})();
+</script>
+</body>
+</html>
