@@ -584,14 +584,20 @@
         // Avail panel: move inside container for embed
         const availPanel = document.getElementById('avail-panel');
         if (availPanel) form.parentNode.insertBefore(availPanel, form);
-        // Auto-resize iframe
+        // Auto-resize iframe — aggressive approach
         function notifyParent() {
             const h = document.documentElement.scrollHeight;
             window.parent.postMessage({ type: 'os-resize', height: h }, '*');
         }
         new MutationObserver(notifyParent).observe(document.body, { childList: true, subtree: true, attributes: true });
         window.addEventListener('resize', notifyParent);
+        document.addEventListener('click', () => setTimeout(notifyParent, 300));
+        document.addEventListener('input', () => setTimeout(notifyParent, 100));
+        // Fire multiple times on load to catch late renders
+        setTimeout(notifyParent, 100);
         setTimeout(notifyParent, 500);
+        setTimeout(notifyParent, 1500);
+        setTimeout(notifyParent, 3000);
     }
 })();
 </script>
