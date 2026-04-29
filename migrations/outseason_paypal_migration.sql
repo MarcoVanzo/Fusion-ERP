@@ -5,7 +5,7 @@
 
 -- 1. Add payment columns to outseason_entries
 ALTER TABLE outseason_entries
-  ADD COLUMN payment_status ENUM('PENDING','PAID','FAILED','REFUNDED') NOT NULL DEFAULT 'PENDING' AFTER order_summary,
+  ADD COLUMN payment_status ENUM('PENDING','PAID','FAILED','REFUNDED','AWAITING_PAYMENT') NOT NULL DEFAULT 'PENDING' AFTER order_summary,
   ADD COLUMN paypal_order_id VARCHAR(50) NULL AFTER payment_status,
   ADD COLUMN paypal_capture_id VARCHAR(50) NULL AFTER paypal_order_id,
   ADD COLUMN payment_method VARCHAR(20) NULL COMMENT 'PAYPAL|CARD|BONIFICO' AFTER paypal_capture_id,
