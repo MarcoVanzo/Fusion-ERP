@@ -24,7 +24,7 @@ const Outseason = () => {
                     </p>
 
                     <a
-                        href="https://www.ftvoutseason.it"
+                        href="https://www.fusionteamvolley.it/outseason/"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center justify-center gap-4 bg-brand-500 text-zinc-950 font-heading text-2xl md:text-3xl px-12 py-6 hover:bg-white hover:text-brand-500 hover:shadow-[0_0_40px_rgba(255,255,255,0.4)] transition-all clip-diagonal"
