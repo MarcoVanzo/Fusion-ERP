@@ -281,17 +281,8 @@
                         <span style="font-size:12px;opacity:.7;">Paga con il tuo conto</span>
                     </button>
 
-                    <!-- Google Pay + Apple Pay -->
-                    <div style="display:flex;gap:12px;">
-                        <button type="button" id="os-btn-gpay" style="display:flex;align-items:center;justify-content:center;gap:10px;flex:1;padding:16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:14px;color:#fff;font-family:'Poppins',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all .25s ease;" onmouseover="this.style.borderColor='rgba(255,255,255,.2)';this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.borderColor='rgba(255,255,255,.1)';this.style.background='rgba(255,255,255,.06)'">
-                            <svg width="20" height="20" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-                            <span>Google Pay</span>
-                        </button>
-                        <button type="button" id="os-btn-applepay" style="display:flex;align-items:center;justify-content:center;gap:10px;flex:1;padding:16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:14px;color:#fff;font-family:'Poppins',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all .25s ease;" onmouseover="this.style.borderColor='rgba(255,255,255,.2)';this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.borderColor='rgba(255,255,255,.1)';this.style.background='rgba(255,255,255,.06)'">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.52-3.23 0-1.44.65-2.2.46-3.06-.4C3.79 16.17 4.36 9.02 8.7 8.76c1.26.07 2.13.72 2.87.76.98-.2 1.92-.88 3.01-.79 1.37.12 2.39.72 3.06 1.81-2.79 1.67-2.13 5.35.41 6.38-.5 1.34-.74 1.94-1.49 3.12l.49.24zM12.03 8.65c-.14-2.28 1.74-4.2 3.89-4.4.3 2.48-2.22 4.52-3.89 4.4z"/></svg>
-                            <span>Apple Pay</span>
-                        </button>
-                    </div>
+                    <!-- Express Checkout (Google Pay + Apple Pay + Link) -->
+                    <div id="stripe-express-checkout" style="min-height:44px; margin-top:4px;"></div>
                     <div style="text-align:center;font-size:11px;color:rgba(255,255,255,.2);margin-top:4px;">🔒 Pagamento sicuro — Stripe & PayPal</div>
                 </div>
             </div>
@@ -381,6 +372,9 @@
                 availData.quotas = d.data.quotas || {};
                 availData.foresteria_quota = d.data.foresteria_quota || 12;
                 availData.foresteria_counts = d.data.foresteria_counts || {};
+                if (d.data.stripe_pk) {
+                    initStripeGlobal(d.data.stripe_pk);
+                }
             }
         } catch(e) { console.warn('Availability fetch failed', e); }
     }
@@ -533,6 +527,11 @@
             document.getElementById('original-price').style.display='none';
             document.getElementById('discount-info').style.display='none';
         }
+        
+        // Aggiorna Stripe Express Checkout se inizializzato
+        if (globalStripeElements && typeof globalStripeElements.update === 'function') {
+            try { globalStripeElements.update({ amount: fin * 100 }); } catch(e){}
+        }
     }
 
     document.getElementById('btn-validate-discount').addEventListener('click', async()=>{
@@ -667,22 +666,83 @@
     let stripeElements = null;
     let stripeEntryId = null;
     let stripeClientSecret = null;
+    let globalStripe = null;
+    let globalStripeElements = null;
+
+    async function initStripeGlobal(pk) {
+        if (!window.Stripe) {
+            const script = document.createElement('script');
+            script.src = 'https://js.stripe.com/v3/';
+            await new Promise((resolve) => {
+                script.onload = resolve;
+                document.head.appendChild(script);
+            });
+        }
+        globalStripe = Stripe(pk);
+        globalStripeElements = globalStripe.elements({
+            mode: 'payment',
+            amount: 65000, // Default a Full Master, viene poi sovrascritto
+            currency: 'eur',
+            appearance: {
+                theme: 'night',
+                variables: {
+                    colorPrimary: '#D9317F',
+                    colorBackground: '#0d0d1a',
+                    colorText: '#ffffff',
+                    fontFamily: "'Poppins', sans-serif",
+                    borderRadius: '10px',
+                }
+            }
+        });
+
+        const expressCheckoutElement = globalStripeElements.create('expressCheckout', {
+            layout: { type: 'accordion' },
+            buttonTheme: {
+                applePay: 'black',
+                googlePay: 'black'
+            }
+        });
+
+        expressCheckoutElement.mount('#stripe-express-checkout');
+
+        expressCheckoutElement.on('click', (event) => {
+            const v = validate();
+            if (v !== true) {
+                event.preventDefault(); // Blocca l'apertura del portafoglio se la form non è compilata
+            }
+        });
+
+        expressCheckoutElement.on('confirm', async (event) => {
+            const {error: submitError} = await globalStripeElements.submit();
+            if (submitError) return;
+
+            try {
+                const r = await fetch(API+'createStripeIntent', {
+                    method:'POST', headers:{'Content-Type':'application/json'},
+                    body: JSON.stringify(payload()),
+                });
+                const d = await r.json();
+                if (!r.ok || d.error) throw new Error(d.message || d.error || 'Errore');
+
+                const {error} = await globalStripe.confirmPayment({
+                    elements: globalStripeElements,
+                    clientSecret: d.data.client_secret,
+                    confirmParams: {
+                        return_url: window.location.origin + window.location.pathname + '?payment_status=success',
+                    },
+                });
+                if (error) throw new Error(error.message);
+            } catch(e) {
+                showGE('Errore: ' + e.message);
+            }
+        });
+    }
 
     // Card button → show Stripe Payment Element inline
     document.getElementById('os-btn-card')?.addEventListener('click', async function() {
         const cardForm = document.getElementById('stripe-card-form');
         if (cardForm.style.display !== 'none') { cardForm.style.display = 'none'; return; }
         await initStripePayment('card');
-    });
-
-    // Google Pay → same as card but with wallet hint
-    document.getElementById('os-btn-gpay')?.addEventListener('click', async function() {
-        await initStripePayment('google_pay');
-    });
-
-    // Apple Pay → same as card but with wallet hint
-    document.getElementById('os-btn-applepay')?.addEventListener('click', async function() {
-        await initStripePayment('apple_pay');
     });
 
     // PayPal button → redirect via PayPal API

@@ -694,6 +694,7 @@ PROMPT;
             'quotas'  => $quotas,
             'foresteria_quota' => 12,
             'foresteria_counts' => $foresteriaCounts,
+            'stripe_pk' => $_ENV['STRIPE_PUBLISHABLE_KEY'] ?? getenv('STRIPE_PUBLISHABLE_KEY'),
         ]);
     }
 
