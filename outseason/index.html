@@ -43,18 +43,7 @@
         <div class="os-avail-panel" id="avail-panel">
             <div class="os-avail-title">Posti Disponibili</div>
             <div id="avail-rows"></div>
-            <!-- Foresteria row -->
-            <div class="os-foresteria-row" id="foresteria-row" style="display:none">
-                <div class="os-foresteria-header">
-                    <span class="os-foresteria-icon">🏠</span>
-                    <span class="os-foresteria-label">Foresteria</span>
-                    <span class="os-foresteria-count" id="foresteria-count">12/12</span>
-                </div>
-                <div class="os-foresteria-bar-wrap">
-                    <div class="os-foresteria-bar" id="foresteria-bar"></div>
-                </div>
-                <div class="os-foresteria-note" id="foresteria-note">Max 12 posti per settimana — Formula Full Camp</div>
-            </div>
+
             <div class="os-avail-legend">
                 <span><span class="leg-dot leg-free"></span> Disponibile</span>
                 <span><span class="leg-dot leg-taken"></span> Occupato</span>
@@ -372,7 +361,6 @@
         void panel.offsetWidth;
         panel.classList.add('visible');
         updateRoleSelect(weekVal);
-        renderForesteria(weekVal);
         updateFullMasterCard(weekVal);
     }
 
@@ -390,36 +378,6 @@
         });
     }
 
-    // ─── Foresteria ──────────────────────────────────────────────
-    function renderForesteria(weekVal) {
-        const row = document.getElementById('foresteria-row');
-        if (!weekVal) { row.style.display = 'none'; return; }
-
-        const quota = availData.foresteria_quota || 12;
-        const taken = availData.foresteria_counts[weekVal] || 0;
-        const free = Math.max(0, quota - taken);
-        const pct = Math.min(100, Math.round((taken / quota) * 100));
-        const isFull = free === 0;
-
-        document.getElementById('foresteria-count').innerHTML = `<span class="avail-num${isFull ? ' full' : ''}">${free}</span>/${quota}`;
-        const bar = document.getElementById('foresteria-bar');
-        bar.style.width = pct + '%';
-        bar.className = 'os-foresteria-bar' + (pct >= 100 ? ' bar-full' : (pct >= 75 ? ' bar-warn' : ''));
-
-        const note = document.getElementById('foresteria-note');
-        if (isFull) {
-            note.innerHTML = '<i class="ph ph-warning-circle"></i> Foresteria esaurita — puoi iscriverti solo con formula Daily Master';
-            note.className = 'os-foresteria-note note-full';
-        } else if (free <= 3) {
-            note.innerHTML = `<i class="ph ph-info"></i> Ultimi ${free} posti in foresteria!`;
-            note.className = 'os-foresteria-note note-warn';
-        } else {
-            note.innerHTML = '<i class="ph ph-house"></i> Max 12 posti per settimana — Formula Full Camp';
-            note.className = 'os-foresteria-note';
-        }
-
-        row.style.display = '';
-    }
 
     function updateFullMasterCard(weekVal) {
         const card = document.querySelector('.os-formula-card[data-val="Full Master"]');
