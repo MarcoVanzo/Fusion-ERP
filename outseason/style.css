@@ -657,7 +657,7 @@ body {
 .os-footer a:hover { opacity: 1; }
 
 /* ─── Embed Mode (for iframe in WordPress) ─────────────────────────── */
-body.os-embed-mode { background: transparent; }
+body.os-embed-mode { background: #000000; }
 body.os-embed-mode .os-hero { display: none; }
 body.os-embed-mode .os-footer { display: none; }
 body.os-embed-mode .os-container { max-width: 780px; padding-top: 0; }
