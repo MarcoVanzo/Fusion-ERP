@@ -309,9 +309,31 @@ class OpenDayModule {
         void panel.offsetWidth;
         panel.classList.add("open");
 
+        const updateHeight = () => {
+            if (window.visualViewport) {
+                panel.style.height = window.visualViewport.height + "px";
+                panel.style.top = window.visualViewport.offsetTop + "px";
+            }
+        };
+        
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener("resize", updateHeight);
+            window.visualViewport.addEventListener("scroll", updateHeight);
+            updateHeight();
+        }
+
         const closeModal = () => {
             panel.classList.remove("open");
-            setTimeout(() => { panel.style.display = "none"; panel.innerHTML = ""; }, 300);
+            if (window.visualViewport) {
+                window.visualViewport.removeEventListener("resize", updateHeight);
+                window.visualViewport.removeEventListener("scroll", updateHeight);
+            }
+            setTimeout(() => { 
+                panel.style.display = "none"; 
+                panel.style.height = "";
+                panel.style.top = "";
+                panel.innerHTML = ""; 
+            }, 300);
         };
 
         document.getElementById("od-cancel-panel")?.addEventListener("click", closeModal, this.sig());
