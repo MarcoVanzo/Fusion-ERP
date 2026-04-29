@@ -61,6 +61,7 @@ class OutSeasonController
         $stmt = $pdo->prepare(
             'SELECT * FROM outseason_entries
              WHERE season_key = :season_key AND tenant_id = :tid AND is_deleted = 0
+             AND payment_status NOT IN (\'AWAITING_PAYMENT\', \'FAILED\')
              ORDER BY entry_date ASC LIMIT 500'
         );
         $stmt->execute([':season_key' => $seasonKey, ':tid' => $tid]);
@@ -646,12 +647,12 @@ PROMPT;
         ];
 
         // Total per week
-        $stmt = $pdo->prepare("SELECT settimana_scelta AS week, COUNT(*) AS count FROM outseason_entries WHERE tenant_id='TNT_fusion' AND season_key=:sk AND is_deleted=0 GROUP BY settimana_scelta");
+        $stmt = $pdo->prepare("SELECT settimana_scelta AS week, COUNT(*) AS count FROM outseason_entries WHERE tenant_id='TNT_fusion' AND season_key=:sk AND is_deleted=0 AND payment_status NOT IN ('AWAITING_PAYMENT','FAILED') GROUP BY settimana_scelta");
         $stmt->execute([':sk' => $sk]);
         $totals = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
         // Per week + ruolo breakdown (with normalization)
-        $stmt2 = $pdo->prepare("SELECT settimana_scelta AS week, ruolo AS role, COUNT(*) AS count FROM outseason_entries WHERE tenant_id='TNT_fusion' AND season_key=:sk AND is_deleted=0 GROUP BY settimana_scelta, ruolo");
+        $stmt2 = $pdo->prepare("SELECT settimana_scelta AS week, ruolo AS role, COUNT(*) AS count FROM outseason_entries WHERE tenant_id='TNT_fusion' AND season_key=:sk AND is_deleted=0 AND payment_status NOT IN ('AWAITING_PAYMENT','FAILED') GROUP BY settimana_scelta, ruolo");
         $stmt2->execute([':sk' => $sk]);
         $byRole = [];
         foreach ($stmt2->fetchAll(\PDO::FETCH_ASSOC) as $r) {
@@ -660,7 +661,7 @@ PROMPT;
         }
 
         // Foresteria: count Full Master entries per week (max 12 beds per week)
-        $stmtForesteria = $pdo->prepare("SELECT settimana_scelta AS week, COUNT(*) AS count FROM outseason_entries WHERE tenant_id='TNT_fusion' AND season_key=:sk AND is_deleted=0 AND formula_scelta LIKE '%Full%' GROUP BY settimana_scelta");
+        $stmtForesteria = $pdo->prepare("SELECT settimana_scelta AS week, COUNT(*) AS count FROM outseason_entries WHERE tenant_id='TNT_fusion' AND season_key=:sk AND is_deleted=0 AND payment_status NOT IN ('AWAITING_PAYMENT','FAILED') AND formula_scelta LIKE '%Full%' GROUP BY settimana_scelta");
         $stmtForesteria->execute([':sk' => $sk]);
         $foresteriaCounts = [];
         foreach ($stmtForesteria->fetchAll(\PDO::FETCH_ASSOC) as $fc) {
@@ -758,7 +759,7 @@ PROMPT;
         try {
             // Foresteria capacity check: max 12 Full Master per week (locked read)
             if ($isFullMaster) {
-                $fcStmt = $pdo->prepare("SELECT COUNT(*) FROM outseason_entries WHERE tenant_id='TNT_fusion' AND season_key=:sk AND is_deleted=0 AND formula_scelta LIKE '%Full%' AND settimana_scelta=:week FOR UPDATE");
+                $fcStmt = $pdo->prepare("SELECT COUNT(*) FROM outseason_entries WHERE tenant_id='TNT_fusion' AND season_key=:sk AND is_deleted=0 AND payment_status NOT IN ('AWAITING_PAYMENT','FAILED') AND formula_scelta LIKE '%Full%' AND settimana_scelta=:week FOR UPDATE");
                 $fcStmt->execute([':sk' => self::seasonKey(), ':week' => trim((string)$data['settimana_scelta'])]);
                 $fullCount = (int)$fcStmt->fetchColumn();
                 if ($fullCount >= 12) {
@@ -770,7 +771,7 @@ PROMPT;
             // Insert entry
             $sql = "INSERT INTO outseason_entries (tenant_id, season_key, nome_e_cognome, email, cellulare, codice_fiscale, data_di_nascita, indirizzo, cap, citta, provincia, club_di_appartenenza, ruolo, taglia_kit, settimana_scelta, formula_scelta, come_vuoi_pagare, codice_sconto, entry_date, entry_status, payment_status, payment_method, synced_at) VALUES (:tid,:sk,:nome,:email,:cell,:cf,:dob,:addr,:cap,:citta,:prov,:club,:ruolo,:kit,:week,:formula,:pagare,:sconto,NOW(),'Submitted',:ps,:pm,NOW())";
             $stmt = $pdo->prepare($sql);
-            $ps = 'PENDING';
+            $ps = ($paymentMethod === 'Bonifico Bancario') ? 'PENDING' : 'AWAITING_PAYMENT';
             $pm = ($paymentMethod === 'Bonifico Bancario') ? 'BONIFICO' : 'PAYPAL';
             $stmt->execute([
                 ':tid'=>$tid, ':sk'=>self::seasonKey(), ':nome'=>trim($data['nome_e_cognome']),
@@ -803,7 +804,10 @@ PROMPT;
             return;
         }
 
-        // PayPal: create order with redirect flow (no JS SDK needed in iframe)
+        // Cleanup stale AWAITING_PAYMENT entries (older than 2 hours)
+        $pdo->prepare("DELETE FROM outseason_entries WHERE tenant_id='TNT_fusion' AND payment_status='AWAITING_PAYMENT' AND entry_date < DATE_SUB(NOW(), INTERVAL 2 HOUR)")->execute();
+
+        // PayPal: create order with redirect flow
         $paypal = new PayPalService();
         $baseUrl = rtrim(getenv('APP_URL') ?: 'https://www.fusionteamvolley.it/ERP', '/');
         $returnUrl = $baseUrl . '/outseason/paypal-return.html?entry_id=' . $entryId;
