@@ -1,7 +1,7 @@
 {
   "version": 3,
-  "generated_at": "2026-04-29T19:25:43.056Z",
-  "file_count": 1698,
+  "generated_at": "2026-04-29T19:27:38.559Z",
+  "file_count": 1697,
   "files": [
     {
       "path": ".env.prod",
@@ -249,7 +249,7 @@
     },
     {
       "path": "api/Modules/TalentDay/TalentDayController.php",
-      "hash": "5b0ab3d793ac2481a8fdd6878167cee434106f99714d01cc5b0004dfe5c5e3c4"
+      "hash": "1119bb6574272b6ac42f7470b9920a883fe9bc5bc876aa369e9041a4e40615f2"
     },
     {
       "path": "api/Modules/Tasks/TasksController.php",
@@ -1160,8 +1160,8 @@
       "hash": "bff23f6cbbda8e9f63374caad9603b813d7ac9dc5935d53e2f1c5831a7c66b61"
     },
     {
-      "path": "fusion-website/dist/assets/FamilyPortal-BCTJPWla.js",
-      "hash": "a6abe0689c8d381e6aeeab93904a3ddd22d28f28eee7d104a8b8411e9907b7bc"
+      "path": "fusion-website/dist/assets/FamilyPortal-7_JejZkj.js",
+      "hash": "53bcfcec42142e7ede0ff5cf2e98887f61a6691647a9ed8f4dc588ddb517a31a"
     },
     {
       "path": "fusion-website/dist/assets/Foresteria-COBY5sGw.js",
@@ -1224,20 +1224,20 @@
       "hash": "23264c83d979d2034f0562b3b1b3411a15fa69415edddde029ce0727c14ed0c6"
     },
     {
-      "path": "fusion-website/dist/assets/Home-vCRsxCi-.js",
-      "hash": "56640d0dfb588d85ff1bab1a069fc3769472e34056974bc7225557cc94b90861"
+      "path": "fusion-website/dist/assets/Home-CwfQCNT8.js",
+      "hash": "534f6726b26e110c5642a185524e74eb61d2a2ac9fd3fd298ae8ec235be93af6"
     },
     {
       "path": "fusion-website/dist/assets/icons-lJskfNWJ.js",
       "hash": "b6262b3e9fd5e1b6a83ba32a3f9c2982cdea7fcbb24c0e824e4a3f139fc2e286"
     },
     {
-      "path": "fusion-website/dist/assets/index-D2jqhOAN.js",
-      "hash": "984df2f078652cbbb36e5fe02de80c3f507b8a5bc2ac053bfac3a43509aeb093"
+      "path": "fusion-website/dist/assets/index-CjRpaBMn.css",
+      "hash": "870facd7987f1e23d44d2b1da49375315daf09c3bf107b79eee4f400dc7b12f1"
     },
     {
-      "path": "fusion-website/dist/assets/index-uvBbVoTx.css",
-      "hash": "676bde2600fbeb7dc102dd7249fb21a979f0ee2cce879b0c8f6728062f9d632a"
+      "path": "fusion-website/dist/assets/index-PhlAUmbp.js",
+      "hash": "b719b837e44cd8c57903b07796497c9fbd89cdfc4385bb39c088a354ce6fdbdd"
     },
     {
       "path": "fusion-website/dist/assets/logo-colorato.png",
@@ -1284,10 +1284,6 @@
       "hash": "aa154e46c39b9710805a1646f7cdfda5f332995fad45fc094a9ad348fefc9ab7"
     },
     {
-      "path": "fusion-website/dist/assets/OpenDay-CNpWuW3x.js",
-      "hash": "e91328be240bdd0b115c583e804eb698a3695e6800c1bcb7181da2dddfcdb89e"
-    },
-    {
       "path": "fusion-website/dist/assets/oswald-cyrillic-600-normal-B7zyAoGs.woff",
       "hash": "b80e140a0b8b5186905614373ee3a70f82999ddebea67fd5003270f61d8aaefb"
     },
@@ -1328,8 +1324,8 @@
       "hash": "79c8db81d80299500f3643d63278fbe6193b2ff5d2fc780cac5109d73cf8cfa6"
     },
     {
-      "path": "fusion-website/dist/assets/Outseason-EP6LF_Zt.js",
-      "hash": "c76180432a16e82805f97612672f419ad28567358b9c54298fec95d816c33f48"
+      "path": "fusion-website/dist/assets/Outseason-BISf5vdr.js",
+      "hash": "f70366dd657bfb752b582b711d166ed31b5b32a93a7284e3a45c72a7dc85726d"
     },
     {
       "path": "fusion-website/dist/assets/Proposal1-o4UMApTy.js",
@@ -1413,7 +1409,7 @@
     },
     {
       "path": "fusion-website/dist/index.html",
-      "hash": "f89b5436d5258b4f67734ba80ecdfb04272a046644069ad5eb551ef51912b6e6"
+      "hash": "e747b15418c6711095221e4d308b858c22f60f20876415752257139dab4e3d70"
     },
     {
       "path": "fusion-website/dist/privacy-policy.pdf",
@@ -1433,7 +1429,7 @@
     },
     {
       "path": "index.html",
-      "hash": "2adbadfbc300832341dcb6a61f9355fe5c7c60cdb43c4b8c9b2fab2b109b9f20"
+      "hash": "ae0d7d8d9ee8e8a188f4bc42abee91315d7f99abad3b1b567112aed9164c8185"
     },
     {
       "path": "js/api/athletes.api.js",
@@ -1745,7 +1741,7 @@
     },
     {
       "path": "js/modules/talentday/TalentDay.js",
-      "hash": "273e3a50ff900afd0e36837fce65bc2aa7b3e2ae5a231391330719c599a4f6bf"
+      "hash": "748bbeae3ac3c7e5059961aea198ac6fe89e8fcbd44a17e5ceb4a631843697d0"
     },
     {
       "path": "js/modules/talentday/TalentDayAPI.js",
@@ -1753,7 +1749,7 @@
     },
     {
       "path": "js/modules/talentday/TalentDayView.js",
-      "hash": "e8a7ab8b84ab15ef17ec43bef8a880762a6017d33b180ecae29d8f45eb2d4199"
+      "hash": "ca38ea6806fea4a86a21f3128110ea22680bb7e382c0f2dee2a0335a6cd883c5"
     },
     {
       "path": "js/modules/tasks.js",
