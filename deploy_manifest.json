@@ -1,7 +1,7 @@
 {
   "version": 3,
-  "generated_at": "2026-04-29T11:27:52.524Z",
-  "file_count": 1750,
+  "generated_at": "2026-04-29T11:48:07.524Z",
+  "file_count": 1751,
   "files": [
     {
       "path": ".env.prod",
@@ -181,7 +181,7 @@
     },
     {
       "path": "api/Modules/OutSeason/OutSeasonController.php",
-      "hash": "8bd0a32f9f10f6825ebeb34c81d60a8c2896b1c814b64c844c820be443cdd0ef"
+      "hash": "017a44e6aaaa42e1f88ef7b813f1c744fcd7d41973fdad78416dcae04b13a1e2"
     },
     {
       "path": "api/Modules/Payments/PaymentsController.php",
@@ -361,7 +361,7 @@
     },
     {
       "path": "api/router.php",
-      "hash": "1d5c213a35f87519b04251d2a9edab87fc57790c9e3479129df2cfe9201be743"
+      "hash": "fe4177a1fed8972b9b2353ae54a5fdeff63701f570631698066d61cb6ced9ff7"
     },
     {
       "path": "api/self_heal.php",
@@ -434,6 +434,10 @@
     {
       "path": "api/Shared/Security.php",
       "hash": "ddd274f2903fed9cd53a5ec7c598137d10b7914c208ce52055116a85d0958e54"
+    },
+    {
+      "path": "api/Shared/StripeService.php",
+      "hash": "e1038075becbc681900df9261ee17c9ceb633d681f4c72f5be79f6adf51abfb2"
     },
     {
       "path": "api/Shared/TenantContext.php",
@@ -1565,7 +1569,7 @@
     },
     {
       "path": "index.html",
-      "hash": "ff401d774c511039ec163c04cc2de3b83beee21e8aa8cb1a6e26d367f2c6884e"
+      "hash": "e3e02f0ecb0b83a7072ec0930a79a4d0196171f691dd5c10d8a59f8f53c13010"
     },
     {
       "path": "js/api/athletes.api.js",
@@ -2061,7 +2065,7 @@
     },
     {
       "path": "outseason/index.html",
-      "hash": "c8e857db5ec8bf452beb4c8fa92f8dab215cfdc8794d4d782778baa1423dd83c"
+      "hash": "7a7a4995e82db4c8b678a7d7ce9a8e34af9167083c4c2b596a70ad5004da7021"
     },
     {
       "path": "outseason/logo-outseason.png",

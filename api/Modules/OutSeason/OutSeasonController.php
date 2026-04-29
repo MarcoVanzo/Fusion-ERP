@@ -21,6 +21,7 @@ use FusionERP\Shared\Response;
 use FusionERP\Shared\AIService;
 use FusionERP\Shared\TenantContext;
 use FusionERP\Shared\PayPalService;
+use FusionERP\Shared\StripeService;
 use FusionERP\Shared\Mailer;
 
 class OutSeasonController
@@ -879,6 +880,148 @@ PROMPT;
         Response::success(['paid'=>true, 'capture_id'=>$captureId, 'payment_source'=>$paymentSource]);
         } catch (\Throwable $e) {
             Response::error('Errore cattura pagamento: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /* ─── Stripe: Create PaymentIntent ─────────────────────────────────────── */
+    public function createStripeIntent(): void
+    {
+        try {
+        self::setCorsPublic();
+        $data = json_decode(file_get_contents('php://input'), true);
+        if (!$data) { Response::error('Dati non validi.', 400); }
+
+        // Reuse same validation & pricing logic from publicRegister
+        $requiredFields = ['nome_e_cognome','email','cellulare','codice_fiscale','data_di_nascita','settimana_scelta','formula_scelta','come_vuoi_pagare'];
+        foreach ($requiredFields as $f) {
+            if (empty(trim((string)($data[$f] ?? '')))) {
+                Response::error("Campo obbligatorio mancante: {$f}", 422);
+            }
+        }
+
+        // Price calculation
+        $formula = trim((string)$data['formula_scelta']);
+        $isFullMaster = (stripos($formula, 'Full') !== false);
+        $basePrice = $isFullMaster
+            ? (float)(getenv('OUTSEASON_PRICE_FULL') ?: 650)
+            : (float)(getenv('OUTSEASON_PRICE_PARTIAL') ?: 400);
+
+        $discountCode = strtoupper(trim((string)($data['codice_sconto'] ?? '')));
+        $discountPct = 0;
+        if (!empty($discountCode)) {
+            $pdo = Database::getInstance();
+            $ds = $pdo->prepare("SELECT discount_percent, max_uses, current_uses FROM outseason_discount_codes WHERE tenant_id='TNT_fusion' AND code=:c AND season_key=:sk AND is_active=1");
+            $ds->execute([':c'=>$discountCode, ':sk'=>self::seasonKey()]);
+            $dc = $ds->fetch(\PDO::FETCH_ASSOC);
+            if ($dc && ($dc['max_uses'] === null || $dc['current_uses'] < $dc['max_uses'])) {
+                $discountPct = (float)$dc['discount_percent'];
+            }
+        }
+        $finalPrice = round($basePrice * (1 - $discountPct / 100), 2);
+
+        // Insert entry as AWAITING_PAYMENT
+        $pdo = Database::getInstance();
+        $tid = 'TNT_fusion';
+        $pdo->beginTransaction();
+        try {
+            if ($isFullMaster) {
+                $fcStmt = $pdo->prepare("SELECT COUNT(*) FROM outseason_entries WHERE tenant_id='TNT_fusion' AND season_key=:sk AND is_deleted=0 AND payment_status NOT IN ('AWAITING_PAYMENT','FAILED') AND formula_scelta LIKE '%Full%' AND settimana_scelta=:week FOR UPDATE");
+                $fcStmt->execute([':sk' => self::seasonKey(), ':week' => trim((string)$data['settimana_scelta'])]);
+                if ((int)$fcStmt->fetchColumn() >= 12) {
+                    $pdo->rollBack();
+                    Response::error('Posti in foresteria esauriti per questa settimana.', 409);
+                }
+            }
+
+            $sql = "INSERT INTO outseason_entries (tenant_id, season_key, nome_e_cognome, email, cellulare, codice_fiscale, data_di_nascita, indirizzo, cap, citta, provincia, club_di_appartenenza, ruolo, taglia_kit, settimana_scelta, formula_scelta, come_vuoi_pagare, codice_sconto, entry_date, entry_status, payment_status, payment_method, synced_at) VALUES (:tid,:sk,:nome,:email,:cell,:cf,:dob,:addr,:cap,:citta,:prov,:club,:ruolo,:kit,:week,:formula,:pagare,:sconto,NOW(),'Submitted','AWAITING_PAYMENT','STRIPE',NOW())";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([
+                ':tid'=>$tid, ':sk'=>self::seasonKey(), ':nome'=>trim($data['nome_e_cognome']),
+                ':email'=>trim($data['email']), ':cell'=>$data['cellulare']??null,
+                ':cf'=>$data['codice_fiscale']??null, ':dob'=>$data['data_di_nascita']??null,
+                ':addr'=>$data['indirizzo']??null, ':cap'=>$data['cap']??null,
+                ':citta'=>$data['citta']??null, ':prov'=>$data['provincia']??null,
+                ':club'=>$data['club_di_appartenenza']??null, ':ruolo'=>$data['ruolo']??null,
+                ':kit'=>$data['taglia_kit']??null, ':week'=>$data['settimana_scelta']??null,
+                ':formula'=>$data['formula_scelta']??null, ':pagare'=>'Stripe',
+                ':sconto'=>$discountCode?:null,
+            ]);
+            $entryId = (int)$pdo->lastInsertId();
+            $pdo->commit();
+        } catch (\Throwable $txErr) {
+            if ($pdo->inTransaction()) { $pdo->rollBack(); }
+            throw $txErr;
+        }
+
+        // Increment discount code usage
+        if (!empty($discountCode) && $discountPct > 0) {
+            $pdo->prepare("UPDATE outseason_discount_codes SET current_uses=current_uses+1 WHERE tenant_id='TNT_fusion' AND code=:c AND season_key=:sk")->execute([':c'=>$discountCode,':sk'=>self::seasonKey()]);
+        }
+
+        // Cleanup stale AWAITING_PAYMENT entries
+        $pdo->prepare("DELETE FROM outseason_entries WHERE tenant_id='TNT_fusion' AND payment_status='AWAITING_PAYMENT' AND entry_date < DATE_SUB(NOW(), INTERVAL 2 HOUR)")->execute();
+
+        // Create Stripe PaymentIntent
+        $stripe = new StripeService();
+        $intent = $stripe->createPaymentIntent(
+            $finalPrice,
+            "OutSeason " . self::seasonKey() . " — " . trim($data['nome_e_cognome']),
+            ['entry_id' => $entryId, 'season' => self::seasonKey()]
+        );
+
+        // Save Stripe PaymentIntent ID
+        $pdo->prepare("UPDATE outseason_entries SET paypal_order_id=:pid WHERE id=:id")
+            ->execute([':pid' => $intent['id'], ':id' => $entryId]);
+
+        Response::success([
+            'entry_id'      => $entryId,
+            'client_secret' => $intent['client_secret'],
+            'stripe_pk'     => $stripe->getPublishableKey(),
+            'amount'        => $finalPrice,
+        ]);
+        } catch (\Throwable $e) {
+            Response::error('Errore: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /* ─── Stripe: Confirm Payment ──────────────────────────────────────── */
+    public function confirmStripePayment(): void
+    {
+        try {
+        self::setCorsPublic();
+        $body = json_decode(file_get_contents('php://input'), true);
+        $intentId = trim((string)($body['payment_intent_id'] ?? ''));
+        $entryId = (int)($body['entry_id'] ?? 0);
+        if (empty($intentId) || $entryId < 1) { Response::error('Parametri mancanti.', 400); }
+
+        $pdo = Database::getInstance();
+        $check = $pdo->prepare("SELECT * FROM outseason_entries WHERE id=:id AND tenant_id='TNT_fusion'");
+        $check->execute([':id'=>$entryId]);
+        $entry = $check->fetch(\PDO::FETCH_ASSOC);
+        if (!$entry) { Response::error('Iscrizione non trovata.', 404); }
+        if ($entry['payment_status'] === 'PAID') { Response::success(['already_paid'=>true]); return; }
+
+        // Verify with Stripe API
+        $stripe = new StripeService();
+        $intent = $stripe->getPaymentIntent($intentId);
+
+        if (($intent['status'] ?? '') !== 'succeeded') {
+            $pdo->prepare("UPDATE outseason_entries SET payment_status='FAILED' WHERE id=:id")->execute([':id'=>$entryId]);
+            Response::error('Pagamento non completato. Status: ' . ($intent['status'] ?? 'unknown'), 422);
+        }
+
+        $chargeId = $intent['latest_charge'] ?? null;
+        $paymentMethod = $intent['payment_method_types'][0] ?? 'card';
+
+        $pdo->prepare("UPDATE outseason_entries SET payment_status='PAID', paypal_capture_id=:cid, payment_method=:pm, paid_at=NOW() WHERE id=:id")
+            ->execute([':cid'=>$chargeId, ':pm'=>'STRIPE_' . strtoupper($paymentMethod), ':id'=>$entryId]);
+
+        // Send confirmation email
+        $this->sendConfirmationEmail($entry, $chargeId, $entry['email']);
+
+        Response::success(['paid'=>true, 'charge_id'=>$chargeId, 'payment_method'=>$paymentMethod]);
+        } catch (\Throwable $e) {
+            Response::error('Errore conferma pagamento Stripe: ' . $e->getMessage(), 500);
         }
     }
 

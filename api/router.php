@@ -88,7 +88,7 @@ if ($module === 'whatsapp') {
 $publicEndpoints = [
     'talentday'  => ['publicRegister'],
     'openday'    => ['publicRegister', 'publicStatus'],
-    'outseason'  => ['publicRegister', 'capturePayment', 'publicStatus', 'validateDiscount'],
+    'outseason'  => ['publicRegister', 'capturePayment', 'createStripeIntent', 'confirmStripePayment', 'publicStatus', 'validateDiscount'],
     'webhooks'   => ['stripe'],
     'whatsapp'   => ['receive', 'verify'],
 ];
@@ -258,7 +258,7 @@ function dispatch(string $controllerName, string $action): void
         'Social'     => ['callback'],   // Meta OAuth redirect
         'TalentDay'  => ['publicRegister', 'publicStatus'], // Public registration form
         'OpenDay'    => ['publicRegister', 'publicStatus'], // Public Open Day registration
-        'OutSeason'  => ['publicRegister', 'capturePayment', 'publicStatus', 'validateDiscount'], // Public OutSeason form
+        'OutSeason'  => ['publicRegister', 'capturePayment', 'createStripeIntent', 'confirmStripePayment', 'publicStatus', 'validateDiscount'], // Public OutSeason form
     ];
     $isModuleException = isset($modulePublicExceptions[$controllerName])
         && in_array($action, $modulePublicExceptions[$controllerName], true);
