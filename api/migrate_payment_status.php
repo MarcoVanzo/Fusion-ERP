@@ -3,8 +3,16 @@
  * One-time migration: Add AWAITING_PAYMENT to payment_status ENUM
  * DELETE THIS FILE AFTER RUNNING
  */
-require_once __DIR__ . '/bootstrap.php';
-use App\Core\Database;
+declare(strict_types=1);
+
+require_once __DIR__ . '/../vendor/autoload.php';
+
+use FusionERP\Shared\Database;
+
+$dotenv = Dotenv\Dotenv::createMutable(dirname(__DIR__));
+$dotenv->safeLoad();
+
+header('Content-Type: application/json; charset=UTF-8');
 
 try {
     $pdo = Database::getInstance();
