@@ -245,16 +245,36 @@
                     Caricamento metodi di pagamento…
                 </div>
                 <div id="paypal-button-container" style="min-height:55px;"></div>
-                <!-- Fallback if SDK blocked -->
+                <!-- Fallback: individual styled buttons when SDK is blocked -->
                 <div id="pp-fallback" style="display:none;">
-                    <div style="text-align:center;margin-bottom:14px;font-size:12px;color:rgba(255,255,255,.35);">
-                        ⚠️ Alcuni metodi di pagamento non si caricano? <a href="#" id="pp-fallback-link" style="color:#D9317F;text-decoration:underline;">Apri il checkout in una nuova scheda</a> per tutte le opzioni.
+                    <div style="display:flex;flex-direction:column;gap:10px;">
+                        <!-- Carta di Credito/Debito -->
+                        <button type="button" class="os-pay-method-btn" id="os-fb-card" style="display:flex;align-items:center;gap:14px;width:100%;padding:16px 20px;background:linear-gradient(135deg,#1a1a2e,#16213e);border:1px solid rgba(255,255,255,.12);border-radius:12px;color:#fff;font-size:15px;font-weight:600;cursor:pointer;transition:all .3s;">
+                            <span style="font-size:24px;">💳</span>
+                            <span style="flex:1;text-align:left;">Carta di Credito / Debito</span>
+                            <span style="display:flex;gap:4px;opacity:.5;">
+                                <img src="https://img.icons8.com/color/28/visa.png" alt="Visa" style="height:20px;">
+                                <img src="https://img.icons8.com/color/28/mastercard-logo.png" alt="MC" style="height:20px;">
+                            </span>
+                        </button>
+                        <!-- PayPal -->
+                        <button type="button" class="os-pay-method-btn" id="os-fb-paypal" style="display:flex;align-items:center;gap:14px;width:100%;padding:16px 20px;background:linear-gradient(135deg,#003087,#0070ba);border:none;border-radius:12px;color:#fff;font-size:15px;font-weight:600;cursor:pointer;transition:all .3s;">
+                            <span style="font-size:24px;">🅿️</span>
+                            <span style="flex:1;text-align:left;">PayPal</span>
+                        </button>
+                        <!-- Google Pay / Apple Pay (need SDK) -->
+                        <div style="display:flex;gap:10px;">
+                            <button type="button" class="os-pay-method-btn" id="os-fb-gpay" style="display:flex;align-items:center;justify-content:center;gap:8px;flex:1;padding:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:rgba(255,255,255,.35);font-size:13px;cursor:pointer;transition:all .3s;" title="Disabilita l'ad blocker per usare Google Pay">
+                                <span>G Pay</span>
+                            </button>
+                            <button type="button" class="os-pay-method-btn" id="os-fb-applepay" style="display:flex;align-items:center;justify-content:center;gap:8px;flex:1;padding:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:rgba(255,255,255,.35);font-size:13px;cursor:pointer;transition:all .3s;" title="Disabilita l'ad blocker per usare Apple Pay">
+                                <span> Pay</span>
+                            </button>
+                        </div>
+                        <div style="text-align:center;font-size:11px;color:rgba(255,255,255,.25);margin-top:2px;">
+                            Per Google Pay e Apple Pay, <a href="#" id="pp-fallback-link" style="color:#D9317F;text-decoration:underline;">apri il checkout in una nuova scheda</a> o disabilita l'ad blocker
+                        </div>
                     </div>
-                    <button type="button" class="os-submit-btn os-paypal-btn" id="os-paypal-fallback" style="width:100%;">
-                        <span class="btn-text">🔗 Paga con PayPal / Carta</span>
-                        <span class="spinner"></span>
-                    </button>
-                    <div style="text-align:center;margin-top:8px;font-size:11px;color:rgba(255,255,255,.3);">Potrai pagare con conto PayPal o carta di credito/debito</div>
                 </div>
             </div>
 
@@ -622,12 +642,11 @@
         });
     }
 
-    // Fallback: "Paga su PayPal" button → opens checkout page in new tab
-    document.getElementById('os-paypal-fallback')?.addEventListener('click', async function() {
+    // ─── Fallback button handlers (when SDK is blocked) ───
+    async function fallbackPay(btn) {
         const v = validate();
         if (v !== true) return;
-        const btn = this;
-        btn.classList.add('loading'); btn.disabled = true;
+        btn.style.opacity = '.5'; btn.style.pointerEvents = 'none';
         try {
             const r = await fetch(API+'publicRegister', {
                 method:'POST', headers:{'Content-Type':'application/json'},
@@ -640,17 +659,21 @@
             const approveUrl = d.data.approve_url;
             if (approveUrl) {
                 window.open(approveUrl, '_blank');
-                showGE('Si è aperta una nuova scheda per completare il pagamento su PayPal. Dopo il pagamento, riceverai una email di conferma.');
+                showGE('Si è aperta una nuova scheda per il pagamento. Dopo il completamento, riceverai una email di conferma.');
             }
         } catch(e) { showGE(e.message || 'Errore. Riprova.'); }
-        finally { btn.classList.remove('loading'); btn.disabled = false; }
-    });
+        finally { btn.style.opacity = '1'; btn.style.pointerEvents = ''; }
+    }
 
-    // Fallback link → opens checkout page with SDK in new tab
-    document.getElementById('pp-fallback-link')?.addEventListener('click', async function(e) {
-        e.preventDefault();
+    // Card and PayPal buttons → both redirect to PayPal (supports guest card checkout)
+    document.getElementById('os-fb-card')?.addEventListener('click', function() { fallbackPay(this); });
+    document.getElementById('os-fb-paypal')?.addEventListener('click', function() { fallbackPay(this); });
+
+    // GPay / ApplePay → open checkout in new tab (SDK loads outside iframe/ad blocker context)
+    async function fallbackNewTab(btn) {
         const v = validate();
         if (v !== true) return;
+        btn.style.opacity = '.5';
         try {
             const r = await fetch(API+'publicRegister', {
                 method:'POST', headers:{'Content-Type':'application/json'},
@@ -667,7 +690,12 @@
                 + '&approve_url=' + encodeURIComponent(d.data.approve_url || '');
             window.open(checkoutUrl, '_blank');
         } catch(e) { showGE(e.message || 'Errore. Riprova.'); }
-    });
+        finally { btn.style.opacity = '1'; }
+    }
+
+    document.getElementById('os-fb-gpay')?.addEventListener('click', function() { fallbackNewTab(this); });
+    document.getElementById('os-fb-applepay')?.addEventListener('click', function() { fallbackNewTab(this); });
+    document.getElementById('pp-fallback-link')?.addEventListener('click', function(e) { e.preventDefault(); fallbackNewTab(this); });
 
     // Listen for payment completion from popup/new tab
     window.addEventListener('message', function(evt) {
