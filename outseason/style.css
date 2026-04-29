@@ -636,7 +636,14 @@ body {
 .os-submit-btn.loading .spinner { display: inline-block; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-#paypal-button-container { margin-top: 18px; min-height: 55px; }
+.os-paypal-btn {
+  background-image: linear-gradient(135deg, #0070ba 0%, #003087 100%) !important;
+  box-shadow: 0 4px 20px rgba(0,112,186,0.25);
+}
+.os-paypal-btn:hover {
+  background-image: linear-gradient(135deg, #003087 0%, #001f5c 100%) !important;
+  box-shadow: 0 8px 30px rgba(0,112,186,0.35);
+}
 
 /* ─── Success ──────────────────────────────────────────────────────── */
 .os-success { display: none; text-align: center; padding: 50px 24px; }

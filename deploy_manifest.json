@@ -1,7 +1,7 @@
 {
   "version": 3,
-  "generated_at": "2026-04-29T09:32:50.468Z",
-  "file_count": 1748,
+  "generated_at": "2026-04-29T09:44:32.952Z",
+  "file_count": 1749,
   "files": [
     {
       "path": ".env.prod",
@@ -181,7 +181,7 @@
     },
     {
       "path": "api/Modules/OutSeason/OutSeasonController.php",
-      "hash": "430f463d368364b02a276fc5feedc7288bba4e0b81fde6b28f5896ba9f420aeb"
+      "hash": "e3958500e11939534911f3fdf5fb620814481bb60b06d1ab4583249b972719e2"
     },
     {
       "path": "api/Modules/Payments/PaymentsController.php",
@@ -421,7 +421,7 @@
     },
     {
       "path": "api/Shared/PayPalService.php",
-      "hash": "a78d0a3168128ecf9df133ea9eb1da264c674c385e6f4bdbddbb49bf00cce280"
+      "hash": "84a4c1602d6ef8d93f82676998659977c7d04551eb5918e0856770834dcb1441"
     },
     {
       "path": "api/Shared/RateLimiter.php",
@@ -1565,7 +1565,7 @@
     },
     {
       "path": "index.html",
-      "hash": "73124c128e3673e5f4cdad5d7b09ad9f77cc57657345c59f36f2e54b094d1d22"
+      "hash": "df74617938a037c19bd441c1d802398bce3dce50605fc3e3631c2d17db3972c8"
     },
     {
       "path": "js/api/athletes.api.js",
@@ -2061,11 +2061,15 @@
     },
     {
       "path": "outseason/index.html",
-      "hash": "c216cf9cac0929dfe47be1c3b7c6d35deba1c5f20231a14992a78603a2a0244c"
+      "hash": "d1c05b0c114b8a7db843534b8de63ef8bbda413860844e3513a9999dda14f93a"
     },
     {
       "path": "outseason/logo-outseason.png",
       "hash": "35d566e1f15e470817b0bd25503018388d3f8677d4bf6ef12b1a8c1dc8b0ffa7"
+    },
+    {
+      "path": "outseason/paypal-return.html",
+      "hash": "1dbbb236e3e264a77f021927ed17777bde29ea8861ffb62e9fb2361cae9914db"
     },
     {
       "path": "outseason/seo-fixes.php",
@@ -2073,7 +2077,7 @@
     },
     {
       "path": "outseason/style.css",
-      "hash": "ee2592cba6f89a683e3cfdfcb01a7cbbbdf701104d89f2e253e2b175352b6249"
+      "hash": "ab523430c129fa734f307c2aab62f7210508b2c49329d2a9e491601b726117cd"
     },
     {
       "path": "pdf_export_tool/export_website_pdf.js",

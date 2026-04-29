@@ -114,9 +114,22 @@ class PayPalService
      * @return array{id: string, status: string, links: array}
      * @throws \RuntimeException on failure
      */
-    public function createOrder(float $amount, string $description, array $metadata = []): array
+    public function createOrder(float $amount, string $description, array $metadata = [], string $returnUrl = '', string $cancelUrl = ''): array
     {
         $token = $this->getAccessToken();
+
+        $appContext = [
+            'brand_name'          => 'Fusion Team Volley',
+            'locale'              => 'it-IT',
+            'shipping_preference' => 'NO_SHIPPING',
+            'user_action'         => 'PAY_NOW',
+        ];
+
+        // If return/cancel URLs are provided, use redirect flow (no JS SDK needed)
+        if (!empty($returnUrl)) {
+            $appContext['return_url'] = $returnUrl;
+            $appContext['cancel_url'] = $cancelUrl ?: $returnUrl;
+        }
 
         $body = [
             'intent' => 'CAPTURE',
@@ -128,12 +141,7 @@ class PayPalService
                 ],
                 'custom_id' => json_encode($metadata),
             ]],
-            'application_context' => [
-                'brand_name'          => 'Fusion Team Volley',
-                'locale'              => 'it-IT',
-                'shipping_preference' => 'NO_SHIPPING',
-                'user_action'         => 'PAY_NOW',
-            ],
+            'application_context' => $appContext,
         ];
 
         $ch = curl_init($this->baseUrl . '/v2/checkout/orders');

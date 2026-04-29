@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pagamento in corso — OutSeason 2026</title>
+    <link rel="icon" href="https://www.fusionteamvolley.it/assets/logo-colorato.png" type="image/png">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #000;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            color: #fff;
+        }
+        .card {
+            text-align: center;
+            padding: 48px 32px;
+            max-width: 480px;
+            width: 100%;
+        }
+        .logo {
+            width: 120px;
+            margin-bottom: 24px;
+            opacity: .9;
+        }
+        .spinner {
+            width: 48px; height: 48px;
+            border: 4px solid rgba(255,255,255,.1);
+            border-top-color: #D9317F;
+            border-radius: 50%;
+            animation: spin .8s linear infinite;
+            margin: 0 auto 24px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .status { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+        .detail { font-size: 14px; color: rgba(255,255,255,.5); line-height: 1.6; }
+
+        /* Success state */
+        .success-icon {
+            width: 72px; height: 72px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            margin: 0 auto 24px;
+            box-shadow: 0 8px 32px rgba(39, 174, 96, .3);
+        }
+        .success-icon.visible { display: flex; }
+        .spinner.hidden { display: none; }
+
+        /* Error state */
+        .error-msg {
+            display: none;
+            background: rgba(229, 62, 62, .1);
+            border: 1px solid rgba(229, 62, 62, .3);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 16px;
+        }
+        .error-msg.visible { display: block; }
+        .error-msg p { color: #e53e3e; font-size: 14px; }
+        .back-link {
+            display: inline-block;
+            margin-top: 16px;
+            color: #D9317F;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .back-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <img src="https://www.fusionteamvolley.it/ERP/outseason/logo-outseason.png" alt="OutSeason" class="logo" id="logo">
+
+    <div class="spinner" id="spinner"></div>
+    <div class="success-icon" id="success-icon">✓</div>
+
+    <div class="status" id="status-text">Completamento pagamento in corso…</div>
+    <div class="detail" id="detail-text">Stiamo confermando il pagamento con PayPal. Non chiudere questa pagina.</div>
+
+    <div class="error-msg" id="error-msg">
+        <p id="error-text"></p>
+        <a href="index.html" class="back-link">← Torna al modulo di iscrizione</a>
+    </div>
+</div>
+
+<script>
+(async function() {
+    'use strict';
+
+    const API = '../api/api.php?module=outseason&action=';
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');      // PayPal adds this on approval
+    const payerID = params.get('PayerID');   // PayPal adds this on approval
+    const entryId = params.get('entry_id');
+    const orderId = params.get('token');     // PayPal uses 'token' as order ID in redirect flow
+
+    const spinner = document.getElementById('spinner');
+    const successIcon = document.getElementById('success-icon');
+    const statusText = document.getElementById('status-text');
+    const detailText = document.getElementById('detail-text');
+    const errorMsg = document.getElementById('error-msg');
+    const errorText = document.getElementById('error-text');
+
+    // Handle cancelled payments
+    if (params.has('cancelled')) {
+        showError('Pagamento annullato. Puoi tornare al modulo per riprovare.');
+        return;
+    }
+
+    // Missing required params
+    if (!entryId || !token) {
+        showError('Parametri di pagamento mancanti. Torna al modulo e riprova.');
+        return;
+    }
+
+    // Capture the payment
+    try {
+        const res = await fetch(API + 'capturePayment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                paypal_order_id: token,
+                entry_id: parseInt(entryId, 10),
+            }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || data.error) {
+            throw new Error(data.message || data.error || 'Errore nella conferma del pagamento.');
+        }
+
+        // Success!
+        showSuccess();
+
+    } catch (err) {
+        showError(err.message || 'Si è verificato un errore. Contatta outseason@fusionteamvolley.it per assistenza.');
+    }
+
+    function showSuccess() {
+        spinner.classList.add('hidden');
+        successIcon.classList.add('visible');
+        statusText.textContent = 'Pagamento completato! 🎉';
+        statusText.style.color = '#27ae60';
+        detailText.innerHTML = 'Iscrizione confermata! Riceverai una email di conferma con tutti i dettagli.<br><br>Grazie per esserti iscritta all\'<strong style="color:#D9317F">OutSeason 2026</strong>.';
+
+        // Notify parent iframe if embedded
+        try {
+            window.parent.postMessage({ type: 'os-payment-complete' }, '*');
+        } catch(e) {}
+    }
+
+    function showError(msg) {
+        spinner.classList.add('hidden');
+        statusText.textContent = 'Errore nel pagamento';
+        statusText.style.color = '#e53e3e';
+        detailText.textContent = '';
+        errorMsg.classList.add('visible');
+        errorText.textContent = msg;
+    }
+})();
+</script>
+</body>
+</html>

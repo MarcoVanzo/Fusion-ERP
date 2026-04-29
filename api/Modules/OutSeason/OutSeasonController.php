@@ -793,14 +793,33 @@ PROMPT;
             return;
         }
 
-        // PayPal: create order
+        // PayPal: create order with redirect flow (no JS SDK needed in iframe)
         $paypal = new PayPalService();
-        $order = $paypal->createOrder($finalPrice, "OutSeason " . self::seasonKey() . " — " . trim($data['nome_e_cognome']), ['entry_id'=>$entryId, 'season'=>self::seasonKey()]);
+        $baseUrl = rtrim(getenv('APP_URL') ?: 'https://www.fusionteamvolley.it/ERP', '/');
+        $returnUrl = $baseUrl . '/outseason/paypal-return.html?entry_id=' . $entryId;
+        $cancelUrl = $baseUrl . '/outseason/index.html?cancelled=1';
+        $order = $paypal->createOrder(
+            $finalPrice,
+            "OutSeason " . self::seasonKey() . " — " . trim($data['nome_e_cognome']),
+            ['entry_id'=>$entryId, 'season'=>self::seasonKey()],
+            $returnUrl,
+            $cancelUrl
+        );
         $pdo->prepare("UPDATE outseason_entries SET paypal_order_id=:oid WHERE id=:id")->execute([':oid'=>$order['id'], ':id'=>$entryId]);
+
+        // Extract the PayPal approval URL for redirect
+        $approveUrl = '';
+        foreach ($order['links'] ?? [] as $link) {
+            if (($link['rel'] ?? '') === 'approve') {
+                $approveUrl = $link['href'];
+                break;
+            }
+        }
 
         Response::success([
             'entry_id'=>$entryId, 'paypal_order_id'=>$order['id'],
             'paypal_client_id'=>$paypal->getClientId(), 'amount'=>$finalPrice,
+            'approve_url'=>$approveUrl,
         ]);
         } catch (\Throwable $e) {
             Response::error('Errore: ' . $e->getMessage(), 500);

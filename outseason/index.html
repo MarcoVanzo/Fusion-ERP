@@ -10,7 +10,7 @@
     <meta property="og:image" content="https://www.fusionteamvolley.it/assets/logo-colorato.png">
     <meta property="og:type" content="website">
     <link rel="icon" href="https://www.fusionteamvolley.it/assets/logo-colorato.png" type="image/png">
-    <link rel="stylesheet" href="style.css?v=20260429113100">
+    <link rel="stylesheet" href="style.css?v=20260429114300">
     <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
 </head>
 <body>
@@ -279,8 +279,14 @@
             </button>
         </div>
 
-        <!-- PayPal Buttons -->
-        <div id="paypal-button-container" style="display:none"></div>
+        <!-- PayPal Pay Button (redirect flow — no SDK needed) -->
+        <div class="os-submit-wrap" id="submit-paypal" style="display:none">
+            <button type="button" class="os-submit-btn os-paypal-btn" id="os-paypal-pay">
+                <span class="btn-text">💳 Procedi al Pagamento</span>
+                <span class="spinner"></span>
+            </button>
+            <div style="text-align:center;margin-top:8px;font-size:12px;color:rgba(255,255,255,.4);">Verrai reindirizzato a PayPal per completare il pagamento in sicurezza</div>
+        </div>
     </form>
 
     <!-- Success -->
@@ -443,13 +449,12 @@
         clearErr('come_vuoi_pagare');
         const isBonifico = selPay==='Bonifico Bancario';
         document.getElementById('submit-bonifico').style.display = isBonifico?'':'none';
-        document.getElementById('paypal-button-container').style.display = selPay==='Carta/PayPal'?'':'none';
+        document.getElementById('submit-paypal').style.display = selPay==='Carta/PayPal'?'':'none';
         document.getElementById('bonifico-info').style.display = isBonifico?'':'none';
         if (isBonifico) {
             const nome = document.getElementById('nome_e_cognome').value.trim() || 'Nome Cognome';
             document.querySelector('.bonifico-causale').innerHTML = 'Iscrizione OutSeason 2026 — <em>' + nome + '</em>';
         }
-        if (selPay==='Carta/PayPal' && !window._ppLoaded) { window._ppLoaded=true; loadPP(); }
     };
     window.copyIban = function() {
         const iban = document.getElementById('iban-value').textContent;
@@ -525,96 +530,51 @@
         finally{b.classList.remove('loading');b.disabled=false;}
     });
 
-    let _ppRetries = 0;
-    const PP_MAX_RETRIES = 3;
-    const PP_CID = 'ASLH7D2ShGnOwYiNh1eLxO8lwTQE6QKP3136fGsQKJp9e4Sm5i7dGbWkj8l3NMSpU4u2pjgENvuyqtDM';
+    // ─── PayPal Redirect Flow (no JS SDK required — works in cross-origin iframes) ───
+    document.getElementById('os-paypal-pay').addEventListener('click', async function() {
+        const v = validate();
+        if (v !== true) return;
 
-    function ppLoadingHTML() {
-        return '<div style="text-align:center;padding:24px;color:#888;font-size:14px;">'
-            + '<div class="os-spinner" style="margin:0 auto 12px;width:32px;height:32px;border:3px solid rgba(255,255,255,.1);border-top-color:#0070ba;border-radius:50%;animation:spin .8s linear infinite;"></div>'
-            + 'Caricamento PayPal…'
-            + (_ppRetries > 0 ? ' <span style="opacity:.6">(tentativo ' + (_ppRetries + 1) + '/' + PP_MAX_RETRIES + ')</span>' : '')
-            + '</div><style>@keyframes spin{to{transform:rotate(360deg)}}</style>';
-    }
+        const btn = this;
+        btn.classList.add('loading');
+        btn.disabled = true;
 
-    function ppErrorHTML() {
-        const directUrl = window.location.origin + window.location.pathname.replace(/\?.*/, '') + '?v=' + Date.now();
-        const isEmbed = new URLSearchParams(window.location.search).get('embed') === '1';
-        return '<div style="text-align:center;padding:20px 16px;">'
-            + '<p style="color:#e53e3e;margin:0 0 14px;font-size:14px;">⚠️ Impossibile caricare il sistema di pagamento PayPal.</p>'
-            + '<button onclick="retryPP()" style="background:#0070ba;color:#fff;border:none;padding:10px 28px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:10px;transition:opacity .2s;" onmouseover="this.style.opacity=0.85" onmouseout="this.style.opacity=1">'
-            + '🔄 Riprova a caricare PayPal</button>'
-            + '<p style="color:#aaa;font-size:12px;margin:8px 0 0;">'
-            + (isEmbed
-                ? 'Se il problema persiste, <a href="' + directUrl + '" target="_blank" rel="noopener" style="color:#e040fb;text-decoration:underline;">apri il modulo di registrazione in una nuova finestra</a> dove il pagamento funzionerà senza restrizioni.'
-                : 'Controlla la connessione Internet o disabilita eventuali ad blocker, poi riprova.')
-            + '</p></div>';
-    }
+        try {
+            const r = await fetch(API + 'publicRegister', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload()),
+            });
+            const d = await r.json();
+            console.log('[OutSeason] publicRegister response:', d);
+            if (!r.ok || d.error) throw new Error(d.message || d.error || 'Errore');
 
-    async function loadPP(){
-        const cont = document.getElementById('paypal-button-container');
-        cont.innerHTML = ppLoadingHTML();
+            const approveUrl = d.data.approve_url;
+            if (!approveUrl) throw new Error('URL di approvazione PayPal non disponibile. Riprova.');
 
-        // Remove any previous failed SDK script to allow clean retry
-        const oldScript = document.querySelector('script[src*="paypal.com/sdk/js"]');
-        if (oldScript) oldScript.remove();
+            eId = d.data.entry_id;
+            ppOrderId = d.data.paypal_order_id;
 
-        const s = document.createElement('script');
-        s.src = `https://www.paypal.com/sdk/js?client-id=${PP_CID}&currency=EUR&intent=capture&locale=it_IT&enable-funding=googlepay,applepay,paylater`;
-        s.onload = function(){
-            console.log('[OutSeason] PayPal SDK loaded, paypal object:', !!window.paypal);
-            _ppRetries = 0;
-            cont.innerHTML = '';
-            renderPP();
-        };
-        s.onerror = function(){
-            _ppRetries++;
-            console.warn('[OutSeason] PayPal SDK load failed (attempt ' + _ppRetries + '/' + PP_MAX_RETRIES + ')');
-            if (_ppRetries < PP_MAX_RETRIES) {
-                // Exponential backoff retry: 1s, 2s, 4s
-                const delay = Math.pow(2, _ppRetries - 1) * 1000;
-                console.log('[OutSeason] Retrying PayPal SDK in ' + delay + 'ms…');
-                setTimeout(loadPP, delay);
+            console.log('[OutSeason] Redirecting to PayPal:', approveUrl);
+
+            // Redirect to PayPal — use top-level navigation to avoid iframe restrictions
+            if (window.top !== window.self) {
+                // We're inside an iframe → open in new tab
+                window.open(approveUrl, '_blank');
+                showGE('Si aprirà una nuova scheda per completare il pagamento su PayPal. Dopo il pagamento, riceverai una email di conferma.');
+                btn.classList.remove('loading');
+                btn.disabled = false;
             } else {
-                console.error('[OutSeason] PayPal SDK failed after ' + PP_MAX_RETRIES + ' attempts');
-                cont.innerHTML = ppErrorHTML();
-                window._ppLoaded = false;
+                // Direct access → redirect in same window
+                window.location.href = approveUrl;
             }
-        };
-        document.head.appendChild(s);
-    }
-
-    window.retryPP = function() {
-        _ppRetries = 0;
-        window._ppLoaded = true;
-        loadPP();
-    };
-    function renderPP(){
-        if(!window.paypal){console.error('[OutSeason] window.paypal not available after SDK load');return;}
-        paypal.Buttons({
-            style:{layout:'vertical',color:'gold',shape:'rect',label:'pay',height:48},
-            createOrder:async()=>{
-                const v=validate();if(v!==true)throw new Error('Compila: '+v.join(', '));
-                const r=await fetch(API+'publicRegister',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload())});
-                const d=await r.json();
-                console.log('[OutSeason] publicRegister response:', d);
-                if(!r.ok||d.error)throw new Error(d.message||d.error||'Errore');
-                eId=d.data.entry_id;ppOrderId=d.data.paypal_order_id;
-                console.log('[OutSeason] PayPal Order ID:', ppOrderId);
-                return ppOrderId;
-            },
-            onApprove:async(data)=>{
-                try{const r=await fetch(API+'capturePayment',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({paypal_order_id:data.orderID,entry_id:eId})});const d=await r.json();if(!r.ok||d.error)throw new Error(d.message||d.error||'Errore');showOK();}
-                catch(e){showGE('Pagamento approvato ma errore conferma: '+e.message);}
-            },
-            onError:e=>{console.error('[OutSeason] PayPal onError:',e);showGE('Errore PayPal: '+(e.message||'Riprova'));},
-            onCancel:()=>showGE('Pagamento annullato.')
-        }).render('#paypal-button-container').then(()=>{
-            console.log('[OutSeason] PayPal buttons rendered successfully');
-        }).catch(err=>{
-            console.error('[OutSeason] PayPal buttons render failed:', err);
-        });
-    }
+        } catch (e) {
+            console.error('[OutSeason] PayPal redirect error:', e);
+            showGE(e.message || 'Errore. Riprova.');
+            btn.classList.remove('loading');
+            btn.disabled = false;
+        }
+    });
     // ─── Embed Mode ──────────────────────────────────────────────
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('embed') === '1') {
