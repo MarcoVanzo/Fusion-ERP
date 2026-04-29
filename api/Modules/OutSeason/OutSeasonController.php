@@ -807,7 +807,7 @@ PROMPT;
     /* ─── Email helpers ───────────────────────────────────────────────── */
 
     private const EMAIL_SENDER_NAME = 'FTV Out Season';
-    private const LOGO_URL = 'https://www.fusionteamvolley.it/outseason/logo-outseason.png';
+    private const LOGO_URL = 'https://www.fusionteamvolley.it/ERP/outseason/logo-outseason.png';
 
     private function sendConfirmationEmail(array $entry, ?string $captureId, ?string $payerEmail): void
     {
