@@ -34,7 +34,7 @@ const OutSeason = (() => {
     return (n.formula_scelta || n.FormulaScelta || "").includes("Full");
   }
   function l(n) {
-    return d(n) ? 650 : 400;
+    return d(n) ? 250 : 150;
   }
   function c(n) {
     return n.nome_e_cognome || n.NomeECognome || "";
