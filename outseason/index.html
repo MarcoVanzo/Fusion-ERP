@@ -113,7 +113,7 @@
             <div class="os-grid" style="margin-top:14px">
                 <div class="os-field">
                     <label class="os-label">Data di Nascita <span class="req">*</span></label>
-                    <input id="data_di_nascita" class="os-input" type="date" required>
+                    <input id="data_di_nascita" class="os-input" type="date" min="1920-01-01" max="2025-12-31" required>
                     <span class="os-field-error" data-for="data_di_nascita">Campo obbligatorio</span>
                 </div>
                 <div class="os-field">
@@ -505,7 +505,7 @@
     const LABEL_MAP={nome_e_cognome:'Nome e Cognome',email:'Email',cellulare:'Cellulare',codice_fiscale:'Codice Fiscale',data_di_nascita:'Data di Nascita',indirizzo:'Indirizzo',cap:'CAP',citta:'Città',provincia:'Provincia',ruolo:'Ruolo',taglia_kit:'Taglia KIT',settimana_scelta:'Settimana',formula_scelta:'Formula',come_vuoi_pagare:'Metodo Pagamento',privacy:'Privacy',terms:'Termini e Condizioni'};
     function validate(){
         clearAll();let bad=false;let badFields=[];
-        REQ.forEach(id=>{const el=document.getElementById(id);if(!el||!el.value.trim()){showErr(id);bad=true;badFields.push(LABEL_MAP[id]||id);}else if(id==='email'&&!isEm(el.value.trim())){showErr(id);bad=true;badFields.push('Email (non valida)');}});
+        REQ.forEach(id=>{const el=document.getElementById(id);if(!el||!el.value.trim()){showErr(id);bad=true;badFields.push(LABEL_MAP[id]||id);}else if(id==='email'&&!isEm(el.value.trim())){showErr(id);bad=true;badFields.push('Email (non valida)');}else if(id==='data_di_nascita'){const y=parseInt(el.value.split('-')[0],10);if(isNaN(y)||y<1920||y>2025){showErr(id);bad=true;badFields.push('Data di Nascita (anno non valido)');}}});
         if(!selWeek){showErr('settimana_scelta');bad=true;badFields.push(LABEL_MAP.settimana_scelta);}
         if(!selFormula){showErr('formula_scelta');bad=true;badFields.push(LABEL_MAP.formula_scelta);}
         if(!selPay){showErr('come_vuoi_pagare');bad=true;badFields.push(LABEL_MAP.come_vuoi_pagare);}

@@ -719,6 +719,16 @@ PROMPT;
             if (empty(trim((string)($data[$f] ?? '')))) { Response::error("Il campo {$f} è obbligatorio.", 400); }
         }
         if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) { Response::error('Email non valida.', 400); }
+        // Date validation: must be valid YYYY-MM-DD with year between 1920-2025
+        $dob = trim((string)$data['data_di_nascita']);
+        $dobDate = \DateTime::createFromFormat('Y-m-d', $dob);
+        if (!$dobDate || $dobDate->format('Y-m-d') !== $dob) {
+            Response::error('Data di nascita non valida. Usa il formato GG/MM/AAAA.', 400);
+        }
+        $dobYear = (int)$dobDate->format('Y');
+        if ($dobYear < 1920 || $dobYear > 2025) {
+            Response::error('Data di nascita non valida: anno ' . $dobYear . ' fuori range.', 400);
+        }
         if (empty($data['privacy_consent'])) { Response::error('Consenso privacy obbligatorio.', 400); }
 
         // Price calculation
