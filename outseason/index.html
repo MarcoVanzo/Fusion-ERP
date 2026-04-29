@@ -10,7 +10,7 @@
     <meta property="og:image" content="https://www.fusionteamvolley.it/assets/logo-colorato.png">
     <meta property="og:type" content="website">
     <link rel="icon" href="https://www.fusionteamvolley.it/assets/logo-colorato.png" type="image/png">
-    <link rel="stylesheet" href="style.css?v=1013">
+    <link rel="stylesheet" href="style.css?v=1014">
     <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
 </head>
 <body>
@@ -64,7 +64,7 @@
             <div class="os-formula-cards">
                 <div class="os-formula-card" data-val="Full Master" onclick="selectFormula(this)">
                     <div class="formula-name">Full Master</div>
-                    <div class="formula-price">€1</div>
+                    <div class="formula-price">€650</div>
                     <div class="formula-desc">Settimana completa</div>
                     <div class="formula-foresteria-badge" id="foresteria-badge">
                         <i class="ph ph-house"></i>
@@ -73,7 +73,7 @@
                 </div>
                 <div class="os-formula-card" data-val="Daily Master" onclick="selectFormula(this)">
                     <div class="formula-name">Daily Master</div>
-                    <div class="formula-price">€1</div>
+                    <div class="formula-price">€400</div>
                     <div class="formula-desc">Frequenza giornaliera</div>
                 </div>
             </div>
@@ -301,7 +301,7 @@
 (function() {
     'use strict';
     const API = '../api/api.php?module=outseason&action=';
-    const PF = 1, PD = 1;
+    const PF = 650, PD = 400;
     let selFormula='', selWeek='', selPay='', discPct=0, ppOrderId='', eId=0;
     let availData = { by_role: {}, quotas: {}, foresteria_quota: 12, foresteria_counts: {} };
 
