@@ -49,6 +49,7 @@ add_filter('aioseo_title', function ($title) {
 
 // ═══════════════════════════════════════════════════════════════
 // 3. FIX og:type — Homepage deve essere 'website', non 'article'
+//    + FIX alt text vuoti sulle immagini homepage
 // ═══════════════════════════════════════════════════════════════
 add_filter('aioseo_og_type', function ($type) {
     if (is_front_page() || is_home()) {
@@ -56,6 +57,58 @@ add_filter('aioseo_og_type', function ($type) {
     }
     return $type;
 }, 999);
+
+// Fallback aggressivo: usa output buffer per forzare la sostituzione
+// nel caso AIOSEO ignori il filtro sopra
+add_action('template_redirect', function () {
+    if (is_front_page() || is_home()) {
+        ob_start(function ($html) {
+            // Fix og:type da article a website
+            $html = preg_replace(
+                '/<meta\s+property="og:type"\s+content="article"\s*\/?>/i',
+                '<meta property="og:type" content="website" />',
+                $html
+            );
+
+            // Fix immagini con alt="" vuoto — aggiungi alt descrittivi
+            // per le immagini note della homepage
+            $alt_map = [
+                'chi_siamo_ftv_out_season'       => 'Chi siamo - Fusion Team Volley Out Season master pallavolo',
+                'il-master_out_of_season'        => 'Il Master Out Season - programma allenamento volley',
+                'staff_out_of_season'            => 'Staff e coach professionisti Out Season pallavolo',
+                'date-tariffe_out_of_season'     => 'Date e tariffe Out Season 2026 camp volley',
+                'registrazione_ftv_out_season'   => 'Registrazione iscrizione Out Season Fusion Team Volley',
+                'contatti_fusion-team_out_of_season' => 'Contatti Fusion Team Volley Out Season',
+                'fusion-team-volley-ftv-out-season' => 'Fusion Team Volley Out Season master alta specializzazione',
+                'Fusion_OutSeason-Logo'          => 'Logo Fusion Out Season master pallavolo',
+            ];
+            foreach ($alt_map as $filename => $alt_text) {
+                $html = preg_replace(
+                    '/(<img[^>]*' . preg_quote($filename, '/') . '[^>]*)\balt=""\s*/i',
+                    '$1alt="' . esc_attr($alt_text) . '" ',
+                    $html
+                );
+            }
+
+            // Fix H1 mancante — inietta un H1 SEO-friendly nella hero section
+            // IMPORTANTE: opera solo sul <body> per non contaminare il <title>
+            $body_pos = stripos($html, '<body');
+            if ($body_pos !== false && stripos($html, '<h1') === false) {
+                $head_part = substr($html, 0, $body_pos);
+                $body_part = substr($html, $body_pos);
+                $body_part = preg_replace(
+                    '/(<(?:span|div|p)[^>]*>)\s*(Master di [Aa]lta [Ss]pecializzazione)\s*(<\/(?:span|div|p)>)/i',
+                    '$1<h1 style="font-size:inherit;font-weight:inherit;margin:0;padding:0;line-height:inherit;color:inherit;display:inline;">$2</h1>$3',
+                    $body_part,
+                    1
+                );
+                $html = $head_part . $body_part;
+            }
+
+            return $html;
+        });
+    }
+}, 0);
 
 // ═══════════════════════════════════════════════════════════════
 // 4. DISABILITA PHPSESSID sulla homepage pubblica
@@ -186,3 +239,28 @@ add_filter('aioseo_description', function ($desc) {
     }
     return $desc;
 }, 999);
+
+// ═══════════════════════════════════════════════════════════════
+// 7. ELIMINA POST "HELLO WORLD" (ID 1) — esegue una sola volta
+// ═══════════════════════════════════════════════════════════════
+add_action('init', function () {
+    // Esegui solo se non è già stato fatto
+    if (get_option('ftv_seo_hello_world_removed')) {
+        return;
+    }
+    $post = get_post(1);
+    if ($post && $post->post_title === 'Hello world!') {
+        wp_trash_post(1);
+        update_option('ftv_seo_hello_world_removed', true);
+    }
+}, 20);
+
+// ═══════════════════════════════════════════════════════════════
+// 8. NOINDEX per pagine non necessarie (search, archive, attachment)
+// ═══════════════════════════════════════════════════════════════
+add_action('wp_head', function () {
+    if (is_search() || is_attachment() || is_author() || is_date() || is_tag()) {
+        echo '<meta name="robots" content="noindex, nofollow" />' . "\n";
+    }
+}, 1);
+
