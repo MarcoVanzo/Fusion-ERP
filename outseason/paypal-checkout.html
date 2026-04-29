@@ -97,6 +97,46 @@
             color: rgba(255,255,255,.5);
         }
 
+        /* Fallback redirect button */
+        .fallback-state {
+            display: none;
+            text-align: center;
+            padding: 16px;
+        }
+        .fallback-state.visible { display: block; animation: fadeUp .4s ease; }
+        .fallback-info {
+            font-size: 13px;
+            color: rgba(255,255,255,.5);
+            margin-bottom: 18px;
+            line-height: 1.6;
+        }
+        .fallback-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 16px 36px;
+            background: linear-gradient(135deg, #0070ba, #003087);
+            border: none;
+            border-radius: 50px;
+            color: #fff;
+            font-family: 'Poppins', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .3s ease;
+            box-shadow: 0 4px 20px rgba(0,112,186,.3);
+            text-decoration: none;
+        }
+        .fallback-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0,112,186,.4);
+        }
+        .fallback-note {
+            margin-top: 14px;
+            font-size: 11px;
+            color: rgba(255,255,255,.3);
+        }
+
         /* Success state */
         .success-state {
             display: none;
@@ -153,10 +193,6 @@
             padding-top: 16px;
             border-top: 1px solid rgba(255,255,255,.06);
         }
-        .checkout-footer img {
-            height: 14px;
-            opacity: .4;
-        }
         .secure-badge {
             display: flex;
             align-items: center;
@@ -191,6 +227,21 @@
 
     <div id="paypal-button-container"></div>
 
+    <!-- Fallback: direct redirect to PayPal if SDK is blocked by ad blocker -->
+    <div class="fallback-state" id="fallback-state">
+        <div class="fallback-info">
+            Il caricamento dei metodi di pagamento avanzati è stato bloccato dal browser.<br>
+            Puoi comunque completare il pagamento direttamente su PayPal:
+        </div>
+        <a class="fallback-btn" id="fallback-btn" href="#" target="_self">
+            🔗 Paga su PayPal
+        </a>
+        <div class="fallback-note">
+            Verrai reindirizzato al sito sicuro PayPal.<br>
+            Potrai pagare con conto PayPal o carta di credito/debito.
+        </div>
+    </div>
+
     <div class="success-state" id="success-state">
         <div class="success-icon">✓</div>
         <h2>Pagamento Completato! 🎉</h2>
@@ -218,6 +269,7 @@
     const clientId = params.get('client_id');
     const amount   = params.get('amount');
     const nome     = params.get('nome') || '';
+    const approveUrl = params.get('approve_url');
 
     // Display amount and name
     if (amount) {
@@ -233,19 +285,58 @@
         return;
     }
 
-    // Load PayPal SDK
-    const script = document.createElement('script');
+    // Try to load PayPal SDK (may be blocked by ad blockers)
+    var sdkTimeout = setTimeout(function() {
+        // If SDK hasn't loaded in 8 seconds, show fallback
+        console.warn('[PayPal] SDK load timed out, showing fallback');
+        showFallback();
+    }, 8000);
+
+    var script = document.createElement('script');
     script.src = 'https://www.paypal.com/sdk/js?client-id=' + encodeURIComponent(clientId)
         + '&currency=EUR&intent=capture&locale=it_IT'
         + '&enable-funding=googlepay,applepay,paylater';
     script.onload = function() {
+        clearTimeout(sdkTimeout);
         document.getElementById('loading-state').style.display = 'none';
         renderButtons();
     };
     script.onerror = function() {
-        showError('Impossibile caricare PayPal. Disabilita eventuali ad blocker e riprova.');
+        clearTimeout(sdkTimeout);
+        console.warn('[PayPal] SDK blocked, showing fallback redirect');
+        showFallback();
     };
     document.head.appendChild(script);
+
+    function showFallback() {
+        document.getElementById('loading-state').style.display = 'none';
+
+        // Set the fallback button to the approve URL
+        if (approveUrl) {
+            document.getElementById('fallback-btn').href = decodeURIComponent(approveUrl);
+        } else {
+            // If no approve URL, fetch one from the API
+            fetchApproveUrl();
+        }
+
+        document.getElementById('fallback-state').classList.add('visible');
+    }
+
+    async function fetchApproveUrl() {
+        try {
+            const r = await fetch(API + 'getApproveUrl', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ paypal_order_id: orderId, entry_id: parseInt(entryId, 10) }),
+            });
+            const d = await r.json();
+            if (d.data && d.data.approve_url) {
+                document.getElementById('fallback-btn').href = d.data.approve_url;
+            }
+        } catch(e) {
+            console.error('[PayPal] fetchApproveUrl failed:', e);
+        }
+    }
 
     function renderButtons() {
         paypal.Buttons({
@@ -257,7 +348,6 @@
                 height: 48,
             },
             createOrder: function() {
-                // Order already created server-side, just return the ID
                 return orderId;
             },
             onApprove: async function(data) {
@@ -272,7 +362,6 @@
                     });
                     const d = await r.json();
                     if (!r.ok || d.error) throw new Error(d.message || d.error || 'Errore conferma');
-
                     showSuccess();
                 } catch (e) {
                     showError('Pagamento approvato ma errore nella conferma: ' + e.message);
@@ -284,8 +373,6 @@
             },
             onCancel: function() {
                 showError('Pagamento annullato. Puoi riprovare cliccando sui pulsanti sopra.');
-                // Don't close - let them retry
-                document.getElementById('error-state').classList.add('visible');
             },
         }).render('#paypal-button-container');
     }
@@ -294,6 +381,7 @@
         document.getElementById('paypal-button-container').style.display = 'none';
         document.getElementById('amount-box').style.display = 'none';
         document.getElementById('error-state').classList.remove('visible');
+        document.getElementById('fallback-state').classList.remove('visible');
         document.getElementById('success-state').classList.add('visible');
 
         // Notify opener window

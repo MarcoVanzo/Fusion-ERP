@@ -553,15 +553,18 @@
             ppOrderId = d.data.paypal_order_id;
             const clientId = d.data.paypal_client_id;
             const amount = d.data.amount;
+            const approveUrl = d.data.approve_url || '';
             const nome = encodeURIComponent(document.getElementById('nome_e_cognome').value.trim());
 
             // Build checkout URL (opens in new tab where PayPal SDK works without iframe restrictions)
+            // Includes approve_url as fallback if SDK is blocked by ad blockers
             const checkoutUrl = 'paypal-checkout.html'
                 + '?order_id=' + encodeURIComponent(ppOrderId)
                 + '&entry_id=' + eId
                 + '&client_id=' + encodeURIComponent(clientId)
                 + '&amount=' + amount
-                + '&nome=' + nome;
+                + '&nome=' + nome
+                + '&approve_url=' + encodeURIComponent(approveUrl);
 
             // Open in new tab (works reliably in iframes, unlike sized popups)
             const tab = window.open(checkoutUrl, '_blank');
