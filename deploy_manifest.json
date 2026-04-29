@@ -1,6 +1,6 @@
 {
   "version": 3,
-  "generated_at": "2026-04-29T07:56:39.945Z",
+  "generated_at": "2026-04-29T07:56:51.587Z",
   "file_count": 1746,
   "files": [
     {
@@ -1288,8 +1288,8 @@
       "hash": "bff23f6cbbda8e9f63374caad9603b813d7ac9dc5935d53e2f1c5831a7c66b61"
     },
     {
-      "path": "fusion-website/dist/assets/FamilyPortal-BQdhA5zD.js",
-      "hash": "e8b4125d3d72d0c4da5f1ac922eec2a00c5b803bfbd42825ac2baa28eb789baf"
+      "path": "fusion-website/dist/assets/FamilyPortal-IqujHHNE.js",
+      "hash": "2be1480889ebbb3e6cb97045e5dec0133a5dab551627b06eb061f624f300ac4c"
     },
     {
       "path": "fusion-website/dist/assets/Foresteria-COBY5sGw.js",
@@ -1364,8 +1364,8 @@
       "hash": "b05ea21060beecbe73de944aba11855beac518f23fe30a6d5acb69dbd2df66a5"
     },
     {
-      "path": "fusion-website/dist/assets/index-DWsQ18Nn.js",
-      "hash": "1dda4eb801f1441c3c5681efa58e3d3afa19d56de63213b116ec94aa0b89c524"
+      "path": "fusion-website/dist/assets/index-lIR1DAt2.js",
+      "hash": "25967f52dc68a3a6f57c9b03947a14a87a1cb719a840c6698a075db2ad6364a8"
     },
     {
       "path": "fusion-website/dist/assets/logo-colorato.png",
@@ -1456,8 +1456,8 @@
       "hash": "79c8db81d80299500f3643d63278fbe6193b2ff5d2fc780cac5109d73cf8cfa6"
     },
     {
-      "path": "fusion-website/dist/assets/Outseason-BISf5vdr.js",
-      "hash": "f70366dd657bfb752b582b711d166ed31b5b32a93a7284e3a45c72a7dc85726d"
+      "path": "fusion-website/dist/assets/Outseason-EP6LF_Zt.js",
+      "hash": "c76180432a16e82805f97612672f419ad28567358b9c54298fec95d816c33f48"
     },
     {
       "path": "fusion-website/dist/assets/Proposal1-o4UMApTy.js",
@@ -1541,7 +1541,7 @@
     },
     {
       "path": "fusion-website/dist/index.html",
-      "hash": "27bbd695040de0d494a3b25c6ba004abbaa7543d3d630271e807872a48808454"
+      "hash": "0896c8a4df0e6a7ead093a203acfa2ad51c2b0a1fe020532f7579c03b3947eb3"
     },
     {
       "path": "fusion-website/dist/privacy-policy.pdf",
@@ -1561,7 +1561,7 @@
     },
     {
       "path": "index.html",
-      "hash": "109703658821c0cfda4b8595637691d71e68c5cac634c9af7ac92c75a16feb5c"
+      "hash": "86a5ed9e0818b64c89ad258dc36bc6bc277dc00d4ca48ca03993dc3e9648cd79"
     },
     {
       "path": "js/api/athletes.api.js",
