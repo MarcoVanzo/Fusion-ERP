@@ -773,7 +773,7 @@ PROMPT;
         if (empty($orderId) || $entryId < 1) { Response::error('Parametri mancanti.', 400); }
 
         $pdo = Database::getInstance();
-        $check = $pdo->prepare("SELECT id, nome_e_cognome, email, formula_scelta, settimana_scelta, paypal_order_id, payment_status FROM outseason_entries WHERE id=:id AND tenant_id='TNT_fusion'");
+        $check = $pdo->prepare("SELECT * FROM outseason_entries WHERE id=:id AND tenant_id='TNT_fusion'");
         $check->execute([':id'=>$entryId]);
         $entry = $check->fetch(\PDO::FETCH_ASSOC);
         if (!$entry) { Response::error('Iscrizione non trovata.', 404); }
@@ -806,62 +806,171 @@ PROMPT;
 
     /* ─── Email helpers ───────────────────────────────────────────────── */
 
+    private const EMAIL_SENDER_NAME = 'FTV Out Season';
+    private const LOGO_URL = 'https://www.fusionteamvolley.it/outseason/logo-outseason.png';
+
     private function sendConfirmationEmail(array $entry, ?string $captureId, ?string $payerEmail): void
     {
         $nome = htmlspecialchars(trim($entry['nome_e_cognome'] ?? ''));
         $email = trim($entry['email'] ?? '');
-        $formula = htmlspecialchars($entry['formula_scelta'] ?? '');
-        $settimana = htmlspecialchars($entry['settimana_scelta'] ?? '');
-        $html = $this->buildOutSeasonEmail($nome, $formula, $settimana, $captureId, 'PayPal/Carta');
-        Mailer::send($email, $nome, 'Conferma Iscrizione OutSeason ' . self::seasonKey() . ' — Fusion Team Volley', $html);
+        $html = $this->buildOutSeasonEmail($entry, $captureId, 'PayPal/Carta');
+        Mailer::send(
+            $email, $nome,
+            'Conferma Iscrizione OutSeason ' . self::seasonKey() . ' — Fusion Team Volley',
+            $html, '', null, self::EMAIL_SENDER_NAME
+        );
     }
 
     private function sendBonificoEmail(array $data, float $amount, int $entryId): void
     {
         $nome = htmlspecialchars(trim($data['nome_e_cognome'] ?? ''));
         $email = trim($data['email'] ?? '');
-        $formula = htmlspecialchars($data['formula_scelta'] ?? '');
-        $settimana = htmlspecialchars($data['settimana_scelta'] ?? '');
-        $html = $this->buildOutSeasonEmail($nome, $formula, $settimana, "BON-{$entryId}", 'Bonifico Bancario', $amount);
-        Mailer::send($email, $nome, 'Iscrizione OutSeason ' . self::seasonKey() . ' — Istruzioni Bonifico', $html);
+        $data['_finalPrice'] = $amount;
+        $html = $this->buildOutSeasonEmail($data, "BON-{$entryId}", 'Bonifico Bancario');
+        Mailer::send(
+            $email, $nome,
+            'Iscrizione OutSeason ' . self::seasonKey() . ' — Istruzioni Bonifico',
+            $html, '', null, self::EMAIL_SENDER_NAME
+        );
     }
 
-    private function buildOutSeasonEmail(string $nome, string $formula, string $settimana, ?string $txId, string $metodo, ?float $importoBonifico = null): string
+    private function buildOutSeasonEmail(array $entry, ?string $txId, string $metodo): string
     {
         $isBonifico = ($metodo === 'Bonifico Bancario');
-        $statusBadge = $isBonifico
-            ? '<span style="background:#f39c12;color:#fff;padding:4px 12px;border-radius:4px;font-weight:700;">IN ATTESA BONIFICO</span>'
-            : '<span style="background:#27ae60;color:#fff;padding:4px 12px;border-radius:4px;font-weight:700;">PAGAMENTO CONFERMATO ✓</span>';
-        $bonificoInfo = $isBonifico
-            ? '<div style="background:#fff8e1;border-left:4px solid #f39c12;padding:16px;margin:16px 0;border-radius:4px;"><p style="margin:0 0 8px;font-weight:700;color:#e67e22;">Istruzioni Bonifico</p><p style="margin:4px 0;font-size:14px;">Importo: <strong>€' . number_format($importoBonifico ?? 0, 2, ',', '.') . '</strong></p><p style="margin:4px 0;font-size:14px;">Intestatario: <strong>FUSION TEAM VOLLEY A.S.D.</strong></p><p style="margin:4px 0;font-size:14px;">IBAN: <strong>IT19R0874936320000000039906</strong></p><p style="margin:4px 0;font-size:14px;">Causale: <strong>OutSeason ' . self::seasonKey() . ' — ' . $nome . '</strong></p></div>'
-            : '';
+        $seasonKey  = self::seasonKey();
+        $logoUrl    = self::LOGO_URL;
 
-        $seasonKey = self::seasonKey();
+        // Sanitize all fields
+        $nome       = htmlspecialchars(trim($entry['nome_e_cognome'] ?? ''));
+        $email      = htmlspecialchars(trim($entry['email'] ?? ''));
+        $cellulare  = htmlspecialchars(trim($entry['cellulare'] ?? ''));
+        $cf         = htmlspecialchars(strtoupper(trim($entry['codice_fiscale'] ?? '')));
+        $dob        = htmlspecialchars(trim($entry['data_di_nascita'] ?? ''));
+        $indirizzo  = htmlspecialchars(trim($entry['indirizzo'] ?? ''));
+        $cap        = htmlspecialchars(trim($entry['cap'] ?? ''));
+        $citta      = htmlspecialchars(trim($entry['citta'] ?? ''));
+        $provincia  = htmlspecialchars(strtoupper(trim($entry['provincia'] ?? '')));
+        $club       = htmlspecialchars(trim($entry['club_di_appartenenza'] ?? '')) ?: '—';
+        $ruolo      = htmlspecialchars(trim($entry['ruolo'] ?? ''));
+        $taglia     = htmlspecialchars(trim($entry['taglia_kit'] ?? ''));
+        $formula    = htmlspecialchars(trim($entry['formula_scelta'] ?? ''));
+        $settimana  = htmlspecialchars(trim($entry['settimana_scelta'] ?? ''));
+        $sconto     = htmlspecialchars(trim($entry['codice_sconto'] ?? ''));
+
+        // Format date
+        if (!empty($dob) && strtotime($dob) !== false) {
+            $dob = date('d/m/Y', strtotime($dob));
+        }
+
+        // Address line
+        $addressLine = $indirizzo;
+        if ($cap || $citta || $provincia) {
+            $addressLine .= ' — ' . implode(' ', array_filter([$cap, $citta, $provincia ? "({$provincia})" : '']));
+        }
+
+        // Status badge
+        $statusBadge = $isBonifico
+            ? '<td style="padding:12px 24px;background:#f39c12;border-radius:6px;text-align:center;"><span style="color:#ffffff;font-family:Roboto,Arial,sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;">⏳ In Attesa Bonifico</span></td>'
+            : '<td style="padding:12px 24px;background:#27ae60;border-radius:6px;text-align:center;"><span style="color:#ffffff;font-family:Roboto,Arial,sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;">✓ Pagamento Confermato</span></td>';
+
+        // Price info
+        $isFullMaster = str_contains($formula, 'Full');
+        $basePrice = $isFullMaster ? self::priceFull() : self::pricePartial();
+        $finalPrice = $entry['_finalPrice'] ?? $basePrice;
+        $priceFormatted = '€' . number_format((float)$finalPrice, 2, ',', '.');
+
+        // Discount row
+        $scontoRow = '';
+        if (!empty($sconto)) {
+            $scontoRow = '<tr><td style="padding:10px 20px;border-bottom:1px solid #f0f0f0;font-family:Roboto,Arial,sans-serif;font-size:13px;color:#999;">Codice Sconto</td><td style="padding:10px 20px;border-bottom:1px solid #f0f0f0;font-family:Roboto,Arial,sans-serif;font-size:13px;font-weight:600;color:#27ae60;">' . $sconto . '</td></tr>';
+        }
+
+        // Bonifico instructions block
+        $bonificoBlock = '';
+        if ($isBonifico) {
+            $bonificoBlock = <<<BONIF
+<table width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0;border-collapse:collapse;">
+<tr><td style="padding:20px;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);border-radius:8px;border-left:4px solid #f39c12;">
+<p style="margin:0 0 12px;font-family:Poppins,Arial,sans-serif;font-size:14px;font-weight:700;color:#f39c12;text-transform:uppercase;letter-spacing:0.06em;">📋 Istruzioni Bonifico</p>
+<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+<tr><td style="padding:6px 0;font-family:Roboto,Arial,sans-serif;font-size:12px;color:rgba(255,255,255,0.6);">Importo</td><td style="padding:6px 0;font-family:Roboto,Arial,sans-serif;font-size:14px;font-weight:700;color:#ffffff;">{$priceFormatted}</td></tr>
+<tr><td style="padding:6px 0;font-family:Roboto,Arial,sans-serif;font-size:12px;color:rgba(255,255,255,0.6);">Intestatario</td><td style="padding:6px 0;font-family:Roboto,Arial,sans-serif;font-size:13px;font-weight:600;color:#ffffff;">FUSION TEAM VOLLEY A.S.D.</td></tr>
+<tr><td style="padding:6px 0;font-family:Roboto,Arial,sans-serif;font-size:12px;color:rgba(255,255,255,0.6);">IBAN</td><td style="padding:6px 0;font-family:Roboto,Arial,sans-serif;font-size:13px;font-weight:700;color:#ffffff;letter-spacing:0.04em;">IT19R0874936320000000039906</td></tr>
+<tr><td style="padding:6px 0;font-family:Roboto,Arial,sans-serif;font-size:12px;color:rgba(255,255,255,0.6);">Causale</td><td style="padding:6px 0;font-family:Roboto,Arial,sans-serif;font-size:13px;font-weight:600;color:#D9317F;">OutSeason {$seasonKey} — {$nome}</td></tr>
+</table>
+</td></tr>
+</table>
+BONIF;
+        }
 
         return <<<HTML
-<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
-<body style="margin:0;padding:0;background:#ededed;font-family:'Segoe UI',Arial,sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#ededed;"><tr><td align="center" style="padding:40px 16px;">
-<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.1);">
-<tr><td style="background:linear-gradient(180deg,#D9317F,#751450);padding:32px 24px;text-align:center;">
-<h1 style="margin:0;font-size:24px;color:#fff;font-weight:800;letter-spacing:0.05em;">OUTSEASON {$seasonKey}</h1>
-<p style="margin:8px 0 0;color:rgba(255,255,255,0.85);font-size:14px;">Fusion Team Volley</p>
+<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body style="margin:0;padding:0;background:#0d0d0d;font-family:Roboto,Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#0d0d0d;"><tr><td align="center" style="padding:32px 16px;">
+
+<!-- Main Card -->
+<table width="600" cellpadding="0" cellspacing="0" style="background:#1a1a1a;border-radius:12px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,0.4);">
+
+<!-- Header with Logo -->
+<tr><td style="background:linear-gradient(135deg,#0d0d0d 0%,#1a1a2e 50%,#0d0d0d 100%);padding:36px 24px 28px;text-align:center;border-bottom:2px solid #D9317F;">
+<img src="{$logoUrl}" alt="Fusion Out Season" width="160" style="width:160px;height:auto;margin-bottom:16px;" />
+<p style="margin:0;font-family:Poppins,Arial,sans-serif;font-size:11px;font-weight:600;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:0.2em;">Master di Alta Specializzazione · {$seasonKey}</p>
 </td></tr>
-<tr><td style="padding:32px;">
-<p style="font-size:16px;color:#333;">Ciao <strong>{$nome}</strong>,</p>
-<p style="font-size:15px;color:#555;line-height:1.7;">la tua iscrizione all'OutSeason {$seasonKey} è stata registrata con successo!</p>
-<div style="text-align:center;margin:20px 0;">{$statusBadge}</div>
-<table width="100%" style="background:#f8f9fa;border-radius:8px;margin:20px 0;border-collapse:collapse;">
-<tr><td style="padding:12px 16px;border-bottom:1px solid #eee;font-size:14px;color:#888;">Formula</td><td style="padding:12px 16px;border-bottom:1px solid #eee;font-size:14px;font-weight:600;">{$formula}</td></tr>
-<tr><td style="padding:12px 16px;border-bottom:1px solid #eee;font-size:14px;color:#888;">Settimana</td><td style="padding:12px 16px;border-bottom:1px solid #eee;font-size:14px;font-weight:600;">{$settimana}</td></tr>
-<tr><td style="padding:12px 16px;font-size:14px;color:#888;">Metodo Pagamento</td><td style="padding:12px 16px;font-size:14px;font-weight:600;">{$metodo}</td></tr>
+
+<!-- Greeting -->
+<tr><td style="padding:32px 32px 16px;">
+<p style="margin:0 0 6px;font-family:Poppins,Arial,sans-serif;font-size:22px;font-weight:700;color:#ffffff;">Ciao {$nome}! 🏐</p>
+<p style="margin:0;font-family:Roboto,Arial,sans-serif;font-size:15px;color:rgba(255,255,255,0.65);line-height:1.7;">La tua iscrizione all'<strong style="color:#D9317F;">OutSeason {$seasonKey}</strong> è stata registrata con successo.</p>
+</td></tr>
+
+<!-- Status Badge -->
+<tr><td style="padding:8px 32px 20px;">
+<table cellpadding="0" cellspacing="0" style="border-collapse:collapse;"><tr>{$statusBadge}</tr></table>
+</td></tr>
+
+<!-- Registration Summary -->
+<tr><td style="padding:0 32px 8px;">
+<p style="margin:0 0 12px;font-family:Poppins,Arial,sans-serif;font-size:11px;font-weight:700;color:#D9317F;text-transform:uppercase;letter-spacing:0.15em;">📋 Riepilogo Iscrizione</p>
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#111111;border-radius:8px;border:1px solid rgba(217,49,127,0.15);border-collapse:collapse;overflow:hidden;">
+<tr><td style="padding:10px 20px;border-bottom:1px solid #1e1e1e;font-family:Roboto,Arial,sans-serif;font-size:13px;color:#999;">Formula</td><td style="padding:10px 20px;border-bottom:1px solid #1e1e1e;font-family:Poppins,Arial,sans-serif;font-size:14px;font-weight:700;color:#D9317F;">{$formula}</td></tr>
+<tr><td style="padding:10px 20px;border-bottom:1px solid #1e1e1e;font-family:Roboto,Arial,sans-serif;font-size:13px;color:#999;">Settimana</td><td style="padding:10px 20px;border-bottom:1px solid #1e1e1e;font-family:Roboto,Arial,sans-serif;font-size:13px;font-weight:600;color:#ffffff;">{$settimana}</td></tr>
+<tr><td style="padding:10px 20px;border-bottom:1px solid #1e1e1e;font-family:Roboto,Arial,sans-serif;font-size:13px;color:#999;">Importo</td><td style="padding:10px 20px;border-bottom:1px solid #1e1e1e;font-family:Poppins,Arial,sans-serif;font-size:15px;font-weight:800;color:#ffffff;">{$priceFormatted}</td></tr>
+{$scontoRow}
+<tr><td style="padding:10px 20px;font-family:Roboto,Arial,sans-serif;font-size:13px;color:#999;">Pagamento</td><td style="padding:10px 20px;font-family:Roboto,Arial,sans-serif;font-size:13px;font-weight:600;color:#ffffff;">{$metodo}</td></tr>
 </table>
-{$bonificoInfo}
-<p style="border-top:1px solid #eee;padding-top:16px;color:#888;font-size:12px;">ID Transazione: {$txId}</p>
 </td></tr>
-<tr><td style="padding:20px;background:#D9317F;text-align:center;">
-<p style="margin:0;font-size:12px;color:#fff;">Fusion Team Volley ASD — outseason@fusionteamvolley.it</p>
+
+<!-- Personal Data -->
+<tr><td style="padding:20px 32px 8px;">
+<p style="margin:0 0 12px;font-family:Poppins,Arial,sans-serif;font-size:11px;font-weight:700;color:#D9317F;text-transform:uppercase;letter-spacing:0.15em;">👤 Dati Personali</p>
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#111111;border-radius:8px;border:1px solid rgba(255,255,255,0.06);border-collapse:collapse;overflow:hidden;">
+<tr><td style="padding:10px 20px;border-bottom:1px solid #1e1e1e;font-family:Roboto,Arial,sans-serif;font-size:13px;color:#999;">Email</td><td style="padding:10px 20px;border-bottom:1px solid #1e1e1e;font-family:Roboto,Arial,sans-serif;font-size:13px;color:#ffffff;">{$email}</td></tr>
+<tr><td style="padding:10px 20px;border-bottom:1px solid #1e1e1e;font-family:Roboto,Arial,sans-serif;font-size:13px;color:#999;">Cellulare</td><td style="padding:10px 20px;border-bottom:1px solid #1e1e1e;font-family:Roboto,Arial,sans-serif;font-size:13px;color:#ffffff;">{$cellulare}</td></tr>
+<tr><td style="padding:10px 20px;border-bottom:1px solid #1e1e1e;font-family:Roboto,Arial,sans-serif;font-size:13px;color:#999;">Codice Fiscale</td><td style="padding:10px 20px;border-bottom:1px solid #1e1e1e;font-family:Roboto,Arial,sans-serif;font-size:13px;color:#ffffff;letter-spacing:0.04em;">{$cf}</td></tr>
+<tr><td style="padding:10px 20px;border-bottom:1px solid #1e1e1e;font-family:Roboto,Arial,sans-serif;font-size:13px;color:#999;">Data di Nascita</td><td style="padding:10px 20px;border-bottom:1px solid #1e1e1e;font-family:Roboto,Arial,sans-serif;font-size:13px;color:#ffffff;">{$dob}</td></tr>
+<tr><td style="padding:10px 20px;border-bottom:1px solid #1e1e1e;font-family:Roboto,Arial,sans-serif;font-size:13px;color:#999;">Indirizzo</td><td style="padding:10px 20px;border-bottom:1px solid #1e1e1e;font-family:Roboto,Arial,sans-serif;font-size:13px;color:#ffffff;">{$addressLine}</td></tr>
+<tr><td style="padding:10px 20px;border-bottom:1px solid #1e1e1e;font-family:Roboto,Arial,sans-serif;font-size:13px;color:#999;">Club</td><td style="padding:10px 20px;border-bottom:1px solid #1e1e1e;font-family:Roboto,Arial,sans-serif;font-size:13px;color:#ffffff;">{$club}</td></tr>
+<tr><td style="padding:10px 20px;border-bottom:1px solid #1e1e1e;font-family:Roboto,Arial,sans-serif;font-size:13px;color:#999;">Ruolo</td><td style="padding:10px 20px;border-bottom:1px solid #1e1e1e;font-family:Roboto,Arial,sans-serif;font-size:13px;color:#ffffff;">{$ruolo}</td></tr>
+<tr><td style="padding:10px 20px;font-family:Roboto,Arial,sans-serif;font-size:13px;color:#999;">Taglia KIT</td><td style="padding:10px 20px;font-family:Roboto,Arial,sans-serif;font-size:13px;color:#ffffff;">{$taglia}</td></tr>
+</table>
 </td></tr>
+
+<!-- Bonifico Info (if applicable) -->
+<tr><td style="padding:0 32px;">{$bonificoBlock}</td></tr>
+
+<!-- Transaction ID -->
+<tr><td style="padding:16px 32px 32px;">
+<p style="margin:0;font-family:Roboto,Arial,sans-serif;font-size:11px;color:rgba(255,255,255,0.3);">ID Transazione: {$txId}</p>
+</td></tr>
+
+<!-- Footer -->
+<tr><td style="padding:20px 24px;background:linear-gradient(90deg,#D9317F,#751450);text-align:center;">
+<p style="margin:0;font-family:Poppins,Arial,sans-serif;font-size:11px;font-weight:500;color:rgba(255,255,255,0.9);">Fusion Team Volley ASD · Via Vicentino 1, Trivignano (VE)</p>
+<p style="margin:4px 0 0;font-family:Roboto,Arial,sans-serif;font-size:11px;"><a href="mailto:outseason@fusionteamvolley.it" style="color:#ffffff;text-decoration:none;">outseason@fusionteamvolley.it</a></p>
+</td></tr>
+
 </table>
 </td></tr></table>
 </body></html>
