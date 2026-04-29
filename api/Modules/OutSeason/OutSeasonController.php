@@ -614,6 +614,14 @@ PROMPT;
             $byRole[$r['week']][$canonical] = ($byRole[$r['week']][$canonical] ?? 0) + (int)$r['count'];
         }
 
+        // Foresteria: count Full Master entries per week (max 12 beds per week)
+        $stmtForesteria = $pdo->prepare("SELECT settimana_scelta AS week, COUNT(*) AS count FROM outseason_entries WHERE tenant_id='TNT_fusion' AND season_key=:sk AND is_deleted=0 AND formula_scelta LIKE '%Full%' GROUP BY settimana_scelta");
+        $stmtForesteria->execute([':sk' => $sk]);
+        $foresteriaCounts = [];
+        foreach ($stmtForesteria->fetchAll(\PDO::FETCH_ASSOC) as $fc) {
+            $foresteriaCounts[$fc['week']] = (int)$fc['count'];
+        }
+
         // Quota per role
         $quotas = [
             'Palleggiatrice' => 4,
@@ -627,6 +635,8 @@ PROMPT;
             'counts' => $totals,
             'by_role' => $byRole,
             'quotas'  => $quotas,
+            'foresteria_quota' => 12,
+            'foresteria_counts' => $foresteriaCounts,
         ]);
     }
 
@@ -669,6 +679,17 @@ PROMPT;
         // Price calculation
         $isFullMaster = str_contains((string)$data['formula_scelta'], 'Full');
         $basePrice = $isFullMaster ? self::priceFull() : self::pricePartial();
+
+        // Foresteria capacity check: max 12 Full Master per week
+        if ($isFullMaster) {
+            $pdo = Database::getInstance();
+            $fcStmt = $pdo->prepare("SELECT COUNT(*) FROM outseason_entries WHERE tenant_id='TNT_fusion' AND season_key=:sk AND is_deleted=0 AND formula_scelta LIKE '%Full%' AND settimana_scelta=:week");
+            $fcStmt->execute([':sk' => self::seasonKey(), ':week' => trim((string)$data['settimana_scelta'])]);
+            $fullCount = (int)$fcStmt->fetchColumn();
+            if ($fullCount >= 12) {
+                Response::error('I posti in foresteria per questa settimana sono esauriti (massimo 12 Full Camp). Puoi scegliere la formula Daily Master oppure un\'altra settimana.', 409);
+            }
+        }
         $discountPct = 0.0;
         $discountCode = strtoupper(trim((string)($data['codice_sconto'] ?? '')));
 

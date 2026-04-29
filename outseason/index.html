@@ -10,7 +10,7 @@
     <meta property="og:image" content="https://www.fusionteamvolley.it/assets/logo-colorato.png">
     <meta property="og:type" content="website">
     <link rel="icon" href="https://www.fusionteamvolley.it/assets/logo-colorato.png" type="image/png">
-    <link rel="stylesheet" href="style.css?v=1011">
+    <link rel="stylesheet" href="style.css?v=1012">
     <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
 </head>
 <body>
@@ -43,6 +43,18 @@
         <div class="os-avail-panel" id="avail-panel">
             <div class="os-avail-title">Posti Disponibili</div>
             <div id="avail-rows"></div>
+            <!-- Foresteria row -->
+            <div class="os-foresteria-row" id="foresteria-row" style="display:none">
+                <div class="os-foresteria-header">
+                    <span class="os-foresteria-icon">🏠</span>
+                    <span class="os-foresteria-label">Foresteria</span>
+                    <span class="os-foresteria-count" id="foresteria-count">12/12</span>
+                </div>
+                <div class="os-foresteria-bar-wrap">
+                    <div class="os-foresteria-bar" id="foresteria-bar"></div>
+                </div>
+                <div class="os-foresteria-note" id="foresteria-note">Max 12 posti per settimana — Formula Full Camp</div>
+            </div>
             <div class="os-avail-legend">
                 <span><span class="leg-dot leg-free"></span> Disponibile</span>
                 <span><span class="leg-dot leg-taken"></span> Occupato</span>
@@ -65,6 +77,10 @@
                     <div class="formula-name">Full Master</div>
                     <div class="formula-price">€650</div>
                     <div class="formula-desc">Settimana completa</div>
+                    <div class="formula-foresteria-badge" id="foresteria-badge">
+                        <i class="ph ph-house"></i>
+                        <span id="foresteria-badge-text">Foresteria: 12 posti</span>
+                    </div>
                 </div>
                 <div class="os-formula-card" data-val="Daily Master" onclick="selectFormula(this)">
                     <div class="formula-name">Daily Master</div>
@@ -298,7 +314,7 @@
     const API = '../api/api.php?module=outseason&action=';
     const PF = 650, PD = 400;
     let selFormula='', selWeek='', selPay='', discPct=0, ppOrderId='', eId=0;
-    let availData = { by_role: {}, quotas: {} };
+    let availData = { by_role: {}, quotas: {}, foresteria_quota: 12, foresteria_counts: {} };
 
     // ─── Availability ───────────────────────────────────────
     const ROLE_CONFIG = [
@@ -316,6 +332,8 @@
             if (d.data) {
                 availData.by_role = d.data.by_role || {};
                 availData.quotas = d.data.quotas || {};
+                availData.foresteria_quota = d.data.foresteria_quota || 12;
+                availData.foresteria_counts = d.data.foresteria_counts || {};
             }
         } catch(e) { console.warn('Availability fetch failed', e); }
     }
@@ -354,6 +372,8 @@
         void panel.offsetWidth;
         panel.classList.add('visible');
         updateRoleSelect(weekVal);
+        renderForesteria(weekVal);
+        updateFullMasterCard(weekVal);
     }
 
     function updateRoleSelect(weekVal) {
@@ -370,6 +390,73 @@
         });
     }
 
+    // ─── Foresteria ──────────────────────────────────────────────
+    function renderForesteria(weekVal) {
+        const row = document.getElementById('foresteria-row');
+        if (!weekVal) { row.style.display = 'none'; return; }
+
+        const quota = availData.foresteria_quota || 12;
+        const taken = availData.foresteria_counts[weekVal] || 0;
+        const free = Math.max(0, quota - taken);
+        const pct = Math.min(100, Math.round((taken / quota) * 100));
+        const isFull = free === 0;
+
+        document.getElementById('foresteria-count').innerHTML = `<span class="avail-num${isFull ? ' full' : ''}">${free}</span>/${quota}`;
+        const bar = document.getElementById('foresteria-bar');
+        bar.style.width = pct + '%';
+        bar.className = 'os-foresteria-bar' + (pct >= 100 ? ' bar-full' : (pct >= 75 ? ' bar-warn' : ''));
+
+        const note = document.getElementById('foresteria-note');
+        if (isFull) {
+            note.innerHTML = '<i class="ph ph-warning-circle"></i> Foresteria esaurita — puoi iscriverti solo con formula Daily Master';
+            note.className = 'os-foresteria-note note-full';
+        } else if (free <= 3) {
+            note.innerHTML = `<i class="ph ph-info"></i> Ultimi ${free} posti in foresteria!`;
+            note.className = 'os-foresteria-note note-warn';
+        } else {
+            note.innerHTML = '<i class="ph ph-house"></i> Max 12 posti per settimana — Formula Full Camp';
+            note.className = 'os-foresteria-note';
+        }
+
+        row.style.display = '';
+    }
+
+    function updateFullMasterCard(weekVal) {
+        const card = document.querySelector('.os-formula-card[data-val="Full Master"]');
+        const badge = document.getElementById('foresteria-badge');
+        const badgeText = document.getElementById('foresteria-badge-text');
+        if (!card || !badge) return;
+
+        if (!weekVal) {
+            badge.className = 'formula-foresteria-badge';
+            badgeText.textContent = 'Foresteria: 12 posti per settimana';
+            card.classList.remove('disabled');
+            return;
+        }
+
+        const quota = availData.foresteria_quota || 12;
+        const taken = availData.foresteria_counts[weekVal] || 0;
+        const free = Math.max(0, quota - taken);
+        const isFull = free === 0;
+
+        if (isFull) {
+            badgeText.textContent = 'Foresteria ESAURITA per questa settimana';
+            badge.className = 'formula-foresteria-badge badge-full';
+            card.classList.add('disabled');
+            // If Full Master was selected, deselect it
+            if (selFormula === 'Full Master') {
+                card.classList.remove('selected');
+                selFormula = '';
+                document.getElementById('formula_scelta').value = '';
+                updatePrice();
+            }
+        } else {
+            badgeText.textContent = `Foresteria: ${free}/${quota} posti disponibili`;
+            badge.className = 'formula-foresteria-badge' + (free <= 3 ? ' badge-warn' : '');
+            card.classList.remove('disabled');
+        }
+    }
+
     // Fetch on page load
     fetchAvailability();
 
@@ -382,6 +469,7 @@
         renderAvailability(selWeek);
     };
     window.selectFormula = function(el) {
+        if (el.classList.contains('disabled')) return; // foresteria full, block Full Master
         document.querySelectorAll('.os-formula-card').forEach(c=>c.classList.remove('selected'));
         el.classList.add('selected');
         selFormula = el.dataset.val;
