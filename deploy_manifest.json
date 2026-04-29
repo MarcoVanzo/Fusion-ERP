@@ -1,11 +1,11 @@
 {
   "version": 3,
-  "generated_at": "2026-04-29T12:26:01.260Z",
-  "file_count": 1752,
+  "generated_at": "2026-04-29T13:38:58.756Z",
+  "file_count": 1753,
   "files": [
     {
       "path": ".env.prod",
-      "hash": "9700ba46820cafa437ab6ba822f23fada26bcf54ef4675a1067cdd92fe4646d7"
+      "hash": "08b3a8ec2bd11d2b9ae9ba84876c6fdc11fb520af38bfc57edcb80cb9d446183"
     },
     {
       "path": ".htaccess",
@@ -1569,7 +1569,7 @@
     },
     {
       "path": "index.html",
-      "hash": "bab128624e42f34e881c0a907acc612e5d7cf53f9ab830871da58c2736243944"
+      "hash": "e654dabc5362224fb8be8b9da5a13ab6b3734d0f2fbd6aca4218bda34148649b"
     },
     {
       "path": "js/api/athletes.api.js",
@@ -2098,6 +2098,10 @@
     {
       "path": "ping.php",
       "hash": "4833cc2c69d8859c2cf8495a0ab6dccf63432fa2edb35e4214d23504de3af6f4"
+    },
+    {
+      "path": "remote.env",
+      "hash": "9700ba46820cafa437ab6ba822f23fada26bcf54ef4675a1067cdd92fe4646d7"
     },
     {
       "path": "resend.php",
