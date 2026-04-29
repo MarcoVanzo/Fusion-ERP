@@ -279,13 +279,26 @@
             </button>
         </div>
 
-        <!-- PayPal Pay Button -->
-        <div class="os-submit-wrap" id="submit-paypal" style="display:none">
-            <button type="button" class="os-submit-btn os-paypal-btn" id="os-paypal-pay">
-                <span class="btn-text">💳 Procedi al Pagamento</span>
-                <span class="spinner"></span>
-            </button>
-            <div style="text-align:center;margin-top:8px;font-size:12px;color:rgba(255,255,255,.4);">Si aprirà una nuova scheda per completare il pagamento in sicurezza</div>
+        <!-- PayPal SDK Buttons (shows PayPal, Card, GPay, ApplePay, PayLater) -->
+        <div id="submit-paypal" style="display:none">
+            <!-- SDK loading indicator -->
+            <div id="pp-loading" style="text-align:center;padding:18px;color:rgba(255,255,255,.4);font-size:13px;">
+                <div style="width:28px;height:28px;border:3px solid rgba(255,255,255,.1);border-top-color:#0070ba;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 10px;"></div>
+                Caricamento metodi di pagamento…
+            </div>
+            <!-- SDK renders buttons here -->
+            <div id="paypal-button-container" style="min-height:55px;margin-top:12px;"></div>
+            <!-- Fallback buttons (shown if SDK is blocked by ad blocker) -->
+            <div id="pp-fallback" style="display:none;margin-top:12px;">
+                <div style="text-align:center;margin-bottom:14px;font-size:12px;color:rgba(255,255,255,.35);">
+                    ⚠️ Alcuni metodi di pagamento non si caricano? <a href="#" id="pp-fallback-link" style="color:#D9317F;text-decoration:underline;">Apri il checkout in una nuova scheda</a> per tutte le opzioni.
+                </div>
+                <button type="button" class="os-submit-btn os-paypal-btn" id="os-paypal-fallback" style="width:100%;">
+                    <span class="btn-text">🔗 Paga su PayPal</span>
+                    <span class="spinner"></span>
+                </button>
+                <div style="text-align:center;margin-top:8px;font-size:11px;color:rgba(255,255,255,.3);">Potrai pagare con conto PayPal o carta di credito/debito</div>
+            </div>
         </div>
     </form>
 
@@ -451,6 +464,7 @@
         document.getElementById('submit-bonifico').style.display = isBonifico?'':'none';
         document.getElementById('submit-paypal').style.display = selPay==='Carta/PayPal'?'':'none';
         document.getElementById('bonifico-info').style.display = isBonifico?'':'none';
+        if (selPay === 'Carta/PayPal') { loadPayPalSDK(); }
         if (isBonifico) {
             const nome = document.getElementById('nome_e_cognome').value.trim() || 'Nome Cognome';
             document.querySelector('.bonifico-causale').innerHTML = 'Iscrizione OutSeason 2026 — <em>' + nome + '</em>';
@@ -530,66 +544,130 @@
         finally{b.classList.remove('loading');b.disabled=false;}
     });
 
-    // ─── PayPal Popup Checkout (SDK loads in popup window — all payment methods work) ───
-    document.getElementById('os-paypal-pay').addEventListener('click', async function() {
+    // ─── PayPal SDK Inline (loads buttons directly: PayPal, Carta, GPay, ApplePay, PayLater) ───
+    const PP_CID = 'ASLH7D2ShGnOwYiNh1eLxO8lwTQE6QKP3136fGsQKJp9e4Sm5i7dGbWkj8l3NMSpU4u2pjgENvuyqtDM';
+    let _ppLoaded = false;
+
+    function loadPayPalSDK() {
+        if (_ppLoaded) return;
+        _ppLoaded = true;
+
+        const loadingEl = document.getElementById('pp-loading');
+        const fallbackEl = document.getElementById('pp-fallback');
+
+        // Timeout: if SDK doesn't load in 6s, show fallback
+        const sdkTimeout = setTimeout(function() {
+            console.warn('[OutSeason] PayPal SDK timed out');
+            if (loadingEl) loadingEl.style.display = 'none';
+            if (fallbackEl) fallbackEl.style.display = 'block';
+        }, 6000);
+
+        const s = document.createElement('script');
+        s.src = 'https://www.paypal.com/sdk/js?client-id=' + PP_CID
+            + '&currency=EUR&intent=capture&locale=it_IT'
+            + '&enable-funding=googlepay,applepay,paylater';
+        s.onload = function() {
+            clearTimeout(sdkTimeout);
+            console.log('[OutSeason] PayPal SDK loaded ✓');
+            if (loadingEl) loadingEl.style.display = 'none';
+            renderPayPalButtons();
+        };
+        s.onerror = function() {
+            clearTimeout(sdkTimeout);
+            console.warn('[OutSeason] PayPal SDK blocked — showing fallback');
+            if (loadingEl) loadingEl.style.display = 'none';
+            if (fallbackEl) fallbackEl.style.display = 'block';
+        };
+        document.head.appendChild(s);
+    }
+
+    function renderPayPalButtons() {
+        if (!window.paypal) { console.error('[OutSeason] paypal not available'); return; }
+        paypal.Buttons({
+            style: { layout:'vertical', color:'gold', shape:'rect', label:'pay', height:48 },
+            createOrder: async function() {
+                const v = validate();
+                if (v !== true) throw new Error('Compila: ' + v.join(', '));
+                const r = await fetch(API+'publicRegister', {
+                    method:'POST', headers:{'Content-Type':'application/json'},
+                    body: JSON.stringify(payload()),
+                });
+                const d = await r.json();
+                console.log('[OutSeason] publicRegister response:', d);
+                if (!r.ok || d.error) throw new Error(d.message || d.error || 'Errore');
+                eId = d.data.entry_id;
+                ppOrderId = d.data.paypal_order_id;
+                return ppOrderId;
+            },
+            onApprove: async function(data) {
+                try {
+                    const r = await fetch(API+'capturePayment', {
+                        method:'POST', headers:{'Content-Type':'application/json'},
+                        body: JSON.stringify({ paypal_order_id: data.orderID, entry_id: eId }),
+                    });
+                    const d = await r.json();
+                    if (!r.ok || d.error) throw new Error(d.message || d.error || 'Errore');
+                    showOK();
+                } catch(e) { showGE('Pagamento approvato ma errore conferma: ' + e.message); }
+            },
+            onError: function(err) { console.error('[OutSeason] PayPal onError:', err); showGE('Errore PayPal: ' + (err.message || 'Riprova.')); },
+            onCancel: function() { showGE('Pagamento annullato.'); },
+        }).render('#paypal-button-container').then(function() {
+            console.log('[OutSeason] PayPal buttons rendered ✓');
+        }).catch(function(err) {
+            console.error('[OutSeason] PayPal render failed:', err);
+            document.getElementById('pp-fallback').style.display = 'block';
+        });
+    }
+
+    // Fallback: "Paga su PayPal" button → opens checkout page in new tab
+    document.getElementById('os-paypal-fallback')?.addEventListener('click', async function() {
         const v = validate();
         if (v !== true) return;
-
         const btn = this;
-        btn.classList.add('loading');
-        btn.disabled = true;
-
+        btn.classList.add('loading'); btn.disabled = true;
         try {
-            const r = await fetch(API + 'publicRegister', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+            const r = await fetch(API+'publicRegister', {
+                method:'POST', headers:{'Content-Type':'application/json'},
                 body: JSON.stringify(payload()),
             });
             const d = await r.json();
-            console.log('[OutSeason] publicRegister response:', d);
             if (!r.ok || d.error) throw new Error(d.message || d.error || 'Errore');
-
             eId = d.data.entry_id;
             ppOrderId = d.data.paypal_order_id;
-            const clientId = d.data.paypal_client_id;
-            const amount = d.data.amount;
-            const approveUrl = d.data.approve_url || '';
-            const nome = encodeURIComponent(document.getElementById('nome_e_cognome').value.trim());
-
-            // Build checkout URL (opens in new tab where PayPal SDK works without iframe restrictions)
-            // Includes approve_url as fallback if SDK is blocked by ad blockers
-            const checkoutUrl = 'paypal-checkout.html'
-                + '?order_id=' + encodeURIComponent(ppOrderId)
-                + '&entry_id=' + eId
-                + '&client_id=' + encodeURIComponent(clientId)
-                + '&amount=' + amount
-                + '&nome=' + nome
-                + '&approve_url=' + encodeURIComponent(approveUrl);
-
-            // Open in new tab (works reliably in iframes, unlike sized popups)
-            const tab = window.open(checkoutUrl, '_blank');
-
-            if (!tab) {
-                // If even new tab is blocked, fallback to PayPal redirect
-                const approveUrl = d.data.approve_url;
-                if (approveUrl) {
-                    window.location.href = approveUrl;
-                } else {
-                    throw new Error('Popup bloccato dal browser. Consenti i popup per questo sito e riprova.');
-                }
+            const approveUrl = d.data.approve_url;
+            if (approveUrl) {
+                window.open(approveUrl, '_blank');
+                showGE('Si è aperta una nuova scheda per completare il pagamento su PayPal. Dopo il pagamento, riceverai una email di conferma.');
             }
-
-            btn.classList.remove('loading');
-            btn.disabled = false;
-        } catch (e) {
-            console.error('[OutSeason] PayPal checkout error:', e);
-            showGE(e.message || 'Errore. Riprova.');
-            btn.classList.remove('loading');
-            btn.disabled = false;
-        }
+        } catch(e) { showGE(e.message || 'Errore. Riprova.'); }
+        finally { btn.classList.remove('loading'); btn.disabled = false; }
     });
 
-    // Listen for payment completion from popup
+    // Fallback link → opens checkout page with SDK in new tab
+    document.getElementById('pp-fallback-link')?.addEventListener('click', async function(e) {
+        e.preventDefault();
+        const v = validate();
+        if (v !== true) return;
+        try {
+            const r = await fetch(API+'publicRegister', {
+                method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify(payload()),
+            });
+            const d = await r.json();
+            if (!r.ok || d.error) throw new Error(d.message || d.error || 'Errore');
+            const checkoutUrl = 'paypal-checkout.html'
+                + '?order_id=' + encodeURIComponent(d.data.paypal_order_id)
+                + '&entry_id=' + d.data.entry_id
+                + '&client_id=' + encodeURIComponent(d.data.paypal_client_id)
+                + '&amount=' + d.data.amount
+                + '&nome=' + encodeURIComponent(document.getElementById('nome_e_cognome').value.trim())
+                + '&approve_url=' + encodeURIComponent(d.data.approve_url || '');
+            window.open(checkoutUrl, '_blank');
+        } catch(e) { showGE(e.message || 'Errore. Riprova.'); }
+    });
+
+    // Listen for payment completion from popup/new tab
     window.addEventListener('message', function(evt) {
         if (evt.data && evt.data.type === 'os-payment-complete') {
             console.log('[OutSeason] Payment complete via popup:', evt.data);
