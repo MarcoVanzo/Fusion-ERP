@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pagamento — OutSeason 2026</title>
+    <link rel="icon" href="https://www.fusionteamvolley.it/assets/logo-colorato.png" type="image/png">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&family=Roboto:wght@300;400;500;600&display=swap');
+        body {
+            min-height: 100vh;
+            background: #0d0d0d;
+            font-family: 'Roboto', -apple-system, sans-serif;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .checkout-card {
+            width: 100%;
+            max-width: 440px;
+            padding: 36px 28px;
+            margin: 20px;
+        }
+        .checkout-header {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+        .checkout-logo {
+            width: 100px;
+            margin-bottom: 12px;
+            opacity: .9;
+        }
+        .checkout-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+        .checkout-subtitle {
+            font-size: 13px;
+            color: rgba(255,255,255,.45);
+        }
+
+        /* Amount display */
+        .checkout-amount {
+            text-align: center;
+            padding: 20px;
+            margin-bottom: 24px;
+            background: rgba(217,49,127,.06);
+            border: 1px solid rgba(217,49,127,.2);
+            border-radius: 12px;
+        }
+        .checkout-amount .label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .1em;
+            color: rgba(255,255,255,.45);
+            margin-bottom: 4px;
+        }
+        .checkout-amount .price {
+            font-family: 'Poppins', sans-serif;
+            font-size: 36px;
+            font-weight: 800;
+            color: #D9317F;
+        }
+        .checkout-amount .name {
+            font-size: 13px;
+            color: rgba(255,255,255,.55);
+            margin-top: 4px;
+        }
+
+        /* PayPal container */
+        #paypal-button-container {
+            min-height: 55px;
+            margin-bottom: 16px;
+        }
+
+        /* Loading state */
+        .loading-state {
+            text-align: center;
+            padding: 32px 16px;
+        }
+        .spinner {
+            width: 40px; height: 40px;
+            border: 3px solid rgba(255,255,255,.1);
+            border-top-color: #0070ba;
+            border-radius: 50%;
+            animation: spin .8s linear infinite;
+            margin: 0 auto 16px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-text {
+            font-size: 14px;
+            color: rgba(255,255,255,.5);
+        }
+
+        /* Success state */
+        .success-state {
+            display: none;
+            text-align: center;
+            padding: 32px 16px;
+        }
+        .success-state.visible { display: block; animation: fadeUp .5s ease; }
+        .success-icon {
+            width: 64px; height: 64px;
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            margin: 0 auto 16px;
+            box-shadow: 0 8px 32px rgba(39,174,96,.3);
+        }
+        .success-state h2 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+            color: #27ae60;
+            margin-bottom: 8px;
+        }
+        .success-state p {
+            font-size: 14px;
+            color: rgba(255,255,255,.55);
+            line-height: 1.7;
+        }
+        .close-text {
+            margin-top: 16px;
+            font-size: 12px;
+            color: rgba(255,255,255,.3);
+        }
+
+        /* Error state */
+        .error-state {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            background: rgba(229,62,62,.06);
+            border: 1px solid rgba(229,62,62,.2);
+            border-radius: 12px;
+            margin-top: 16px;
+        }
+        .error-state.visible { display: block; }
+        .error-state p { color: #e53e3e; font-size: 14px; }
+
+        /* Footer */
+        .checkout-footer {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255,255,255,.06);
+        }
+        .checkout-footer img {
+            height: 14px;
+            opacity: .4;
+        }
+        .secure-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-size: 11px;
+            color: rgba(255,255,255,.3);
+        }
+        .secure-badge::before { content: '🔒'; }
+
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+<div class="checkout-card">
+    <div class="checkout-header">
+        <img src="https://www.fusionteamvolley.it/ERP/outseason/logo-outseason.png" alt="OutSeason" class="checkout-logo">
+        <div class="checkout-title">Completa il Pagamento</div>
+        <div class="checkout-subtitle">OutSeason 2026 — Fusion Team Volley</div>
+    </div>
+
+    <div class="checkout-amount" id="amount-box">
+        <div class="label">Totale da pagare</div>
+        <div class="price" id="display-amount">€ —</div>
+        <div class="name" id="display-name"></div>
+    </div>
+
+    <div class="loading-state" id="loading-state">
+        <div class="spinner"></div>
+        <div class="loading-text">Caricamento metodi di pagamento…</div>
+    </div>
+
+    <div id="paypal-button-container"></div>
+
+    <div class="success-state" id="success-state">
+        <div class="success-icon">✓</div>
+        <h2>Pagamento Completato! 🎉</h2>
+        <p>La tua iscrizione è confermata.<br>Riceverai una email con tutti i dettagli.</p>
+        <p class="close-text">Questa finestra si chiuderà automaticamente…</p>
+    </div>
+
+    <div class="error-state" id="error-state">
+        <p id="error-text"></p>
+    </div>
+
+    <div class="checkout-footer">
+        <div class="secure-badge">Pagamento sicuro via PayPal</div>
+    </div>
+</div>
+
+<script>
+(function() {
+    'use strict';
+
+    const API = '../api/api.php?module=outseason&action=';
+    const params = new URLSearchParams(window.location.search);
+    const orderId  = params.get('order_id');
+    const entryId  = params.get('entry_id');
+    const clientId = params.get('client_id');
+    const amount   = params.get('amount');
+    const nome     = params.get('nome') || '';
+
+    // Display amount and name
+    if (amount) {
+        document.getElementById('display-amount').textContent = '€ ' + parseFloat(amount).toFixed(2).replace('.', ',');
+    }
+    if (nome) {
+        document.getElementById('display-name').textContent = nome;
+    }
+
+    // Validate params
+    if (!orderId || !entryId || !clientId) {
+        showError('Parametri mancanti. Chiudi questa finestra e riprova.');
+        return;
+    }
+
+    // Load PayPal SDK
+    const script = document.createElement('script');
+    script.src = 'https://www.paypal.com/sdk/js?client-id=' + encodeURIComponent(clientId)
+        + '&currency=EUR&intent=capture&locale=it_IT'
+        + '&enable-funding=googlepay,applepay,paylater';
+    script.onload = function() {
+        document.getElementById('loading-state').style.display = 'none';
+        renderButtons();
+    };
+    script.onerror = function() {
+        showError('Impossibile caricare PayPal. Disabilita eventuali ad blocker e riprova.');
+    };
+    document.head.appendChild(script);
+
+    function renderButtons() {
+        paypal.Buttons({
+            style: {
+                layout: 'vertical',
+                color: 'gold',
+                shape: 'rect',
+                label: 'pay',
+                height: 48,
+            },
+            createOrder: function() {
+                // Order already created server-side, just return the ID
+                return orderId;
+            },
+            onApprove: async function(data) {
+                try {
+                    const r = await fetch(API + 'capturePayment', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            paypal_order_id: data.orderID,
+                            entry_id: parseInt(entryId, 10),
+                        }),
+                    });
+                    const d = await r.json();
+                    if (!r.ok || d.error) throw new Error(d.message || d.error || 'Errore conferma');
+
+                    showSuccess();
+                } catch (e) {
+                    showError('Pagamento approvato ma errore nella conferma: ' + e.message);
+                }
+            },
+            onError: function(err) {
+                console.error('[PayPal] onError:', err);
+                showError('Errore PayPal: ' + (err.message || 'Riprova.'));
+            },
+            onCancel: function() {
+                showError('Pagamento annullato. Puoi riprovare cliccando sui pulsanti sopra.');
+                // Don't close - let them retry
+                document.getElementById('error-state').classList.add('visible');
+            },
+        }).render('#paypal-button-container');
+    }
+
+    function showSuccess() {
+        document.getElementById('paypal-button-container').style.display = 'none';
+        document.getElementById('amount-box').style.display = 'none';
+        document.getElementById('error-state').classList.remove('visible');
+        document.getElementById('success-state').classList.add('visible');
+
+        // Notify opener window
+        try {
+            if (window.opener && !window.opener.closed) {
+                window.opener.postMessage({
+                    type: 'os-payment-complete',
+                    entry_id: entryId,
+                    order_id: orderId,
+                }, '*');
+            }
+        } catch(e) { console.warn('postMessage failed:', e); }
+
+        // Auto-close after 4 seconds
+        setTimeout(function() {
+            try { window.close(); } catch(e) {}
+        }, 4000);
+    }
+
+    function showError(msg) {
+        document.getElementById('loading-state').style.display = 'none';
+        document.getElementById('error-state').classList.add('visible');
+        document.getElementById('error-text').textContent = msg;
+    }
+})();
+</script>
+</body>
+</html>

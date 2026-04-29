@@ -1,7 +1,7 @@
 {
   "version": 3,
-  "generated_at": "2026-04-29T09:48:55.467Z",
-  "file_count": 1749,
+  "generated_at": "2026-04-29T09:53:06.920Z",
+  "file_count": 1750,
   "files": [
     {
       "path": ".env.prod",
@@ -1565,7 +1565,7 @@
     },
     {
       "path": "index.html",
-      "hash": "64c627aab41c23d9738fb017c30afa7d1eaf332dc3044b86b16b8a5972e2736f"
+      "hash": "a9be66dd9198276c4ea969e6c154e9a9816405198bf7e6cd90904e6c2f8408f9"
     },
     {
       "path": "js/api/athletes.api.js",
@@ -2061,11 +2061,15 @@
     },
     {
       "path": "outseason/index.html",
-      "hash": "f3a4a7efe25204db7540d99f362e079c1c683edc6b0f0ec997173b8f34a13325"
+      "hash": "98c8f41b2f4a9a68075d5dfee234869467c45ad4ff5256a2945961888dd6e50d"
     },
     {
       "path": "outseason/logo-outseason.png",
       "hash": "35d566e1f15e470817b0bd25503018388d3f8677d4bf6ef12b1a8c1dc8b0ffa7"
+    },
+    {
+      "path": "outseason/paypal-checkout.html",
+      "hash": "245828b80c32aea184149b15be3321732df256eddd6c1a27c8f6ab87b6252eca"
     },
     {
       "path": "outseason/paypal-return.html",

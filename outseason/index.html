@@ -10,7 +10,7 @@
     <meta property="og:image" content="https://www.fusionteamvolley.it/assets/logo-colorato.png">
     <meta property="og:type" content="website">
     <link rel="icon" href="https://www.fusionteamvolley.it/assets/logo-colorato.png" type="image/png">
-    <link rel="stylesheet" href="style.css?v=20260429114300">
+    <link rel="stylesheet" href="style.css?v=20260429115100">
     <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
 </head>
 <body>
@@ -214,7 +214,7 @@
             <div class="os-payment-cards">
                 <div class="os-payment-card" data-val="Carta/PayPal" onclick="selectPayment(this)">
                     <div class="pay-icon">💳</div>
-                    <div class="pay-label">Carta di Credito / PayPal</div>
+                    <div class="pay-label">Carta / PayPal / Google Pay / Apple Pay</div>
                 </div>
                 <div class="os-payment-card" data-val="Bonifico Bancario" onclick="selectPayment(this)">
                     <div class="pay-icon">🏦</div>
@@ -530,7 +530,7 @@
         finally{b.classList.remove('loading');b.disabled=false;}
     });
 
-    // ─── PayPal Redirect Flow (no JS SDK required — works in cross-origin iframes) ───
+    // ─── PayPal Popup Checkout (SDK loads in popup window — all payment methods work) ───
     document.getElementById('os-paypal-pay').addEventListener('click', async function() {
         const v = validate();
         if (v !== true) return;
@@ -549,30 +549,54 @@
             console.log('[OutSeason] publicRegister response:', d);
             if (!r.ok || d.error) throw new Error(d.message || d.error || 'Errore');
 
-            const approveUrl = d.data.approve_url;
-            if (!approveUrl) throw new Error('URL di approvazione PayPal non disponibile. Riprova.');
-
             eId = d.data.entry_id;
             ppOrderId = d.data.paypal_order_id;
+            const clientId = d.data.paypal_client_id;
+            const amount = d.data.amount;
+            const nome = encodeURIComponent(document.getElementById('nome_e_cognome').value.trim());
 
-            console.log('[OutSeason] Redirecting to PayPal:', approveUrl);
+            // Build popup URL
+            const popupUrl = 'paypal-checkout.html'
+                + '?order_id=' + encodeURIComponent(ppOrderId)
+                + '&entry_id=' + eId
+                + '&client_id=' + encodeURIComponent(clientId)
+                + '&amount=' + amount
+                + '&nome=' + nome;
 
-            // Redirect to PayPal — use top-level navigation to avoid iframe restrictions
-            if (window.top !== window.self) {
-                // We're inside an iframe → open in new tab
-                window.open(approveUrl, '_blank');
-                showGE('Si aprirà una nuova scheda per completare il pagamento su PayPal. Dopo il pagamento, riceverai una email di conferma.');
-                btn.classList.remove('loading');
-                btn.disabled = false;
-            } else {
-                // Direct access → redirect in same window
-                window.location.href = approveUrl;
+            // Open popup (centered on screen)
+            const w = 480, h = 680;
+            const left = (screen.width - w) / 2;
+            const top = (screen.height - h) / 2;
+            const popup = window.open(popupUrl, 'paypal_checkout',
+                'width=' + w + ',height=' + h + ',left=' + left + ',top=' + top
+                + ',toolbar=no,menubar=no,scrollbars=yes,resizable=yes');
+
+            if (!popup || popup.closed) {
+                // Popup blocked → fallback to redirect
+                const approveUrl = d.data.approve_url;
+                if (approveUrl) {
+                    window.open(approveUrl, '_blank');
+                    showGE('Si aprirà una nuova scheda per completare il pagamento. Dopo il pagamento, riceverai una email di conferma.');
+                } else {
+                    throw new Error('Popup bloccato dal browser. Consenti i popup per questo sito e riprova.');
+                }
             }
+
+            btn.classList.remove('loading');
+            btn.disabled = false;
         } catch (e) {
-            console.error('[OutSeason] PayPal redirect error:', e);
+            console.error('[OutSeason] PayPal checkout error:', e);
             showGE(e.message || 'Errore. Riprova.');
             btn.classList.remove('loading');
             btn.disabled = false;
+        }
+    });
+
+    // Listen for payment completion from popup
+    window.addEventListener('message', function(evt) {
+        if (evt.data && evt.data.type === 'os-payment-complete') {
+            console.log('[OutSeason] Payment complete via popup:', evt.data);
+            showOK();
         }
     });
     // ─── Embed Mode ──────────────────────────────────────────────
