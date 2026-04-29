@@ -22,6 +22,7 @@ export class ScoutingView {
                     width: 450px;
                     max-width: 100vw;
                     height: 100vh;
+                    height: 100dvh;
                     background: var(--color-bg);
                     z-index: 10000;
                     box-shadow: -10px 0 30px rgba(0,0,0,0.8);

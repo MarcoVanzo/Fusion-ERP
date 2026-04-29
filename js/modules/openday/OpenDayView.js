@@ -26,7 +26,7 @@ export class OpenDayView {
 
             <style>
                 #od-side-panel {
-                    position: fixed; top: 0; right: -520px; width: 500px; max-width: 100vw; height: 100vh;
+                    position: fixed; top: 0; right: -520px; width: 500px; max-width: 100vw; height: 100vh; height: 100dvh;
                     background: var(--color-bg); z-index: 10000; box-shadow: -10px 0 30px rgba(0,0,0,0.8);
                     border-left: 1px solid var(--color-border); transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
                 }
